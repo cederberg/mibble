@@ -33,7 +33,7 @@
 
 package net.percederberg.mibble;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -95,7 +95,7 @@ import net.percederberg.mibble.value.ValueReference;
  * identifier is encountered. 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.3
  * @since    2.0
  */
 class MibAnalyzer extends Asn1Analyzer {
@@ -386,7 +386,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // Schedule MIB loading
         try {
             mib.getLoader().scheduleLoad(module);
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             throw new ParseException(
                 ParseException.ANALYSIS_ERROR,
                 "couldn't find imported MIB: " + module,
@@ -2550,7 +2550,7 @@ class MibAnalyzer extends Asn1Analyzer {
         module = getStringValue(getChildAt(node, 0), 0);
         try {
             mib.getLoader().scheduleLoad(module);
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             throw new ParseException(
                 ParseException.ANALYSIS_ERROR,
                 "couldn't find referenced MIB: " + module,

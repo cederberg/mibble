@@ -303,14 +303,12 @@ public class MibLoader {
      *
      * @return the MIB file loaded
      *
-     * @throws FileNotFoundException if the MIB file couldn't be
-     *             found in the MIB search path
+     * @throws IOException if the MIB file couldn't be found in the
+     *             MIB search path
      * @throws MibLoaderException if the MIB file couldn't be loaded
      *             correctly
      */
-    public Mib load(String name)
-        throws FileNotFoundException, MibLoaderException {
-
+    public Mib load(String name) throws IOException, MibLoaderException {
         MibSource  src;
         Mib        mib;
 
@@ -336,14 +334,11 @@ public class MibLoader {
      *
      * @return the MIB file loaded
      *
-     * @throws FileNotFoundException if the MIB file couldn't be
-     *             found
+     * @throws IOException if the MIB file couldn't be read
      * @throws MibLoaderException if the MIB file couldn't be loaded
      *             correctly
      */
-    public Mib load(File file)
-        throws FileNotFoundException, MibLoaderException {
-
+    public Mib load(File file) throws IOException, MibLoaderException {
         Mib  mib;
 
         mib = getMib(file);
@@ -362,15 +357,13 @@ public class MibLoader {
      *
      * @return the MIB file loaded
      *
-     * @throws FileNotFoundException if the URL couldn't be read
+     * @throws IOException if the MIB URL couldn't be read
      * @throws MibLoaderException if the MIB file couldn't be loaded
      *             correctly
      *
      * @since 2.3
      */
-    public Mib load(URL url)
-        throws FileNotFoundException, MibLoaderException {
-
+    public Mib load(URL url) throws IOException, MibLoaderException {
         return load(new MibSource(url));
     }
 
@@ -383,15 +376,13 @@ public class MibLoader {
      *
      * @return the MIB file loaded
      *
-     * @throws FileNotFoundException if the stream couldn't be read
+     * @throws IOException if the input stream couldn't be read
      * @throws MibLoaderException if the MIB file couldn't be loaded
      *             correctly
      *
      * @since 2.3
      */
-    public Mib load(Reader input)
-        throws FileNotFoundException, MibLoaderException {
-
+    public Mib load(Reader input) throws IOException, MibLoaderException {
         return load(new MibSource(input));
     }
 
@@ -403,12 +394,11 @@ public class MibLoader {
      *
      * @return the MIB loaded
      *
-     * @throws FileNotFoundException if the MIB couldn't be found
+     * @throws IOException if the MIB couldn't be found
      * @throws MibLoaderException if the MIB couldn't be loaded
      *             correctly
      */
-    private Mib load(MibSource src)
-        throws FileNotFoundException, MibLoaderException {
+    private Mib load(MibSource src) throws IOException, MibLoaderException {
 
         int           position;
         MibLoaderLog  log;
@@ -520,10 +510,10 @@ public class MibLoader {
      *
      * @param name           the MIB name (filename without extension)
      *
-     * @throws FileNotFoundException if the MIB file couldn't be
-     *             found in the MIB search path
+     * @throws IOException if the MIB file couldn't be found in the
+     *             MIB search path
      */
-    void scheduleLoad(String name) throws FileNotFoundException {
+    void scheduleLoad(String name) throws IOException {
         MibSource  src;
 
         if (getMib(name) == null) {
@@ -570,10 +560,10 @@ public class MibLoader {
      *
      * @return the loader log for the whole queue
      *
-     * @throws FileNotFoundException if the MIB file in the queue
-     *             couldn't be found
+     * @throws IOException if the MIB file in the queue couldn't be
+     *             found
      */
-    private MibLoaderLog loadQueue() throws FileNotFoundException {
+    private MibLoaderLog loadQueue() throws IOException {
         MibLoaderLog  log = new MibLoaderLog();
         ArrayList     processed = new ArrayList();
         MibSource     src;
@@ -764,28 +754,18 @@ public class MibLoader {
          *
          * @return the MIB container created
          *
-         * @throws FileNotFoundException if the MIB couldn't be found
+         * @throws IOException if the MIB couldn't be found
          * @throws MibLoaderException if the MIB couldn't be parsed
          *             or analyzed correctly
          */
         public Mib createMib(MibLoader loader, MibLoaderLog log)
-            throws FileNotFoundException, MibLoaderException {
+            throws IOException, MibLoaderException {
 
             if (input != null) {
                 return new Mib(input, null, loader, log);
             } else if (url != null) {
-                try {
-                    input = new InputStreamReader(url.openStream());
-                    return new Mib(input, file, loader, log);
-                } catch (IOException e) {
-                    if (file != null) {
-                        throw new FileNotFoundException("couldn't find '" +
-                                                        file + "' MIB");
-                    } else {
-                        throw new FileNotFoundException("couldn't find '" +
-                                                        url + "' MIB");
-                    }
-                }
+                input = new InputStreamReader(url.openStream());
+                return new Mib(input, file, loader, log);
             } else {
                 return new Mib(file, loader, log);
             }

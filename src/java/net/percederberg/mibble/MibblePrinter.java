@@ -35,16 +35,19 @@ package net.percederberg.mibble;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
+import java.net.MalformedURLException;
 import java.util.Iterator;
 
 /**
  * A program that parses and prints a MIB file. If the MIB file(s)
- * specified on the command-line uses constructs or syntax that are 
- * not supported, an error message will be printed to the standard 
+ * specified on the command-line uses constructs or syntax that are
+ * not supported, an error message will be printed to the standard
  * output.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.3
  * @since    2.0
  */
 public class MibblePrinter {
@@ -56,7 +59,7 @@ public class MibblePrinter {
         "Prints the contents of an SNMP MIB file. This program comes with\n" +
         "ABSOLUTELY NO WARRANTY; for details see the LICENSE.txt file.\n" +
         "\n" +
-        "Syntax: MibblePrinter <file>";
+        "Syntax: MibblePrinter <file or URL>";
 
     /**
      * The internal error message.
@@ -76,26 +79,39 @@ public class MibblePrinter {
         MibLoader  loader = new MibLoader();
         Mib        mib = null;
         File       file;
+        URL        url;
         Iterator   iter;
 
         // Check command-line arguments
         if (args.length < 1) {
-            printHelp("No MIB file specified");
+            printHelp("No MIB file or URL specified");
             System.exit(1);
         } else if (args.length > 1) {
-            printHelp("Only one MIB file may be specified");
+            printHelp("Only one MIB file or URL may be specified");
             System.exit(1);
         }
-   
+
         // Parse MIB file
         try {
-            file = new File(args[0]);
-            loader.addDir(file.getParentFile());
-            mib = loader.load(file);
+            try {
+                url = new URL(args[0]);
+            } catch (MalformedURLException e) {
+                url = null;
+            }
+            if (url == null) {
+                file = new File(args[0]);
+                loader.addDir(file.getParentFile());
+                mib = loader.load(file);
+            } else {
+                mib = loader.load(url);
+            }
             if (mib.getLog().warningCount() > 0) {
                 mib.getLog().printTo(System.err);
             }
         } catch (FileNotFoundException e) {
+            printError(args[0], e);
+            System.exit(1);
+        } catch (IOException e) {
             printError(args[0], e);
             System.exit(1);
         } catch (MibLoaderException e) {
@@ -128,32 +144,47 @@ public class MibblePrinter {
             System.err.println();
         }
     }
-    
+
     /**
      * Prints an internal error message. This type of error should
      * only be reported when run-time exceptions occur, such as null
      * pointer and the likes. All these error should be reported as
      * bugs to the program maintainers.
-     * 
+     *
      * @param e              the exception to be reported
      */
     private static void printInternalError(Exception e) {
         System.err.println(INTERNAL_ERROR);
         e.printStackTrace();
     }
-    
+
     /**
      * Prints a file not found error message.
-     * 
+     *
      * @param file           the file name not found
      * @param e              the detailed exception
      */
     private static void printError(String file, FileNotFoundException e) {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append("Error: couldn't open file:");
         buffer.append("\n    ");
         buffer.append(file);
+        System.out.println(buffer.toString());
+    }
+
+    /**
+     * Prints a URL not found error message.
+     *
+     * @param url            the URL not found
+     * @param e              the detailed exception
+     */
+    private static void printError(String url, IOException e) {
+        StringBuffer  buffer = new StringBuffer();
+
+        buffer.append("Error: couldn't open URL:");
+        buffer.append("\n    ");
+        buffer.append(url);
         System.out.println(buffer.toString());
     }
 }

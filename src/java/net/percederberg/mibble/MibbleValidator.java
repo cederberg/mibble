@@ -35,16 +35,19 @@ package net.percederberg.mibble;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 /**
  * A program that parses and validates a MIB file. If the MIB file(s)
- * specified on the command-line uses constructs or syntax that are 
- * not supported, an error message will be printed to the standard 
- * output. The program will also return the number of validation 
+ * specified on the command-line uses constructs or syntax that are
+ * not supported, an error message will be printed to the standard
+ * output. The program will also return the number of validation
  * failures as its exit code.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.3
  * @since    2.0
  */
 public class MibbleValidator {
@@ -56,7 +59,7 @@ public class MibbleValidator {
         "Validates a set of SNMP MIB files. This program comes with\n" +
         "ABSOLUTELY NO WARRANTY; for details see the LICENSE.txt file.\n" +
         "\n" +
-        "Syntax: MibbleValidator <file(s)>";
+        "Syntax: MibbleValidator <file(s) or URL(s)>";
 
     /**
      * The internal error message.
@@ -76,6 +79,7 @@ public class MibbleValidator {
         MibLoader  loader;
         Mib        mib;
         File       file;
+        URL        url;
         int        errors = 0;
         int        warnings = 0;
 
@@ -84,22 +88,35 @@ public class MibbleValidator {
             printHelp("No file(s) specified");
             System.exit(1);
         }
-   
+
         // Parse MIB files
         for (int i = 0; i < args.length; i++) {
             try {
                 System.out.print("Reading " + args[i] + "... ");
                 System.out.flush();
-                file = new File(args[i]);
+                try {
+                    url = new URL(args[0]);
+                } catch (MalformedURLException e) {
+                    url = null;
+                }
                 loader = new MibLoader();
-                loader.addDir(file.getParentFile());
-                mib = loader.load(file);
+                if (url == null) {
+                    file = new File(args[i]);
+                    loader.addDir(file.getParentFile());
+                    mib = loader.load(file);
+                } else {
+                    mib = loader.load(url);
+                }
                 System.out.println("[OK]");
                 if (mib.getLog().warningCount() > 0) {
                     mib.getLog().printTo(System.out);
                     warnings++;
                 }
             } catch (FileNotFoundException e) {
+                System.out.println("[FAILED]");
+                printError(args[i], e);
+                errors++;
+            } catch (IOException e) {
                 System.out.println("[FAILED]");
                 printError(args[i], e);
                 errors++;
@@ -141,32 +158,47 @@ public class MibbleValidator {
             System.err.println();
         }
     }
-    
+
     /**
      * Prints an internal error message. This type of error should
      * only be reported when run-time exceptions occur, such as null
      * pointer and the likes. All these error should be reported as
      * bugs to the program maintainers.
-     * 
+     *
      * @param e              the exception to be reported
      */
     private static void printInternalError(Exception e) {
         System.err.println(INTERNAL_ERROR);
         e.printStackTrace();
     }
-    
+
     /**
      * Prints a file not found error message.
-     * 
+     *
      * @param file           the file name not found
      * @param e              the detailed exception
      */
     private static void printError(String file, FileNotFoundException e) {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append("Error: couldn't open file:");
         buffer.append("\n    ");
         buffer.append(file);
+        System.out.println(buffer.toString());
+    }
+
+    /**
+     * Prints a URL not found error message.
+     *
+     * @param url            the URL not found
+     * @param e              the detailed exception
+     */
+    private static void printError(String url, IOException e) {
+        StringBuffer  buffer = new StringBuffer();
+
+        buffer.append("Error: couldn't open URL:");
+        buffer.append("\n    ");
+        buffer.append(url);
         System.out.println(buffer.toString());
     }
 }

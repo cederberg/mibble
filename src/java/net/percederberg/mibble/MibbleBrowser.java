@@ -38,7 +38,7 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JDialog;
@@ -496,7 +496,7 @@ public class MibbleBrowser extends JFrame {
                 e.getLog().printTo(System.err);
                 resultTextArea.append(e.getMessage());
                 continue;
-            } catch (FileNotFoundException e) {
+            } catch (IOException e) {
                 System.err.println(e.getMessage());
                 resultTextArea.append(e.getMessage());
                 continue;

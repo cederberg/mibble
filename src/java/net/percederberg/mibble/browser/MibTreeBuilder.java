@@ -33,8 +33,8 @@
 
 package net.percederberg.mibble.browser;
 
-import java.io.FileNotFoundException;
 import java.io.File;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Iterator;
 
@@ -102,13 +102,13 @@ public class MibTreeBuilder {
      *
      * @return the MIB file loaded
      *
-     * @throws FileNotFoundException if the MIB file couldn't be
-     *             found in the MIB search path
+     * @throws IOException if the MIB file couldn't be found in the
+     *             MIB search path
      * @throws MibLoaderException if the MIB file couldn't be loaded
      *             correctly
      */
     public Mib loadMib(File file)
-        throws FileNotFoundException, MibLoaderException {
+        throws IOException, MibLoaderException {
 
         MibLoader  loader = new MibLoader();
 
