@@ -2744,28 +2744,6 @@ class MibAnalyzer extends Asn1Analyzer {
     }
 
     /**
-     * Returns all the child values for a node.
-     *
-     * @param node           the parse tree node
-     *
-     * @return a list with all the child node values
-     */
-    private ArrayList getChildValues(Node node) {
-        ArrayList  result = new ArrayList();
-        Node       child;
-        ArrayList  values;
-                                                                                
-        for (int i = 0; i < node.getChildCount(); i++) {
-            child = node.getChildAt(i);
-            values = child.getAllValues();
-            if (values != null) {
-                result.addAll(values);
-            }
-        }
-        return result;
-    }
-    
-    /**
      * Returns the location of a specified node.
      * 
      * @param node           the parse tree node
