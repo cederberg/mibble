@@ -39,7 +39,7 @@ package net.percederberg.mibble.asn1;
  * An interface with constants for the parser and tokenizer.
  * 
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  */
 public interface Asn1Constants {
 

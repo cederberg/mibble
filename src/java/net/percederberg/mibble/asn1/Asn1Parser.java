@@ -47,7 +47,7 @@ import net.percederberg.grammatica.parser.RecursiveDescentParser;
  * A token stream parser.
  * 
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  */
 public class Asn1Parser extends RecursiveDescentParser {
 

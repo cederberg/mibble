@@ -45,7 +45,7 @@ import net.percederberg.grammatica.parser.Tokenizer;
  * A character stream tokenizer.
  * 
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  */
 public class Asn1Tokenizer extends Tokenizer {
 
