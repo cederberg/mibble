@@ -69,7 +69,7 @@ class DefaultContext implements MibContext {
         oid = new ObjectIdentifierValue("iso", 1);
         symbol = new MibValueSymbol(new FileLocation(null, -1, -1),
                                     "iso",
-                                    ObjectIdentifierType.TYPE,
+                                    new ObjectIdentifierType(),
                                     oid);
         oid.setSymbol((MibValueSymbol) symbol);
         symbols.put("iso", symbol);

@@ -48,15 +48,9 @@ import net.percederberg.mibble.value.NumberValue;
 public class RealType extends MibType {
 
     /**
-     * The one a only real type instance.
-     */
-// TODO: remove this
-    public static final RealType TYPE = new RealType();
-
-    /**
      * Creates a new real MIB type. 
      */
-    private RealType() {
+    public RealType() {
         // TODO: check the primitive status for REAL
         this(true);
     }

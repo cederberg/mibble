@@ -518,7 +518,7 @@ class MibAnalyzer extends Asn1Analyzer {
      * @return the node to add to the parse tree
      */
     protected Node exitNullType(Production node) {
-        node.addValue(NullType.TYPE);
+        node.addValue(new NullType());
         return node;
     }
 
@@ -530,7 +530,7 @@ class MibAnalyzer extends Asn1Analyzer {
      * @return the node to add to the parse tree
      */
     protected Node exitBooleanType(Production node) {
-        node.addValue(BooleanType.TYPE);
+        node.addValue(new BooleanType());
         return node;
     }
 
@@ -542,7 +542,7 @@ class MibAnalyzer extends Asn1Analyzer {
      * @return the node to add to the parse tree
      */
     protected Node exitRealType(Production node) {
-        node.addValue(RealType.TYPE);
+        node.addValue(new RealType());
         return node;
     }
 
@@ -581,7 +581,7 @@ class MibAnalyzer extends Asn1Analyzer {
      * @return the node to add to the parse tree
      */
     protected Node exitObjectIdentifierType(Production node) {
-        node.addValue(ObjectIdentifierType.TYPE);
+        node.addValue(new ObjectIdentifierType());
         return node;
     }
 
@@ -696,7 +696,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // TODO: implement set type support
         log.addError(getLocation(node), 
                      "SET type currently unsupported");
-        node.addValue(NullType.TYPE);
+        node.addValue(new NullType());
         return node;
     }
 
@@ -712,7 +712,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // TODO: implement set of type support
         log.addError(getLocation(node), 
                      "SET OF type currently unsupported");
-        node.addValue(NullType.TYPE);
+        node.addValue(new NullType());
         return node;
     }
 
@@ -740,7 +740,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // TODO: implement enumerated type support
         log.addError(getLocation(node), 
                      "ENUMERATED type currently unsupported");
-        node.addValue(NullType.TYPE);
+        node.addValue(new NullType());
         return node;
     }
 
@@ -756,7 +756,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // TODO: implement selection type support
         log.addError(getLocation(node), 
                      "selection type currently unsupported");
-        node.addValue(NullType.TYPE);
+        node.addValue(new NullType());
         return node;
     }
 
@@ -794,7 +794,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // TODO: implement any type support
         log.addError(getLocation(node), 
                      "ANY type currently unsupported");
-        node.addValue(NullType.TYPE);
+        node.addValue(new NullType());
         return node;
     }
 

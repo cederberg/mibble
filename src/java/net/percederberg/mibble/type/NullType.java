@@ -48,15 +48,9 @@ import net.percederberg.mibble.value.NullValue;
 public class NullType extends MibType {
 
     /**
-     * The one a only null type instance.
-     */
-    // TODO: remove this
-    public static final NullType TYPE = new NullType();
-
-    /**
      * Creates a new null MIB type. 
      */
-    private NullType() {
+    public NullType() {
         this(true);
     }
     

@@ -48,15 +48,9 @@ import net.percederberg.mibble.value.BooleanValue;
 public class BooleanType extends MibType {
 
     /**
-     * The one a only boolean type instance.
-     */
-    // TODO: remove this
-    public static final BooleanType TYPE = new BooleanType();
-
-    /**
      * Creates a new boolean MIB type. 
      */
-    private BooleanType() {
+    public BooleanType() {
         this(true);
     }
     

@@ -48,16 +48,9 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
 public class ObjectIdentifierType extends MibType {
 
     /**
-     * The one a only object identifier type instance.
-     */
-    // TODO: remove this
-    public static final ObjectIdentifierType TYPE = 
-        new ObjectIdentifierType();
-
-    /**
      * Creates a new object identifier MIB type. 
      */
-    private ObjectIdentifierType() {
+    public ObjectIdentifierType() {
         this(true);
     }
     
