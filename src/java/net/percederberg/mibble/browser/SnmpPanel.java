@@ -241,9 +241,9 @@ public class SnmpPanel extends JPanel {
     private JButton getNextButton = new JButton("Get Next");
 
     /**
-     * The get branch button.
+     * The get all button.
      */
-    private JButton getBranchButton = new JButton("Get Branch");
+    private JButton getAllButton = new JButton("Get All");
 
     /**
      * The set button.
@@ -666,14 +666,14 @@ public class SnmpPanel extends JPanel {
             }
         });
         panel.add(getNextButton);
-        getBranchButton.setToolTipText("Walk an OID branch and " +
+        getAllButton.setToolTipText("Walk an OID branch and " +
                                        "retrieve all values");
-        getBranchButton.addActionListener(new ActionListener() {
+        getAllButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                performGetBranch();
+                performGetAll();
             }
         });
-        panel.add(getBranchButton);
+        panel.add(getAllButton);
         setButton.setToolTipText("Perform SNMP set operation");
         setButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -804,7 +804,7 @@ public class SnmpPanel extends JPanel {
         valueField.setEnabled(allowSet);
         getButton.setEnabled(allowGet);
         getNextButton.setEnabled(allowGet);
-        getBranchButton.setEnabled(allowGet);
+        getAllButton.setEnabled(allowGet);
         setButton.setEnabled(allowSet);
         stopButton.setEnabled(operation != null);
     }
@@ -877,12 +877,12 @@ public class SnmpPanel extends JPanel {
     }
 
     /**
-     * Performs a get branch operation.
+     * Performs a get all operation.
      */
-    protected void performGetBranch() {
+    protected void performGetAll() {
         operation = createOperation(true);
         if (operation != null) {
-            operation.startGetBranch();
+            operation.startGetAll();
         }
     }
 
@@ -1097,10 +1097,10 @@ public class SnmpPanel extends JPanel {
         }
 
         /**
-         * Starts a GET BRANCH operation in a background thread.
+         * Starts a GET ALL operation in a background thread.
          */
-        public void startGetBranch() {
-            this.operation = "GET BRANCH";
+        public void startGetAll() {
+            this.operation = "GET ALL";
             start();
         }
 
@@ -1140,8 +1140,8 @@ public class SnmpPanel extends JPanel {
                       request.getOid() + "...";
             setOperationStatus(message);
             try {
-                if (operation.equals("GET BRANCH")) {
-                    runGetBranch();
+                if (operation.equals("GET ALL")) {
+                    runGetAll();
                 } else {
                     appendResults(operation + ": ");
                     if (operation.equals("GET")) {
@@ -1167,12 +1167,12 @@ public class SnmpPanel extends JPanel {
         }
 
         /**
-         * Runs the get branch operation.
+         * Runs the get all operation.
          *
          * @throws SnmpException if an error occurred during the
          *             operation
          */
-        private void runGetBranch() throws SnmpException {
+        private void runGetAll() throws SnmpException {
             SnmpResponse  response = null;
             String        oid = request.getOid();
 
