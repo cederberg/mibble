@@ -47,7 +47,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  *
  * @author   Watsh Rajneesh
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.3
+ * @version  2.5
  * @since    2.3
  */
 public class MibTreeBuilder {
@@ -225,8 +225,10 @@ public class MibTreeBuilder {
         ObjectIdentifierValue  parent = oid.getParent();
 
         return oid.getSymbol() != null
+            && oid.getSymbol().getMib() != null
             && parent != null
             && parent.getSymbol() != null
+            && parent.getSymbol().getMib() != null
             && parent.getSymbol().getMib().equals(oid.getSymbol().getMib());
     }
 

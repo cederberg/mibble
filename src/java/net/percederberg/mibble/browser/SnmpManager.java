@@ -22,23 +22,26 @@
 package net.percederberg.mibble.browser;
 
 import java.io.IOException;
+import java.net.InetAddress;
 
 import uk.co.westhawk.snmp.pdu.BlockPdu;
-import uk.co.westhawk.snmp.pdu.OneSetPdu;
 import uk.co.westhawk.snmp.stack.AsnInteger;
 import uk.co.westhawk.snmp.stack.AsnObject;
 import uk.co.westhawk.snmp.stack.AsnObjectId;
 import uk.co.westhawk.snmp.stack.AsnOctets;
-import uk.co.westhawk.snmp.stack.Pdu;
+import uk.co.westhawk.snmp.stack.AsnUnsInteger;
+import uk.co.westhawk.snmp.stack.AsnUnsInteger64;
 import uk.co.westhawk.snmp.stack.PduException;
 import uk.co.westhawk.snmp.stack.SnmpContextBasisFace;
 import uk.co.westhawk.snmp.stack.SnmpContextPool;
-import uk.co.westhawk.snmp.stack.varbind;
+
+import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibTypeTag;
 
 /**
- * An SNMP manager. This class exposes the different snmp operations
- * which the user may want to perform. It is a wrapper class over the
- * Westhawk SNMP stack.
+ * An SNMPv1 manager. This class handles the GET, GETNEXT and SET
+ * SNMP operations. It is a wrapper class over the Westhawk SNMP
+ * stack.
  *
  * @see uk.co.westhawk.snmp.pdu.BlockPdu
  * @see uk.co.westhawk.snmp.stack.SnmpContextPool
@@ -46,14 +49,19 @@ import uk.co.westhawk.snmp.stack.varbind;
  * @author   Watsh Rajneesh
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.5
- * @since    2.3
+ * @since    2.5
  */
 public class SnmpManager {
 
     /**
+     * The default SNMP port.
+     */
+    public static final int DEFAULT_PORT = SnmpContextBasisFace.DEFAULT_PORT;
+
+    /**
      * The SNMP context pool.
      */
-    private SnmpContextPool context;
+    private SnmpContextBasisFace context = null;
 
     /**
      * Creates a new SNMP manager.
@@ -68,147 +76,291 @@ public class SnmpManager {
     public SnmpManager(String host, int port, String community)
         throws IOException {
 
-        String  socket;
+        SnmpContextPool  poolV1;
 
-        if (context != null) {
-            context.destroy();
-        }
-        socket = SnmpContextBasisFace.STANDARD_SOCKET;
-        context = new SnmpContextPool(host, port, socket);
-        context.setCommunity(community);
+        poolV1 = new SnmpContextPool(host, port);
+        poolV1.setCommunity(community);
+        context = poolV1;
     }
 
     /**
-     * Send a Get request.
-     *
-     * @param oid            the oid to get
-     *
-     * @return a string description of the results
+     * Destroys the encapsulated SNMP context. This will free all
+     * resources used by this instance. After calling this method,
+     * no other methods should be called on this instance.
      */
-    public String sendGetRequest(String oid) {
+    public void destroy() {
+        context.destroy();
+        context = null;
+    }
+
+    /**
+     * Sends an SNMP get request for a single OID.
+     *
+     * @param oid            the OID to get
+     *
+     * @return the SNMP response
+     *
+     * @throws SnmpException if the SNMP request failed
+     */
+    public SnmpResponse get(String oid) throws SnmpException {
         BlockPdu  pdu = new BlockPdu(context);
 
         pdu.setPduType(BlockPdu.GET);
-        pdu.addOid(oid);
-        return sendRequest(pdu);
+        addOid(pdu, oid);
+        return send(pdu);
     }
 
     /**
-     * Send a GetNext request.
+     * Sends an SNMP get request for multiple OIDs.
      *
-     * @param oid            the oid to perform GetNext
+     * @param oids           the OIDs to get
      *
-     * @return a string description of the results
+     * @return the SNMP response
+     *
+     * @throws SnmpException if the SNMP request failed
      */
-    public String sendGetNextRequest(String oid) {
+    public SnmpResponse get(String[] oids) throws SnmpException {
+        BlockPdu  pdu = new BlockPdu(context);
+
+        pdu.setPduType(BlockPdu.GET);
+        for (int i = 0; i < oids.length; i++) {
+            addOid(pdu, oids[i]);
+        }
+        return send(pdu);
+    }
+
+    /**
+     * Sends an SNMP get gext request for a single OID.
+     *
+     * @param oid            the OID whose successor will be returned
+     *
+     * @return the SNMP response
+     *
+     * @throws SnmpException if the SNMP request failed
+     */
+    public SnmpResponse getNext(String oid) throws SnmpException {
         BlockPdu  pdu = new BlockPdu(context);
 
         pdu.setPduType(BlockPdu.GETNEXT);
-        pdu.addOid(oid);
-        return sendRequest(pdu);
+        addOid(pdu, oid);
+        return send(pdu);
     }
 
     /**
-     * Send a Set request.
+     * Sends an SNMP get gext request for multiple OIDs.
      *
-     * @param oid            the oid to set
-     * @param value          the value for the set operation
+     * @param oids           the OIDs whose successors will be returned
      *
-     * @return a string description of the results
+     * @return the SNMP response
+     *
+     * @throws SnmpException if the SNMP request failed
      */
-    public String sendSetRequest(String oid, String value) {
-        OneSetPdu oneSetPdu = new OneSetPdu(context);
-        AsnObject obj;
+    public SnmpResponse getNext(String[] oids) throws SnmpException {
+        BlockPdu  pdu = new BlockPdu(context);
 
-        if (isNumber(value)) {
-            obj = new AsnInteger(Integer.parseInt(value));
+        pdu.setPduType(BlockPdu.GETNEXT);
+        for (int i = 0; i < oids.length; i++) {
+            addOid(pdu, oids[i]);
+        }
+        return send(pdu);
+    }
+
+    /**
+     * Sends an SNMP set request for a single OID.
+     *
+     * @param request        the request object
+     *
+     * @return the SNMP response
+     *
+     * @throws SnmpException if the SNMP request failed
+     */
+    public SnmpResponse set(SnmpRequest request) throws SnmpException {
+        BlockPdu  pdu = new BlockPdu(context);
+
+        pdu.setPduType(BlockPdu.SET);
+        addOid(pdu, request.getOid(), createAsnValue(request));
+        return send(pdu);
+    }
+
+    /**
+     * Sends an SNMP set request for multiple OIDs.
+     *
+     * @param requests       the request objects
+     *
+     * @return the SNMP response
+     *
+     * @throws SnmpException if the SNMP request failed
+     */
+    public SnmpResponse set(SnmpRequest[] requests) throws SnmpException {
+        BlockPdu  pdu = new BlockPdu(context);
+
+        pdu.setPduType(BlockPdu.SET);
+        for (int i = 0; i < requests.length; i++) {
+            addOid(pdu, requests[i].getOid(), createAsnValue(requests[i]));
+        }
+        return send(pdu);
+    }
+
+    /**
+     * A synchronous SNMP request dispatch method.
+     *
+     * @param pdu            the blocking synchronous pdu
+     *
+     * @return the SNMP response
+     *
+     * @throws SnmpException if the SNMP request failed
+     */
+    private SnmpResponse send(BlockPdu pdu) throws SnmpException {
+        try {
+            return new SnmpResponse(pdu, pdu.getResponseVariableBindings());
+        } catch (PduException e) {
+            // Timeout errors end up here
+            throw new SnmpException(e.getMessage());
+        } catch (IOException e) {
+            throw new SnmpException(e.getMessage());
+        }
+    }
+
+    /**
+     * Adds an OID to a blocking PDU.
+     *
+     * @param pdu            the blocking PDU
+     * @param oid            the OID to add
+     *
+     * @throws SnmpException if the OID couldn't be added correctly
+     */
+    private void addOid(BlockPdu pdu, String oid) throws SnmpException {
+        try {
+            pdu.addOid(oid);
+        } catch (IllegalArgumentException e) {
+            throw new SnmpException(e.getMessage());
+        }
+    }
+
+    /**
+     * Adds an OID to a blocking PDU.
+     *
+     * @param pdu            the blocking PDU
+     * @param oid            the OID to add
+     * @param value          the associated value
+     *
+     * @throws SnmpException if the OID couldn't be added correctly
+     */
+    private void addOid(BlockPdu pdu, String oid, AsnObject value)
+        throws SnmpException {
+
+        try {
+            pdu.addOid(oid, value);
+        } catch (IllegalArgumentException e) {
+            throw new SnmpException(e.getMessage());
+        }
+    }
+
+    /**
+     * Creates an ASN.1 value object for an SNMP set request. The
+     * value object will be created based on the MibType and string
+     * value in the request. If the value cannot be converted to the
+     * correct data type, an exception is thrown. 
+     *
+     * @param request        the request object
+     *
+     * @return the value object
+     *
+     * @throws SnmpException if the type is unsupported or if the
+     *             value didn't match the type
+     */
+    public AsnObject createAsnValue(SnmpRequest request)
+        throws SnmpException {
+
+        MibType  type = request.getType();
+        String   value = request.getValue();
+
+        if (type.hasTag(MibTypeTag.UNIVERSAL_CATEGORY, 2)) {
+            // INTEGER & Integer32
+            return new AsnInteger(parseInteger(value));
+        } else if (type.hasTag(MibTypeTag.UNIVERSAL_CATEGORY, 4)) {
+            // OCTET STRING
+            return new AsnOctets(value);
+        } else if (type.hasTag(MibTypeTag.UNIVERSAL_CATEGORY, 6)) {
+            // OBJECT IDENTIFIER
+            return new AsnObjectId(value);
+        } else if (type.hasTag(MibTypeTag.APPLICATION_CATEGORY, 0)) {
+            // IPAddress
+            return new AsnOctets(parseInetAddress(value));
+        } else if (type.hasTag(MibTypeTag.APPLICATION_CATEGORY, 1)) {
+            // Counter
+            return new AsnUnsInteger(parseInteger(value));
+        } else if (type.hasTag(MibTypeTag.APPLICATION_CATEGORY, 2)) {
+            // Gauge
+            return new AsnUnsInteger(parseInteger(value));
+        } else if (type.hasTag(MibTypeTag.APPLICATION_CATEGORY, 3)) {
+            // TimeTicks
+            return new AsnUnsInteger(parseInteger(value));
+        } else if (type.hasTag(MibTypeTag.APPLICATION_CATEGORY, 4)) {
+            // Opaque
+            return new AsnOctets(value);
+        } else if (type.hasTag(MibTypeTag.APPLICATION_CATEGORY, 6)) {
+            // Counter64
+            return new AsnUnsInteger64(parseLong(value));
         } else {
-            obj = new AsnOctets(value);
+            throw new SnmpException("Unsupported MIB type: " + type);
         }
-        oneSetPdu.addOid(oid, obj);
-        return sendRequestSet(oneSetPdu);
     }
 
     /**
-     * Send (dispatch) a Get or GetNext request.
+     * Parses an integer string.
      *
-     * @param pdu            a blocking PDU for synchronous SNMP
-     *                       operation
+     * @param value          the value string
      *
-     * @return a string description of the results
+     * @return the integer value
+     *
+     * @throws SnmpException if the value couldn't be parsed
+     *             correctly
      */
-    private String sendRequest(BlockPdu pdu) {
+    private int parseInteger(String value) throws SnmpException {
         try {
-            if (pdu != null) {
-                // Request sent and call blocks till response is received...
-                varbind var = pdu.getResponseVariableBinding();
-                if (var != null) {
-                    AsnObjectId oid = var.getOid();
-                    AsnObject res = var.getValue();
-                    if (res != null) {
-                            // print or display the answer
-                            return (oid.toString() + "--> " + res.toString());
-                    } else {
-                            // Received no answer
-                            return "Timeout";
-                    }
-                }
-            }
-        } catch (PduException exc) {
-            return exc.getMessage();
-        } catch (IOException exc) {
-            // give the user feedback
-            exc.printStackTrace();
-        }
-        return "";
-    }
-
-    /**
-     * Send (dispatch) a Set request.
-     *
-     * @param pdu            the set request pdu
-     *
-     * @return a string description of the results
-     */
-    private String sendRequestSet(Pdu pdu) {
-        try {
-            if (pdu.send()) {
-                // Request sent and call blocks until response is received
-                varbind var[] = pdu.getRequestVarbinds();
-                if (var != null && var.length > 0 && var[0] != null) {
-                    AsnObjectId oid = var[0].getOid();
-                    AsnObject res = var[0].getValue();
-                    if (res != null) {
-                        // print or display the answer
-                        return (oid.toString() + "--> " + res.toString());
-                    } else {
-                        // Received no answer
-                        return "Timeout";
-                    }
-                }
-            }
-        } catch (PduException exc) {
-            return exc.getMessage();
-        } catch (IOException exc) {
-            return exc.getMessage();
-        }
-        return "";
-    }
-
-    /**
-     * Checks if a string contains a number.
-     *
-     * @param str            the string to check
-     *
-     * @return true if the string contains a number, or
-     *         false otherwise
-     */
-    private boolean isNumber(String str) {
-        try {
-            Integer.parseInt(str);
-            return true;
+            return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            return false;
+            throw new SnmpException("Value not numeric: " + value);
+        }
+    }
+
+    /**
+     * Parses a long integer string.
+     *
+     * @param value          the value string
+     *
+     * @return the long integer value
+     *
+     * @throws SnmpException if the value couldn't be parsed
+     *             correctly
+     */
+    private long parseLong(String value) throws SnmpException {
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            throw new SnmpException("Value not numeric: " + value);
+        }
+    }
+
+    /**
+     * Parses an ip address or host string.
+     *
+     * @param value          the value string
+     *
+     * @return the resolved ip address value
+     *
+     * @throws SnmpException if the value couldn't be parsed
+     *             correctly
+     */
+    private InetAddress parseInetAddress(String value)
+        throws SnmpException {
+
+        try {
+            return InetAddress.getByName(value);
+        } catch (java.net.UnknownHostException e) {
+            throw new SnmpException("Invalid hostname or IP address: " +
+                                    value);
         }
     }
 }

@@ -24,6 +24,8 @@ package net.percederberg.mibble.browser;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibValueSymbol;
+import net.percederberg.mibble.snmp.SnmpObjectType;
 import net.percederberg.mibble.snmp.SnmpType;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
@@ -89,6 +91,36 @@ public class MibNode extends DefaultMutableTreeNode {
             return "";
         } else {
             return value.toString();
+        }
+    }
+
+    /**
+     * Returns the MIB value symbol for this node.
+     *
+     * @return the MIB value symbol, or
+     *         null for none
+     */
+    public MibValueSymbol getSymbol() {
+        if (value == null) {
+            return null;
+        } else {
+            return value.getSymbol();
+        }
+    }
+
+    /**
+     * Returns the SNMP object type of the current node symbol.
+     *
+     * @return the SNMP object type of the current node symbol, or
+     *         null if non-existent
+     */
+    public SnmpObjectType getSnmpObjectType() {
+        MibValueSymbol  symbol = getSymbol();
+        
+        if (symbol != null && symbol.getType() instanceof SnmpObjectType) {
+            return (SnmpObjectType) symbol.getType();
+        } else {
+            return null;
         }
     }
 

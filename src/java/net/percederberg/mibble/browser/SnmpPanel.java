@@ -40,6 +40,8 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import net.percederberg.mibble.snmp.SnmpObjectType;
+
 /**
  * The SNMP operations panel.
  *
@@ -61,6 +63,11 @@ public class SnmpPanel extends JPanel {
     private BrowserFrame frame;
 
     /**
+     * The blocked flag.
+     */
+    public boolean blocked = false;
+
+    /**
      * The host IP address field.
      */
     private JTextField ipField = new JTextField("127.0.0.1");
@@ -68,7 +75,7 @@ public class SnmpPanel extends JPanel {
     /**
      * The host port number field.
      */
-    private JTextField portField = new JTextField("161");
+    private JTextField portField = new JTextField();
 
     /**
      * The read community name field.
@@ -83,9 +90,19 @@ public class SnmpPanel extends JPanel {
         new JPasswordField("public");
 
     /**
+     * The OID label.
+     */
+    private JLabel oidLabel = new JLabel("OID:");
+
+    /**
      * The OID field.
      */
     private JTextField oidField = new JTextField();
+
+    /**
+     * The value label.
+     */
+    private JLabel valueLabel = new JLabel("Value:");
 
     /**
      * The value field.
@@ -119,7 +136,7 @@ public class SnmpPanel extends JPanel {
 
     /**
      * Creates a new SNMP panel.
-     * 
+     *
      * @param frame          the frame containing this panel
      */
     public SnmpPanel(BrowserFrame frame) {
@@ -180,6 +197,7 @@ public class SnmpPanel extends JPanel {
         c.fill = GridBagConstraints.BOTH;
         c.insets = DEFAULT_INSETS;
         add(label, c);
+        portField.setText(String.valueOf(SnmpManager.DEFAULT_PORT));
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 2;
@@ -206,13 +224,12 @@ public class SnmpPanel extends JPanel {
         add(writeCommunityField, c);
 
         // Add OID field
-        label = new JLabel("OID:");
-        label.setLabelFor(oidField);
+        oidLabel.setLabelFor(oidField);
         c = new GridBagConstraints();
         c.gridy = 3;
         c.fill = GridBagConstraints.BOTH;
         c.insets = DEFAULT_INSETS;
-        add(label, c);
+        add(oidLabel, c);
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 3;
@@ -223,13 +240,12 @@ public class SnmpPanel extends JPanel {
         add(oidField, c);
 
         // Add value field
-        label = new JLabel("Value:");
-        label.setLabelFor(valueField);
+        valueLabel.setLabelFor(valueField);
         c = new GridBagConstraints();
         c.gridy = 4;
         c.fill = GridBagConstraints.BOTH;
         c.insets = DEFAULT_INSETS;
-        add(label, c);
+        add(valueLabel, c);
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 4;
@@ -249,6 +265,7 @@ public class SnmpPanel extends JPanel {
         add(initializeButtons(), c);
 
         // Add results area
+        resultsArea.setEditable(false);
         c = new GridBagConstraints();
         c.gridy = 6;
         c.gridwidth = 4;
@@ -260,19 +277,17 @@ public class SnmpPanel extends JPanel {
         // Add change listeners
         l = new DocumentListener() {
             public void changedUpdate(DocumentEvent e) {
-                updateButtonStatus();
+                updateStatus();
             }
             public void insertUpdate(DocumentEvent e) {
-                updateButtonStatus();
+                updateStatus();
             }
             public void removeUpdate(DocumentEvent e) {
-                updateButtonStatus();
+                updateStatus();
             }
         };
         ipField.getDocument().addDocumentListener(l);
         portField.getDocument().addDocumentListener(l);
-        oidField.getDocument().addDocumentListener(l);
-        valueField.getDocument().addDocumentListener(l);
     }
 
     /**
@@ -312,29 +327,61 @@ public class SnmpPanel extends JPanel {
             }
         });
         panel.add(clearButton);
-        updateButtonStatus();
+        updateStatus();
         return panel;
     }
 
     /**
-     * Enables or disables the SNMP operations. This method can be
-     * used when performing operations with a long delay to
-     * inactivate the user interface.
+     * Blocks or unblocks GUI operations in this panel. This method
+     * is used when performing long-running operations to inactivate
+     * the user interface.
      *
-     * @param enabled        the enabled flag
+     * @param blocked        the blocked flag
      */
-    public void setEnabled(boolean enabled) {
-        super.setEnabled(enabled);
-        updateButtonStatus();
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
+        updateStatus();
     }
 
     /**
      * Sets the OID field text.
      *
-     * @param text           the new OID field text
+     * @param text           the new OID text
      */
     public void setOidText(String text) {
         oidField.setText(text);
+    }
+
+    /**
+     * Updates various panel conponents, such as text fields and
+     * buttons. This method should be called when a new MIB node is
+     * selected or when the UI has been blocked or unblocked.
+     */
+    public void updateStatus() {
+        MibNode         node = frame.getSelectedNode();
+        SnmpObjectType  type = null;
+        boolean         allowOperation;
+        boolean         allowGet;
+        boolean         allowSet;
+
+        if (node != null) {
+            type = node.getSnmpObjectType();
+        }
+        allowOperation = !blocked
+                      && type != null
+                      && ipField.getText().length() > 0
+                      && portField.getText().length() > 0;
+        allowGet = allowOperation
+                && type.getAccess().canRead();
+        allowSet = allowOperation
+                && type.getAccess().canWrite();
+        oidLabel.setEnabled(allowGet || allowSet);
+        oidField.setEnabled(allowGet || allowSet);
+        valueLabel.setEnabled(allowSet);
+        valueField.setEnabled(allowSet);
+        getButton.setEnabled(allowGet);
+        getNextButton.setEnabled(allowGet);
+        setButton.setEnabled(allowSet);
     }
 
     /**
@@ -345,27 +392,9 @@ public class SnmpPanel extends JPanel {
      *
      * @param text           the status text (or null)
      */
-    public void setOperationStatus(String text) {
-        frame.setEnabled(text == null);
+    protected void setOperationStatus(String text) {
+        frame.setBlocked(text != null);
         frame.setStatus(text);
-    }
-
-    /**
-     * Enables or disables the buttons. This method can be used while
-     * selecting MIB elements that allow or disallows operations.
-     */
-    protected void updateButtonStatus() {
-        boolean  allowGet;
-        boolean  allowSet;
-
-        allowGet = ipField.getText().length() > 0
-                && portField.getText().length() > 0
-                && oidField.getText().length() > 0
-                && isEnabled();
-        allowSet = allowGet && valueField.getText().length() > 0;
-        getButton.setEnabled(allowGet);
-        getNextButton.setEnabled(allowGet);
-        setButton.setEnabled(allowSet);
     }
 
     /**
@@ -397,7 +426,7 @@ public class SnmpPanel extends JPanel {
         Operation  operation = createOperation(false);
 
         if (operation != null) {
-            operation.startSet(valueField.getText());
+            operation.startSet();
         }
     }
 
@@ -427,12 +456,15 @@ public class SnmpPanel extends JPanel {
      *         null if none could be created
      */
     private Operation createOperation(boolean read) {
-        String       host = ipField.getText();
-        int          port;
-        String       community;
-        String       oid = oidField.getText();
-        SnmpManager  manager;
-        String       message;
+        String          host = ipField.getText();
+        int             port;
+        String          community;
+        String          oid = oidField.getText();
+        SnmpManager     manager;
+        SnmpRequest     request;
+        SnmpObjectType  type;
+        String          value;
+        String          message;
 
         // Validate port number
         try {
@@ -470,8 +502,16 @@ public class SnmpPanel extends JPanel {
             return null;
         }
 
-        // Return operation
-        return new Operation(manager, oid);
+        // Create request
+        if (read) {
+            request = new SnmpRequest(oid);
+        } else {
+            type = frame.getSelectedNode().getSnmpObjectType();
+            value = valueField.getText();
+            request = new SnmpRequest(oid, type.getSyntax(), value);
+        }
+
+        return new Operation(manager, request);
     }
 
 
@@ -488,14 +528,9 @@ public class SnmpPanel extends JPanel {
         private SnmpManager manager;
 
         /**
-         * The object identifier.
+         * The SNMP request object.
          */
-        private String oid;
-
-        /**
-         * The optional value to set.
-         */
-        private String value;
+        private SnmpRequest request;
 
         /**
          * The operation to perform.
@@ -506,11 +541,11 @@ public class SnmpPanel extends JPanel {
          * Creates a new background SNMP operation.
          *
          * @param manager        the SNMP manager to use
-         * @param oid            the object identifier to use
+         * @param request        the request OID, type and value
          */
-        public Operation(SnmpManager manager, String oid) {
+        public Operation(SnmpManager manager, SnmpRequest request) {
             this.manager = manager;
-            this.oid = oid;
+            this.request = request;
         }
 
         /**
@@ -531,11 +566,8 @@ public class SnmpPanel extends JPanel {
 
         /**
          * Starts a SET operation in a background thread.
-         *
-         * @param value          the value to set
          */
-        public void startSet(String value) {
-            this.value = value;
+        public void startSet() {
             this.operation = "SET";
             start();
         }
@@ -554,21 +586,30 @@ public class SnmpPanel extends JPanel {
          * the thread created through a call to start().
          */
         public void run() {
-            setOperationStatus("Performing SNMP " + operation +
-                               " operation...");
-            if (operation.equals("GET")) {
-                appendResults("Get: ");
-                appendResults(manager.sendGetRequest(oid));
-                appendResults("\n");
-            } else if (operation.equals("GET NEXT")) {
-                appendResults("Get Next: ");
-                appendResults(manager.sendGetNextRequest(oid));
-                appendResults("\n");
-            } else if (operation.equals("SET")) {
-                appendResults("Set: ");
-                appendResults(manager.sendSetRequest(oid, value));
+            SnmpResponse  response = null;
+            String        message;
+
+            message = "Performing " + operation + " on " +
+                      request.getOid() + "...";
+            setOperationStatus(message);
+            appendResults(message);
+            try {
+                if (operation.equals("GET")) {
+                    response = manager.get(request.getOid());
+                } else if (operation.equals("GET NEXT")) {
+                    response = manager.getNext(request.getOid());
+                } else if (operation.equals("SET")) {
+                    response = manager.set(request);
+                }
+                appendResults(" done.\n");
+                appendResults(response.getOidsAndValues());
+            } catch (SnmpException e) {
+                appendResults(" failed.\n");
+                appendResults("Error: ");
+                appendResults(e.getMessage());
                 appendResults("\n");
             }
+            manager.destroy();
             setOperationStatus(null);
         }
     }

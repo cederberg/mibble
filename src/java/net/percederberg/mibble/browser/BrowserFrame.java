@@ -153,6 +153,7 @@ public class BrowserFrame extends JFrame {
         verticalSplitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         verticalSplitPane.setDividerLocation((int) (bounds.height * 0.40));
         verticalSplitPane.setOneTouchExpandable(true);
+        descriptionArea.setEditable(false);
         verticalSplitPane.setLeftComponent(new JScrollPane(descriptionArea));
         snmpPanel = new SnmpPanel(this);
         verticalSplitPane.setRightComponent(snmpPanel);
@@ -212,18 +213,17 @@ public class BrowserFrame extends JFrame {
     }
 
     /**
-     * Enables or disables the frame operations. This method can be
-     * used when performing operations with a long delay to
-     * inactivate the user interface.
+     * Blocks or unblocks GUI operations in this frame. This method
+     * is used when performing long-running operations to inactivate
+     * the user interface.
      *
-     * @param enabled        the enabled flag
+     * @param blocked        the blocked flag
      */
-    public void setEnabled(boolean enabled) {
-        super.setEnabled(enabled);
+    public void setBlocked(boolean blocked) {
         for (int i = 0; i < menuBar.getMenuCount(); i++) {
-            menuBar.getMenu(i).setEnabled(enabled);
+            menuBar.getMenu(i).setEnabled(!blocked);
         }
-        snmpPanel.setEnabled(enabled);
+        snmpPanel.setBlocked(blocked);
     }
 
     /**
@@ -279,10 +279,8 @@ public class BrowserFrame extends JFrame {
      * Unloads the MIB file from the currently selected symbol.
      */
     protected void unloadMib() {
-        JTree    tree = MibTreeBuilder.getInstance().getTree();
-        MibNode  node;
+        MibNode  node = getSelectedNode();
 
-        node = (MibNode) tree.getLastSelectedPathComponent();
         if (node == null) {
             return;
         }
@@ -297,10 +295,18 @@ public class BrowserFrame extends JFrame {
      * Refreshes the MIB tree.
      */
     public void refreshTree() {
-        JTree  tree = MibTreeBuilder.getInstance().getTree();
+        ((DefaultTreeModel) mibTree.getModel()).reload();
+        mibTree.repaint();
+    }
 
-        ((DefaultTreeModel) tree.getModel()).reload();
-        tree.repaint();
+    /**
+     * Returns the currently selected MIB node.
+     *
+     * @return the currently selected MIB node, or
+     *         null for none
+     */
+    public MibNode getSelectedNode() {
+        return (MibNode) mibTree.getLastSelectedPathComponent();
     }
 
     /**
@@ -338,15 +344,17 @@ public class BrowserFrame extends JFrame {
      * Updates the tree selection.
      */
     protected void updateTreeSelection() {
-        MibNode  node;
+        MibNode  node = getSelectedNode();
 
-        node = (MibNode) mibTree.getLastSelectedPathComponent();
         if (node == null) {
-            return;
+            descriptionArea.setText("");
+            snmpPanel.setOidText("");
+        } else {
+            descriptionArea.setText(node.getDescription());
+            descriptionArea.setCaretPosition(0);
+            snmpPanel.setOidText(node.getOid());
         }
-        descriptionArea.setText(node.getDescription());
-        descriptionArea.setCaretPosition(0);
-        snmpPanel.setOidText(node.getOid());
+        snmpPanel.updateStatus();
     }
 
 
@@ -388,12 +396,12 @@ public class BrowserFrame extends JFrame {
          * the thread created through a call to start().
          */
         public void run() {
-            setEnabled(false);
+            setBlocked(true);
             for (int i = 0; i < files.length; i++) {
                 loadMib(files[i].toString());
             }
             refreshTree();
-            setEnabled(true);
+            setBlocked(false);
         }
     }
 }

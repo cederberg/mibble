@@ -90,15 +90,17 @@ public class MibbleBrowser {
             printInternalError(e);
         }
         frame = new BrowserFrame(browser);
-        frame.setEnabled(false);
         frame.setVisible(true);
 
         // Load default MIBs
-        for (int i = 0; i < args.length; i++) {
-            frame.loadMib(args[i]);
+        if (args.length > 0) {
+            frame.setBlocked(true);
+            for (int i = 0; i < args.length; i++) {
+                frame.loadMib(args[i]);
+            }
+            frame.refreshTree();
+            frame.setBlocked(false);
         }
-        frame.refreshTree();
-        frame.setEnabled(true);
     }
 
     /**
