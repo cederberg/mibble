@@ -36,7 +36,7 @@ import net.percederberg.grammatica.parser.ParserLogException;
  * from loading a MIB file and all imports not previously loaded.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.6
  * @since    2.0
  */
 public class MibLoaderLog {
@@ -399,7 +399,11 @@ public class MibLoaderLog {
          */
         public LogEntry(int type, FileLocation location, String message) {
             this.type = type;
-            this.location = location;
+            if (location == null || location.getFile() == null) {
+                this.location = new FileLocation(new File("<unknown file>"));
+            } else {
+                this.location = location;
+            }
             this.message = message;
         }
 
