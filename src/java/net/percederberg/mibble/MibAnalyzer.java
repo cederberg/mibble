@@ -459,8 +459,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
         // Create type symbol
         type = (MibType) getValue(getChildAt(node, 2), 0);
-        symbol = new MibTypeSymbol(getLocation(node), name, type);
-        mib.addSymbol(symbol);
+        symbol = new MibTypeSymbol(getLocation(node), mib, name, type);
 
         return null;
     }
@@ -1009,7 +1008,8 @@ class MibAnalyzer extends Asn1Analyzer {
         
         name = getStringValue(getChildAt(node, 0), 0);
         value = (MibValue) getValue(getChildAt(node, 2), 0);
-        symbol = new MibValueSymbol(getLocation(node), 
+        symbol = new MibValueSymbol(getLocation(node),
+                                    null, 
                                     name, 
                                     null, 
                                     value);
@@ -1316,8 +1316,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // Create value symbol
         type = (MibType) getValue(getChildAt(node, 1), 0);
         value = (MibValue) getValue(getChildAt(node, 3), 0);
-        symbol = new MibValueSymbol(getLocation(node), name, type, value);
-        mib.addSymbol(symbol);
+        symbol = new MibValueSymbol(getLocation(node), mib, name, type, value);
         return null;
     }
 

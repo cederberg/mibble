@@ -52,14 +52,18 @@ public class MibTypeSymbol extends MibSymbol {
      * Creates a new type symbol
      * 
      * @param location       the symbol location
+     * @param mib            the symbol MIB file
      * @param name           the symbol name
      * @param type           the symbol type
+     * 
+     * @since 2.2
      */
-    public MibTypeSymbol(FileLocation location, 
-                         String name, 
-                         MibType type) {
+    MibTypeSymbol(FileLocation location,
+                  Mib mib, 
+                  String name, 
+                  MibType type) {
 
-        super(location, name);
+        super(location, mib, name);
         this.type = type;
     }
 

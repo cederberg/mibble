@@ -39,7 +39,7 @@ package net.percederberg.mibble;
  * unique within the MIB file. All symbols also have a data type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
 public abstract class MibSymbol {
@@ -50,19 +50,32 @@ public abstract class MibSymbol {
     private FileLocation location;
 
     /**
+     * The MIB containing this symbol.
+     */
+    private Mib mib;
+
+    /**
      * The symbol name.
      */
     private String name;
     
     /**
-     * Creates a new symbol with the specified name.
+     * Creates a new symbol with the specified name. The symbol will
+     * also be added to the MIB file.
      * 
-     * @param name           the symbol name
      * @param location       the symbol location
+     * @param mib            the symbol MIB file
+     * @param name           the symbol name
+     * 
+     * @since 2.2
      */
-    public MibSymbol(FileLocation location, String name) {
+    MibSymbol(FileLocation location, Mib mib, String name) {
         this.location = location;
+        this.mib = mib;
         this.name = name;
+        if (mib != null) {
+            mib.addSymbol(this);
+        }
     }
 
     /**
@@ -86,6 +99,18 @@ public abstract class MibSymbol {
      */
     public FileLocation getLocation() {
         return location;
+    }
+
+    /**
+     * Returns the symbol MIB file. This is the MIB file where the
+     * symbol is defined. 
+     * 
+     * @return the symbol MIB file
+     * 
+     * @since 2.2
+     */
+    public Mib getMib() {
+        return mib;
     }
 
     /**

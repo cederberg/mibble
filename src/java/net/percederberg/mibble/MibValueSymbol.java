@@ -60,16 +60,20 @@ public class MibValueSymbol extends MibSymbol {
      * Creates a new value symbol
      * 
      * @param location       the symbol location
+     * @param mib            the symbol MIB file
      * @param name           the symbol name
      * @param type           the symbol type
      * @param value          the symbol value
+     * 
+     * @since 2.2
      */
-    public MibValueSymbol(FileLocation location, 
-                          String name, 
-                          MibType type, 
-                          MibValue value) {
+    MibValueSymbol(FileLocation location,
+                   Mib mib, 
+                   String name, 
+                   MibType type, 
+                   MibValue value) {
 
-        super(location, name);
+        super(location, mib, name);
         this.type = type;
         this.value = value;
     }

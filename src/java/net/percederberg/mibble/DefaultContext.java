@@ -42,7 +42,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * A default MIB context.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
 class DefaultContext implements MibContext {
@@ -55,7 +55,7 @@ class DefaultContext implements MibContext {
     /**
      * Creates a new default context.
      */
-    public DefaultContext() {
+    DefaultContext() {
         initialize();
     }
 
@@ -68,6 +68,7 @@ class DefaultContext implements MibContext {
 
         oid = new ObjectIdentifierValue("iso", 1);
         symbol = new MibValueSymbol(new FileLocation(null, -1, -1),
+                                    null,
                                     "iso",
                                     new ObjectIdentifierType(),
                                     oid);
