@@ -201,7 +201,7 @@ public class MibbleBrowser extends JFrame {
 
         mibDescriptionPanel.setLayout(new java.awt.BorderLayout());
 
-        mibDescriptionScrollPane.setMinimumSize(new java.awt.Dimension(100, 300));
+        mibDescriptionScrollPane.setMinimumSize(new java.awt.Dimension(100, 200));
         mibDescriptionScrollPane.setPreferredSize(new java.awt.Dimension(100, 300));
         mibDescriptionScrollPane.setViewportView(mibDescriptionTextArea);
 
@@ -413,7 +413,7 @@ public class MibbleBrowser extends JFrame {
         pack();
     }//GEN-END:initComponents
 
-    void unloadMibMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_unloadMibMenuItemActionPerformed
+    private void unloadMibMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_unloadMibMenuItemActionPerformed
         String selectedMibName = mibDescriptionTextArea.getText();
 
         // Check if it is a valid MIB name
@@ -461,7 +461,8 @@ public class MibbleBrowser extends JFrame {
         String         oidToSet = this.oidTextField.getText();
         String         setValue = this.setTextField.getText();
 
-        operation.sendSetRequest(oidToSet, setValue);
+        resultTextArea.append("\nSet: " +
+                              operation.sendSetRequest(oidToSet, setValue));
     }//GEN-LAST:event_setButtonActionPerformed
 
     void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed

@@ -33,6 +33,7 @@
 
 package net.percederberg.mibble.browser;
 
+import java.io.IOException;
 import javax.swing.JTextArea;
 
 import uk.co.westhawk.snmp.pdu.BlockPdu;
@@ -95,7 +96,7 @@ public class SnmpOperation {
                                           port,
                                           SnmpContextFace.STANDARD_SOCKET);
             context.setCommunity(comm);
-        } catch (java.io.IOException exc) {
+        } catch (IOException exc) {
             // give the user feedback
             exc.printStackTrace();
         }
@@ -136,8 +137,10 @@ public class SnmpOperation {
      *
      * @param oid            the oid to set
      * @param value          the value for the set operation
+     *
+     * @return a string description of the results
      */
-    public void sendSetRequest(String oid, String value) {
+    public String sendSetRequest(String oid, String value) {
         OneSetPdu oneSetPdu = new OneSetPdu(context);
         AsnObject obj;
 
@@ -147,7 +150,7 @@ public class SnmpOperation {
             obj = new AsnOctets(value);
         }
         oneSetPdu.addOid(oid, obj);
-        sendRequestSet(oneSetPdu);
+        return sendRequestSet(oneSetPdu);
     }
 
     /**
@@ -171,17 +174,13 @@ public class SnmpOperation {
                             return (oid.toString() + "--> " + res.toString());
                     } else {
                             // Received no answer
-                            return "ERR";
+                            return "Timeout";
                     }
                 }
             }
         } catch (PduException exc) {
-            // comes here when timeout occurs.
-            if (exc.getMessage().equals("No such name error")) {
-                return "No such name error";
-            }
-            return "ERR";
-        } catch (java.io.IOException exc) {
+            return exc.getMessage();
+        } catch (IOException exc) {
             // give the user feedback
             exc.printStackTrace();
         }
@@ -192,15 +191,32 @@ public class SnmpOperation {
      * Send (dispatch) a Set request.
      *
      * @param pdu            the set request pdu
+     *
+     * @return a string description of the results
      */
-    private void sendRequestSet(Pdu pdu) {
+    private String sendRequestSet(Pdu pdu) {
         try {
-            pdu.send();
+            if (pdu.send()) {
+                // Request sent and call blocks until response is received
+                varbind var[] = pdu.getRequestVarbinds();
+                if (var != null && var.length > 0 && var[0] != null) {
+                    AsnObjectId oid = var[0].getOid();
+                    AsnObject res = var[0].getValue();
+                    if (res != null) {
+                        // print or display the answer
+                        return (oid.toString() + "--> " + res.toString());
+                    } else {
+                        // Received no answer
+                        return "Timeout";
+                    }
+                }
+            }
         } catch (PduException exc) {
-            exc.printStackTrace();
-        } catch (java.io.IOException exc) {
-            exc.printStackTrace();
+            return exc.getMessage();
+        } catch (IOException exc) {
+            return exc.getMessage();
         }
+        return "";
     }
 
     /**
@@ -241,26 +257,17 @@ public class SnmpOperation {
                                 pdu = new BlockPdu(context);
                                 pdu.setPduType(BlockPdu.GETNEXT);
                                 pdu.addOid(oidNext.toString());
-                            } else {
-                                return ("$$1");
                             }
-                        } else {
-                            return ("$$2");
                         }
                     }
-                } else {
-                     return ("$$3");
                 }
             } catch (PduException exc1) {
                 // comes here when timeout occurs.
-                exc1.printStackTrace();
-                break;
-            } catch (java.io.IOException exc) {
-                exc.printStackTrace();
-                break;
+                return exc1.getMessage();
+            } catch (IOException exc) {
+                return exc.getMessage();
             }
         }
-        return ("END OF MIB");
     }
 
     /**
