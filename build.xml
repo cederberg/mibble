@@ -20,20 +20,56 @@
   Copyright (c) 2004 Per Cederberg. All rights reserved.
 -->
 
-<project name="mibble" default="package" basedir=".">
+<project name="mibble" default="all" basedir=".">
+
+<!-- 
+
+  BUILD INSTRUCTIONS
+
+  This is an Ant build file for packaging Mibble. You can use it to
+  package the different distributions of Mibble. Note that this build
+  file will overwrite content in the current directory as a result of
+  the build process.
+
+  To run Ant, choose one (or more) of the targets under the TOP-LEVEL
+  TARGETS heading below. If you run Ant without any target specified
+  it will build and package all distributions.
+
+  The following build properties are available (specify on the
+  command-line with -Dname=value):
+
+    build.version
+        The build version number. Defaults to todays date.
+
+    build.type
+        The build type name. Set to "all" to run the complete build
+        with tests. By default this value is set to "minimal" which
+        avoids testing.
+
+-->
+
 
 <!-- INITIALIZATION -->
   <target name="init">
     <tstamp />
     <property name="build.version" value="${DSTAMP}" />
+    <property name="build.type" value="minimal" />
     <ant antfile="compile.xml" target="compile-codegen" />
   </target>
 
 
-<!-- PACKAGING TARGETS -->
-  <target name="package"
-          depends="init,package-clean,package-commercial,package-public" />
+<!-- TOP-LEVEL TARGETS -->
+  <target name="all"
+          depends="commercial,public" />
 
+  <target name="commercial"
+          depends="init,package-clean,package-commercial" />
+
+  <target name="public"
+          depends="init,package-clean,package-public" />
+
+
+<!-- PACKAGING TARGETS -->
   <target name="package-clean">
     <delete>
       <fileset dir="."
@@ -57,7 +93,7 @@
         <exclude name="src/java/net/percederberg/mibble/browser/**" />
       </fileset>
     </copy>
-    <ant antfile="compile.xml" dir="build" target="minimal">
+    <ant antfile="compile.xml" dir="build" target="${build.type}">
       <property name="build.name" value="mibble-commercial" />
     </ant>
     <tar tarfile="mibble-commercial-${build.version}.tar.gz"
@@ -87,7 +123,7 @@
     <copy file="LICENSE-GPL.txt"
           tofile="LICENSE.txt"
           overwrite="true" />
-    <ant antfile="compile.xml" target="minimal">
+    <ant antfile="compile.xml" target="${build.type}">
       <property name="build.name" value="mibble" />
     </ant>
     <tar tarfile="mibble-${build.version}.tar.gz"
