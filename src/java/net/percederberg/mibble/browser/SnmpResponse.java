@@ -21,6 +21,7 @@
 
 package net.percederberg.mibble.browser;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -53,9 +54,14 @@ public class SnmpResponse {
     public int errorIndex;
 
     /**
-     * The map of all responses, indexed by OID.
+     * The list of response OIDs.
      */
-    private HashMap responses = new HashMap();
+    public ArrayList oids = new ArrayList();
+
+    /**
+     * The map of all value, indexed by OID.
+     */
+    private HashMap values = new HashMap();
 
     /**
      * Creates a new SNMP response container.
@@ -69,10 +75,59 @@ public class SnmpResponse {
         errorIndex = pdu.getErrorIndex();
         if (variables != null) {
             for (int i = 0; i < variables.length; i++) {
-                responses.put(variables[i].getOid().toString(),
-                              variables[i].getValue().toString());
+                oids.add(variables[i].getOid().toString());
+                values.put(variables[i].getOid().toString(),
+                           variables[i].getValue().toString());
             }
         }
+    }
+
+    /**
+     * Returns the number of OID and value pairs.
+     *
+     * @return the number of OID and value pairs
+     */
+    public int getCount() {
+        return oids.size();
+    }
+
+    /**
+     * Returns the OID at a specified position.
+     *
+     * @param index          the OID index, 0 <= index < getCount()
+     *
+     * @return the OID string
+     *
+     * @see #getCount()
+     */
+    public String getOid(int index) {
+        if (index < 0 || index >= oids.size()) {
+            return null;
+        } else {
+            return oids.get(index).toString();
+        }
+    }
+
+    /**
+     * Returns an iterator with all the OIDs.
+     *
+     * @return an iterator with all the OIDs
+     */
+    public Iterator getOids() {
+        return oids.iterator();
+    }
+
+    /**
+     * Returns the value at a specified position.
+     *
+     * @param index          the value index, 0 <= index < getCount()
+     *
+     * @return the value string
+     *
+     * @see #getCount()
+     */
+    public String getValue(int index) {
+        return getValue(getOid(index));
     }
 
     /**
@@ -84,7 +139,7 @@ public class SnmpResponse {
      *         null if not found
      */
     public String getValue(String oid) {
-        return (String) responses.get(oid);
+        return (String) values.get(oid);
     }
 
     /**
@@ -94,12 +149,10 @@ public class SnmpResponse {
      */
     public String getOidsAndValues() {
         StringBuffer  buffer = new StringBuffer();
-        Iterator      iter;
         String        oid;
 
-        iter = responses.keySet().iterator();
-        while (iter.hasNext()) {
-            oid = iter.next().toString();
+        for (int i = 0; i < oids.size(); i++) {
+            oid = oids.get(i).toString();
             buffer.append(oid);
             buffer.append(": ");
             buffer.append(getValue(oid));

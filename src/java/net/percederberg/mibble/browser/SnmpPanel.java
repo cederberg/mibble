@@ -41,7 +41,11 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibTypeTag;
+import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.snmp.SnmpObjectType;
+import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * The SNMP operations panel.
@@ -699,6 +703,35 @@ public class SnmpPanel extends JPanel {
     }
 
     /**
+     * Updates the OID field based on the node selected in the frame
+     * tree.
+     */
+    public void updateOidText() {
+        MibNode                node = frame.getSelectedNode();
+        MibValueSymbol         symbol;
+        MibType                type;
+        ObjectIdentifierValue  oid;
+
+        if (node == null) {
+            setOidText("");
+        } else if (node.getSnmpObjectType() == null) {
+            setOidText(node.getOid());
+        } else {
+            symbol = node.getSymbol();
+            type = ((SnmpObjectType) symbol.getType()).getSyntax();
+            oid = (ObjectIdentifierValue) symbol.getValue();
+            symbol = oid.getParent().getSymbol();
+            if (type.hasTag(MibTypeTag.UNIVERSAL_CATEGORY, 16)
+             || symbol.getType() instanceof SnmpObjectType) {
+
+                setOidText(node.getOid());
+            } else {
+                setOidText(node.getOid() + ".0");
+            }
+        }
+    }
+
+    /**
      * Updates various panel components, such as text fields and
      * buttons. This method should be called when a new MIB node is
      * selected or when the UI has been blocked or unblocked.
@@ -708,25 +741,29 @@ public class SnmpPanel extends JPanel {
         SnmpObjectType  type = null;
         boolean         allowOperation;
         boolean         allowGet;
+        boolean         allowGetNext;
         boolean         allowSet;
 
         if (node != null) {
             type = node.getSnmpObjectType();
         }
         allowOperation = !blocked
-                      && type != null
                       && hostField.getText().length() > 0
                       && portField.getText().length() > 0;
         allowGet = allowOperation
+                && type != null
                 && type.getAccess().canRead();
+        allowGetNext = allowOperation
+                    && oidField.getText().length() > 0;
         allowSet = allowOperation
+                && type != null
                 && type.getAccess().canWrite();
-        oidLabel.setEnabled(allowGet || allowSet);
-        oidField.setEnabled(allowGet || allowSet);
+        oidLabel.setEnabled(allowOperation);
+        oidField.setEnabled(allowOperation);
         valueLabel.setEnabled(allowSet);
         valueField.setEnabled(allowSet);
         getButton.setEnabled(allowGet);
-        getNextButton.setEnabled(allowGet);
+        getNextButton.setEnabled(allowGetNext);
         setButton.setEnabled(allowSet);
     }
 
@@ -817,6 +854,7 @@ public class SnmpPanel extends JPanel {
      */
     protected void appendResults(String text) {
         resultsArea.append(text);
+        resultsArea.setCaretPosition(resultsArea.getText().length());
     }
 
     /**
@@ -999,7 +1037,7 @@ public class SnmpPanel extends JPanel {
             message = "Performing " + operation + " on " +
                       request.getOid() + "...";
             setOperationStatus(message);
-            appendResults(message);
+            appendResults(operation + ": ");
             try {
                 if (operation.equals("GET")) {
                     response = manager.get(request.getOid());
@@ -1008,10 +1046,10 @@ public class SnmpPanel extends JPanel {
                 } else if (operation.equals("SET")) {
                     response = manager.set(request);
                 }
-                appendResults(" done.\n");
                 appendResults(response.getOidsAndValues());
+                // TODO: select returned OID in MIB tree
+                setOidText(response.getOid(0));
             } catch (SnmpException e) {
-                appendResults(" failed.\n");
                 appendResults("Error: ");
                 appendResults(e.getMessage());
                 appendResults("\n");

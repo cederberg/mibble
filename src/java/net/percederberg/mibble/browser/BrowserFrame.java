@@ -411,12 +411,11 @@ public class BrowserFrame extends JFrame {
 
         if (node == null) {
             descriptionArea.setText("");
-            snmpPanel.setOidText("");
         } else {
             descriptionArea.setText(node.getDescription());
             descriptionArea.setCaretPosition(0);
-            snmpPanel.setOidText(node.getOid());
         }
+        snmpPanel.updateOidText();
         snmpPanel.updateStatus();
     }
 
