@@ -16,6 +16,13 @@ then
     export MIBBLE_HOME
 fi
 
+# Check JAVA_HOME variable
+if [ -z "$JAVA_HOME" ]
+then
+    echo "Error: JAVA_HOME environment variable not set"
+    exit 1
+fi
+
 # Adjust CLASSPATH variable
 if [ ! -x "$MIBBLE_HOME/lib" ]
 then
@@ -36,4 +43,6 @@ export CLASSPATH
 # Display variables
 echo "Using environment variables:"
 echo "  MIBBLE_HOME = $MIBBLE_HOME"
+echo "  JAVA_HOME   = $JAVA_HOME"
 echo "  CLASSPATH   = $CLASSPATH"
+echo
