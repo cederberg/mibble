@@ -47,7 +47,6 @@ import javax.swing.JOptionPane;
 import javax.swing.tree.DefaultTreeModel;
 
 import net.percederberg.mibble.browser.AboutDialog;
-import net.percederberg.mibble.browser.MibNode;
 import net.percederberg.mibble.browser.MibTreeBuilder;
 import net.percederberg.mibble.browser.SnmpOperation;
 import net.percederberg.mibble.browser.TreeListener;
@@ -416,7 +415,7 @@ public class MibbleBrowser extends JFrame {
         // Check if it is a valid MIB name
         for (int i = 0; i < loadedMibsCache.size(); i++) {
             if (selectedMibName.equals(loadedMibsCache.get(i))) {
-                if (MibTreeBuilder.unloadMib(selectedMibName)) {
+                if (MibTreeBuilder.getInstance().unloadMib(selectedMibName)) {
                     // Update the cache
                     loadedMibsCache.remove(i);
                 }
@@ -496,7 +495,6 @@ public class MibbleBrowser extends JFrame {
                 System.err.println(e.getMessage());
                 continue;
             }
-            MibNode loadedMibRootNode = new MibNode(mib.getName(), null);
             // Check if MIB is not already loaded
             for (int j = 0; j < loadedMibsCache.size(); j++) {
                 if (mib.getName().equals((String)loadedMibsCache.get(j))) {
@@ -513,7 +511,7 @@ public class MibbleBrowser extends JFrame {
             }
             
             // Create MIB Sub Tree.
-            mb.buildSubTree(mib, loadedMibRootNode);
+            mb.addMib(mib);
             mb.mibTree.addTreeSelectionListener( 
                                 new TreeListener(mb.mibTree, 
                                                  oidTextField, 

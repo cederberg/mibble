@@ -73,11 +73,6 @@ public class MibTreeBuilder {
     public static JTree mibTree = null;
 
     /**
-     * Temporarily used MIB tree component. 
-     */
-    private JTree subTree = null;
-
-    /**
      * Returns the single instance of this class.
      *
      * @return the one and only instance 
@@ -122,95 +117,103 @@ public class MibTreeBuilder {
     }
 
     /**
-     * Code for extracting the symbol names and building the mib 
-     * sub-tree corresponding to the current mib.
+     * Adds a MIB to the MIB tree.
      *
-     * @param mib            the MIB
-     * @param subTreeRoot    the root to start the tree from
+     * @param mib            the MIB to add
      */
-    public void buildSubTree(Mib mib, MibNode subTreeRoot) {
+    public void addMib(Mib mib) {
         Iterator   iter = mib.getAllSymbols().iterator();
         MibSymbol  symbol;
+        MibNode    root;
+        MibNode    node;
+        JTree      valueTree;
 
-        // Make a new sub tree
-        subTree = new JTree(subTreeRoot);
-
-        // Add all symbols to sub tree
+        // Create value sub tree
+        node = new MibNode("VALUES", null);
+        valueTree = new JTree(node);
         while (iter.hasNext()) {
             symbol = (MibSymbol) iter.next();
-            addSymbol(symbol);
+            addSymbol(valueTree.getModel(), symbol);
         }
         
-        // Merge sub tree to mib tree
-        MibNode mibTreeRoot = (MibNode) mibTree.getModel().getRoot();
-        DefaultTreeModel model = (DefaultTreeModel) mibTree.getModel();
-        model.insertNodeInto(subTreeRoot, mibTreeRoot, model.getChildCount(mibTreeRoot));        
+        // Add sub tree root to MIB tree
+        root = (MibNode) mibTree.getModel().getRoot();
+        node = new MibNode(mib.getName(), null);
+        node.add((MibNode) valueTree.getModel().getRoot());
+        root.add(node);
     }
 
     /**
-     * Adds a MIB symbol to current subtree.
+     * Adds a MIB symbol to a MIB tree model.
      *
+     * @param model          the MIB tree model
      * @param symbol         the MIB symbol
      *
      * @see #addToTree
      */
-    private void addSymbol(MibSymbol symbol) {
+    private void addSymbol(TreeModel model, MibSymbol symbol) {
         MibValue               value;
         ObjectIdentifierValue  oid;
-        String                 name;
 
         if (symbol instanceof MibValueSymbol) {
             value = ((MibValueSymbol) symbol).getValue();
             if (value instanceof ObjectIdentifierValue) {
                 oid = (ObjectIdentifierValue) value;
-                name = oid.getName() + "(" + oid.getValue() + ")"; 
-                addNodeToTree(new MibNode(name, oid));
+                addToTree(model, oid);
             }            
         }
     }
-    
+
     /**
-     * Traverses the tree in pre-order and identifies the right place
-     * to add the new node.
+     * Adds an object identifier value to a MIB tree model.
      *
-     * @param nodeToAdd      the node to add
+     * @param model          the MIB tree model
+     * @param oid            the object identifier value
      *
-     * @return true if the node was added, or
-     *         false otherwise
+     * @return the MIB tree node added
      */
-    private boolean addNodeToTree(MibNode nodeToAdd) {
-        TreeModel model = subTree.getModel();
-        MibNode tempNode = null;
-        MibNode root = (MibNode) model.getRoot();
-        Enumeration enum = root.preorderEnumeration();
-        boolean addedNode = false;
-        String objIdStr = nodeToAdd.getOid();
-        
-        while (enum.hasMoreElements()) {
-            tempNode = (MibNode) enum.nextElement();
-            String curOid = tempNode.getOid();
-   
-            if (objIdStr.substring(0, objIdStr.lastIndexOf('.')).equals(curOid)) {
-                
-                int childrenCount = tempNode.getChildCount();
-                for (int i = 0; i < childrenCount; i++) {
-                    MibNode node = (MibNode) tempNode.getChildAt(i);
-                    if (node.getOid().equals(objIdStr)) {
-                        return false;
-                    }
-                }
-                tempNode.add(nodeToAdd);
-                addedNode = true;
-                break;
+    private MibNode addToTree(TreeModel model, ObjectIdentifierValue oid) {
+        MibNode  parent;
+        MibNode  node;
+        String   name;
+
+        // Add parent node to tree (if needed)
+        if (hasParent(oid)) {
+            parent = addToTree(model, oid.getParent());
+        } else {
+            parent = (MibNode) model.getRoot();
+        }
+
+        // Check if node already added
+        for (int i = 0; i < model.getChildCount(parent); i++) {
+            node = (MibNode) model.getChild(parent, i);
+            if (node.getValue().equals(oid)) {
+                return node;
             }
         }
-        if (!addedNode) {
-            tempNode.add(nodeToAdd);
-            addedNode = true;
-        }        
-        return true;
+
+        // Create new node
+        name = oid.getName() + " (" + oid.getValue() + ")"; 
+        node = new MibNode(name, oid);
+        parent.add(node);
+        return node;
     }
-    
+
+    /**
+     * Checks if the specified object identifier has a parent.
+     *
+     * @param oid            the object identifier to check
+     *
+     * @return true if the object identifier has a parent, or
+     *         false otherwise
+     */
+    private boolean hasParent(ObjectIdentifierValue oid) {
+        ObjectIdentifierValue  parent = oid.getParent();
+
+        return parent != null
+            && parent.getSymbol().getMib().equals(oid.getSymbol().getMib());
+    }
+
     /**
      * Unloads a MIB.
      *
@@ -219,7 +222,7 @@ public class MibTreeBuilder {
      * @return true on success, or
      *         false otherwise
      */
-    public static boolean unloadMib(String mibName) {
+    public boolean unloadMib(String mibName) {
         DefaultTreeModel model = (DefaultTreeModel) mibTree.getModel();
         MibNode tempNode = null;
         MibNode root = (MibNode) model.getRoot();
