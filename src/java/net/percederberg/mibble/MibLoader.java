@@ -21,9 +21,11 @@
 
 package net.percederberg.mibble;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -31,20 +33,33 @@ import java.net.URL;
 import java.util.ArrayList;
 
 /**
- * A MIB file loader. This class contains a search path for locating
- * MIB files, and also holds a refererence to previously loaded MIB
- * files to avoid loading the same file multiple times. The MIB
- * search path consists of directories with MIB files that can be
- * imported into another MIB. If an import isn't found in the search
- * path, the default IANA and IETF MIB directories are searched. Note
- * that these files are normally stored as resources together with
- * the compiled code.<p>
+ * A MIB loader. This class contains a search path for locating MIB
+ * files, and also holds a refererence to previously loaded MIB files
+ * to avoid loading the same file multiple times. The MIB search path
+ * consists of directories with MIB files that can be imported into
+ * other MIBs. The search path directories can either be normal file
+ * system directories or resource directories. By default the search
+ * path contains resource directories containing standard IANA and
+ * IETF MIB files (packaged in the Mibble JAR file).<p>
+ *
+ * The MIB loader searches for MIB files in a specific order. First,
+ * the file system directories in the search path are scanned for
+ * files with the same name as the MIB module being imported. This
+ * search ignores any file name extensions and compares the base file
+ * name in case-insensitive mode. If this search fails, the resource
+ * directories are searched for a file having the exact name of the
+ * MIB module being imported (case sensitive). The last step, if both
+ * the previous ones have failed, is to open the files in the search
+ * path one by one to check the MIB module names specified inside.
+ * Note that this may be slow for large directories with many files,
+ * and it is therefore recommended to always name the MIB files
+ * according to their module name.<p>
  *
  * The MIB loader is not thread-safe, i.e. it cannot be used
  * concurrently in multiple threads.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.3
+ * @version  2.4
  * @since    2.0
  */
 public class MibLoader {
@@ -187,7 +202,7 @@ public class MibLoader {
     /**
      * Removes all directories from the MIB resource search path. This
      * will also remove the default directories where the IANA and
-     * IETF MIB are present, and may thus make this MIB loaded
+     * IETF MIB are present, and may thus make this MIB loader mostly
      * unusable. Use this method with caution.
      *
      * @since 2.3
@@ -596,11 +611,13 @@ public class MibLoader {
 
     /**
      * Searches for a MIB in the search path. The name specified
-     * should be the MIB file name, possibly leaving out the
-     * extension. If the MIB isn't found in the directory search path,
-     * the base resource path is also tested.
+     * should be the MIB name. If a matching file name isn't found in
+     * the directory search path, the contents in the base resource
+     * path are also tested. Finally, if no MIB file has been found,
+     * the files in the search path will be opened regardless of file
+     * name to perform a small heuristic test for the MIB in question.
      *
-     * @param name           the MIB file name (without extension)
+     * @param name           the MIB name
      *
      * @return the MIB found, or
      *         null if no MIB was found
@@ -611,6 +628,7 @@ public class MibLoader {
         File[]       files;
         URL          url;
         int          i;
+        int          j;
 
         for (i = 0; i < dirs.size(); i++) {
             dir = (File) dirs.get(i);
@@ -625,9 +643,68 @@ public class MibLoader {
                 return new MibSource(name, url);
             }
         }
+        for (i = 0; i < dirs.size(); i++) {
+            dir = (File) dirs.get(i);
+            files = dir.listFiles();
+            for (j = 0; files != null && j < files.length; j++) {
+                if (isNamedMib(files[j], name)) {
+                    return new MibSource(files[j]);
+                }
+            }
+        }
         return null;
     }
 
+    /**
+     * Checks if a file contains a specified MIB. The file will be
+     * opened and the first non-comment line will be interpreted as
+     * the starting of a MIB. The MIB name will then be compared to
+     * the specified name in case sensitive manner.
+     *
+     * @param file           the file to check
+     * @param name           the MIB name to search for
+     *
+     * @return true if the file seems to contain the MIB, or
+     *         false otherwise
+     *
+     * @since 2.4
+     */
+    private boolean isNamedMib(File file, String name) {
+        BufferedReader  in = null;
+        String          str;
+
+        if (!file.canRead() || !file.isFile()) {
+            return false;
+        }
+        try {
+            in = new BufferedReader(new FileReader(file));
+            while (true) {
+                str = in.readLine();
+                if (str == null) {
+                    break;
+                }
+                str = str.trim();
+                if (!str.equals("") && !str.startsWith("--")) {
+                    return str.equals(name)
+                        || str.startsWith(name + " ")
+                        || str.startsWith(name + "\t");
+                }
+            }
+        } catch (FileNotFoundException ignore) {
+            // Do nothing
+        } catch (IOException ignore) {
+            // Do nothing
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException ignore) {
+                    // Do nothing
+                }
+            }
+        }
+        return false;
+    }
 
     /**
      * A MIB input source. This class encapsulates the two different
@@ -780,7 +857,7 @@ public class MibLoader {
          * @param name           the MIB name to filter with
          */
         public MibFileFilter(String name) {
-            this.basename = name;
+            this.basename = name.toUpperCase();
         }
 
         /**
@@ -793,6 +870,7 @@ public class MibLoader {
          *         false otherwise
          */
         public boolean accept(File dir, String name) {
+            name = name.toUpperCase();
             return name.equals(basename)
                 || name.startsWith(basename + ".");
         }
