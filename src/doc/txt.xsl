@@ -120,21 +120,33 @@ is left intact.</xsl:text>
   </xsl:template>
 
   <xsl:template match="ref">
+    <xsl:variable name="text">
+      <xsl:apply-templates />
+    </xsl:variable>
     <xsl:choose>
       <xsl:when test="@url != ''">
-        <xsl:apply-templates />
+        <xsl:value-of select="$text" />
         <xsl:text> (</xsl:text>
         <xsl:value-of select="@url" />
         <xsl:text>)</xsl:text>
       </xsl:when>
       <xsl:when test="@file != ''">
-        <xsl:apply-templates />
+        <xsl:value-of select="$text" />
         <xsl:text> (in </xsl:text>
         <xsl:value-of select="substring-before(@file,'.')" />
         <xsl:text>.txt)</xsl:text>
       </xsl:when>
+      <xsl:when test="@bug != ''">
+        <xsl:text>[Bug #</xsl:text>
+        <xsl:value-of select="@bug" />
+        <xsl:if test="string-length($text) &gt; 0">
+          <xsl:text> - </xsl:text>
+          <xsl:value-of select="$text" />
+        </xsl:if>
+        <xsl:text>]</xsl:text>
+      </xsl:when>
       <xsl:otherwise>
-        <xsl:apply-templates />
+        <xsl:value-of select="$text" />
         <xsl:text> [UNDEFINED REFERENCE]</xsl:text>
       </xsl:otherwise>
     </xsl:choose>

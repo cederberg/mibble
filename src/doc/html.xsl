@@ -126,13 +126,16 @@
   </xsl:template>
 
   <xsl:template match="ref">
+    <xsl:variable name="text">
+      <xsl:apply-templates />
+    </xsl:variable>
     <xsl:choose>
       <xsl:when test="@url != ''">
         <a>
           <xsl:attribute name="href">
             <xsl:value-of select="@url" />
           </xsl:attribute>
-          <xsl:apply-templates />
+          <xsl:value-of select="$text" />
         </a>
       </xsl:when>
       <xsl:when test="@file != ''">
@@ -141,11 +144,26 @@
             <xsl:value-of select="substring-before(@file,'.')" />
             <xsl:text>.html</xsl:text>
           </xsl:attribute>
-          <xsl:apply-templates />
+          <xsl:value-of select="$text" />
+        </a>
+      </xsl:when>
+      <xsl:when test="@bug != ''">
+        <a>
+          <xsl:attribute name="href">
+            <xsl:text>http://savannah.nongnu.org/bugs/index.php</xsl:text>
+            <xsl:text>?func=detailitem&amp;item_id=</xsl:text>
+            <xsl:value-of select="@bug" />
+          </xsl:attribute>
+          <xsl:text>Bug #</xsl:text>
+          <xsl:value-of select="@bug" />
+          <xsl:if test="string-length($text) &gt; 0">
+            <xsl:text> - </xsl:text>
+            <xsl:value-of select="$text" />
+          </xsl:if>
         </a>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:apply-templates />
+        <xsl:value-of select="$text" />
         <xsl:text> [UNDEFINED REFERENCE]</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
