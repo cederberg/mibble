@@ -22,26 +22,22 @@
 package net.percederberg.mibble;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
-import net.percederberg.grammatica.parser.ParserCreationException;
-import net.percederberg.grammatica.parser.ParserLogException;
-import net.percederberg.mibble.asn1.Asn1Parser;
 import net.percederberg.mibble.value.NumberValue;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
- * An SNMP MIB container. This class contains all the information
- * from a MIB file, including all defined types and values. MIB files
- * are loaded through a {@link MibLoader MIB loader}.
+ * An SNMP MIB module. This class contains all the information
+ * from a single MIB module, including all defined types and values.
+ * Note that a single MIB file may contain several such modules,
+ * although that is not very common. MIB files are loaded through a
+ * {@link MibLoader MIB loader}.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.4
+ * @version  2.5
  * @since    2.0
  *
  * @see <a href="http://www.ietf.org/rfc/rfc3411.txt">RFC 3411 - An
@@ -95,93 +91,23 @@ public class Mib implements MibContext {
     private HashMap symbolValueMap = new HashMap();
 
     /**
-     * Creates a new MIB container. This will read the MIB file and
-     * create initial MIB symbols. Note that this only corresponds to
-     * the first analysis pass (of two), leaving symbols in the MIB
-     * possibly containing unresolved references. A separate call to
-     * initialize() must be made once all referenced MIB files have
-     * been loaded.
+     * Creates a new MIB module. This will NOT read the actual MIB
+     * file, but only creates an empty container. The symbols are
+     * then added during the first analysis pass (of two), leaving
+     * symbols in the MIB possibly containing unresolved references.
+     * A separate call to initialize() must be made once all
+     * referenced MIB modules have also been loaded.
      *
-     * @param file           the MIB file to load
-     * @param loader         the MIB loader to use for imports
-     * @param log            the MIB log to use for errors
-     *
-     * @throws FileNotFoundException if the MIB file couldn't be
-     *             found
-     * @throws MibLoaderException if the MIB file couldn't be parsed
-     *             or analyzed correctly
-     *
-     * @see #initialize()
-     */
-    Mib(File file, MibLoader loader, MibLoaderLog log)
-        throws FileNotFoundException, MibLoaderException {
-
-        this(new FileReader(file), file, loader, log);
-    }
-
-    /**
-     * Creates a new MIB container. This will read the MIB file and
-     * create initial MIB symbols. Note that this only corresponds to
-     * the first analysis pass (of two), leaving symbols in the MIB
-     * possibly containing unresolved references. A separate call to
-     * initialize() must be made once all referenced MIB files have
-     * been loaded.
-     *
-     * @param input          the input stream to read
      * @param file           the MIB file name
      * @param loader         the MIB loader to use for imports
      * @param log            the MIB log to use for errors
      *
-     * @throws MibLoaderException if the MIB file couldn't be parsed
-     *             or analyzed correctly
-     *
      * @see #initialize()
      */
-    Mib(Reader input, File file, MibLoader loader, MibLoaderLog log)
-        throws MibLoaderException {
-
-        // Initialize instance variables
+    Mib(File file, MibLoader loader, MibLoaderLog log) {
         this.file = file;
         this.loader = loader;
         this.log = log;
-
-        // Parse MIB file
-        parse(input);
-    }
-
-    /**
-     * Parses the MIB file. This will read the MIB file and create
-     * the MIB symbols, types and values. Note that this only
-     * corresponds to the first analysis pass (of three), leaving
-     * possible unresolved references in types and values. Separate
-     * calls to initialize() and validate() must be made once all
-     * referenced MIB files have been loaded.
-     *
-     * @param input          the input stream to read
-     *
-     * @throws MibLoaderException if the MIB file couldn't be parsed
-     *             or analyzed correctly
-     *
-     * @see #initialize()
-     * @see #validate()
-     */
-    private void parse(Reader input) throws MibLoaderException {
-
-        Asn1Parser  parser;
-        String      msg;
-
-        try {
-            parser = new Asn1Parser(input, new MibAnalyzer(this));
-            parser.parse();
-        } catch (ParserCreationException e) {
-            msg = "parser creation error in ASN.1 parser: " +
-                  e.getMessage();
-            log.addInternalError(file, msg);
-            throw new MibLoaderException(log);
-        } catch (ParserLogException e) {
-            log.addAll(file, e);
-            throw new MibLoaderException(log);
-        }
     }
 
     /**

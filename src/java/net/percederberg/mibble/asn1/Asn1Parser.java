@@ -35,7 +35,7 @@ import net.percederberg.grammatica.parser.RecursiveDescentParser;
  * A token stream parser.
  * 
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.5
  */
 public class Asn1Parser extends RecursiveDescentParser {
 
@@ -112,6 +112,13 @@ public class Asn1Parser extends RecursiveDescentParser {
     private void createPatterns() throws ParserCreationException {
         ProductionPattern             pattern;
         ProductionPatternAlternative  alt;
+
+        pattern = new ProductionPattern(Asn1Constants.START,
+                                        "Start");
+        alt = new ProductionPatternAlternative();
+        alt.addProduction(Asn1Constants.MODULE_DEFINITION, 1, -1);
+        pattern.addAlternative(alt);
+        addPattern(pattern);
 
         pattern = new ProductionPattern(Asn1Constants.MODULE_DEFINITION,
                                         "ModuleDefinition");

@@ -21,6 +21,7 @@
 
 package net.percederberg.mibble;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -76,22 +77,32 @@ import net.percederberg.mibble.value.ValueReference;
 
 /**
  * A MIB file analyzer. This class analyzes the MIB file parse tree,
- * and creates appropriate symbols that are added to the MIB file.
- * This analyzer handles imports by adding them to the MIB loader
- * queue. As the imported MIB symbols aren't available during the
- * analysis, type and value references will be created whenever an
- * identifier is encountered.
+ * and creates appropriate MIB modules with the right symbols. This
+ * analyzer handles imports by adding them to the MIB loader queue.
+ * As the imported MIB symbols aren't available during the analysis,
+ * type and value references will be created whenever an identifier
+ * is encountered.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.3
+ * @version  2.5
  * @since    2.0
  */
 class MibAnalyzer extends Asn1Analyzer {
 
     /**
+     * The list of MIB modules found.
+     */
+    private ArrayList mibs = new ArrayList();
+
+    /**
      * The MIB file being analyzed.
      */
-    private Mib mib;
+    private File file;
+
+    /**
+     * The MIB loader using this analyzer.
+     */
+    private MibLoader loader;
 
     /**
      * The MIB loader log.
@@ -99,10 +110,15 @@ class MibAnalyzer extends Asn1Analyzer {
     private MibLoaderLog log;
 
     /**
+     * The current MIB module being analyzed.
+     */
+    private Mib currentMib = null;
+
+    /**
      * The base MIB symbol context. This context will be extended
      * when parsing the import list.
      */
-    private MibContext baseContext;
+    private MibContext baseContext = null;
 
     /**
      * The MIB context stack. This stack is modified during the
@@ -121,14 +137,23 @@ class MibAnalyzer extends Asn1Analyzer {
     /**
      * Creates a new MIB file analyzer.
      *
-     * @param mib            the MIB file being analyzed
+     * @param file           the MIB file being analyzed
+     * @param loader         the MIB loader using this analyzer
+     * @param log            the MIB loader log to use
      */
-    public MibAnalyzer(Mib mib) {
-        this.mib = mib;
-        this.log = mib.getLog();
-        this.baseContext = mib.getLoader().getDefaultContext();
-        this.baseContext = new CompoundContext(mib, baseContext);
-        pushContext(baseContext);
+    public MibAnalyzer(File file, MibLoader loader, MibLoaderLog log) {
+        this.file = file;
+        this.loader = loader;
+        this.log = log;
+    }
+
+    /**
+     * Returns the list of MIB modules found during analysis.
+     *  
+     * @return a list of MIB modules
+     */
+    public ArrayList getMibs() {
+        return mibs;
     }
 
     /**
@@ -245,6 +270,18 @@ class MibAnalyzer extends Asn1Analyzer {
     }
 
     /**
+     * Creates the current MIB module container and the base context.
+     *
+     * @param node           the node being entered
+     */
+    protected void enterModuleDefinition(Production node) {
+        currentMib = new Mib(file, loader, log);
+        baseContext = loader.getDefaultContext();
+        baseContext = new CompoundContext(currentMib, baseContext);
+        pushContext(baseContext);
+    }
+
+    /**
      * Sets the MIB name to the module identifier string value. Also
      * removes this node from the parse tree.
      *
@@ -257,7 +294,10 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitModuleDefinition(Production node)
         throws ParseException {
 
-        mib.setName(getStringValue(getChildAt(node, 0), 0));
+        currentMib.setName(getStringValue(getChildAt(node, 0), 0));
+        mibs.add(currentMib);
+        currentMib = null;
+        baseContext = null;
         return null;
     }
 
@@ -328,13 +368,13 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitImportList(Production node) {
         ArrayList     references = getChildValues(node);
         MibReference  ref;
-        MibContext    current = mib.getLoader().getDefaultContext();
+        MibContext    current = loader.getDefaultContext();
 
         for (int i = references.size() - 1; i >= 0; i--) {
             ref = (MibReference) references.get(i);
             current = new CompoundContext(ref, current);
         }
-        baseContext = new CompoundContext(mib, current);
+        baseContext = new CompoundContext(currentMib, current);
         popContext();
         pushContext(baseContext);
         return null;
@@ -366,14 +406,14 @@ class MibAnalyzer extends Asn1Analyzer {
         }
         child = getChildAt(node, 2);
         module = getStringValue(child, 0);
-        ref = new MibReference(mib.getLoader(),
+        ref = new MibReference(loader,
                                getLocation(child),
                                module,
                                symbols);
 
         // Schedule MIB loading
         try {
-            mib.getLoader().scheduleLoad(module);
+            loader.scheduleLoad(module);
         } catch (IOException e) {
             throw new ParseException(
                 ParseException.ANALYSIS_ERROR,
@@ -383,7 +423,7 @@ class MibAnalyzer extends Asn1Analyzer {
         }
 
         // Add reference to MIB and node
-        mib.addImport(ref);
+        currentMib.addImport(ref);
         node.addValue(ref);
         return node;
     }
@@ -431,7 +471,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
         // Check type name
         name = getStringValue(getChildAt(node, 0), 0);
-        if (mib.getSymbol(name) != null) {
+        if (currentMib.getSymbol(name) != null) {
             throw new ParseException(
                 ParseException.ANALYSIS_ERROR,
                 "a symbol '" + name + "' already present in the MIB",
@@ -446,7 +486,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
         // Create type symbol
         type = (MibType) getValue(getChildAt(node, 2), 0);
-        new MibTypeSymbol(getLocation(node), mib, name, type);
+        new MibTypeSymbol(getLocation(node), currentMib, name, type);
 
         return null;
     }
@@ -486,7 +526,7 @@ class MibAnalyzer extends Asn1Analyzer {
             switch (child.getId()) {
             case Asn1Constants.MODULE_REFERENCE:
                 name = getStringValue(child, 0);
-                local = mib.getImport(name);
+                local = currentMib.getImport(name);
                 if (local == null) {
                     throw new ParseException(
                         ParseException.ANALYSIS_ERROR,
@@ -1286,7 +1326,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
         // Check value name
         name = getStringValue(getChildAt(node, 0), 0);
-        if (mib.getSymbol(name) != null) {
+        if (currentMib.getSymbol(name) != null) {
             throw new ParseException(
                 ParseException.ANALYSIS_ERROR,
                 "a symbol '" + name + "' already present in the MIB",
@@ -1302,7 +1342,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // Create value symbol
         type = (MibType) getValue(getChildAt(node, 1), 0);
         value = (MibValue) getValue(getChildAt(node, 3), 0);
-        new MibValueSymbol(getLocation(node), mib, name, type, value);
+        new MibValueSymbol(getLocation(node), currentMib, name, type, value);
 
         return null;
     }
@@ -1340,7 +1380,7 @@ class MibAnalyzer extends Asn1Analyzer {
         child = getChildAt(node, 0);
         if (child.getId() == Asn1Constants.MODULE_REFERENCE) {
             name = getStringValue(child, 0);
-            local = mib.getImport(name);
+            local = currentMib.getImport(name);
             if (local == null) {
                 throw new ParseException(
                     ParseException.ANALYSIS_ERROR,
@@ -2543,7 +2583,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // Load referenced module
         module = getStringValue(getChildAt(node, 0), 0);
         try {
-            mib.getLoader().scheduleLoad(module);
+            loader.scheduleLoad(module);
         } catch (IOException e) {
             throw new ParseException(
                 ParseException.ANALYSIS_ERROR,
@@ -2553,11 +2593,8 @@ class MibAnalyzer extends Asn1Analyzer {
         }
 
         // Create module reference and context
-        ref = new MibReference(mib.getLoader(),
-                               getLocation(node),
-                               module,
-                               null);
-        mib.addImport(ref);
+        ref = new MibReference(loader, getLocation(node), module, null);
+        currentMib.addImport(ref);
         pushContextExtension(ref);
 
         // Return results
@@ -2852,7 +2889,7 @@ class MibAnalyzer extends Asn1Analyzer {
      * @return the file location of the node
      */
     private FileLocation getLocation(Node node) {
-        return new FileLocation(mib.getFile(),
+        return new FileLocation(file,
                                 node.getStartLine(),
                                 node.getStartColumn());
     }

@@ -27,7 +27,7 @@ package net.percederberg.mibble.asn1;
  * An interface with constants for the parser and tokenizer.
  * 
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.5
  */
 public interface Asn1Constants {
 
@@ -569,625 +569,630 @@ public interface Asn1Constants {
     /**
      * A production node identity constant.
      */
-    public static final int MODULE_DEFINITION = 2001;
+    public static final int START = 2001;
 
     /**
      * A production node identity constant.
      */
-    public static final int MODULE_IDENTIFIER = 2002;
+    public static final int MODULE_DEFINITION = 2002;
 
     /**
      * A production node identity constant.
      */
-    public static final int MODULE_REFERENCE = 2003;
+    public static final int MODULE_IDENTIFIER = 2003;
 
     /**
      * A production node identity constant.
      */
-    public static final int TAG_DEFAULT = 2004;
+    public static final int MODULE_REFERENCE = 2004;
 
     /**
      * A production node identity constant.
      */
-    public static final int MODULE_BODY = 2005;
+    public static final int TAG_DEFAULT = 2005;
 
     /**
      * A production node identity constant.
      */
-    public static final int EXPORT_LIST = 2006;
+    public static final int MODULE_BODY = 2006;
 
     /**
      * A production node identity constant.
      */
-    public static final int IMPORT_LIST = 2007;
+    public static final int EXPORT_LIST = 2007;
 
     /**
      * A production node identity constant.
      */
-    public static final int SYMBOLS_FROM_MODULE = 2008;
+    public static final int IMPORT_LIST = 2008;
 
     /**
      * A production node identity constant.
      */
-    public static final int SYMBOL_LIST = 2009;
+    public static final int SYMBOLS_FROM_MODULE = 2009;
 
     /**
      * A production node identity constant.
      */
-    public static final int SYMBOL = 2010;
+    public static final int SYMBOL_LIST = 2010;
 
     /**
      * A production node identity constant.
      */
-    public static final int ASSIGNMENT_LIST = 2011;
+    public static final int SYMBOL = 2011;
 
     /**
      * A production node identity constant.
      */
-    public static final int ASSIGNMENT = 2012;
+    public static final int ASSIGNMENT_LIST = 2012;
 
     /**
      * A production node identity constant.
      */
-    public static final int MACRO_DEFINITION = 2013;
+    public static final int ASSIGNMENT = 2013;
 
     /**
      * A production node identity constant.
      */
-    public static final int MACRO_REFERENCE = 2014;
+    public static final int MACRO_DEFINITION = 2014;
 
     /**
      * A production node identity constant.
      */
-    public static final int MACRO_BODY = 2015;
+    public static final int MACRO_REFERENCE = 2015;
 
     /**
      * A production node identity constant.
      */
-    public static final int MACRO_BODY_ELEMENT = 2016;
+    public static final int MACRO_BODY = 2016;
 
     /**
      * A production node identity constant.
      */
-    public static final int TYPE_ASSIGNMENT = 2017;
+    public static final int MACRO_BODY_ELEMENT = 2017;
 
     /**
      * A production node identity constant.
      */
-    public static final int TYPE = 2018;
+    public static final int TYPE_ASSIGNMENT = 2018;
 
     /**
      * A production node identity constant.
      */
-    public static final int DEFINED_TYPE = 2019;
+    public static final int TYPE = 2019;
 
     /**
      * A production node identity constant.
      */
-    public static final int BUILTIN_TYPE = 2020;
+    public static final int DEFINED_TYPE = 2020;
 
     /**
      * A production node identity constant.
      */
-    public static final int NULL_TYPE = 2021;
+    public static final int BUILTIN_TYPE = 2021;
 
     /**
      * A production node identity constant.
      */
-    public static final int BOOLEAN_TYPE = 2022;
+    public static final int NULL_TYPE = 2022;
 
     /**
      * A production node identity constant.
      */
-    public static final int REAL_TYPE = 2023;
+    public static final int BOOLEAN_TYPE = 2023;
 
     /**
      * A production node identity constant.
      */
-    public static final int INTEGER_TYPE = 2024;
+    public static final int REAL_TYPE = 2024;
 
     /**
      * A production node identity constant.
      */
-    public static final int OBJECT_IDENTIFIER_TYPE = 2025;
+    public static final int INTEGER_TYPE = 2025;
 
     /**
      * A production node identity constant.
      */
-    public static final int STRING_TYPE = 2026;
+    public static final int OBJECT_IDENTIFIER_TYPE = 2026;
 
     /**
      * A production node identity constant.
      */
-    public static final int BIT_STRING_TYPE = 2027;
+    public static final int STRING_TYPE = 2027;
 
     /**
      * A production node identity constant.
      */
-    public static final int BITS_TYPE = 2028;
+    public static final int BIT_STRING_TYPE = 2028;
 
     /**
      * A production node identity constant.
      */
-    public static final int SEQUENCE_TYPE = 2029;
+    public static final int BITS_TYPE = 2029;
 
     /**
      * A production node identity constant.
      */
-    public static final int SEQUENCE_OF_TYPE = 2030;
+    public static final int SEQUENCE_TYPE = 2030;
 
     /**
      * A production node identity constant.
      */
-    public static final int SET_TYPE = 2031;
+    public static final int SEQUENCE_OF_TYPE = 2031;
 
     /**
      * A production node identity constant.
      */
-    public static final int SET_OF_TYPE = 2032;
+    public static final int SET_TYPE = 2032;
 
     /**
      * A production node identity constant.
      */
-    public static final int CHOICE_TYPE = 2033;
+    public static final int SET_OF_TYPE = 2033;
 
     /**
      * A production node identity constant.
      */
-    public static final int ENUMERATED_TYPE = 2034;
+    public static final int CHOICE_TYPE = 2034;
 
     /**
      * A production node identity constant.
      */
-    public static final int SELECTION_TYPE = 2035;
+    public static final int ENUMERATED_TYPE = 2035;
 
     /**
      * A production node identity constant.
      */
-    public static final int TAGGED_TYPE = 2036;
+    public static final int SELECTION_TYPE = 2036;
 
     /**
      * A production node identity constant.
      */
-    public static final int TAG = 2037;
+    public static final int TAGGED_TYPE = 2037;
 
     /**
      * A production node identity constant.
      */
-    public static final int CLASS = 2038;
+    public static final int TAG = 2038;
 
     /**
      * A production node identity constant.
      */
-    public static final int EXPLICIT_OR_IMPLICIT_TAG = 2039;
+    public static final int CLASS = 2039;
 
     /**
      * A production node identity constant.
      */
-    public static final int ANY_TYPE = 2040;
+    public static final int EXPLICIT_OR_IMPLICIT_TAG = 2040;
 
     /**
      * A production node identity constant.
      */
-    public static final int ELEMENT_TYPE_LIST = 2041;
+    public static final int ANY_TYPE = 2041;
 
     /**
      * A production node identity constant.
      */
-    public static final int ELEMENT_TYPE = 2042;
+    public static final int ELEMENT_TYPE_LIST = 2042;
 
     /**
      * A production node identity constant.
      */
-    public static final int OPTIONAL_OR_DEFAULT_ELEMENT = 2043;
+    public static final int ELEMENT_TYPE = 2043;
 
     /**
      * A production node identity constant.
      */
-    public static final int VALUE_OR_CONSTRAINT_LIST = 2044;
+    public static final int OPTIONAL_OR_DEFAULT_ELEMENT = 2044;
 
     /**
      * A production node identity constant.
      */
-    public static final int NAMED_NUMBER_LIST = 2045;
+    public static final int VALUE_OR_CONSTRAINT_LIST = 2045;
 
     /**
      * A production node identity constant.
      */
-    public static final int NAMED_NUMBER = 2046;
+    public static final int NAMED_NUMBER_LIST = 2046;
 
     /**
      * A production node identity constant.
      */
-    public static final int NUMBER = 2047;
+    public static final int NAMED_NUMBER = 2047;
 
     /**
      * A production node identity constant.
      */
-    public static final int CONSTRAINT_LIST = 2048;
+    public static final int NUMBER = 2048;
 
     /**
      * A production node identity constant.
      */
-    public static final int CONSTRAINT = 2049;
+    public static final int CONSTRAINT_LIST = 2049;
 
     /**
      * A production node identity constant.
      */
-    public static final int VALUE_CONSTRAINT_LIST = 2050;
+    public static final int CONSTRAINT = 2050;
 
     /**
      * A production node identity constant.
      */
-    public static final int VALUE_CONSTRAINT = 2051;
+    public static final int VALUE_CONSTRAINT_LIST = 2051;
 
     /**
      * A production node identity constant.
      */
-    public static final int VALUE_RANGE = 2052;
+    public static final int VALUE_CONSTRAINT = 2052;
 
     /**
      * A production node identity constant.
      */
-    public static final int LOWER_END_POINT = 2053;
+    public static final int VALUE_RANGE = 2053;
 
     /**
      * A production node identity constant.
      */
-    public static final int UPPER_END_POINT = 2054;
+    public static final int LOWER_END_POINT = 2054;
 
     /**
      * A production node identity constant.
      */
-    public static final int SIZE_CONSTRAINT = 2055;
+    public static final int UPPER_END_POINT = 2055;
 
     /**
      * A production node identity constant.
      */
-    public static final int ALPHABET_CONSTRAINT = 2056;
+    public static final int SIZE_CONSTRAINT = 2056;
 
     /**
      * A production node identity constant.
      */
-    public static final int CONTAINED_TYPE_CONSTRAINT = 2057;
+    public static final int ALPHABET_CONSTRAINT = 2057;
 
     /**
      * A production node identity constant.
      */
-    public static final int INNER_TYPE_CONSTRAINT = 2058;
+    public static final int CONTAINED_TYPE_CONSTRAINT = 2058;
 
     /**
      * A production node identity constant.
      */
-    public static final int COMPONENTS_LIST = 2059;
+    public static final int INNER_TYPE_CONSTRAINT = 2059;
 
     /**
      * A production node identity constant.
      */
-    public static final int COMPONENTS_LIST_TAIL = 2060;
+    public static final int COMPONENTS_LIST = 2060;
 
     /**
      * A production node identity constant.
      */
-    public static final int COMPONENT_CONSTRAINT = 2061;
+    public static final int COMPONENTS_LIST_TAIL = 2061;
 
     /**
      * A production node identity constant.
      */
-    public static final int COMPONENT_VALUE_PRESENCE = 2062;
+    public static final int COMPONENT_CONSTRAINT = 2062;
 
     /**
      * A production node identity constant.
      */
-    public static final int COMPONENT_PRESENCE = 2063;
+    public static final int COMPONENT_VALUE_PRESENCE = 2063;
 
     /**
      * A production node identity constant.
      */
-    public static final int VALUE_ASSIGNMENT = 2064;
+    public static final int COMPONENT_PRESENCE = 2064;
 
     /**
      * A production node identity constant.
      */
-    public static final int VALUE = 2065;
+    public static final int VALUE_ASSIGNMENT = 2065;
 
     /**
      * A production node identity constant.
      */
-    public static final int DEFINED_VALUE = 2066;
+    public static final int VALUE = 2066;
 
     /**
      * A production node identity constant.
      */
-    public static final int BUILTIN_VALUE = 2067;
+    public static final int DEFINED_VALUE = 2067;
 
     /**
      * A production node identity constant.
      */
-    public static final int NULL_VALUE = 2068;
+    public static final int BUILTIN_VALUE = 2068;
 
     /**
      * A production node identity constant.
      */
-    public static final int BOOLEAN_VALUE = 2069;
+    public static final int NULL_VALUE = 2069;
 
     /**
      * A production node identity constant.
      */
-    public static final int SPECIAL_REAL_VALUE = 2070;
+    public static final int BOOLEAN_VALUE = 2070;
 
     /**
      * A production node identity constant.
      */
-    public static final int NUMBER_VALUE = 2071;
+    public static final int SPECIAL_REAL_VALUE = 2071;
 
     /**
      * A production node identity constant.
      */
-    public static final int BINARY_VALUE = 2072;
+    public static final int NUMBER_VALUE = 2072;
 
     /**
      * A production node identity constant.
      */
-    public static final int HEXADECIMAL_VALUE = 2073;
+    public static final int BINARY_VALUE = 2073;
 
     /**
      * A production node identity constant.
      */
-    public static final int STRING_VALUE = 2074;
+    public static final int HEXADECIMAL_VALUE = 2074;
 
     /**
      * A production node identity constant.
      */
-    public static final int BIT_OR_OBJECT_IDENTIFIER_VALUE = 2075;
+    public static final int STRING_VALUE = 2075;
 
     /**
      * A production node identity constant.
      */
-    public static final int BIT_VALUE = 2076;
+    public static final int BIT_OR_OBJECT_IDENTIFIER_VALUE = 2076;
 
     /**
      * A production node identity constant.
      */
-    public static final int OBJECT_IDENTIFIER_VALUE = 2077;
+    public static final int BIT_VALUE = 2077;
 
     /**
      * A production node identity constant.
      */
-    public static final int NAME_VALUE_LIST = 2078;
+    public static final int OBJECT_IDENTIFIER_VALUE = 2078;
 
     /**
      * A production node identity constant.
      */
-    public static final int NAME_VALUE_COMPONENT = 2079;
+    public static final int NAME_VALUE_LIST = 2079;
 
     /**
      * A production node identity constant.
      */
-    public static final int NAME_OR_NUMBER = 2080;
+    public static final int NAME_VALUE_COMPONENT = 2080;
 
     /**
      * A production node identity constant.
      */
-    public static final int NAME_AND_NUMBER = 2081;
+    public static final int NAME_OR_NUMBER = 2081;
 
     /**
      * A production node identity constant.
      */
-    public static final int DEFINED_MACRO_TYPE = 2082;
+    public static final int NAME_AND_NUMBER = 2082;
 
     /**
      * A production node identity constant.
      */
-    public static final int DEFINED_MACRO_NAME = 2083;
+    public static final int DEFINED_MACRO_TYPE = 2083;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_MODULE_IDENTITY_MACRO_TYPE = 2084;
+    public static final int DEFINED_MACRO_NAME = 2084;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_OBJECT_IDENTITY_MACRO_TYPE = 2085;
+    public static final int SNMP_MODULE_IDENTITY_MACRO_TYPE = 2085;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_OBJECT_TYPE_MACRO_TYPE = 2086;
+    public static final int SNMP_OBJECT_IDENTITY_MACRO_TYPE = 2086;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_NOTIFICATION_TYPE_MACRO_TYPE = 2087;
+    public static final int SNMP_OBJECT_TYPE_MACRO_TYPE = 2087;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_TRAP_TYPE_MACRO_TYPE = 2088;
+    public static final int SNMP_NOTIFICATION_TYPE_MACRO_TYPE = 2088;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_TEXTUAL_CONVENTION_MACRO_TYPE = 2089;
+    public static final int SNMP_TRAP_TYPE_MACRO_TYPE = 2089;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_OBJECT_GROUP_MACRO_TYPE = 2090;
+    public static final int SNMP_TEXTUAL_CONVENTION_MACRO_TYPE = 2090;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_NOTIFICATION_GROUP_MACRO_TYPE = 2091;
+    public static final int SNMP_OBJECT_GROUP_MACRO_TYPE = 2091;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_MODULE_COMPLIANCE_MACRO_TYPE = 2092;
+    public static final int SNMP_NOTIFICATION_GROUP_MACRO_TYPE = 2092;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_AGENT_CAPABILITIES_MACRO_TYPE = 2093;
+    public static final int SNMP_MODULE_COMPLIANCE_MACRO_TYPE = 2093;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_UPDATE_PART = 2094;
+    public static final int SNMP_AGENT_CAPABILITIES_MACRO_TYPE = 2094;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_ORGANIZATION_PART = 2095;
+    public static final int SNMP_UPDATE_PART = 2095;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_CONTACT_PART = 2096;
+    public static final int SNMP_ORGANIZATION_PART = 2096;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_DESCR_PART = 2097;
+    public static final int SNMP_CONTACT_PART = 2097;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_REVISION_PART = 2098;
+    public static final int SNMP_DESCR_PART = 2098;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_STATUS_PART = 2099;
+    public static final int SNMP_REVISION_PART = 2099;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_REFER_PART = 2100;
+    public static final int SNMP_STATUS_PART = 2100;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_SYNTAX_PART = 2101;
+    public static final int SNMP_REFER_PART = 2101;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_UNITS_PART = 2102;
+    public static final int SNMP_SYNTAX_PART = 2102;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_ACCESS_PART = 2103;
+    public static final int SNMP_UNITS_PART = 2103;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_INDEX_PART = 2104;
+    public static final int SNMP_ACCESS_PART = 2104;
 
     /**
      * A production node identity constant.
      */
-    public static final int INDEX_VALUE_LIST = 2105;
+    public static final int SNMP_INDEX_PART = 2105;
 
     /**
      * A production node identity constant.
      */
-    public static final int INDEX_VALUE = 2106;
+    public static final int INDEX_VALUE_LIST = 2106;
 
     /**
      * A production node identity constant.
      */
-    public static final int INDEX_TYPE = 2107;
+    public static final int INDEX_VALUE = 2107;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_DEF_VAL_PART = 2108;
+    public static final int INDEX_TYPE = 2108;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_OBJECTS_PART = 2109;
+    public static final int SNMP_DEF_VAL_PART = 2109;
 
     /**
      * A production node identity constant.
      */
-    public static final int VALUE_LIST = 2110;
+    public static final int SNMP_OBJECTS_PART = 2110;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_ENTERPRISE_PART = 2111;
+    public static final int VALUE_LIST = 2111;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_VAR_PART = 2112;
+    public static final int SNMP_ENTERPRISE_PART = 2112;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_DISPLAY_PART = 2113;
+    public static final int SNMP_VAR_PART = 2113;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_NOTIFICATIONS_PART = 2114;
+    public static final int SNMP_DISPLAY_PART = 2114;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_MODULE_PART = 2115;
+    public static final int SNMP_NOTIFICATIONS_PART = 2115;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_MODULE_IMPORT = 2116;
+    public static final int SNMP_MODULE_PART = 2116;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_MANDATORY_PART = 2117;
+    public static final int SNMP_MODULE_IMPORT = 2117;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_COMPLIANCE_PART = 2118;
+    public static final int SNMP_MANDATORY_PART = 2118;
 
     /**
      * A production node identity constant.
      */
-    public static final int COMPLIANCE_GROUP = 2119;
+    public static final int SNMP_COMPLIANCE_PART = 2119;
 
     /**
      * A production node identity constant.
      */
-    public static final int COMPLIANCE_OBJECT = 2120;
+    public static final int COMPLIANCE_GROUP = 2120;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_WRITE_SYNTAX_PART = 2121;
+    public static final int COMPLIANCE_OBJECT = 2121;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_PRODUCT_RELEASE_PART = 2122;
+    public static final int SNMP_WRITE_SYNTAX_PART = 2122;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_MODULE_SUPPORT_PART = 2123;
+    public static final int SNMP_PRODUCT_RELEASE_PART = 2123;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_VARIATION_PART = 2124;
+    public static final int SNMP_MODULE_SUPPORT_PART = 2124;
 
     /**
      * A production node identity constant.
      */
-    public static final int SNMP_CREATION_PART = 2125;
+    public static final int SNMP_VARIATION_PART = 2125;
+
+    /**
+     * A production node identity constant.
+     */
+    public static final int SNMP_CREATION_PART = 2126;
 }

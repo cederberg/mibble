@@ -32,6 +32,11 @@ import java.io.Reader;
 import java.net.URL;
 import java.util.ArrayList;
 
+import net.percederberg.grammatica.parser.ParserCreationException;
+import net.percederberg.grammatica.parser.ParserLogException;
+
+import net.percederberg.mibble.asn1.Asn1Parser;
+
 /**
  * A MIB loader. This class contains a search path for locating MIB
  * files, and also holds a refererence to previously loaded MIB files
@@ -59,7 +64,7 @@ import java.util.ArrayList;
  * concurrently in multiple threads.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.4
+ * @version  2.5
  * @since    2.0
  */
 public class MibLoader {
@@ -570,15 +575,17 @@ public class MibLoader {
         MibLoaderLog  log = new MibLoaderLog();
         ArrayList     processed = new ArrayList();
         MibSource     src;
-        Mib           mib;
+        ArrayList     list;
 
         // Parse MIB files in queue
         while (queue.size() > 0) {
             try {
                 src = (MibSource) queue.get(0);
-                mib = src.createMib(this, log);
-                mibs.add(mib);
-                processed.add(mib);
+                if (!mibs.contains(src.getFile())) {
+                    list = src.parseMib(this, log);
+                    mibs.addAll(list);
+                    processed.addAll(list);
+                }
             } catch (MibLoaderException e) {
                 // Do nothing, errors are already in the log
             }
@@ -813,28 +820,49 @@ public class MibLoader {
         }
 
         /**
-         * Creates the MIB container. This method will read the MIB
-         * either from file, URL or input stream.
+         * Parses the MIB input source and returns the MIB modules
+         * found. This method will read the MIB either from file, URL
+         * or input stream.
          *
          * @param loader         the MIB loader to use for imports
          * @param log            the MIB log to use for errors
          *
-         * @return the MIB container created
+         * @return the list of MIB modules created
          *
          * @throws IOException if the MIB couldn't be found
          * @throws MibLoaderException if the MIB couldn't be parsed
          *             or analyzed correctly
          */
-        public Mib createMib(MibLoader loader, MibLoaderLog log)
+        public ArrayList parseMib(MibLoader loader, MibLoaderLog log)
             throws IOException, MibLoaderException {
 
+            Asn1Parser   parser;
+            MibAnalyzer  analyzer;
+            String       msg;
+
+            // Open input stream
             if (input != null) {
-                return new Mib(input, null, loader, log);
+                // Do nothing as input stream already setup
             } else if (url != null) {
                 input = new InputStreamReader(url.openStream());
-                return new Mib(input, file, loader, log);
             } else {
-                return new Mib(file, loader, log);
+                input = new FileReader(file);
+            }
+
+            // Parse input stream
+            try {
+                analyzer = new MibAnalyzer(null, loader, log);
+                parser = new Asn1Parser(input, analyzer);
+                parser.parse();
+                return analyzer.getMibs();
+            } catch (ParserCreationException e) {
+                msg = "parser creation error in ASN.1 parser: " +
+                      e.getMessage();
+                log.addInternalError(file, msg);
+                throw new MibLoaderException(log);
+            } catch (ParserLogException e) {
+                log.addAll(file, e);
+                throw new MibLoaderException(log);
             }
         }
     }

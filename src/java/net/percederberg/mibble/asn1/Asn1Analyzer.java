@@ -33,7 +33,7 @@ import net.percederberg.grammatica.parser.Token;
  * A class providing callback methods for the parser.
  * 
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.5
  */
 public abstract class Asn1Analyzer extends Analyzer {
 
@@ -360,6 +360,9 @@ public abstract class Asn1Analyzer extends Analyzer {
             break;
         case Asn1Constants.NUMBER_STRING:
             enterNumberString((Token) node);
+            break;
+        case Asn1Constants.START:
+            enterStart((Production) node);
             break;
         case Asn1Constants.MODULE_DEFINITION:
             enterModuleDefinition((Production) node);
@@ -961,6 +964,8 @@ public abstract class Asn1Analyzer extends Analyzer {
             return exitIdentifierString((Token) node);
         case Asn1Constants.NUMBER_STRING:
             return exitNumberString((Token) node);
+        case Asn1Constants.START:
+            return exitStart((Production) node);
         case Asn1Constants.MODULE_DEFINITION:
             return exitModuleDefinition((Production) node);
         case Asn1Constants.MODULE_IDENTIFIER:
@@ -1227,6 +1232,9 @@ public abstract class Asn1Analyzer extends Analyzer {
         throws ParseException {
 
         switch (node.getId()) {
+        case Asn1Constants.START:
+            childStart(node, child);
+            break;
         case Asn1Constants.MODULE_DEFINITION:
             childModuleDefinition(node, child);
             break;
@@ -4161,6 +4169,44 @@ public abstract class Asn1Analyzer extends Analyzer {
      */
     protected Node exitNumberString(Token node) throws ParseException {
         return node;
+    }
+
+    /**
+     * Called when entering a parse tree node.
+     * 
+     * @param node           the node being entered
+     * 
+     * @throws ParseException if the node analysis discovered errors
+     */
+    protected void enterStart(Production node) throws ParseException {
+    }
+
+    /**
+     * Called when exiting a parse tree node.
+     * 
+     * @param node           the node being exited
+     * 
+     * @return the node to add to the parse tree, or
+     *         null if no parse tree should be created
+     * 
+     * @throws ParseException if the node analysis discovered errors
+     */
+    protected Node exitStart(Production node) throws ParseException {
+        return node;
+    }
+
+    /**
+     * Called when adding a child to a parse tree node.
+     * 
+     * @param node           the parent node
+     * @param child          the child node, or null
+     * 
+     * @throws ParseException if the node analysis discovered errors
+     */
+    protected void childStart(Production node, Node child)
+        throws ParseException {
+
+        node.addChild(child);
     }
 
     /**
