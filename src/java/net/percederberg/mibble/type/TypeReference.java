@@ -43,7 +43,6 @@ import net.percederberg.mibble.MibSymbol;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibTypeSymbol;
 import net.percederberg.mibble.MibValue;
-import net.percederberg.mibble.snmp.SnmpTextualConvention;
 
 /**
  * A reference to a type symbol.
@@ -184,90 +183,21 @@ public class TypeReference extends MibType implements MibContext {
         throws MibException {
 
         type = type.initialize(log);
-        // TODO: clone type if possible
-        if (constraint == null && values == null) {
-            return type;
-        } else if (type instanceof IntegerType) {
-            return initialize(log, (IntegerType) type);
-        } else if (type instanceof StringType) {
-            return initialize(log, (StringType) type);
-        } else if (type instanceof BitSetType) {
-            return initialize(log, (BitSetType) type);
-        } else if (type instanceof SnmpTextualConvention) {
-            type = ((SnmpTextualConvention) type).getSyntax();
-            return initialize(log, type);
-        } else {
-            throw new MibException(location, 
-                                   "type does not support constraints");
+        try {
+            if (constraint != null) {
+                type = type.createReference(constraint);
+                type = type.initialize(log);
+            } else if (values != null) {
+                type = type.createReference(values);
+                type = type.initialize(log);
+            } else {
+                type = type.createReference();
+            }
+        } catch (UnsupportedOperationException e) {
+            throw new MibException(location, e.getMessage());
         }
-    }
-
-    /**
-     * Initializes the specified integer MIB type. This method will 
-     * add the constraints or defined values.
-     * 
-     * @param log            the MIB loader log
-     * @param type           the MIB type
-     * 
-     * @return the basic MIB type
-     * 
-     * @throws MibException if an error was encountered during the
-     *             initialization
-     */
-    private MibType initialize(MibLoaderLog log, IntegerType type) 
-        throws MibException {
-
-        if (values != null) {
-            return new IntegerType(values).initialize(log);
-        } else {
-            return new IntegerType(constraint).initialize(log);
-        }
-    }
-
-    /**
-     * Initializes the specified string MIB type. This method  will 
-     * add the constraints.
-     * 
-     * @param log            the MIB loader log
-     * @param type           the MIB type
-     * 
-     * @return the basic MIB type
-     * 
-     * @throws MibException if an error was encountered during the
-     *             initialization
-     */
-    private MibType initialize(MibLoaderLog log, StringType type) 
-        throws MibException {
-
-        if (values != null) {
-            throw new MibException(location, 
-                                   "string type does not support " +
-                                   "defined values");
-        } else {
-            return new StringType(constraint).initialize(log);
-        }
-    }
-
-    /**
-     * Initializes the specified bit set MIB type. This method  will 
-     * add the constraints or defined values.
-     * 
-     * @param log            the MIB loader log
-     * @param type           the MIB type
-     * 
-     * @return the basic MIB type
-     * 
-     * @throws MibException if an error was encountered during the
-     *             initialization
-     */
-    private MibType initialize(MibLoaderLog log, BitSetType type) 
-        throws MibException {
-
-        if (values != null) {
-            return new BitSetType(values).initialize(log);
-        } else {
-            return new BitSetType(constraint).initialize(log);
-        }
+        // TODO: set MIB Type tag
+        return type;
     }
 
     /**

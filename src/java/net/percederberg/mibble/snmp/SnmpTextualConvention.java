@@ -33,12 +33,15 @@
 
 package net.percederberg.mibble.snmp;
 
+import java.util.ArrayList;
+
 import net.percederberg.mibble.MibContext;
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibSymbol;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
+import net.percederberg.mibble.type.Constraint;
 
 /**
  * An SNMP textual convention.
@@ -114,6 +117,69 @@ public class SnmpTextualConvention extends MibType implements MibContext {
     public MibType initialize(MibLoaderLog log) throws MibException {
         syntax = syntax.initialize(log);
         return this;
+    }
+
+    /**
+     * Creates a type reference to this type. The type reference is
+     * normally an identical type, but with the primitive flag set to 
+     * false. Only certain types support being referenced, and the
+     * default implementation of this method throws an exception. 
+     * 
+     * @return the MIB type reference
+     * 
+     * @throws UnsupportedOperationException if a type reference 
+     *             couldn't be created
+     * 
+     * @since 2.2
+     */
+    public MibType createReference() 
+        throws UnsupportedOperationException {
+
+        return syntax.createReference();
+    }
+
+    /**
+     * Creates a constrained type reference to this type. The type 
+     * reference is normally an identical type, but with the 
+     * primitive flag set to false. Only certain types support being 
+     * referenced, and the default implementation of this method 
+     * throws an exception. 
+     *
+     * @param constraint     the type constraint
+     *  
+     * @return the MIB type reference
+     * 
+     * @throws UnsupportedOperationException if a type reference 
+     *             couldn't be created with constraints
+     * 
+     * @since 2.2
+     */
+    public MibType createReference(Constraint constraint) 
+        throws UnsupportedOperationException {
+
+        return syntax.createReference(constraint);
+    }
+
+    /**
+     * Creates a constrained type reference to this type. The type 
+     * reference is normally an identical type, but with the 
+     * primitive flag set to false. Only certain types support being 
+     * referenced, and the default implementation of this method 
+     * throws an exception. 
+     *
+     * @param values         the type value symbols
+     *  
+     * @return the MIB type reference
+     * 
+     * @throws UnsupportedOperationException if a type reference 
+     *             couldn't be created with value constraints
+     * 
+     * @since 2.2
+     */
+    public MibType createReference(ArrayList values) 
+        throws UnsupportedOperationException {
+
+        return syntax.createReference(values);
     }
 
     /**

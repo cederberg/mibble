@@ -89,18 +89,7 @@ public class BitSetType extends MibType implements MibContext {
      */
     public BitSetType(ArrayList values) {
         this(true, null, null);
-        for (int i = 0; i < values.size(); i++) {
-            if (values.get(i) instanceof MibValueSymbol) {
-                MibValueSymbol sym = (MibValueSymbol) values.get(i);
-                symbols.put(sym.getName(), sym);
-                ValueConstraint c = new ValueConstraint(sym.getValue());
-                if (constraint == null) {
-                    constraint = c;
-                } else {
-                    constraint = new CompoundConstraint(constraint, c);
-                }
-            }
-        }
+        createValueConstraints(values);
     }
 
     /**
@@ -154,6 +143,82 @@ public class BitSetType extends MibType implements MibContext {
             }
         }
         return this;
+    }
+
+    /**
+     * Creates a type reference to this type. The type reference is
+     * normally an identical type, but with the primitive flag set to 
+     * false. Only certain types support being referenced, and the
+     * default implementation of this method throws an exception. 
+     * 
+     * @return the MIB type reference
+     * 
+     * @since 2.2
+     */
+    public MibType createReference() {
+        return new BitSetType(false, constraint, symbols);
+    }
+
+    /**
+     * Creates a constrained type reference to this type. The type 
+     * reference is normally an identical type, but with the 
+     * primitive flag set to false. Only certain types support being 
+     * referenced, and the default implementation of this method 
+     * throws an exception. 
+     *
+     * @param constraint     the type constraint
+     *  
+     * @return the MIB type reference
+     * 
+     * @since 2.2
+     */
+    public MibType createReference(Constraint constraint) {
+        return new BitSetType(false, constraint, null);
+    }
+
+    /**
+     * Creates a constrained type reference to this type. The type 
+     * reference is normally an identical type, but with the 
+     * primitive flag set to false. Only certain types support being 
+     * referenced, and the default implementation of this method 
+     * throws an exception. 
+     *
+     * @param values         the type value symbols
+     *  
+     * @return the MIB type reference
+     * 
+     * @since 2.2
+     */
+    public MibType createReference(ArrayList values) {
+        BitSetType  type;
+
+        type = new BitSetType(false, null, null);
+        type.createValueConstraints(values);
+        return type;
+    }
+
+    /**
+     * Creates the constraints and symbol map from a list of value 
+     * symbols.
+     * 
+     * @param values         the list of value symbols
+     */
+    private void createValueConstraints(ArrayList values) {
+        MibValueSymbol   sym;
+        ValueConstraint  c;
+
+        for (int i = 0; i < values.size(); i++) {
+            if (values.get(i) instanceof MibValueSymbol) {
+                sym = (MibValueSymbol) values.get(i);
+                symbols.put(sym.getName(), sym);
+                c = new ValueConstraint(sym.getValue());
+                if (constraint == null) {
+                    constraint = c;
+                } else {
+                    constraint = new CompoundConstraint(constraint, c);
+                }
+            }
+        }
     }
 
     /**

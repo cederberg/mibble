@@ -50,13 +50,23 @@ public class NullType extends MibType {
     /**
      * The one a only null type instance.
      */
+    // TODO: remove this
     public static final NullType TYPE = new NullType();
 
     /**
      * Creates a new null MIB type. 
      */
     private NullType() {
-        super("NULL", true);
+        this(true);
+    }
+    
+    /**
+     * Creates a new null MIB type.
+     * 
+     * @param primitive      the primitive type flag 
+     */
+    private NullType(boolean primitive) {
+        super("NULL", primitive);
     }
 
     /**
@@ -72,6 +82,20 @@ public class NullType extends MibType {
      */
     public MibType initialize(MibLoaderLog log) {
         return this;
+    }
+
+    /**
+     * Creates a type reference to this type. The type reference is
+     * normally an identical type, but with the primitive flag set to 
+     * false. Only certain types support being referenced, and the
+     * default implementation of this method throws an exception. 
+     * 
+     * @return the MIB type reference
+     * 
+     * @since 2.2
+     */
+    public MibType createReference() {
+        return new NullType(false);
     }
 
     /**

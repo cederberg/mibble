@@ -50,13 +50,23 @@ public class BooleanType extends MibType {
     /**
      * The one a only boolean type instance.
      */
+    // TODO: remove this
     public static final BooleanType TYPE = new BooleanType();
 
     /**
      * Creates a new boolean MIB type. 
      */
     private BooleanType() {
-        super("BOOLEAN", true);
+        this(true);
+    }
+    
+    /**
+     * Creates a new boolean MIB type.
+     * 
+     * @param primitive      the primitive type flag 
+     */
+    private BooleanType(boolean primitive) {
+        super("BOOLEAN", primitive);
     }
 
     /**
@@ -72,6 +82,20 @@ public class BooleanType extends MibType {
      */
     public MibType initialize(MibLoaderLog log) {
         return this;
+    }
+
+    /**
+     * Creates a type reference to this type. The type reference is
+     * normally an identical type, but with the primitive flag set to 
+     * false. Only certain types support being referenced, and the
+     * default implementation of this method throws an exception. 
+     * 
+     * @return the MIB type reference
+     * 
+     * @since 2.2
+     */
+    public MibType createReference() {
+        return new BooleanType(false);
     }
 
     /**

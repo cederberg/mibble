@@ -102,6 +102,37 @@ public class StringType extends MibType {
     }
 
     /**
+     * Creates a type reference to this type. The type reference is
+     * normally an identical type, but with the primitive flag set to 
+     * false. Only certain types support being referenced, and the
+     * default implementation of this method throws an exception. 
+     * 
+     * @return the MIB type reference
+     * 
+     * @since 2.2
+     */
+    public MibType createReference() {
+        return new StringType(false, constraint);
+    }
+
+    /**
+     * Creates a constrained type reference to this type. The type 
+     * reference is normally an identical type, but with the 
+     * primitive flag set to false. Only certain types support being 
+     * referenced, and the default implementation of this method 
+     * throws an exception. 
+     *
+     * @param constraint     the type constraint
+     *  
+     * @return the MIB type reference
+     * 
+     * @since 2.2
+     */
+    public MibType createReference(Constraint constraint) {
+        return new StringType(false, constraint);
+    }
+
+    /**
      * Checks if this type has any constraint.
      * 
      * @return true if this type has any constraint, or

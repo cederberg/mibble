@@ -90,6 +90,20 @@ public class SequenceType extends MibType {
     }
 
     /**
+     * Creates a type reference to this type. The type reference is
+     * normally an identical type, but with the primitive flag set to 
+     * false. Only certain types support being referenced, and the
+     * default implementation of this method throws an exception. 
+     * 
+     * @return the MIB type reference
+     * 
+     * @since 2.2
+     */
+    public MibType createReference() {
+        return new SequenceType(elements);
+    }
+
+    /**
      * Checks if the specified value is compatible with this type. No
      * values are considered compatible with this type, and this 
      * method therefore always returns false.

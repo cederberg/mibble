@@ -90,6 +90,20 @@ public class ChoiceType extends MibType {
     }
 
     /**
+     * Creates a type reference to this type. The type reference is
+     * normally an identical type, but with the primitive flag set to 
+     * false. Only certain types support being referenced, and the
+     * default implementation of this method throws an exception. 
+     * 
+     * @return the MIB type reference
+     * 
+     * @since 2.2
+     */
+    public MibType createReference() {
+        return new ChoiceType(elements);
+    }
+
+    /**
      * Checks if the specified value is compatible with this type. A
      * values is considered compatible with this type, if it is 
      * compatible with any single type in the union.

@@ -33,6 +33,10 @@
 
 package net.percederberg.mibble;
 
+import java.util.ArrayList;
+
+import net.percederberg.mibble.type.Constraint;
+
 /**
  * The base MIB type class. All the basic MIB types can also be 
  * cloned, and implements the Cloneable interface. Some of the more
@@ -60,6 +64,7 @@ public abstract class MibType {
     /**
      * Creates a new MIB type instance.
      * 
+     * @param name           the type name
      * @param primitive      the primitive type flag
      */
     public MibType(String name, boolean primitive) {
@@ -85,6 +90,73 @@ public abstract class MibType {
         throws MibException;
 
     /**
+     * Creates a type reference to this type. The type reference is
+     * normally an identical type, but with the primitive flag set to 
+     * false. Only certain types support being referenced, and the
+     * default implementation of this method throws an exception. 
+     * 
+     * @return the MIB type reference
+     * 
+     * @throws UnsupportedOperationException if a type reference 
+     *             couldn't be created
+     * 
+     * @since 2.2
+     */
+    public MibType createReference() 
+        throws UnsupportedOperationException {
+
+        String msg = name + " type cannot be referenced";
+        throw new UnsupportedOperationException(msg); 
+    }
+
+    /**
+     * Creates a constrained type reference to this type. The type 
+     * reference is normally an identical type, but with the 
+     * primitive flag set to false. Only certain types support being 
+     * referenced, and the default implementation of this method 
+     * throws an exception. 
+     *
+     * @param constraint     the type constraint
+     *  
+     * @return the MIB type reference
+     * 
+     * @throws UnsupportedOperationException if a type reference 
+     *             couldn't be created with constraints
+     * 
+     * @since 2.2
+     */
+    public MibType createReference(Constraint constraint) 
+        throws UnsupportedOperationException {
+
+        String msg = name + " type cannot be referenced with constraints";
+        throw new UnsupportedOperationException(msg); 
+    }
+
+    /**
+     * Creates a constrained type reference to this type. The type 
+     * reference is normally an identical type, but with the 
+     * primitive flag set to false. Only certain types support being 
+     * referenced, and the default implementation of this method 
+     * throws an exception. 
+     *
+     * @param values         the type value symbols
+     *  
+     * @return the MIB type reference
+     * 
+     * @throws UnsupportedOperationException if a type reference 
+     *             couldn't be created with value constraints
+     * 
+     * @since 2.2
+     */
+    public MibType createReference(ArrayList values) 
+        throws UnsupportedOperationException {
+
+        String msg = name + " type cannot be referenced with " +
+                     "defined values";
+        throw new UnsupportedOperationException(msg); 
+    }
+
+    /**
      * Checks if the specified value is compatible with this type. A
      * value is compatible if it has a type that matches this one and
      * a value that satisfies all constraints. 
@@ -104,6 +176,8 @@ public abstract class MibType {
      * 
      * @return true if this type represents a primitive type, or
      *         false otherwise
+     * 
+     * @since 2.2
      */
     public boolean isPrimitive() {
         return primitive;
