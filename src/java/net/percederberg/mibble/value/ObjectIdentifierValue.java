@@ -266,7 +266,9 @@ public class ObjectIdentifierValue extends MibValue {
     }
 
     /**
-     * Returns a child object identifier value.
+     * Returns a child object identifier value. The children are
+     * ordered by their value, not necessarily in the order in which
+     * they appear in the original MIB file.
      *
      * @param index          the child position, 0 <= index < count
      *
@@ -278,7 +280,9 @@ public class ObjectIdentifierValue extends MibValue {
     }
 
     /**
-     * Returns an array of all child object identifier values.
+     * Returns an array of all child object identifier values. The
+     * children are ordered by their value, not necessarily in the
+     * order in which they appear in the original MIB file.
      *
      * @return the child object identifier values
      *
@@ -293,14 +297,28 @@ public class ObjectIdentifierValue extends MibValue {
     }
 
     /**
-     * Adds a child component.
+     * Adds a child component. The children will be inserted in the
+     * value order. If a child has already been added, it will be
+     * ignored.
      *
      * @param child          the child component
      */
     private void addChild(ObjectIdentifierValue child) {
-        if (!children.contains(child)) {
-            children.add(child);
+        ObjectIdentifierValue  value;
+        int                    i = children.size();
+
+        // Insert child in value order, searching backwards to 
+        // optimize the most common case (ordered insertion)
+        while (i > 0) {
+            value = (ObjectIdentifierValue) children.get(i - 1);
+            if (value.getValue() == child.getValue()) {
+                return;
+            } else if (value.getValue() < child.getValue()) {
+                break;
+            }
+            i--;
         }
+        children.add(i, child);
     }
 
     /**
