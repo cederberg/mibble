@@ -41,10 +41,32 @@ import net.percederberg.mibble.type.Constraint;
  * type is to check the type instance and then cast the MibType
  * object to the corresponding subtype. Each subtype have very
  * different properties, which is why the API in this class is rather
- * limited. Another way to check which type is at hand, is to query
- * the type tags with the hasTag() method. In this way it is possible
- * to distinguish between types using the same or a similar primitive
+ * limited. The example below shows some skeleton code for extracting
+ * type information.
+ *
+ * <pre>    if (type instanceof SnmpObjectType) {
+ *        objectType = (SnmpObjectType) type;
+ *        ...
+ *    }</pre>
+ *
+ * Another way to check which type is at hand, is to query the type
+ * tags with the hasTag() method. In this way it is possible to
+ * distinguish between types using the same or a similar primitive
  * ASN.1 type representation (such as DisplayString and IpAddress).
+ * This should normally be done in order to create a correct BER-
+ * or DER-encoding of the type. The example below illustrates how
+ * this could be done.
+ *
+ * <pre>    tag = type.getTag();
+ *    if (tag.getCategory() == MibTypeTag.UNIVERSAL) {
+ *        // Set BER and DER identifier bits 8 &amp; 7 to 00
+ *    } else if (tag.getCategory() == MibTypeTag.APPLICATION) {
+ *        // Set BER and DER identifier bits 8 &amp; 7 to 01 
+ *    }
+ *    ... 
+ *    if (!type.isPrimitive()) {
+ *        // Set BER and DER constructed bit
+ *    }</pre>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -219,6 +241,8 @@ public abstract class MibType {
      * @return true if the specified type tag was present, or
      *         false otherwise
      *
+     * @see #hasTag(int, int)
+     *
      * @since 2.2
      */
     public boolean hasTag(MibTypeTag tag) {
@@ -235,6 +259,8 @@ public abstract class MibType {
      * @return true if the specified type tag was present, or
      *         false otherwise
      *
+     * @see #hasTag(MibTypeTag)
+     *
      * @since 2.2
      */
     public boolean hasTag(int category, int value) {
@@ -250,13 +276,18 @@ public abstract class MibType {
     }
 
     /**
-     * Checks if this type referenced the specified type symbol.
+     * Checks if this type referenced the specified type symbol. This
+     * method should be avoided if possible, as it is much better to
+     * rely on type tags to distinguish between two types with the
+     * same base type (such as DisplayString and IpAddress).
      *
      * @param name           the type symbol name
      *
      * @return true if this type was a reference to the symbol, or
      *         false otherwise
      *
+     * @see #hasTag(int, int)
+     * @see #hasTag(MibTypeTag)
      * @see #getReferenceSymbol()
      *
      * @since 2.2
@@ -272,7 +303,10 @@ public abstract class MibType {
     }
 
     /**
-     * Checks if this type referenced the specified type symbol.
+     * Checks if this type referenced the specified type symbol. This
+     * method should be avoided if possible, as it is much better to
+     * rely on type tags to distinguish between two types with the
+     * same base type (such as DisplayString and IpAddress).
      *
      * @param module         the type symbol module (MIB) name
      * @param name           the type symbol name
@@ -280,6 +314,8 @@ public abstract class MibType {
      * @return true if this type was a reference to the symbol, or
      *         false otherwise
      *
+     * @see #hasTag(int, int)
+     * @see #hasTag(MibTypeTag)
      * @see #getReferenceSymbol()
      *
      * @since 2.2
@@ -363,10 +399,16 @@ public abstract class MibType {
      * whenever a type is defined in a type assignment, and later
      * referenced by name from some other symbol. The complete chain
      * of type references is available by calling getReference()
-     * recursively on the type of the returned type symbol.
+     * recursively on the type of the returned type symbol.<p>
+     *
+     * In general, this method should be avoided as it is much better
+     * to rely on type tags to distinguish between two types with the
+     * same base type (such as DisplayString and IpAddress).
      *
      * @return the type reference symbol, or
      *         null if this type never referenced another type
+     *
+     * @see #getTag()
      *
      * @since 2.2
      */
