@@ -100,12 +100,16 @@ public class MibLoader {
     }
 
     /**
-     * Adds a directory to the MIB search path.
+     * Adds a directory to the MIB search path. If the directory
+     * specified is null, the current working directory will be added.
      * 
      * @param dir            the directory to add
      */
     public void addDir(File dir) {
-        if (dir != null && !dirs.contains(dir)) {
+        if (dir == null) {
+            dir = new File(".");
+        }
+        if (!dirs.contains(dir)) {
             dirs.add(dir);
         }
     }
@@ -123,12 +127,17 @@ public class MibLoader {
 
     /**
      * Adds a directory and all subdirectories to the MIB search path.
+     * If the directory specified is null, the current working
+     * directory (and subdirectories) will be added.
      * 
      * @param dir            the directory to add
      */
     public void addAllDirs(File dir) {
         File[]  files;
 
+        if (dir == null) {
+            dir = new File(".");
+        }
         addDir(dir);
         files = dir.listFiles();
         for (int i = 0; i < files.length; i++) {
