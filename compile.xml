@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  build.xml
+
+  This work is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published
+  by the Free Software Foundation; either version 2 of the License,
+  or (at your option) any later version.
+
+  This work is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA
+
+  Copyright (c) 2004 Per Cederberg. All rights reserved.
+-->
+
+<project name="mibble" default="all" basedir=".">
+
+<!-- 
+
+  BUILD INSTRUCTIONS
+
+  This is an Ant build file for Mibble. You can use it to simplify
+  compiling and packaging of your own modifications to the original
+  Mibble source code. Note that this build file will overwrite content
+  in the current directory as a result of the build process.
+
+  To run Ant, choose one (or more) of the targets under the TOP-LEVEL
+  TARGETS heading below. If you run Ant without any target specified
+  it will build the whole Mibble project, while also performing tests
+  and creating the documentation.
+
+  The following build properties are available (specify on the
+  command-line with -Dname=value):
+
+    build.name
+        The base name of the build. Defaults to "mibble".
+
+    build.version
+        The build version number. Defaults to todays date.
+
+    build.debug
+        The debug build flag. Set to any value to compile with debug
+        information. By default this flag is off.
+
+-->
+
+
+<!-- INITIALIZATION -->
+  <path id="project.class.path">
+    <fileset dir="lib"
+             includes="*.jar" />
+  </path>
+
+  <target name="init">
+    <tstamp>
+      <format property="build.printdate"
+              pattern="yyyy-MM-dd" />
+    </tstamp>
+    <property name="build.date" value="${DSTAMP}" />
+    <condition property="build.name" value="mibble">
+      <not>
+        <isset property="build.name" />
+      </not>
+    </condition>
+    <condition property="build.version" value="${DSTAMP}">
+      <not>
+        <isset property="build.version" />
+      </not>
+    </condition>
+  </target>
+
+
+<!-- TOP-LEVEL TARGETS -->
+
+  <target name="all"
+          depends="compile,test,doc" />
+
+  <target name="minimal"
+          depends="compile,doc" />
+
+  <target name="compile"
+          depends="init,compile-clean,compile-java,compile-scripts" />
+
+  <target name="test"
+          depends="compile,test-validator" />
+
+  <target name="doc"
+          depends="init,doc-clean,doc-text,doc-html,doc-java" />
+
+
+<!-- COMPILATION TARGETS -->
+  <target name="compile-clean">
+    <delete quiet="true">
+      <fileset dir="bin" />
+      <fileset dir="classes" />
+      <fileset dir="lib"
+               includes="mibble*.jar" />
+    </delete>
+    <mkdir dir="bin" />
+    <mkdir dir="classes" />
+    <mkdir dir="lib" />
+  </target>
+
+  <target name="compile-codegen">
+    <taskdef name="grammatica"
+             classname="net.percederberg.grammatica.ant.GrammaticaTask"
+             classpathref="project.class.path" />
+    <grammatica grammar="src/grammar/asn1.grammar">
+      <java dir="src/java"
+            package="net.percederberg.mibble.asn1"
+            public="true" />
+    </grammatica>
+  </target>
+
+  <target name="compile-java" 
+          depends="compile-java-optimized,compile-java-debug">
+    <jar jarfile="lib/${build.name}-${build.version}.jar">
+      <fileset dir="."
+               includes="README.txt" />
+      <fileset dir="."
+               includes="LICENSE.txt" />
+      <fileset dir="classes" />
+      <zipfileset dir="src/mibs"
+                  prefix="mibs" />
+    </jar>
+  </target>
+
+  <target name="compile-java-optimized" unless="build.debug">
+    <javac srcdir="src/java"
+           destdir="classes"
+           classpathref="project.class.path"
+           target="1.1"
+           debug="off"
+           optimize="on"
+           deprecation="on" />
+  </target>
+
+  <target name="compile-java-debug" if="build.debug">
+    <javac srcdir="src/java"
+           destdir="classes"
+           classpathref="project.class.path"
+           target="1.1"
+           debug="on"
+           deprecation="on" />
+  </target>
+
+  <target name="compile-scripts">
+    <copy todir="bin" overwrite="true">
+      <fileset dir="src/bin" />
+      <filterset>
+        <filter token="NAME" value="${build.name}" />
+        <filter token="VERSION" value="${build.version}" />
+      </filterset>
+    </copy>
+    <chmod dir="bin" includes="*.sh" perm="ugo+x" />
+  </target>
+
+
+<!-- TEST TARGETS -->
+  <target name="test-validator">
+    <apply executable="java"
+           relative="true"
+           parallel="true"
+           failonerror="true">
+      <arg line="-cp lib/${build.name}-${build.version}.jar:lib/grammatica-1.4.jar" />
+      <arg value="net.percederberg.mibble.MibbleValidator" />
+      <fileset dir="."
+               includes="src/mibs/**" />
+    </apply>
+  </target>
+
+
+<!-- DOCUMENTATION TARGETS -->
+  <target name="doc-clean">
+    <delete dir="doc" quiet="true" />
+    <mkdir dir="doc" />
+    <mkdir dir="doc/api" />
+  </target>
+
+  <target name="doc-text">
+    <xslt style="src/doc/txt.xsl"
+          basedir="src/doc/release"
+          destdir="doc"
+          extension=".txt"
+          includes="*.xml">
+      <param name="name" expression="${build.name}" />
+      <param name="version" expression="${build.version}" />
+      <param name="date" expression="${build.printdate}" />
+    </xslt>
+  </target>
+
+  <target name="doc-html">
+    <copy file="src/doc/style.css"
+          todir="doc" />
+    <xslt style="src/doc/html.xsl"
+          basedir="src/doc/release"
+          destdir="doc"
+          extension=".html"
+          includes="*.xml">
+      <param name="name" expression="${build.name}" />
+      <param name="version" expression="${build.version}" />
+      <param name="date" expression="${build.printdate}" />
+      <param name="style" expression="style.css" />
+    </xslt>
+  </target>
+
+  <target name="doc-java">
+    <javadoc packagenames="net.percederberg.mibble.*"
+             excludepackagenames="net.percederberg.mibble.asn1.*,net.percederberg.mibble.browser.*"
+             sourcepath="src/java"
+             destdir="doc/api"
+             classpath="classes"
+             classpathref="project.class.path"
+             version="false"
+             use="true"
+             author="false"
+             windowtitle="Mibble ${build.version} Documentation"
+             failonerror="true" />
+  </target>
+
+</project>
