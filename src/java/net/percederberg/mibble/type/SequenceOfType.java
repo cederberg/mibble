@@ -112,7 +112,10 @@ public class SequenceOfType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        return new SequenceOfType(base, constraint);
+        SequenceOfType  type = new SequenceOfType(base, constraint);
+        
+        type.setTag(true, getTag());
+        return type;
     }
 
     /**
@@ -129,7 +132,10 @@ public class SequenceOfType extends MibType {
      * @since 2.2
      */
     public MibType createReference(Constraint constraint) {
-        return new SequenceOfType(base, constraint);
+        SequenceOfType  type = new SequenceOfType(base, constraint);
+        
+        type.setTag(true, getTag());
+        return type;
     }
 
     /**

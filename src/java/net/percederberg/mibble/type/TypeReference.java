@@ -42,6 +42,7 @@ import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibSymbol;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibTypeSymbol;
+import net.percederberg.mibble.MibTypeTag;
 import net.percederberg.mibble.MibValue;
 
 /**
@@ -82,6 +83,16 @@ public class TypeReference extends MibType implements MibContext {
      * The additional defined symbols.
      */
     private ArrayList values = null;
+
+    /**
+     * The MIB type tag to set on the referenced type.
+     */
+    private MibTypeTag tag = null;
+    
+    /**
+     * The implicit type tag flag.
+     */
+    private boolean implicitTag = true;
 
     /**
      * Creates a new type reference.
@@ -196,8 +207,31 @@ public class TypeReference extends MibType implements MibContext {
         } catch (UnsupportedOperationException e) {
             throw new MibException(location, e.getMessage());
         }
-        // TODO: set MIB Type tag
+        if (tag != null) {
+            
+        }
+        initializeTypeTag(type, tag);
         return type;
+    }
+
+    /**
+     * Initializes the type tags for the specified type. The type tag
+     * may be part in a chain of type tags, in which case the chain
+     * is preserved. The last tag in the chain will be added first,
+     * in order to be able to override (or preserve) a previous tag.
+     * 
+     * @param type           the MIB type
+     * @param tag            the MIB type tag
+     */
+    private void initializeTypeTag(MibType type, MibTypeTag tag) {
+        if (tag == null) {
+            // Do nothing
+        } else if (tag.getNext() == null) {
+            type.setTag(implicitTag, tag);
+        } else {
+            initializeTypeTag(type, tag.getNext());
+            type.setTag(false, tag);
+        }
     }
 
     /**
@@ -235,6 +269,28 @@ public class TypeReference extends MibType implements MibContext {
             return ((MibContext) type).getSymbol(name);
         } else {
             return null;
+        }
+    }
+
+    /**
+     * Sets the type tag. This method will keep the type tag stored
+     * until the type reference is resolved.
+     *
+     * @param implicit       the implicit inheritance flag
+     * @param tag            the new type tag
+     * 
+     * @since 2.2
+     */
+    public void setTag(boolean implicit, MibTypeTag tag) {
+        if (this.tag == null) {
+            this.tag = tag;
+            this.implicitTag = implicit; 
+        } else if (implicit) {
+            tag.setNext(this.tag.getNext());
+            this.tag = tag;
+        } else {
+            tag.setNext(this.tag);
+            this.tag = tag;
         }
     }
 }

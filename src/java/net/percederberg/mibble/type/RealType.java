@@ -61,6 +61,7 @@ public class RealType extends MibType {
      * @param primitive      the primitive type flag
      */
     private RealType(boolean primitive) {
+        // TODO: set universal type tag (if exists)
         super("REAL", primitive);
     }
 
@@ -90,7 +91,10 @@ public class RealType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        return new RealType(false);
+        RealType  type = new RealType(false);
+
+        type.setTag(true, getTag());
+        return type;
     }
 
     /**

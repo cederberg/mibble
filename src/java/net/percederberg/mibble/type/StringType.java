@@ -36,6 +36,7 @@ package net.percederberg.mibble.type;
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibTypeTag;
 import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.value.StringValue;
 
@@ -78,6 +79,7 @@ public class StringType extends MibType {
     private StringType(boolean primitive, Constraint constraint) {
         super("OCTET STRING", primitive);
         this.constraint = constraint;
+        setTag(true, MibTypeTag.OCTET_STRING);
     }
 
     /**
@@ -112,7 +114,10 @@ public class StringType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        return new StringType(false, constraint);
+        StringType  type = new StringType(false, constraint);
+        
+        type.setTag(true, getTag());
+        return type;
     }
 
     /**
@@ -129,7 +134,10 @@ public class StringType extends MibType {
      * @since 2.2
      */
     public MibType createReference(Constraint constraint) {
-        return new StringType(false, constraint);
+        StringType  type = new StringType(false, constraint);
+        
+        type.setTag(true, getTag());
+        return type;
     }
 
     /**

@@ -35,6 +35,7 @@ package net.percederberg.mibble.type;
 
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibTypeTag;
 import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.value.NullValue;
 
@@ -61,6 +62,7 @@ public class NullType extends MibType {
      */
     private NullType(boolean primitive) {
         super("NULL", primitive);
+        setTag(true, MibTypeTag.NULL);
     }
 
     /**
@@ -89,7 +91,10 @@ public class NullType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        return new NullType(false);
+        NullType  type = new NullType(false);
+        
+        type.setTag(true, getTag());
+        return type;
     }
 
     /**

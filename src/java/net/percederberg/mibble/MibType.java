@@ -49,8 +49,6 @@ import net.percederberg.mibble.type.Constraint;
  */
 public abstract class MibType {
 
-    // TODO: add support for MibTypeTag
-
     /**
      * The type name.
      */
@@ -60,6 +58,11 @@ public abstract class MibType {
      * The primitive type flag.
      */
     private boolean primitive;
+
+    /**
+     * The type tag.
+     */
+    private MibTypeTag tag = null;
 
     /**
      * Creates a new MIB type instance.
@@ -184,11 +187,52 @@ public abstract class MibType {
     }
 
     /**
+     * Returns the type tag.
+     * 
+     * @return the type tag, or
+     *         null if no type tag has been set 
+     * 
+     * @since 2.2
+     */
+    public MibTypeTag getTag() {
+        return tag;
+    }
+
+    /**
+     * Sets the type tag. The old type tag is kept to some extent,
+     * depending on if the implicit flag is set to true or false. For
+     * implicit inheritance, the first tag in the old tag chain is 
+     * replaced with the new tag. For explicit inheritance, the new
+     * tag is added first in the tag chain without removing any old 
+     * tag.
+     *
+     * @param implicit       the implicit inheritance flag
+     * @param tag            the new type tag
+     * 
+     * @since 2.2
+     */
+    public void setTag(boolean implicit, MibTypeTag tag) {
+        MibTypeTag  next = this.tag;
+
+        if (implicit && next != null) {
+            next = next.getNext();
+        }
+        if (tag != null) {
+            tag.setNext(next);
+        }
+        this.tag = tag; 
+    }
+
+    /**
      * Returns a string representation of this object.
      * 
      * @return a string representation of this object
      */
     public String toString() {
-        return name;
+        if (tag != null) {
+            return tag.toString() + " " + name;
+        } else {
+            return name;
+        }
     }
 }

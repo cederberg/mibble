@@ -42,6 +42,7 @@ import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibSymbol;
 import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibTypeTag;
 import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.value.BitSetValue;
@@ -110,6 +111,7 @@ public class BitSetType extends MibType implements MibContext {
         if (symbols != null) {
             this.symbols = symbols;
         }
+        setTag(true, MibTypeTag.BIT_STRING);
     }
 
     /**
@@ -156,7 +158,10 @@ public class BitSetType extends MibType implements MibContext {
      * @since 2.2
      */
     public MibType createReference() {
-        return new BitSetType(false, constraint, symbols);
+        BitSetType  type =  new BitSetType(false, constraint, symbols);
+        
+        type.setTag(true, getTag());
+        return type;
     }
 
     /**
@@ -173,7 +178,10 @@ public class BitSetType extends MibType implements MibContext {
      * @since 2.2
      */
     public MibType createReference(Constraint constraint) {
-        return new BitSetType(false, constraint, null);
+        BitSetType  type =  new BitSetType(false, constraint, null);
+        
+        type.setTag(true, getTag());
+        return type;
     }
 
     /**
@@ -194,6 +202,7 @@ public class BitSetType extends MibType implements MibContext {
 
         type = new BitSetType(false, null, null);
         type.createValueConstraints(values);
+        type.setTag(false, getTag());
         return type;
     }
 

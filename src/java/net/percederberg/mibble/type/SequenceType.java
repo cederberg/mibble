@@ -100,7 +100,10 @@ public class SequenceType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        return new SequenceType(elements);
+        SequenceType  type = new SequenceType(elements);
+        
+        type.setTag(true, getTag());
+        return type;
     }
 
     /**

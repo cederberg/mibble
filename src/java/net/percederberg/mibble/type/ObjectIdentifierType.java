@@ -35,6 +35,7 @@ package net.percederberg.mibble.type;
 
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibTypeTag;
 import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
@@ -61,6 +62,7 @@ public class ObjectIdentifierType extends MibType {
      */
     private ObjectIdentifierType(boolean primitive) {
         super("OBJECT IDENTIFIER", primitive);
+        setTag(true, MibTypeTag.OBJECT_IDENTIFIER);
     }
 
     /**
@@ -89,7 +91,10 @@ public class ObjectIdentifierType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        return new ObjectIdentifierType(false);
+        ObjectIdentifierType  type = new ObjectIdentifierType(false);
+        
+        type.setTag(true, getTag());
+        return type;
     }
 
     /**
