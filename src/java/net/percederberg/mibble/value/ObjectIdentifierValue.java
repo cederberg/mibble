@@ -33,7 +33,7 @@ import net.percederberg.mibble.MibValueSymbol;
  * identifier values in a tree hierarchy.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.3
+ * @version  2.5
  * @since    2.0
  */
 public class ObjectIdentifierValue extends MibValue {
@@ -268,6 +268,69 @@ public class ObjectIdentifierValue extends MibValue {
     }
 
     /**
+     * Returns a child object identifier value. The children are
+     * searched by their names. This method uses linear search and
+     * therefors has time complexity O(n).
+     *
+     * @param name           the child name
+     *
+     * @return the child object identifier value, or
+     *         null if not found
+     *
+     * @since 2.5
+     */
+    public ObjectIdentifierValue getChildByName(String name) {
+        ObjectIdentifierValue  child;
+
+        for (int i = 0; i < children.size(); i++) {
+            child = (ObjectIdentifierValue) children.get(i);
+            if (name.equals(child.getName())) {
+                return child;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns a child object identifier value. The children are
+     * searched by their numerical value. This method uses binary
+     * search and therefore has time complexity O(log(n)).
+     *
+     * @param value          the child value
+     *
+     * @return the child object identifier value, or
+     *         null if not found
+     *
+     * @since 2.5
+     */
+    public ObjectIdentifierValue getChildByValue(int value) {
+        ObjectIdentifierValue  child;
+        int                    low = 0;
+        int                    high = children.size();
+        int                    pos;
+
+        if (low < value && value <= high) {
+            // Default to that the value is really the index - 1 
+            pos = value - 1;
+        } else {
+            // Otherwise use normal interval midpoint
+            pos = (low + high) / 2;
+        }
+        while (low < high) {
+            child = (ObjectIdentifierValue) children.get(pos);
+            if (child.getValue() == value) {
+                return child;
+            } else if (child.getValue() < value) {
+                low = pos + 1;
+            } else {
+                high = pos;
+            }
+            pos = (low + high) / 2;
+        }
+        return null;
+    }
+
+    /**
      * Returns an array of all child object identifier values. The
      * children are ordered by their value, not necessarily in the
      * order in which they appear in the original MIB file.
@@ -300,6 +363,8 @@ public class ObjectIdentifierValue extends MibValue {
         while (i > 0) {
             value = (ObjectIdentifierValue) children.get(i - 1);
             if (value.getValue() == child.getValue()) {
+                // TODO: this is erroneous as we really need to unify
+                //       the oid:s when this happens
                 return;
             } else if (value.getValue() < child.getValue()) {
                 break;

@@ -472,13 +472,13 @@ public class Mib implements MibContext {
      */
     private MibValueSymbol getSymbolChild(MibValueSymbol sym, int value) {
         ObjectIdentifierValue  oid;
+        ObjectIdentifierValue  child;
 
         if (sym.getValue() instanceof ObjectIdentifierValue) {
             oid = (ObjectIdentifierValue) sym.getValue();
-            for (int i = 0; i < oid.getChildCount(); i++) {
-                if (oid.getChild(i).getValue() == value) {
-                    return oid.getChild(i).getSymbol();
-                }
+            child = oid.getChildByValue(value);
+            if (child != null) {
+                return child.getSymbol();
             }
             if (oid.getChildCount() == 1) {
                 // TODO: We should really check that sym is indeed a
