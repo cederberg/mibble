@@ -56,7 +56,7 @@ import java.util.ArrayList;
  * concurrently in multiple threads. 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
 public class MibLoader {
@@ -194,6 +194,22 @@ public class MibLoader {
             }
         }
         return null;
+    }
+    
+    /**
+     * Returns all previously loaded MIB files. If no MIB files have
+     * been loaded an empty array will be returned.
+     * 
+     * @return an array with all loaded MIB files
+     * 
+     * @since 2.2
+     */
+    public Mib[] getAllMibs() {
+        Mib[]  res;
+        
+        res = new Mib[mibs.size()];
+        mibs.toArray(res);
+        return res;
     }
 
     /**
