@@ -34,7 +34,10 @@
 package net.percederberg.mibble;
 
 /**
- * The base MIB value class. 
+ * The base MIB value class. There are only a few MIB value classes,
+ * each corresponding to a primitive ASN.1 type. To extract the basic
+ * Java representation of the MIB value, the toObject() method should
+ * be used. 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2

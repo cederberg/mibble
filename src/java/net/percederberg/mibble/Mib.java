@@ -50,13 +50,14 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
 /**
  * An SNMP MIB container. This class contains all the information 
  * from a MIB file, including all defined types and values. MIB files
- * are loaded through a MIB loader.
+ * are loaded through a {@link MibLoader MIB loader}.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.0
  * @since    2.0
  * 
- * @see "RFC 3411 - An Architecture for Describing SNMP Management Frameworks"
+ * @see <a href="http://www.ietf.org/rfc/rfc3411.txt">RFC 3411 - An 
+ *      Architecture for Describing SNMP Management Frameworks</a>
  */
 public class Mib implements MibContext {
 
@@ -290,7 +291,8 @@ public class Mib implements MibContext {
     }
 
     /**
-     * Returns the MIB name.
+     * Returns the MIB name. This is sometimes also referred to as 
+     * the MIB module name.
      * 
      * @return the MIB name
      */
@@ -342,7 +344,7 @@ public class Mib implements MibContext {
      * 
      * @return the MIB reference, or null if not found
      */
-    public MibReference getImport(String name) {
+    MibReference getImport(String name) {
         MibReference  ref;
 
         for (int i = 0; i < imports.size(); i++) {

@@ -177,11 +177,12 @@ public class MibLoader {
 
     /**
      * Returns a previously loaded MIB file. If the MIB file hasn't
-     * been loaded, null will be returned.
+     * been loaded, null will be returned. The MIB is identified by
+     * it's MIB name (i.e. the module name).
      * 
-     * @param name           the MIB name
+     * @param name           the MIB (module) name
      * 
-     * @return the MIB container if found, or
+     * @return the MIB module if found, or
      *         null otherwise
      */
     public Mib getMib(String name) {
@@ -247,7 +248,9 @@ public class MibLoader {
 
     /**
      * Loads a MIB file. The file is searched for in the MIB search
-     * path.
+     * path. The MIB is identified by it's MIB name (i.e. the module 
+     * name). This method will also load all imported MIB:s if not 
+     * previously loaded by this loader.
      * 
      * @param name           the MIB name (filename without extension)
      * 
@@ -272,7 +275,8 @@ public class MibLoader {
     }
     
     /**
-     * Loads a MIB file.
+     * Loads a MIB file. This method will also load all imported 
+     * MIB:s if not previously loaded by this loader.
      * 
      * @param file           the MIB file
      * 
@@ -290,7 +294,8 @@ public class MibLoader {
     }
 
     /**
-     * Loads a MIB.
+     * Loads a MIB. This method will also load all imported MIB:s if
+     * not previously loaded by this loader.
      * 
      * @param src            the MIB source
      * 
@@ -314,6 +319,52 @@ public class MibLoader {
             throw new MibLoaderException(log);
         }
         return (Mib) mibs.get(position);
+    }
+
+    /**
+     * Schedules the loading of a MIB file. The file is added to the
+     * queue of MIB files to be loaded, unless it is already loaded 
+     * or in the queue. The file is searched for in the MIB search
+     * path.
+     * 
+     * @param name           the MIB name (filename without extension)
+     * 
+     * @throws FileNotFoundException if the MIB file couldn't be 
+     *             found in the MIB search path
+     */
+    void scheduleLoad(String name) throws FileNotFoundException {
+        MibSource  src;
+        
+        src = locate(name);
+        if (src == null) {
+            throw new FileNotFoundException("couldn't locate MIB: '" + 
+                                            name + "'");
+        }
+        scheduleLoad(src);
+    }
+
+    /**
+     * Schedules the loading of a MIB file. The file is added to the
+     * queue of MIB files to be loaded, unless it is already loaded 
+     * or in the queue.
+     * 
+     * @param file           the MIB file
+     */
+    void scheduleLoad(File file) {
+        scheduleLoad(new MibSource(file));
+    }
+
+    /**
+     * Schedules the loading of a MIB. The MIB source is added to the
+     * queue of MIB:s to be loaded, unless it is already loaded or in
+     * the queue.
+     * 
+     * @param src            the MIB source
+     */
+    void scheduleLoad(MibSource src) {
+        if (!mibs.contains(src.getFile()) && !queue.contains(src)) {
+            queue.add(src);
+        }
     }
 
     /**
@@ -368,52 +419,6 @@ public class MibLoader {
         }
         
         return log;
-    }
-
-    /**
-     * Schedules the loading of a MIB file. The file is added to the
-     * queue of MIB files to be loaded, unless it is already loaded 
-     * or in the queue. The file is searched for in the MIB search
-     * path.
-     * 
-     * @param name           the MIB name (filename without extension)
-     * 
-     * @throws FileNotFoundException if the MIB file couldn't be 
-     *             found in the MIB search path
-     */
-    public void scheduleLoad(String name) throws FileNotFoundException {
-        MibSource  src;
-        
-        src = locate(name);
-        if (src == null) {
-            throw new FileNotFoundException("couldn't locate MIB: '" + 
-                                            name + "'");
-        }
-        scheduleLoad(src);
-    }
-
-    /**
-     * Schedules the loading of a MIB file. The file is added to the
-     * queue of MIB files to be loaded, unless it is already loaded 
-     * or in the queue.
-     * 
-     * @param file           the MIB file
-     */
-    public void scheduleLoad(File file) {
-        scheduleLoad(new MibSource(file));
-    }
-
-    /**
-     * Schedules the loading of a MIB. The MIB source is added to the
-     * queue of MIB:s to be loaded, unless it is already loaded or in
-     * the queue.
-     * 
-     * @param src            the MIB source
-     */
-    private void scheduleLoad(MibSource src) {
-        if (!mibs.contains(src.getFile()) && !queue.contains(src)) {
-            queue.add(src);
-        }
     }
 
 
