@@ -21,6 +21,9 @@
 
 package net.percederberg.mibble;
 
+import net.percederberg.mibble.snmp.SnmpObjectType;
+import net.percederberg.mibble.type.SequenceOfType;
+import net.percederberg.mibble.type.SequenceType;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
@@ -29,7 +32,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * an object identifier.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.5
  * @since    2.0
  */
 public class MibValueSymbol extends MibSymbol {
@@ -105,6 +108,103 @@ public class MibValueSymbol extends MibSymbol {
     }
 
     /**
+     * Checks if this symbol corresponds to a scalar. A symbol is
+     * considered a scalar if it has an SnmpObjectType type and does
+     * not represent or reside within a table.
+     *
+     * @return true if this symbol is a scalar, or
+     *         false otherwise
+     *
+     * @see #isTable()
+     * @see #isTableRow()
+     * @see #isTableColumn()
+     * @see net.percederberg.mibble.snmp.SnmpObjectType
+     *
+     * @since 2.5
+     */
+    public boolean isScalar() {
+        return type instanceof SnmpObjectType
+            && !isTable()
+            && !isTableRow()
+            && !isTableColumn();
+    }
+
+    /**
+     * Checks if this symbol corresponds to a table. A symbol is
+     * considered a table if it has an SnmpObjectType type with
+     * SEQUENCE OF syntax.
+     *
+     * @return true if this symbol is a table, or
+     *         false otherwise
+     *
+     * @see #isScalar()
+     * @see #isTableRow()
+     * @see #isTableColumn()
+     * @see net.percederberg.mibble.snmp.SnmpObjectType
+     *
+     * @since 2.5
+     */
+    public boolean isTable() {
+        MibType  syntax;
+
+        if (type instanceof SnmpObjectType) {
+            syntax = ((SnmpObjectType) type).getSyntax();
+            return syntax instanceof SequenceOfType;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Checks if this symbol corresponds to a table row (or entry). A
+     * symbol is considered a table row if it has an SnmpObjectType
+     * type with SEQUENCE syntax.
+     *
+     * @return true if this symbol is a table row, or
+     *         false otherwise
+     *
+     * @see #isScalar()
+     * @see #isTable()
+     * @see #isTableColumn()
+     * @see net.percederberg.mibble.snmp.SnmpObjectType
+     *
+     * @since 2.5
+     */
+    public boolean isTableRow() {
+        MibType  syntax;
+
+        if (type instanceof SnmpObjectType) {
+            syntax = ((SnmpObjectType) type).getSyntax();
+            return syntax instanceof SequenceType;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Checks if this symbol corresponds to a table column. A symbol
+     * is considered a table column if it has an SnmpObjectType type
+     * and a parent symbol that is a table row.
+     *
+     * @return true if this symbol is a table column, or
+     *         false otherwise
+     *
+     * @see #isScalar()
+     * @see #isTable()
+     * @see #isTableRow()
+     * @see net.percederberg.mibble.snmp.SnmpObjectType
+     *
+     * @since 2.5
+     */
+    public boolean isTableColumn() {
+        MibValueSymbol  parent = getParent();
+
+        return type instanceof SnmpObjectType
+            && parent != null
+            && parent.isTableRow();
+    }
+
+    /**
      * Returns the symbol type.
      *
      * @return the symbol type
@@ -120,6 +220,30 @@ public class MibValueSymbol extends MibSymbol {
      */
     public MibValue getValue() {
         return value;
+    }
+
+    /**
+     * Returns the parent symbol in the OID tree. This is a
+     * convenience method for value symbols that have object
+     * identifier values. 
+     *
+     * @return the parent symbol in the OID tree, or
+     *         null for none or if not applicable
+     *
+     * @see net.percederberg.mibble.value.ObjectIdentifierValue
+     *
+     * @since 2.5
+     */
+    public MibValueSymbol getParent() {
+        ObjectIdentifierValue  oid;
+
+        if (value instanceof ObjectIdentifierValue) {
+            oid = ((ObjectIdentifierValue) value).getParent();
+            if (oid != null) {
+                return oid.getSymbol();
+            }
+        }
+        return null;
     }
 
     /**
