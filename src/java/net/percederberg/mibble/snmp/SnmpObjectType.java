@@ -38,7 +38,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * The SNMP object type macro type. This macro type was present in
- * SNMPv1, but was somewhat extended in SNMPv2. It is defined in the
+ * SMIv1, but was somewhat extended in SMIv2. It is defined in the
  * RFC:s 1155, 1212 and 2578.
  *
  * @see <a href="http://www.ietf.org/rfc/rfc1155.txt">RFC 1155 (RFC1155-SMI)</a>

@@ -33,7 +33,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * The SNMP module compliance macro type. This macro type was added
- * to SNMPv2 and is defined in RFC 2580.
+ * to SMIv2 and is defined in RFC 2580.
  *
  * @see <a href="http://www.ietf.org/rfc/rfc2580.txt">RFC 2580 (SNMPv2-CONF)</a>
  *

@@ -33,8 +33,8 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * The SNMP notification type macro. This macro type was added to
- * SNMPv2 and is defined in RFC 2578. The notification type macro is
- * used instead of the trap type macro in SNMPv2 and later.
+ * SMIv2 and is defined in RFC 2578. The notification type macro is
+ * used instead of the trap type macro in SMIv2.
  *
  * @see SnmpTrapType
  * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>

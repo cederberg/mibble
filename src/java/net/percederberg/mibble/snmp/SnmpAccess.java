@@ -24,8 +24,8 @@ package net.percederberg.mibble.snmp;
 /**
  * An SNMP access mode value. This class is used to encapsulate the
  * access value constants used in several SNMP macro types. Note that
- * due to the support for both SNMPv1, SNMPv2 and SNMPv3 not all of
- * the constants defined in this class can be present in all files.
+ * due to the support for both SMIv1 and SMIv2 not all of the
+ * constants defined in this class can be present in all files.
  * Please see the comments for each individual constant regarding the
  * support for different SNMP versions.
  *
@@ -37,8 +37,8 @@ public class SnmpAccess {
 
     /**
      * The not implemented SNMP access mode. This mode is only used
-     * in SNMPv2 (and later) variation declarations inside an agent
-     * capabilities declaration.
+     * in SMIv2 variation declarations inside an agent capabilities
+     * declaration.
      */
     public static final SnmpAccess NOT_IMPLEMENTED =
         new SnmpAccess("not-implemented");
@@ -51,7 +51,7 @@ public class SnmpAccess {
 
     /**
      * The accesible for notify SNMP access mode. This mode is only
-     * used in SNMPv2 and later.
+     * used in SMIv2.
      */
     public static final SnmpAccess ACCESSIBLE_FOR_NOTIFY =
         new SnmpAccess("accessible-for-notify");
@@ -70,14 +70,14 @@ public class SnmpAccess {
 
     /**
      * The read-create SNMP access mode. This mode is only used in
-     * SNMPv2 and later.
+     * SMIv2.
      */
     public static final SnmpAccess READ_CREATE =
         new SnmpAccess("read-create");
 
     /**
      * The write-only SNMP access mode. This mode is only used in
-     * SNMPv1.
+     * SMIv1.
      */
     public static final SnmpAccess WRITE_ONLY =
         new SnmpAccess("write-only");

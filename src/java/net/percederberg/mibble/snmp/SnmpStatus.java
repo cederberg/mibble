@@ -23,11 +23,11 @@ package net.percederberg.mibble.snmp;
 
 /**
  * An SNMP status value. This class is used to encapsulate the status
- * value constants used in several SNMP macro types. Note that due to
- * the support for both SNMPv1, SNMPv2 and SNMPv3 not all of the
- * constants defined in this class can be present in all files.
- * Please see the comments for each individual constant regarding the
- * support for different SNMP versions.
+ * value constants used in several SNMP macro types. Note that, due
+ * to the support for both SMIv1 and SMIv2, not all of the constants
+ * defined in this class can be present in all files. Please see the
+ * comments for each individual constant regarding the support for
+ * different SMI versions.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -36,26 +36,26 @@ package net.percederberg.mibble.snmp;
 public class SnmpStatus {
 
     /**
-     * The mandatory SNMP status. This status is only used in SNMPv1.
+     * The mandatory SNMP status. This status is only used in SMIv1.
      */
     public static final SnmpStatus MANDATORY =
         new SnmpStatus("mandatory");
 
     /**
-     * The optional SNMP status. This status is only used in SNMPv1.
+     * The optional SNMP status. This status is only used in SMIv1.
      */
     public static final SnmpStatus OPTIONAL =
         new SnmpStatus("optional");
 
     /**
-     * The current SNMP status. This status is only used in SNMPv2
+     * The current SNMP status. This status is only used in SMIv2
      * and later.
      */
     public static final SnmpStatus CURRENT =
         new SnmpStatus("current");
 
     /**
-     * The deprecated SNMP status. This status is only used in SNMPv2
+     * The deprecated SNMP status. This status is only used in SMIv2
      * and later.
      */
     public static final SnmpStatus DEPRECATED =

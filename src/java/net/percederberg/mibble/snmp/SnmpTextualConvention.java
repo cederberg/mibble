@@ -33,7 +33,7 @@ import net.percederberg.mibble.type.Constraint;
 
 /**
  * The SNMP textual convention macro type. This macro type was added
- * to SNMPv2 and is defined in RFC 2579.
+ * to SMIv2 and is defined in RFC 2579.
  *
  * @see <a href="http://www.ietf.org/rfc/rfc2579.txt">RFC 2579 (SNMPv2-TC)</a>
  *
