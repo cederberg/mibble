@@ -1,23 +1,23 @@
 /*
  * Asn1Tokenizer.java
- *
+ * 
  * THIS FILE HAS BEEN GENERATED AUTOMATICALLY. DO NOT EDIT!
- *
+ * 
  * This work is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2 of the License,
  * or (at your option) any later version.
- *
+ * 
  * This work is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
- *
+ * 
  * As a special exception, the copyright holders of this library give
  * you permission to link this library with independent modules to
  * produce an executable, regardless of the license terms of these
@@ -29,7 +29,7 @@
  * library, you may extend this exception to your version of the
  * library, but you are not obligated to do so. If you do not wish to
  * do so, delete this exception statement from your version.
- *
+ * 
  * Copyright (c) 2004 Per Cederberg. All rights reserved.
  */
 
@@ -43,7 +43,7 @@ import net.percederberg.grammatica.parser.Tokenizer;
 
 /**
  * A character stream tokenizer.
- *
+ * 
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
  */
@@ -51,9 +51,9 @@ public class Asn1Tokenizer extends Tokenizer {
 
     /**
      * Creates a new tokenizer for the specified input stream.
-     *
+     * 
      * @param input          the input stream to read
-     *
+     * 
      * @throws ParserCreationException if the tokenizer couldn't be
      *             initialized correctly
      */
@@ -64,7 +64,7 @@ public class Asn1Tokenizer extends Tokenizer {
 
     /**
      * Initializes the tokenizer by creating all the token patterns.
-     *
+     * 
      * @throws ParserCreationException if the tokenizer couldn't be
      *             initialized correctly
      */
