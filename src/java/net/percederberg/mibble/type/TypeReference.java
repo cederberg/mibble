@@ -178,7 +178,7 @@ public class TypeReference extends MibType implements MibContext {
 
         ref = context.getSymbol(name);
         if (ref instanceof MibTypeSymbol) {
-            type = initialize(symbol, log, ((MibTypeSymbol) ref).getType());
+            type = initialize(symbol, log, (MibTypeSymbol) ref);
             return type;
         } else if (ref == null) {
             message = "undefined symbol '" + name + "'";
@@ -197,7 +197,7 @@ public class TypeReference extends MibType implements MibContext {
      * 
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
-     * @param type           the MIB type
+     * @param ref            the referenced MIB type symbol
      * 
      * @return the basic MIB type
      * 
@@ -206,8 +206,10 @@ public class TypeReference extends MibType implements MibContext {
      */
     private MibType initialize(MibSymbol symbol, 
                                MibLoaderLog log, 
-                               MibType type) 
+                               MibTypeSymbol ref) 
         throws MibException {
+
+        MibType  type = ref.getType();
 
         type = type.initialize(symbol, log);
         try {
@@ -222,6 +224,7 @@ public class TypeReference extends MibType implements MibContext {
         } catch (UnsupportedOperationException e) {
             throw new MibException(location, e.getMessage());
         }
+        type.setReferenceSymbol(ref);
         initializeTypeTag(type, tag);
         return type;
     }

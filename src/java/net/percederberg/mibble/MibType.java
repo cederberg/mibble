@@ -63,6 +63,12 @@ public abstract class MibType {
      * The type tag.
      */
     private MibTypeTag tag = null;
+    
+    /**
+     * The type reference symbol. This is set to the referenced type
+     * symbol when resolving this type.
+     */
+    private MibTypeSymbol reference = null;
 
     /**
      * Creates a new MIB type instance.
@@ -202,6 +208,53 @@ public abstract class MibType {
     }
 
     /**
+     * Checks if this type referenced the specified type symbol.
+     * 
+     * @param name           the type symbol name
+     * 
+     * @return true if this type was a reference to the symbol, or
+     *         false otherwise
+     * 
+     * @since 2.2
+     */
+    public boolean isReferenceTo(String name) {
+        if (reference == null) {
+            return false;
+        } else if (reference.getName().equals(name)) {
+            return true;
+        } else {
+            return reference.getType().isReferenceTo(name);
+        }
+    }
+
+    /**
+     * Checks if this type referenced the specified type symbol.
+     *
+     * @param module         the type symbol module (MIB) name 
+     * @param name           the type symbol name
+     * 
+     * @return true if this type was a reference to the symbol, or
+     *         false otherwise
+     * 
+     * @since 2.2
+     */
+    public boolean isReferenceTo(String module, String name) {
+        Mib  mib;
+
+        if (reference == null) {
+            return false;
+        }
+        mib = reference.getMib();
+        if (mib.getName().equals(module) 
+         && reference.getName().equals(name)) {
+
+            return true;
+        } else {
+            return reference.getType().isReferenceTo(module, name);
+        }
+    }
+
+    /**
      * Returns the type name.
      * 
      * @return the type name, or
@@ -251,6 +304,38 @@ public abstract class MibType {
             tag.setNext(next);
         }
         this.tag = tag; 
+    }
+
+    /**
+     * Returns the type reference symbol. A type reference is created
+     * whenever a type is defined in a type assignment, and later
+     * referenced by name from some other symbol. The complete chain 
+     * of type references is available by calling getReference() 
+     * recursively on the type of the returned type symbol.
+     * 
+     * @return the type reference symbol, or 
+     *         null if this type never referenced another type
+     * 
+     * @since 2.2
+     */
+    public MibTypeSymbol getReferenceSymbol() {
+        return reference;
+    }
+
+    /**
+     * Sets the type reference symbol. The type reference is set
+     * whenever a type is defined in a type assignment, and later
+     * referenced by name from some other symbol.<p> 
+     * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     * 
+     * @param symbol         the referenced type symbol
+     * 
+     * @since 2.2
+     */
+    public void setReferenceSymbol(MibTypeSymbol symbol) {
+        this.reference = symbol;
     }
 
     /**
