@@ -52,8 +52,11 @@ import net.percederberg.mibble.type.Constraint;
  * The best way to extract the specific type information from a MIB 
  * type is to check the type instance and then cast the MibType 
  * object to the corresponding subtype. Each subtype have very 
- * different properties, which is why the API in this class is so
- * limited.
+ * different properties, which is why the API in this class is rather
+ * limited. Another way to check which type is at hand, is to query 
+ * the type tags with the hasTag() method. In this way it is possible
+ * to distinguish between types using the same or a similar primitive 
+ * ASN.1 type representation (such as DisplayString and IpAddress). 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
