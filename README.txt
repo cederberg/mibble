@@ -53,6 +53,6 @@ MIBBLE README
   
 _____________________________________________________________________
 
-Copyright (c) 2003 Per Cederberg. Permission is granted to copy this 
+Copyright (c) 2004 Per Cederberg. Permission is granted to copy this 
 document verbatim in any medium, provided that this copyright notice 
 is left intact.

@@ -28,7 +28,7 @@
  * library, but you are not obligated to do so. If you do not wish to
  * do so, delete this exception statement from your version.
  *
- * Copyright (c) 2003 Watsh Rajneesh. All rights reserved.
+ * Copyright (c) 2004 Watsh Rajneesh. All rights reserved.
  */
 
 package net.percederberg.mibble;
