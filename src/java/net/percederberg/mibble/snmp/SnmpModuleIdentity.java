@@ -90,7 +90,7 @@ public class SnmpModuleIdentity extends MibType {
                               String description,
                               ArrayList revisions) {
                                   
-        super(false);
+        super("MODULE-IDENTITY", false);
         this.lastUpdated = lastUpdated;
         this.organization = organization;
         this.contactInfo = contactInfo;
@@ -191,7 +191,8 @@ public class SnmpModuleIdentity extends MibType {
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
         
-        buffer.append("MODULE-IDENTITY (");
+        buffer.append(super.toString());
+        buffer.append(" (");
         buffer.append("\n  Last Updated: ");
         buffer.append(lastUpdated);
         buffer.append("\n  Organization: ");

@@ -61,7 +61,7 @@ public class SequenceType extends MibType {
      * @param elements       the list of element types
      */
     public SequenceType(ArrayList elements) {
-        super(false);
+        super("SEQUENCE", false);
         this.elements = elements;
     }
     
@@ -109,6 +109,6 @@ public class SequenceType extends MibType {
      * @return a string representation of this object
      */
     public String toString() {
-        return "SEQUENCE " + elements.toString();
+        return super.toString() + " " + elements.toString();
     }
 }

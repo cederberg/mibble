@@ -116,7 +116,7 @@ public class SnmpObjectType extends MibType {
                           ArrayList index,
                           MibValue defaultValue) {
 
-        super(false);
+        super("OBJECT-TYPE", false);
         this.syntax = syntax;
         this.units = units;
         this.access = access;
@@ -149,7 +149,7 @@ public class SnmpObjectType extends MibType {
                           MibValue augments,
                           MibValue defaultValue) {
 
-        super(false);
+        super("OBJECT-TYPE", false);
         this.syntax = syntax;
         this.units = units;
         this.access = access;
@@ -308,8 +308,9 @@ public class SnmpObjectType extends MibType {
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
-        buffer.append("OBJECT-TYPE (");
+
+        buffer.append(super.toString());
+        buffer.append(" (");
         buffer.append("\n  Syntax: ");
         buffer.append(syntax);
         if (units != null) {

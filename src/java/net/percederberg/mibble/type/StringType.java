@@ -57,7 +57,7 @@ public class StringType extends MibType {
      * Creates a new string MIB type. 
      */
     public StringType() {
-        super(true);
+        this(true, null);
     }
 
     /**
@@ -66,7 +66,17 @@ public class StringType extends MibType {
      * @param constraint     the additional type constraint 
      */
     public StringType(Constraint constraint) {
-        super(true);
+        this(true, constraint);
+    }
+
+    /**
+     * Creates a new string MIB type.
+     * 
+     * @param primitive      the primitive type flag
+     * @param constraint     the type constraint, or null 
+     */
+    private StringType(boolean primitive, Constraint constraint) {
+        super("OCTET STRING", primitive);
         this.constraint = constraint;
     }
 
@@ -135,10 +145,14 @@ public class StringType extends MibType {
      * @return a string representation of this type
      */
     public String toString() {
-        if (constraint == null) {
-            return "OCTET STRING";
-        } else {
-            return "OCTET STRING (" + constraint.toString() + ")";
+        StringBuffer  buffer = new StringBuffer();
+        
+        buffer.append(super.toString());
+        if (constraint != null) {
+            buffer.append(" (");
+            buffer.append(constraint.toString());
+            buffer.append(")");
         }
+        return buffer.toString();
     }
 }

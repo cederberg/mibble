@@ -74,7 +74,7 @@ public class SequenceOfType extends MibType {
      * @param constraint     the sequence constraint 
      */
     public SequenceOfType(MibType base, Constraint constraint) {
-        super(false);
+        super("SEQUENCE", false);
         this.base = base;
         this.constraint = constraint;
     }
@@ -123,7 +123,8 @@ public class SequenceOfType extends MibType {
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
         
-        buffer.append("SEQUENCE ");
+        buffer.append(super.toString());
+        buffer.append(" ");
         if (constraint != null) {
              buffer.append("(");
              buffer.append(constraint.toString());

@@ -57,7 +57,7 @@ public class RealType extends MibType {
      */
     private RealType() {
         // TODO: check the primitive status for REAL
-        super(true);
+        super("REAL", true);
     }
 
     /**
@@ -95,14 +95,5 @@ public class RealType extends MibType {
             }
         }
         return false;
-    }
-
-    /**
-     * Returns a string representation of this type.
-     * 
-     * @return a string representation of this type
-     */
-    public String toString() {
-        return "REAL";
     }
 }

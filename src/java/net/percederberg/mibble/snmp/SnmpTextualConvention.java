@@ -89,7 +89,7 @@ public class SnmpTextualConvention extends MibType implements MibContext {
                                  String reference,
                                  MibType syntax) {
 
-        super(false);
+        super("TEXTUAL-CONVENTION", false);
         this.displayHint = displayHint;
         this.status = status;
         this.description = description;
@@ -201,7 +201,8 @@ public class SnmpTextualConvention extends MibType implements MibContext {
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
         
-        buffer.append("TEXTUAL-CONVENTION (");
+        buffer.append(super.toString());
+        buffer.append(" (");
         if (displayHint != null) {
             buffer.append("\n  Display-Hint: ");
             buffer.append(displayHint);

@@ -73,7 +73,7 @@ public class SnmpObjectIdentity extends MibType {
                               String description,
                               String reference) {
 
-        super(false);
+        super("OBJECT-IDENTITY", false);
         this.status = status;
         this.description = description;
         this.reference = reference;
@@ -144,7 +144,8 @@ public class SnmpObjectIdentity extends MibType {
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
         
-        buffer.append("OBJECT-IDENTITY (");
+        buffer.append(super.toString());
+        buffer.append(" (");
         buffer.append("\n  Status: ");
         buffer.append(status);
         buffer.append("\n  Description: ");

@@ -34,7 +34,10 @@
 package net.percederberg.mibble;
 
 /**
- * The base MIB type class. 
+ * The base MIB type class. All the basic MIB types can also be 
+ * cloned, and implements the Cloneable interface. Some of the more
+ * complex SNMP types cannot be cloned, however, which is the reason
+ * for this base class not supporting cloning. 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -42,9 +45,12 @@ package net.percederberg.mibble;
  */
 public abstract class MibType {
 
-    // TODO: add support for clone() or similar
-    // TODO: hide initialize and setConstructed()
-    // TODO: add some support for toString() or similar
+    // TODO: add support for MibTypeTag
+
+    /**
+     * The type name.
+     */
+    private String name;
 
     /**
      * The primitive type flag.
@@ -56,7 +62,8 @@ public abstract class MibType {
      * 
      * @param primitive      the primitive type flag
      */
-    public MibType(boolean primitive) {
+    public MibType(String name, boolean primitive) {
+        this.name = name;
         this.primitive = primitive;
     }
 
@@ -101,12 +108,13 @@ public abstract class MibType {
     public boolean isPrimitive() {
         return primitive;
     }
-    
+
     /**
-     * Sets the primitive type flag to false. This method is called 
-     * when defining a new type.
+     * Returns a string representation of this object.
+     * 
+     * @return a string representation of this object
      */
-    public void setConstructed() {
-        primitive = false;
+    public String toString() {
+        return name;
     }
 }

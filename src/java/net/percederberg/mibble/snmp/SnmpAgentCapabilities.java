@@ -90,7 +90,7 @@ public class SnmpAgentCapabilities extends MibType {
                                  String reference,
                                  ArrayList modules) {
 
-        super(false);
+        super("AGENT-CAPABILITIES", false);
         this.productRelease = productRelease;
         this.status = status;
         this.description = description;
@@ -189,7 +189,8 @@ public class SnmpAgentCapabilities extends MibType {
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
         
-        buffer.append("AGENT-CAPABILITIES (");
+        buffer.append(super.toString());
+        buffer.append(" (");
         buffer.append("\n  Product Release: ");
         buffer.append(productRelease);
         buffer.append("\n  Status: ");

@@ -83,7 +83,7 @@ public class SnmpNotificationGroup extends MibType {
                                  String description,
                                  String reference) {
 
-        super(false);
+        super("NOTIFICATION-GROUP", false);
         this.notifications = notifications;
         this.status = status;
         this.description = description;
@@ -174,8 +174,9 @@ public class SnmpNotificationGroup extends MibType {
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
-        buffer.append("NOTIFICATION-GROUP (");
+
+        buffer.append(super.toString());
+        buffer.append(" (");
         buffer.append("\n  Notifications: ");
         buffer.append(notifications);
         buffer.append("\n  Status: ");

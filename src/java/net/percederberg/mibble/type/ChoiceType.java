@@ -61,7 +61,7 @@ public class ChoiceType extends MibType {
      * @param elements       the list of element types
      */
     public ChoiceType(ArrayList elements) {
-        super(false);
+        super("CHOICE", false);
         this.elements = elements;
     }
     
@@ -117,6 +117,6 @@ public class ChoiceType extends MibType {
      * @return a string representation of this object
      */
     public String toString() {
-        return "CHOICE " + elements.toString();
+        return super.toString() + " " + elements.toString();
     }
 }

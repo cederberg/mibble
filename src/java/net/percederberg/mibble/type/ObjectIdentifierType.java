@@ -57,7 +57,7 @@ public class ObjectIdentifierType extends MibType {
      * Creates a new object identifier MIB type. 
      */
     private ObjectIdentifierType() {
-        super(true);
+        super("OBJECT IDENTIFIER", true);
     }
 
     /**
@@ -87,14 +87,5 @@ public class ObjectIdentifierType extends MibType {
      */
     public boolean isCompatible(MibValue value) {
         return value instanceof ObjectIdentifierValue;
-    }
-
-    /**
-     * Returns a string representation of this type.
-     * 
-     * @return a string representation of this type
-     */
-    public String toString() {
-        return "OBJECT IDENTIFIER";
     }
 }

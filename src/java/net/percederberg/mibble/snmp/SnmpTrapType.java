@@ -83,7 +83,7 @@ public class SnmpTrapType extends MibType {
                         String description,
                         String reference) {
 
-        super(false);
+        super("TRAP-TYPE", false);
         this.enterprise = enterprise;
         this.variables = variables;
         this.description = description;
@@ -178,7 +178,8 @@ public class SnmpTrapType extends MibType {
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
         
-        buffer.append("TRAP-TYPE (");
+        buffer.append(super.toString());
+        buffer.append(" (");
         buffer.append("\n  Enterprise: ");
         buffer.append(enterprise);
         buffer.append("\n  Variables: ");

@@ -83,7 +83,7 @@ public class SnmpNotificationType extends MibType {
                                 String description,
                                 String reference) {
 
-        super(false);
+        super("NOTIFICATION-TYPE", false);
         this.objects = objects;
         this.status = status;
         this.description = description;
@@ -176,8 +176,9 @@ public class SnmpNotificationType extends MibType {
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
-        buffer.append("NOTIFICATION-TYPE (");
+
+        buffer.append(super.toString());
+        buffer.append(" (");
         buffer.append("\n  Objects: ");
         buffer.append(objects);
         buffer.append("\n  Status: ");

@@ -66,7 +66,7 @@ public class ElementType extends MibType {
      * @param type           the element type
      */
     public ElementType(String name, MibType type) {
-        super(false);
+        super("", false);
         this.name = name;
         this.type = type; 
     }
@@ -110,10 +110,14 @@ public class ElementType extends MibType {
      * @return a string representation of this object
      */
     public String toString() {
-        if (name == null) {
-            return type.toString();
-        } else {
-            return name + " " + type.toString();
+        StringBuffer  buffer = new StringBuffer();
+
+        buffer.append(super.toString());
+        if (name != null) {
+            buffer.append(name);
+            buffer.append(" ");
         }
+        buffer.append(type.toString());
+        return buffer.toString();
     }
 }

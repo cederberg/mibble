@@ -70,7 +70,7 @@ public class BitSetType extends MibType implements MibContext {
      * Creates a new bit set MIB type. 
      */
     public BitSetType() {
-        super(true);
+        this(true, null, null);
     }
 
     /**
@@ -79,31 +79,47 @@ public class BitSetType extends MibType implements MibContext {
      * @param constraint     the additional type constraint 
      */
     public BitSetType(Constraint constraint) {
-        super(true);
-        this.constraint = constraint;
+        this(true, constraint, null);
     }
 
     /**
-     * Creates a new integer MIB type.
+     * Creates a new bit set MIB type.
      * 
      * @param values         the additional defined symbols
      */
     public BitSetType(ArrayList values) {
-        super(true);
-
-        MibValueSymbol   sym;
-        ValueConstraint  c;
+        this(true, null, null);
         for (int i = 0; i < values.size(); i++) {
             if (values.get(i) instanceof MibValueSymbol) {
-                sym = (MibValueSymbol) values.get(i);
+                MibValueSymbol sym = (MibValueSymbol) values.get(i);
                 symbols.put(sym.getName(), sym);
-                c = new ValueConstraint(sym.getValue());
+                ValueConstraint c = new ValueConstraint(sym.getValue());
                 if (constraint == null) {
                     constraint = c;
                 } else {
                     constraint = new CompoundConstraint(constraint, c);
                 }
             }
+        }
+    }
+
+    /**
+     * Creates a new bit set MIB type.
+     * 
+     * @param primitive      the primitive type flag
+     * @param constraint     the type constraint, or null
+     * @param symbols        the defined symbols, or null
+     */
+    private BitSetType(boolean primitive, 
+                       Constraint constraint, 
+                       HashMap symbols) {
+
+        super("BITS", primitive);
+        if (constraint != null) {
+            this.constraint = constraint;
+        }
+        if (symbols != null) {
+            this.symbols = symbols;
         }
     }
 
@@ -218,10 +234,14 @@ public class BitSetType extends MibType implements MibContext {
      * @return a string representation of this type
      */
     public String toString() {
-        if (constraint == null) {
-            return "BITS";
-        } else {
-            return "BITS (" + constraint.toString() + ")";
+        StringBuffer  buffer = new StringBuffer();
+        
+        buffer.append(super.toString());
+        if (constraint != null) {
+            buffer.append(" (");
+            buffer.append(constraint.toString());
+            buffer.append(")");
         }
+        return buffer.toString();
     }
 }

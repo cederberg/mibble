@@ -83,7 +83,7 @@ public class SnmpObjectGroup extends MibType {
                            String description,
                            String reference) {
 
-        super(false);
+        super("OBJECT-GROUP", false);
         this.objects = objects;
         this.status = status;
         this.description = description;
@@ -177,7 +177,8 @@ public class SnmpObjectGroup extends MibType {
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
         
-        buffer.append("OBJECT-GROUP (");
+        buffer.append(super.toString());
+        buffer.append(" (");
         buffer.append("\n  Objects: ");
         buffer.append(objects);
         buffer.append("\n  Status: ");

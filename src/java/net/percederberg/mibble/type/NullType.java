@@ -56,7 +56,7 @@ public class NullType extends MibType {
      * Creates a new null MIB type. 
      */
     private NullType() {
-        super(true);
+        super("NULL", true);
     }
 
     /**
@@ -85,14 +85,5 @@ public class NullType extends MibType {
      */
     public boolean isCompatible(MibValue value) {
         return value instanceof NullValue;
-    }
-
-    /**
-     * Returns a string representation of this type.
-     * 
-     * @return a string representation of this type
-     */
-    public String toString() {
-        return "NULL";
     }
 }

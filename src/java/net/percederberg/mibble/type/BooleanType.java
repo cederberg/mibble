@@ -56,7 +56,7 @@ public class BooleanType extends MibType {
      * Creates a new boolean MIB type. 
      */
     private BooleanType() {
-        super(true);
+        super("BOOLEAN", true);
     }
 
     /**
@@ -85,14 +85,5 @@ public class BooleanType extends MibType {
      */
     public boolean isCompatible(MibValue value) {
         return value instanceof BooleanValue;
-    }
-
-    /**
-     * Returns a string representation of this type.
-     * 
-     * @return a string representation of this type
-     */
-    public String toString() {
-        return "BOOLEAN";
     }
 }

@@ -83,7 +83,7 @@ public class SnmpModuleCompliance extends MibType {
                                 String reference,
                                 ArrayList modules) {
 
-        super(false);
+        super("MODULE-COMPLIANCE", false);
         this.status = status;
         this.description = description;
         this.reference = reference;
@@ -172,7 +172,8 @@ public class SnmpModuleCompliance extends MibType {
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
         
-        buffer.append("MODULE-COMPLIANCE (");
+        buffer.append(super.toString());
+        buffer.append(" (");
         buffer.append("\n  Status: ");
         buffer.append(status);
         buffer.append("\n  Description: ");
