@@ -135,8 +135,7 @@ public class ObjectIdentifierValue implements MibValue {
      *             initialization
      */
     public MibValue initialize(MibLoaderLog log) throws MibException { 
-        ObjectIdentifierValue  oid;
-        ValueReference         ref = null;
+        ValueReference  ref = null;
 
         if (parent == null) {
             return this;

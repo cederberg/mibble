@@ -735,8 +735,6 @@ class MibAnalyzer extends Asn1Analyzer {
      * @param node           the node being exited
      * 
      * @return the node to add to the parse tree
-     * 
-     * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitEnumeratedType(Production node) {
         // TODO: implement enumerated type support
