@@ -38,7 +38,7 @@ import net.percederberg.mibble.type.Constraint;
  * @see <a href="http://www.ietf.org/rfc/rfc2579.txt">RFC 2579 (SNMPv2-TC)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.4
  * @since    2.0
  */
 public class SnmpTextualConvention extends MibType implements MibContext {
@@ -252,19 +252,26 @@ public class SnmpTextualConvention extends MibType implements MibContext {
     }
 
     /**
-     * Returns a named MIB symbol. This method checks the syntax type
-     * for a MibContext implementation.<p>
+     * Searches for a named MIB symbol. This method may search outside
+     * the normal (or strict) scope, thereby allowing a form of
+     * relaxed search. Note that the results from the normal and
+     * expanded search may not be identical, due to the context
+     * chaining and the same symbol name appearing in various
+     * contexts.<p>
      *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
      *
      * @param name           the symbol name
+     * @param expanded       the expanded scope flag
      *
      * @return the MIB symbol, or null if not found
+     *
+     * @since 2.4
      */
-    public MibSymbol getSymbol(String name) {
+    public MibSymbol findSymbol(String name, boolean expanded) {
         if (syntax instanceof MibContext) {
-            return ((MibContext) syntax).getSymbol(name);
+            return ((MibContext) syntax).findSymbol(name, expanded);
         } else {
             return null;
         }

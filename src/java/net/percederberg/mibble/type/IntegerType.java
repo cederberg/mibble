@@ -39,7 +39,7 @@ import net.percederberg.mibble.value.NumberValue;
  * An integer MIB type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.4
  * @since    2.0
  */
 public class IntegerType extends MibType implements MibContext {
@@ -303,16 +303,15 @@ public class IntegerType extends MibType implements MibContext {
      * returned is not a normal MIB symbol, i.e. only the name and
      * value components are valid.<p>
      *
-     * <strong>Note:</strong> Due to implementation details, the
-     * method signature specifies a MibSymbol return value, while in
-     * reality it is a MibValueSymbol.
+     * <strong>Note:</strong> As of version 2.4 the method signature
+     * was changed to return a MibValueSymbol instead of a MibSymbol.
      *
      * @param name           the symbol name
      *
      * @return the MIB value symbol, or
      *         null if not found
      */
-    public MibSymbol getSymbol(String name) {
+    public MibValueSymbol getSymbol(String name) {
         return (MibValueSymbol) symbols.get(name);
     }
 
@@ -337,6 +336,28 @@ public class IntegerType extends MibType implements MibContext {
             res[i] = (MibValueSymbol) iter.next();
         }
         return res;
+    }
+
+    /**
+     * Searches for a named MIB symbol. This method may search outside
+     * the normal (or strict) scope, thereby allowing a form of
+     * relaxed search. Note that the results from the normal and
+     * expanded search may not be identical, due to the context
+     * chaining and the same symbol name appearing in various
+     * contexts.<p>
+     *
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     *
+     * @param name           the symbol name
+     * @param expanded       the expanded scope flag
+     *
+     * @return the MIB symbol, or null if not found
+     *
+     * @since 2.4
+     */
+    public MibSymbol findSymbol(String name, boolean expanded) {
+        return getSymbol(name);
     }
 
     /**

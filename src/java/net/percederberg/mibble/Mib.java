@@ -501,6 +501,25 @@ public class Mib implements MibContext {
     }
 
     /**
+     * Searches for a named MIB symbol. This method is required to
+     * implement the MibContext interface but returns the same results
+     * as getSymbol(String).<p>
+     *
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     *
+     * @param name           the symbol name
+     * @param expanded       the expanded scope flag
+     *
+     * @return the MIB symbol, or null if not found
+     *
+     * @since 2.4
+     */
+    public MibSymbol findSymbol(String name, boolean expanded) {
+        return getSymbol(name);
+    }
+
+    /**
      * Returns a string representation of this object.
      *
      * @return a string representation of this object

@@ -42,7 +42,7 @@ import net.percederberg.mibble.MibValue;
  * <strong>NOT</strong> use or reference this class.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.4
  * @since    2.0
  */
 public class TypeReference extends MibType implements MibContext {
@@ -164,7 +164,15 @@ public class TypeReference extends MibType implements MibContext {
         MibSymbol  ref;
         String     message;
 
-        ref = context.getSymbol(name);
+        ref = context.findSymbol(name, false);
+        if (ref == null) {
+            ref = context.findSymbol(name, true);
+            if (ref != null) {
+                message = "missing import for '" + name + "', using " +
+                          "definition from " + ref.getMib().getName();
+                log.addWarning(location, message);
+            }
+        }
         if (ref instanceof MibTypeSymbol) {
             type = initializeReference(symbol, log, (MibTypeSymbol) ref);
             return type;
@@ -260,16 +268,27 @@ public class TypeReference extends MibType implements MibContext {
     }
 
     /**
-     * Returns a named MIB symbol. This method checks the referenced
-     * type for a MibContext implementation.
+     * Searches for a named MIB symbol. This method may search outside
+     * the normal (or strict) scope, thereby allowing a form of
+     * relaxed search. Note that the results from the normal and
+     * expanded search may not be identical, due to the context
+     * chaining and the same symbol name appearing in various
+     * contexts. This method checks the referenced type for a
+     * MibContext implementation.<p>
+     *
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
      *
      * @param name           the symbol name
+     * @param expanded       the expanded scope flag
      *
      * @return the MIB symbol, or null if not found
+     *
+     * @since 2.4
      */
-    public MibSymbol getSymbol(String name) {
+    public MibSymbol findSymbol(String name, boolean expanded) {
         if (type instanceof MibContext) {
-            return ((MibContext) type).getSymbol(name);
+            return ((MibContext) type).findSymbol(name, expanded);
         } else {
             return null;
         }

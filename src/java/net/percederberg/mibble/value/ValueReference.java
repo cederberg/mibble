@@ -38,7 +38,7 @@ import net.percederberg.mibble.MibValueSymbol;
  * <strong>NOT</strong> use or reference this class.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.4
  * @since    2.0
  */
 public class ValueReference extends MibValue {
@@ -93,23 +93,31 @@ public class ValueReference extends MibValue {
      *             initialization
      */
     public MibValue initialize(MibLoaderLog log) throws MibException {
-        MibSymbol  symbol;
+        MibSymbol  ref;
         MibValue   value;
         String     message;
 
-        symbol = context.getSymbol(name);
-        if (symbol instanceof MibValueSymbol) {
-            value = ((MibValueSymbol) symbol).getValue().initialize(log);
+        ref = context.findSymbol(name, false);
+        if (ref == null) {
+            ref = context.findSymbol(name, true);
+            if (ref != null) {
+                message = "missing import for '" + name + "', using " +
+                          "definition from " + ref.getMib().getName();
+                log.addWarning(location, message);
+            }
+        }
+        if (ref instanceof MibValueSymbol) {
+            value = ((MibValueSymbol) ref).getValue().initialize(log);
             try {
                 value = value.createReference();
             } catch (UnsupportedOperationException e) {
                 throw new MibException(location, e.getMessage());
             }
             if (!(value instanceof ObjectIdentifierValue)) {
-                value.setReferenceSymbol((MibValueSymbol) symbol);
+                value.setReferenceSymbol((MibValueSymbol) ref);
             }
             return value;
-        } else if (symbol == null) {
+        } else if (ref == null) {
             message = "undefined symbol '" + name + "'";
             throw new MibException(location, message);
         } else {

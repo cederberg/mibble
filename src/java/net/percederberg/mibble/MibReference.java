@@ -28,7 +28,7 @@ import java.util.ArrayList;
  * not yet been loaded.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.4
  * @since    2.0
  */
 class MibReference implements MibContext {
@@ -117,18 +117,27 @@ class MibReference implements MibContext {
     }
 
     /**
-     * Returns a named MIB symbol. This method will only return
-     * symbols from the list of referenced symbols, or any symbol in
-     * the MIB if no reference list is set.
+     * Searches for a named MIB symbol. This method may search outside
+     * the normal (or strict) scope, thereby allowing a form of
+     * relaxed search. Note that the results from the normal and
+     * expanded search may not be identical, due to the context
+     * chaining and the same symbol name appearing in various
+     * contexts.<p>
+     *
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
      *
      * @param name           the symbol name
+     * @param expanded       the expanded scope flag
      *
      * @return the MIB symbol, or null if not found
+     *
+     * @since 2.4
      */
-    public MibSymbol getSymbol(String name) {
+    public MibSymbol findSymbol(String name, boolean expanded) {
         if (mib == null) {
             return null;
-        } else if (symbols != null && !symbols.contains(name)) {
+        } else if (!expanded && symbols != null && !symbols.contains(name)) {
             return null;
         } else {
             return mib.getSymbol(name);
