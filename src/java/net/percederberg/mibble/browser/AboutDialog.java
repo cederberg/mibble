@@ -56,7 +56,7 @@ public class AboutDialog extends JDialog {
     /**
      * The about dialog text.
      */
-    private static final String TEXT = 
+    private static final String TEXT =
         "Mibble MIB Browser\n" +
         "~~~~~~~~~~~~~~\n\n\n" +
         "Author: Watsh Rajneesh\n\n" +

@@ -67,9 +67,9 @@ public class MibNode extends DefaultMutableTreeNode {
         this.value = value;
     }
 
-    /** 
+    /**
      * Returns the node name.
-     * 
+     *
      * @return the node name
      */
     public String getName() {
@@ -86,9 +86,9 @@ public class MibNode extends DefaultMutableTreeNode {
         return value;
     }
 
-    /** 
+    /**
      * Returns the full node description.
-     * 
+     *
      * @return the full node description
      */
     public String getDescription() {

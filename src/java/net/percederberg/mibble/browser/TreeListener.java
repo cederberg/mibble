@@ -54,7 +54,7 @@ public class TreeListener implements TreeSelectionListener {
     private JTree tree;
 
     /**
-     * The oid text field. 
+     * The oid text field.
      */
     private JTextField oid;
 
@@ -65,7 +65,7 @@ public class TreeListener implements TreeSelectionListener {
 
     /**
      * Creates a new tree listener.
-     * 
+     *
      * @param tree           the tree component
      * @param oid            the OID text field
      * @param mibDescription the MIB description text area
@@ -89,7 +89,7 @@ public class TreeListener implements TreeSelectionListener {
 
         if (node == null) {
             return;
-        } 
+        }
         oid.setText(node.getOid());
         mibDescription.setText(node.getDescription());
     }

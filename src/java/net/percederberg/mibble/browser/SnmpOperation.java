@@ -48,8 +48,8 @@ import uk.co.westhawk.snmp.stack.SnmpContextPool;
 import uk.co.westhawk.snmp.stack.varbind;
 
 /**
- * This class exposes the different snmp operations which the user 
- * may want to perform. It is a wrapper class over the Westhawk SNMP 
+ * This class exposes the different snmp operations which the user
+ * may want to perform. It is a wrapper class over the Westhawk SNMP
  * stack.
  *
  * @see uk.co.westhawk.snmp.pdu.BlockPdu
@@ -71,7 +71,7 @@ public class SnmpOperation {
      *
      * @param host           the host name or IP address
      * @param port           the agent port
-     * @param comm           the community name (read/write depends 
+     * @param comm           the community name (read/write depends
      *                       on type of operation)
      */
     public SnmpOperation(String host, int port, String comm) {
@@ -83,7 +83,7 @@ public class SnmpOperation {
      *
      * @param host           the host name or IP address
      * @param port           the agent port
-     * @param comm           the community name (read/write depends 
+     * @param comm           the community name (read/write depends
      *                       on type of operation)
      */
     private void createContext(String host, int port, String comm) {
@@ -153,7 +153,7 @@ public class SnmpOperation {
     /**
      * Send (dispatch) a Get or GetNext request.
      *
-     * @param pdu            a blocking PDU for synchronous SNMP 
+     * @param pdu            a blocking PDU for synchronous SNMP
      *                       operation
      *
      * @return a string description of the results
@@ -207,7 +207,7 @@ public class SnmpOperation {
      * Walk the MIB.
      *
      * @param oid            oid to start walking the mib
-     * @param resultArea     text area to populate with the result of 
+     * @param resultArea     text area to populate with the result of
      *                       walk operation
      *
      * @return a string description of the results
@@ -226,7 +226,7 @@ public class SnmpOperation {
                     if (var != null) {
                         AsnObjectId oidNext = var.getOid();
                         AsnObject res = var.getValue();
-                        if (res.getRespType() != 
+                        if (res.getRespType() !=
                             AsnObject.SNMP_VAR_ENDOFMIBVIEW) {
 
                             if (res != null && oidNext != null) {
@@ -237,7 +237,7 @@ public class SnmpOperation {
                                 resultArea.append("\n" +
                                         oidNext.toString() + "--> "
                                         + res.toString());
-                                
+
                                 pdu = new BlockPdu(context);
                                 pdu.setPduType(BlockPdu.GETNEXT);
                                 pdu.addOid(oidNext.toString());
