@@ -41,7 +41,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * are loaded through a {@link MibLoader MIB loader}.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.4
  * @since    2.0
  *
  * @see <a href="http://www.ietf.org/rfc/rfc3411.txt">RFC 3411 - An
@@ -396,6 +396,98 @@ public class Mib implements MibContext {
      */
     public MibValueSymbol getSymbolByValue(MibValue value) {
         return (MibValueSymbol) symbolValueMap.get(value.toString());
+    }
+
+    /**
+     * Returns a value symbol from from this MIB. The search is done
+     * by using the strictly numerical OID value specified. Differing
+     * from the getSymbolByValue() methods, this method will attempt
+     * to identify and ignore the parts of the OID that corresponds to
+     * table row numbers. If an exact match for the OID is present in
+     * the MIB, this method will always return the same result as
+     * getSymbolByValue().<p>
+     *
+     * The search can be performed either for an exact match or by
+     * finding the symbol with the longest matching OID (i.e. an
+     * ancestor symbol). If the exact match flag is set to true, each
+     * number in the OID must correspond to a symbol in the MIB,
+     * either through a direct match or through a table row number
+     * counter (all pointing at the same table entry symbol). If the
+     * exact match is set to false, the last symbol before a failed
+     * match will be returned, making sure that an ancestor to the
+     * specified OID is returned when an exact match wasn't present in
+     * the MIB (as can be the case for some malformed MIB files).
+     *
+     * @param oid            the numeric OID value
+     * @param exactMatch     the exact match flag
+     *
+     * @return the MIB value symbol, or null if not found
+     *
+     * @throws NumberFormatException if the OID specified wasn't
+     *             strictly numeric
+     *
+     * @since 2.4
+     */
+    public MibValueSymbol getSymbolByOid(String oid, boolean exactMatch)
+        throws NumberFormatException {
+
+        MibValueSymbol  parent;
+        String          parentOid;
+        MibValueSymbol  sym;
+        int             pos;
+        int             value;
+
+        sym = getSymbolByValue(oid);
+        if (sym != null) {
+            return sym;
+        }
+        pos = oid.lastIndexOf(".");
+        if (pos > 0) {
+            parentOid = oid.substring(0, pos);
+            parent = getSymbolByOid(parentOid, true);
+            if (parent != null) {
+                value = Integer.parseInt(oid.substring(pos + 1));
+                sym = getSymbolChild(parent, value);
+                if (sym != null) {
+                    return sym;
+                } else if (!exactMatch) {
+                    return parent;
+                }
+            } else if (!exactMatch) {
+                return getSymbolByOid(parentOid, false);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns a symbol child having a specified OID component value.
+     *
+     * @param sym            the parent value symbol
+     * @param value          the child OID value component
+     *
+     * @return the child MIB value symbol, or null if not found
+     *
+     * @since 2.4
+     */
+    private MibValueSymbol getSymbolChild(MibValueSymbol sym, int value) {
+        ObjectIdentifierValue  oid;
+
+        if (sym.getValue() instanceof ObjectIdentifierValue) {
+            oid = (ObjectIdentifierValue) sym.getValue();
+            for (int i = 0; i < oid.getChildCount(); i++) {
+                if (oid.getChild(i).getValue() == value) {
+                    return oid.getChild(i).getSymbol();
+                }
+            }
+            if (oid.getChildCount() == 1) {
+                // TODO: We should really check that sym is indeed a
+                //       SEQUENCE OF type here, but indirect SNMP types
+                //       cause problems with a straight check.
+                return oid.getChild(0).getSymbol();
+            }
+        }
+        return null;
     }
 
     /**
