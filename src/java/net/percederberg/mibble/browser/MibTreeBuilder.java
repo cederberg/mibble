@@ -210,7 +210,9 @@ public class MibTreeBuilder {
     private boolean hasParent(ObjectIdentifierValue oid) {
         ObjectIdentifierValue  parent = oid.getParent();
 
-        return parent != null
+        return oid.getSymbol() != null
+            && parent != null
+            && parent.getSymbol() != null
             && parent.getSymbol().getMib().equals(oid.getSymbol().getMib());
     }
 
