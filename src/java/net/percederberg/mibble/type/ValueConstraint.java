@@ -21,6 +21,7 @@
 
 package net.percederberg.mibble.type;
 
+import net.percederberg.mibble.FileLocation;
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
@@ -39,6 +40,12 @@ import net.percederberg.mibble.value.StringValue;
 public class ValueConstraint implements Constraint {
 
     /**
+     * The constraint location. This value is reset to null once the
+     * constraint has been initialized. 
+     */
+    private FileLocation location;
+
+    /**
      * The constraint value.
      */
     private MibValue value;
@@ -46,9 +53,11 @@ public class ValueConstraint implements Constraint {
     /**
      * Creates a new value constraint.
      *
+     * @param location       the constraint location
      * @param value          the constraint value
      */
-    public ValueConstraint(MibValue value) {
+    public ValueConstraint(FileLocation location, MibValue value) {
+        this.location = location;
         this.value = value;
     }
 
@@ -68,10 +77,14 @@ public class ValueConstraint implements Constraint {
     public void initialize(MibType type, MibLoaderLog log)
         throws MibException {
 
+        String  message;
+
         value = value.initialize(log);
-        if (!isCompatible(type)) {
-            // TODO: log warning message 
+        if (location != null && !isCompatible(type)) {
+            message = "Value constraint not compatible with this type";
+            log.addWarning(location, message);
         }
+        location = null;
     }
 
     /**

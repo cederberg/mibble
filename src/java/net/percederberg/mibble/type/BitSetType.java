@@ -226,7 +226,8 @@ public class BitSetType extends MibType implements MibContext {
             if (values.get(i) instanceof MibValueSymbol) {
                 sym = (MibValueSymbol) values.get(i);
                 symbols.put(sym.getName(), sym);
-                c = new ValueConstraint(sym.getValue());
+                // TODO: check value constraint compability
+                c = new ValueConstraint(null, sym.getValue());
                 if (constraint == null) {
                     constraint = c;
                 } else {

@@ -23,6 +23,7 @@ package net.percederberg.mibble.type;
 
 import java.util.ArrayList;
 
+import net.percederberg.mibble.FileLocation;
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
@@ -38,6 +39,12 @@ import net.percederberg.mibble.MibValue;
 public class SizeConstraint implements Constraint {
 
     /**
+     * The constraint location. This value is reset to null once the
+     * constraint has been initialized. 
+     */
+    private FileLocation location;
+
+    /**
      * The constrained size values.
      */
     private Constraint values;
@@ -45,9 +52,11 @@ public class SizeConstraint implements Constraint {
     /**
      * Creates a new size constraint.
      *
+     * @param location       the constraint location
      * @param values         the constrained size values
      */
-    public SizeConstraint(Constraint values) {
+    public SizeConstraint(FileLocation location, Constraint values) {
+        this.location = location;
         this.values = values;
     }
 
@@ -67,10 +76,14 @@ public class SizeConstraint implements Constraint {
     public void initialize(MibType type, MibLoaderLog log)
         throws MibException {
 
+        String  message;
+
         values.initialize(new IntegerType(), log);
-        if (!isCompatible(type)) {
-            // TODO: log warning message 
+        if (location != null && !isCompatible(type)) {
+            message = "Size constraint not compatible with this type";
+            log.addWarning(location, message);
         }
+        location = null;
     }
 
     /**
@@ -83,7 +96,8 @@ public class SizeConstraint implements Constraint {
      *         false otherwise
      */
     public boolean isCompatible(MibType type) {
-        return type instanceof SequenceOfType;
+        return type instanceof SequenceOfType
+            || type instanceof StringType;
     }
 
     /**

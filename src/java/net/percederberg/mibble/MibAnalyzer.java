@@ -84,7 +84,7 @@ import net.percederberg.mibble.value.ValueReference;
  * is encountered.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.6
  * @since    2.0
  */
 class MibAnalyzer extends Asn1Analyzer {
@@ -1155,7 +1155,7 @@ class MibAnalyzer extends Asn1Analyzer {
                 node.getStartColumn());
         } else if (list.size() == 1) {
             lower = (MibValue) list.get(0);
-            obj = new ValueConstraint(lower);
+            obj = new ValueConstraint(getLocation(node), lower);
         } else {
             for (int i = 0; i < list.size(); i++) {
                 obj = list.get(i);
@@ -1169,7 +1169,8 @@ class MibAnalyzer extends Asn1Analyzer {
                     upper = (MibValue) obj;
                 }
             }
-            obj = new ValueRangeConstraint(lower,
+            obj = new ValueRangeConstraint(getLocation(node),
+                                           lower,
                                            strictLower.booleanValue(),
                                            upper,
                                            strictUpper.booleanValue());
@@ -1257,7 +1258,7 @@ class MibAnalyzer extends Asn1Analyzer {
         Constraint  c;
 
         c = (Constraint) getValue(getChildAt(node, 1), 0);
-        node.addValue(new SizeConstraint(c));
+        node.addValue(new SizeConstraint(getLocation(node), c));
         return node;
     }
 

@@ -23,6 +23,7 @@ package net.percederberg.mibble.type;
 
 import java.math.BigInteger;
 
+import net.percederberg.mibble.FileLocation;
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
@@ -39,6 +40,12 @@ import net.percederberg.mibble.value.StringValue;
  * @since    2.0
  */
 public class ValueRangeConstraint implements Constraint {
+
+    /**
+     * The constraint location. This value is reset to null once the
+     * constraint has been initialized. 
+     */
+    private FileLocation location;
 
     /**
      * The lower bound value.
@@ -63,16 +70,19 @@ public class ValueRangeConstraint implements Constraint {
     /**
      * Creates a new value range constraint.
      *
+     * @param location       the constraint location
      * @param lower          the lower bound, or null for minimum
      * @param strictLower    the strict lower bound (less than) flag
      * @param upper          the upper bound, or null for maximum
      * @param strictUpper    the strict upper bound (greater than) flag
      */
-    public ValueRangeConstraint(MibValue lower,
+    public ValueRangeConstraint(FileLocation location,
+                                MibValue lower,
                                 boolean strictLower,
                                 MibValue upper,
                                 boolean strictUpper) {
 
+        this.location = location;
         this.lower = lower;
         this.upper = upper;
         this.strictLower = strictLower;
@@ -95,15 +105,20 @@ public class ValueRangeConstraint implements Constraint {
     public void initialize(MibType type, MibLoaderLog log)
         throws MibException {
 
+        String  message;
+
         if (lower != null) {
             lower = lower.initialize(log);
         }
         if (upper != null) {
             upper = upper.initialize(log);
         }
-        if (!isCompatible(type)) {
-            // TODO: log warning message 
+        if (location != null && !isCompatible(type)) {
+            message = "Value range constraint not compatible with " +
+                      "this type";
+            log.addWarning(location, message);
         }
+        location = null;
     }
 
     /**
