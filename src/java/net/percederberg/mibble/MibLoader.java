@@ -570,18 +570,20 @@ public class MibLoader {
         MibLoaderLog  log = new MibLoaderLog();
         ArrayList     processed = new ArrayList();
         MibSource     src;
+        Mib           mib;
 
         // Parse MIB files in queue
         while (queue.size() > 0) {
             try {
                 src = (MibSource) queue.get(0);
-                processed.add(src.createMib(this, log));
+                mib = src.createMib(this, log);
+                mibs.add(mib);
+                processed.add(mib);
             } catch (MibLoaderException e) {
                 // Do nothing, errors are already in the log
             }
             queue.remove(0);
         }
-        mibs.addAll(processed);
 
         // Initialize all parsed MIB files
         for (int i = 0; i < processed.size(); i++) {
