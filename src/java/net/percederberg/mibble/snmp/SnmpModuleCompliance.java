@@ -44,7 +44,10 @@ import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
- * An SNMP module compliance type.
+ * The SNMP module compliance macro type. This macro type was added
+ * to SNMPv2 and is defined in RFC 2580. 
+ * 
+ * @see <a href="http://www.ietf.org/rfc/rfc2580.txt">RFC 2580 (SNMPv2-CONF)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -169,7 +172,8 @@ public class SnmpModuleCompliance extends MibType {
     }
     
     /**
-     * Returns the list of SNMP modules.
+     * Returns the list of SNMP modules. The returned list will 
+     * consist of SnmpModule instances.
      * 
      * @return the list of SNMP modules
      * 

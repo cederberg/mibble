@@ -41,8 +41,10 @@ import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
 
 /**
- * An SNMP module variation declaration. This declaration is used 
- * inside a module support declaration. 
+ * An SNMP module variation value. This declaration is used inside a
+ * module support declaration.
+ * 
+ * @see SnmpModuleSupport 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -184,7 +186,8 @@ public class SnmpVariation {
     }
 
     /**
-     * Returns cell values required for creation.
+     * Returns cell values required for creation. The returned list
+     * will consist of MibValue instances.
      * 
      * @return cell values required for creation
      * 

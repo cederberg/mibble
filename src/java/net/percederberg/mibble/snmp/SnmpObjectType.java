@@ -49,7 +49,13 @@ import net.percederberg.mibble.type.SequenceType;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
- * An SNMP object type. 
+ * The SNMP object type macro type. This macro type was present in
+ * SNMPv1, but was somewhat extended in SNMPv2. It is defined in the 
+ * RFC:s 1155, 1212 and 2578. 
+ * 
+ * @see <a href="http://www.ietf.org/rfc/rfc1155.txt">RFC 1155 (RFC1155-SMI)</a>
+ * @see <a href="http://www.ietf.org/rfc/rfc1212.txt">RFC 1212 (RFC-1212)</a>
+ * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -396,7 +402,8 @@ public class SnmpObjectType extends MibType {
     }
 
     /**
-     * Returns the list of index values or types.
+     * Returns the list of index values or types. The returned list
+     * will consist of MibValue and MibType instances.
      * 
      * @return the list of index values or types
      * 

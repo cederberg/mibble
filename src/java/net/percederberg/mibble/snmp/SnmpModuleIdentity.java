@@ -44,7 +44,10 @@ import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
- * An SNMP module identity. 
+ * The SNMP module identity macro type. This macro type was added
+ * to SNMPv2 and is defined in RFC 2578. 
+ * 
+ * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a> 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -188,7 +191,8 @@ public class SnmpModuleIdentity extends MibType {
     }
 
     /**
-     * Returns a list of all the SNMP module revisions.
+     * Returns a list of all the SNMP module revisions. The returned 
+     * list will consist of SnmpRevision instances.
      * 
      * @return a list of all the SNMP module revisions
      * 

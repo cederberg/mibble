@@ -44,7 +44,10 @@ import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.type.Constraint;
 
 /**
- * An SNMP textual convention.
+ * The SNMP textual convention macro type. This macro type was added
+ * to SNMPv2 and is defined in RFC 2579. 
+ * 
+ * @see <a href="http://www.ietf.org/rfc/rfc2579.txt">RFC 2579 (SNMPv2-TC)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -262,7 +265,10 @@ public class SnmpTextualConvention extends MibType implements MibContext {
 
     /**
      * Returns a named MIB symbol. This method checks the syntax type 
-     * for a MibContext implementation. 
+     * for a MibContext implementation.<p> 
+     * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
      * 
      * @param name           the symbol name
      * 

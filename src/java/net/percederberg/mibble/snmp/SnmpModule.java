@@ -40,8 +40,10 @@ import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibValue;
 
 /**
- * An SNMP module compliance declaration. This declaration is used 
- * inside the module compliance type.
+ * An SNMP module compliance value. This declaration is used inside 
+ * the module compliance macro type.
+ * 
+ * @see SnmpModuleCompliance
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -118,7 +120,8 @@ public class SnmpModule {
     }
     
     /**
-     * Returns the list of mandatory group values.
+     * Returns the list of mandatory group values. The returned list
+     * will consist of MibValue instances.
      * 
      * @return the list of mandatory group values
      * 
@@ -129,7 +132,8 @@ public class SnmpModule {
     }
     
     /**
-     * Returns the list of compliances.
+     * Returns the list of compliances. The returned list will 
+     * consist of SnmpCompliance instances.
      * 
      * @return the list of compliances
      * 

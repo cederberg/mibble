@@ -44,7 +44,12 @@ import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
- * An SNMP notification type.
+ * The SNMP notification type macro. This macro type was added to 
+ * SNMPv2 and is defined in RFC 2578. The notification type macro is
+ * used instead of the trap type macro in SNMPv2 and later.
+ * 
+ * @see SnmpTrapType
+ * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -146,7 +151,8 @@ public class SnmpNotificationType extends MibType {
     }
 
     /**
-     * Returns the value objects. 
+     * Returns the value objects. The returned list will consist of 
+     * MibValue instances.
      * 
      * @return the value objects
      *

@@ -34,10 +34,15 @@
 package net.percederberg.mibble.snmp;
 
 /**
- * An SNMP status value.
+ * An SNMP status value. This class is used to encapsulate the status
+ * value constants used in several SNMP macro types. Note that due to
+ * the support for both SNMPv1, SNMPv2 and SNMPv3 not all of the 
+ * constants defined in this class can be present in all files. 
+ * Please see the comments for each individual constant regarding the
+ * support for different SNMP versions.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
 public class SnmpStatus {

@@ -38,7 +38,10 @@ import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibValue;
 
 /**
- * An SNMP module identity revision.
+ * An SNMP module identity revision value.  This declaration is used 
+ * inside a module identity macro type.
+ * 
+ * @see SnmpModuleIdentity
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2

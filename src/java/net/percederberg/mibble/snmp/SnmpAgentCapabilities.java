@@ -44,7 +44,10 @@ import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
- * An SNMP agent capabilities.
+ * The SNMP agent capabilities macro type. This macro type was added
+ * to SNMPv2 and is defined in RFC 2580. 
+ * 
+ * @see <a href="http://www.ietf.org/rfc/rfc2580.txt">RFC 2580 (SNMPv2-CONF)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -186,7 +189,8 @@ public class SnmpAgentCapabilities extends MibType {
     }
 
     /**
-     * Returns the list of the supported modules.
+     * Returns the list of the supported modules. The returned list
+     * will consist of SnmpModuleSupport instances.  
      * 
      * @return the list of the supported modules
      * 

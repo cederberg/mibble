@@ -40,8 +40,10 @@ import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibValue;
 
 /**
- * An SNMP module support declaration. This declaration is used 
- * inside the agent capabilities type.
+ * An SNMP module support value. This declaration is used inside the 
+ * agent capabilities type.
+ * 
+ * @see SnmpAgentCapabilities
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -116,7 +118,8 @@ public class SnmpModuleSupport {
     }
     
     /**
-     * Returns the list of included group values.
+     * Returns the list of included group values. The returned list
+     * will consist of MibValue instances.
      * 
      * @return the list of included group values
      * 
@@ -127,7 +130,8 @@ public class SnmpModuleSupport {
     }
     
     /**
-     * Returns the list of variations.
+     * Returns the list of variations. The returned list will consist
+     * of SnmpVariation instances.
      * 
      * @return the list of variations
      * 

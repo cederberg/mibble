@@ -44,7 +44,12 @@ import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.value.NumberValue;
 
 /**
- * An SNMP trap type.
+ * The SNMP trap type macro. This macro type is only present in 
+ * SNMPv1 and is defined in RFC 1215. In SNMPv2 and later, the 
+ * notification type macro should be used instead. 
+ * 
+ * @see SnmpNotificationType
+ * @see <a href="http://www.ietf.org/rfc/rfc1215.txt">RFC 1215 (RFC-1215)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2

@@ -39,8 +39,10 @@ import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
 
 /**
- * An SNMP module compliance declaration. This declaration is used 
- * inside a module declaration. 
+ * An SNMP module compliance value. This declaration is used inside a
+ * module declaration for both the GROUP and OBJECT compliance parts.
+ * 
+ * @see SnmpModule 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2

@@ -34,7 +34,12 @@
 package net.percederberg.mibble.snmp;
 
 /**
- * An SNMP access mode value.
+ * An SNMP access mode value. This class is used to encapsulate the
+ * access value constants used in several SNMP macro types. Note that
+ * due to the support for both SNMPv1, SNMPv2 and SNMPv3 not all of
+ * the constants defined in this class can be present in all files.
+ * Please see the comments for each individual constant regarding the
+ * support for different SNMP versions.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.0
@@ -44,8 +49,8 @@ public class SnmpAccess {
 
     /**
      * The not implemented SNMP access mode. This mode is only used 
-     * in SNMPv2 variation declarations inside an agent capabilities
-     * declaration.
+     * in SNMPv2 (and later) variation declarations inside an agent 
+     * capabilities declaration.
      */
     public static final SnmpAccess NOT_IMPLEMENTED =
         new SnmpAccess("not-implemented");
