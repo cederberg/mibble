@@ -30,7 +30,7 @@ package net.percederberg.mibble.snmp;
  * support for different SNMP versions.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.5
  * @since    2.0
  */
 public class SnmpAccess {
@@ -94,6 +94,34 @@ public class SnmpAccess {
      */
     private SnmpAccess(String description) {
         this.description = description;
+    }
+
+    /**
+     * Checks if this access mode allows reading the value.
+     *
+     * @return true if reading is allowed, or
+     *         false otherwise
+     *
+     * @since 2.5
+     */
+    public boolean canRead() {
+        return this == READ_ONLY
+            || this == READ_WRITE
+            || this == READ_CREATE;
+    }
+
+    /**
+     * Checks if this access mode allows writing the value.
+     *
+     * @return true if writing is allowed, or
+     *         false otherwise
+     *
+     * @since 2.5
+     */
+    public boolean canWrite() {
+        return this == READ_WRITE
+            || this == READ_CREATE
+            || this == WRITE_ONLY;
     }
 
     /**
