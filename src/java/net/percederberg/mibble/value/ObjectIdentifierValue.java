@@ -23,6 +23,7 @@ package net.percederberg.mibble.value;
 
 import java.util.ArrayList;
 
+import net.percederberg.mibble.FileLocation;
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibValue;
@@ -37,6 +38,16 @@ import net.percederberg.mibble.MibValueSymbol;
  * @since    2.0
  */
 public class ObjectIdentifierValue extends MibValue {
+
+    /**
+     * The declaration file location. This variable is only used when
+     * resolving value references in order to present correct error
+     * messages. After initialization it is set to null to minimize
+     * memory impact.
+     *
+     * @since 2.5
+     */
+    private FileLocation location = null;
 
     /**
      * The component parent.
@@ -79,33 +90,47 @@ public class ObjectIdentifierValue extends MibValue {
     /**
      * Creates a new object identifier value.
      *
+     * @param location       the declaration file location
      * @param parent         the component parent
      * @param name           the component name, or null
      * @param value          the component value
+     *
+     * @throws MibException if the object identifier parent already
+     *             had a child with the specified value
      */
-    public ObjectIdentifierValue(ObjectIdentifierValue parent,
+    public ObjectIdentifierValue(FileLocation location,
+                                 ObjectIdentifierValue parent,
                                  String name,
-                                 int value) {
+                                 int value)
+        throws MibException {
 
         super("OBJECT IDENTIFIER");
         this.parent = parent;
         this.name = name;
         this.value = value;
-        parent.addChild(this);
+        if (parent.getChildByValue(value) != null) {
+            throw new MibException(location,
+                                   "cannot add duplicate OID " +
+                                   "children with value " + value);
+        }
+        parent.addChild(location, this);
     }
 
     /**
      * Creates a new object identifier value.
      *
+     * @param location       the declaration file location
      * @param parent         the component parent
      * @param name           the component name, or null
      * @param value          the component value
      */
-    public ObjectIdentifierValue(ValueReference parent,
+    public ObjectIdentifierValue(FileLocation location,
+                                 ValueReference parent,
                                  String name,
                                  int value) {
 
         super("OBJECT IDENTIFIER");
+        this.location = location;
         this.parent = parent;
         this.name = name;
         this.value = value;
@@ -129,7 +154,8 @@ public class ObjectIdentifierValue extends MibValue {
      *             initialization
      */
     public MibValue initialize(MibLoaderLog log) throws MibException {
-        ValueReference  ref = null;
+        ValueReference         ref = null;
+        ObjectIdentifierValue  result = this;
 
         if (parent == null) {
             return this;
@@ -139,14 +165,16 @@ public class ObjectIdentifierValue extends MibValue {
         parent = parent.initialize(log);
         if (ref != null) {
             if (parent instanceof ObjectIdentifierValue) {
-                ((ObjectIdentifierValue) parent).addChild(this);
+                result = (ObjectIdentifierValue) parent;
+                result = result.addChild(location, this);
             } else {
                 throw new MibException(ref.getLocation(),
                                        "referenced value is not an " +
                                        "object identifier");
             }
         }
-        return this;
+        location = null;
+        return result;
     }
 
     /**
@@ -269,8 +297,10 @@ public class ObjectIdentifierValue extends MibValue {
 
     /**
      * Returns a child object identifier value. The children are
-     * searched by their names. This method uses linear search and
-     * therefors has time complexity O(n).
+     * searched by their component names. This method uses linear
+     * search and therefore has time complexity O(n). Note that most
+     * OID:s don't have a component name, but only an associated
+     * symbol.
      *
      * @param name           the child name
      *
@@ -349,12 +379,22 @@ public class ObjectIdentifierValue extends MibValue {
 
     /**
      * Adds a child component. The children will be inserted in the
-     * value order. If a child has already been added, it will be
-     * ignored.
+     * value order. If a child with the same value has already been
+     * added, the new child will be merged with the previous one (if
+     * possible) and the resulting child will be returned.
      *
+     * @param location       the file location on error
      * @param child          the child component
+     *
+     * @return the child object identifier value added
+     *
+     * @throws MibException if an irrecoverable conflict between two
+     *             children occurred
      */
-    private void addChild(ObjectIdentifierValue child) {
+    private ObjectIdentifierValue addChild(FileLocation location,
+                                           ObjectIdentifierValue child)
+        throws MibException {
+
         ObjectIdentifierValue  value;
         int                    i = children.size();
 
@@ -363,15 +403,90 @@ public class ObjectIdentifierValue extends MibValue {
         while (i > 0) {
             value = (ObjectIdentifierValue) children.get(i - 1);
             if (value.getValue() == child.getValue()) {
-                // TODO: this is erroneous as we really need to unify
-                //       the oid:s when this happens
-                return;
+                value = merge(location, value, child);
+                children.set(i - 1, value);
+                return value;
             } else if (value.getValue() < child.getValue()) {
                 break;
             }
             i--;
         }
         children.add(i, child);
+        return child;
+    }
+
+    /**
+     * Merges two object identifiers. One of the two objects will be
+     * used as the merge destination, depending on the level of
+     * initialization that both have. The merge can only be made
+     * under certain conditions, for example that no children OID:s
+     * conflict. It is also assumed that the two OID:s have the same
+     * numerical value.
+     *
+     * @param location       the file location on error
+     * @param value1         the first OID value
+     * @param value2         the second OID value
+     *
+     * @return the merged object identifier value
+     *
+     * @throws MibException if the merge couldn't be performed due to
+     *             some conflict or invalid state
+     */
+    private ObjectIdentifierValue merge(FileLocation location,
+                                        ObjectIdentifierValue value1,
+                                        ObjectIdentifierValue value2)
+        throws MibException {
+
+        if (value1.symbol != null) {
+            return transfer(location, value2, value1);
+        } else if (value2.symbol != null || value2.children.size() > 0) {
+            return transfer(location, value1, value2);
+        } else {
+            return transfer(location, value2, value1);
+        }
+    }
+    
+    /**
+     * Transfers the contents of one object identifier to another one.
+     * The transfer can only be made under certain conditions, for
+     * example that no children OID:s conflict. It is also assumed
+     * that the two OID:s have the name numerical value.
+     *
+     * @param location       the file location on error
+     * @param src            the source OID value
+     * @param dest           the destination OID value
+     *
+     * @return the destination object identifier value
+     *
+     * @throws MibException if the transfer couldn't be performed due
+     *             to some conflict or invalid state
+     */
+    private ObjectIdentifierValue transfer(FileLocation location,
+                                           ObjectIdentifierValue src,
+                                           ObjectIdentifierValue dest)
+        throws MibException {
+
+        ObjectIdentifierValue  child;
+
+        if (dest.name == null) {
+            dest.name = src.name;
+        } else if (src.name != null && !src.name.equals(dest.name)) {
+            throw new MibException(location,
+                                   "cannot merge OID:s with same " +
+                                   "value but different names");
+        }
+        if (src.symbol != null) {
+            throw new MibException(location,
+                                   "INTERNAL ERROR: OID merge with " +
+                                   "symbol reference already set");
+        }
+        for (int i = 0; i < src.children.size(); i++) {
+            child = (ObjectIdentifierValue) src.children.get(i);
+            child.parent = dest;
+            dest.addChild(location, child);
+        }
+        src.children.clear();
+        return dest;
     }
 
     /**

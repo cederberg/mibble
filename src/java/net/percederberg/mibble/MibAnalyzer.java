@@ -1592,12 +1592,19 @@ class MibAnalyzer extends Asn1Analyzer {
             if (number.hasNumber()) {
                 value = number.getNumber().intValue();
                 if (parent instanceof ObjectIdentifierValue) {
-                    parent = new ObjectIdentifierValue(
+                    try {
+                        parent = new ObjectIdentifierValue(
+                                        getLocation(node),
                                         (ObjectIdentifierValue) parent,
                                         number.getName(),
                                         value);
+                    } catch (MibException e) {
+                        log.addError(e.getLocation(), e.getMessage());
+                        parent = null;
+                    }
                 } else {
                     parent = new ObjectIdentifierValue(
+                                        getLocation(node),
                                         (ValueReference) parent,
                                         number.getName(),
                                         value);

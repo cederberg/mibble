@@ -296,7 +296,8 @@ public class SnmpObjectType extends MibType {
                                       new ArrayList(),
                                       null);
             value = (ObjectIdentifierValue) symbol.getValue();
-            value = new ObjectIdentifierValue(value,
+            value = new ObjectIdentifierValue(symbol.getLocation(),
+                                              value,
                                               element.getName(),
                                               pos);
             elementSymbol = new MibValueSymbol(symbol.getLocation(),

@@ -84,6 +84,8 @@ public class MibValueSymbol extends MibSymbol {
      *             initialization
      */
     public void initialize(MibLoaderLog log) throws MibException {
+        ObjectIdentifierValue  oid;
+
         if (type != null) {
             type = type.initialize(this, log);
         }
@@ -95,7 +97,10 @@ public class MibValueSymbol extends MibSymbol {
                                    "value is not compatible with type");
         }
         if (value instanceof ObjectIdentifierValue) {
-            ((ObjectIdentifierValue) value).setSymbol(this);
+            oid = (ObjectIdentifierValue) value;
+            if (oid.getSymbol() == null) {
+                oid.setSymbol(this);
+            }
         }
     }
 
