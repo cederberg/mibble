@@ -25,18 +25,14 @@
 <!-- INITIALIZATION -->
   <target name="init">
     <tstamp />
-    <condition property="build.version" value="${DSTAMP}">
-      <not>
-        <isset property="build.version" />
-      </not>
-    </condition>
+    <property name="build.version" value="${DSTAMP}" />
     <ant antfile="compile.xml" target="compile-codegen" />
   </target>
 
 
 <!-- PACKAGING TARGETS -->
   <target name="package"
-          depends="init,package-clean,package-public" />
+          depends="init,package-clean,package-commercial,package-public" />
 
   <target name="package-clean">
     <delete>
@@ -45,30 +41,74 @@
     </delete>
   </target>
 
-  <target name="package-public">
-    <property name="build.name" value="mibble" />
-    <copy file="LICENSE-GPL.txt"
-          tofile="LICENSE.txt"
-          overwrite="true" />
-    <ant antfile="compile.xml" target="minimal" />
-    <tar tarfile="${build.name}-${build.version}.tar.gz"
+  <target name="package-commercial">
+    <mkdir dir="build" />
+    <copy file="LICENSE-COMMERCIAL.txt"
+          tofile="build/LICENSE.txt" />
+    <copy todir="build">
+      <fileset dir=".">
+        <include name="README.txt" />
+        <include name="*.xml" />
+        <include name="lib/mibble-*.jar" />
+        <include name="lib/grammatica-bin-*.jar" />
+        <include name="src/**" />
+        <exclude name="src/bin/MibbleBrowser.*" />
+        <exclude name="src/java/net/percederberg/mibble/MibbleBrowser.*" />
+        <exclude name="src/java/net/percederberg/mibble/browser/**" />
+      </fileset>
+    </copy>
+    <ant antfile="compile.xml" dir="build" target="minimal">
+      <property name="build.name" value="mibble-commercial" />
+    </ant>
+    <tar tarfile="mibble-commercial-${build.version}.tar.gz"
          longfile="gnu"
          compression="gzip">
-      <tarfileset dir="."
-                  fullpath="${build.name}-${build.version}/build.xml"
+      <tarfileset dir="build"
+                  fullpath="mibble-commercial-${build.version}/build.xml"
                   includes="compile.xml" />
-      <tarfileset dir="."
-                  prefix="${build.name}-${build.version}">
+      <tarfileset dir="build"
+                  prefix="mibble-commercial-${build.version}">
         <include name="README.txt" />
         <include name="LICENSE.txt" />
         <include name="bin/*.bat" />
         <include name="lib/**" />
-        <exclude name="lib/grammatica-bin*.jar" />
+        <include name="src/**" />
+        <include name="doc/**" />
+      </tarfileset>
+      <tarfileset dir="build"
+                  prefix="mibble-commercial-${build.version}"
+                  mode="777"
+                  includes="bin/*.sh" />
+    </tar>
+    <delete dir="build" quiet="true" />
+  </target>
+
+  <target name="package-public">
+    <copy file="LICENSE-GPL.txt"
+          tofile="LICENSE.txt"
+          overwrite="true" />
+    <ant antfile="compile.xml" target="minimal">
+      <property name="build.name" value="mibble" />
+    </ant>
+    <tar tarfile="mibble-${build.version}.tar.gz"
+         longfile="gnu"
+         compression="gzip">
+      <tarfileset dir="."
+                  fullpath="mibble-${build.version}/build.xml"
+                  includes="compile.xml" />
+      <tarfileset dir="."
+                  prefix="mibble-${build.version}">
+        <include name="README.txt" />
+        <include name="LICENSE.txt" />
+        <include name="bin/*.bat" />
+        <include name="lib/mibble-*.jar" />
+        <include name="lib/grammatica-bin-*.jar" />
+        <include name="lib/snmp*.jar" />
         <include name="src/**" />
         <include name="doc/**" />
       </tarfileset>
       <tarfileset dir="."
-                  prefix="${build.name}-${build.version}"
+                  prefix="mibble-${build.version}"
                   mode="777"
                   includes="bin/*.sh" />
     </tar>

@@ -29,8 +29,8 @@ then
     echo "Error: $MIBBLE_HOME/lib does not exist"
     exit 1
 fi
-MIBBLE_JAR=$MIBBLE_HOME/lib/mibble-@VERSION@.jar
-GRAMMATICA_JAR=$MIBBLE_HOME/lib/grammatica-1.4.jar
+MIBBLE_JAR=$MIBBLE_HOME/lib/@NAME@-@VERSION@.jar
+GRAMMATICA_JAR=$MIBBLE_HOME/lib/grammatica-bin-1.4.jar
 SNMP_JAR=$MIBBLE_HOME/lib/snmp4_13.jar
 CLASSPATH=$MIBBLE_JAR:$GRAMMATICA_JAR:$SNMP_JAR
 export CLASSPATH

@@ -23,7 +23,7 @@ echo Error: %MIBBLE_HOME%\lib does not exist
 pause
 goto end
 :doneLib
-set CLASSPATH=%MIBBLE_HOME%\lib\mibble-@VERSION@.jar;%MIBBLE_HOME%\lib\grammatica-1.4.jar;%MIBBLE_HOME%\lib\snmp4_13.jar
+set CLASSPATH=%MIBBLE_HOME%\lib\@NAME@-@VERSION@.jar;%MIBBLE_HOME%\lib\grammatica-bin-1.4.jar;%MIBBLE_HOME%\lib\snmp4_13.jar
 
 REM Display variables
 echo Using environment variables:
