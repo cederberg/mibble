@@ -30,7 +30,7 @@ import net.percederberg.mibble.MibValue;
  * A MIB type constraint.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.6
  * @since    2.0
  */
 public interface Constraint {
@@ -42,12 +42,13 @@ public interface Constraint {
      * may modify this object as a side-effect, and will be called by
      * the MIB loader.
      *
+     * @param type           the type to constrain
      * @param log            the MIB loader log
      *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    void initialize(MibLoaderLog log) throws MibException;
+    void initialize(MibType type, MibLoaderLog log) throws MibException;
 
     /**
      * Checks if the specified type is compatible with this

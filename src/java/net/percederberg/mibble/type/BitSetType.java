@@ -41,7 +41,7 @@ import net.percederberg.mibble.value.NumberValue;
  * a set of bit values
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.4
+ * @version  2.6
  * @since    2.0
  */
 public class BitSetType extends MibType implements MibContext {
@@ -131,7 +131,7 @@ public class BitSetType extends MibType implements MibContext {
         String          message;
 
         if (constraint != null) {
-            constraint.initialize(log);
+            constraint.initialize(this, log);
         }
         while (iter.hasNext()) {
             sym = (MibValueSymbol) iter.next();

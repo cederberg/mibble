@@ -33,7 +33,7 @@ import net.percederberg.mibble.MibValue;
  * as an array.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.6
  * @since    2.0
  */
 public class SequenceOfType extends MibType {
@@ -109,7 +109,7 @@ public class SequenceOfType extends MibType {
 
         base = base.initialize(symbol, log);
         if (constraint != null) {
-            constraint.initialize(log);
+            constraint.initialize(this, log);
         }
         return this;
     }

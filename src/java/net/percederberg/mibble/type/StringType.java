@@ -33,7 +33,7 @@ import net.percederberg.mibble.value.StringValue;
  * A string MIB type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.6
  * @since    2.0
  */
 public class StringType extends MibType {
@@ -95,7 +95,7 @@ public class StringType extends MibType {
         throws MibException {
 
         if (constraint != null) {
-            constraint.initialize(log);
+            constraint.initialize(this, log);
         }
         return this;
     }

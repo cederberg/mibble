@@ -35,7 +35,7 @@ import net.percederberg.mibble.MibValue;
  * two constraints.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.6
  * @since    2.0
  */
 public class CompoundConstraint implements Constraint {
@@ -68,14 +68,17 @@ public class CompoundConstraint implements Constraint {
      * may modify this object as a side-effect, and will be called by
      * the MIB loader.
      *
+     * @param type           the type to constrain
      * @param log            the MIB loader log
      *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public void initialize(MibLoaderLog log) throws MibException {
-        first.initialize(log);
-        second.initialize(log);
+    public void initialize(MibType type, MibLoaderLog log)
+        throws MibException {
+
+        first.initialize(type, log);
+        second.initialize(type, log);
     }
 
     /**
