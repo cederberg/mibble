@@ -101,6 +101,24 @@ public class MibTypeTag {
         new MibTypeTag(UNIVERSAL_CATEGORY, 6);    
 
     /**
+     * The universal real type tag. 
+     */
+    public static final MibTypeTag REAL = 
+        new MibTypeTag(UNIVERSAL_CATEGORY, 9);    
+
+    /**
+     * The universal sequence and sequence of type tag. 
+     */
+    public static final MibTypeTag SEQUENCE = 
+        new MibTypeTag(UNIVERSAL_CATEGORY, 16);    
+
+    /**
+     * The universal sequence and sequence of type tag. 
+     */
+    public static final MibTypeTag SET = 
+        new MibTypeTag(UNIVERSAL_CATEGORY, 17);    
+
+    /**
      * The tag category.
      */
     private int category;

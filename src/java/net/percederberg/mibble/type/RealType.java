@@ -35,6 +35,7 @@ package net.percederberg.mibble.type;
 
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibTypeTag;
 import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.value.NumberValue;
 
@@ -51,7 +52,6 @@ public class RealType extends MibType {
      * Creates a new real MIB type. 
      */
     public RealType() {
-        // TODO: check the primitive status for REAL
         this(true);
     }
 
@@ -61,8 +61,8 @@ public class RealType extends MibType {
      * @param primitive      the primitive type flag
      */
     private RealType(boolean primitive) {
-        // TODO: set universal type tag (if exists)
         super("REAL", primitive);
+        setTag(true, MibTypeTag.REAL);
     }
 
     /**

@@ -126,6 +126,11 @@ class MibAnalyzer extends Asn1Analyzer {
     private ArrayList contextStack = new ArrayList();
                                                                                 
     /**
+     * The implicit tags flag.
+     */
+    private boolean implicitTags = true;
+
+    /**
      * Creates a new MIB file analyzer.
      * 
      * @param mib            the MIB file being analyzed
@@ -299,6 +304,30 @@ class MibAnalyzer extends Asn1Analyzer {
         node.addValue(getStringValue(getChildAt(node, 0), 0));
         return node;
     }
+
+    /**
+     * Sets the implicit tags flag.
+     * 
+     * @param node           the node being exited
+     * 
+     * @return null to remove the node from the parse tree
+     * 
+     * @throws ParseException if the node analysis discovered errors
+     */
+    protected Node exitTagDefault(Production node)
+        throws ParseException {
+
+        Node  child;
+
+        child = getChildAt(node, 0);
+        if (child.getId() == Asn1Constants.EXPLICIT) {
+            implicitTags = false;
+        } else {
+            implicitTags = true;
+        }
+        return null;
+    }
+
 
     /**
      * Adds all imported MIB files to the MIB context. Also removes
@@ -772,13 +801,92 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitTaggedType(Production node)
         throws ParseException {
 
-        MibType  type;
-        Node     child;
-        
-        // TODO: handle the type tag?
+        MibType     type;
+        MibTypeTag  tag;
+        boolean     implicit = implicitTags;
+        Node        child;
+
+        child = getChildAt(node, 0);
+        tag = (MibTypeTag) getValue(child, 0);
+        child = getChildAt(node, 1);
+        if (child.getId() == Asn1Constants.EXPLICIT_OR_IMPLICIT_TAG) {
+            implicit = ((Boolean) getValue(child, 0)).booleanValue();
+        }
         child = getChildAt(node, node.getChildCount() - 1);
         type = (MibType) getValue(child, 0);
+        type.setTag(implicit, tag);
         node.addValue(type);
+        return node;
+    }
+
+    /**
+     * Called when exiting a parse tree node.
+     * 
+     * @param node           the node being exited
+     * 
+     * @return the node to add to the parse tree, or
+     *         null if no parse tree should be created
+     */
+    protected Node exitTag(Production node) {
+        ArrayList  values = getChildValues(node);
+        int        category = MibTypeTag.CONTEXT_SPECIFIC_CATEGORY;
+        int        value;
+        
+        if (values.size() == 1) {
+            value = ((Number) values.get(0)).intValue();
+        } else {
+            category = ((Integer) values.get(0)).intValue();
+            value = ((Number) values.get(1)).intValue();
+        }
+        node.addValue(new MibTypeTag(category, value));
+        return node;
+    }
+
+    /**
+     * Adds the type tag category value as a node value.
+     * 
+     * @param node           the node being exited
+     * 
+     * @return the node to add to the parse tree
+     * 
+     * @throws ParseException if the node analysis discovered errors
+     */
+    protected Node exitClass(Production node) throws ParseException {
+        Node  child = getChildAt(node, 0);
+        int   category;
+        
+        if (child.getId() == Asn1Constants.UNIVERSAL) {
+            category = MibTypeTag.UNIVERSAL_CATEGORY;
+        } else if (child.getId() == Asn1Constants.APPLICATION) {
+            category = MibTypeTag.APPLICATION_CATEGORY;
+        } else if (child.getId() == Asn1Constants.PRIVATE) {
+            category = MibTypeTag.PRIVATE_CATEGORY;
+        } else {
+            category = MibTypeTag.CONTEXT_SPECIFIC_CATEGORY;
+        }
+        node.addValue(new Integer(category));
+        return node;
+    }
+
+    /**
+     * Adds the implicit boolean flag as a node value.
+     * 
+     * @param node           the node being exited
+     * 
+     * @return the node to add to the parse tree
+     * 
+     * @throws ParseException if the node analysis discovered errors
+     */
+    protected Node exitExplicitOrImplicitTag(Production node)
+        throws ParseException {
+
+        Node  child = getChildAt(node, 0);
+        
+        if (child.getId() == Asn1Constants.EXPLICIT) {
+            node.addValue(Boolean.FALSE);
+        } else {
+            node.addValue(Boolean.TRUE);
+        }
         return node;
     }
 

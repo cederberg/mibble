@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibTypeTag;
 import net.percederberg.mibble.MibValue;
 
 /**
@@ -61,8 +62,19 @@ public class SequenceType extends MibType {
      * @param elements       the list of element types
      */
     public SequenceType(ArrayList elements) {
-        super("SEQUENCE", false);
+        this(true, elements);
+    }
+
+    /**
+     * Creates a new sequence MIB type.
+     *
+     * @param primitive      the primitive type flag 
+     * @param elements       the list of element types
+     */
+    private SequenceType(boolean primitive, ArrayList elements) {
+        super("SEQUENCE", primitive);
         this.elements = elements;
+        setTag(true, MibTypeTag.SEQUENCE);
     }
     
     /**
@@ -100,7 +112,7 @@ public class SequenceType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        SequenceType  type = new SequenceType(elements);
+        SequenceType  type = new SequenceType(false, elements);
         
         type.setTag(true, getTag());
         return type;

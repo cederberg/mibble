@@ -146,6 +146,14 @@ public class Asn1Parser extends RecursiveDescentParser {
         pattern.addAlternative(alt);
         addPattern(pattern);
 
+        pattern = new ProductionPattern(Asn1Constants.MODULE_REFERENCE,
+                                        "ModuleReference");
+        alt = new ProductionPatternAlternative();
+        alt.addToken(Asn1Constants.IDENTIFIER_STRING, 1, 1);
+        alt.addToken(Asn1Constants.DOT, 1, 1);
+        pattern.addAlternative(alt);
+        addPattern(pattern);
+
         pattern = new ProductionPattern(Asn1Constants.TAG_DEFAULT,
                                         "TagDefault");
         alt = new ProductionPatternAlternative();
@@ -155,14 +163,6 @@ public class Asn1Parser extends RecursiveDescentParser {
         alt = new ProductionPatternAlternative();
         alt.addToken(Asn1Constants.IMPLICIT, 1, 1);
         alt.addToken(Asn1Constants.TAGS, 1, 1);
-        pattern.addAlternative(alt);
-        addPattern(pattern);
-
-        pattern = new ProductionPattern(Asn1Constants.MODULE_REFERENCE,
-                                        "ModuleReference");
-        alt = new ProductionPatternAlternative();
-        alt.addToken(Asn1Constants.IDENTIFIER_STRING, 1, 1);
-        alt.addToken(Asn1Constants.DOT, 1, 1);
         pattern.addAlternative(alt);
         addPattern(pattern);
 
@@ -555,7 +555,7 @@ public class Asn1Parser extends RecursiveDescentParser {
         alt = new ProductionPatternAlternative();
         alt.addToken(Asn1Constants.LEFT_BRACKET, 1, 1);
         alt.addProduction(Asn1Constants.CLASS, 0, 1);
-        alt.addProduction(Asn1Constants.NUMBER, 1, 1);
+        alt.addToken(Asn1Constants.NUMBER_STRING, 1, 1);
         alt.addToken(Asn1Constants.RIGHT_BRACKET, 1, 1);
         pattern.addAlternative(alt);
         addPattern(pattern);

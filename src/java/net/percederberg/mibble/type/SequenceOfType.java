@@ -36,6 +36,7 @@ package net.percederberg.mibble.type;
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibTypeTag;
 import net.percederberg.mibble.MibValue;
 
 /**
@@ -64,7 +65,7 @@ public class SequenceOfType extends MibType {
      * @param base           the sequence element type 
      */
     public SequenceOfType(MibType base) {
-        this(base, null);
+        this(true, base, null);
     }
     
     /**
@@ -74,11 +75,26 @@ public class SequenceOfType extends MibType {
      * @param constraint     the sequence constraint 
      */
     public SequenceOfType(MibType base, Constraint constraint) {
-        super("SEQUENCE", false);
-        this.base = base;
-        this.constraint = constraint;
+        this(true, base, constraint);
     }
     
+    /**
+     * Creates a new sequence of a MIB type.
+     * 
+     * @param primitive      the primitive type flag
+     * @param base           the sequence element type
+     * @param constraint     the sequence constraint 
+     */
+    private SequenceOfType(boolean primitive, 
+                           MibType base, 
+                           Constraint constraint) {
+
+        super("SEQUENCE", primitive);
+        this.base = base;
+        this.constraint = constraint;
+        setTag(true, MibTypeTag.SEQUENCE);
+    }
+
     /**
      * Initializes the MIB type. This will remove all levels of
      * indirection present, such as references to other types, and 
@@ -112,7 +128,7 @@ public class SequenceOfType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        SequenceOfType  type = new SequenceOfType(base, constraint);
+        SequenceOfType  type = new SequenceOfType(false, base, constraint);
         
         type.setTag(true, getTag());
         return type;
@@ -132,7 +148,7 @@ public class SequenceOfType extends MibType {
      * @since 2.2
      */
     public MibType createReference(Constraint constraint) {
-        SequenceOfType  type = new SequenceOfType(base, constraint);
+        SequenceOfType  type = new SequenceOfType(false, base, constraint);
         
         type.setTag(true, getTag());
         return type;

@@ -591,12 +591,12 @@ public interface Asn1Constants {
     /**
      * A production node identity constant.
      */
-    public static final int TAG_DEFAULT = 2003;
+    public static final int MODULE_REFERENCE = 2003;
 
     /**
      * A production node identity constant.
      */
-    public static final int MODULE_REFERENCE = 2004;
+    public static final int TAG_DEFAULT = 2004;
 
     /**
      * A production node identity constant.

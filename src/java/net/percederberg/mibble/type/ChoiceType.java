@@ -61,7 +61,17 @@ public class ChoiceType extends MibType {
      * @param elements       the list of element types
      */
     public ChoiceType(ArrayList elements) {
-        super("CHOICE", false);
+        this(true, elements);
+    }
+    
+    /**
+     * Creates a new choice MIB type.
+     *
+     * @param primitive      the primitive type flag 
+     * @param elements       the list of element types
+     */
+    private ChoiceType(boolean primitive, ArrayList elements) {
+        super("CHOICE", primitive);
         this.elements = elements;
     }
     
@@ -100,7 +110,7 @@ public class ChoiceType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        ChoiceType  type = new ChoiceType(elements);
+        ChoiceType  type = new ChoiceType(false, elements);
         
         type.setTag(true, getTag());
         return type;

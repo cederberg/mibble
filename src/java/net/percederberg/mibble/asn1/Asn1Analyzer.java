@@ -379,11 +379,11 @@ public abstract class Asn1Analyzer extends Analyzer {
         case Asn1Constants.MODULE_IDENTIFIER:
             enterModuleIdentifier((Production) node);
             break;
-        case Asn1Constants.TAG_DEFAULT:
-            enterTagDefault((Production) node);
-            break;
         case Asn1Constants.MODULE_REFERENCE:
             enterModuleReference((Production) node);
+            break;
+        case Asn1Constants.TAG_DEFAULT:
+            enterTagDefault((Production) node);
             break;
         case Asn1Constants.MODULE_BODY:
             enterModuleBody((Production) node);
@@ -977,10 +977,10 @@ public abstract class Asn1Analyzer extends Analyzer {
             return exitModuleDefinition((Production) node);
         case Asn1Constants.MODULE_IDENTIFIER:
             return exitModuleIdentifier((Production) node);
-        case Asn1Constants.TAG_DEFAULT:
-            return exitTagDefault((Production) node);
         case Asn1Constants.MODULE_REFERENCE:
             return exitModuleReference((Production) node);
+        case Asn1Constants.TAG_DEFAULT:
+            return exitTagDefault((Production) node);
         case Asn1Constants.MODULE_BODY:
             return exitModuleBody((Production) node);
         case Asn1Constants.EXPORT_LIST:
@@ -1245,11 +1245,11 @@ public abstract class Asn1Analyzer extends Analyzer {
         case Asn1Constants.MODULE_IDENTIFIER:
             childModuleIdentifier(node, child);
             break;
-        case Asn1Constants.TAG_DEFAULT:
-            childTagDefault(node, child);
-            break;
         case Asn1Constants.MODULE_REFERENCE:
             childModuleReference(node, child);
+            break;
+        case Asn1Constants.TAG_DEFAULT:
+            childTagDefault(node, child);
             break;
         case Asn1Constants.MODULE_BODY:
             childModuleBody(node, child);
@@ -4264,47 +4264,6 @@ public abstract class Asn1Analyzer extends Analyzer {
      * 
      * @throws ParseException if the node analysis discovered errors
      */
-    protected void enterTagDefault(Production node)
-        throws ParseException {
-    }
-
-    /**
-     * Called when exiting a parse tree node.
-     * 
-     * @param node           the node being exited
-     * 
-     * @return the node to add to the parse tree, or
-     *         null if no parse tree should be created
-     * 
-     * @throws ParseException if the node analysis discovered errors
-     */
-    protected Node exitTagDefault(Production node)
-        throws ParseException {
-
-        return node;
-    }
-
-    /**
-     * Called when adding a child to a parse tree node.
-     * 
-     * @param node           the parent node
-     * @param child          the child node, or null
-     * 
-     * @throws ParseException if the node analysis discovered errors
-     */
-    protected void childTagDefault(Production node, Node child)
-        throws ParseException {
-
-        node.addChild(child);
-    }
-
-    /**
-     * Called when entering a parse tree node.
-     * 
-     * @param node           the node being entered
-     * 
-     * @throws ParseException if the node analysis discovered errors
-     */
     protected void enterModuleReference(Production node)
         throws ParseException {
     }
@@ -4334,6 +4293,47 @@ public abstract class Asn1Analyzer extends Analyzer {
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childModuleReference(Production node, Node child)
+        throws ParseException {
+
+        node.addChild(child);
+    }
+
+    /**
+     * Called when entering a parse tree node.
+     * 
+     * @param node           the node being entered
+     * 
+     * @throws ParseException if the node analysis discovered errors
+     */
+    protected void enterTagDefault(Production node)
+        throws ParseException {
+    }
+
+    /**
+     * Called when exiting a parse tree node.
+     * 
+     * @param node           the node being exited
+     * 
+     * @return the node to add to the parse tree, or
+     *         null if no parse tree should be created
+     * 
+     * @throws ParseException if the node analysis discovered errors
+     */
+    protected Node exitTagDefault(Production node)
+        throws ParseException {
+
+        return node;
+    }
+
+    /**
+     * Called when adding a child to a parse tree node.
+     * 
+     * @param node           the parent node
+     * @param child          the child node, or null
+     * 
+     * @throws ParseException if the node analysis discovered errors
+     */
+    protected void childTagDefault(Production node, Node child)
         throws ParseException {
 
         node.addChild(child);
