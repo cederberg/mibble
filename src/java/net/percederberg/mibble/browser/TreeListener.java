@@ -91,7 +91,6 @@ public class TreeListener implements TreeSelectionListener {
             return;
         } 
         oid.setText(node.getOid());
-        mibDescription.setText("\nName: " + node.getName() + 
-                               "\nOID: " + node.getOid());
+        mibDescription.setText(node.getDescription());
     }
 }

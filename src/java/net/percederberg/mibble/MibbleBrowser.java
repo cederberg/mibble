@@ -38,12 +38,13 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
-import java.util.HashMap;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
 
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.tree.TreeSelectionModel;
+import javax.swing.tree.DefaultTreeModel;
 
 import net.percederberg.mibble.browser.AboutDialog;
 import net.percederberg.mibble.browser.MibNode;
@@ -72,18 +73,24 @@ public class MibbleBrowser extends JFrame {
     /** Creates new form MibbleBrowser */
     public MibbleBrowser() {
         initComponents();
+        loadedMibsCache = new ArrayList();
         this.setJMenuBar(menuBar);
         mainSplitPane.setOneTouchExpandable(true);
         mainSplitPane.setDividerLocation(300);
 
-        /* Set frame size. */
+        // Set frame size
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        this.setSize(screenSize);
+        setSize((int) (screenSize.width * 0.75), 
+                (int) (screenSize.height * 0.75));
 
-        /* Center the frame. */
+        // Center the frame
         Rectangle frameDim = getBounds();
         setLocation((screenSize.width - frameDim.width) / 2,
                     (screenSize.height - frameDim.height) / 2);
+
+        // Set up the tree view
+        MibTreeBuilder mb = MibTreeBuilder.getInstance();
+        lhsNavigationScrollPane.setViewportView(mb.mibTree);
     }
 
     /** This method is called from within the constructor to
@@ -98,6 +105,7 @@ public class MibbleBrowser extends JFrame {
         menuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         loadMibMenuItem = new javax.swing.JMenuItem();
+        unloadMibMenuItem = new javax.swing.JMenuItem();
         exitMenuItem = new javax.swing.JMenuItem();
         helpMenu = new javax.swing.JMenu();
         aboutMenuItem = new javax.swing.JMenuItem();
@@ -129,7 +137,7 @@ public class MibbleBrowser extends JFrame {
         clearButton = new javax.swing.JButton();
         snmpWalkButton = new javax.swing.JButton();
         statusPanel = new javax.swing.JPanel();
-        statusLabel = new javax.swing.JLabel();
+        statusLabel = new javax.swing.JLabel("Ready");
 
         fileMenu.setText("File");
         loadMibMenuItem.setText("Load MIB...");
@@ -140,6 +148,15 @@ public class MibbleBrowser extends JFrame {
         });
 
         fileMenu.add(loadMibMenuItem);
+
+        unloadMibMenuItem.setText("Unload MIB");
+        unloadMibMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                unloadMibMenuItemActionPerformed(evt);
+            }
+        });
+
+        fileMenu.add(unloadMibMenuItem);
 
         exitMenuItem.setText("Exit");
         exitMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -181,12 +198,11 @@ public class MibbleBrowser extends JFrame {
 
         mibDescriptionPanel.setLayout(new java.awt.BorderLayout());
 
-        mibDescriptionScrollPane.setMinimumSize(new java.awt.Dimension(220, 220));
-        mibDescriptionScrollPane.setPreferredSize(new java.awt.Dimension(50, 100));
+        mibDescriptionScrollPane.setMinimumSize(new java.awt.Dimension(100, 300));
+        mibDescriptionScrollPane.setPreferredSize(new java.awt.Dimension(100, 300));
         mibDescriptionScrollPane.setViewportView(mibDescriptionTextArea);
 
-        mibDescriptionPanel.add(mibDescriptionScrollPane,
-                                java.awt.BorderLayout.CENTER);
+        mibDescriptionPanel.add(mibDescriptionScrollPane, java.awt.BorderLayout.CENTER);
 
         rhsPanel.add(mibDescriptionPanel, java.awt.BorderLayout.SOUTH);
 
@@ -394,6 +410,21 @@ public class MibbleBrowser extends JFrame {
         pack();
     }//GEN-END:initComponents
 
+    void unloadMibMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_unloadMibMenuItemActionPerformed
+        String selectedMibName = mibDescriptionTextArea.getText();
+
+        // Check if it is a valid MIB name
+        for (int i = 0; i < loadedMibsCache.size(); i++) {
+            if (selectedMibName.equals(loadedMibsCache.get(i))) {
+                if (MibTreeBuilder.unloadMib(selectedMibName)) {
+                    // Update the cache
+                    loadedMibsCache.remove(i);
+                }
+                return;
+            }
+        }
+    }//GEN-LAST:event_unloadMibMenuItemActionPerformed
+
     void snmpWalkButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_snmpWalkButtonActionPerformed
         SnmpOperation  operation = createSnmpOperation(true);
         String         oidToWalk = oidTextField.getText();
@@ -440,29 +471,60 @@ public class MibbleBrowser extends JFrame {
         System.exit(0);
     }//GEN-LAST:event_exitMenuItemActionPerformed
 
+    /**
+     * Load MIB Action Event Handler.
+     */
     void loadMibMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadMibMenuItemActionPerformed
         this.statusLabel.setText("Loading MIB...");
         this.fileChooser.setMultiSelectionEnabled(true);
         this.fileChooser.showOpenDialog(this);
         
         java.io.File[] selFiles = this.fileChooser.getSelectedFiles();
+        Mib mib = null;
+        MibTreeBuilder mb = MibTreeBuilder.getInstance();
+        StringBuffer namesOfMibsLoaded = new StringBuffer();
+        boolean alreadyLoaded = false;
+        
+        // Try loading all chosen files.
         for (int i = 0; i < selFiles.length; i++) {
             try {
-                MibTreeBuilder mb = MibTreeBuilder.getInstance();
-                Mib mib = mb.loadMib(selFiles[i]);
-                mb.top = new MibNode(mib.getName(), "");
-                System.out.println(mb.top.getOid());
-                mb.tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-                mb.tree.addTreeSelectionListener( new TreeListener(mb.tree, oidTextField, mibDescriptionTextArea));
-                HashMap map = mb.extractObjectIdentifiers(mib);
-                mb.createSortedTree(map, mib);
-                lhsNavigationScrollPane.setViewportView(mb.tree);
-                this.statusLabel.setText(mib.getName() + " Loaded.");
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
+                mib = mb.loadMib(selFiles[i]);
+            } catch (MibLoaderException e) {
+                e.getLog().printTo(System.err);
+                continue;
+            } catch (FileNotFoundException e) {
+                System.err.println(e.getMessage());
+                continue;
             }
+            MibNode loadedMibRootNode = new MibNode(mib.getName(), null);
+            // Check if MIB is not already loaded
+            for (int j = 0; j < loadedMibsCache.size(); j++) {
+                if (mib.getName().equals((String)loadedMibsCache.get(j))) {
+                    // MIB already loaded.
+                    this.statusLabel.setText(mib.getName() + " Already Loaded.");
+                    alreadyLoaded = true;
+                    break;
+                }
+            }
+            // If mib already loaded, then skip tree creation.
+            if (alreadyLoaded) {
+                alreadyLoaded = false;
+                continue;
+            }
+            
+            // Create MIB Sub Tree.
+            mb.buildSubTree(mib, loadedMibRootNode);
+            mb.mibTree.addTreeSelectionListener( 
+                                new TreeListener(mb.mibTree, 
+                                                 oidTextField, 
+                                                 mibDescriptionTextArea)
+                                            );           
+            loadedMibsCache.add(mib.getName());
+            namesOfMibsLoaded.append(mib.getName() + ", ");
         }
+        this.statusLabel.setText(namesOfMibsLoaded.toString() + " Loaded."); 
+        ((DefaultTreeModel) mb.mibTree.getModel()).reload();
+        mb.mibTree.repaint();
     }//GEN-LAST:event_loadMibMenuItemActionPerformed
 
     void portTextFieldActionPerformed(ActionEvent evt) {//GEN-FIRST:event_portTextFieldActionPerformed
@@ -553,8 +615,9 @@ public class MibbleBrowser extends JFrame {
     private javax.swing.JButton snmpWalkButton;
     private javax.swing.JLabel statusLabel;
     private javax.swing.JPanel statusPanel;
+    private javax.swing.JMenuItem unloadMibMenuItem;
     private javax.swing.JLabel writeCommLabel;
     private javax.swing.JPasswordField writeCommPasswordField;
     // End of variables declaration//GEN-END:variables
-
+    private ArrayList loadedMibsCache;
 }

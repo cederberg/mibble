@@ -34,6 +34,7 @@
 package net.percederberg.mibble.browser;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * A MIB tree node.
@@ -47,23 +48,23 @@ public class MibNode extends DefaultMutableTreeNode {
     /**
      * The MIB node name.
      */
-    private String nodeName;
+    private String name;
 
     /**
-     * The MIB node object identifier (oid).
+     * The MIB node object identifier (oid) value.
      */
-    private String oid = "";
+    private ObjectIdentifierValue value;
 
     /**
      * Creates a new MIB tree node.
      *
-     * @param nodeName MIB oid name.
-     * @param oid Numeric OID string.
+     * @param name           the node name
+     * @param value          the node object identifier value
      */
-    public MibNode(String nodeName, String oid) {
-        super(nodeName);
-        this.nodeName = nodeName;
-        this.oid = oid;
+    public MibNode(String name, ObjectIdentifierValue value) {
+        super(name);
+        this.name = name;
+        this.value = value;
     }
 
     /** 
@@ -72,28 +73,45 @@ public class MibNode extends DefaultMutableTreeNode {
      * @return the node name
      */
     public String getName() {
-        return nodeName;
+        return name;
     }
 
     /**
-     * Returns the MIB object identifier (oid) associated with the 
-     * node.
+     * Returns the node object identifier value.
      *
-     * @return the node object identifier (oid) 
+     * @return the node object identifier value, or
+     *         null if no value is present
+     */
+    public ObjectIdentifierValue getValue() {
+        return value;
+    }
+
+    /** 
+     * Returns the full node description.
+     * 
+     * @return the full node description
+     */
+    public String getDescription() {
+        if (value == null) {
+            return name;
+        } else if (value.getSymbol() != null) {
+            return value.getSymbol().toString();
+        } else {
+            return value.toDetailString();
+        }
+    }
+
+    /**
+     * Returns the object identifier (oid) associated with the node.
+     *
+     * @return the node object identifier (oid), or
+     *         an empty string if no object identifier is present
      */
     public String getOid() {
-        return oid;
-    }
-
-    /**
-     * Removes the braces (if any) from the tree node name.
-     *
-     * @return a clean node name
-     */
-    public String getCleanName() {
-        if (nodeName.trim().endsWith(")")) {
-            return (nodeName.substring(0, nodeName.indexOf('(')));
+        if (value == null) {
+            return "";
+        } else {
+            return value.toString();
         }
-        return nodeName;
     }
 }

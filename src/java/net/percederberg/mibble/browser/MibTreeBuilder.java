@@ -36,12 +36,12 @@ package net.percederberg.mibble.browser;
 import java.io.FileNotFoundException;
 import java.io.File;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.TreeMap;
 
 import javax.swing.JTree;
 import javax.swing.tree.TreeModel;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeSelectionModel;
 
 import net.percederberg.mibble.Mib;
 import net.percederberg.mibble.MibLoader;
@@ -67,14 +67,15 @@ public class MibTreeBuilder {
     private static MibTreeBuilder instance = null;
 
     /**
-     * The tree tree component.
+     * The root tree component. This acts as a placeholder for 
+     * attaching multiple MIB sub-trees.
      */
-    public static JTree tree = null;
+    public static JTree mibTree = null;
 
     /**
-     * The root tree node.
+     * Temporarily used MIB tree component. 
      */
-    public static MibNode top = null;
+    private JTree subTree = null;
 
     /**
      * Returns the single instance of this class.
@@ -92,24 +93,11 @@ public class MibTreeBuilder {
      * Creates a new MIB tree builder.
      */
     private MibTreeBuilder() {
-        // Add default nodes.
-        top = new MibNode("iso(1)", ".1");
-        tree = new JTree(top);
+        int  mode = TreeSelectionModel.SINGLE_TREE_SELECTION;
 
-        MibNode temp = new MibNode("org(3)", "1.3");
-        addNodeToTree(temp);
-        temp = new MibNode("dod(6)", "1.3.6");
-        addNodeToTree(temp);
-        temp = new MibNode("internet(1)", "1.3.6.1");
-        addNodeToTree(temp);
-        temp = new MibNode("private(4)", "1.3.6.1.4");
-        addNodeToTree(temp);
-        temp = new MibNode("enterprises(1)", "1.3.6.1.4.1");
-        addNodeToTree(temp);
-        temp = new MibNode("mgmt(2)", "1.3.6.1.2");
-        addNodeToTree(temp);
-        temp = new MibNode("mib-2(1)", "1.3.6.1.2.1");
-        addNodeToTree(temp);
+        mibTree = new JTree(new MibNode("Mibble Browser", null));
+        mibTree.getSelectionModel().setSelectionMode(mode);
+        mibTree.setRootVisible(false);
     }
 
     /**
@@ -132,83 +120,58 @@ public class MibTreeBuilder {
         loader.addDir(file.getParentFile());
         return loader.load(file);
     }
-    
+
     /**
-     * Code for extracting a map of the symbol names.
+     * Code for extracting the symbol names and building the mib 
+     * sub-tree corresponding to the current mib.
      *
      * @param mib            the MIB
-     * 
-     * @return a map of symbol oid:s to names 
+     * @param subTreeRoot    the root to start the tree from
      */
-    public HashMap extractObjectIdentifiers(Mib mib) {
-        HashMap    map = new HashMap();
+    public void buildSubTree(Mib mib, MibNode subTreeRoot) {
         Iterator   iter = mib.getAllSymbols().iterator();
         MibSymbol  symbol;
-        MibValue   value;
 
+        // Make a new sub tree
+        subTree = new JTree(subTreeRoot);
+
+        // Add all symbols to sub tree
         while (iter.hasNext()) {
             symbol = (MibSymbol) iter.next();
-            value = extractObjectIdentifier(symbol);
-            if (value != null) {
-                map.put(value.toString(), symbol.getName());
-                // TODO: attach to the right parent.
-                //pNode = new MibNode(symbol.getName(),value.toString());
-                //top.add(pNode);
-            }
+            addSymbol(symbol);
         }
-        return map;
+        
+        // Merge sub tree to mib tree
+        MibNode mibTreeRoot = (MibNode) mibTree.getModel().getRoot();
+        DefaultTreeModel model = (DefaultTreeModel) mibTree.getModel();
+        model.insertNodeInto(subTreeRoot, mibTreeRoot, model.getChildCount(mibTreeRoot));        
     }
 
     /**
-     * Code for extracting values from symbol.
+     * Adds a MIB symbol to current subtree.
      *
      * @param symbol         the MIB symbol
      *
-     * @return the object identifier (oid) value, or 
-     *         null if not present
+     * @see #addToTree
      */
-    public ObjectIdentifierValue extractObjectIdentifier(MibSymbol symbol) {
-        MibValue  value;
+    private void addSymbol(MibSymbol symbol) {
+        MibValue               value;
+        ObjectIdentifierValue  oid;
+        String                 name;
 
         if (symbol instanceof MibValueSymbol) {
             value = ((MibValueSymbol) symbol).getValue();
             if (value instanceof ObjectIdentifierValue) {
-                return (ObjectIdentifierValue) value;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Builds the JTree. The properties are given to a TreeMap, which
-     * automatically sorts them. The keys from the TreeMap are used 
-     * to create the JTree nodes.
-     *
-     * @param map            the hash map of oid-name pairs
-     * @param mib            the MIB
-     */
-    public void createSortedTree(HashMap map, Mib mib) {
-        TreeMap treeMap = new TreeMap(map);
-        
-        while (treeMap.size() > 0) {
-            String objIdStr = (String) treeMap.firstKey();
-            String objName = (String) treeMap.get(objIdStr);
-            String nameWithLastOidNumeral = objName + "(" + 
-                objIdStr.substring(objIdStr.lastIndexOf('.') + 1,
-                                   objIdStr.length()) + 
-                ")";
-            MibNode nodeToAdd = new MibNode(nameWithLastOidNumeral, objIdStr);
-            
-            if (!addNodeToTree(nodeToAdd)) {
-                System.err.println("Node add failed: " + nodeToAdd.getName());
+                oid = (ObjectIdentifierValue) value;
+                name = oid.getName() + "(" + oid.getValue() + ")"; 
+                addNodeToTree(new MibNode(name, oid));
             }            
-            treeMap.remove(objIdStr);
         }
     }
     
     /**
      * Traverses the tree in pre-order and identifies the right place
-     * to add a new node.
+     * to add the new node.
      *
      * @param nodeToAdd      the node to add
      *
@@ -216,7 +179,7 @@ public class MibTreeBuilder {
      *         false otherwise
      */
     private boolean addNodeToTree(MibNode nodeToAdd) {
-        TreeModel model = tree.getModel();
+        TreeModel model = subTree.getModel();
         MibNode tempNode = null;
         MibNode root = (MibNode) model.getRoot();
         Enumeration enum = root.preorderEnumeration();
@@ -227,7 +190,7 @@ public class MibTreeBuilder {
             tempNode = (MibNode) enum.nextElement();
             String curOid = tempNode.getOid();
    
-            if ((objIdStr.substring(0, (objIdStr.lastIndexOf('.')))).equals(curOid)) {
+            if (objIdStr.substring(0, objIdStr.lastIndexOf('.')).equals(curOid)) {
                 
                 int childrenCount = tempNode.getChildCount();
                 for (int i = 0; i < childrenCount; i++) {
@@ -246,5 +209,32 @@ public class MibTreeBuilder {
             addedNode = true;
         }        
         return true;
+    }
+    
+    /**
+     * Unloads a MIB.
+     *
+     * @param mibName        the name of the MIB to unload
+     *
+     * @return true on success, or
+     *         false otherwise
+     */
+    public static boolean unloadMib(String mibName) {
+        DefaultTreeModel model = (DefaultTreeModel) mibTree.getModel();
+        MibNode tempNode = null;
+        MibNode root = (MibNode) model.getRoot();
+        Enumeration enum = root.preorderEnumeration();
+
+        while (enum.hasMoreElements()) {
+            tempNode = (MibNode) enum.nextElement();
+
+            if (tempNode.getValue() == null && 
+                tempNode.getName().equals(mibName)) {
+
+                model.removeNodeFromParent(tempNode);
+                return true;
+            }
+        }
+        return false;
     }
 }
