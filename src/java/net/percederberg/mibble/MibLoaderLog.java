@@ -302,6 +302,9 @@ public class MibLoaderLog {
         String  currentPath;
         String  filePath;
         
+        if (file == null) {
+            return "<unknown file>";
+        }
         try {
             currentPath = new File(".").getCanonicalPath();
             filePath = file.getCanonicalPath();

@@ -292,12 +292,12 @@ public class MibLoader {
     }
 
     /**
-     * Loads a MIB file. The file is searched for in the MIB search
-     * path. The MIB is identified by it's MIB name (i.e. the module
-     * name). This method will also load all imported MIB:s if not
-     * previously loaded by this loader. If a MIB with the same name
-     * has already been loaded, it will be returned directly instead
-     * of reloading it.
+     * Loads a MIB file with the specified base name. The file is
+     * searched for in the MIB search path. The MIB is identified by
+     * it's MIB name (i.e. the module name). This method will also
+     * load all imported MIB:s if not previously loaded by this
+     * loader. If a MIB with the same name has already been loaded, it
+     * will be returned directly instead of reloading it.
      *
      * @param name           the MIB name (filename without extension)
      *
@@ -351,6 +351,48 @@ public class MibLoader {
             mib = load(new MibSource(file));
         }
         return mib;
+    }
+
+    /**
+     * Loads a MIB file from the specified URL. This method will also
+     * load all imported MIB:s if not previously loaded by this
+     * loader.
+     *
+     * @param url            the URL containing the MIB
+     *
+     * @return the MIB file loaded
+     *
+     * @throws FileNotFoundException if the URL couldn't be read
+     * @throws MibLoaderException if the MIB file couldn't be loaded
+     *             correctly
+     *
+     * @since 2.3
+     */
+    public Mib load(URL url)
+        throws FileNotFoundException, MibLoaderException {
+
+        return load(new MibSource(url));
+    }
+
+    /**
+     * Loads a MIB file from the specified input reader. This method
+     * will also load all imported MIB:s if not previously loaded by
+     * this loader.
+     *
+     * @param input          the input stream containing the MIB
+     *
+     * @return the MIB file loaded
+     *
+     * @throws FileNotFoundException if the stream couldn't be read
+     * @throws MibLoaderException if the MIB file couldn't be loaded
+     *             correctly
+     *
+     * @since 2.3
+     */
+    public Mib load(Reader input)
+        throws FileNotFoundException, MibLoaderException {
+
+        return load(new MibSource(input));
     }
 
     /**
@@ -616,8 +658,8 @@ public class MibLoader {
     private class MibSource {
 
         /**
-         * The MIB file. This variable must always be set, as it is
-         * used for printing the MIB name.
+         * The MIB file. This variable is only set if the MIB is read
+         * from file, or if the MIB name is known.
          */
         private File file = null;
 
@@ -626,6 +668,12 @@ public class MibLoader {
          * is read from a URL.
          */
         private URL url = null;
+
+        /**
+         * The MIB reader. This variable is only set if the MIB
+         * is read from an input stream.
+         */
+        private Reader input = null;
 
         /**
          * Creates a new MIB input source. The MIB will be read from
@@ -641,12 +689,35 @@ public class MibLoader {
          * Creates a new MIB input source. The MIB will be read from
          * the specified URL.
          *
+         * @param url            the URL to read from
+         */
+        public MibSource(URL url) {
+            this.url = url;
+        }
+
+        /**
+         * Creates a new MIB input source. The MIB will be read from
+         * the specified URL. This method also create a default file
+         * from the specified MIB name in order to improve possible
+         * error messages.
+         *
          * @param name           the MIB name
          * @param url            the URL to read from
          */
         public MibSource(String name, URL url) {
+            this(url);
             this.file = new File(name);
-            this.url = url;
+        }
+
+        /**
+         * Creates a new MIB input source. The MIB will be read from
+         * the specified input reader. The input reader will be closed
+         * after reading the MIB.
+         *
+         * @param input          the input stream to read from
+         */
+        public MibSource(Reader input) {
+            this.input = input;
         }
 
         /**
@@ -664,14 +735,13 @@ public class MibLoader {
 
             if (obj instanceof MibSource) {
                 src = (MibSource) obj;
-                if (url == null) {
-                    return file.equals(src.file);
-                } else {
+                if (url != null) {
                     return url.equals(src.url);
+                } else if (file != null) {
+                    return file.equals(src.file);
                 }
-            } else {
-                return false;
             }
+            return false;
         }
 
         /**
@@ -687,7 +757,7 @@ public class MibLoader {
 
         /**
          * Creates the MIB container. This method will read the MIB
-         * either from file or from URL.
+         * either from file, URL or input stream.
          *
          * @param loader         the MIB loader to use for imports
          * @param log            the MIB log to use for errors
@@ -701,21 +771,27 @@ public class MibLoader {
         public Mib createMib(MibLoader loader, MibLoaderLog log)
             throws FileNotFoundException, MibLoaderException {
 
-            Reader  input;
-
-            if (url == null) {
-                return new Mib(file, loader, log);
-            } else {
+            if (input != null) {
+                return new Mib(input, null, loader, log);
+            } else if (url != null) {
                 try {
                     input = new InputStreamReader(url.openStream());
                     return new Mib(input, file, loader, log);
                 } catch (IOException e) {
-                    throw new FileNotFoundException("couldn't find '" +
-                                                    file + "' MIB");
+                    if (file != null) {
+                        throw new FileNotFoundException("couldn't find '" +
+                                                        file + "' MIB");
+                    } else {
+                        throw new FileNotFoundException("couldn't find '" +
+                                                        url + "' MIB");
+                    }
                 }
+            } else {
+                return new Mib(file, loader, log);
             }
         }
     }
+
 
     /**
      * A MIB file name filter. This filter compares a file name with

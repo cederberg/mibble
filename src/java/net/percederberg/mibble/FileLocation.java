@@ -125,7 +125,7 @@ public class FileLocation {
         BufferedReader  input;
         String          str = null;
 
-        if (line < 0) {
+        if (file == null || line < 0) {
             return null;
         }
         try {

@@ -281,7 +281,7 @@ public class Mib implements MibContext {
     public boolean equals(Object obj) {
         if (obj instanceof String) {
             return name.equals(obj);
-        } else if (obj instanceof File) {
+        } else if (file != null && obj instanceof File) {
             return file.equals(obj);
         } else if (obj instanceof Mib) {
             return obj.equals(name);
@@ -308,6 +308,9 @@ public class Mib implements MibContext {
      */
     void setName(String name) {
         this.name = name;
+        if (file == null) {
+            file = new File(name);
+        }
     }
 
     /**
