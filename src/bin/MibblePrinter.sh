@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# mibprinter.sh: Runs the Mibble MIB printer
+# MibblePrinter.sh: Runs the Mibble MIB printer
 #
 
 # Set Mibble environment variables

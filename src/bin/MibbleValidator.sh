@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# mibvalidator.sh: Runs the Mibble MIB validator
+# MibbleValidator.sh: Runs the Mibble MIB validator
 #
 
 # Set Mibble environment variables

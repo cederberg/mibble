@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# mibbrowser.sh: Runs the Mibble MIB browser
+# MibbleBrowser.sh: Runs the Mibble MIB browser
 #
 
 # Set Mibble environment variables
