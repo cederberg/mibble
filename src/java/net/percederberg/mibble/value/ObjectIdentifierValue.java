@@ -155,7 +155,7 @@ public class ObjectIdentifierValue extends MibValue {
      */
     public MibValue initialize(MibLoaderLog log) throws MibException {
         ValueReference         ref = null;
-        ObjectIdentifierValue  result = this;
+        ObjectIdentifierValue  oid;
 
         if (parent == null) {
             return this;
@@ -165,8 +165,8 @@ public class ObjectIdentifierValue extends MibValue {
         parent = parent.initialize(log);
         if (ref != null) {
             if (parent instanceof ObjectIdentifierValue) {
-                result = (ObjectIdentifierValue) parent;
-                result = result.addChild(location, this);
+                oid = (ObjectIdentifierValue) parent;
+                oid.addChild(location, this);
             } else {
                 throw new MibException(ref.getLocation(),
                                        "referenced value is not an " +
@@ -174,7 +174,11 @@ public class ObjectIdentifierValue extends MibValue {
             }
         }
         location = null;
-        return result;
+        if (parent instanceof ObjectIdentifierValue) {
+            return ((ObjectIdentifierValue) parent).getChildByValue(value);
+        } else {
+            return this;
+        }
     }
 
     /**
@@ -485,7 +489,7 @@ public class ObjectIdentifierValue extends MibValue {
             child.parent = dest;
             dest.addChild(location, child);
         }
-        src.children.clear();
+        src.children = null;
         return dest;
     }
 
