@@ -90,6 +90,7 @@ public class SnmpModuleIdentity extends MibType {
                               String description,
                               ArrayList revisions) {
                                   
+        super(false);
         this.lastUpdated = lastUpdated;
         this.organization = organization;
         this.contactInfo = contactInfo;

@@ -42,6 +42,24 @@ package net.percederberg.mibble;
  */
 public abstract class MibType {
 
+    // TODO: add support for clone() or similar
+    // TODO: hide initialize and setConstructed()
+    // TODO: add some support for toString() or similar
+
+    /**
+     * The primitive type flag.
+     */
+    private boolean primitive;
+
+    /**
+     * Creates a new MIB type instance.
+     * 
+     * @param primitive      the primitive type flag
+     */
+    public MibType(boolean primitive) {
+        this.primitive = primitive;
+    }
+
     /**
      * Initializes the MIB type. This will remove all levels of
      * indirection present, such as references to other types, and 
@@ -70,4 +88,25 @@ public abstract class MibType {
      *         false otherwise
      */
     public abstract boolean isCompatible(MibValue value);
+    
+    /**
+     * Checks if this type represents a primitive type. The primitive
+     * types are the basic building blocks of the ASN.1 type system.
+     * By defining new types (that may be identical to a primitive 
+     * type), the new type looses it's primitive status.
+     * 
+     * @return true if this type represents a primitive type, or
+     *         false otherwise
+     */
+    public boolean isPrimitive() {
+        return primitive;
+    }
+    
+    /**
+     * Sets the primitive type flag to false. This method is called 
+     * when defining a new type.
+     */
+    public void setConstructed() {
+        primitive = false;
+    }
 }

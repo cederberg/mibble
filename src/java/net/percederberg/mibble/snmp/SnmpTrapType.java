@@ -83,6 +83,7 @@ public class SnmpTrapType extends MibType {
                         String description,
                         String reference) {
 
+        super(false);
         this.enterprise = enterprise;
         this.variables = variables;
         this.description = description;

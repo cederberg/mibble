@@ -83,6 +83,7 @@ public class SnmpObjectGroup extends MibType {
                            String description,
                            String reference) {
 
+        super(false);
         this.objects = objects;
         this.status = status;
         this.description = description;

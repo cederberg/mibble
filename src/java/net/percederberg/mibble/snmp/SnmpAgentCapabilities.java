@@ -90,6 +90,7 @@ public class SnmpAgentCapabilities extends MibType {
                                  String reference,
                                  ArrayList modules) {
 
+        super(false);
         this.productRelease = productRelease;
         this.status = status;
         this.description = description;

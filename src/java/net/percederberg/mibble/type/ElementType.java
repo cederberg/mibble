@@ -66,6 +66,7 @@ public class ElementType extends MibType {
      * @param type           the element type
      */
     public ElementType(String name, MibType type) {
+        super(false);
         this.name = name;
         this.type = type; 
     }

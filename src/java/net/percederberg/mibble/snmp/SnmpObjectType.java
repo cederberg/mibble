@@ -116,6 +116,7 @@ public class SnmpObjectType extends MibType {
                           ArrayList index,
                           MibValue defaultValue) {
 
+        super(false);
         this.syntax = syntax;
         this.units = units;
         this.access = access;
@@ -148,6 +149,7 @@ public class SnmpObjectType extends MibType {
                           MibValue augments,
                           MibValue defaultValue) {
 
+        super(false);
         this.syntax = syntax;
         this.units = units;
         this.access = access;

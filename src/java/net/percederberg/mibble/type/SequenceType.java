@@ -61,6 +61,7 @@ public class SequenceType extends MibType {
      * @param elements       the list of element types
      */
     public SequenceType(ArrayList elements) {
+        super(false);
         this.elements = elements;
     }
     

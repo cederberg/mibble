@@ -83,6 +83,7 @@ public class SnmpNotificationGroup extends MibType {
                                  String description,
                                  String reference) {
 
+        super(false);
         this.notifications = notifications;
         this.status = status;
         this.description = description;

@@ -56,6 +56,8 @@ public class RealType extends MibType {
      * Creates a new real MIB type. 
      */
     private RealType() {
+        // TODO: check the primitive status for REAL
+        super(true);
     }
 
     /**

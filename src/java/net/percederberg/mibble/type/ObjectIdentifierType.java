@@ -57,6 +57,7 @@ public class ObjectIdentifierType extends MibType {
      * Creates a new object identifier MIB type. 
      */
     private ObjectIdentifierType() {
+        super(true);
     }
 
     /**

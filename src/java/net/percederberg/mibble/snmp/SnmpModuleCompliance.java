@@ -83,6 +83,7 @@ public class SnmpModuleCompliance extends MibType {
                                 String reference,
                                 ArrayList modules) {
 
+        super(false);
         this.status = status;
         this.description = description;
         this.reference = reference;

@@ -57,6 +57,7 @@ public class StringType extends MibType {
      * Creates a new string MIB type. 
      */
     public StringType() {
+        super(true);
     }
 
     /**
@@ -65,6 +66,7 @@ public class StringType extends MibType {
      * @param constraint     the additional type constraint 
      */
     public StringType(Constraint constraint) {
+        super(true);
         this.constraint = constraint;
     }
 

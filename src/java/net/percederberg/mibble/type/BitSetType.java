@@ -70,6 +70,7 @@ public class BitSetType extends MibType implements MibContext {
      * Creates a new bit set MIB type. 
      */
     public BitSetType() {
+        super(true);
     }
 
     /**
@@ -78,6 +79,7 @@ public class BitSetType extends MibType implements MibContext {
      * @param constraint     the additional type constraint 
      */
     public BitSetType(Constraint constraint) {
+        super(true);
         this.constraint = constraint;
     }
 
@@ -87,9 +89,10 @@ public class BitSetType extends MibType implements MibContext {
      * @param values         the additional defined symbols
      */
     public BitSetType(ArrayList values) {
+        super(true);
+
         MibValueSymbol   sym;
         ValueConstraint  c;
-
         for (int i = 0; i < values.size(); i++) {
             if (values.get(i) instanceof MibValueSymbol) {
                 sym = (MibValueSymbol) values.get(i);

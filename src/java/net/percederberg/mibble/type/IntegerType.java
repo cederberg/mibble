@@ -69,6 +69,7 @@ public class IntegerType extends MibType implements MibContext {
      * Creates a new integer MIB type. 
      */
     public IntegerType() {
+        super(true);
     }
 
     /**
@@ -77,6 +78,7 @@ public class IntegerType extends MibType implements MibContext {
      * @param constraint     the additional type constraint 
      */
     public IntegerType(Constraint constraint) {
+        super(true);
         this.constraint = constraint;
     }
 
@@ -86,6 +88,8 @@ public class IntegerType extends MibType implements MibContext {
      * @param values         the additional defined symbols
      */
     public IntegerType(ArrayList values) {
+        super(true);
+
         MibValueSymbol   sym;
         ValueConstraint  c;
 

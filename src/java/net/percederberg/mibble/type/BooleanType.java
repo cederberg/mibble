@@ -56,6 +56,7 @@ public class BooleanType extends MibType {
      * Creates a new boolean MIB type. 
      */
     private BooleanType() {
+        super(true);
     }
 
     /**

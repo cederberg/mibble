@@ -89,6 +89,7 @@ public class SnmpTextualConvention extends MibType implements MibContext {
                                  String reference,
                                  MibType syntax) {
 
+        super(false);
         this.displayHint = displayHint;
         this.status = status;
         this.description = description;

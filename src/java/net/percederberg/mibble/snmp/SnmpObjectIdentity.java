@@ -73,6 +73,7 @@ public class SnmpObjectIdentity extends MibType {
                               String description,
                               String reference) {
 
+        super(false);
         this.status = status;
         this.description = description;
         this.reference = reference;

@@ -56,6 +56,7 @@ public class NullType extends MibType {
      * Creates a new null MIB type. 
      */
     private NullType() {
+        super(true);
     }
 
     /**

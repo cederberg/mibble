@@ -61,6 +61,7 @@ public class ChoiceType extends MibType {
      * @param elements       the list of element types
      */
     public ChoiceType(ArrayList elements) {
+        super(false);
         this.elements = elements;
     }
     

@@ -74,6 +74,7 @@ public class SequenceOfType extends MibType {
      * @param constraint     the sequence constraint 
      */
     public SequenceOfType(MibType base, Constraint constraint) {
+        super(false);
         this.base = base;
         this.constraint = constraint;
     }

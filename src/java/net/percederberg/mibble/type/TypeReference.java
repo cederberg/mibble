@@ -95,6 +95,7 @@ public class TypeReference extends MibType implements MibContext {
                          MibContext context, 
                          String name) {
 
+        super(false);
         this.location = location;
         this.context = context;
         this.name = name;
@@ -113,6 +114,7 @@ public class TypeReference extends MibType implements MibContext {
                          String name,
                          Constraint constraint) {
 
+        super(false);
         this.location = location;
         this.context = context;
         this.name = name;
@@ -132,6 +134,7 @@ public class TypeReference extends MibType implements MibContext {
                          String name,
                          ArrayList values) {
 
+        super(false);
         this.location = location;
         this.context = context;
         this.name = name;
@@ -186,6 +189,7 @@ public class TypeReference extends MibType implements MibContext {
     private MibType initialize(MibLoaderLog log, MibType type) 
         throws MibException {
 
+        // TODO: call type.setConstructed();
         type = type.initialize(log);
         if (constraint == null && values == null) {
             return type;
