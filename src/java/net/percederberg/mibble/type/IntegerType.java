@@ -294,10 +294,13 @@ public class IntegerType extends MibType implements MibContext {
 
     /**
      * Returns a named integer value. The value will be returned as a 
-     * value symbol, containing a numeric MIB value. Note that due to
-     * implementation details, the method signature specifies a 
-     * MibSymbol return value, while in reality it is a 
-     * MibValueSymbol.
+     * value symbol, containing a numeric MIB value. The symbol 
+     * returned is not a normal MIB symbol, i.e. only the name and 
+     * value components are valid.<p>
+     * 
+     * <strong>Note:</strong> Due to implementation details, the 
+     * method signature specifies a MibSymbol return value, while in 
+     * reality it is a MibValueSymbol.
      * 
      * @param name           the symbol name
      * 
@@ -309,10 +312,12 @@ public class IntegerType extends MibType implements MibContext {
     }
 
     /**
-     * Returns all named integer values. Note that an integer may 
-     * allow unnamed values as well. Use the constraint object or the
-     * isCompatible() method to check if a value is compatible with
-     * this integer. 
+     * Returns all named integer values. An integer may also allow 
+     * unnamed values, depending on the constraints. Use the 
+     * constraint object or the isCompatible() method to check if a 
+     * value is compatible with this type. Also note that the value 
+     * symbols returned by this method are not normal MIB symbols, 
+     * i.e. only the name and value components are valid.
      * 
      * @return an array of all named values (as MIB value symbols)
      * 

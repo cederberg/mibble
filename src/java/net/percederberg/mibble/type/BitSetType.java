@@ -307,10 +307,14 @@ public class BitSetType extends MibType implements MibContext {
 
     /**
      * Returns a named bit value. The value will be returned as a 
-     * value symbol, containing a numeric MIB value. Note that due to
-     * implementation details, the method signature specifies a 
-     * MibSymbol return value, while in reality it is a 
-     * MibValueSymbol.
+     * value symbol, containing a numeric MIB value. The symbol 
+     * returned is not a normal MIB symbol, i.e. it is not present in
+     * any MIB file and only the name and value components are 
+     * valid.<p>
+     * 
+     * <strong>Note:</strong> Due to implementation details, the 
+     * method signature specifies a MibSymbol return value, while in 
+     * reality it is a MibValueSymbol.
      * 
      * @param name           the symbol name
      * 
@@ -323,9 +327,11 @@ public class BitSetType extends MibType implements MibContext {
 
     /**
      * Returns all named bit values. Note that a bit string may allow
-     * unnamed values as well. Use the constraint object or the 
-     * isCompatible() method to check if a value is compatible with 
-     * this bit string. 
+     * unnamed values, depending on the constraints. Use the 
+     * constraint object or the isCompatible() method to check if a 
+     * value is compatible with this type. Also note that the value 
+     * symbols returned by this method are not normal MIB symbols, 
+     * i.e. only the name and value components are valid.
      * 
      * @return an array of all named values (as MIB value symbols)
      * 
