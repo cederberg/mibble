@@ -82,6 +82,7 @@ public class ObjectIdentifierValue extends MibValue {
      * @param value          the component value
      */
     public ObjectIdentifierValue(String name, int value) {
+        super("OBJECT IDENTIFIER");
         this.parent = null;
         this.name = name;
         this.value = value;
@@ -98,6 +99,7 @@ public class ObjectIdentifierValue extends MibValue {
                                  String name, 
                                  int value) {
 
+        super("OBJECT IDENTIFIER");
         this.parent = parent;
         this.name = name;
         this.value = value;
@@ -115,6 +117,7 @@ public class ObjectIdentifierValue extends MibValue {
                                  String name, 
                                  int value) {
 
+        super("OBJECT IDENTIFIER");
         this.parent = parent;
         this.name = name;
         this.value = value;
@@ -155,6 +158,23 @@ public class ObjectIdentifierValue extends MibValue {
                                        "object identifier");
             }
         }
+        return this;
+    }
+
+    /**
+     * Creates a value reference to this value. The value reference 
+     * is normally an identical value. Only certain values support 
+     * being referenced, and the default implementation of this 
+     * method throws an exception.<p> 
+     * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     * 
+     * @return the MIB value reference
+     * 
+     * @since 2.2
+     */
+    public MibValue createReference() {
         return this;
     }
 

@@ -81,6 +81,7 @@ public class ValueReference extends MibValue {
                           MibContext context,
                           String name) {
 
+        super("ReferenceToValue(" + name + ")");
         this.location = location;
         this.context = context;
         this.name = name;
@@ -105,11 +106,21 @@ public class ValueReference extends MibValue {
      */
     public MibValue initialize(MibLoaderLog log) throws MibException { 
         MibSymbol  symbol;
+        MibValue   value;
         String     message;
 
         symbol = context.getSymbol(name);
         if (symbol instanceof MibValueSymbol) {
-            return ((MibValueSymbol) symbol).getValue().initialize(log);
+            value = ((MibValueSymbol) symbol).getValue().initialize(log);
+            try {
+                value = value.createReference();
+            } catch (UnsupportedOperationException e) {
+                throw new MibException(location, e.getMessage());
+            }
+            if (!(value instanceof ObjectIdentifierValue)) {
+                value.setReferenceSymbol((MibValueSymbol) symbol); 
+            }
+            return value;
         } else if (symbol == null) {
             message = "undefined symbol '" + name + "'";
             throw new MibException(location, message);

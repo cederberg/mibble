@@ -66,6 +66,7 @@ public class BooleanValue extends MibValue {
      * @param value          the boolean value
      */
     private BooleanValue(boolean value) {
+        super("BOOLEAN");
         this.value = value;
     }
 
@@ -85,6 +86,23 @@ public class BooleanValue extends MibValue {
      */
     public MibValue initialize(MibLoaderLog log) {
         return this; 
+    }
+
+    /**
+     * Creates a value reference to this value. The value reference 
+     * is normally an identical value. Only certain values support 
+     * being referenced, and the default implementation of this 
+     * method throws an exception.<p> 
+     * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     * 
+     * @return the MIB value reference
+     * 
+     * @since 2.2
+     */
+    public MibValue createReference() {
+        return new BooleanValue(value);
     }
 
     /**

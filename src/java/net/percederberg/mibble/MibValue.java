@@ -43,6 +43,26 @@ package net.percederberg.mibble;
 public abstract class MibValue {
 
     /**
+     * The value name.
+     */
+    private String name;
+
+    /**
+     * The value reference symbol. This is set to the referenced 
+     * value symbol when resolving this value.
+     */
+    private MibValueSymbol reference = null;
+
+    /**
+     * Creates a new MIB value instance.
+     * 
+     * @param name           the value name
+     */
+    protected MibValue(String name) {
+        this.name = name;
+    }
+
+    /**
      * Initializes the MIB value. This will remove all levels of
      * indirection present, such as references to other values. No 
      * value information is lost by this operation. This method may 
@@ -61,6 +81,121 @@ public abstract class MibValue {
      */
     public abstract MibValue initialize(MibLoaderLog log) 
         throws MibException; 
+
+    /**
+     * Creates a value reference to this value. The value reference 
+     * is normally an identical value. Only certain values support 
+     * being referenced, and the default implementation of this 
+     * method throws an exception.<p> 
+     * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     * 
+     * @return the MIB value reference
+     * 
+     * @throws UnsupportedOperationException if a value reference 
+     *             couldn't be created
+     * 
+     * @since 2.2
+     */
+    public MibValue createReference() 
+        throws UnsupportedOperationException {
+
+        String msg = name + " value cannot be referenced";
+        throw new UnsupportedOperationException(msg); 
+    }
+
+    /**
+     * Checks if this value referenced the specified value symbol.
+     * 
+     * @param name           the value symbol name
+     * 
+     * @return true if this value was a reference to the symbol, or
+     *         false otherwise
+     * 
+     * @since 2.2
+     */
+    public boolean isReferenceTo(String name) {
+        if (reference == null) {
+            return false;
+        } else if (reference.getName().equals(name)) {
+            return true;
+        } else {
+            return reference.getValue().isReferenceTo(name);
+        }
+    }
+
+    /**
+     * Checks if this value referenced the specified value symbol.
+     * 
+     * @param module         the value symbol module (MIB) name 
+     * @param name           the value symbol name
+     * 
+     * @return true if this value was a reference to the symbol, or
+     *         false otherwise
+     * 
+     * @since 2.2
+     */
+    public boolean isReferenceTo(String module, String name) {
+        Mib  mib;
+
+        if (reference == null) {
+            return false;
+        }
+        mib = reference.getMib();
+        if (mib.getName().equals(module) 
+         && reference.getName().equals(name)) {
+
+            return true;
+        } else {
+            return reference.getValue().isReferenceTo(module, name);
+        }
+    }
+
+    /**
+     * Returns the value name.
+     * 
+     * @return the value name, or
+     *         an empty string if not applicable
+     * 
+     * @since 2.2
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Returns the value reference symbol. A value reference is 
+     * created whenever a value is defined in a value assignment, and
+     * later referenced by name from some other symbol. The complete 
+     * chain of value references is available by calling 
+     * getReference() recursively on the value of the returned value
+     * symbol.
+     * 
+     * @return the value reference symbol, or 
+     *         null if this value never referenced another value
+     * 
+     * @since 2.2
+     */
+    public MibValueSymbol getReferenceSymbol() {
+        return reference;
+    }
+
+    /**
+     * Sets the value reference symbol. The value reference is set
+     * whenever a value is defined in a value assignment, and later
+     * referenced by name from some other symbol.<p> 
+     * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     * 
+     * @param symbol         the referenced value symbol
+     * 
+     * @since 2.2
+     */
+    public void setReferenceSymbol(MibValueSymbol symbol) {
+        this.reference = symbol;
+    }
 
     /**
      * Returns a Java object representation of this value.
