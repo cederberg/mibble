@@ -199,7 +199,31 @@ public class MibLoader {
 
         for (int i = 0; i < mibs.size(); i++) {
             mib = (Mib) mibs.get(i);
-            if (name.equals(mib.getName())) {
+            if (mib.equals(name)) {
+                return mib;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns a previously loaded MIB file. If the MIB file hasn't
+     * been loaded, null will be returned. The MIB is identified by
+     * it's file name.
+     *
+     * @param file           the MIB file
+     *
+     * @return the MIB module if found, or
+     *         null otherwise
+     *
+     * @since 2.3
+     */
+    public Mib getMib(File file) {
+        Mib  mib;
+
+        for (int i = 0; i < mibs.size(); i++) {
+            mib = (Mib) mibs.get(i);
+            if (mib.equals(file)) {
                 return mib;
             }
         }
@@ -223,43 +247,12 @@ public class MibLoader {
     }
 
     /**
-     * Searches for a MIB in the search path. The name specified
-     * should be the MIB file name, possibly leaving out the
-     * extension. If the MIB isn't found in the directory search path,
-     * the base resource path is also tested.
-     *
-     * @param name           the MIB file name (without extension)
-     *
-     * @return the MIB found, or
-     *         null if no MIB was found
-     */
-    private MibSource locate(String name) {
-        File    dir;
-        File[]  files;
-        URL     url;
-        int     i;
-
-        for (i = 0; i < dirs.size(); i++) {
-            dir = (File) dirs.get(i);
-            files = dir.listFiles(new MibFileFilter(name));
-            if (files != null && files.length > 0) {
-                return new MibSource(files[0]);
-            }
-        }
-        for (i = 0; i < RESOURCE_BASE.length; i++) {
-            url = ClassLoader.getSystemResource(RESOURCE_BASE[i] + "/" + name);
-            if (url != null) {
-                return new MibSource(name, url);
-            }
-        }
-        return null;
-    }
-
-    /**
      * Loads a MIB file. The file is searched for in the MIB search
      * path. The MIB is identified by it's MIB name (i.e. the module
      * name). This method will also load all imported MIB:s if not
-     * previously loaded by this loader.
+     * previously loaded by this loader. If a MIB with the same name
+     * has already been loaded, it will be returned directly instead
+     * of reloading it.
      *
      * @param name           the MIB name (filename without extension)
      *
@@ -274,18 +267,25 @@ public class MibLoader {
         throws FileNotFoundException, MibLoaderException {
 
         MibSource  src;
+        Mib        mib;
 
-        src = locate(name);
-        if (src == null) {
-            throw new FileNotFoundException("couldn't locate MIB: '" +
-                                            name + "'");
+        mib = getMib(name);
+        if (mib == null) {
+            src = locate(name);
+            if (src == null) {
+                throw new FileNotFoundException("couldn't locate MIB: '" +
+                                                name + "'");
+            }
+            mib = load(src);
         }
-        return load(src);
+        return mib;
     }
 
     /**
-     * Loads a MIB file. This method will also load all imported
-     * MIB:s if not previously loaded by this loader.
+     * Loads a MIB file. This method will also load all imported MIB:s
+     * if not previously loaded by this loader. If a MIB with the same
+     * file name has already been loaded, it will be returned directly
+     * instead of reloading it.
      *
      * @param file           the MIB file
      *
@@ -299,7 +299,13 @@ public class MibLoader {
     public Mib load(File file)
         throws FileNotFoundException, MibLoaderException {
 
-        return load(new MibSource(file));
+        Mib  mib;
+
+        mib = getMib(file);
+        if (mib == null) {
+            mib = load(new MibSource(file));
+        }
+        return mib;
     }
 
     /**
@@ -347,10 +353,13 @@ public class MibLoader {
      * @since 2.3
      */
     public void unload(String name) throws MibLoaderException {
-        int  pos = mibs.indexOf(name);
+        Mib  mib;
 
-        if (pos >= 0) {
-            unload((Mib) mibs.get(pos));
+        for (int i = 0; i < mibs.size(); i++) {
+            mib = (Mib) mibs.get(i);
+            if (mib.equals(name)) {
+                unload(mib);
+            }
         }
     }
 
@@ -371,10 +380,13 @@ public class MibLoader {
      * @since 2.3
      */
     public void unload(File file) throws MibLoaderException {
-        int  pos = mibs.indexOf(file);
+        Mib  mib;
 
-        if (pos >= 0) {
-            unload((Mib) mibs.get(pos));
+        for (int i = 0; i < mibs.size(); i++) {
+            mib = (Mib) mibs.get(i);
+            if (mib.equals(file)) {
+                unload(mib);
+            }
         }
     }
 
@@ -427,12 +439,14 @@ public class MibLoader {
     void scheduleLoad(String name) throws FileNotFoundException {
         MibSource  src;
 
-        src = locate(name);
-        if (src == null) {
-            throw new FileNotFoundException("couldn't locate MIB: '" +
-                                            name + "'");
+        if (getMib(name) == null) {
+            src = locate(name);
+            if (src == null) {
+                throw new FileNotFoundException("couldn't locate MIB: '" +
+                                                name + "'");
+            }
+            scheduleLoad(src);
         }
-        scheduleLoad(src);
     }
 
     /**
@@ -443,7 +457,9 @@ public class MibLoader {
      * @param file           the MIB file
      */
     void scheduleLoad(File file) {
-        scheduleLoad(new MibSource(file));
+        if (getMib(file) == null) {
+            scheduleLoad(new MibSource(file));
+        }
     }
 
     /**
@@ -453,7 +469,7 @@ public class MibLoader {
      *
      * @param src            the MIB source
      */
-    void scheduleLoad(MibSource src) {
+    private void scheduleLoad(MibSource src) {
         if (!mibs.contains(src.getFile()) && !queue.contains(src)) {
             queue.add(src);
         }
@@ -511,6 +527,39 @@ public class MibLoader {
         }
 
         return log;
+    }
+
+    /**
+     * Searches for a MIB in the search path. The name specified
+     * should be the MIB file name, possibly leaving out the
+     * extension. If the MIB isn't found in the directory search path,
+     * the base resource path is also tested.
+     *
+     * @param name           the MIB file name (without extension)
+     *
+     * @return the MIB found, or
+     *         null if no MIB was found
+     */
+    private MibSource locate(String name) {
+        File    dir;
+        File[]  files;
+        URL     url;
+        int     i;
+
+        for (i = 0; i < dirs.size(); i++) {
+            dir = (File) dirs.get(i);
+            files = dir.listFiles(new MibFileFilter(name));
+            if (files != null && files.length > 0) {
+                return new MibSource(files[0]);
+            }
+        }
+        for (i = 0; i < RESOURCE_BASE.length; i++) {
+            url = ClassLoader.getSystemResource(RESOURCE_BASE[i] + "/" + name);
+            if (url != null) {
+                return new MibSource(name, url);
+            }
+        }
+        return null;
     }
 
 
