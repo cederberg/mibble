@@ -79,7 +79,7 @@ public class MibbleBrowser extends JFrame {
 
         // Set frame size
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setSize((int) (screenSize.width * 0.75), 
+        setSize((int) (screenSize.width * 0.90), 
                 (int) (screenSize.height * 0.75));
 
         // Center the frame
@@ -490,9 +490,11 @@ public class MibbleBrowser extends JFrame {
                 mib = mb.loadMib(selFiles[i]);
             } catch (MibLoaderException e) {
                 e.getLog().printTo(System.err);
+                resultTextArea.append(e.getMessage());
                 continue;
             } catch (FileNotFoundException e) {
                 System.err.println(e.getMessage());
+                resultTextArea.append(e.getMessage());
                 continue;
             }
             // Check if MIB is not already loaded

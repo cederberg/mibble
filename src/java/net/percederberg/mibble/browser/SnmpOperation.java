@@ -178,7 +178,7 @@ public class SnmpOperation {
         } catch (PduException exc) {
             // comes here when timeout occurs.
             if (exc.getMessage().equals("No such name error")) {
-                return "ERR";
+                return "No such name error";
             }
             return "ERR";
         } catch (java.io.IOException exc) {
@@ -209,6 +209,8 @@ public class SnmpOperation {
      * @param oid            oid to start walking the mib
      * @param resultArea     text area to populate with the result of 
      *                       walk operation
+     *
+     * @return a string description of the results
      */
     public String snmpWalk(String oid, JTextArea resultArea) {
         BlockPdu  pdu = new BlockPdu(context);
@@ -224,7 +226,9 @@ public class SnmpOperation {
                     if (var != null) {
                         AsnObjectId oidNext = var.getOid();
                         AsnObject res = var.getValue();
-                        if (res.getRespType() != AsnObject.SNMP_VAR_ENDOFMIBVIEW) {
+                        if (res.getRespType() != 
+                            AsnObject.SNMP_VAR_ENDOFMIBVIEW) {
+
                             if (res != null && oidNext != null) {
                                 if ((oidNext.toString().indexOf(oid)) == -1) {
                                     return "END OF WALK";
