@@ -38,10 +38,22 @@ import java.util.ArrayList;
 import net.percederberg.mibble.type.Constraint;
 
 /**
- * The base MIB type class. All the basic MIB types can also be 
- * cloned, and implements the Cloneable interface. Some of the more
- * complex SNMP types cannot be cloned, however, which is the reason
- * for this base class not supporting cloning. 
+ * The base MIB type class. There are two categories of MIB types
+ * extending this class, primitive ASN.1 type and SNMP macro types.
+ * The primitive types are used in SNMP for transferring data on the
+ * wire. The SNMP macro types are used in the MIB files for adding 
+ * additional information to the primitive types or values, such as
+ * descriptions and similar. Most of the SNMP macro types only 
+ * support object identifier values, and can only be used at the top
+ * level. The primitive types support whatever values are appropriate
+ * for the specific type, and are normally used inside the SNMP macro
+ * types in a MIB file.<p>
+ * 
+ * The best way to extract the specific type information from a MIB 
+ * type is to check the type instance and then cast the MibType 
+ * object to the corresponding subtype. Each subtype have very 
+ * different properties, which is why the API in this class is so
+ * limited.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -208,6 +220,45 @@ public abstract class MibType {
     }
 
     /**
+     * Checks if this type has a specific type tag. This method will
+     * check the whole type tag chain.
+     * 
+     * @param tag            the type tag to search for
+     * 
+     * @return true if the specified type tag was present, or
+     *         false otherwise
+     * 
+     * @since 2.2
+     */
+    public boolean hasTag(MibTypeTag tag) {
+        return hasTag(tag.getCategory(), tag.getValue());
+    }
+
+    /**
+     * Checks if this type has a specific type tag. This method will
+     * check the whole type tag chain.
+     * 
+     * @param category       the tag category to search for
+     * @param value          the tag value to search for
+     * 
+     * @return true if the specified type tag was present, or
+     *         false otherwise
+     * 
+     * @since 2.2
+     */
+    public boolean hasTag(int category, int value) {
+        MibTypeTag  iter = getTag();
+        
+        while (iter != null) {
+            if (iter.equals(category, value)) {
+                return true;
+            }
+            iter = iter.getNext();
+        }
+        return false;
+    }
+
+    /**
      * Checks if this type referenced the specified type symbol.
      * 
      * @param name           the type symbol name
@@ -215,15 +266,17 @@ public abstract class MibType {
      * @return true if this type was a reference to the symbol, or
      *         false otherwise
      * 
+     * @see #getReferenceSymbol()
+     * 
      * @since 2.2
      */
-    public boolean isReferenceTo(String name) {
+    public boolean hasReferenceTo(String name) {
         if (reference == null) {
             return false;
         } else if (reference.getName().equals(name)) {
             return true;
         } else {
-            return reference.getType().isReferenceTo(name);
+            return reference.getType().hasReferenceTo(name);
         }
     }
 
@@ -236,9 +289,11 @@ public abstract class MibType {
      * @return true if this type was a reference to the symbol, or
      *         false otherwise
      * 
+     * @see #getReferenceSymbol()
+     * 
      * @since 2.2
      */
-    public boolean isReferenceTo(String module, String name) {
+    public boolean hasReferenceTo(String module, String name) {
         Mib  mib;
 
         if (reference == null) {
@@ -250,7 +305,7 @@ public abstract class MibType {
 
             return true;
         } else {
-            return reference.getType().isReferenceTo(module, name);
+            return reference.getType().hasReferenceTo(module, name);
         }
     }
 
@@ -267,7 +322,13 @@ public abstract class MibType {
     }
 
     /**
-     * Returns the type tag.
+     * Returns the type tag. The type tags consist of a category and 
+     * value number, and are used to identify a specific type 
+     * uniquely (such as IpAddress and similar). Most (if not all)
+     * SNMP types have unique tags that are normally inherited when
+     * the type is referenced. Type tags may also be chained 
+     * together, in which case this method returns the first tag in 
+     * the chain.
      * 
      * @return the type tag, or
      *         null if no type tag has been set 

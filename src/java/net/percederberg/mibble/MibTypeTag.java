@@ -34,7 +34,13 @@
 package net.percederberg.mibble;
 
 /**
- * A MIB type tag.
+ * A MIB type tag. The type tag consists of a category and value. 
+ * Together these two numbers normally identifies a type uniquely, as
+ * all primitive and most (if not all) SNMP types (such as IpAddress 
+ * and similar) have type tags assigned to them. Type tags may also 
+ * be chained together in a list, in order to not loose information.
+ * Whether to replace or to chain a type tag is determined by the
+ * EXPLICIT or IMPLICIT keywords in the MIB file. 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -145,16 +151,58 @@ public class MibTypeTag {
     }
 
     /**
-     * Returns the type tag category.
+     * Checks if this type tag equals another object. This method
+     * will only return true if the other object is a type tag with
+     * the same category and value numbers.
+     * 
+     * @param obj            the object to compare to
+     * 
+     * @return true if the objects are equal, or
+     *         false otherwise
+     */
+    public boolean equals(Object obj) {
+        MibTypeTag  tag;
+        
+        if (obj instanceof MibTypeTag) {
+            tag = (MibTypeTag) obj;
+            return equals(tag.category, tag.value);
+        } else {
+            return false;
+        }
+    }
+    
+    /**
+     * Checks if this type tag has the specified category and 
+     * value numbers.
+     * 
+     * @param category       the category number
+     * @param value          the value number
+     * 
+     * @return true if the category and value numbers match, or
+     *         false otherwise
+     */
+    public boolean equals(int category, int value) {
+        return this.category == category && this.value == value;
+    }
+
+    /**
+     * Returns the type tag category. The category value corresponds
+     * to one of the defined category constants. 
      * 
      * @return the type tag category
+     * 
+     * @see #UNIVERSAL_CATEGORY
+     * @see #APPLICATION_CATEGORY
+     * @see #CONTEXT_SPECIFIC_CATEGORY
+     * @see #PRIVATE_CATEGORY
      */
     public int getCategory() {
         return category;
     }
 
     /**
-     * Returns the type tag value.
+     * Returns the type tag value. The tag category and value 
+     * normally identifies a type uniquely.
      * 
      * @return the type tag value
      */
@@ -173,7 +221,10 @@ public class MibTypeTag {
     }
     
     /**
-     * Sets the next type tag in the tag chain.
+     * Sets the next type tag in the tag chain.<p> 
+     * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
      * 
      * @param next           the next type tag
      */
