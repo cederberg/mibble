@@ -92,7 +92,7 @@ public class AboutDialog extends JDialog {
         // Add header text
         label = new JLabel("Mibble MIB Browser");
         label.setFont(Font.decode("sans bold 20"));
-        label.setForeground(new Color(30, 100, 70));
+        label.setForeground(new Color(227, 96, 48));
         c = new GridBagConstraints();
         c.gridwidth = 2;
         c.anchor = GridBagConstraints.CENTER;
