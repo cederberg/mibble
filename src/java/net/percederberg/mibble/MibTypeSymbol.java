@@ -38,7 +38,7 @@ package net.percederberg.mibble;
  * type assignment, i.e. a defined type name.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
 public class MibTypeSymbol extends MibSymbol {
@@ -71,8 +71,10 @@ public class MibTypeSymbol extends MibSymbol {
      * Initializes the MIB symbol. This will remove all levels of
      * indirection present, such as references to types or values. No 
      * information is lost by this operation. This method may modify
-     * this object as a side-effect, and will be called by the MIB 
-     * loader.
+     * this object as a side-effect.<p>
+     * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
      * 
      * @param log            the MIB loader log
      * 
