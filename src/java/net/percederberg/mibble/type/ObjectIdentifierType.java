@@ -42,10 +42,10 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * An object identifier MIB type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class ObjectIdentifierType implements MibType {
+public class ObjectIdentifierType extends MibType {
 
     /**
      * The one a only object identifier type instance.

@@ -49,10 +49,10 @@ import net.percederberg.mibble.snmp.SnmpTextualConvention;
  * A reference to a type symbol.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class TypeReference implements MibType, MibContext {
+public class TypeReference extends MibType implements MibContext {
 
     /**
      * The reference location.

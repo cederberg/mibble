@@ -44,10 +44,10 @@ import net.percederberg.mibble.MibValue;
  * An SNMP textual convention.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class SnmpTextualConvention implements MibType, MibContext {
+public class SnmpTextualConvention extends MibType implements MibContext {
 
     /**
      * The display hint.

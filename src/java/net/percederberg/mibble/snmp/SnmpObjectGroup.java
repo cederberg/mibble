@@ -45,10 +45,10 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * An SNMP object group.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class SnmpObjectGroup implements MibType {
+public class SnmpObjectGroup extends MibType {
 
     /**
      * The value objects.

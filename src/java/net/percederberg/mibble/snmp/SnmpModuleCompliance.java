@@ -45,10 +45,10 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * An SNMP module compliance type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
- * @since
+ * @version  2.2
+ * @since    2.0
  */
-public class SnmpModuleCompliance implements MibType {
+public class SnmpModuleCompliance extends MibType {
 
     /**
      * The type status.

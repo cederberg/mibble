@@ -43,9 +43,10 @@ import net.percederberg.mibble.MibValue;
  * as an array.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  1.0
+ * @version  2.2
+ * @since    2.0
  */
-public class SequenceOfType implements MibType {
+public class SequenceOfType extends MibType {
 
     /**
      * The base type.

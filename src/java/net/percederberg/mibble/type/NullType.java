@@ -42,10 +42,10 @@ import net.percederberg.mibble.value.NullValue;
  * A null MIB type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class NullType implements MibType {
+public class NullType extends MibType {
 
     /**
      * The one a only null type instance.

@@ -34,13 +34,13 @@
 package net.percederberg.mibble;
 
 /**
- * A MIB type. 
+ * The base MIB type class. 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public interface MibType {
+public abstract class MibType {
 
     /**
      * Initializes the MIB type. This will remove all levels of
@@ -56,7 +56,8 @@ public interface MibType {
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    MibType initialize(MibLoaderLog log) throws MibException;
+    public abstract MibType initialize(MibLoaderLog log) 
+        throws MibException;
 
     /**
      * Checks if the specified value is compatible with this type. A
@@ -68,5 +69,5 @@ public interface MibType {
      * @return true if the value is compatible, or
      *         false otherwise
      */
-    boolean isCompatible(MibValue value);
+    public abstract boolean isCompatible(MibValue value);
 }

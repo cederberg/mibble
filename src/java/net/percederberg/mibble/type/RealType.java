@@ -42,10 +42,10 @@ import net.percederberg.mibble.value.NumberValue;
  * A real MIB type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class RealType implements MibType {
+public class RealType extends MibType {
 
     /**
      * The one a only real type instance.

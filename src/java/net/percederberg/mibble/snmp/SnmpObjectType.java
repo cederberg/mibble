@@ -45,10 +45,10 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * An SNMP object type. 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class SnmpObjectType implements MibType {
+public class SnmpObjectType extends MibType {
 
     /**
      * The type syntax.

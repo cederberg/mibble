@@ -45,10 +45,10 @@ import net.percederberg.mibble.value.NumberValue;
  * An SNMP trap type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class SnmpTrapType implements MibType {
+public class SnmpTrapType extends MibType {
 
     /**
      * The enterprise value.

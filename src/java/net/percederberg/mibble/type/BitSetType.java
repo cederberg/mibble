@@ -51,10 +51,10 @@ import net.percederberg.mibble.value.NumberValue;
  * A bit set MIB type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class BitSetType implements MibType, MibContext {
+public class BitSetType extends MibType implements MibContext {
 
     /**
      * The additional type constraint.

@@ -45,10 +45,10 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * An SNMP module identity. 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class SnmpModuleIdentity implements MibType {
+public class SnmpModuleIdentity extends MibType {
 
     /**
      * The last updated date.

@@ -45,10 +45,10 @@ import net.percederberg.mibble.MibValue;
  * union.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class ChoiceType implements MibType {
+public class ChoiceType extends MibType {
 
     /**
      * The choice elements.

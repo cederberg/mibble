@@ -50,10 +50,10 @@ import net.percederberg.mibble.value.NumberValue;
  * An integer MIB type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class IntegerType implements MibType, MibContext {
+public class IntegerType extends MibType implements MibContext {
 
     /**
      * The additional type constraint.

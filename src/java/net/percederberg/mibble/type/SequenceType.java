@@ -45,10 +45,10 @@ import net.percederberg.mibble.MibValue;
  * struct.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class SequenceType implements MibType {
+public class SequenceType extends MibType {
 
     /**
      * The sequence elements.
