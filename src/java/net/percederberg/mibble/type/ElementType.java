@@ -41,7 +41,7 @@ import net.percederberg.mibble.MibValue;
 /**
  * A compound element MIB type. This typs is used inside various 
  * compound types, storing a reference to the type and an optional
- * name. 
+ * name.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -102,6 +102,29 @@ public class ElementType extends MibType {
      */
     public boolean isCompatible(MibValue value) {
         return type.isCompatible(value);
+    }
+
+    /**
+     * Returns the optional element name.
+     * 
+     * @return the element name, or 
+     *         null if no name has been set
+     * 
+     * @since 2.2
+     */
+    public String getName() {
+        return name;
+    }
+    
+    /**
+     * Returns the referenced MIB type. 
+     * 
+     * @return the referenced MIB type
+     * 
+     * @since 2.2
+     */
+    public MibType getType() {
+        return type;
     }
 
     /**

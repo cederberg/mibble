@@ -179,6 +179,19 @@ public class StringType extends MibType {
     }
 
     /**
+     * Returns the optional type constraint. The type constraint for
+     * a string will typically be a size constraint.
+     *
+     * @return the type constraint, or
+     *         null if no constraint has been set
+     * 
+     * @since 2.2
+     */
+    public Constraint getConstraint() {
+        return constraint;
+    }
+
+    /**
      * Returns a string representation of this type.
      * 
      * @return a string representation of this type

@@ -89,7 +89,6 @@ public class SizeConstraint implements Constraint {
      *         false otherwise
      */
     public boolean isCompatible(MibType type) {
-        // TODO: support other types?
         return type instanceof SequenceOfType;
     }
 

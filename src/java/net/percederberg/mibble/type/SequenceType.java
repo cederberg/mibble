@@ -133,6 +133,22 @@ public class SequenceType extends MibType {
     }
 
     /**
+     * Returns all the element types. These are the types that the
+     * sequence type is composed of.
+     * 
+     * @return an array of the element types 
+     * 
+     * @since 2.2
+     */
+    public ElementType[] getAllElements() {
+        ElementType[]  res;
+        
+        res = new ElementType[elements.size()];
+        elements.toArray(res);
+        return res;
+    }
+
+    /**
      * Returns a string representation of this object.
      * 
      * @return a string representation of this object

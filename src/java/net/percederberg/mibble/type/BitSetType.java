@@ -49,7 +49,8 @@ import net.percederberg.mibble.value.BitSetValue;
 import net.percederberg.mibble.value.NumberValue;
 
 /**
- * A bit set MIB type.
+ * A bit set MIB type. This is the equivalent of a bit string, i.e.
+ * a set of bit values
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -291,15 +292,54 @@ public class BitSetType extends MibType implements MibContext {
     }
 
     /**
-     * Returns a named MIB symbol. This method returns predefined 
-     * integer values, if some exist.
+     * Returns the optional type constraint. The type constraints for
+     * a bit set will typically be value constraints or compound 
+     * value constraints.
+     *
+     * @return the type constraint, or
+     *         null if no constraint has been set
+     * 
+     * @since 2.2
+     */
+    public Constraint getConstraint() {
+        return constraint;
+    }
+
+    /**
+     * Returns a named bit value. The value will be returned as a 
+     * value symbol, containing a numeric MIB value. Note that due to
+     * implementation details, the method signature specifies a 
+     * MibSymbol return value, while in reality it is a 
+     * MibValueSymbol.
      * 
      * @param name           the symbol name
      * 
-     * @return the MIB symbol, or null if not found
+     * @return the MIB value symbol, or 
+     *         null if not found
      */
     public MibSymbol getSymbol(String name) {
-        return (MibSymbol) symbols.get(name);
+        return (MibValueSymbol) symbols.get(name);
+    }
+
+    /**
+     * Returns all named bit values. Note that a bit string may allow
+     * unnamed values as well. Use the constraint object or the 
+     * isCompatible() method to check if a value is compatible with 
+     * this bit string. 
+     * 
+     * @return an array of all named values (as MIB value symbols)
+     * 
+     * @since 2.2
+     */
+    public MibValueSymbol[] getAllSymbols() {
+        MibValueSymbol[]  res;
+        Iterator          iter = symbols.values().iterator();
+        
+        res = new MibValueSymbol[symbols.size()];
+        for (int i = 0; iter.hasNext(); i++) {
+            res[i] = (MibValueSymbol) iter.next();
+        }
+        return res;
     }
 
     /**

@@ -46,7 +46,12 @@ import net.percederberg.mibble.MibTypeTag;
 import net.percederberg.mibble.MibValue;
 
 /**
- * A reference to a type symbol.
+ * A reference to a type symbol.<p>
+ * 
+ * <strong>NOTE:</strong> This class is used internally during the 
+ * MIB parsing only. After loading a MIB file successfully, all type 
+ * references will have been resolved to other MIB types. Do 
+ * <strong>NOT</strong> use or reference this class.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2

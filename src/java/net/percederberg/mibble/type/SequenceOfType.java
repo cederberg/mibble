@@ -155,6 +155,18 @@ public class SequenceOfType extends MibType {
     }
 
     /**
+     * Checks if this type has any constraint.
+     * 
+     * @return true if this type has any constraint, or
+     *         false otherwise
+     *
+     * @since 2.2
+     */
+    public boolean hasConstraint() {
+        return constraint != null;
+    }
+
+    /**
      * Checks if the specified value is compatible with this type. No
      * values are considered compatible with this type, and this 
      * method will therefore always return false. 
@@ -166,6 +178,31 @@ public class SequenceOfType extends MibType {
      */
     public boolean isCompatible(MibValue value) {
         return false;
+    }
+
+    /**
+     * Returns the optional type constraint. The type constraint for
+     * a sequence of type will typically be a size constraint.
+     *
+     * @return the type constraint, or
+     *         null if no constraint has been set
+     * 
+     * @since 2.2
+     */
+    public Constraint getConstraint() {
+        return constraint;
+    }
+
+    /**
+     * Returns the sequence element type. This is the type of each 
+     * individual element in the sequence.
+     * 
+     * @return the sequence element type
+     * 
+     * @since 2.2
+     */
+    public MibType getElementType() {
+        return base;
     }
 
     /**

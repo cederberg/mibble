@@ -279,15 +279,54 @@ public class IntegerType extends MibType implements MibContext {
     }
 
     /**
-     * Returns a named MIB symbol. This method returns predefined 
-     * integer values, if some exist.
+     * Returns the optional type constraint. The type constraints for
+     * an integer will typically be value, value range or compound 
+     * constraints.
+     *
+     * @return the type constraint, or
+     *         null if no constraint has been set
+     * 
+     * @since 2.2
+     */
+    public Constraint getConstraint() {
+        return constraint;
+    }
+
+    /**
+     * Returns a named integer value. The value will be returned as a 
+     * value symbol, containing a numeric MIB value. Note that due to
+     * implementation details, the method signature specifies a 
+     * MibSymbol return value, while in reality it is a 
+     * MibValueSymbol.
      * 
      * @param name           the symbol name
      * 
-     * @return the MIB symbol, or null if not found
+     * @return the MIB value symbol, or 
+     *         null if not found
      */
     public MibSymbol getSymbol(String name) {
-        return (MibSymbol) symbols.get(name);
+        return (MibValueSymbol) symbols.get(name);
+    }
+
+    /**
+     * Returns all named integer values. Note that an integer may 
+     * allow unnamed values as well. Use the constraint object or the
+     * isCompatible() method to check if a value is compatible with
+     * this integer. 
+     * 
+     * @return an array of all named values (as MIB value symbols)
+     * 
+     * @since 2.2
+     */
+    public MibValueSymbol[] getAllSymbols() {
+        MibValueSymbol[]  res;
+        Iterator          iter = symbols.values().iterator();
+        
+        res = new MibValueSymbol[symbols.size()];
+        for (int i = 0; iter.hasNext(); i++) {
+            res[i] = (MibValueSymbol) iter.next();
+        }
+        return res;
     }
 
     /**
