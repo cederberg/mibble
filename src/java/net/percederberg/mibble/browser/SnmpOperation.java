@@ -16,19 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * As a special exception, the copyright holders of this library give
- * you permission to link this library with independent modules to
- * produce an executable, regardless of the license terms of these
- * independent modules, and to copy and distribute the resulting
- * executable under terms of your choice, provided that you also meet,
- * for each linked independent module, the terms and conditions of the
- * license of that module. An independent module is a module which is
- * not derived from or based on this library. If you modify this
- * library, you may extend this exception to your version of the
- * library, but you are not obligated to do so. If you do not wish to
- * do so, delete this exception statement from your version.
- *
- * Copyright (c) 2004 Watsh Rajneesh. All rights reserved.
+ * Copyright (c) 2004 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.browser;
@@ -44,7 +32,8 @@ import uk.co.westhawk.snmp.stack.AsnObjectId;
 import uk.co.westhawk.snmp.stack.AsnOctets;
 import uk.co.westhawk.snmp.stack.Pdu;
 import uk.co.westhawk.snmp.stack.PduException;
-import uk.co.westhawk.snmp.stack.SnmpContextFace;
+import uk.co.westhawk.snmp.stack.SnmpConstants;
+import uk.co.westhawk.snmp.stack.SnmpContextBasisFace;
 import uk.co.westhawk.snmp.stack.SnmpContextPool;
 import uk.co.westhawk.snmp.stack.varbind;
 
@@ -57,7 +46,8 @@ import uk.co.westhawk.snmp.stack.varbind;
  * @see uk.co.westhawk.snmp.stack.SnmpContextPool
  *
  * @author   Watsh Rajneesh
- * @version  2.3
+ * @author   Per Cederberg, <per at percederberg dot net>
+ * @version  2.5
  * @since    2.3
  */
 public class SnmpOperation {
@@ -74,8 +64,13 @@ public class SnmpOperation {
      * @param port           the agent port
      * @param comm           the community name (read/write depends
      *                       on type of operation)
+     *
+     * @throws IOException if an SNMP context pool couldn't be
+     *             created from the specified values
      */
-    public SnmpOperation(String host, int port, String comm) {
+    public SnmpOperation(String host, int port, String comm)
+        throws IOException {
+
         createContext(host, port, comm);
     }
 
@@ -84,22 +79,22 @@ public class SnmpOperation {
      *
      * @param host           the host name or IP address
      * @param port           the agent port
-     * @param comm           the community name (read/write depends
-     *                       on type of operation)
+     * @param community      the community name
+     *
+     * @throws IOException if an SNMP context pool couldn't be
+     *             created from the specified values
      */
-    private void createContext(String host, int port, String comm) {
+    private void createContext(String host, int port, String community)
+        throws IOException {
+
+        String  socket;
+
         if (context != null) {
             context.destroy();
         }
-        try {
-            context = new SnmpContextPool(host,
-                                          port,
-                                          SnmpContextFace.STANDARD_SOCKET);
-            context.setCommunity(comm);
-        } catch (IOException exc) {
-            // give the user feedback
-            exc.printStackTrace();
-        }
+        socket = SnmpContextBasisFace.STANDARD_SOCKET;
+        context = new SnmpContextPool(host, port, socket);
+        context.setCommunity(community);
     }
 
     /**
@@ -243,16 +238,17 @@ public class SnmpOperation {
                         AsnObjectId oidNext = var.getOid();
                         AsnObject res = var.getValue();
                         if (res.getRespType() !=
-                            AsnObject.SNMP_VAR_ENDOFMIBVIEW) {
+                            SnmpConstants.SNMP_VAR_ENDOFMIBVIEW) {
 
                             if (res != null && oidNext != null) {
                                 if ((oidNext.toString().indexOf(oid)) == -1) {
                                     return "END OF WALK";
                                 }
                                 // print or display the answer
-                                resultArea.append("\n" +
-                                        oidNext.toString() + "--> "
-                                        + res.toString());
+                                resultArea.append(oidNext.toString());
+                                resultArea.append(" --> ");
+                                resultArea.append(res.toString());
+                                resultArea.append("\n");
 
                                 pdu = new BlockPdu(context);
                                 pdu.setPduType(BlockPdu.GETNEXT);

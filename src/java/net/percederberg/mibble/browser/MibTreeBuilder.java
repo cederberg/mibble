@@ -16,23 +16,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * As a special exception, the copyright holders of this library give
- * you permission to link this library with independent modules to
- * produce an executable, regardless of the license terms of these
- * independent modules, and to copy and distribute the resulting
- * executable under terms of your choice, provided that you also meet,
- * for each linked independent module, the terms and conditions of the
- * license of that module. An independent module is a module which is
- * not derived from or based on this library. If you modify this
- * library, you may extend this exception to your version of the
- * library, but you are not obligated to do so. If you do not wish to
- * do so, delete this exception statement from your version.
- *
- * Copyright (c) 2004 Watsh Rajneesh. All rights reserved.
+ * Copyright (c) 2004 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.browser;
 
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
@@ -41,6 +30,7 @@ import java.util.Iterator;
 import javax.swing.JTree;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import net.percederberg.mibble.Mib;
@@ -56,6 +46,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * the parsed MIB. A singleton class.
  *
  * @author   Watsh Rajneesh
+ * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.3
  * @since    2.3
  */
@@ -70,7 +61,7 @@ public class MibTreeBuilder {
      * The root tree component. This acts as a placeholder for
      * attaching multiple MIB sub-trees.
      */
-    public static JTree mibTree = null;
+    private JTree mibTree = null;
 
     /**
      * Returns the single instance of this class.
@@ -90,9 +81,31 @@ public class MibTreeBuilder {
     private MibTreeBuilder() {
         int  mode = TreeSelectionModel.SINGLE_TREE_SELECTION;
 
-        mibTree = new JTree(new MibNode("Mibble Browser", null));
+        mibTree = new JTree(new MibNode("Mibble Browser", null)) {
+            public String getToolTipText(MouseEvent e) {
+                TreePath  path;
+                MibNode   node;
+
+                if (getRowForLocation(e.getX(), e.getY()) == -1) {
+                    return null;    
+                }
+                path = getPathForLocation(e.getX(), e.getY());
+                node = (MibNode) path.getLastPathComponent();
+                return node.getToolTipText();
+            }
+        };
+        mibTree.setToolTipText("");
         mibTree.getSelectionModel().setSelectionMode(mode);
         mibTree.setRootVisible(false);
+    }
+
+    /**
+     * Returns the MIB tree component.
+     *
+     * @return the MIB tree component
+     */
+    public JTree getTree() {
+        return mibTree;
     }
 
     /**
@@ -129,6 +142,7 @@ public class MibTreeBuilder {
         JTree      valueTree;
 
         // Create value sub tree
+        // TODO: create type sub tree
         node = new MibNode("VALUES", null);
         valueTree = new JTree(node);
         while (iter.hasNext()) {

@@ -7,4 +7,4 @@
 . `dirname "$0"`/setenv.sh
 
 # Run Mibble MIB browser
-$JAVA_HOME/bin/java -Xmx200M net.percederberg.mibble.MibbleBrowser
+$JAVA_HOME/bin/java net.percederberg.mibble.MibbleBrowser $*

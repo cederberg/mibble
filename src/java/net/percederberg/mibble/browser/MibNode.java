@@ -16,31 +16,23 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * As a special exception, the copyright holders of this library give
- * you permission to link this library with independent modules to
- * produce an executable, regardless of the license terms of these
- * independent modules, and to copy and distribute the resulting
- * executable under terms of your choice, provided that you also meet,
- * for each linked independent module, the terms and conditions of the
- * license of that module. An independent module is a module which is
- * not derived from or based on this library. If you modify this
- * library, you may extend this exception to your version of the
- * library, but you are not obligated to do so. If you do not wish to
- * do so, delete this exception statement from your version.
- *
- * Copyright (c) 2004 Watsh Rajneesh. All rights reserved.
+ * Copyright (c) 2004 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.browser;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+
+import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.snmp.SnmpType;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * A MIB tree node.
  *
+ * @author   Per Cederberg, <per at percederberg dot net>
  * @author   Watsh Rajneesh
- * @version  2.3
+ * @version  2.5
  * @since    2.3
  */
 public class MibNode extends DefaultMutableTreeNode {
@@ -87,21 +79,6 @@ public class MibNode extends DefaultMutableTreeNode {
     }
 
     /**
-     * Returns the full node description.
-     *
-     * @return the full node description
-     */
-    public String getDescription() {
-        if (value == null) {
-            return name;
-        } else if (value.getSymbol() != null) {
-            return value.getSymbol().toString();
-        } else {
-            return value.toDetailString();
-        }
-    }
-
-    /**
      * Returns the object identifier (oid) associated with the node.
      *
      * @return the node object identifier (oid), or
@@ -113,5 +90,43 @@ public class MibNode extends DefaultMutableTreeNode {
         } else {
             return value.toString();
         }
+    }
+
+    /**
+     * Returns the detailed node description.
+     *
+     * @return the detailed node description
+     */
+    public String getDescription() {
+        if (value != null  && value.getSymbol() != null) {
+            return value.getSymbol().toString();
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Returns the tool tip text for this node.
+     *
+     * @return the tool tip text for this node.
+     */
+    public String getToolTipText() {
+        MibType  type;
+        String   str;
+
+        if (value != null  && value.getSymbol() != null) {
+            type = value.getSymbol().getType();
+            if (type instanceof SnmpType) {
+                str = ((SnmpType) type).getDescription();
+                if (str.indexOf('.') > 0) {
+                    str = str.substring(0, str.indexOf('.') + 1);
+                }
+                if (str.length() > 150) {
+                    str = str.substring(0, 150) + "...";
+                }
+                return str.replaceAll("[ \t\r\n]+", " ");
+            }
+        }
+        return null;
     }
 }
