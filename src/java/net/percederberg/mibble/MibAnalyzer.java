@@ -1337,7 +1337,7 @@ class MibAnalyzer extends Asn1Analyzer {
         if (!Character.isLowerCase(name.charAt(0))) {
             log.addWarning(getLocation(node),
                            "value identifier '" + name + "' doesn't " +
-                           "start with an lowercase character");
+                           "start with a lowercase character");
         }
 
         // Create value symbol
