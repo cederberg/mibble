@@ -59,11 +59,6 @@ public class SnmpModuleIdentity extends SnmpType {
     private String contactInfo;
 
     /**
-     * The module description.
-     */
-    private String description;
-
-    /**
      * The list of SNMP revision objects.
      */
     private ArrayList revisions;
@@ -83,11 +78,10 @@ public class SnmpModuleIdentity extends SnmpType {
                               String description,
                               ArrayList revisions) {
 
-        super("MODULE-IDENTITY");
+        super("MODULE-IDENTITY", description);
         this.lastUpdated = lastUpdated;
         this.organization = organization;
         this.contactInfo = contactInfo;
-        this.description = description;
         this.revisions = revisions;
     }
 
@@ -170,15 +164,6 @@ public class SnmpModuleIdentity extends SnmpType {
     }
 
     /**
-     * Returns the module description.
-     *
-     * @return the module description
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
      * Returns a list of all the SNMP module revisions. The returned
      * list will consist of SnmpRevision instances.
      *
@@ -207,7 +192,7 @@ public class SnmpModuleIdentity extends SnmpType {
         buffer.append("\n  Contact Info: ");
         buffer.append(contactInfo);
         buffer.append("\n  Description: ");
-        buffer.append(description);
+        buffer.append(getDescription("               "));
         for (int i = 0; i < revisions.size(); i++) {
             buffer.append("\n  Revision: ");
             buffer.append(revisions.get(i));

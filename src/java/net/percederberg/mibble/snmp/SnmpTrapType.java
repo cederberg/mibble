@@ -56,11 +56,6 @@ public class SnmpTrapType extends SnmpType {
     private ArrayList variables;
 
     /**
-     * The type description.
-     */
-    private String description;
-
-    /**
      * The type reference.
      */
     private String reference;
@@ -78,10 +73,9 @@ public class SnmpTrapType extends SnmpType {
                         String description,
                         String reference) {
 
-        super("TRAP-TYPE");
+        super("TRAP-TYPE", description);
         this.enterprise = enterprise;
         this.variables = variables;
-        this.description = description;
         this.reference = reference;
     }
 
@@ -159,16 +153,6 @@ public class SnmpTrapType extends SnmpType {
     }
 
     /**
-     * Returns the type description.
-     *
-     * @return the type description, or
-     *         null if no description has been set
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
      * Returns the type reference.
      *
      * @return the type reference, or
@@ -192,9 +176,9 @@ public class SnmpTrapType extends SnmpType {
         buffer.append(enterprise);
         buffer.append("\n  Variables: ");
         buffer.append(variables);
-        if (description != null) {
+        if (getUnformattedDescription() != null) {
             buffer.append("\n  Description: ");
-            buffer.append(description);
+            buffer.append(getDescription("               "));
         }
         if (reference != null) {
             buffer.append("\n  Reference: ");

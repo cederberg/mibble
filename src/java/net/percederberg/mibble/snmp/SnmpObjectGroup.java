@@ -54,11 +54,6 @@ public class SnmpObjectGroup extends SnmpType {
     private SnmpStatus status;
 
     /**
-     * The object group description.
-     */
-    private String description;
-
-    /**
      * The object group reference.
      */
     private String reference;
@@ -76,10 +71,9 @@ public class SnmpObjectGroup extends SnmpType {
                            String description,
                            String reference) {
 
-        super("OBJECT-GROUP");
+        super("OBJECT-GROUP", description);
         this.objects = objects;
         this.status = status;
-        this.description = description;
         this.reference = reference;
     }
 
@@ -158,15 +152,6 @@ public class SnmpObjectGroup extends SnmpType {
     }
 
     /**
-     * Returns the object group description.
-     *
-     * @return the object group description
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
      * Returns the object group reference.
      *
      * @return the object group reference, or
@@ -191,7 +176,7 @@ public class SnmpObjectGroup extends SnmpType {
         buffer.append("\n  Status: ");
         buffer.append(status);
         buffer.append("\n  Description: ");
-        buffer.append(description);
+        buffer.append(getDescription("               "));
         if (reference != null) {
             buffer.append("\n  Reference: ");
             buffer.append(reference);

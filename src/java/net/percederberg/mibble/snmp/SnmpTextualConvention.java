@@ -54,11 +54,6 @@ public class SnmpTextualConvention extends SnmpType implements MibContext {
     private SnmpStatus status;
 
     /**
-     * The type description.
-     */
-    private String description;
-
-    /**
      * The type reference.
      */
     private String reference;
@@ -83,10 +78,9 @@ public class SnmpTextualConvention extends SnmpType implements MibContext {
                                  String reference,
                                  MibType syntax) {
 
-        super("TEXTUAL-CONVENTION");
+        super("TEXTUAL-CONVENTION", description);
         this.displayHint = displayHint;
         this.status = status;
-        this.description = description;
         this.reference = reference;
         this.syntax = syntax;
     }
@@ -224,15 +218,6 @@ public class SnmpTextualConvention extends SnmpType implements MibContext {
     }
 
     /**
-     * Returns the type description.
-     *
-     * @return the type description
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
      * Returns the type reference.
      *
      * @return the type reference, or
@@ -294,7 +279,7 @@ public class SnmpTextualConvention extends SnmpType implements MibContext {
         buffer.append("\n  Status: ");
         buffer.append(status);
         buffer.append("\n  Description: ");
-        buffer.append(description);
+        buffer.append(getDescription("               "));
         if (reference != null) {
             buffer.append("\n  Reference: ");
             buffer.append(reference);

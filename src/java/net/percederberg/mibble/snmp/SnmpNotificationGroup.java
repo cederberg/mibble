@@ -54,11 +54,6 @@ public class SnmpNotificationGroup extends SnmpType {
     private SnmpStatus status;
 
     /**
-     * The type description.
-     */
-    private String description;
-
-    /**
      * The type reference.
      */
     private String reference;
@@ -76,10 +71,9 @@ public class SnmpNotificationGroup extends SnmpType {
                                  String description,
                                  String reference) {
 
-        super("NOTIFICATION-GROUP");
+        super("NOTIFICATION-GROUP", description);
         this.notifications = notifications;
         this.status = status;
-        this.description = description;
         this.reference = reference;
     }
 
@@ -155,15 +149,6 @@ public class SnmpNotificationGroup extends SnmpType {
     }
 
     /**
-     * Returns the type description.
-     *
-     * @return the type description
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
      * Returns the type reference.
      *
      * @return the type reference, or
@@ -188,7 +173,7 @@ public class SnmpNotificationGroup extends SnmpType {
         buffer.append("\n  Status: ");
         buffer.append(status);
         buffer.append("\n  Description: ");
-        buffer.append(description);
+        buffer.append(getDescription("               "));
         if (reference != null) {
             buffer.append("\n  Reference: ");
             buffer.append(reference);

@@ -72,11 +72,6 @@ public class SnmpObjectType extends SnmpType {
     private SnmpStatus status;
 
     /**
-     * The type description.
-     */
-    private String description;
-
-    /**
      * The type reference.
      */
     private String reference;
@@ -117,12 +112,11 @@ public class SnmpObjectType extends SnmpType {
                           ArrayList index,
                           MibValue defaultValue) {
 
-        super("OBJECT-TYPE");
+        super("OBJECT-TYPE", description);
         this.syntax = syntax;
         this.units = units;
         this.access = access;
         this.status = status;
-        this.description = description;
         this.reference = reference;
         this.index = index;
         this.augments = null;
@@ -150,12 +144,11 @@ public class SnmpObjectType extends SnmpType {
                           MibValue augments,
                           MibValue defaultValue) {
 
-        super("OBJECT-TYPE");
+        super("OBJECT-TYPE", description);
         this.syntax = syntax;
         this.units = units;
         this.access = access;
         this.status = status;
-        this.description = description;
         this.reference = reference;
         this.index = new ArrayList();
         this.augments = augments;
@@ -371,16 +364,6 @@ public class SnmpObjectType extends SnmpType {
     }
 
     /**
-     * Returns the type description.
-     *
-     * @return the type description, or
-     *         null if no description has been set
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
      * Returns the type reference.
      *
      * @return the type reference, or
@@ -443,9 +426,9 @@ public class SnmpObjectType extends SnmpType {
         buffer.append(access);
         buffer.append("\n  Status: ");
         buffer.append(status);
-        if (description != null) {
+        if (getUnformattedDescription() != null) {
             buffer.append("\n  Description: ");
-            buffer.append(description);
+            buffer.append(getDescription("               "));
         }
         if (reference != null) {
             buffer.append("\n  Reference: ");

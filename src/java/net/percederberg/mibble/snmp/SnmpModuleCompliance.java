@@ -49,11 +49,6 @@ public class SnmpModuleCompliance extends SnmpType {
     private SnmpStatus status;
 
     /**
-     * The type description.
-     */
-    private String description;
-
-    /**
      * The type reference.
      */
     private String reference;
@@ -76,9 +71,8 @@ public class SnmpModuleCompliance extends SnmpType {
                                 String reference,
                                 ArrayList modules) {
 
-        super("MODULE-COMPLIANCE");
+        super("MODULE-COMPLIANCE", description);
         this.status = status;
-        this.description = description;
         this.reference = reference;
         this.modules = modules;
     }
@@ -141,15 +135,6 @@ public class SnmpModuleCompliance extends SnmpType {
     }
 
     /**
-     * Returns the type description.
-     *
-     * @return the type description
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
      * Returns the type reference.
      *
      * @return the type reference, or
@@ -184,7 +169,7 @@ public class SnmpModuleCompliance extends SnmpType {
         buffer.append("\n  Status: ");
         buffer.append(status);
         buffer.append("\n  Description: ");
-        buffer.append(description);
+        buffer.append(getDescription("               "));
         if (reference != null) {
             buffer.append("\n  Reference: ");
             buffer.append(reference);

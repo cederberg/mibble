@@ -47,11 +47,6 @@ public class SnmpObjectIdentity extends SnmpType {
     private SnmpStatus status;
 
     /**
-     * The object identity description.
-     */
-    private String description;
-
-    /**
      * The object identity reference.
      */
     private String reference;
@@ -67,9 +62,8 @@ public class SnmpObjectIdentity extends SnmpType {
                               String description,
                               String reference) {
 
-        super("OBJECT-IDENTITY");
+        super("OBJECT-IDENTITY", description);
         this.status = status;
-        this.description = description;
         this.reference = reference;
     }
 
@@ -128,15 +122,6 @@ public class SnmpObjectIdentity extends SnmpType {
     }
 
     /**
-     * Returns the object identity description.
-     *
-     * @return the object identity description
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
      * Returns the object identity reference.
      *
      * @return the object identity reference, or
@@ -159,7 +144,7 @@ public class SnmpObjectIdentity extends SnmpType {
         buffer.append("\n  Status: ");
         buffer.append(status);
         buffer.append("\n  Description: ");
-        buffer.append(description);
+        buffer.append(getDescription("               "));
         if (reference != null) {
             buffer.append("\n  Reference: ");
             buffer.append(reference);
