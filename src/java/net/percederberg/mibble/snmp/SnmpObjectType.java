@@ -35,12 +35,17 @@ package net.percederberg.mibble.snmp;
 
 import java.util.ArrayList;
 
+import net.percederberg.mibble.Mib;
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibSymbol;
 import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibTypeSymbol;
 import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.MibValueSymbol;
+import net.percederberg.mibble.type.ElementType;
+import net.percederberg.mibble.type.SequenceOfType;
+import net.percederberg.mibble.type.SequenceType;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
@@ -195,7 +200,7 @@ public class SnmpObjectType extends MibType {
                                    getName() + " type");
         }
         syntax = syntax.initialize(symbol, log);
-        // TODO: add undefined sequence elements to MIB...
+        checkType((MibValueSymbol) symbol, log, syntax);
         for (int i = 0; i < index.size(); i++) {
             obj = index.get(i);
             if (obj instanceof MibValue) {
@@ -212,6 +217,111 @@ public class SnmpObjectType extends MibType {
             defaultValue = defaultValue.initialize(log);
         }
         return this;
+    }
+
+    /**
+     * Validates a MIB type. This will check any sequences and make 
+     * sure their elements are present in the MIB file. If they are 
+     * not, new symbols will be added to the MIB.
+     * 
+     * @param symbol         the MIB symbol containing this type
+     * @param log            the MIB loader log
+     * @param type           the MIB type to check
+     * 
+     * @throws MibException if an error was encountered during the
+     *             validation
+     * 
+     * @since 2.2
+     */
+    private void checkType(MibValueSymbol symbol, 
+                           MibLoaderLog log, 
+                           MibType type)
+        throws MibException {
+
+        SequenceOfType  sequence;
+        ElementType[]   elems;
+
+        if (type instanceof SequenceOfType) {
+            sequence = (SequenceOfType) type;
+            checkType(symbol, log, sequence.getElementType());
+        } else if (type instanceof SequenceType) {
+            elems = ((SequenceType) type).getAllElements();
+            for (int i = 0; i < elems.length; i++) {
+                checkElement(symbol, log, elems[i], i + 1);
+            }
+        }
+    }
+    
+    /**
+     * Validates an element type. This will check that the element 
+     * is present in the MIB file. If it is not, a new symbol will be
+     * added to the MIB.
+     * 
+     * @param symbol         the MIB symbol containing this type
+     * @param log            the MIB loader log
+     * @param element        the MIB element type to check
+     * @param pos            the MIB element position
+     * 
+     * @throws MibException if an error was encountered during the
+     *             validation
+     * 
+     * @since 2.2
+     */
+    private void checkElement(MibValueSymbol symbol,
+                              MibLoaderLog log,
+                              ElementType element,
+                              int pos) 
+        throws MibException {
+                                       
+        Mib                    mib = symbol.getMib();
+        MibSymbol              elementSymbol;
+        String                 name;
+        MibType                type;
+        ObjectIdentifierValue  value;
+
+        elementSymbol = mib.getSymbol(element.getName());
+        if (elementSymbol == null) {
+            if (element.getName() != null) {
+                name = pos + " '" + element.getName() + "'";
+            } else {
+                name = String.valueOf(pos);
+            }
+            log.addWarning(symbol.getLocation(), 
+                           "sequence element " + name + " is undefined " +
+                           "in MIB, a default symbol will be created");
+            name = element.getName();
+            if (name == null) {
+                name = symbol.getName() + "." + pos;
+            }
+            type = new SnmpObjectType(element.getType(), 
+                                      null, 
+                                      SnmpAccess.READ_ONLY, 
+                                      SnmpStatus.CURRENT,
+                                      "AUTOMATICALLY CREATED SYMBOL",
+                                      null,
+                                      new ArrayList(),
+                                      null);
+            value = (ObjectIdentifierValue) symbol.getValue();
+            value = new ObjectIdentifierValue(value, 
+                                              element.getName(),
+                                              pos);
+            elementSymbol = new MibValueSymbol(symbol.getLocation(),
+                                               mib,
+                                               name,
+                                               type,
+                                               value);
+            elementSymbol.initialize(log);
+        } else if (elementSymbol instanceof MibTypeSymbol) {
+            if (element.getName() != null) {
+                name = pos + " '" + element.getName() + "'";
+            } else {
+                name = String.valueOf(pos);
+            }
+            throw new MibException(symbol.getLocation(),
+                                   "sequence element " + name + 
+                                   " does not refer to a value, but " +
+                                   "to a type");
+        }
     }
 
     /**

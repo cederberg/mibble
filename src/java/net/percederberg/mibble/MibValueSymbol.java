@@ -57,7 +57,10 @@ public class MibValueSymbol extends MibSymbol {
     private MibValue value;
 
     /**
-     * Creates a new value symbol
+     * Creates a new value symbol.<p>
+     * 
+     * <strong>NOTE:</strong> This is an internal constructor that 
+     * should only be called by the MIB loader.
      * 
      * @param location       the symbol location
      * @param mib            the symbol MIB file
@@ -67,11 +70,11 @@ public class MibValueSymbol extends MibSymbol {
      * 
      * @since 2.2
      */
-    MibValueSymbol(FileLocation location,
-                   Mib mib, 
-                   String name, 
-                   MibType type, 
-                   MibValue value) {
+    public MibValueSymbol(FileLocation location,
+                          Mib mib, 
+                          String name, 
+                          MibType type, 
+                          MibValue value) {
 
         super(location, mib, name);
         this.type = type;
