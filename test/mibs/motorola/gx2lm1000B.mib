@@ -1,0 +1,2954 @@
+	       OMNI-gx2LM-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+	IpAddress, TimeTicks            
+					      FROM RFC1155-SMI
+	OBJECT-TYPE                     
+					      FROM RFC-1212
+	sysUpTime, DisplayString        
+					      FROM RFC1213-MIB
+	TRAP-TYPE                       
+					      FROM RFC-1215
+	gi, motproxies                   
+					      FROM NLS-BBNIDENT-MIB
+	gx2Lm
+					      FROM GX2HFC-MIB
+
+	trapIdentifier,trapNetworkElemModelNumber,
+	trapNetworkElemSerialNum, trapPerceivedSeverity,
+	trapNetworkElemOperState, trapNetworkElemAlarmStatus,
+	trapNetworkElemAdminState, trapNetworkElemAvailStatus,
+	trapText, trapNETrapLastTrapTimeStamp, trapChangedObjectId,
+	trapChangedValueInteger, trapChangedValueDisplayString
+					      FROM NLSBBN-TRAPS-MIB;
+
+
+
+	       -- This MIB module uses the extended OBJECT-TYPE macro as
+	       -- defined in RFC1212 and the TRAP-TYPE macro as defined
+	       -- in RFC 1215.
+		
+		   --REVISION	"4" Jan 20, 2003
+		   --DESCRIPTION
+		   --			Added revision and description comment section
+
+
+		--    OMNISTAR Laser Module (Forward Path Transmetter)  MIB MODULE
+
+	-- This MIB module defines information for management of HFC networks
+		-- 
+		-- The MIB module assumes that all generic (static) network element
+		-- information is defined in a different module such as the HFC module
+		-- The MIB consists of two groups:
+		-- the device type descriptor subgroup and 
+		-- gx2Lm Network Elements subgroup.
+		-- The device type descriptor subgroup is used to define 
+		-- parameters specific to gx2Lm device type.
+		-- These parameters are common across all network elements
+		-- from gx2Lm device type.
+		--
+		-- The gx2Lm Network Elements subgroup is
+		-- a list of gx2Lm type elements in the
+		-- current network topology with nominal
+		-- and current parameter values for the
+		-- individual network elements; the individual
+		-- network elements are identified by  
+		-- index from hfcCommonTable.
+		-- That implies what hfcCommonTableIndex and
+		-- gx2LmTableIndex are equal for each individual
+		-- network element.
+		-- This table is an extension of the hfcCommonTable
+		-- for all elements of gx2Lm type.
+		--
+		-- Both groups are mandatory for management of gx2Lm devices.
+
+-- ****************************************************************************
+		--
+		-- All floating point numbers will be represented by an IEEE 32 Bit number.
+		-- Conversion of this number must be done on the user interface to view the 
+		-- actual floating point number. 
+		--
+
+		Float ::= Counter  -- UNSIGNED (32 BITS) 
+
+-- ****************************************************************************
+
+		-- gx2Lm Device Descriptor subgroup.
+
+		-- The device type descriptor subgroup is used to define 
+		-- parameters specific to gx2Lm device type.
+		-- These parameters are common across all network elements
+		-- from gx2Lm device type.
+
+
+		gx2lmDescriptor OBJECT IDENTIFIER ::= {gx2Lm 1}
+
+
+
+--*****************************************************************************
+		--              gx2Lm Table
+		
+		-- Contains a list of all gx2Lm type devices in
+		-- the network. Each device is characterized with
+		-- current network topology information, with nominal
+		-- and current parameter values for the
+		-- individual network elements;
+		--
+		-- The individual network elements indentified by  
+		-- index from hfcCommonTable.
+		-- That implies what hfcCommonTableIndex and
+		-- gx2lmTableIndex are equal for each individual
+		-- nettwork element.
+		-- This table should be used as an extension of the hfcCommonTable
+		-- for all elements of gx2Lm type.
+
+
+	       gx2lmAnalogTable                    OBJECT-TYPE
+			 SYNTAX             SEQUENCE OF Gx2lmAnalogEntry
+			 ACCESS             not-accessible
+			 STATUS             mandatory
+			 DESCRIPTION
+			 "This table contains gx2Lm specific parameters with
+			  nominal and current values."
+			 ::= { gx2Lm 2 }
+
+
+	       gx2lmAnalogEntry               OBJECT-TYPE
+			 SYNTAX             Gx2lmAnalogEntry
+			 ACCESS             not-accessible
+			 STATUS             mandatory
+			 DESCRIPTION
+			 "This list contains the analog parameters and descriptions."
+			 INDEX { gx2lmAnalogTableIndex }
+			 ::= { gx2lmAnalogTable  1}
+
+--***********************************************************************
+	       gx2lmDigitalTable                    OBJECT-TYPE
+			 SYNTAX             SEQUENCE OF Gx2lmDigitalEntry
+			 ACCESS             not-accessible
+			 STATUS             mandatory
+			 DESCRIPTION
+			 "This table contains gx2Lm specific parameters with
+			  nominal and current values."
+			 ::= { gx2Lm 3 }
+
+	       gx2lmDigitalEntry               OBJECT-TYPE
+			 SYNTAX             Gx2lmDigitalEntry
+			 ACCESS             not-accessible
+			 STATUS             mandatory
+			 DESCRIPTION
+			 "This list contains digital parameters and descriptions."
+			 INDEX { gx2lmDigitalTableIndex }
+			 ::= { gx2lmDigitalTable  2}
+
+--***********************************************************************
+	       gx2lmStatusTable                    OBJECT-TYPE
+			 SYNTAX             SEQUENCE OF Gx2lmStatusEntry
+			 ACCESS             not-accessible
+			 STATUS             mandatory
+			 DESCRIPTION
+			 "This table contains gx2Lm specific parameters with
+			  nominal and current values."
+			 ::= { gx2Lm 4 }
+
+	       gx2lmStatusEntry               OBJECT-TYPE
+			 SYNTAX             Gx2lmStatusEntry
+			 ACCESS             not-accessible
+			 STATUS             mandatory
+			 DESCRIPTION
+			 "This list contains Status parameters and descriptions."
+			 INDEX { gx2lmStatusTableIndex }
+			 ::= { gx2lmStatusTable  3}
+
+--***********************************************************************
+	       gx2lmFactoryTable                    OBJECT-TYPE
+			 SYNTAX             SEQUENCE OF Gx2lmFactoryEntry
+			 ACCESS             not-accessible
+			 STATUS             mandatory
+			 DESCRIPTION
+			 "This table contains gx2Lm specific parameters with
+			  nominal and current values."
+			 ::= { gx2Lm 5 }
+
+	       gx2lmFactoryEntry               OBJECT-TYPE
+			 SYNTAX             Gx2lmFactoryEntry
+			 ACCESS             not-accessible
+			 STATUS             mandatory
+			 DESCRIPTION
+			 "This list contains Factory parameters and descriptions."
+			 INDEX { gx2lmFactoryTableIndex }
+			 ::= { gx2lmFactoryTable  4}
+
+	      Gx2lmAnalogEntry    ::= SEQUENCE  
+	       {
+		gx2lmAnalogTableIndex         INTEGER,
+		
+		--           Analog Parameters
+
+		labelOffsetNomMonitor 		DisplayString (SIZE (0..80)),
+		uomOffsetNomMonitor		DisplayString (SIZE (0..80)),
+		majorHighOffsetNomMonitor	Float, 
+		majorLowOffsetNomMonitor	Float, 
+		minorHighOffsetNomMonitor	Float,
+		minorLowOffsetNomMonitor	Float, 
+		currentValueOffsetNomMonitor	Float, 
+		stateFlagOffsetNomMonitor	INTEGER,
+		minValueOffsetNomMonitor	Float,
+		maxValueOffsetNomMonitor 	Float,
+		alarmStateOffsetNomMonitor	INTEGER,
+
+		labelOffsetNomCnt 		DisplayString (SIZE (0..80)),
+		uomOffsetNomCnt			DisplayString (SIZE (0..80)),
+		majorHighOffsetNomCnt		Float, 
+		majorLowOffsetNomCnt		Float, 
+		minorHighOffsetNomCnt		Float,
+		minorLowOffsetNomCnt		Float, 
+		currentValueOffsetNomCnt	Float, 
+		stateFlagOffsetNomCnt		INTEGER,
+		minValueOffsetNomCnt		Float,
+		maxValueOffsetNomCnt 		Float,
+		alarmStateOffsetNomCnt		INTEGER,
+
+		labelRelAttenSetting 		DisplayString (SIZE (0..80)),
+		uomRelAttenSetting		DisplayString (SIZE (0..80)),
+		majorHighRelAttenSetting	Float, 
+		majorLowRelAttenSetting		Float, 
+		minorHighRelAttenSetting	Float,
+		minorLowRelAttenSetting		Float, 
+		currentValueRelAttenSetting	Float, 
+		stateFlagRelAttenSetting	INTEGER,
+		minValueRelAttenSetting		Float,
+		maxValueRelAttenSetting 	Float,
+		alarmStateRelAttenSetting	INTEGER,
+
+		labelOptPower			DisplayString (SIZE (0..80)),
+		uomOptPower				DisplayString (SIZE (0..80)),
+		majorHighOptPower			Float, 
+		majorLowOptPower			Float, 
+		minorHighOptPower			Float,
+		minorLowOptPower			Float, 
+		currentValueOptPower		Float, 
+		stateFlagOptPower			INTEGER,
+		minValueOptPower			Float,
+		maxValueOptPower 			Float,
+		alarmStateOptPower		INTEGER,
+
+		labelLaserBias			DisplayString (SIZE (0..80)),
+		uomLaserBias			DisplayString (SIZE (0..80)),
+		majorHighLaserBias		Float, 
+		majorLowLaserBias			Float, 
+		minorHighLaserBias		Float,
+		minorLowLaserBias			Float, 
+		currentValueLaserBias		Float, 
+		stateFlagLaserBias		INTEGER,
+		minValueLaserBias			Float,
+		maxValueLaserBias 		Float,
+		alarmStateLaserBias		INTEGER,
+
+		labelTecCurrent			DisplayString (SIZE (0..80)),
+		uomTecCurrent			DisplayString (SIZE (0..80)),
+		majorHighTecCurrent		Float, 
+		majorLowTecCurrent		Float, 
+		minorHighTecCurrent		Float,
+		minorLowTecCurrent		Float, 
+		currentValueTecCurrent		Float, 
+		stateFlagTecCurrent		INTEGER,
+		minValueTecCurrent		Float,
+		maxValueTecCurrent 		Float,
+		alarmStateTecCurrent		INTEGER,
+
+		labelLaserTemp			DisplayString (SIZE (0..80)),
+		uomLaserTemp			DisplayString (SIZE (0..80)),
+		majorHighLaserTemp		Float, 
+		majorLowLaserTemp			Float, 
+		minorHighLaserTemp		Float,
+		minorLowLaserTemp			Float, 
+		currentValueLaserTemp		Float, 
+		stateFlagLaserTemp		INTEGER,
+		minValueLaserTemp			Float,
+		maxValueLaserTemp			Float,
+		alarmStateLaserTemp		INTEGER,
+
+		labelModuleTemp			DisplayString (SIZE (0..80)),
+		uomModuleTemp				DisplayString (SIZE (0..80)),
+		majorHighModuleTemp			Float, 
+		majorLowModuleTemp			Float, 
+		minorHighModuleTemp			Float,
+		minorLowModuleTemp			Float, 
+		currentValueModuleTemp		Float, 
+		stateFlagModuleTemp			INTEGER,
+		minValueModuleTemp			Float,
+		maxValueModuleTemp			Float,
+		alarmStateModuleTemp			INTEGER,
+
+		labelFanCurrent			DisplayString (SIZE (0..80)),
+		uomFanCurrent			DisplayString (SIZE (0..80)),
+		majorHighFanCurrent		Float, 
+		majorLowFanCurrent		Float, 
+		minorHighFanCurrent		Float,
+		minorLowFanCurrent		Float, 
+		currentValueFanCurrent		Float, 
+		stateFlagFanCurrent		INTEGER,
+		minValueFanCurrent		Float,
+		maxValueFanCurrent 		Float,
+		alarmStateFanCurrent		INTEGER,
+
+		label12Volt			DisplayString (SIZE (0..80)),
+		uom12Volt			DisplayString (SIZE (0..80)),
+		majorHigh12Volt			Float, 
+		majorLow12Volt			Float, 
+		minorHigh12Volt			Float,
+		minorLow12Volt			Float, 
+		currentValue12Volt		Float, 
+		stateFlag12Volt			INTEGER,
+		minValue12Volt			Float,
+		maxValue12Volt			Float,
+		alarmState12Volt			INTEGER
+		}
+
+		-- ****************  Digital Parameters ***********************
+      Gx2lmDigitalEntry    ::= SEQUENCE  
+      {
+		gx2lmDigitalTableIndex         INTEGER,
+
+		labelRfInput			DisplayString (SIZE (0..80)),
+		enumRfInput					DisplayString (SIZE (0..80)),
+		valueRfInput			INTEGER,
+		stateflagRfInput  		INTEGER,
+
+		labelOptOutput			DisplayString (SIZE (0..80)),
+		enumOptOutput				DisplayString (SIZE (0..80)),
+		valueOptOutput			INTEGER,
+		stateflagOptOutput         	INTEGER,
+
+		labelLaserMode			DisplayString (SIZE (0..80)),
+		enumLaserMode				DisplayString (SIZE (0..80)),
+		valueLaserMode			INTEGER,
+		stateflagLaserMode         	INTEGER,
+
+		labelLaserSecMode			DisplayString (SIZE (0..80)),
+		enumLaserSecMode				DisplayString (SIZE (0..80)),
+		valueLaserSecMode			INTEGER,
+		stateflagLaserSecMode     	INTEGER,
+
+		labelVideoOffset			DisplayString (SIZE (0..80)),
+		enumVideoOffset				DisplayString (SIZE (0..80)),
+		valueVideoOffset			INTEGER,
+		stateflagVideoOffset         	INTEGER,
+
+		labelFactoryDefault		DisplayString (SIZE (0..80)),
+		enumFactoryDefault				DisplayString (SIZE (0..80)),
+		valueFactoryDefault		INTEGER,
+		stateflagFactoryDefault   	INTEGER
+		}
+
+		-- ****************  Status Parameters ************************************
+      Gx2lmStatusEntry    ::= SEQUENCE  
+      {
+		gx2lmStatusTableIndex         INTEGER,
+
+		labelBoot				DisplayString (SIZE (0..80)),
+		valueBoot				INTEGER,
+		stateflagBoot			INTEGER,
+		
+		labelFlash				DisplayString (SIZE (0..80)),
+		valueFlash				INTEGER,
+		stateflagFlash			INTEGER,
+
+		labelFactoryDataCRC 		DisplayString (SIZE (0..80)),
+		valueFactoryDataCRC		INTEGER,
+		stateflagFactoryDataCRC		INTEGER,
+
+		labelLaserDataCRC 		DisplayString (SIZE (0..80)),
+		valueLaserDataCRC 		INTEGER,
+		stateflagLaserDataCRC 		INTEGER,
+
+		labelAlarmDataCrc			DisplayString (SIZE (0..80)),
+		valueAlarmDataCrc			INTEGER,
+		stateflagAlarmDataCrc		INTEGER,
+
+		labelHWStatus			DisplayString (SIZE (0..80)),
+		valueHWStatus			INTEGER,
+		stateflagHWStatus			INTEGER,
+
+		labelRFInputStatus			DisplayString (SIZE (0..80)),
+		valueRFInputStatus			INTEGER,
+		stateflagRFInputStatus			INTEGER
+		}
+
+
+		-- ****************  Factory Parameters *************************************
+      Gx2lmFactoryEntry   ::= SEQUENCE  
+      {
+		gx2lmFactoryTableIndex         INTEGER,
+		bootControlByteValue  			INTEGER,
+		bootStatusByteValue   			INTEGER,
+		bank1CRCValue    			INTEGER,
+		bank2CRCValue    			INTEGER,
+		prgEEPROMByteValue    			INTEGER,
+		factoryCRCValue    			INTEGER,
+		calculateCRCValue    			INTEGER,
+		hourMeterValue    			INTEGER,
+		flashPrgCntAValue    			INTEGER,
+		flashPrgCntBValue    			INTEGER,
+		flashBankARevValue    			DisplayString (SIZE (0..80)),
+		flashBankBRevValue    			DisplayString (SIZE (0..80))
+		}
+            -- ************** Analog Parameters ****************************
+		gx2lmAnalogTableIndex              OBJECT-TYPE
+			   SYNTAX           INTEGER (1..4294967295)
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object identifies the network
+			    element. This index is equal to the
+			    hfcCommonTableIndex for the same element."
+			   ::= { gx2lmAnalogEntry 1}
+-- New Parameter
+
+		labelOffsetNomMonitor     OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Offset Monitor Analog parameter."
+			   ::= { gx2lmAnalogEntry 2}
+
+		uomOffsetNomMonitor       OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the Unit of Measure of the
+			    Offset Monitor Analog parameter."
+			   ::= { gx2lmAnalogEntry 3}
+
+		majorHighOffsetNomMonitor OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major High alarm value
+			    of the Offset Monitor Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 4}
+
+
+		majorLowOffsetNomMonitor  OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major Low alarm value
+			    of the Offset Monitor Analog parameter.
+			    This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 5}
+
+		minorHighOffsetNomMonitor OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor High alarm value
+			    of the Offset Monitor Analog parameter.
+			   This value is a float and is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 6}
+
+		minorLowOffsetNomMonitor  OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor Low alarm value
+			    of the Offset Monitor Analog parameter.
+			   This value is a float and is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 7}
+
+		currentValueOffsetNomMonitor  OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Current value
+			    of the Offset Monitor Analog parameter.
+			   This value is a float and is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 8}
+
+		stateFlagOffsetNomMonitor  OBJECT-TYPE
+			   SYNTAX           INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the Offset Monitor Analog parameter. (0-Hidden	
+			          1-Read-Only, 2-Updateable)"
+			   ::= { gx2lmAnalogEntry 9}
+
+		minValueOffsetNomMonitor  OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the minimum value
+			    the Offset Monitor Analog parameter can achive.
+			   This value is a float and is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 10}
+
+		maxValueOffsetNomMonitor  OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the maximum value
+			    the Offset Monitor Analog parameter can achive.
+			   This value is a float and is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 11}
+
+		alarmStateOffsetNomMonitor  OBJECT-TYPE
+			   SYNTAX           INTEGER
+									{
+									noAlarm(1),
+									majorLowAlarm(2),
+									minorLowAlarm(3),
+									minorHighAlarm(4),
+									majorHighAlarm(5),
+									informational(6)
+									}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the curent alarm state of
+			    the Offset Monitor Analog parameter."
+			   ::= { gx2lmAnalogEntry 12}
+
+-- New Parameter
+
+		labelOffsetNomCnt         OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Offset Control Analog parameter."
+			   ::= { gx2lmAnalogEntry 13}
+
+		uomOffsetNomCnt           OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Offset Control Analog parameter."
+			   ::= { gx2lmAnalogEntry 14}
+
+		majorHighOffsetNomCnt     OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major High alarm value
+			    of the Offset Control Analog parameter.
+			   This value is a float and is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 15}
+
+
+		majorLowOffsetNomCnt      OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major Low alarm value
+			    of the Offset Control Analog parameter.
+			   This value is a float and is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 16}
+
+		minorHighOffsetNomCnt     OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor High alarm value
+			    of the Offset Control Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 17}
+
+		minorLowOffsetNomCnt      OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor Low alarm value
+			    of the Offset Control Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 18}
+
+		currentValueOffsetNomCnt  OBJECT-TYPE
+			   SYNTAX			Float
+			   ACCESS           read-write
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Current value
+			    of the Offset Control Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 19}
+
+		stateFlagOffsetNomCnt     OBJECT-TYPE
+			   SYNTAX           INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the Offset Control Analog parameter. (0-Hidden	
+			          1-Read-Only, 2-Updateable)"
+			   ::= { gx2lmAnalogEntry 20}
+
+		minValueOffsetNomCnt      OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the minimum value
+			    the Offset Control Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 21}
+
+		maxValueOffsetNomCnt      OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the maximum value
+			    the Offset Control Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 22}
+
+		alarmStateOffsetNomCnt    OBJECT-TYPE
+			   SYNTAX           INTEGER
+									{
+									noAlarm(1),
+									majorLowAlarm(2),
+									minorLowAlarm(3),
+									minorHighAlarm(4),
+									majorHighAlarm(5),
+									informational(6)
+									}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the curent alarm state of
+			    the Offset Control Analog parameter."
+			   ::= { gx2lmAnalogEntry 23}
+-- New Parameter
+
+		labelRelAttenSetting      OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Attenuator Setting Analog parameter."
+			   ::= { gx2lmAnalogEntry 24}
+
+		uomRelAttenSetting        OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the Unit of Measure of the
+			    Attenuator Setting Analog parameter."
+			   ::= { gx2lmAnalogEntry 25}
+
+		majorHighRelAttenSetting  OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major High alarm value
+			    of the Attenuator Setting Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 26}
+
+
+		majorLowRelAttenSetting   OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major Low alarm value
+			    of the Attenuator Setting Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 27}
+
+		minorHighRelAttenSetting  OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor High alarm value
+			    of the Attenuator Setting Analog parameter.
+   			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 28}
+
+		minorLowRelAttenSetting   OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor Low alarm value
+			    of the Attenuator Setting Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 29}
+
+		currentValueRelAttenSetting   OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-write
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Current value
+			    of the Attenuator Setting Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 30}
+
+		stateFlagRelAttenSetting  OBJECT-TYPE
+			   SYNTAX           INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the Attenuator Setting Analog parameter. (0-Hidden	
+			          1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmAnalogEntry 31}
+
+		minValueRelAttenSetting   OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the minimum value
+			    the Attenuator Setting Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 32}
+
+		maxValueRelAttenSetting   OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the maximum value
+			    the Attenuator Setting Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 33}
+
+		alarmStateRelAttenSetting OBJECT-TYPE
+			   SYNTAX           INTEGER
+									{
+									noAlarm(1),
+									majorLowAlarm(2),
+									minorLowAlarm(3),
+									minorHighAlarm(4),
+									majorHighAlarm(5),
+									informational(6)
+									}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the curent alarm state of
+			    the Attenuator Setting Analog parameter."
+			   ::= { gx2lmAnalogEntry 34}
+-- New Parameter
+
+		labelOptPower             OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Optical Power Analog parameter."
+			   ::= { gx2lmAnalogEntry 35}
+
+		uomOptPower               OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the Unit of Measure of the
+			    Optical Power Analog parameter."
+			   ::= { gx2lmAnalogEntry 36}
+
+		majorHighOptPower         OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major High alarm value
+			    of the Optical Power Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 37}
+
+
+		majorLowOptPower          OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major Low alarm value
+			    of the Optical Power Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 38}
+
+		minorHighOptPower         OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor High alarm value
+			    of the Optical Power Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 39}
+
+		minorLowOptPower          OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor Low alarm value
+			    of the Optical Power Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 40}
+
+		currentValueOptPower      OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Current value
+			    of the Optical Power Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 41}
+
+		stateFlagOptPower         OBJECT-TYPE
+			   SYNTAX           INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the Optical Power Analog parameter. (0-Hidden	
+			          1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmAnalogEntry 42}
+
+		minValueOptPower          OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the minimum value
+			    the Optical Power Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 43}
+
+		maxValueOptPower          OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the maximum value
+			    the Optical Power Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 44}
+
+		alarmStateOptPower        OBJECT-TYPE
+			   SYNTAX           INTEGER
+									{
+									noAlarm(1),
+									majorLowAlarm(2),
+									minorLowAlarm(3),
+									minorHighAlarm(4),
+									majorHighAlarm(5),
+									informational(6)
+									}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the curent alarm state of
+			    the Optical Power Analog parameter."
+			   ::= { gx2lmAnalogEntry 45}
+-- New Parameter
+
+		labelLaserBias            OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Laser Bias Current Analog parameter."
+			   ::= { gx2lmAnalogEntry 46}
+
+		uomLaserBias              OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the Unit of Measure of the
+			    Laser Bias Analog parameter."
+			   ::= { gx2lmAnalogEntry 47}
+
+		majorHighLaserBias        OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major High alarm value
+			    of the Laser Bias Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 48}
+
+
+		majorLowLaserBias         OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major Low alarm value
+			    of the Laser Bias Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 49}
+
+		minorHighLaserBias        OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor High alarm value
+			    of the Laser Bias Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 50}
+
+		minorLowLaserBias         OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor Low alarm value
+			    of the Laser Bias Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 51}
+
+		currentValueLaserBias     OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Current value
+			    of the Laser Bias Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 52}
+
+		stateFlagLaserBias        OBJECT-TYPE
+			   SYNTAX           INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the Laser Bias Analog parameter. (0-Hidden	
+			          1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmAnalogEntry 53}
+
+		minValueLaserBias         OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the minimum value
+			    the Laser Bias Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 54}
+
+		maxValueLaserBias         OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the maximum value
+			    the Laser Bias Analog parameter can achive.
+   			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 55}
+
+		alarmStateLaserBias       OBJECT-TYPE
+			   SYNTAX           INTEGER
+									{
+									noAlarm(1),
+									majorLowAlarm(2),
+									minorLowAlarm(3),
+									minorHighAlarm(4),
+									majorHighAlarm(5),
+									informational(6)
+									}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the curent alarm state of
+			    the Laser Bias Analog parameter."
+			   ::= { gx2lmAnalogEntry 56}
+-- New Parameter
+
+		labelTecCurrent           OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    TEC Current Analog parameter."
+			   ::= { gx2lmAnalogEntry 57}
+
+		uomTecCurrent             OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the Unit of Measure of the
+			    TEC Current Analog parameter.."
+			   ::= { gx2lmAnalogEntry 58}
+
+		majorHighTecCurrent       OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major High alarm value
+			    of the TEC Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 59}
+
+
+		majorLowTecCurrent        OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major Low alarm value
+			    of the TEC Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 60}
+
+		minorHighTecCurrent       OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor High alarm value
+			    of the TEC Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 61}
+
+		minorLowTecCurrent        OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor Low alarm value
+			    of the TEC Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 62}
+
+		currentValueTecCurrent    OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Current value
+			    of the TEC Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 63}
+
+		stateFlagTecCurrent       OBJECT-TYPE
+			   SYNTAX           INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the TEC Current Analog parameter. (0-Hidden	
+			          1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmAnalogEntry 64}
+
+		minValueTecCurrent        OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the minimum value
+			    the TEC Current Analog parameter can achive.
+	   		   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 65}
+
+		maxValueTecCurrent        OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the maximum value
+			    the TEC Current Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 66}
+
+		alarmStateTecCurrent      OBJECT-TYPE
+			   SYNTAX           INTEGER
+									{
+									noAlarm(1),
+									majorLowAlarm(2),
+									minorLowAlarm(3),
+									minorHighAlarm(4),
+									majorHighAlarm(5),
+									informational(6)
+									}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the curent alarm state of
+			    the TEC Current Analog parameter."
+			   ::= { gx2lmAnalogEntry 67}
+-- New Parameter
+
+		labelLaserTemp            OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Laser Temperature Analog parameter."
+			   ::= { gx2lmAnalogEntry 68}
+
+		uomLaserTemp              OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the Unit of Measure of the
+			    Laser Temperature Analog parameter."
+			   ::= { gx2lmAnalogEntry 69}
+
+		majorHighLaserTemp        OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major High alarm value
+			    of the Laser Temperature Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 70}
+
+
+		majorLowLaserTemp         OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major Low alarm value
+			    of the Laser Temperature Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 71}
+
+		minorHighLaserTemp        OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor High alarm value
+			    of the Laser Temperature Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 72}
+
+		minorLowLaserTemp         OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor Low alarm value
+			    of the Laser Temperature Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 73}
+
+		currentValueLaserTemp     OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Current value
+			    of the Laser Temperature Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 74}
+
+		stateFlagLaserTemp        OBJECT-TYPE
+			   SYNTAX           INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the Laser Temperature Analog parameter. (0-Hidden	
+			          1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmAnalogEntry 75}
+
+		minValueLaserTemp         OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the minimum value
+			    the Laser Temperature Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 76}
+
+		maxValueLaserTemp         OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the maximum value
+			    the Laser Temperature Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 77}
+
+		alarmStateLaserTemp       OBJECT-TYPE
+			   SYNTAX           INTEGER
+									{
+									noAlarm(1),
+									majorLowAlarm(2),
+									minorLowAlarm(3),
+									minorHighAlarm(4),
+									majorHighAlarm(5),
+									informational(6)
+									}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the curent alarm state of
+			    the Laser Temperature Analog parameter."
+			   ::= { gx2lmAnalogEntry 78}
+
+-- New Parameter
+
+		labelModuleTemp              OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Module Temperature Analog parameter."
+			   ::= { gx2lmAnalogEntry 79}
+
+		uomModuleTemp                OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the Unit of Measure of the
+			    Module Temperature Analog parameter."
+			   ::= { gx2lmAnalogEntry 80}
+
+		majorHighModuleTemp          OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major High alarm value
+			    of the Module Temperature Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 81}
+
+
+		majorLowModuleTemp           OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major Low alarm value
+			    of the Module Temperature Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 82}
+
+		minorHighModuleTemp          OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor High alarm value
+			    of the Module Temperature Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 83}
+
+		minorLowModuleTemp           OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor Low alarm value
+			    of the Module Temperature Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 84}
+
+		currentValueModuleTemp       OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Current value
+			    of the Module Temperature Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 85}
+
+		stateFlagModuleTemp          OBJECT-TYPE
+			   SYNTAX           INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the Module Temperature Analog parameter. (0-Hidden	
+			          1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmAnalogEntry 86}
+
+		minValueModuleTemp           OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the minimum value
+			    the Module Temperature Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 87}
+
+		maxValueModuleTemp           OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the maximum value
+			    the Module Temperature Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 88}
+
+		alarmStateModuleTemp         OBJECT-TYPE
+			   SYNTAX           INTEGER
+									{
+									noAlarm(1),
+									majorLowAlarm(2),
+									minorLowAlarm(3),
+									minorHighAlarm(4),
+									majorHighAlarm(5),
+									informational(6)
+									}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the curent alarm state of
+			    the Module Temperature Analog parameter."
+			   ::= { gx2lmAnalogEntry 89}
+-- New Parameter
+
+		labelFanCurrent           OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Fan Current Analog parameter."
+			   ::= { gx2lmAnalogEntry 90}
+
+		uomFanCurrent             OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the Unit of Measure of the
+			    Fan Current Analog parameter."
+			   ::= { gx2lmAnalogEntry 91}
+
+		majorHighFanCurrent       OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major High alarm value
+			    of the Fan Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 92}
+
+
+		majorLowFanCurrent        OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major Low alarm value
+			    of the Fan Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 93}
+
+		minorHighFanCurrent       OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor High alarm value
+			    of the Fan Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 94}
+
+		minorLowFanCurrent        OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor Low alarm value
+			    of the Fan Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 95}
+
+		currentValueFanCurrent    OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Current value
+			    of the Fan Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 96}
+
+		stateFlagFanCurrent       OBJECT-TYPE
+			   SYNTAX           INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the Fan Current Analog parameter. (0-Hidden	
+			          1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmAnalogEntry 97}
+
+		minValueFanCurrent        OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the minimum value
+			    the Fan Current Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 98}
+
+		maxValueFanCurrent        OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the maximum value
+			    the Fan Current Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 99}
+
+		alarmStateFanCurrent      OBJECT-TYPE
+			   SYNTAX           INTEGER
+									{
+									noAlarm(1),
+									majorLowAlarm(2),
+									minorLowAlarm(3),
+									minorHighAlarm(4),
+									majorHighAlarm(5),
+									informational(6)
+									}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the curent alarm state of
+			    the Fan Current Analog parameter."
+			   ::= { gx2lmAnalogEntry 100}
+-- New Parameter
+
+		label12Volt               OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    12v Current Analog parameter."
+			   ::= { gx2lmAnalogEntry 101}
+
+		uom12Volt                 OBJECT-TYPE
+			   SYNTAX           DisplayString (SIZE (0..80))
+			   ACCESS           read-only
+			   STATUS           optional
+			   DESCRIPTION
+			   "The value of this object provides the Unit of Measure of the
+			    12v Current Analog parameter."
+			   ::= { gx2lmAnalogEntry 102}
+
+		majorHigh12Volt           OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major High alarm value
+			    of the 12v Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 103}
+
+
+		majorLow12Volt            OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Major Low alarm value
+			    of the 12v Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 104}
+
+		minorHigh12Volt           OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor High alarm value
+			    of the 12v Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 105}
+
+		minorLow12Volt            OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Minor Low alarm value
+			    of the 12v Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 106}
+
+		currentValue12Volt        OBJECT-TYPE
+			   SYNTAX           Float 
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the Current value
+			    of the 12v Current Analog parameter.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 107}
+
+		stateFlag12Volt           OBJECT-TYPE
+			   SYNTAX           INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the 12v Current Analog parameter. (0-Hidden	
+			          1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmAnalogEntry 108}
+
+		minValue12Volt            OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the minimum value
+			    the 12v Current Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 109}
+
+		maxValue12Volt            OBJECT-TYPE
+			   SYNTAX           Float
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the maximum value
+			    the 12v Current Analog parameter can achive.
+			   This value is a floating point number that is represented as an IEEE 32 bit number."
+			   ::= { gx2lmAnalogEntry 110}
+
+		alarmState12Volt          OBJECT-TYPE
+			   SYNTAX           INTEGER
+									{
+									noAlarm(1),
+									majorLowAlarm(2),
+									minorLowAlarm(3),
+									minorHighAlarm(4),
+									majorHighAlarm(5),
+									informational(6)
+									}
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object provides the curent alarm state of
+			    the 12v Current Analog parameter."
+			   ::= { gx2lmAnalogEntry 111}
+
+-- ************************ Digital parameters **********************************
+		gx2lmDigitalTableIndex              OBJECT-TYPE
+			   SYNTAX           INTEGER (1..4294967295)
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object identifies the network
+			    element. This index is equal to the
+			    hfcCommonTableIndex for the same element."
+			   ::= { gx2lmDigitalEntry 1}
+
+-- New parameter
+		labelRfInput                	OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    RF Input Control  Digital parameter."
+			   ::= { gx2lmDigitalEntry 2}
+
+		enumRfInput               		OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object represents the Enumeration values
+			    possible for the Digital parameter. Each Enumerated values is
+			    separated by a common. The first value has a enumerated value of 1."
+			   ::= { gx2lmDigitalEntry 3}
+
+		valueRfInput                	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+					    		{
+							off(1),
+							on(2)
+					    		}
+			   ACCESS           	read-write
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object is the current value of the parameter."
+			   ::= { gx2lmDigitalEntry 4}
+
+		stateflagRfInput              OBJECT-TYPE
+			   SYNTAX       		INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the RF Input Control  Digital parameter. (0-Hidden	
+			          1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmDigitalEntry 5}
+
+-- New parameter
+		labelOptOutput                OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Optical Output Control  Digital parameter."
+			   ::= { gx2lmDigitalEntry 6}
+
+		enumOptOutput               	      OBJECT-TYPE
+			   SYNTAX          	DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object represents the Enumeration values
+			    possible for the Digital parameter. Each Enumerated values is
+			    separated by a common. The first value has a enumerated value of 1."
+			   ::= { gx2lmDigitalEntry 7}
+
+		valueOptOutput                OBJECT-TYPE
+			   SYNTAX       		INTEGER
+					    		{
+							off(1),
+							on(2)
+					    		}
+			   ACCESS           	read-write
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object is the current value of the parameter."
+			   ::= { gx2lmDigitalEntry 8}
+
+		stateflagOptOutput            OBJECT-TYPE
+			   SYNTAX      		INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the the parameter. (0-Hidden 1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmDigitalEntry 9}
+-- New parameter
+		labelLaserMode                OBJECT-TYPE
+			   SYNTAX         	DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Laser Mode  Digital parameter."
+			   ::= { gx2lmDigitalEntry 10}
+
+		enumLaserMode               	OBJECT-TYPE
+			   SYNTAX         	DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object represents the Enumeration values
+			    possible for the Digital parameter. Each Enumerated values is
+			    separated by a common. The first value has a enumerated value of 1."
+			   ::= { gx2lmDigitalEntry 11}
+
+		valueLaserMode                OBJECT-TYPE
+			   SYNTAX       		INTEGER
+					    		{
+							preset(1),
+							set(2),
+							setEquate(3),
+							manual(4),
+							manualEquate(5)
+					    		}
+			   ACCESS           	read-write
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object is the current value of the parameter."
+			   ::= { gx2lmDigitalEntry 12}
+
+		stateflagLaserMode            OBJECT-TYPE
+			   SYNTAX         	INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the the parameter. (0-Hidden 1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmDigitalEntry 13}
+-- New parameter
+		labelLaserSecMode             OBJECT-TYPE
+			   SYNTAX         	DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Laser Secondary Mode Digital parameter."
+			   ::= { gx2lmDigitalEntry 14}
+
+		enumLaserSecMode               	OBJECT-TYPE
+			   SYNTAX          	DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object represents the Enumeration values
+			    possible for the Digital parameter. Each Enumerated values is
+			    separated by a common. The first value has a enumerated value of 1."
+			   ::= { gx2lmDigitalEntry 15}
+
+		valueLaserSecMode           	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+					    		{
+							cw(1),
+							video(2)
+					    		}
+			   ACCESS           	read-write
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object is the current value of the parameter."
+			   ::= { gx2lmDigitalEntry 16}
+
+		stateflagLaserSecMode         OBJECT-TYPE
+			   SYNTAX         	INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the the parameter. (0-Hidden 1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmDigitalEntry 17}
+
+-- New parameter
+		labelVideoOffset            	OBJECT-TYPE
+			   SYNTAX       	      DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Video Offset  Digital parameter."
+			   ::= { gx2lmDigitalEntry 18}
+
+		enumVideoOffset               	OBJECT-TYPE
+			   SYNTAX       	      DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object represents the Enumeration values
+			    possible for the Digital parameter. Each Enumerated values is
+			    separated by a common. The first value has a enumerated value of 1.."
+			   ::= { gx2lmDigitalEntry 19}
+
+		valueVideoOffset              OBJECT-TYPE
+			   SYNTAX       		INTEGER
+					    		{
+							minus2dB(1),
+							minus3dB(2),
+ 							minus4dB(3),
+							minus5dB(4)
+					    		}
+			   ACCESS           	read-write
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object is the current value of the parameter."
+			   ::= { gx2lmDigitalEntry 20}
+
+		stateflagVideoOffset        	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the the parameter. (0-Hidden 1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmDigitalEntry 21}
+-- New parameter
+		labelFactoryDefault           OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Factory Default Reset  Digital parameter."
+			   ::= { gx2lmDigitalEntry 22}
+
+		enumFactoryDefault               	OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object represents the Enumeration values
+			    possible for the Digital parameter. Each Enumerated values is
+			    separated by a common. The first value has a enumerated value of 1."
+			   ::= { gx2lmDigitalEntry 23}
+
+
+		valueFactoryDefault         	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+					    		{
+							off(1),
+							on(2)
+					    		}
+			   ACCESS           	read-write
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object is the current value of the parameter."
+			   ::= { gx2lmDigitalEntry 24}
+
+		stateflagFactoryDefault     	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the the parameter. (0-Hidden 1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmDigitalEntry 25}
+
+
+		--*********** STATUS *****************
+		gx2lmStatusTableIndex              OBJECT-TYPE
+			   SYNTAX           INTEGER (1..4294967295)
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object identifies the network
+			    element. This index is equal to the
+			    hfcCommonTableIndex for the same element."
+			   ::= { gx2lmStatusEntry 1}
+
+--New Parameter
+		labelBoot               	OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Boot Status  Status parameter."
+			   ::= { gx2lmStatusEntry 2}
+
+		valueBoot              		OBJECT-TYPE
+			   SYNTAX       		INTEGER
+									{
+									ok(1),
+									undetermined(2),
+									warning(3),
+									minor(4),
+									major(5),
+									critical(6)
+									}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the current state of
+			    the parameter (0-Ok, 1-Undetermined
+			    2-Warning, 3-Minor, 4-Major, 5-Critical)."
+			   ::= { gx2lmStatusEntry 3}
+
+		stateflagBoot     	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the the parameter. (0-Hidden 1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmStatusEntry  4}
+
+
+
+--New Parameter
+		labelFlash               	OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Flash Status  Status parameter."
+			   ::= { gx2lmStatusEntry 5}
+
+		valueFlash              	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+									{
+									ok(1),
+									undetermined(2),
+									warning(3),
+									minor(4),
+									major(5),
+									critical(6)
+									}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the current state of
+			    the parameter (0-Ok, 1-Undetermined
+			    2-Warning, 3-Minor, 4-Major, 5-Critical)."
+			   ::= { gx2lmStatusEntry 6}
+
+		stateflagFlash     	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the the parameter. (0-Hidden 1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmStatusEntry  7}
+
+--New Parameter
+		labelFactoryDataCRC           OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Factory Data CRC Status parameter."
+			   ::= { gx2lmStatusEntry 8}
+
+		valueFactoryDataCRC          	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+									{
+									ok(1),
+									undetermined(2),
+									warning(3),
+									minor(4),
+									major(5),
+									critical(6)
+									}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the current state of
+			    the parameter (0-Ok, 1-Undetermined
+			    2-Warning, 3-Minor, 4-Major, 5-Critical)."
+			   ::= { gx2lmStatusEntry 9}
+
+		stateflagFactoryDataCRC     	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the the parameter. (0-Hidden 1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmStatusEntry  10}
+
+
+--New Parameter
+		labelLaserDataCRC             OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Laser Data CRC Status parameter."
+			   ::= { gx2lmStatusEntry 11}
+
+		valueLaserDataCRC           	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+									{
+									ok(1),
+									undetermined(2),
+									warning(3),
+									minor(4),
+									major(5),
+									critical(6)
+									}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the current state of
+			    the parameter (0-Ok, 1-Undetermined
+			    2-Warning, 3-Minor, 4-Major, 5-Critical)."
+			   ::= { gx2lmStatusEntry 12}
+
+		stateflagLaserDataCRC     	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the the parameter. (0-Hidden 1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmStatusEntry  13}
+
+--New Parameter
+		labelAlarmDataCrc               	      OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Alarm Data Crc parameter."
+			   ::= { gx2lmStatusEntry 14}
+
+		valueAlarmDataCrc              		OBJECT-TYPE
+			   SYNTAX       		INTEGER
+									{
+									ok(1),
+									undetermined(2),
+									warning(3),
+									minor(4),
+									major(5),
+									critical(6)
+									}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the current state of
+			    the parameter (0-Ok, 1-Undetermined
+			    2-Warning, 3-Minor, 4-Major, 5-Critical)."
+			   ::= { gx2lmStatusEntry 15}
+
+		stateflagAlarmDataCrc     	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the the parameter. (0-Hidden 1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmStatusEntry  16}
+
+--New Parameter
+		labelHWStatus              OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    Laser Drive Level Status parameter."
+			   ::= { gx2lmStatusEntry 17}
+
+		valueHWStatus              OBJECT-TYPE
+			   SYNTAX       		INTEGER
+									{
+									ok(1),
+									undetermined(2),
+									warning(3),
+									minor(4),
+									major(5),
+									critical(6)
+									}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the current state of
+			    the parameter (0-Ok, 1-Undetermined
+			    2-Warning, 3-Minor, 4-Major, 5-Critical)."
+			   ::= { gx2lmStatusEntry 18}
+
+		stateflagHWStatus     	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the the parameter. (0-Hidden 1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmStatusEntry  19}
+
+--New Parameter
+		labelRFInputStatus              OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))         
+			   ACCESS           	read-only
+			   STATUS           	optional
+			   DESCRIPTION
+			   "The value of this object provides the label of the
+			    RF Input Status parameter."
+			   ::= { gx2lmStatusEntry 20}
+
+		valueRFInputStatus              OBJECT-TYPE
+			   SYNTAX       		INTEGER
+									{
+									ok(1),
+									undetermined(2),
+									warning(3),
+									minor(4),
+									major(5),
+									critical(6)
+									}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the current state of
+			    the parameter (0-Ok, 1-Undetermined
+			    2-Warning, 3-Minor, 4-Major, 5-Critical)."
+			   ::= { gx2lmStatusEntry 21}
+
+		stateflagRFInputStatus     	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+								{
+								hidden(1),
+								read-only(2),
+								updateable(3)
+								}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object provides the state
+			    of the the parameter. (0-Hidden 1-Read-Only, 2-Updateable)."
+			   ::= { gx2lmStatusEntry  22}
+
+
+
+            -- ************ FACTORY DATA ****************
+		gx2lmFactoryTableIndex              OBJECT-TYPE
+			   SYNTAX           INTEGER (1..4294967295)
+			   ACCESS           read-only
+			   STATUS           mandatory
+			   DESCRIPTION
+			   "The value of this object identifies the network
+			    element. This index is equal to the
+			    hfcCommonTableIndex for the same element."
+			   ::= { gx2lmFactoryEntry 1}
+
+		bootControlByteValue          	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "The value of this object indicates which bank the firmware
+			    is currently being boot from."
+			   ::= { gx2lmFactoryEntry 2}
+
+		bootStatusByteValue          	OBJECT-TYPE
+			   SYNTAX       		INTEGER
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "This object indicates the status of the last boot"
+			   ::= { gx2lmFactoryEntry 3}
+
+		bank1CRCValue          		OBJECT-TYPE
+			   SYNTAX       		INTEGER
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "This object provides the CRC code of bank 0."
+			   ::= { gx2lmFactoryEntry 4}
+
+		bank2CRCValue          		OBJECT-TYPE
+			   SYNTAX       		INTEGER
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "This object provides the CRC code of bank 1."
+			   ::= { gx2lmFactoryEntry 5}
+
+		prgEEPROMByteValue          		OBJECT-TYPE
+			   SYNTAX       		INTEGER
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "This object indicates if the EEPROM has been programmed"
+			   ::= { gx2lmFactoryEntry 6}
+
+		factoryCRCValue          		OBJECT-TYPE
+			   SYNTAX       		INTEGER
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "This object provides the CRC code for the Factory data."
+			   ::= { gx2lmFactoryEntry 7}
+
+		calculateCRCValue          		OBJECT-TYPE
+			   SYNTAX       		INTEGER
+					    		{
+							factory(1),
+							laserData(2),
+							alarm(3)
+					    		}
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "This object indicates which of the Emnums will have the CRC calculated."
+			   ::= { gx2lmFactoryEntry 8}
+
+		hourMeterValue          		OBJECT-TYPE
+			   SYNTAX       		INTEGER
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "This object provides the hour meter reading of the module."
+			   ::= { gx2lmFactoryEntry 9}
+
+		flashPrgCntAValue          		OBJECT-TYPE
+			   SYNTAX       		INTEGER
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "This object provides the number of times Bank 1 flash has been 
+                      programmed."
+			   ::= { gx2lmFactoryEntry 10}
+
+		flashPrgCntBValue          		OBJECT-TYPE
+			   SYNTAX       		INTEGER
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "This object provides the number of times Bank 1 flash has been 
+                      programmed."
+			   ::= { gx2lmFactoryEntry 11}
+
+		flashBankARevValue          		OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "This object provides the revision of flash bank 0."
+			   ::= { gx2lmFactoryEntry 12}
+
+		flashBankBRevValue          		OBJECT-TYPE
+			   SYNTAX       		DisplayString (SIZE (0..80))
+			   ACCESS           	read-only
+			   STATUS           	mandatory
+			   DESCRIPTION
+			   "This object provides the revision of flash bank 1."
+			   ::= { gx2lmFactoryEntry 13}
+
+
+
+-- ****************************************************************
+--
+-- TRAP DEFINITIONS
+--
+--
+-- Every trap generated by an HFC agents will include first 9 identical
+-- fields. If particular variable is not supported in
+-- particular TRAP-TYPE then default value will be returned.
+--
+-- DESCRIPTION will include explanation of use of generic
+-- variables (trapAdditionalInfo******.)  If no
+-- DESCRIPTION is given then generic variables will contain
+-- default values.
+--
+-- *****************************************************************
+
+--***************************************************************************
+-- ***********!!! THE TRAP SECTION HAS NOT BEEN COMPLETED YET !!! ***********
+--***************************************************************************
+
+-- **************************************************************************
+--                              Laser Module traps
+-- **************************************************************************
+   trapLMConfigChangeInteger TRAP-TYPE
+       ENTERPRISE gx2Lm
+       VARIABLES
+	       {       
+		trapIdentifier,
+		trapNetworkElemModelNumber,
+		trapNetworkElemSerialNum,
+		trapPerceivedSeverity,
+		trapNetworkElemOperState,
+		trapNetworkElemAlarmStatus,  
+		trapNetworkElemAdminState,
+		trapNetworkElemAvailStatus,
+		trapText,
+		trapChangedObjectId,
+		trapChangedValueInteger,
+		trapNETrapLastTrapTimeStamp
+	       }
+       DESCRIPTION
+	"This trap is issued if configuration of a single variable
+	 with integer type was changed (via ANY interface).  
+	 TrapChangedValueInteger variable may contain current reading
+	 of that variable.
+	 trapPerceivedSeverity - 'indeterminate'"
+  ::= 1
+
+   trapLMConfigChangeDisplayString TRAP-TYPE
+       ENTERPRISE gx2Lm
+       VARIABLES
+	       {       
+		trapIdentifier,
+		trapNetworkElemModelNumber,
+		trapNetworkElemSerialNum,
+		trapPerceivedSeverity,
+		trapNetworkElemOperState,
+		trapNetworkElemAlarmStatus,  
+		trapNetworkElemAdminState,
+		trapNetworkElemAvailStatus,
+		trapText,
+		trapChangedObjectId,
+		trapChangedValueDisplayString,
+		trapNETrapLastTrapTimeStamp
+	       }
+       DESCRIPTION
+	"This trap is issued if configuration of a single variable
+	 with DispalayString type was changed (via ANY interface).  
+	 TrapChangedValueDisplayString variable may contain current reading
+	 of that variable.
+	 trapPerceivedSeverity - 'indeterminate'"
+  ::= 2
+
+  trapLMRFInputAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Modules RF input parameter 
+	 goes out of range.
+	 trapAdditionalInfoInteger variable contains current reading of 
+	 the this parameter."
+  ::= 3
+  
+  trapLMRFOverloadAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Modules RF overload parameter 
+	 goes out of range.
+	 trapAdditionalInfoInteger variable contains current reading of 
+	 the this parameter."
+  ::= 4
+
+  trapLMRFOffsetAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Modules RF Offset parameter 
+	 goes out of range.
+	 trapAdditionalInfoInteger variable contains current reading of 
+	 the this parameter."
+  ::= 5
+
+  trapLMOpticalPowerAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Modules Optical Power parameter 
+	 goes out of range.
+	 trapAdditionalInfoInteger variable contains current reading of 
+	 the this parameter."
+  ::= 6
+
+  trapLMLaserBiasAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Bias parameter goes out of range.
+	 trapAdditionalInfoInteger variable contains current reading of 
+	 the this parameter."
+  ::= 7
+     
+  trapLMLaserTempAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Temperature parameter 
+	 goes out of range.
+	 trapAdditionalInfoInteger variable contains current reading of 
+	 the this parameter."
+  ::= 8
+
+  trapLMTECCurrentAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Modules TEC Current parameter 
+	 goes out of range.
+	 trapAdditionalInfoInteger variable contains current reading of 
+	 the this parameter."
+  ::= 9
+
+  trapLMFanCurrentAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Modules Fan Current 
+	 parameter goes out of range.
+	 trapAdditionalInfoInteger variable contains current reading of 
+	 the this parameter."
+  ::= 10
+
+  trapLM12vAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Modules 12 Volt parameter goes out of range.
+	 trapAdditionalInfoInteger variable contains current reading of 
+	 the this parameter."
+  ::= 11
+
+  trapLMModuleTempAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Module Temperature goes out of range."
+  ::= 12
+
+  trapLMFlashAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Modules detects an error during
+	Flash memory operations."
+  ::= 13
+
+  trapLMLaserBiasCntLoopAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Modules detects an error in its Laser Bias control loop
+       operation."
+  ::= 14
+
+  trapLMBankBootAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Modules detects an error while booting
+	from bank 0 or bank 1."
+  ::= 15
+
+	trapLMLaserBiasCntLoopInitAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Bias Control loop init fails."
+  ::= 16
+
+	trapLMRFParamInitAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the RF parameter Init fails."
+  ::= 17
+
+	trapLMTECParamInitAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the TEC Parameter Init fails."
+  ::= 18
+
+	trapLMAttnTableInitAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Attenuator Table Init fails."
+  ::= 19
+
+	trapLMPowerMeterTableInitAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Power Meter Table Init fails."
+  ::= 20
+
+	trapLMLaserDataCRCAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Laser Data CRC is incorrect."
+  ::= 21
+
+	trapLMAlarmDataCRCAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Alarm Data CRC is incorrect."
+  ::= 22
+
+	trapLMFactoryDataCRCAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Factory Data CRC is incorrect."
+  ::= 23
+
+	trapLMUserRFOffAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the the User RF is turned off."
+  ::= 24
+
+	trapLMUserOpticalOffAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the User Optical Power is turned off."
+  ::= 25
+
+	trapLMResetFactoryDefaultAlarm TRAP-TYPE
+	ENTERPRISE gx2Lm
+	VARIABLES
+		{       
+		 trapIdentifier,
+		 trapNetworkElemModelNumber,
+		 trapNetworkElemSerialNum,
+		 trapPerceivedSeverity,
+		 trapNetworkElemOperState,
+		 trapNetworkElemAlarmStatus,  
+		 trapNetworkElemAdminState,
+		 trapNetworkElemAvailStatus,
+		 trapText,
+		 trapChangedObjectId,
+		 trapChangedValueInteger,
+		 trapNETrapLastTrapTimeStamp
+		}
+	DESCRIPTION
+	"This trap is issued when the Factory Default Reset occurs."
+  ::= 26
+
+  END
