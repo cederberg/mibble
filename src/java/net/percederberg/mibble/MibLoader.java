@@ -62,18 +62,19 @@ import java.util.ArrayList;
 public class MibLoader {
 
     /**
-     * The base resource directories. These are used when locating a
-     * MIB stored as a resource inside the JAR file.
-     */
-    private static final String[] RESOURCE_BASE =
-        { "mibs/iana", "mibs/ietf" };
-
-    /**
      * The MIB file search path. This is a list of directories to
      * search for MIB files. If a MIB isn't found among these
-     * directories, the default resource paths will be attempted.
+     * directories, the resource directories will be attempted.
      */
     private ArrayList dirs = new ArrayList();
+
+    /**
+     * The MIB file resource directories. This is a list of Java class
+     * loader resource directories to search for MIB files. These
+     * directories can be used to store MIB files as resources inside
+     * a JAR file.
+     */
+    private ArrayList resources = new ArrayList();
 
     /**
      * The MIB files loaded. This list contains all MIB file loaded
@@ -97,6 +98,8 @@ public class MibLoader {
      * Creates a new MIB loader.
      */
     public MibLoader() {
+        addResourceDir("mibs/iana");
+        addResourceDir("mibs/ietf");
     }
 
     /**
@@ -161,6 +164,48 @@ public class MibLoader {
      */
     public void removeAllDirs() {
         dirs.clear();
+    }
+
+    /**
+     * Adds a directory to the MIB resource search path. The resource
+     * search path can be used to load MIB files as resources via the
+     * ClassLoader. Note the MIB files stored as resources must have
+     * the EXACT MIB name, i.e. no file extensions can be used and
+     * name casing is important.
+     *
+     * @param dir            the resource directory to add
+     *
+     * @since 2.3
+     */
+    public void addResourceDir(String dir) {
+        if (!resources.contains(dir)) {
+            resources.add(dir);
+        }
+    }
+
+    /**
+     * Removes a directory from the MIB resource search path. The
+     * resource search path can be used to load MIB files as resources
+     * via the ClassLoader.
+     *
+     * @param dir            the resource directory to remove
+     *
+     * @since 2.3
+     */
+    public void removeResourceDir(String dir) {
+        resources.remove(dir);
+    }
+
+    /**
+     * Removes all directories from the MIB resource search path. This
+     * will also remove the default directories where the IANA and
+     * IETF MIB are present, and may thus make this MIB loaded
+     * unusable. Use this method with caution.
+     *
+     * @since 2.3
+     */
+    public void removeAllResourceDirs() {
+        resources.clear();
     }
 
     /**
@@ -541,10 +586,11 @@ public class MibLoader {
      *         null if no MIB was found
      */
     private MibSource locate(String name) {
-        File    dir;
-        File[]  files;
-        URL     url;
-        int     i;
+        ClassLoader  loader = getClass().getClassLoader();
+        File         dir;
+        File[]       files;
+        URL          url;
+        int          i;
 
         for (i = 0; i < dirs.size(); i++) {
             dir = (File) dirs.get(i);
@@ -553,8 +599,8 @@ public class MibLoader {
                 return new MibSource(files[0]);
             }
         }
-        for (i = 0; i < RESOURCE_BASE.length; i++) {
-            url = ClassLoader.getSystemResource(RESOURCE_BASE[i] + "/" + name);
+        for (i = 0; i < resources.size(); i++) {
+            url = loader.getResource(resources.get(i) + "/" + name);
             if (url != null) {
                 return new MibSource(name, url);
             }
