@@ -7,4 +7,4 @@ REM Set Mibble environment variables
 call .\setenv.bat
 
 REM Run Mibble MIB browser
-%JAVA_HOME%\bin\java -mx200M net.percederberg.mibble.MibbleBrowser
+%JAVA_HOME%\bin\java -Xmx200M net.percederberg.mibble.MibbleBrowser
