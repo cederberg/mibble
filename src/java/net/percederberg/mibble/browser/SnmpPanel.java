@@ -1154,7 +1154,7 @@ public class SnmpPanel extends JPanel {
                     updateOid(response.getOid(0));
                     updateValue(response.getValue(0));
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(250);
                     } catch (InterruptedException ignore) {
                         // Do nothing if interrupted
                     }

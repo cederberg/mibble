@@ -402,6 +402,7 @@ public class BrowserFrame extends JFrame {
         mibTree.expandPath(path);
         mibTree.scrollPathToVisible(path);
         mibTree.setSelectionPath(path);
+        mibTree.repaint();
     }
 
     /**

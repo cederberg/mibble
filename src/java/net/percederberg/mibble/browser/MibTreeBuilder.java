@@ -88,19 +88,7 @@ public class MibTreeBuilder {
     private MibTreeBuilder() {
         int  mode = TreeSelectionModel.SINGLE_TREE_SELECTION;
 
-        mibTree = new JTree(new MibNode("Mibble Browser", null)) {
-            public String getToolTipText(MouseEvent e) {
-                TreePath  path;
-                MibNode   node;
-
-                if (getRowForLocation(e.getX(), e.getY()) == -1) {
-                    return null;    
-                }
-                path = getPathForLocation(e.getX(), e.getY());
-                node = (MibNode) path.getLastPathComponent();
-                return node.getToolTipText();
-            }
-        };
+        mibTree = new MibTree();
         mibTree.setToolTipText("");
         mibTree.getSelectionModel().setSelectionMode(mode);
         mibTree.setRootVisible(false);
@@ -161,13 +149,14 @@ public class MibTreeBuilder {
         JTree      valueTree;
 
         // Create value sub tree
-        // TODO: create type sub tree
         node = new MibNode("VALUES", null);
         valueTree = new JTree(node);
         while (iter.hasNext()) {
             symbol = (MibSymbol) iter.next();
             addSymbol(valueTree.getModel(), symbol);
         }
+
+        // TODO: create TYPES sub tree
 
         // Add sub tree root to MIB tree
         root = (MibNode) mibTree.getModel().getRoot();
@@ -295,6 +284,40 @@ public class MibTreeBuilder {
             if (node.isNodeDescendant(root)) {
                 iter.remove();
             }
+        }
+    }
+
+
+    /**
+     * A MIB tree component.
+     */
+    private class MibTree extends JTree {
+
+        /**
+         * Creates a new MIB tree.
+         */
+        public MibTree() {
+            super(new MibNode("Mibble Browser", null));
+        }
+
+        /**
+         * Returns the tool tip text for a specified mouse event.
+         *
+         * @param e              the mouse event
+         *
+         * @return the tool tipe text, or
+         *         null for none
+         */
+        public String getToolTipText(MouseEvent e) {
+            TreePath  path;
+            MibNode   node;
+
+            if (getRowForLocation(e.getX(), e.getY()) == -1) {
+                return null;    
+            }
+            path = getPathForLocation(e.getX(), e.getY());
+            node = (MibNode) path.getLastPathComponent();
+            return node.getToolTipText();
         }
     }
 }
