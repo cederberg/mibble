@@ -45,7 +45,7 @@ import net.percederberg.mibble.MibValueSymbol;
  * identifier values in a tree hierarchy.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.3
  * @since    2.0
  */
 public class ObjectIdentifierValue extends MibValue {
@@ -275,6 +275,21 @@ public class ObjectIdentifierValue extends MibValue {
      */
     public ObjectIdentifierValue getChild(int index) {
         return (ObjectIdentifierValue) children.get(index);
+    }
+
+    /**
+     * Returns an array of all child object identifier values.
+     *
+     * @return the child object identifier values
+     *
+     * @since 2.3
+     */
+    public ObjectIdentifierValue[] getAllChildren() {
+        ObjectIdentifierValue[]  values;
+
+        values = new ObjectIdentifierValue[children.size()];
+        children.toArray(values);
+        return values;
     }
 
     /**
