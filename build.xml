@@ -13,7 +13,7 @@
   General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software 
+  along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
   USA
 
@@ -40,12 +40,14 @@
             value="${basedir}" />
 
   <path id="project.class.path">
-    <pathelement location="${build.dir}/lib/grammatica-1.3.jar" />
+    <fileset dir="${build.dir}/lib">
+      <include name="**/*.jar"/>
+    </fileset>
   </path>
 
   <target name="init">
     <tstamp>
-      <format property="build.printdate" 
+      <format property="build.printdate"
               pattern="yyyy-MM-dd" />
     </tstamp>
     <condition property="build.version" value="${DSTAMP}">
@@ -54,32 +56,17 @@
       </not>
     </condition>
     <property name="build.date" value="${DSTAMP}" />
-  </target>  
-
-
-<!-- CODE GENERATION TARGETS -->
-  <target name="codegen">
-    <java classname="net.percederberg.grammatica.Grammatica"
-          classpathref="project.class.path"
-          failonerror="true">
-	  <arg value="${build.dir}/src/grammar/asn1.grammar" />
-	  <arg value="--javaoutput" />
-	  <arg value="${build.dir}/src/java" />
-	  <arg value="--javapackage" />
-	  <arg value="net.percederberg.mibble.asn1" />
-	  <arg value="--javapublic" />
-    </java>
   </target>
 
 
 <!-- COMPILATION TARGETS -->
-  <target name="compile" 
-          depends="init,codegen,compile-clean,compile-java">
+  <target name="compile"
+          depends="init,compile-clean,compile-codegen,compile-java">
     <jar jarfile="${build.dir}/lib/mibble-${build.version}.jar"
          includesfile="${build.dir}/LICENSE.txt">
       <fileset dir="${build.dir}" includes="*.txt" />
       <fileset dir="${build.dir}/classes" />
-      <zipfileset dir="${build.dir}/src/mibs" 
+      <zipfileset dir="${build.dir}/src/mibs"
                   prefix="mibs"  />
     </jar>
   </target>
@@ -87,14 +74,38 @@
   <target name="compile-clean">
     <delete>
       <fileset dir="${build.dir}/classes" />
-      <fileset dir="${build.dir}/lib" 
+      <fileset dir="${build.dir}/lib"
                includes="mibble*.jar" />
     </delete>
     <mkdir dir="${build.dir}/classes" />
     <mkdir dir="${build.dir}/lib" />
   </target>
 
-  <target name="compile-java">
+  <target name="compile-codegen">
+    <taskdef name="grammatica"
+             classname="net.percederberg.grammatica.ant.GrammaticaTask"
+             classpathref="project.class.path" />
+    <grammatica grammar="${build.dir}/src/grammar/asn1.grammar">
+      <java dir="${build.dir}/src/java"
+            package="net.percederberg.mibble.asn1"
+            public="true" />
+    </grammatica>
+  </target>
+
+  <target name="compile-java" 
+          depends="compile-java-optimized,compile-java-debug" />
+
+  <target name="compile-java-optimized" if="build.binary">
+    <javac srcdir="${build.dir}/src/java"
+           destdir="${build.dir}/classes"
+           classpathref="project.class.path"
+           target="1.1"
+           debug="off"
+           optimize="on"
+           deprecation="on" />
+  </target>
+
+  <target name="compile-java-debug" unless="build.binary">
     <javac srcdir="${build.dir}/src/java"
            destdir="${build.dir}/classes"
            classpathref="project.class.path"
@@ -105,27 +116,27 @@
 
 
 <!-- TEST TARGETS -->
-  <target name="test" depends="compile,test-mibs">
-  </target>
+  <target name="test" 
+          depends="compile,test-mibs" />
 
-  <target name="test-mibs">
+  <target name="test-mibs" if="build.test">
     <apply executable="java"
            dir="${build.dir}"
            relative="true"
            parallel="true"
            failonerror="true">
-      <arg line="-cp lib/mibble-${build.version}.jar:lib/grammatica-1.3.jar" />
+      <arg line="-cp lib/mibble-${build.version}.jar:lib/grammatica-1.4.jar" />
       <arg value="net.percederberg.mibble.MibbleValidator" />
       <fileset dir="${build.dir}">
         <include name="src/mibs/**/*" />
       </fileset>
     </apply>
-  </target>  
+  </target>
 
 
 <!-- DOCUMENTATION TARGETS -->
-  <target name="doc" depends="init,doc-clean,doc-text,doc-html,doc-java">
-  </target>
+  <target name="doc" 
+          depends="init,doc-clean,doc-text,doc-html,doc-java" />
 
   <target name="doc-clean">
     <delete dir="${build.dir}/doc" />
@@ -167,19 +178,41 @@
              version="false"
              use="true"
              author="false"
-             windowtitle="Mibble ${build.version} Documentation" 
+             windowtitle="Mibble ${build.version} Documentation"
              failonerror="true" />
   </target>
 
 
 <!-- PACKAGING TARGETS -->
-  <target name="package" depends="init,codegen,compile,test,doc">
+  <target name="package"
+          depends="init,compile,test,doc,package-clean,package-all" />
+
+  <target name="package-clean">
     <delete>
       <fileset dir="${build.dir}" includes="mibble-*.tar.gz" />
     </delete>
-	<tar tarfile="${build.dir}/mibble-${build.version}.tar.gz"
-	     longfile="gnu"
-	     compression="gzip">
+  </target>
+
+  <target name="package-all"
+          depends="package-bin,package-src" />
+
+  <target name="package-bin" if="build.binary">
+    <tar tarfile="${build.dir}/mibble-${build.version}-bin.tar.gz"
+         longfile="gnu"
+         compression="gzip">
+      <tarfileset dir="${build.dir}"
+                  prefix="mibble-${build.version}">
+        <include name="*.txt" />
+        <include name="lib/**" />
+        <include name="doc/**" />
+      </tarfileset>
+    </tar>
+  </target>
+
+  <target name="package-src" unless="build.binary">
+    <tar tarfile="${build.dir}/mibble-${build.version}.tar.gz"
+         longfile="gnu"
+         compression="gzip">
       <tarfileset dir="${build.dir}"
                   prefix="mibble-${build.version}">
         <include name="*.txt" />
@@ -188,7 +221,7 @@
         <include name="src/**" />
         <include name="doc/**" />
       </tarfileset>
-	</tar>
+    </tar>
   </target>
 
 </project>
