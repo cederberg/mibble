@@ -42,7 +42,12 @@ import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.MibValueSymbol;
 
 /**
- * A reference to a value symbol.
+ * A reference to a value symbol.<p>
+ * 
+ * <strong>NOTE:</strong> This class is used internally during the 
+ * MIB parsing only. After loading a MIB file successfully, all value 
+ * references will have been resolved to other MIB values. Do 
+ * <strong>NOT</strong> use or reference this class.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -83,10 +88,13 @@ public class ValueReference extends MibValue {
 
     /**
      * Initializes the MIB value. This will remove all levels of
-     * indirection present, such as references to other values, and 
-     * returns the basic value. No value information is lost by this 
-     * operation. This method may modify this object as a 
-     * side-effect, and will be called by the MIB loader.
+     * indirection present, such as references to other values. No 
+     * value information is lost by this operation. This method may 
+     * modify this object as a side-effect, and will return the basic 
+     * value.<p>
+     * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
      * 
      * @param log            the MIB loader log
      * 
