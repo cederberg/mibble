@@ -26,7 +26,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.Iterator;
+
+import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * A program that parses and prints a MIB file. If the MIB file(s)
@@ -35,7 +38,7 @@ import java.util.Iterator;
  * output.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.3
+ * @version  2.5
  * @since    2.0
  */
 public class MibblePrinter {
@@ -47,7 +50,10 @@ public class MibblePrinter {
         "Prints the contents of an SNMP MIB file. This program comes with\n" +
         "ABSOLUTELY NO WARRANTY; for details see the LICENSE.txt file.\n" +
         "\n" +
-        "Syntax: MibblePrinter <file or URL>";
+        "Syntax: MibblePrinter [--oid-tree] <file(s) or URL(s)>\n" +
+        "\n" +
+        "    --oid-tree      Prints the complete OID tree, including all\n" +
+        "                    nodes in imported MIB files";
 
     /**
      * The internal error message.
@@ -65,42 +71,54 @@ public class MibblePrinter {
      */
     public static void main(String[] args) {
         MibLoader  loader = new MibLoader();
+        ArrayList  loadedMibs = new ArrayList();
+        boolean    printOidTree = false;
         Mib        mib = null;
+        int        pos = 0;
         File       file;
         URL        url;
-        Iterator   iter;
 
         // Check command-line arguments
         if (args.length < 1) {
             printHelp("No MIB file or URL specified");
             System.exit(1);
-        } else if (args.length > 1) {
-            printHelp("Only one MIB file or URL may be specified");
+        } else if (args[0].startsWith("--") && args.length < 2) {
+            printHelp("No MIB file or URL specified");
+            System.exit(1);
+        }
+        if (args[0].equals("--oid-tree")) {
+            printOidTree = true;
+            pos++;
+        } else if (args[0].startsWith("--")) {
+            printHelp("No option '" + args[0] + "' exist");
             System.exit(1);
         }
 
-        // Parse MIB file
+        // Parse the MIB files
         try {
-            try {
-                url = new URL(args[0]);
-            } catch (MalformedURLException e) {
-                url = null;
-            }
-            if (url == null) {
-                file = new File(args[0]);
-                loader.addDir(file.getParentFile());
-                mib = loader.load(file);
-            } else {
-                mib = loader.load(url);
-            }
-            if (mib.getLog().warningCount() > 0) {
-                mib.getLog().printTo(System.err);
+            for (; pos < args.length; pos++) {
+                try {
+                    url = new URL(args[pos]);
+                } catch (MalformedURLException e) {
+                    url = null;
+                }
+                if (url == null) {
+                    file = new File(args[pos]);
+                    loader.addDir(file.getParentFile());
+                    mib = loader.load(file);
+                } else {
+                    mib = loader.load(url);
+                }
+                if (mib.getLog().warningCount() > 0) {
+                    mib.getLog().printTo(System.err);
+                }
+                loadedMibs.add(mib);
             }
         } catch (FileNotFoundException e) {
-            printError(args[0], e);
+            printError(args[pos], e);
             System.exit(1);
         } catch (IOException e) {
-            printError(args[0], e);
+            printError(args[pos], e);
             System.exit(1);
         } catch (MibLoaderException e) {
             e.getLog().printTo(System.err);
@@ -110,11 +128,74 @@ public class MibblePrinter {
             System.exit(1);
         }
 
-        // Print MIB file
-        iter = mib.getAllSymbols().iterator();
-        while (iter.hasNext()) {
-            System.out.println(iter.next());
+        // Print MIB files
+        if (printOidTree) {
+            printOidTree((Mib) loadedMibs.get(0));
+        } else {
+            printMibs(loadedMibs);
+        }
+    }
+
+    /**
+     * Prints the contents of a list of MIBs.
+     *
+     * @param mibs           the list of MIBs
+     */
+    private static void printMibs(ArrayList mibs) {
+        Iterator  iter;
+
+        for (int i = 0; i < mibs.size(); i++) {
+            iter = ((Mib) mibs.get(i)).getAllSymbols().iterator();
+            while (iter.hasNext()) {
+                System.out.println(iter.next());
+                System.out.println();
+            }
             System.out.println();
+            System.out.println();
+        }
+    }
+
+    /**
+     * Prints the complete OID tree. The MIB provided is only used to
+     * find a starting OID value from which to locate the root.
+     *
+     * @param mib            the starting MIB
+     */
+    private static void printOidTree(Mib mib) {
+        ObjectIdentifierValue  root = null;
+        Iterator               iter;
+        MibSymbol              symbol;
+        MibValue               value;
+
+        iter = mib.getAllSymbols().iterator();
+        while (root == null && iter.hasNext()) {
+            symbol = (MibSymbol) iter.next();
+            if (symbol instanceof MibValueSymbol) {
+                value = ((MibValueSymbol) symbol).getValue();
+                if (value instanceof ObjectIdentifierValue) {
+                    root = (ObjectIdentifierValue) value;
+                }
+            }
+        }
+        if (root == null) {
+            printError("no OID value could be found in " + mib.getName());
+        } else {
+            while (root.getParent() != null) {
+                root = root.getParent();
+            }
+            printOid(root);
+        }
+    }
+
+    /**
+     * Prints the detailed OID tree starting in the specified OID. 
+     *
+     * @param oid            the OID node to print
+     */
+    private static void printOid(ObjectIdentifierValue oid) {
+        System.out.println(oid.toDetailString());
+        for (int i = 0; i < oid.getChildCount(); i++) {
+            printOid(oid.getChild(i));
         }
     }
 
@@ -127,9 +208,7 @@ public class MibblePrinter {
         System.err.println(COMMAND_HELP);
         System.err.println();
         if (error != null) {
-            System.err.print("Error: ");
-            System.err.println(error);
-            System.err.println();
+            printError(error);
         }
     }
 
@@ -147,6 +226,16 @@ public class MibblePrinter {
     }
 
     /**
+     * Prints an error message.
+     *
+     * @param message        the error message
+     */
+    private static void printError(String message) {
+        System.err.print("Error: ");
+        System.err.println(message);
+    }
+    
+    /**
      * Prints a file not found error message.
      *
      * @param file           the file name not found
@@ -155,10 +244,9 @@ public class MibblePrinter {
     private static void printError(String file, FileNotFoundException e) {
         StringBuffer  buffer = new StringBuffer();
 
-        buffer.append("Error: couldn't open file:");
-        buffer.append("\n    ");
+        buffer.append("couldn't open file:\n    ");
         buffer.append(file);
-        System.out.println(buffer.toString());
+        printError(buffer.toString());
     }
 
     /**
@@ -170,9 +258,8 @@ public class MibblePrinter {
     private static void printError(String url, IOException e) {
         StringBuffer  buffer = new StringBuffer();
 
-        buffer.append("Error: couldn't open URL:");
-        buffer.append("\n    ");
+        buffer.append("couldn't open URL:\n    ");
         buffer.append(url);
-        System.out.println(buffer.toString());
+        printError(buffer.toString());
     }
 }
