@@ -50,8 +50,10 @@ import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 
 import net.percederberg.mibble.MibLoaderException;
+import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.MibbleBrowser;
 
 /**
@@ -373,6 +375,36 @@ public class BrowserFrame extends JFrame {
     }
 
     /**
+     * Sets the selected node based on the specified OID. The MIB
+     * that will be searched is based on the currently selected MIB
+     * node.
+     *
+     * @param oid            the OID to select
+     */
+    public void setSelectedNode(String oid) {
+        MibNode         node = getSelectedNode();
+        MibValueSymbol  symbol;
+        TreePath        path;
+
+        // Find matching symbol
+        if (node == null || node.getSymbol() == null) {
+            return;
+        }
+        symbol = node.getSymbol().getMib().getSymbolByOid(oid);
+        if (symbol == null) {
+            mibTree.clearSelection();
+            return;
+        }
+
+        // Select tree node
+        node = MibTreeBuilder.getInstance().getNode(symbol);
+        path = new TreePath(node.getPath());
+        mibTree.expandPath(path);
+        mibTree.setSelectionPath(path);
+        mibTree.scrollPathToVisible(path);
+    }
+
+    /**
      * Sets the status label text.
      *
      * @param text           the status label text (or null)
@@ -415,8 +447,7 @@ public class BrowserFrame extends JFrame {
             descriptionArea.setText(node.getDescription());
             descriptionArea.setCaretPosition(0);
         }
-        snmpPanel.updateOidText();
-        snmpPanel.updateStatus();
+        snmpPanel.updateOid();
     }
 
 

@@ -25,7 +25,9 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.swing.JTree;
 import javax.swing.tree.TreeModel;
@@ -62,6 +64,11 @@ public class MibTreeBuilder {
      * attaching multiple MIB sub-trees.
      */
     private JTree mibTree = null;
+
+    /**
+     * The MIB node map. This is indexed by the MIB symbol.
+     */
+    private HashMap nodes = new HashMap();
 
     /**
      * Returns the single instance of this class.
@@ -106,6 +113,18 @@ public class MibTreeBuilder {
      */
     public JTree getTree() {
         return mibTree;
+    }
+
+    /**
+     * Returns the MIB node corresponding to the specified symbol.
+     *
+     * @param symbol         the symbol to search for
+     *
+     * @return the MIB node, or
+     *         null if none found
+     */
+    public MibNode getNode(MibSymbol symbol) {
+        return (MibNode) nodes.get(symbol);
     }
 
     /**
@@ -210,6 +229,7 @@ public class MibTreeBuilder {
         name = oid.getName() + " (" + oid.getValue() + ")";
         node = new MibNode(name, oid);
         parent.add(node);
+        nodes.put(oid.getSymbol(), node);
         return node;
     }
 
@@ -248,14 +268,33 @@ public class MibTreeBuilder {
 
         while (enum.hasMoreElements()) {
             tempNode = (MibNode) enum.nextElement();
-
             if (tempNode.getValue() == null &&
                 tempNode.getName().equals(mibName)) {
 
+                removeNodes(tempNode);
                 model.removeNodeFromParent(tempNode);
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Removes descendant nodes from the node hash.
+     *
+     * @param root           the root node
+     */
+    private void removeNodes(MibNode root) {
+        Iterator   iter = nodes.entrySet().iterator();
+        Map.Entry  entry;
+        MibNode    node;
+
+        while (iter.hasNext()) {
+            entry = (Map.Entry) iter.next();
+            node = (MibNode) entry.getValue();
+            if (node.isNodeDescendant(root)) {
+                iter.remove();
+            }
+        }
     }
 }

@@ -41,11 +41,7 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import net.percederberg.mibble.MibType;
-import net.percederberg.mibble.MibTypeTag;
-import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.snmp.SnmpObjectType;
-import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * The SNMP operations panel.
@@ -335,6 +331,7 @@ public class SnmpPanel extends JPanel {
         };
         hostField.getDocument().addDocumentListener(l);
         portField.getDocument().addDocumentListener(l);
+        oidField.getDocument().addDocumentListener(l);
     }
 
     /**
@@ -694,41 +691,41 @@ public class SnmpPanel extends JPanel {
     }
 
     /**
-     * Sets the OID field text.
+     * Updates the OID field based on the node selected in the frame
+     * tree.
+     */
+    public void updateOid() {
+        MibNode  node = frame.getSelectedNode();
+
+        if (node == null) {
+            oidField.setText("");
+        } else if (node.getSymbol() != null
+                && node.getSymbol().isScalar()) {
+
+            oidField.setText(node.getOid() + ".0");
+        } else {
+            oidField.setText(node.getOid());
+        }
+    }
+
+    /**
+     * Updates the OID field with the specified OID. Also updates the
+     * frame selection to the closest matching node.
      *
      * @param text           the new OID text
      */
-    public void setOidText(String text) {
+    public void updateOid(String text) {
+        frame.setSelectedNode(text);
         oidField.setText(text);
     }
 
     /**
-     * Updates the OID field based on the node selected in the frame
-     * tree.
+     * Updates the value field with the specified value.
+     *
+     * @param value          the new value
      */
-    public void updateOidText() {
-        MibNode                node = frame.getSelectedNode();
-        MibValueSymbol         symbol;
-        MibType                type;
-        ObjectIdentifierValue  oid;
-
-        if (node == null) {
-            setOidText("");
-        } else if (node.getSnmpObjectType() == null) {
-            setOidText(node.getOid());
-        } else {
-            symbol = node.getSymbol();
-            type = ((SnmpObjectType) symbol.getType()).getSyntax();
-            oid = (ObjectIdentifierValue) symbol.getValue();
-            symbol = oid.getParent().getSymbol();
-            if (type.hasTag(MibTypeTag.UNIVERSAL_CATEGORY, 16)
-             || symbol.getType() instanceof SnmpObjectType) {
-
-                setOidText(node.getOid());
-            } else {
-                setOidText(node.getOid() + ".0");
-            }
-        }
+    public void updateValue(String value) {
+        valueField.setText(value);
     }
 
     /**
@@ -1047,8 +1044,8 @@ public class SnmpPanel extends JPanel {
                     response = manager.set(request);
                 }
                 appendResults(response.getOidsAndValues());
-                // TODO: select returned OID in MIB tree
-                setOidText(response.getOid(0));
+                updateOid(response.getOid(0));
+                updateValue(response.getValue(0));
             } catch (SnmpException e) {
                 appendResults("Error: ");
                 appendResults(e.getMessage());
