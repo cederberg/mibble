@@ -50,8 +50,8 @@ Mibble </xsl:text>
     <xsl:value-of select="$version" />
     <xsl:text> (</xsl:text>
     <xsl:value-of select="$date" />
-    <xsl:text>). See http://www.nongnu.org/mibble for
-more information.
+    <xsl:text>). See http://www.mibble.org/ for more
+information.
 
 Copyright (c) 2004 Per Cederberg. Permission is granted to copy this
 document verbatim in any medium, provided that this copyright notice

@@ -76,7 +76,7 @@
         <xsl:value-of select="$date" />
         <xsl:text>). See the</xsl:text>
         &newline;&indent;&indent;
-        <a href="http://www.nongnu.org/mibble">Mibble web site</a>
+        <a href="http://www.mibble.org/">Mibble web site</a>
         &newline;&indent;&indent;
         <xsl:text>for more information.</xsl:text>
       </p>
