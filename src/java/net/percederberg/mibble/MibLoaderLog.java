@@ -60,6 +60,7 @@ public class MibLoaderLog {
      * Creates a new loader log without entries.
      */
     public MibLoaderLog() {
+        // Nothing initialization needed
     }
 
     /**
