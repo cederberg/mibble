@@ -23,7 +23,7 @@ then
     exit 1
 fi
 
-# Adjust CLASSPATH variable
+# Set CLASSPATH variable
 if [ ! -x "$MIBBLE_HOME/lib" ]
 then
     echo "Error: $MIBBLE_HOME/lib does not exist"
@@ -32,12 +32,7 @@ fi
 MIBBLE_JAR=$MIBBLE_HOME/lib/mibble-@VERSION@.jar
 GRAMMATICA_JAR=$MIBBLE_HOME/lib/grammatica-1.4.jar
 SNMP_JAR=$MIBBLE_HOME/lib/snmp4_13.jar
-if [ -z "$CLASSPATH" ]
-then
-    CLASSPATH=$MIBBLE_JAR:$GRAMMATICA_JAR:$SNMP_JAR
-else
-    CLASSPATH=$CLASSPATH:$MIBBLE_JAR:$GRAMMATICA_JAR:$SNMP_JAR
-fi
+CLASSPATH=$MIBBLE_JAR:$GRAMMATICA_JAR:$SNMP_JAR
 export CLASSPATH
 
 # Display variables

@@ -17,18 +17,13 @@ pause
 goto end
 :doneJava
 
-REM Adjust CLASSPATH variable
+REM Set CLASSPATH variable
 if exist "%MIBBLE_HOME%\lib\*.jar" goto doneLib
 echo Error: %MIBBLE_HOME%\lib does not exist
 pause
 goto end
 :doneLib
-if not "%CLASSPATH%" == "" goto addCls
 set CLASSPATH=%MIBBLE_HOME%\lib\mibble-@VERSION@.jar;%MIBBLE_HOME%\lib\grammatica-1.4.jar;%MIBBLE_HOME%\lib\snmp4_13.jar
-goto doneCls
-:addCls
-set CLASSPATH=%CLASSPATH%;%MIBBLE_HOME%\lib\mibble-@VERSION@.jar;%MIBBLE_HOME%\lib\grammatica-1.4.jar;%MIBBLE_HOME%\lib\snmp4_13.jar
-:doneCls
 
 REM Display variables
 echo Using environment variables:
