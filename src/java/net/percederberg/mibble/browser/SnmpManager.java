@@ -34,6 +34,9 @@ import uk.co.westhawk.snmp.stack.AsnUnsInteger64;
 import uk.co.westhawk.snmp.stack.PduException;
 import uk.co.westhawk.snmp.stack.SnmpContextBasisFace;
 import uk.co.westhawk.snmp.stack.SnmpContextPool;
+import uk.co.westhawk.snmp.stack.SnmpContextv2cPool;
+import uk.co.westhawk.snmp.stack.SnmpContextv3Face;
+import uk.co.westhawk.snmp.stack.SnmpContextv3Pool;
 
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibTypeTag;
@@ -64,23 +67,135 @@ public class SnmpManager {
     private SnmpContextBasisFace context = null;
 
     /**
-     * Creates a new SNMP manager.
+     * Creates a new SNMPv1 manager.
      *
      * @param host           the host name or IP address
      * @param port           the agent port
      * @param community      the community name
      *
-     * @throws IOException if an SNMP context pool couldn't be
+     * @return the new SNMP manager created
+     *
+     * @throws SnmpException if an SNMP context pool couldn't be
      *             created from the specified values
      */
-    public SnmpManager(String host, int port, String community)
-        throws IOException {
+    public static SnmpManager createSNMPv1(String host,
+                                           int port,
+                                           String community)
+        throws SnmpException {
 
-        SnmpContextPool  poolV1;
+        SnmpContextPool  pool;
 
-        poolV1 = new SnmpContextPool(host, port);
-        poolV1.setCommunity(community);
-        context = poolV1;
+        try {
+            pool = new SnmpContextPool(host, port);
+            pool.setCommunity(community);
+            return new SnmpManager(pool);
+        } catch (IOException e) {
+            throw new SnmpException("SNMP communication error: " +
+                                    e.getMessage());
+        }
+    }
+
+    /**
+     * Creates a new SNMPv2c manager.
+     *
+     * @param host           the host name or IP address
+     * @param port           the agent port
+     * @param community      the community name
+     *
+     * @return the new SNMP manager created
+     *
+     * @throws SnmpException if an SNMP context pool couldn't be
+     *             created from the specified values
+     */
+    public static SnmpManager createSNMPv2c(String host,
+                                            int port,
+                                            String community)
+        throws SnmpException {
+
+        SnmpContextv2cPool  pool;
+
+        try {
+            pool = new SnmpContextv2cPool(host, port);
+            pool.setCommunity(community);
+            return new SnmpManager(pool);
+        } catch (IOException e) {
+            throw new SnmpException("SNMP communication error: " +
+                                    e.getMessage());
+        }
+    }
+
+    /**
+     * Creates a new SNMPv3 manager.
+     *
+     * @param host           the host name or IP address
+     * @param port           the agent port
+     * @param contextName    the context name
+     * @param contextEngine  the context engine id
+     * @param userName       the user name
+     * @param auth           the authentication parameters
+     * @param privacy        the privacy parameters
+     *
+     * @return the new SNMP manager created
+     *
+     * @throws SnmpException if an SNMP context pool couldn't be
+     *             created from the specified values
+     */
+    public static SnmpManager createSNMPv3(String host,
+                                           int port,
+                                           String contextName,
+                                           String contextEngine,
+                                           String userName,
+                                           SnmpAuthentication auth,
+                                           SnmpPrivacy privacy)
+        throws SnmpException {
+
+        SnmpContextv3Pool  pool;
+        String             type;
+        int                protocol;
+
+        try {
+            pool = new SnmpContextv3Pool(host, port);
+            pool.setContextName(contextName);
+            pool.setContextEngineId(contextEngine.getBytes());
+            pool.setUserName(userName);
+            pool.setUseAuthentication(auth != null);
+            pool.setUsePrivacy(auth != null && privacy != null);
+            if (auth != null) {
+                type = auth.getType(); 
+                if (type.equals(SnmpAuthentication.MD5_TYPE)) {
+                    protocol = SnmpContextv3Face.MD5_PROTOCOL;
+                    pool.setAuthenticationProtocol(protocol);
+                } else if (type.equals(SnmpAuthentication.SHA1_TYPE)) {
+                    protocol = SnmpContextv3Face.SHA1_PROTOCOL;
+                    pool.setAuthenticationProtocol(protocol);
+                } else {
+                    throw new SnmpException("Unsupported authentication " +
+                                            "protocol: " + type);
+                }
+                pool.setUserAuthenticationPassword(auth.getPassword());
+            }
+            if (auth != null && privacy != null) {
+                type = privacy.getType();
+                if (!type.equals(SnmpPrivacy.CBC_DES_TYPE)) {
+                    throw new SnmpException("Unsupported privacy " +
+                                            "protocol: " + type);
+                }
+                pool.setUserPrivacyPassword(privacy.getPassword());
+            }
+            return new SnmpManager(pool);
+        } catch (IOException e) {
+            throw new SnmpException("SNMP communication error: " +
+                                    e.getMessage());
+        }
+    }
+
+    /**
+     * Creates a new SNMP manager.
+     *
+     * @param context        the context pool to use
+     */
+    private SnmpManager(SnmpContextBasisFace context) {
+        this.context = context;
     }
 
     /**
@@ -260,7 +375,7 @@ public class SnmpManager {
      * Creates an ASN.1 value object for an SNMP set request. The
      * value object will be created based on the MibType and string
      * value in the request. If the value cannot be converted to the
-     * correct data type, an exception is thrown. 
+     * correct data type, an exception is thrown.
      *
      * @param request        the request object
      *

@@ -35,6 +35,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -71,6 +72,24 @@ public class BrowserFrame extends JFrame {
      * The menu bar.
      */
     private JMenuBar menuBar = new JMenuBar();
+
+    /**
+     * The SNMP version 1 menu item.
+     */
+    private JCheckBoxMenuItem snmpV1Item =
+        new JCheckBoxMenuItem("SNMP version 1");
+
+    /**
+     * The SNMP version 2c menu item.
+     */
+    private JCheckBoxMenuItem snmpV2Item =
+        new JCheckBoxMenuItem("SNMP version 2c");
+
+    /**
+     * The SNMP version 3 menu item.
+     */
+    private JCheckBoxMenuItem snmpV3Item =
+        new JCheckBoxMenuItem("SNMP version 3");
 
     /**
      * The description text area.
@@ -193,6 +212,31 @@ public class BrowserFrame extends JFrame {
         menu.add(item);
         menuBar.add(menu);
 
+        // Create SNMP menu
+        menu = new JMenu("SNMP");
+        snmpV1Item.setSelected(true);
+        snmpV1Item.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setSnmpVersion(1);
+            }
+        });
+        menu.add(snmpV1Item);
+        snmpV2Item.setSelected(false);
+        snmpV2Item.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setSnmpVersion(2);
+            }
+        });
+        menu.add(snmpV2Item);
+        snmpV3Item.setSelected(false);
+        snmpV3Item.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setSnmpVersion(3);
+            }
+        });
+        menu.add(snmpV3Item);
+        menuBar.add(menu);
+
         // Create help menu
         menu = new JMenu("Help");
         item = new JMenuItem("License...");
@@ -299,6 +343,25 @@ public class BrowserFrame extends JFrame {
         mibTree.repaint();
     }
 
+    /**
+     * Sets the SNMP version to use.
+     *
+     * @param version        the new version number
+     */
+    public void setSnmpVersion(int version) {
+        snmpV1Item.setSelected(false);
+        snmpV2Item.setSelected(false);
+        snmpV3Item.setSelected(false);
+        if (version == 1) {
+            snmpV1Item.setSelected(true);
+        } else if (version == 2) {
+            snmpV2Item.setSelected(true);
+        } else if (version == 3) {
+            snmpV3Item.setSelected(true);
+        }
+        snmpPanel.setVersion(version);
+    }
+    
     /**
      * Returns the currently selected MIB node.
      *

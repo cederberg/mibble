@@ -27,14 +27,15 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
@@ -63,19 +64,44 @@ public class SnmpPanel extends JPanel {
     private BrowserFrame frame;
 
     /**
+     * The SNMP version to use.
+     */
+    private int version = 1;
+
+    /**
      * The blocked flag.
      */
     public boolean blocked = false;
 
     /**
+     * The SNMP field panel.
+     */
+    private JPanel fieldPanel = new JPanel();
+
+    /**
+     * The host IP address label.
+     */
+    private JLabel hostLabel = new JLabel("Host IP Address;"); 
+
+    /**
      * The host IP address field.
      */
-    private JTextField ipField = new JTextField("127.0.0.1");
+    private JTextField hostField = new JTextField("127.0.0.1");
+
+    /**
+     * The host port number label.
+     */
+    private JLabel portLabel = new JLabel("Port Number:");
 
     /**
      * The host port number field.
      */
     private JTextField portField = new JTextField();
+
+    /**
+     * The read community name label.
+     */
+    private JLabel readCommunityLabel = new JLabel("Read Community:");
 
     /**
      * The read community name field.
@@ -84,9 +110,88 @@ public class SnmpPanel extends JPanel {
         new JPasswordField("public");
 
     /**
+     * The write community name label.
+     */
+    private JLabel writeCommunityLabel =
+        new JLabel("Write Community:");
+
+    /**
      * The write community name field.
      */
     private JPasswordField writeCommunityField =
+        new JPasswordField("public");
+
+    /**
+     * The context name label.
+     */
+    private JLabel contextNameLabel = new JLabel("Context Name:");
+
+    /**
+     * The context name field.
+     */
+    private JTextField contextNameField = new JTextField("");
+
+    /**
+     * The context engine label.
+     */
+    private JLabel contextEngineLabel = new JLabel("Context Engine:");
+
+    /**
+     * The context engine field.
+     */
+    private JTextField contextEngineField = new JTextField("");
+
+    /**
+     * The user name label.
+     */
+    private JLabel userNameLabel = new JLabel("User Name:");
+
+    /**
+     * The user name field.
+     */
+    private JTextField userNameField = new JTextField("initial");
+
+    /**
+     * The authentication type label.
+     */
+    private JLabel authTypeLabel = new JLabel("Authentication:");
+
+    /**
+     * The authentication type combo box.
+     */
+    private JComboBox authTypeCombo = new JComboBox();
+
+    /**
+     * The authentication password label.
+     */
+    private JLabel authPasswordLabel = new JLabel("Auth. Password:");
+
+    /**
+     * The authentication password field.
+     */
+    private JPasswordField authPasswordField =
+        new JPasswordField("public");
+
+    /**
+     * The privacy type label.
+     */
+    private JLabel privacyTypeLabel = new JLabel("Privacy:");
+
+    /**
+     * The privacy type combo box.
+     */
+    private JComboBox privacyTypeCombo = new JComboBox();
+
+    /**
+     * The privacy password label.
+     */
+    private JLabel privacyPasswordLabel =
+        new JLabel("Privacy Password:");
+
+    /**
+     * The privacy password field.
+     */
+    private JPasswordField privacyPasswordField =
         new JPasswordField("public");
 
     /**
@@ -149,132 +254,70 @@ public class SnmpPanel extends JPanel {
      * Initializes the panel components.
      */
     private void initialize() {
-        JLabel              label;
-        DocumentListener    l;
         GridBagConstraints  c;
+        DocumentListener    l;
 
-        // Adjust panel
+        // Component initialization
         setLayout(new GridBagLayout());
-
-        // Add host IP address field
-        label = new JLabel("Host IP Address:");
-        label.setLabelFor(ipField);
-        c = new GridBagConstraints();
-        c.gridy = 1;
-        c.fill = GridBagConstraints.BOTH;
-        c.insets = DEFAULT_INSETS;
-        add(label, c);
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 1;
-        c.weightx = 0.1d;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = DEFAULT_INSETS;
-        add(ipField, c);
-
-        // Add read community field
-        label = new JLabel("Read Community:");
-        label.setLabelFor(readCommunityField);
-        c = new GridBagConstraints();
-        c.gridx = 2;
-        c.gridy = 1;
-        c.fill = GridBagConstraints.BOTH;
-        c.insets = DEFAULT_INSETS;
-        add(label, c);
-        c = new GridBagConstraints();
-        c.gridx = 3;
-        c.gridy = 1;
-        c.weightx = 0.1d;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = DEFAULT_INSETS;
-        add(readCommunityField, c);
-
-        // Add host port number field
-        label = new JLabel("Port Number:");
-        label.setLabelFor(portField);
-        c = new GridBagConstraints();
-        c.gridy = 2;
-        c.fill = GridBagConstraints.BOTH;
-        c.insets = DEFAULT_INSETS;
-        add(label, c);
+        fieldPanel.setLayout(new GridBagLayout());
         portField.setText(String.valueOf(SnmpManager.DEFAULT_PORT));
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 2;
-        c.weightx = 0.1d;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = DEFAULT_INSETS;
-        add(portField, c);
+        authTypeCombo.addItem("None");
+        authTypeCombo.addItem(SnmpAuthentication.MD5_TYPE);
+        authTypeCombo.addItem(SnmpAuthentication.SHA1_TYPE);
+        privacyTypeCombo.addItem("None");
+        privacyTypeCombo.addItem(SnmpPrivacy.CBC_DES_TYPE);
 
-        // Add write community field
-        label = new JLabel("Write Community:");
-        label.setLabelFor(writeCommunityField);
-        c = new GridBagConstraints();
-        c.gridx = 2;
-        c.gridy = 2;
-        c.fill = GridBagConstraints.BOTH;
-        c.insets = DEFAULT_INSETS;
-        add(label, c);
-        c = new GridBagConstraints();
-        c.gridx = 3;
-        c.gridy = 2;
-        c.weightx = 0.1d;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = DEFAULT_INSETS;
-        add(writeCommunityField, c);
-
-        // Add OID field
+        // Associate labels
+        hostLabel.setLabelFor(hostField);
+        portLabel.setLabelFor(portField);
+        readCommunityLabel.setLabelFor(readCommunityField);
+        writeCommunityLabel.setLabelFor(writeCommunityField);
+        contextNameLabel.setLabelFor(contextNameField);
+        contextEngineLabel.setLabelFor(contextEngineField);
+        userNameLabel.setLabelFor(userNameField);
+        authTypeLabel.setLabelFor(authTypeCombo);
+        authPasswordLabel.setLabelFor(authPasswordField);
+        privacyTypeLabel.setLabelFor(privacyTypeCombo);
+        privacyPasswordLabel.setLabelFor(privacyPasswordField);
         oidLabel.setLabelFor(oidField);
-        c = new GridBagConstraints();
-        c.gridy = 3;
-        c.fill = GridBagConstraints.BOTH;
-        c.insets = DEFAULT_INSETS;
-        add(oidLabel, c);
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 3;
-        c.gridwidth = 3;
-        c.weightx = 0.1d;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = DEFAULT_INSETS;
-        add(oidField, c);
-
-        // Add value field
         valueLabel.setLabelFor(valueField);
+
+        // Add SNMP fields
+        initializeSnmpV1FieldPanel();
         c = new GridBagConstraints();
-        c.gridy = 4;
-        c.fill = GridBagConstraints.BOTH;
-        c.insets = DEFAULT_INSETS;
-        add(valueLabel, c);
-        c = new GridBagConstraints();
-        c.gridx = 1;
-        c.gridy = 4;
-        c.gridwidth = 3;
-        c.weightx = 0.1d;
         c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = DEFAULT_INSETS;
-        add(valueField, c);
+        add(fieldPanel, c);
 
         // Add buttons
         c = new GridBagConstraints();
-        c.gridy = 5;
-        c.gridwidth = 4;
+        c.gridy = 1;
         c.anchor = GridBagConstraints.WEST;
         c.fill = GridBagConstraints.NONE;
-        c.insets = DEFAULT_INSETS;
         add(initializeButtons(), c);
 
         // Add results area
         resultsArea.setEditable(false);
         c = new GridBagConstraints();
-        c.gridy = 6;
-        c.gridwidth = 4;
-        c.weightx = 0.5d;
-        c.weighty = 0.5d;
+        c.gridy = 2;
+        c.weightx = 1.0d;
+        c.weighty = 1.0d;
         c.fill = GridBagConstraints.BOTH;
         add(new JScrollPane(resultsArea), c);
 
-        // Add change listeners
+        // Add authentication and privacy listeners
+        authTypeCombo.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                updateAuthentication();
+            }
+        });
+        privacyTypeCombo.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                updatePrivacy();
+            }
+        });
+        updateAuthentication();
+
+        // Add text change listeners
         l = new DocumentListener() {
             public void changedUpdate(DocumentEvent e) {
                 updateStatus();
@@ -286,10 +329,298 @@ public class SnmpPanel extends JPanel {
                 updateStatus();
             }
         };
-        ipField.getDocument().addDocumentListener(l);
+        hostField.getDocument().addDocumentListener(l);
         portField.getDocument().addDocumentListener(l);
     }
 
+    /**
+     * Initializes the field panel for SNMP version 1.
+     */
+    private void initializeSnmpV1FieldPanel() {
+        GridBagConstraints  c;
+
+        // Clear panel
+        fieldPanel.removeAll();
+        fieldPanel.invalidate();
+
+        // Add host IP address field
+        c = new GridBagConstraints();
+        c.gridy = 1;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(hostLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 1;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(hostField, c);
+
+        // Add read community field
+        c = new GridBagConstraints();
+        c.gridx = 2;
+        c.gridy = 1;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(readCommunityLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 3;
+        c.gridy = 1;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(readCommunityField, c);
+
+        // Add host port number field
+        c = new GridBagConstraints();
+        c.gridy = 2;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(portLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 2;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(portField, c);
+
+        // Add write community field
+        c = new GridBagConstraints();
+        c.gridx = 2;
+        c.gridy = 2;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(writeCommunityLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 3;
+        c.gridy = 2;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(writeCommunityField, c);
+
+        // Add separator
+        c = new GridBagConstraints();
+        c.gridy = 3;
+        c.gridwidth = 4;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(new JSeparator(), c);
+
+        // Add OID field
+        c = new GridBagConstraints();
+        c.gridy = 4;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(oidLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 4;
+        c.gridwidth = 3;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(oidField, c);
+
+        // Add value field
+        c = new GridBagConstraints();
+        c.gridy = 5;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(valueLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 5;
+        c.gridwidth = 3;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(valueField, c);
+    }
+    
+    /**
+     * Initializes the field panel for SNMP version 3.
+     */
+    private void initializeSnmpV3FieldPanel() {
+        GridBagConstraints  c;
+
+        // Clear panel
+        fieldPanel.removeAll();
+
+        // Add host IP address field
+        c = new GridBagConstraints();
+        c.gridy = 1;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(hostLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 1;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(hostField, c);
+
+        // Add context name field
+        c = new GridBagConstraints();
+        c.gridx = 2;
+        c.gridy = 1;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(contextNameLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 3;
+        c.gridy = 1;
+        c.weightx = 0.2d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(contextNameField, c);
+
+        // Add host port number field
+        c = new GridBagConstraints();
+        c.gridy = 2;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(portLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 2;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(portField, c);
+
+        // Add context engine field
+        c = new GridBagConstraints();
+        c.gridx = 2;
+        c.gridy = 2;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(contextEngineLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 3;
+        c.gridy = 2;
+        c.weightx = 0.2d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(contextEngineField, c);
+
+        // Add user name field
+        c = new GridBagConstraints();
+        c.gridy = 3;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(userNameLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 3;
+        c.gridwidth = 3;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(userNameField, c);
+
+        // Add authentication type field
+        c = new GridBagConstraints();
+        c.gridy = 4;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(authTypeLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 4;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(authTypeCombo, c);
+
+        // Add authentication password field
+        c = new GridBagConstraints();
+        c.gridx = 2;
+        c.gridy = 4;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(authPasswordLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 3;
+        c.gridy = 4;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(authPasswordField, c);
+
+        // Add privacy type field
+        c = new GridBagConstraints();
+        c.gridy = 5;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(privacyTypeLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 5;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(privacyTypeCombo, c);
+
+        // Add privacy password field
+        c = new GridBagConstraints();
+        c.gridx = 2;
+        c.gridy = 5;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(privacyPasswordLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 3;
+        c.gridy = 5;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(privacyPasswordField, c);
+
+        // Add separator
+        c = new GridBagConstraints();
+        c.gridy = 6;
+        c.gridwidth = 4;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(new JSeparator(), c);
+
+        // Add OID field
+        c = new GridBagConstraints();
+        c.gridy = 7;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(oidLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 7;
+        c.gridwidth = 3;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(oidField, c);
+
+        // Add value field
+        c = new GridBagConstraints();
+        c.gridy = 8;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(valueLabel, c);
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 8;
+        c.gridwidth = 3;
+        c.weightx = 0.1d;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = DEFAULT_INSETS;
+        fieldPanel.add(valueField, c);
+    }
+    
     /**
      * Creates and initializes the operation buttons.
      *
@@ -332,6 +663,21 @@ public class SnmpPanel extends JPanel {
     }
 
     /**
+     * Sets the SNMP version to use.
+     *
+     * @param version        the new version number
+     */
+    public void setVersion(int version) {
+        this.version = version;
+        if (version == 1 || version == 2) {
+            initializeSnmpV1FieldPanel();
+        } else if (version == 3) {
+            initializeSnmpV3FieldPanel();
+        }
+        validate();
+    }
+
+    /**
      * Blocks or unblocks GUI operations in this panel. This method
      * is used when performing long-running operations to inactivate
      * the user interface.
@@ -353,7 +699,7 @@ public class SnmpPanel extends JPanel {
     }
 
     /**
-     * Updates various panel conponents, such as text fields and
+     * Updates various panel components, such as text fields and
      * buttons. This method should be called when a new MIB node is
      * selected or when the UI has been blocked or unblocked.
      */
@@ -369,7 +715,7 @@ public class SnmpPanel extends JPanel {
         }
         allowOperation = !blocked
                       && type != null
-                      && ipField.getText().length() > 0
+                      && hostField.getText().length() > 0
                       && portField.getText().length() > 0;
         allowGet = allowOperation
                 && type.getAccess().canRead();
@@ -382,6 +728,33 @@ public class SnmpPanel extends JPanel {
         getButton.setEnabled(allowGet);
         getNextButton.setEnabled(allowGet);
         setButton.setEnabled(allowSet);
+    }
+
+    /**
+     * Updates the authentication UI components on change.
+     */
+    protected void updateAuthentication() {
+        boolean  useAuth;
+        
+        useAuth = authTypeCombo.getSelectedIndex() != 0;
+        authPasswordLabel.setEnabled(useAuth);
+        authPasswordField.setEnabled(useAuth);
+        privacyTypeLabel.setEnabled(useAuth);
+        privacyTypeCombo.setEnabled(useAuth);
+        if (!useAuth) {
+            privacyTypeCombo.setSelectedIndex(0);
+        }
+    }
+
+    /**
+     * Updates the privacy UI components on change.
+     */
+    protected void updatePrivacy() {
+        boolean  usePrivacy;
+
+        usePrivacy = privacyTypeCombo.getSelectedIndex() != 0;
+        privacyPasswordLabel.setEnabled(usePrivacy);
+        privacyPasswordField.setEnabled(usePrivacy);
     }
 
     /**
@@ -456,15 +829,22 @@ public class SnmpPanel extends JPanel {
      *         null if none could be created
      */
     private Operation createOperation(boolean read) {
-        String          host = ipField.getText();
-        int             port;
-        String          community;
-        String          oid = oidField.getText();
-        SnmpManager     manager;
-        SnmpRequest     request;
-        SnmpObjectType  type;
-        String          value;
-        String          message;
+        String              host = hostField.getText();
+        int                 port;
+        String              community = null;
+        String              contextName = null;
+        String              contextEngine = null;
+        String              userName = null;
+        String              type;
+        String              password;
+        SnmpAuthentication  auth = null;
+        SnmpPrivacy         privacy = null;
+        String              oid = oidField.getText();
+        SnmpManager         manager;
+        SnmpRequest         request;
+        SnmpObjectType      objectType;
+        String              value;
+        String              message;
 
         // Validate port number
         try {
@@ -483,21 +863,48 @@ public class SnmpPanel extends JPanel {
             return null;
         }
 
-        // Get community password
-        if (read) {
-            community = new String(readCommunityField.getPassword());
+        // Get SNMP manager parameters
+        if (version < 3) {
+            if (read) {
+                community = new String(readCommunityField.getPassword());
+            } else {
+                community = new String(writeCommunityField.getPassword());
+            }
         } else {
-            community = new String(writeCommunityField.getPassword());
+            contextName = contextNameField.getText();
+            contextEngine = contextEngineField.getText();
+            userName = userNameField.getText();
+            if (authTypeCombo.getSelectedIndex() > 0) {
+                type = authTypeCombo.getSelectedItem().toString();
+                password = new String(authPasswordField.getPassword());
+                auth = new SnmpAuthentication(type, password);
+            }
+            if (privacyTypeCombo.getSelectedIndex() > 0) {
+                type = privacyTypeCombo.getSelectedItem().toString();
+                password = new String(privacyPasswordField.getPassword());
+                privacy = new SnmpPrivacy(type, password);
+            }
         }
 
         // Create SNMP manager
         try {
-            manager = new SnmpManager(host, port, community);
-        } catch (IOException e) {
-            message = "SNMP communication error: " + e.getMessage();
+            if (version == 1) {
+                manager = SnmpManager.createSNMPv1(host, port, community);
+            } else if (version == 2) {
+                manager = SnmpManager.createSNMPv2c(host, port, community);
+            } else {
+                manager = SnmpManager.createSNMPv3(host,
+                                                   port,
+                                                   contextName,
+                                                   contextEngine,
+                                                   userName,
+                                                   auth,
+                                                   privacy);
+            }
+        } catch (SnmpException e) {
             JOptionPane.showMessageDialog(frame,
-                                          message,
-                                          "SNMP Communication Error",
+                                          e.getMessage(),
+                                          "SNMP Error",
                                           JOptionPane.ERROR_MESSAGE);
             return null;
         }
@@ -506,9 +913,9 @@ public class SnmpPanel extends JPanel {
         if (read) {
             request = new SnmpRequest(oid);
         } else {
-            type = frame.getSelectedNode().getSnmpObjectType();
+            objectType = frame.getSelectedNode().getSnmpObjectType();
             value = valueField.getText();
-            request = new SnmpRequest(oid, type.getSyntax(), value);
+            request = new SnmpRequest(oid, objectType.getSyntax(), value);
         }
 
         return new Operation(manager, request);
