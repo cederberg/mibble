@@ -12,45 +12,67 @@ IMPORTS
     snmpAuthProtocols, snmpPrivProtocols  FROM SNMP-FRAMEWORK-MIB;
 
 snmpUsmMIB MODULE-IDENTITY
-    LAST-UPDATED "9901200000Z"            -- 20 Jan 1999, midnight
+    LAST-UPDATED "200210160000Z"            -- 16 Oct 2002, midnight
     ORGANIZATION "SNMPv3 Working Group"
     CONTACT-INFO "WG-email:   snmpv3@lists.tislabs.com
                   Subscribe:  majordomo@lists.tislabs.com
                               In msg body:  subscribe snmpv3
 
                   Chair:      Russ Mundy
-                              Trusted Information Systems
-                  postal:     3060 Washington Rd
-                              Glenwood MD 21738
+                              Network Associates Laboratories
+                  postal:     15204 Omega Drive, Suite 300
+                              Rockville, MD 20850-4601
                               USA
                   email:      mundy@tislabs.com
-                  phone:      +1-301-854-6889
+                  phone:      +1 301-947-7107
+
+                  Co-Chair:   David Harrington
+                              Enterasys Networks
+                  Postal:     35 Industrial Way
+                              P. O. Box 5004
+                              Rochester, New Hampshire 03866-5005
+                              USA
+                  EMail:      dbh@enterasys.com
+                  Phone:      +1 603-337-2614
 
                   Co-editor   Uri Blumenthal
-                              IBM T. J. Watson Research
-                  postal:     30 Saw Mill River Pkwy,
-                              Hawthorne, NY 10532
+                              Lucent Technologies
+                  postal:     67 Whippany Rd.
+                              Whippany, NJ 07981
                               USA
-                  email:      uri@watson.ibm.com
-                  phone:      +1-914-784-7964
+                  email:      uri@lucent.com
+                  phone:      +1-973-386-2163
 
                   Co-editor:  Bert Wijnen
-                              IBM T. J. Watson Research
+                              Lucent Technologies
                   postal:     Schagen 33
                               3461 GL Linschoten
                               Netherlands
-                  email:      wijnen@vnet.ibm.com
-                  phone:      +31-348-432-794
+                  email:      bwijnen@lucent.com
+                  phone:      +31-348-480-685
                  "
     DESCRIPTION  "The management information definitions for the
                   SNMP User-based Security Model.
+
+                  Copyright (C) The Internet Society (2002). This
+                  version of this MIB module is part of RFC 3414;
+                  see the RFC itself for full legal notices.
                  "
 --  Revision history
 
-    REVISION     "9901200000Z"            -- 20 Jan 1999, midnight
+    REVISION     "200210160000Z"          -- 16 Oct 2002, midnight
+    DESCRIPTION  "Changes in this revision:
+                  - Updated references and contact info.
+                  - Clarification to usmUserCloneFrom DESCRIPTION
+                    clause
+                  - Fixed 'command responder' into 'command generator'
+                    in last para of DESCRIPTION clause of
+                    usmUserTable.
+                  This revision published as RFC3414.
+                 "
+    REVISION     "199901200000Z"          -- 20 Jan 1999, midnight
     DESCRIPTION  "Clarifications, published as RFC2574"
-
-    REVISION     "9711200000Z"            -- 20 Nov 1997, midnight
+    REVISION     "199711200000Z"          -- 20 Nov 1997, midnight
     DESCRIPTION  "Initial version, published as RFC2274"
 
     ::= { snmpModules 15 }
@@ -116,9 +138,7 @@ usmDESPrivProtocol OBJECT-IDENTITY
                  "
     ::= { snmpPrivProtocols 2 }
 
-
 -- Textual Conventions ***********************************************
-
 
 KeyChange ::=     TEXTUAL-CONVENTION
    STATUS         current
@@ -196,7 +216,6 @@ KeyChange ::=     TEXTUAL-CONVENTION
 
           At the receiver side, when an instance of this object is set
           to a new value, then a new value of K is computed as follows:
-
            - a temporary variable is initialized to the existing value
              of K;
            - if the length of the delta component is greater than L
@@ -219,6 +238,7 @@ KeyChange ::=     TEXTUAL-CONVENTION
              length as the unused portion of the delta component, is
              XOR-ed with the unused portion of the delta component to
              produce the (final portion of the) new value of K.
+
            For example, using MD5 as the hash algorithm H:
 
               iterations = (lenOfDelta - 1)/16; /* integer division */
@@ -314,6 +334,7 @@ usmStatsDecryptionErrors OBJECT-TYPE
     ::= { usmStats 6 }
 
 -- The usmUser Group ************************************************
+
 usmUser          OBJECT IDENTIFIER ::= { usmMIBObjects 2 }
 
 usmUserSpinLock  OBJECT-TYPE
@@ -361,6 +382,7 @@ usmUserTable     OBJECT-TYPE
                        If not, repeat steps 4-6.
 
                  If the new user will never use privacy:
+
                    7)  SET(usmUserPrivProtocol=usmNoPrivProtocol)
 
                  If the new user is to use authentication:
@@ -390,7 +412,7 @@ usmUserTable     OBJECT-TYPE
                  SNMP-VIEW-BASED-ACM-MIB.
 
                  The use of usmUserSpinlock is to avoid conflicts with
-                 another SNMP command responder application which may
+                 another SNMP command generator application which may
                  also be acting on the usmUserTable.
                 "
     ::= { usmUser 2 }
@@ -486,8 +508,9 @@ usmUserCloneFrom OBJECT-TYPE
                  Cloning also causes the initial values of the secret
                  authentication key (authKey) and the secret encryption
                  key (privKey) of the new user to be set to the same
-                 value as the corresponding secret of the clone-from
-                 user.
+                 values as the corresponding secrets of the clone-from
+                 user to allow the KeyChange process to occur as
+                 required during user creation.
 
                  The first time an instance of this object is set by
                  a management operation (either at or after its
@@ -648,6 +671,7 @@ usmUserPrivProtocol OBJECT-TYPE
                  this user to/from the SNMP engine identified by
                  usmUserEngineID, can be protected from disclosure,
                  and if so, the type of privacy protocol which is used.
+
                  An instance of this object is created concurrently
                  with the creation of any other object instance for
                  the same user (i.e., as part of the processing of
@@ -840,6 +864,7 @@ usmMIBCompliance MODULE-COMPLIANCE
 
     MODULE       -- this module
         MANDATORY-GROUPS { usmMIBBasicGroup }
+
         OBJECT           usmUserAuthProtocol
         MIN-ACCESS       read-only
         DESCRIPTION     "Write access is not required."
