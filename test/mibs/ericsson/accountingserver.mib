@@ -1,0 +1,212 @@
+ACCOUNTINGSERVER DEFINITIONS ::= BEGIN
+
+-- 
+--								SNMPv1
+-- 
+-- NAME:		Accounting Server Seamac MIB
+-- 
+-- REVISION HISTORY:-
+--
+-- REV	DATE		NAME		DESCRIPTION
+-- PA1	980428		ETXHAIM		First try
+-- A	980429		ETXHAIM		-
+-- PB1	980622		QTXJOAL		Added traps.
+-- B    980629		QTXJOAL		Rev B.
+-- PC1	980716		QTXSCHU		Replaced some oids and added some new (Öland)
+-- C	981010		ETXHAIM		Rev C.
+--
+--
+-- DESCRIPTION
+-- This document describe the configuration parameters for the accounting server.
+-- 
+
+-- Ericsson Long Distance MIB for accounting server
+
+IMPORTS
+	enterprises
+		FROM RFC1155-SMI
+	OBJECT-TYPE
+		FROM RFC-1212   
+	DisplayString
+-- FIX:		FROM RFC-1213;
+                FROM RFC1213-MIB;
+		
+	ericsson		  OBJECT IDENTIFIER ::= { enterprises 193 }
+	phonedoubler		  OBJECT IDENTIFIER ::= { ericsson 26 } 
+	accountingserverMIB 	  OBJECT IDENTIFIER ::= { phonedoubler 10 }
+	accountingserverMIBObjects   OBJECT IDENTIFIER ::= { accountingserverMIB 1 }
+	
+-- Define of a truth value
+	TruthValue ::= INTEGER { true(1), false(2) }
+
+-- =======================================================================================
+-- AccountingServer MIB
+
+-- =======================================================================================
+-- GENERAL ATTRIBUTES
+-- ==================
+
+	capacity OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is the maximum number of Local
+                 Gatekeepers served by this accounting server"
+		DEFVAL { "" }
+		::= { accountingserverMIBObjects 1 }
+
+	asMachineReboot OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS write-only
+		STATUS mandatory
+		DESCRIPTION
+				"This function reboots the machine."
+		::= { accountingserverMIBObjects 2 }
+
+	newFileEveryMinute OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is the period to create a new file"
+		DEFVAL { "" }
+		::= { accountingserverMIBObjects 3 }
+
+	alarmState OBJECT-TYPE
+		SYNTAX INTEGER {
+				noAlarm(0),
+				failedToWriteToDisk(1),
+				maximumNumberOfAllowedSitekeepersExceeded(2),
+				netkeeperError(4)
+				}
+
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"The current alarm state which can take a combination of the
+			following values:
+				 0   No alarm
+				 1   Failed to write to disk
+                 2   Maximum number of allowed sitekeepers exceeded 
+				 4   No contact with Netkeeper "
+
+		::= { accountingserverMIBObjects 4 }
+
+	cdrLogDirectory OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is where to write Cdr files.
+                                 Recommended value: C:\Seamac\cdr"
+		DEFVAL { "" }
+		::= { accountingserverMIBObjects 5 }
+
+	traceLogDirectory OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is where to write trace files.
+                                 Recommended value: C:\Seamac\Traces"
+		DEFVAL { "" }
+		::= { accountingserverMIBObjects 6 }
+
+	programTraceOnAlarm OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that alarms are traced if set to true."
+		DEFVAL { false }
+		::= { accountingserverMIBObjects 7 }
+
+	programTraceOnError OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that errors are traced if set to true."
+		DEFVAL { false }
+		::= { accountingserverMIBObjects 8 }
+
+	programTraceOnWarn OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that warnings are traced if set to true."
+		DEFVAL { false }
+		::= { accountingserverMIBObjects 9 }
+
+	programTraceOnInfo OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that information is logged if set to true."
+		DEFVAL { false }
+		::= { accountingserverMIBObjects 10 }
+
+	serverNodes OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is the IP address of the Network
+				Gatekeeper used by this Accounting Server. 
+				The address takes the form X.X.X.X where
+				X is an integer between 0 and 255."
+		DEFVAL { "" }
+		::= { accountingserverMIBObjects 11 }
+
+	serviceState OBJECT-TYPE
+		    SYNTAX INTEGER {
+				stop(1),
+				startpending(2),
+				stoppending(3),
+				run(4),
+				continuepending(5),
+				pausepending(6),
+				pause(7)
+			}
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"This function controls or returns the state of the 
+				 accounting service."
+		::= { accountingserverMIBObjects 12 }
+
+	versionInfo OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+				"This is the version information of the installed
+					accounting server service."
+		::= { accountingserverMIBObjects 13 }
+
+	serviceStateChange TRAP-TYPE
+		ENTERPRISE accountingserverMIB
+		VARIABLES { serviceState }
+		DESCRIPTION
+		"Trap is sent when the state of the accounting service is changed."
+		::= 1
+
+	alarm TRAP-TYPE
+		ENTERPRISE accountingserverMIB
+		VARIABLES { alarmState }
+		DESCRIPTION
+		"Trap is sent when an alarm occurs."
+		::= 2
+
+	alarmCeasing TRAP-TYPE
+		ENTERPRISE accountingserverMIB
+		VARIABLES { alarmState }
+		DESCRIPTION
+		"Trap is sent when an alarm disappears."
+		::= 3
+
+--=======================================================================================
+END

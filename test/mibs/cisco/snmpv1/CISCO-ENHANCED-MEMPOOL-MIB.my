@@ -1,0 +1,350 @@
+-- MIB file created 29-Nov-2001 13:45:47, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-ENHANCED-MEMPOOL-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-ENHANCED-MEMPOOL-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+    TruthValue, AutonomousType
+            FROM SNMPv2-TC-v1
+    SnmpAdminString
+            FROM SNMP-FRAMEWORK-MIB
+    entPhysicalIndex
+            FROM ENTITY-MIB
+    ciscoMgmt
+            FROM CISCO-SMI
+    Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
+
+ciscoEnhancedMemPoolMIB OBJECT IDENTIFIER ::= { ciscoMgmt 221 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200106050000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--           Cisco Systems
+--            Customer Service
+--    
+--    Postal: 170 W Tasman Drive
+--            San Jose, CA  95134
+--            USA
+--    
+--       Tel: +1 800 553-NETS
+--    
+--    E-mail: cs-snmp@cisco.com
+--  Descr
+--    New MIB module for monitoring the memory pools 
+--    of all physical entities on a managed system.
+--  RevDate
+--    200106050000Z
+--  RevDescr
+--    Initial version of this MIB.
+
+cempMIBObjects  OBJECT IDENTIFIER ::= { ciscoEnhancedMemPoolMIB 1 }
+cempMemPool     OBJECT IDENTIFIER ::= { cempMIBObjects 1 }
+cempMIBNotificationPrefix OBJECT IDENTIFIER ::= { ciscoEnhancedMemPoolMIB 2 }
+cempMIBNotifications OBJECT IDENTIFIER ::= { cempMIBNotificationPrefix 0 }
+cempMIBConformance OBJECT IDENTIFIER ::= { ciscoEnhancedMemPoolMIB 3 }
+cempMIBCompliances OBJECT IDENTIFIER ::= { cempMIBConformance 1 }
+cempMIBGroups   OBJECT IDENTIFIER ::= { cempMIBConformance 2 }
+
+CempMemPoolIndex ::= INTEGER(1..2147483647)
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    A unique value, greater than zero, for each memory
+--    pool in a particular physical entity. It is recommended 
+--    that values are assigned contiguously starting from 1 
+--    such that the index will be unique within a particular 
+--    physical entity.
+
+CempMemPoolIndexOrNone ::= INTEGER(0..2147483647)
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    This textual convention is an extension of the
+--    CempMemPoolIndex. The latter defines a value greater 
+--    than zero to identify a memory pool in a particular 
+--    physical entity. This extension permits the additional 
+--    value of zero. The value zero is object-specific and 
+--    must therefore be defined as part of the description 
+--    of any object which uses this syntax. Examples of the 
+--    usage of zero might include situations where memory
+--    pool was unknown, or when none or all memory pools 
+--    need to be referenced.
+
+CempMemPoolTypes ::= INTEGER {
+        other(1),
+        processorMemory(2),
+        ioMemory(3),
+        pciMemory(4),
+        fastMemory(5),
+        multibusMemory(6),
+        interruptStackMemory(7),
+        processStackMemory(8),
+        localExceptionMemory(9),
+        virtualMemory(10),
+        reservedMemory(11),
+        imageMemory(12),
+        asicMemory(13)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    Represents the different types of memory pools that
+--    may be present in a managed device. 
+--    Note that only the processor pool is required to be
+--    supported by all devices.  Support for other pool types
+--    is dependent on the device being managed.
+--    
+--    processorMemory - processor associated heap memory.
+--    ioMemory - shared memory for buffer data and
+--    controller descriptor blocks.
+--    pciMemory - Peripheral Component Interconnect bus
+--    memory which is visible to all devices on the PCI 
+--    buses in a platform.
+--    fastMemory - memory defined by the particular platform 
+--    for speed critical applications.
+--    multibusMemory - memory present on some platforms that
+--    is used as a fallback pool.
+--    interruptStackMemory - memory for allocating
+--    interrupt stacks. It is usually allocated from heap.
+--    processStackMemory - memory for allocating process 
+--    stacks. It is usually allocated from heap.
+--    localExceptionMemory - memory reserved for processing 
+--    a system core dump.
+--    virtualMemory - memory used to increase available RAM.
+--    reservedMemory - memory used for packet headers, 
+--    particle headers and particles. 
+--    imageMemory - memory which corresponds to the image 
+--    file system.
+--    asicMemory - Application Specific Integrated Circuit
+--    memory.
+
+cempMemPoolTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CempMemPoolEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table of memory pool monitoring entries for all 
+        physical entities on a managed system."
+    ::= { cempMemPool 1 }
+
+cempMemPoolEntry OBJECT-TYPE
+    SYNTAX CempMemPoolEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry in the memory pool monitoring table."
+    INDEX { entPhysicalIndex, cempMemPoolIndex }
+    ::= { cempMemPoolTable 1 }
+
+CempMemPoolEntry ::= SEQUENCE {
+    cempMemPoolIndex CempMemPoolIndex,
+    cempMemPoolType CempMemPoolTypes,
+    cempMemPoolName SnmpAdminString,
+    cempMemPoolPlatformMemory AutonomousType,
+    cempMemPoolAlternate CempMemPoolIndexOrNone,
+    cempMemPoolValid TruthValue,
+    cempMemPoolUsed Gauge,
+    cempMemPoolFree Gauge,
+    cempMemPoolLargestFree Gauge,
+    cempMemPoolLowestFree Gauge
+    }
+
+cempMemPoolIndex OBJECT-TYPE
+    SYNTAX CempMemPoolIndex
+--    Rsyntax INTEGER(1..2147483647)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Within each physical entity, the unique value  
+         greater than zero, used to represent each memory pool.  
+         It is recommended that values are assigned
+         contiguously starting from 1."
+    ::= { cempMemPoolEntry 1 }
+
+cempMemPoolType OBJECT-TYPE
+    SYNTAX CempMemPoolTypes
+--    Rsyntax INTEGER {
+--        other(1),
+--        processorMemory(2),
+--        ioMemory(3),
+--        pciMemory(4),
+--        fastMemory(5),
+--        multibusMemory(6),
+--        interruptStackMemory(7),
+--        processStackMemory(8),
+--        localExceptionMemory(9),
+--        virtualMemory(10),
+--        reservedMemory(11),
+--        imageMemory(12),
+--        asicMemory(13)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The type of memory pool for which this entry
+        contains information."
+    ::= { cempMemPoolEntry 2 }
+
+cempMemPoolName OBJECT-TYPE
+    SYNTAX SnmpAdminString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "A textual name assigned to the memory pool. This
+        object is suitable for output to a human operator,
+        and may also be used to distinguish among the various
+        pool types."
+    ::= { cempMemPoolEntry 3 }
+
+cempMemPoolPlatformMemory OBJECT-TYPE
+    SYNTAX AutonomousType
+--    Rsyntax OBJECT IDENTIFIER
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "An indication of the platform-specific memory
+        pool type. The associated instance of cempMemPoolType
+        is used to indicate the general type of memory pool.
+        
+        If no platform specific memory hardware type
+        identifier exists for this physical entity, or the
+        value is unknown by this agent, then the value { 0 0 }
+        is returned."
+    ::= { cempMemPoolEntry 4 }
+
+cempMemPoolAlternate OBJECT-TYPE
+    SYNTAX CempMemPoolIndexOrNone
+--    Rsyntax INTEGER(0..2147483647)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether or not this memory pool has an
+        alternate pool configured.  Alternate pools are
+        used for fallback when the current pool runs out
+        of memory.
+        
+        If an instance of this object has a value of zero,
+        then this pool does not have an alternate.  Otherwise
+        the value of this object is the same as the value of
+        cempMemPoolType of the alternate pool."
+    ::= { cempMemPoolEntry 5 }
+
+cempMemPoolValid OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether or not cempMemPoolUsed,
+        cempMemPoolFree, cempMemPoolLargestFree and 
+        cempMemPoolLowestFree in this entry contain accurate 
+        data. If an instance of this object has the value 
+        false (which in and of itself indicates an internal 
+        error condition), the values of these objects
+        in the conceptual row may contain inaccurate 
+        information (specifically, the reported values may be 
+        less than the actual values)."
+    ::= { cempMemPoolEntry 6 }
+
+cempMemPoolUsed OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the number of bytes from the memory pool
+        that are currently in use by applications on the
+        physical entity."
+    ::= { cempMemPoolEntry 7 }
+
+cempMemPoolFree OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the number of bytes from the memory pool
+        that are currently unused on the physical entity.
+        
+        Note that the sum of cempMemPoolUsed and cempMemPoolFree
+        is the total amount of memory in the pool"
+    ::= { cempMemPoolEntry 8 }
+
+cempMemPoolLargestFree OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the largest number of contiguous bytes
+        from the memory pool that are currently unused on
+        the physical entity."
+    ::= { cempMemPoolEntry 9 }
+
+cempMemPoolLowestFree OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The lowest amount of available memory in the memory pool
+        recorded at any time during the operation of the system."
+    ::= { cempMemPoolEntry 10 }
+
+cempMemPoolGroup OBJECT IDENTIFIER ::= { cempMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing memory pool monitoring.
+--  objects
+--    cempMemPoolType, cempMemPoolName, cempMemPoolValid, 
+--    cempMemPoolUsed, cempMemPoolFree
+
+cempMemPoolExtGroup OBJECT IDENTIFIER ::= { cempMIBGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing additional memory
+--    pool information.
+--  objects
+--    cempMemPoolPlatformMemory, cempMemPoolAlternate, 
+--    cempMemPoolLargestFree, cempMemPoolLowestFree
+
+cempMIBCompliance OBJECT IDENTIFIER ::= { cempMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for entities which 
+--    implement the Cisco Enhanced MemPool MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cempMemPoolGroup
+--   OptGroup
+--    cempMemPoolExtGroup
+
+
+END
+

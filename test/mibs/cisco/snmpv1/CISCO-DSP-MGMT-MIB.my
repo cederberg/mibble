@@ -1,0 +1,415 @@
+-- MIB created 8/24/100 10:42:51, by
+--   SMIC (the next generation) version 1.6.29, November 22, 1994.
+
+CISCO-DSP-MGMT-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-DSP-MGMT-MIB.my"
+
+IMPORTS
+    Counter32, Gauge32, Integer32
+            FROM SNMPv2-SMI-v1
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215
+    TimeStamp, TruthValue, DisplayString
+            FROM SNMPv2-TC-v1
+    entPhysicalIndex
+            FROM ENTITY-MIB
+    Unsigned32
+            FROM CISCO-TC
+    ciscoMgmt
+            FROM CISCO-SMI;
+
+ciscoDspMgmtMIB OBJECT IDENTIFIER ::= { ciscoMgmt 86 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200008140000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--           Cisco Systems
+--            Customer Service
+--    
+--    Postal: 170 W. Tasman Drive
+--            San Jose, CA  95134
+--            USA
+--    
+--    Tel: +1 800 553-NETS
+--    
+--    E-mail: cs-voice@cisco.com
+--  Descr
+--    Digital Signal Processing (DSP) Management MIB module.
+--     The MIB module monitors the DSP resource and status.
+--  RevDate
+--    200008140000Z
+--  RevDescr
+--    Fix typo in the DESCRIPTION caluse of 
+--    cdspMIBEnableCardStatusNotification object;
+--    change 'cdspFatalNotification' to 
+--    'cdspMIBCardStateNotification'.
+--  RevDate
+--    9810170000Z
+--  RevDescr
+--    Add new objects to support channelized DSP features.
+
+cdspMgmtObjects OBJECT IDENTIFIER ::= { ciscoDspMgmtMIB 1 }
+cdspCardObjects OBJECT IDENTIFIER ::= { cdspMgmtObjects 1 }
+cdspObjects     OBJECT IDENTIFIER ::= { cdspMgmtObjects 2 }
+cdspMIBNotificationEnables OBJECT IDENTIFIER ::= { cdspMgmtObjects 3 }
+cdspMIBNotificationPrefix OBJECT IDENTIFIER ::= { ciscoDspMgmtMIB 2 }
+cdspMIBNotifications OBJECT IDENTIFIER ::= { cdspMIBNotificationPrefix 0 }
+cdspMgmtConformance OBJECT IDENTIFIER ::= { ciscoDspMgmtMIB 3 }
+cdspMgmtCompliances OBJECT IDENTIFIER ::= { cdspMgmtConformance 1 }
+cdspMgmtGroups  OBJECT IDENTIFIER ::= { cdspMgmtConformance 2 }
+
+cdspCardStatusTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CdspCardStatusEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The DSP Card Table. It contains status information of the 
+        DSP cards present within the router."
+    ::= { cdspCardObjects 1 }
+
+cdspCardStatusEntry OBJECT-TYPE
+    SYNTAX CdspCardStatusEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry in the DSP card table indicates the 
+         DSP card state, resource utilization.
+         Each entry is created when a DSP software is detected
+         on a DSP card. The entry is deleted when the DSP card is 
+        deleted. "
+    INDEX { entPhysicalIndex }
+    ::= { cdspCardStatusTable 1 }
+
+CdspCardStatusEntry ::= SEQUENCE {
+    cdspCardIndex Integer32,
+    cdspCardState INTEGER,
+    cdspCardResourceUtilization Unsigned32,
+    cdspCardLastHiWaterUtilization Unsigned32,
+    cdspCardLastResetTime TimeStamp,
+    cdspCardMaxChanPerDSP Unsigned32
+    }
+
+cdspCardIndex OBJECT-TYPE
+    SYNTAX Integer32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The object corresponds to cardIndex in the chassis mib. 
+         If value of this object is 0, then the entry is not
+         associated to cardIndex of the chassis mib."
+    ::= { cdspCardStatusEntry 1 }
+
+cdspCardState OBJECT-TYPE
+    SYNTAX INTEGER {
+        normal(1),
+        warning(2),
+        critical(3),
+        fatal(4),
+        offLine(5)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The object indicates the current state of
+         DSP card being monitored.
+         normal   - DSP card in normal condition.
+         warning  - DSP card has some problem and need attention.
+         critical - DSP card has a major alarm.
+         fatal    - DSP card is not functional.
+                    DSP subsystem might reset DSP card to 
+                    recover it from the fatal error condition.
+                    After the DSP card is reset successfully,
+                    the object cdspCardResourceUtilization and
+                    cdspCardLastHiWaterUtilization are reset to
+                    0.
+                    If the fatal error is persistent in this object
+                    after card is reset, the card should be replaced. 
+         offLine  - DSP card is in off-line maintenance state."
+    ::= { cdspCardStatusEntry 2 }
+
+cdspCardResourceUtilization OBJECT-TYPE
+    SYNTAX Unsigned32(0..100)
+--    Rsyntax Gauge32(0..100)
+--  Units
+--    percent
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The object indicates the percentage of current DSP 
+         resource utilization of the card. The utilization is a 
+        ratio of number of busy DSP resources (for handling calls, 
+        transcoding, voice compression,...) to the total available 
+        DSP resources."
+    ::= { cdspCardStatusEntry 3 }
+
+cdspCardLastHiWaterUtilization OBJECT-TYPE
+    SYNTAX Unsigned32(0..100)
+--    Rsyntax Gauge32(0..100)
+--  Units
+--    percent
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The object indicates the last high water mark of DSP 
+         resource utilization. This object is reset to 0 after
+         DSP card is reset."
+    ::= { cdspCardStatusEntry 4 }
+
+cdspCardLastResetTime OBJECT-TYPE
+    SYNTAX TimeStamp
+--    Rsyntax TimeTicks
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The value of sysUpTime when the last DSP card reset
+         occurred."
+    ::= { cdspCardStatusEntry 5 }
+
+cdspCardMaxChanPerDSP OBJECT-TYPE
+    SYNTAX Unsigned32
+--    Rsyntax Gauge32
+--  Units
+--    channels
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The maximum number of channels allowed in each DSP. 
+         The value is chosen in an implementation-dependent
+         manner by the DSP functionality.
+         The value of 0 in this object indicates Channelized
+         DSP mode is turned off."
+    ::= { cdspCardStatusEntry 6 }
+
+cdspStatusTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CdspStatusEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Status information for the DSPs.
+         For tracking dangling DSP resources, the dangling DSP 
+        channels can be computed by 
+        'cdspInUseChannels - cdspActiveChannels'."
+    ::= { cdspObjects 1 }
+
+cdspStatusEntry OBJECT-TYPE
+    SYNTAX CdspStatusEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry in the DSP table indicates the DSP state and 
+        alarm conditions. Each entry is created when a DSP is 
+        detected on a DSP card. The entry is deleted when the DSP 
+        card is deleted. "
+    INDEX { entPhysicalIndex }
+    ::= { cdspStatusTable 1 }
+
+CdspStatusEntry ::= SEQUENCE {
+    cdspOperState INTEGER,
+    cdspAlarms Counter32,
+    cdspLastAlarmCause INTEGER,
+    cdspLastAlarmCauseText DisplayString,
+    cdspLastAlarmTime TimeStamp,
+    cdspTotalChannels Unsigned32,
+    cdspInUseChannels Gauge32,
+    cdspActiveChannels Gauge32
+    }
+
+cdspOperState OBJECT-TYPE
+    SYNTAX INTEGER {
+        normal(1),
+        shutdown(2)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The current operational state of the DSP.
+         normal   - DSP operates normally 
+         shutdown - DSP is shutdown due to fatal error."
+    ::= { cdspStatusEntry 1 }
+
+cdspAlarms OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The object indicates the accumulated number of DSP
+         Alarms."
+    ::= { cdspStatusEntry 2 }
+
+cdspLastAlarmCause OBJECT-TYPE
+    SYNTAX INTEGER {
+        other(1),
+        noAlarm(2),
+        dspFatalError(3),
+        dspMemoryError(4),
+        dspBufferError(5),
+        dspDownloadError(6)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The object indicates the current or last alarm state of 
+         DSP.
+         other            - none of the following
+         noAlarm          - alarm condition had not been detected
+         dspFatalError    - DSP fatal error 
+         dspMemoryError   - DSP memory error is detected
+         dspBufferError   - DSP buffer error
+         dspDownloadError - Failed to download software to DSP. 
+         The cdspOperState will be set to 'shutdown(2) if the
+         alarm condition of DSP is persistent."
+    ::= { cdspStatusEntry 3 }
+
+cdspLastAlarmCauseText OBJECT-TYPE
+    SYNTAX DisplayString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The object indicates the failure reason for the current
+         or last DSP Alarm.
+         It should be used only for direct, human-readable display 
+        and only if a management station is unable to
+         decode the value of cdspLastAlarmCause."
+    ::= { cdspStatusEntry 4 }
+
+cdspLastAlarmTime OBJECT-TYPE
+    SYNTAX TimeStamp
+--    Rsyntax TimeTicks
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The value of sysUpTime when the last DSP Alarm
+         occurred. The value of this object is 0 if the value of
+         cdspLastAlarmCause object is noAlarm. "
+    ::= { cdspStatusEntry 5 }
+
+cdspTotalChannels OBJECT-TYPE
+    SYNTAX Unsigned32
+--    Rsyntax Gauge32
+--  Units
+--    channels
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of channels in the DSP. This value is 
+         predetermined by the DSP functionality upon initialization.
+         The value of 0 in this object indicates Channelized DSP 
+        mode is turned off."
+    ::= { cdspStatusEntry 6 }
+
+cdspInUseChannels OBJECT-TYPE
+    SYNTAX Gauge32
+--  Units
+--    channels
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of channels that are reserved for
+         serving calls. The value is incremented when the
+         DSP channel is reserved for call setup and
+         is decremented after the DSP channel is free
+         due to call disconnection."
+    ::= { cdspStatusEntry 7 }
+
+cdspActiveChannels OBJECT-TYPE
+    SYNTAX Gauge32
+--  Units
+--    channels
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of channels that are used by
+         active calls to process media stream.
+         The value is incremented after the reserved DSP
+         channel enters call connection state and is decremented
+         after the call is disconnected."
+    ::= { cdspStatusEntry 8 }
+
+cdspMIBEnableCardStatusNotification OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This variable  indicates  whether  the  system
+         produces the cdspMIBCardStateNotification.  A false
+         value will prevent DSP card fatal notifications
+         from being generated by this system."
+    DEFVAL { false }
+    ::= { cdspMIBNotificationEnables 1 }
+
+cdspMIBCardStateNotification TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cdspMIBNotificationPrefix
+    VARIABLES {
+        cdspCardState }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "A cdspMIBCardStateNotification is sent when the cdspCardState
+         enters into or exits from fatal(4) state. "
+    ::= 1
+
+cdspMgmtGeneralInfoGroup OBJECT IDENTIFIER ::= { cdspMgmtGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the Digital Signal Processing
+--     related information.
+--  objects
+--    cdspCardIndex, cdspCardState, cdspCardResourceUtilization, 
+--    cdspCardLastHiWaterUtilization, cdspCardLastResetTime, 
+--    cdspOperState, cdspAlarms, cdspLastAlarmCause, 
+--    cdspLastAlarmCauseText, cdspLastAlarmTime, 
+--    cdspMIBEnableCardStatusNotification
+
+cdspChannelGroup OBJECT IDENTIFIER ::= { cdspMgmtGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing information
+--     specific for multiple channels per DSP.
+--  objects
+--    cdspCardMaxChanPerDSP, cdspTotalChannels, cdspInUseChannels, 
+--    cdspActiveChannels
+
+cdspMgmtCompliance OBJECT IDENTIFIER ::= { cdspMgmtCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for systems that contain a 
+--    Cisco DSP card and its associated DSPs. 
+--  Module
+--    >>current<<
+--   MandGroup
+--    cdspMgmtGeneralInfoGroup
+
+cdspMgmtComplianceRev1 OBJECT IDENTIFIER ::= { cdspMgmtCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for systems that contain a 
+--    Cisco DSP card and its associated DSPs.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cdspMgmtGeneralInfoGroup
+--   OptGroup
+--    cdspChannelGroup
+
+
+END
+

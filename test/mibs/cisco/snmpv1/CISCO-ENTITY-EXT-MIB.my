@@ -1,0 +1,398 @@
+-- MIB file created 14-Sep-2001 10:54:20, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-ENTITY-EXT-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-ENTITY-EXT-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+    DisplayString
+            FROM SNMPv2-TC-v1
+    entPhysicalIndex
+            FROM ENTITY-MIB
+    ciscoMgmt
+            FROM CISCO-SMI
+    Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
+
+ciscoEntityExtMIB OBJECT IDENTIFIER ::= { ciscoMgmt 195 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200104050000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--           Cisco Systems
+--            Customer Service
+--    
+--    Postal: 170 W. Tasman Drive
+--            San Jose, CA 95134
+--            USA
+--    
+--       Tel: +1 800 553-NETS
+--    
+--    E-mail: cs-snmp@cisco.com
+--  Descr
+--    This MIB is an extension of the ENTITY-MIB
+--     specified in RFC2737.
+--    
+--     This MIB module contains  Cisco-defined  extensions 
+--     to the  entityPhysicalTable to represent infomation
+--     related to entities of class module(entPhysicalClass
+--     = 'module') which have a Processor.
+--    
+--                   A processor module is defined as a physical entity
+--                   that has a CPU, RAM and NVRAM  so that
+--                   it can independently
+--                      - load a bootable image
+--                      - save configuration.
+--     This module is the entry point for external
+--     applications like SNMP Manager, CLI, FTP etc.
+--    
+--     Line card is an interface card  with atleast a 
+--     Processor and RAM. This might be referred to as 
+--     Service Module in some cisco products.
+--    
+--     A configuration register is  a 16 bit 
+--     software register.
+--     The configuration register is mainly used to 
+--     check for instructions on where to find the Cisco 
+--     Operating System software.
+--     Some other functions of configuration register are:
+--      - To select a boot source and default boot filename.
+--      - To enable or disable the Break function.
+--      - To control broadcast addresses.
+--      - To set the console terminal baud rate.
+--      - To load operating software from Flash memory.
+--      - To allow us to manually boot the system using the 
+--        boot command at the bootstrap program prompt.
+--     
+--     Booting is the process of initializing the
+--     hardware and starting the Operating System.
+--  RevDate
+--    200104050000Z
+--  RevDescr
+--    Initial version of this MIB module.
+
+ciscoEntityExtMIBObjects OBJECT IDENTIFIER ::= { ciscoEntityExtMIB 1 }
+ciscoEntityExtMIBNotificationPrefix OBJECT IDENTIFIER ::= { ciscoEntityExtMIB 2 }
+ciscoEntityExtMIBNotifications OBJECT IDENTIFIER ::= { ciscoEntityExtMIBNotificationPrefix 0 }
+ciscoEntityExtMIBConformance OBJECT IDENTIFIER ::= { ciscoEntityExtMIB 3 }
+ciscoEntityExtMIBCompliances OBJECT IDENTIFIER ::= { ciscoEntityExtMIBConformance 1 }
+ciscoEntityExtMIBGroups OBJECT IDENTIFIER ::= { ciscoEntityExtMIBConformance 2 }
+
+ConfigRegisterValue ::= OCTET STRING(SIZE(2))
+-- TEXTUAL-CONVENTION
+--  DspHint
+--    x
+--  Status
+--    mandatory
+--  Descr
+--    An Integer containing the value of config register.
+--     
+--     The definition of individual bits from left to right 
+--     when set are as follows:
+--    
+--     00 to 
+--     03  Boot Fields(Refer below for
+--      explanation).
+--    
+--     04 to 
+--     05  Not Used.
+--    
+--     06  Causes system software to ignore the 
+--      contents of NVRAM.
+--    
+--     07  Enable the original equipment 
+--      manufacturer (OEM) bit.
+--    
+--     08  The Break function is disabled.
+--    
+--     09  Not used.
+--    
+--     10  Broadcast based on 0.0.0.0 IP address.
+--    
+--     11 to 
+--     12  Defines the console baud rate as below:
+--      Bits 11 & 12 unset: 9600 baud(default),
+--      Bit 11 set & 12 unset: 4800 baud,
+--      Bit 11 unset & 12 set: 1200 baud,
+--      Bit 11 set & 12 set: 2400 baud
+--    
+--     13  Boots default Flash software if 
+--      network boot fails.
+--    
+--     14  IP broadcasts do not have network numbers.
+--    
+--     15  Enables diagnostic messages and ignores 
+--      the contents of NVRAM.
+--        
+--    
+--    Meanings for different values of Boot Fields
+--    (Bits 00 to 03) are explained below:
+--    
+--    Value(in hex) Description
+--    ============    ===========
+--     00  On powerup or reload, the system
+--      remains at the ROM monitor prompt 
+--      (rommon>), awaiting a user command 
+--      to boot the system manually by means 
+--      of the rommon boot command.
+--    
+--     01  On powerup or reload, the system loads
+--      the system image found in onboard 
+--      Flash memory.
+--    
+--     02 to  On powerup or reload, the system loads
+--     0F  the system image specified by 
+--      ceExtSysBootImageList.
+--      It tries to boot the
+--      image in the order in which 
+--      the image names are entered in 
+--      ceExtSysBootImageList. If 
+--      it cannot boot any image in the
+--      ceExtSysBootImageList, it 
+--      stays in ROM monitor mode.
+
+BootImageList ::= DisplayString(SIZE(0..255))
+-- Rsyntax OCTET STRING(SIZE(0..255))
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    This contains a list of  boot images, 
+--    each separated by the ';' (semi-colon) character.  
+--    The following provides a syntax for parsing a single
+--    boot image list item.
+--    
+--     <device>:[filename] | <URL>
+--    
+--    <device> can be (but not limited to):
+--    flash, bootflash, slot0, rom, C
+--    The transfer protocol used in the <URL>
+--    can be (but not limited to):
+--    tftp, ftp, rcp, mop.
+--    
+--    The following is en example containing two boot image
+--    names:  
+--    disk0:c7100-ik2s-mz;tftp://dirt/c7100-ik2s-mz
+--    
+--    If the filename is not  specified, then the
+--    first file on the <device> will be used.
+--    
+--    If the last two characters in the returned value
+--    are ';+' this indicates that additional boot image
+--    items are configured on the device but can not
+--    be returned because the maximum string size limitation
+--    would be exceeded.
+--    
+--    For example:
+--    disk0:image1;disk0:image2;+
+
+ceExtPhysicalProcessorTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CeExtPhysicalProcessorEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The ceExtPhysicalProcessorTable extends
+         the ENTITY-MIB entPhysicalTable for modules
+         (Non FRUs(Field Replacable Units) or FRUs)."
+    REFERENCE
+        "RFC2737: Section 2.12.1"
+    ::= { ciscoEntityExtMIBObjects 1 }
+
+ceExtPhysicalProcessorEntry OBJECT-TYPE
+    SYNTAX CeExtPhysicalProcessorEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A ceExtPhysicalProcessorTable entry extends 
+         a corresponding entPhysicalTable entry of class
+         module(entPhysicalClass = 'module').
+        
+         A processor module or line card which 
+         has a processor will have an entry in
+         this table.
+        
+         A processor module or line card having
+         multiple processors and is a SMP(Symmetric
+         multi processor) system will have only 
+         one entry corresponding to all the processors 
+         since the resources defined below are shared.
+        
+         A processor module or line card having
+         multiple processors and is not an SMP system
+         would register the processors as separate entities.
+        
+                Entries are created by the agent at the system power-up
+         or module insertion.
+        
+         Entries are removed when the module is reset or removed."
+    INDEX { entPhysicalIndex }
+    ::= { ceExtPhysicalProcessorTable 1 }
+
+CeExtPhysicalProcessorEntry ::= SEQUENCE {
+    ceExtProcessorRam Gauge,
+    ceExtNVRAMSize Gauge,
+    ceExtNVRAMUsed Gauge
+    }
+
+ceExtProcessorRam OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of bytes of RAM available on the
+         Processor."
+    ::= { ceExtPhysicalProcessorEntry 1 }
+
+ceExtNVRAMSize OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of bytes of NVRAM in the entity.
+         
+         A value of 0 for this object means the entity
+         does not support NVRAM or NVRAM information 
+         is not available."
+    ::= { ceExtPhysicalProcessorEntry 2 }
+
+ceExtNVRAMUsed OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Number of bytes of NVRAM in use. This object
+         is irrelevent if ceExtNVRAMSize is 0."
+    ::= { ceExtPhysicalProcessorEntry 3 }
+
+ceExtConfigRegTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CeExtConfigRegEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The ceExtConfigRegTable extends
+         the ENTITY-MIB entPhysicalTable."
+    REFERENCE
+        "RFC2737: Section 2.12.1"
+    ::= { ciscoEntityExtMIBObjects 2 }
+
+ceExtConfigRegEntry OBJECT-TYPE
+    SYNTAX CeExtConfigRegEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A ceExtConfigRegTable entry extends 
+         a corresponding entPhysicalTable entry of class
+         module which has a configuration register.
+        
+                Entries are created by the agent at the system power-up
+         or module insertion.
+        
+         Entries are removed when the module is reset or 
+         removed."
+    INDEX { entPhysicalIndex }
+    ::= { ceExtConfigRegTable 1 }
+
+CeExtConfigRegEntry ::= SEQUENCE {
+    ceExtConfigRegister ConfigRegisterValue,
+    ceExtConfigRegNext ConfigRegisterValue,
+    ceExtSysBootImageList BootImageList
+    }
+
+ceExtConfigRegister OBJECT-TYPE
+    SYNTAX ConfigRegisterValue
+--    Rsyntax OCTET STRING(SIZE(2))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The value of configuration register with which 
+         the processor module booted."
+    ::= { ceExtConfigRegEntry 1 }
+
+ceExtConfigRegNext OBJECT-TYPE
+    SYNTAX ConfigRegisterValue
+--    Rsyntax OCTET STRING(SIZE(2))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The value of configuration register in the 
+         processor module at next reboot. Just after 
+         the reboot this has the same value as 
+         ceExtConfigRegister."
+    ::= { ceExtConfigRegEntry 2 }
+
+ceExtSysBootImageList OBJECT-TYPE
+    SYNTAX BootImageList
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The list of system boot images which
+         can be used for booting."
+    DEFVAL { "" }
+    ::= { ceExtConfigRegEntry 3 }
+
+ciscoEntityExtPhysicalProcessorGroup OBJECT IDENTIFIER ::= { ciscoEntityExtMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of objects which give information about
+--    the Processor RAM and NVRAM.
+--  objects
+--    ceExtProcessorRam, ceExtNVRAMSize, ceExtNVRAMUsed
+
+ciscoEntityExtConfigRegGroup OBJECT IDENTIFIER ::= { ciscoEntityExtMIBGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of objects which give information about
+--    configuration register.
+--    
+--    Implementation of this group is optional.
+--  objects
+--    ceExtConfigRegister, ceExtConfigRegNext
+
+ciscoEntityExtSysBootImageListGroup OBJECT IDENTIFIER ::= { ciscoEntityExtMIBGroups 3 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A group containing an object providing information 
+--    about the system boot images.
+--    
+--    Implementation of this group is optional.
+--  objects
+--    ceExtSysBootImageList
+
+ciscoEntityExtMIBCompliance OBJECT IDENTIFIER ::= { ciscoEntityExtMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    Compliance for SNMP Entities which support modules 
+--    with CPU, NVRAM and configuration register.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoEntityExtPhysicalProcessorGroup
+--   OptGroup
+--    ciscoEntityExtConfigRegGroup
+--   OptGroup
+--    ciscoEntityExtSysBootImageListGroup
+
+
+END
+

@@ -1,0 +1,223 @@
+CISCO-UDLDP-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+        MODULE-IDENTITY, OBJECT-TYPE    
+               FROM SNMPv2-SMI                 
+        TruthValue
+               FROM SNMPv2-TC
+        MODULE-COMPLIANCE, OBJECT-GROUP  
+               FROM SNMPv2-CONF
+        ifIndex
+               FROM IF-MIB
+        ciscoMgmt                        
+                FROM CISCO-SMI;
+
+ciscoUdldpMIB MODULE-IDENTITY
+        LAST-UPDATED        "200004100000Z"
+        ORGANIZATION        "Cisco Systems, Inc."
+        CONTACT-INFO
+                "       Cisco Systems
+                        Customer Service
+
+                Postal: 170 W Tasman Drive
+                        San Jose, CA  95134
+                        USA
+
+                   Tel: +1 800 553-NETS
+
+                E-mail: cs-wbu@cisco.com"
+
+        DESCRIPTION
+                  "Cisco Uni Direction Link Detection Protocol
+                   MIB"
+
+        REVISION    "200004100000Z" 
+        DESCRIPTION
+                    "Added two UDLDP AggressiveMode objects"
+
+        REVISION    "9811100000Z" 
+        DESCRIPTION
+                "Initial version of this MIB module."
+        ::= { ciscoMgmt 118 }
+
+
+ciscoUdldpMIBObjects OBJECT IDENTIFIER ::=  { ciscoUdldpMIB 1 }
+
+cudldpGlobal         OBJECT IDENTIFIER ::=  { ciscoUdldpMIBObjects 1 }
+cudldpInterface      OBJECT IDENTIFIER ::=  { ciscoUdldpMIBObjects 2 }
+
+
+
+-- cudldpGlobal
+
+cudldpGlobalEnable OBJECT-TYPE
+     SYNTAX      TruthValue 
+     MAX-ACCESS  read-write
+     STATUS      current
+     DESCRIPTION
+                    "This variable is used to 
+                     enable(true)/disable(false) Uni Direction 
+                     Link Detection Protocol on the device"
+        DEFVAL { true } 
+        ::= { cudldpGlobal 1 }
+
+cudldpHelloInterval OBJECT-TYPE
+        SYNTAX      INTEGER  (7..90)
+        UNITS       "seconds"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+                    "Indicates interval in seconds at which each port
+                     sends a hello packet to all of its neighbors at
+                     steady state when the link has been identified as
+                     bidirectional."
+        DEFVAL { 60 }
+        ::= { cudldpGlobal 2 }
+
+-- cudldpInterface
+
+cudldpInterfaceTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF CudldpInterfaceEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+                "The (conceptual) table containing the status 
+                 of UDLDP on the device's interfaces."
+        ::= { cudldpInterface 1 }
+
+cudldpInterfaceEntry OBJECT-TYPE
+        SYNTAX      CudldpInterfaceEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+                  "A conceptual row of cudldpInterfaceTable. An 
+                   entry exists for each interface that supports 
+                   UDLDP."
+        INDEX { ifIndex }
+        ::= { cudldpInterfaceTable 1 }
+
+CudldpInterfaceEntry ::= SEQUENCE {
+      cudldpInterfaceEnable         TruthValue,
+      cudldpInterfaceOperStatus     INTEGER,
+      cudldpInterfaceAggressiveMode TruthValue
+}
+cudldpInterfaceEnable  OBJECT-TYPE
+        SYNTAX        TruthValue
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION
+                "This variable is used to enable UDLDP on this 
+                 interface.  If cudldpGlobalEnable is set to 
+                 'false' then this variable has no effect"
+        DEFVAL { true } 
+::= { cudldpInterfaceEntry 1}
+
+
+cudldpInterfaceOperStatus OBJECT-TYPE
+        SYNTAX        INTEGER {
+                                shutdown(1), 
+                                indeterminant(2),
+                                bidirectional(3), 
+                                notapplicable(4)
+                              }
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION
+               " This mib oject contains the following values,
+                 which has the meaning as:
+                 'shutdown'       - An Uni-Direction link  has been 
+                                    detected and the port has been 
+                                       disabled.
+                 'indeterminant' - Uni-Direction Link Detection  
+                                   protocol has not collected enough
+                                   information to determine if the 
+                                      link is bidirectional or not.
+                 'bi-directional' - A bidirectional link has been 
+                                    detected.
+                 'not-applicable' - Uni-Direction Link Detection 
+                                    Protocol is disabled. 
+                "
+::= { cudldpInterfaceEntry 2}
+cudldpInterfaceAggressiveMode OBJECT-TYPE
+        SYNTAX        TruthValue 
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION
+                  "An indication of whether the UDLDP aggressive mode 
+                   is enabled on this interface. If the 
+                   aggressive mode is set to 'true', an active port may 
+                   be shutdown in case of the abrupt loss of its 
+                   neighbor(s) because the loss of communication
+                   (heartbeat) with the neighbor(s) is assumed to be
+                   caused by a fault; thus, the cudldpInterfaceOperStatus
+                   of the active port will be 'shutdown'. Instead, when
+                   the aggressive mode is set to 'false', and if there
+                   is a loss of communication with the neighbor(s), then
+                   the cudldpInterfaceOperStatus of the active port
+                   will be 'indeterminant'. 
+                   Therefore, this mode is recommended 
+                   only for links that don't use hubs, media converters 
+                   or similar devices, and where the unexpected loss of 
+                   the port's neighbor is not an admissible condition."
+        DEFVAL { false } 
+        ::= { cudldpInterfaceEntry 3}
+
+-- Conformance
+
+ciscoUdldpMIBConformance OBJECT IDENTIFIER ::= { ciscoUdldpMIB 3 }
+
+ciscoUdldpMIBCompliances OBJECT IDENTIFIER 
+                                 ::= { ciscoUdldpMIBConformance 1 }
+
+ciscoUdldpMIBGroups OBJECT IDENTIFIER ::= { ciscoUdldpMIBConformance 2 }
+
+-- compliance statements
+
+ciscoUdldpMIBCompliance MODULE-COMPLIANCE
+        STATUS  deprecated
+        DESCRIPTION
+                "The compliance statement for the CISCO-UDLDP-MIB."
+        MODULE  -- this module
+        MANDATORY-GROUPS { ciscoUdldpMIBGroup }
+
+        ::= { ciscoUdldpMIBCompliances 1 }
+
+ciscoUdldpMIBComplianceRev1 MODULE-COMPLIANCE
+        STATUS  current
+        DESCRIPTION
+                "The compliance statement for the CISCO-UDLDP-MIB."
+        MODULE  -- this module
+        MANDATORY-GROUPS { ciscoUdldpMIBGroup  }
+ 
+        GROUP        ciscoUdldpAggreModeOptionalGroup
+        DESCRIPTION
+                "This group is mandatory if the managed system 
+                 supports UDLDP aggressive mode feature."
+
+        ::= { ciscoUdldpMIBCompliances 2 }
+
+-- Units of Conformance
+
+ciscoUdldpMIBGroup OBJECT-GROUP
+      OBJECTS {
+               cudldpGlobalEnable,
+               cudldpInterfaceEnable,
+               cudldpInterfaceOperStatus
+              }
+      STATUS  current
+      DESCRIPTION
+              "A collection of objects for use with the  Uni Direction 
+               Link Detection Protocol."
+        ::= { ciscoUdldpMIBGroups 1 }
+
+ciscoUdldpAggreModeOptionalGroup OBJECT-GROUP
+      OBJECTS {
+               cudldpInterfaceAggressiveMode,
+               cudldpHelloInterval
+              }
+      STATUS  current
+      DESCRIPTION
+              " A collection of optional objects providing UDLDP 
+                aggressive mode configuration information." 
+        ::= { ciscoUdldpMIBGroups 2 }
+END

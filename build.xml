@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  build.xml
+
+  This work is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published
+  by the Free Software Foundation; either version 2 of the License,
+  or (at your option) any later version.
+
+  This work is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software 
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+  USA
+
+  As a special exception, the copyright holders of this library give
+  you permission to link this library with independent modules to
+  produce an executable, regardless of the license terms of these
+  independent modules, and to copy and distribute the resulting
+  executable under terms of your choice, provided that you also meet,
+  for each linked independent module, the terms and conditions of the
+  license of that module. An independent module is a module which is
+  not derived from or based on this library. If you modify this
+  library, you may extend this exception to your version of the
+  library, but you are not obligated to do so. If you do not wish to
+  do so, delete this exception statement from your version.
+
+  Copyright (c) 2003 Per Cederberg. All rights reserved.
+-->
+
+<project name="mibble" default="package" basedir=".">
+
+
+<!-- INITIALIZATION -->
+  <property name="build.dir"
+            value="${basedir}" />
+
+  <path id="project.class.path">
+    <pathelement location="${build.dir}/lib/grammatica-1.2.jar" />
+  </path>
+
+  <target name="init">
+    <tstamp>
+      <format property="build.printdate" 
+              pattern="yyyy-MM-dd" />
+    </tstamp>
+    <condition property="build.version" value="${DSTAMP}">
+      <not>
+        <isset property="build.version" />
+      </not>
+    </condition>
+    <property name="build.date" value="${DSTAMP}" />
+  </target>  
+
+
+<!-- CODE GENERATION TARGETS -->
+  <target name="codegen">
+    <java classname="net.percederberg.grammatica.Grammatica"
+          classpathref="project.class.path"
+          failonerror="true">
+	  <arg value="${build.dir}/src/grammar/asn1.grammar" />
+	  <arg value="--javaoutput" />
+	  <arg value="${build.dir}/src/java" />
+	  <arg value="--javapackage" />
+	  <arg value="net.percederberg.mibble.asn1" />
+	  <arg value="--javapublic" />
+    </java>
+  </target>
+
+
+<!-- COMPILATION TARGETS -->
+  <target name="compile" 
+          depends="init,codegen,compile-clean,compile-java">
+    <jar jarfile="${build.dir}/lib/mibble-${build.version}.jar"
+         includesfile="${build.dir}/LICENSE.txt">
+      <fileset dir="${build.dir}" includes="*.txt" />
+      <fileset dir="${build.dir}/classes" />
+      <zipfileset dir="${build.dir}/src/mibs" 
+                  prefix="mibs"  />
+    </jar>
+  </target>
+
+  <target name="compile-clean">
+    <delete>
+      <fileset dir="${build.dir}/classes" />
+      <fileset dir="${build.dir}/lib" 
+               includes="mibble*.jar" />
+    </delete>
+    <mkdir dir="${build.dir}/classes" />
+    <mkdir dir="${build.dir}/lib" />
+  </target>
+
+  <target name="compile-java">
+    <javac srcdir="${build.dir}/src/java"
+           destdir="${build.dir}/classes"
+           classpathref="project.class.path"
+           target="1.1"
+           debug="on"
+           deprecation="on" />
+  </target>
+
+
+<!-- TEST TARGETS -->
+  <target name="test" depends="compile,test-mibs">
+  </target>
+
+  <target name="test-mibs">
+    <apply executable="java"
+           dir="${build.dir}"
+           relative="true"
+           parallel="true"
+           failonerror="true">
+      <arg line="-cp lib/mibble-${build.version}.jar:lib/grammatica-1.2.jar" />
+      <arg value="net.percederberg.mibble.MibbleValidator" />
+      <fileset dir="${build.dir}">
+        <include name="src/mibs/**/*" />
+      </fileset>
+    </apply>
+  </target>  
+
+
+<!-- DOCUMENTATION TARGETS -->
+  <target name="doc" depends="init,doc-clean,doc-text,doc-html,doc-java">
+  </target>
+
+  <target name="doc-clean">
+    <delete dir="${build.dir}/doc" />
+    <mkdir dir="${build.dir}/doc" />
+    <mkdir dir="${build.dir}/doc/api" />
+  </target>
+
+  <target name="doc-text">
+    <xslt style="${build.dir}/src/doc/txt.xsl"
+          basedir="${build.dir}/src/doc/release"
+          destdir="${build.dir}/doc"
+          extension=".txt"
+          includes="*.xml">
+      <param name="version" expression="${build.version}" />
+      <param name="date" expression="${build.printdate}" />
+    </xslt>
+  </target>
+
+  <target name="doc-html">
+    <copy file="${build.dir}/src/doc/style.css"
+          todir="${build.dir}/doc" />
+    <xslt style="${build.dir}/src/doc/html.xsl"
+          basedir="${build.dir}/src/doc/release"
+          destdir="${build.dir}/doc"
+          extension=".html"
+          includes="*.xml">
+      <param name="version" expression="${build.version}" />
+      <param name="date" expression="${build.printdate}" />
+      <param name="style" expression="style.css" />
+    </xslt>
+  </target>
+
+  <target name="doc-java">
+    <javadoc packagenames="net.percederberg.mibble.*"
+             sourcepath="${build.dir}/src/java"
+             destdir="${build.dir}/doc/api"
+             classpath="${build.dir}/classes"
+             classpathref="project.class.path"
+             version="false"
+             use="true"
+             author="false"
+             windowtitle="Mibble ${build.version} Documentation" 
+             failonerror="true" />
+  </target>
+
+
+<!-- PACKAGING TARGETS -->
+  <target name="package" depends="init,codegen,compile,test,doc">
+    <delete>
+      <fileset dir="${build.dir}" includes="mibble-*.tar.gz" />
+    </delete>
+	<tar tarfile="${build.dir}/mibble-${build.version}.tar.gz"
+	     longfile="gnu"
+	     compression="gzip">
+      <tarfileset dir="${build.dir}"
+                  prefix="mibble-${build.version}">
+        <include name="*.txt" />
+        <include name="*.xml" />
+        <include name="lib/**" />
+        <include name="src/**" />
+        <include name="doc/**" />
+      </tarfileset>
+	</tar>
+  </target>
+
+</project>

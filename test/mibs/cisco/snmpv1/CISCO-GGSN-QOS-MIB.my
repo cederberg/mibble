@@ -1,0 +1,361 @@
+-- MIB file created 09-Jan-2002 16:20:16, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-GGSN-QOS-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-GGSN-QOS-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+--    Unsigned32
+--            FROM CISCO-TC
+    ciscoMgmt
+            FROM CISCO-SMI
+    Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
+
+cggsnQosMIB OBJECT IDENTIFIER ::= { ciscoMgmt 241 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200112061330Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--           Cisco Systems
+--            Customer Service
+--    
+--    Postal: 170 W Tasman Drive
+--            San Jose, CA  95134
+--            USA
+--    
+--       Tel: +1 800 553-NETS
+--    
+--    E-mail: cs-gprs@cisco.com
+--  Descr
+--    This MIB module manages the Quality of Service 
+--    parameters of GGSN in a GPRS system.
+--    
+--    GGSN is the Gateway GPRS Support Node in the GPRS
+--    architecture. It provides interworking of GPRS 
+--    network with external packet-switched networks 
+--    - PDNs or other data networks.
+--    
+--    The following diagram illustrates a simplified GPRS
+--    logical architecture with the name of inter-node
+--    interface:
+--    
+--    +=============================================+
+--    |                         +======+   a PLMN   |
+--    |                         | SGSN |            |
+--    |                         +======+            |
+--    |                            |                |
+--    |                            Gn               |
+--    |                            |                |
+--    |+====+   +====+ +=====+ +======+    +======+ |    +===+
+--    || TE |-R-| MT |-| BSS |-| SGSN |-Gn-| GGSN |-|-Gi-|PDN|
+--    |+====+   +====+ +=====+ +======+    +======+ |    +===+
+--    |                                        |    |
+--    |                                        |    |
+--    +========================================|====+
+--                                             Gp
+--                                             |
+--                    +=============================+
+--                    | +====+   +=====+   +======+ |
+--                    | | MS |===| BSS |===| SGSN | |
+--                    | +====+   +=====+   +======+ |
+--                    |                             |
+--                    |                other PLMN   |
+--                    +=============================+
+--    
+--    A PDP Context is an information set maintained by MS
+--    and GSNs which describes the mobile wireless service
+--    call or session.
+--    
+--    A Qos Profile is associated with each PDP context which
+--    defines multiple attributes like precedence, delay,
+--    reliability, peak throughput and mean throughput.
+--    Based on the precedence, delay and mean throughput an
+--    user is classified into different Qos classes.
+--    
+--    In GGSN, the QoS remapping mechanism is that, for 
+--    uplink traffic, the GGSN remaps the TOS in the user 
+--    traffic before forwarding the packet to the Gi 
+--    interface and for downlink traffic, the GGSN will 
+--    only setup the TOS for the IP header for the Tunnel, 
+--    not the IP header for user traffic. Traffic from MS 
+--    to PDN is considered as uplink and the reverse is 
+--    considered as downlink traffic.
+--    
+--    Two types of Qos mapping method are supported on GGSN:
+--    canonical and delay. Canonical Qos mapping consists
+--    of Best Effort, Normal and Premium Qos classes. Delay
+--    Qos mapping consists of four classes: delay1, delay2
+--    delay3 and delay-besteffort.
+--    
+--    Acronyms and terms:
+--    
+--     APN    Access Point Name
+--     ETSI   European Telecommunications Standards Institute
+--     GGSN   Gateway GPRS Support Node
+--     GPRS   General Packet Radio Service
+--     GSM    Global System for Mobile communication
+--     GSN    GPRS Support Node
+--     G-PDU  GTP PDU
+--     MS     Mobile Station
+--     PDP    Packet Data Protocol
+--     PDU    Protocol Data Unit
+--     SGSN   Serving GPRS support Node
+--     T-PDU  the payload of G-PDU
+--    
+--    REFERENCE
+--    
+--    [1] GSM 03.60: Digital cellular telecommunications
+--        system (Phase 2+); General Packet Radio Service
+--        (GPRS); Service description; Stage 2. V7.1.0
+--    
+--    [2] GSM 09.60: Digital cellular telecommunication
+--        system (Phase 2+); General Packet Radio Service
+--        (GPRS); GPRS Tunnelling Protocol (GTP) across
+--        Gn and Gp Interface. V7.3.0
+--  RevDate
+--    200112061330Z
+--  RevDescr
+--    Initial version of this MIB module.
+
+cggsnQosMIBObjects OBJECT IDENTIFIER ::= { cggsnQosMIB 1 }
+cggsnQosGeneralConfig OBJECT IDENTIFIER ::= { cggsnQosMIBObjects 1 }
+cggsnQosCanonicalQos OBJECT IDENTIFIER ::= { cggsnQosMIBObjects 2 }
+cggsnQosMIBConformances OBJECT IDENTIFIER ::= { cggsnQosMIB 2 }
+cggsnQosMIBCompliances OBJECT IDENTIFIER ::= { cggsnQosMIBConformances 1 }
+cggsnQosMIBGroups OBJECT IDENTIFIER ::= { cggsnQosMIBConformances 2 }
+
+cggsnQosMappingMethod OBJECT-TYPE
+    SYNTAX INTEGER {
+        none(1),
+        canonical(2),
+        delay(3)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the type of QoS method (canonical
+         or delay or none (best-effort)) mapped to GPRS QoS."
+    DEFVAL { none }
+    ::= { cggsnQosGeneralConfig 1 }
+
+cggsnQosClassIpTosMapTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CggsnQosClassIpTosMapEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table represents the mapping for different 
+         Qos classes to TOS precedence classes in the IP 
+         header. 
+        
+         If cggsnQosMappingMethod is set to delay(3),
+         the length of the table is 4 with the following 
+         default mapping: delay1 = 3 (flash), delay2 = 2 (immediate),
+         delay3 = 1 (priority), delay_besteffort = 0 (routine).
+        
+         If cggsnQosMappingMethod is set to canonical(2),
+         the length of the table is 3 with the following 
+         default mapping: premium = 2 (immediate), normal
+         = 1 (priority), best_effort = 0 (routine).
+          
+         If cggsnQosMappingMethod is set to none(1),
+         then the table will be empty."
+    ::= { cggsnQosGeneralConfig 2 }
+
+cggsnQosClassIpTosMapEntry OBJECT-TYPE
+    SYNTAX CggsnQosClassIpTosMapEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Entry which denotes mapping of different Qos classes 
+        to TOS precedence class and also the number of PDP
+        contexts associated with each Qos Class."
+    INDEX { cggsnQosClass }
+    ::= { cggsnQosClassIpTosMapTable 1 }
+
+CggsnQosClassIpTosMapEntry ::= SEQUENCE {
+    cggsnQosClass INTEGER,
+    cggsnQosMappedIpTos INTEGER,
+    cggsnQosCurrentPdps Gauge
+    }
+
+cggsnQosClass OBJECT-TYPE
+    SYNTAX INTEGER(1..4)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies different Qos Classes of
+        either 'canonical' or 'delay' Qos based on the 
+        value set to cggsnQosMappingMethod. The following
+        is how the value needs to be interpreted.
+        
+        If cggsnQosMappingMethod is set to delay(3),
+        1 - delay1, 2 - delay2, 3 - delay3, 
+        4 - delay_best_effort.
+        
+        If cggsnQosMappingMethod is set to canonical(2),
+        1 - premium, 2 - normal, 3 - best_effort."
+    ::= { cggsnQosClassIpTosMapEntry 1 }
+
+cggsnQosMappedIpTos OBJECT-TYPE
+    SYNTAX INTEGER(0..5)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the IP TOS precedence to which
+        cggsnQosClass is mapped. Higher TOS precedence
+        value indicates a higher service priority. The values
+        '6 (internetwork_control)' and '7 (network_control)' 
+        of TOS are not used in mapping."
+    ::= { cggsnQosClassIpTosMapEntry 2 }
+
+cggsnQosCurrentPdps OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the current number of PDP contexts
+         that have cggsnQosClass."
+    ::= { cggsnQosClassIpTosMapEntry 3 }
+
+cggsnQosTotalBandwidthResrc OBJECT-TYPE
+    SYNTAX Gauge(1..4294967295)
+--  Units
+--    bits/sec
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The total amount of bandwidth resource on the GGSN,
+         this total depends on various factors like system
+         throughput, memory size, maximum number of PDP contexts
+         supported.  A portion of the total resources will be
+         allocated to a user at the PDP context activation time
+         based on the Qos class the user is assigned to. This
+         object can only be retrieved if cggsnQosMappingMethod 
+         is set to canonical(2)."
+    DEFVAL { 1048576 }
+    ::= { cggsnQosCanonicalQos 1 }
+
+cggsnQosCurrentUsedBandwidth OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bits/sec
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The current amount of bandwidth resource used on the GGSN.
+         This object can only be retrieved if cggsnQosMappingMethod
+         is set to canonical(2)."
+    ::= { cggsnQosCanonicalQos 2 }
+
+cggsnQosPremiumMtDeviationFactor OBJECT-TYPE
+    SYNTAX Gauge(1..1000)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the mean throughput deviation
+        factor that the GGSN uses to calculate the allowable
+        data throughput for Premium Qos. This object can
+        only be retrieved if cggsnQosMappingMethod is set
+        to canonical(2)."
+    DEFVAL { 100 }
+    ::= { cggsnQosCanonicalQos 3 }
+
+cggsnQosBestEffrtBandWidthFactor OBJECT-TYPE
+    SYNTAX Gauge(1..4000000)
+--  Units
+--    bits/sec
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the bandwidth factor to be 
+        applied to canonical best-effort QoS class. This 
+        object can only be retrieved if cggsnQosMappingMethod 
+        is set to canonical(2)."
+    DEFVAL { 10 }
+    ::= { cggsnQosCanonicalQos 4 }
+
+cggsnQosPremiumMeanThroughput OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes/sec
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The sum of the mean throughput of premium class QOS
+         users on the GSN. This object can only be retrieved
+         if cggsnQosMappingMethod is set to canonical(2)."
+    ::= { cggsnQosCanonicalQos 5 }
+
+cggsnQosNormalMeanThroughput OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes/sec
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The sum of the mean throughput of normal class QOS
+         users on the GSN. This object can only be retrieved
+         if cggsnQosMappingMethod is set to canonical(2)."
+    ::= { cggsnQosCanonicalQos 6 }
+
+cggsnQosBestEffortMeanThroughput OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes/sec
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The sum of the mean throughput of best-effort class
+         QOS users on the GSN. This object can only be retrieved
+         if cggsnQosMappingMethod is set to canonical(2)."
+    ::= { cggsnQosCanonicalQos 7 }
+
+cggsnQosGeneralConfigGroup OBJECT IDENTIFIER ::= { cggsnQosMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing general Qos 
+--    configurations.
+--  objects
+--    cggsnQosMappingMethod, cggsnQosMappedIpTos, 
+--    cggsnQosCurrentPdps
+
+cggsnQosCanonicalQosGroup OBJECT IDENTIFIER ::= { cggsnQosMIBGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects specific to Canonical Qos
+--    on GGSN.
+--  objects
+--    cggsnQosTotalBandwidthResrc, cggsnQosCurrentUsedBandwidth, 
+--    cggsnQosPremiumMtDeviationFactor, 
+--    cggsnQosBestEffrtBandWidthFactor, 
+--    cggsnQosPremiumMeanThroughput, cggsnQosNormalMeanThroughput, 
+--    cggsnQosBestEffortMeanThroughput
+
+cggsnQosMIBCompliance OBJECT IDENTIFIER ::= { cggsnQosMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statements for entities which
+--    implement the CISCO GGSN QOS MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cggsnQosGeneralConfigGroup
+--   MandGroup
+--    cggsnQosCanonicalQosGroup
+
+
+END
+

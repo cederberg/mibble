@@ -1,0 +1,875 @@
+-- MIB file created 27-Jun-2001 15:18:05, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-RMON-CONFIG-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-RMON-CONFIG-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+    TruthValue
+            FROM SNMPv2-TC-v1
+    ifIndex, InterfaceIndex
+            FROM IF-MIB
+    portCopySource, portCopyDest
+            FROM SMON-MIB
+    ciscoMgmt
+            FROM CISCO-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
+
+ciscoRmonConfigMIB OBJECT IDENTIFIER ::= { ciscoMgmt 103 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200104010000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--           Cisco Systems
+--            Customer Service
+--    
+--    Postal: 170 W Tasman Drive
+--            San Jose, CA  95134
+--            USA
+--    
+--       Tel: +1 800 553-NETS
+--    
+--    E-mail: cs-rmon@cisco.com
+--  Descr
+--    This module defines configuration extensions for
+--    some of the IETF RMON MIBs.
+--    
+--    The following terms are used throughout this MIB:
+--    
+--       A span session is an association of one or more 
+--       destination(s) with a set of source(s), along with
+--       other parameters, to specify the network traffic to be
+--       monitored. Each span session is denoted by an unique
+--       number.
+--    
+--       The term 'remote span', also called 'RSPAN', refers to 
+--       the analysis of network traffic remotely, from 
+--       destination port(s) for one or more source ports, 
+--       distributed in one or more switches in a switched
+--       network, through a RSPAN VLAN.
+--  RevDate
+--    200104010000Z
+--  RevDescr
+--    Add the portCopyReflectorPort mib object
+--  RevDate
+--    200102220000Z
+--  RevDescr
+--    Add the following mib objects:
+--     portCopyDestLoVlanMask,
+--     portCopyDestHiVlanMask,
+--     portCopyOption,
+--     portCopySessionNo,
+--     portCopySessionType,
+--     portCopyRemoveSrc, 
+--     portCopyMaxIngressSessions,
+--     portCopyMinEgressSessions.
+--  RevDate
+--    9812010000Z
+--  RevDescr
+--    Updated the portCopyXTable;
+--     portCopyDirection moved to SMON standard, and
+--     multiple VLANs per source port now supported.
+
+ciscoRmonConfigObjects OBJECT IDENTIFIER ::= { ciscoRmonConfigMIB 1 }
+ciscoRmonConfigNotifications OBJECT IDENTIFIER ::= { ciscoRmonConfigMIB 2 }
+ciscoRmonConfigConformance OBJECT IDENTIFIER ::= { ciscoRmonConfigMIB 3 }
+ciscoRmon2ConfigObjects OBJECT IDENTIFIER ::= { ciscoRmonConfigObjects 1 }
+ciscoSmonConfigObjects OBJECT IDENTIFIER ::= { ciscoRmonConfigObjects 2 }
+ciscoSampleConfigObjects OBJECT IDENTIFIER ::= { ciscoRmonConfigObjects 3 }
+ciscoRmonConfigCompliances OBJECT IDENTIFIER ::= { ciscoRmonConfigConformance 1 }
+ciscoRmonConfigGroups OBJECT IDENTIFIER ::= { ciscoRmonConfigConformance 2 }
+
+rmonTimeFilterMode OBJECT-TYPE
+    SYNTAX INTEGER {
+        stopAfterOne(1),
+        stopAfterAll(2)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object controls the way the SNMP agent implements the
+         getnext operation for tables with a TimeFilter index, such
+         as those found in the RMON2-MIB module.
+        
+         If this object has the value `stopAfterOne(1)', then a GetNext
+         or GetBulk operation will provide one pass through a given table,
+         i.e., the agent will continue to the next object or table,
+         instead of incrementing a TimeMark INDEX value, even if
+         there exists higher TimeMark values which are valid for
+         the same conceptual row.
+        
+         This mode is not strictly compliant with the TimeFilter textual
+         convention definition, because potentially many conceptual rows
+         will be skipped instead of returned in a GetNext or GetBulk
+         operation.  Such rows are identical to each other, except for
+         the returned TimeMark INDEX value. This mode is intended only
+         for testing purposes, however it may also be useful if an NMS
+         wishes to utilize the GetBulk PDU. This mode will prevent the
+         GetBulk responses from containing duplicate rows due to the
+         TimeFilter mechanism.
+        
+         If this object has the value `stopAfterAll(2)', then a getNext
+         or getBulk MIB walk will repeat through the same MIB table until
+         the TimeMark for the most-recently changed entry is reached.
+         Note that as long as traffic occurs on the monitored interface,
+         it is possible a highest value of the TimeFilter INDEX may
+         never be reached. This mode is strictly compliant with the
+         TimeFilter textual convention definition.  Note that GetBulk
+         PDU responses in this mode will likely contain multiple copies
+         of the same MIB instances, differing only in the TimeMark INDEX
+         value.
+        
+         As an example, consider row 'fooEntry' which was last updated
+         at 'time 1000'. An NMS may use any TimeMark INDEX value in the
+         range '0' to '1000', and the current (i.e., time of get request)
+         counter values for the 'fooEntry' will be returned by agent.
+         In the 'stopAfterOne' mode, the agent will not increment
+         the fooEntry TimeMark index under any conditions. In the
+         'stopAfterAll' mode, the agent will increment any fooEntry
+         TimeMark INDEX value in the range '0' to '999', up until
+         the TimeMark value of '1000' is reached."
+    DEFVAL { stopAfterAll }
+    ::= { ciscoRmon2ConfigObjects 1 }
+
+portCopyXTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF PortCopyXEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table extends the port copy capability found in the 
+         SMON MIB portCopyTable. This table is intended to augment 
+         every portCopyEntry, but not all features provided may be 
+         available on all RMON platforms. In such a case, a 
+         particular MIB object will be implemented with read-only 
+         access."
+    ::= { ciscoSmonConfigObjects 1 }
+
+portCopyXEntry OBJECT-TYPE
+    SYNTAX PortCopyXEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Describes a particular port copy extension entry.
+        
+         When creating an entry in this table using the 'createAndwait'
+         method, the following rules are applied:
+        
+         - no span consistency check is done for the entry until
+         the entry is activated.  An entry will not be activated
+         if it fails the span consistency check described for
+         the 'createAndGo' method.
+        
+         -an instance remains in the 'notReady' state until the
+         associated portCopyStatus changes to 'active'.
+        
+         When the agent processes a request of adding an entry
+         using 'createAndGo' method or a request that sets the value
+         of portCopyStatus object to 'active', the following rules
+         are applied:
+        
+         The agent will add the entry to a span session having the same
+         portCopySessionNo, or create a new session if it does not
+         exist. To join an existing session, either portCopySource or
+         portCopyDest, but not both, must exist in one of the entries
+         from the same span session. In addition, the following actions
+         will be taken after a successful join:
+        
+         1. The portCopyDirection, portCopyLoVlanMask, and
+            portCopyHiVlanMask values will overwrite the existing
+            values associated with this port copy session.
+        
+         2. The portCopyDestLoVlanMask, portCopyDestHiVlanMask, and
+            portCopyOption values will overwrite the existing values
+            associated the same portCopyDest and this port copy session.
+        
+         3. If the value of portCopyDest object does not exist in the
+            existing span session, each of the ports identified in the
+            portCopySource is added to this span session. 
+            For example, given an existing span session having ports 
+            1, 2, and 3 as source ports, and port A as the destination
+            port, if an entry is added by an NMS with indices of (2,B),
+            the agent will also add entries for the other source ports
+            (e.g. (1,B) and (3,B)) to the session.  The same algorithm
+            for adding entries will be applied if the portCopySource
+            does not already belong to this span session.
+        
+         When the agent processes a request to change the RowStatus of
+         an entry from 'active' to 'notInService', the following
+         rules are applied:
+        
+         - That entry will be removed from its participating span
+         session. The new RowStatus state will be 'notInService'.
+        
+         - all entries in the table that have the same value of
+         portCopySessionNo and same value of portCopySource are
+         also set to 'NotInService'.
+        
+         When agent processes a request to delete an entry, the
+         following rules are applied:
+        
+         - the entry is simply removed if it is not currently active.
+        
+         - if the portCopySessionNo value is non-zero and the value of
+         portCopyRemoveSrc object is set to 'true', then all entries 
+         with the same value of portCopySessionNo and same value of 
+         portCopySource are deleted.
+        
+         - if the portCopySessionNo value is non-zero and the value of
+         portCopyRemoveSrc object is set to 'false', then all entries
+         with the same value of portCopySessionNo and same
+         value of portCopyDest are deleted.
+        
+         - if the last portCopy entry is removed from a session, 
+         then the session information is also removed."
+    INDEX { portCopySource, portCopyDest }
+-- Augments portCopyEntry FROM SMON-MIB
+    ::= { portCopyXTable 1 }
+
+PortCopyXEntry ::= SEQUENCE {
+    portCopyLoVlanMask OCTET STRING,
+    portCopyHiVlanMask OCTET STRING,
+    portCopyDestLoVlanMask OCTET STRING,
+    portCopyDestHiVlanMask OCTET STRING,
+    portCopyOption OCTET STRING,
+    portCopySessionNo INTEGER,
+    portCopySessionType INTEGER,
+    portCopyRemoveSrc TruthValue,
+    portCopyReflectorPort InterfaceIndex
+    }
+
+portCopyLoVlanMask OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(0..256))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object affects the way VLAN-based traffic is copied from 
+         a switch source port, for the indicated port copy operation. 
+         It is used in tandem with the portCopyHiVlanMask to 
+         identify all possible 4096 IEEE 802.1Q VLAN ID values. 
+         This object is used to select or deselect VLAN IDs 
+         0 though 2047. 
+        
+         If this object contains a zero-length string, or none 
+         of the octets contain a non-zero value, and the 
+         associated portCopyHiVlanMask is not instantiated, 
+         contains a zero-length string, or contains only 
+         zero-valued octets, then network traffic will not 
+         be filtered, based on IEEE 802.1Q or ISL VLAN ID, before 
+         it is copied to the indicated destination port. 
+        
+         If this object has a non-zero length, and at least 
+         one octet contains a non-zero value, or the 
+         portCopyHiVlanMask contains at least one non-zero octet, 
+         then traffic will be filtered, based on the indicated 
+         IEEE 802.1Q or ISL VLAN ID, before it is copied to the 
+         indicated destination port. Only frames (tagged or 
+         untagged) which match the indicated VLAN ID(s) will be 
+         copied to the indicated destination port. 
+        
+         VLAN IDs are encoded as a string of octets containing 
+         one bit per VLAN to be included in the port copy operation. 
+         The first octet corresponds to VLANs with VlanIndex values 
+         of 0 through 7; the second octet to VLANs 8 through 15; etc. 
+         The most significant bit of each octet corresponds to the 
+         lowest value VlanIndex in that octet.  If the bit 
+         corresponding to a VLAN is set to '1', then the traffic 
+         associated with that VLAN will be selected for the 
+         indicated port copy operation. 
+        
+         Note that if the length of this string is less than 
+         256 octets, any 'missing' octets are assumed to contain 
+         the value zero. An NMS may omit any zero-valued octets 
+         from the end of this string in order to reduce SetPDU size, 
+         and the agent may also omit zero-valued trailing octets, 
+         to reduce the size of GetResponse PDUs. 
+        
+         The creation and deletion of instances of this object is 
+         controlled by the portCopyStatus object found in the 
+         augmented portCopyEntry.  It is an implementation-specific 
+         matter as to how many VLANs may be selected from a 
+         particular physical source port at any one time, or whether 
+         this object may be modified while the associated 
+         portCopyStatus object is equal to 'active'."
+    DEFVAL { ''H }
+    ::= { portCopyXEntry 1 }
+
+portCopyHiVlanMask OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(0..256))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object affects the way VLAN-based traffic is copied from 
+         a switch source port, for the indicated port copy operation. 
+         It is used in tandem with the portCopyLoVlanMask to 
+         identify all possible 4096 IEEE 802.1Q VLAN ID values. 
+         This object is used to select or deselect VLAN IDs 
+         2048 though 4095. 
+        
+         If this object contains a zero-length string, or none 
+         of the octets contain a non-zero value, and the 
+         associated portCopyLoVlanMask is not instantiated, 
+         contains a zero-length string, or contains only 
+         zero-valued octets, then network traffic will not 
+         be filtered, based on IEEE 802.1Q or ISL VLAN ID, before 
+         it is copied to the indicated destination port. 
+        
+         If this object has a non-zero length, and at least 
+         one octet contains a non-zero value, or the 
+         portCopyLoVlanMask contains at least one non-zero octet, 
+         then traffic will be filtered, based on the indicated 
+         IEEE 802.1Q or ISL VLAN ID, before it is copied to the 
+         indicated destination port. Only frames (tagged or 
+         untagged) which match the indicated VLAN ID(s) will be 
+         copied to the indicated destination port. 
+        
+         VLAN IDs are encoded as a string of octets containing 
+         one bit per VLAN to be included in the port copy operation. 
+         The first octet corresponds to VLANs with VlanIndex values 
+         of 2048 through 2055; the second octet to VLANs 2056 through 
+         2063; etc. The most significant bit of each octet corresponds 
+         to the lowest value VlanIndex in that octet.  If the bit 
+         corresponding to a VLAN is set to '1', then the traffic 
+         associated with that VLAN will be selected for the 
+         indicated port copy operation. 
+        
+         Note that if the length of this string is less than 
+         256 octets, any 'missing' octets are assumed to contain 
+         the value zero. An NMS may omit any zero-valued octets 
+         from the end of this string in order to reduce SetPDU size, 
+         and the agent may also omit zero-valued trailing octets, 
+         to reduce the size of GetResponse PDUs. 
+        
+         The creation and deletion of instances of this object is 
+         controlled by the portCopyStatus object found in the 
+         augmented portCopyEntry.  It is an implementation-specific 
+         matter as to how many VLANs may be selected from a 
+         particular physical source port at any one time, or whether 
+         this object may be modified while the associated 
+         portCopyStatus object is equal to 'active'."
+    DEFVAL { ''H }
+    ::= { portCopyXEntry 2 }
+
+portCopyDestLoVlanMask OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(0..256))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object affects the way VLAN-based traffic to a switch
+         destination port is filtered for the indicated port copy 
+         operation. It is used in tandem with the 
+         portCopyDestHiVlanMask to identify all possible 4096 IEEE 
+         802.1Q VLAN ID values. This object is used to select or 
+         deselect VLAN IDs 0 though 2047. 
+        
+         If this object contains a zero-length string, or none 
+         of the octets contain a non-zero value, and the 
+         associated portCopyDestHiVlanMask is not instantiated, 
+         contains a zero-length string, or contains only 
+         zero-valued octets, then network traffic will not 
+         be filtered, based on IEEE 802.1Q or ISL VLAN ID, before 
+         it is copied to the indicated destination port. 
+        
+         If this object has a non-zero length, and at least 
+         one octet contains a non-zero value, or the 
+         portCopyDestHiVlanMask contains at least one non-zero octet, 
+         then traffic will be filtered, based on the indicated 
+         IEEE 802.1Q or ISL VLAN ID, before it is copied to the 
+         indicated destination port. Only frames (tagged or 
+         untagged) which match the indicated VLAN ID(s) will be 
+         copied to the indicated destination port. If a VLAN is
+         included in the portCopyDestLoVlanMask object, it should 
+         also be included in the portCopyLoVlanMask object and 
+         vice versa.
+        
+         VLAN IDs are encoded as a string of octets containing 
+         one bit per VLAN to be included in the port copy operation. 
+         The first octet corresponds to VLANs with VlanIndex values 
+         of 0 through 7; the second octet to VLANs 8 through 15; etc. 
+         The most significant bit of each octet corresponds to the 
+         lowest value VlanIndex in that octet.  If the bit 
+         corresponding to a VLAN is set to '1', then the traffic 
+         associated with that VLAN will be selected for the 
+         indicated port copy operation. 
+        
+         Note that if the length of this string is less than 
+         256 octets, any 'missing' octets are assumed to contain 
+         the value zero. An NMS may omit any zero-valued octets 
+         from the end of this string in order to reduce SetPDU size, 
+         and the agent may also omit zero-valued trailing octets, 
+         to reduce the size of GetResponse PDUs. 
+        
+         The creation and deletion of instances of this object is 
+         controlled by the portCopyStatus object found in the 
+         augmented portCopyEntry.  It is an implementation-specific 
+         matter as to how many VLANs may be selected from a 
+         particular physical source port at any one time, or whether 
+         this object may be modified while the associated 
+         portCopyStatus object is equal to 'active'."
+    DEFVAL { ''H }
+    ::= { portCopyXEntry 3 }
+
+portCopyDestHiVlanMask OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(0..256))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object affects the way VLAN-based traffic to a switch
+         destination port is filtered for the indicated port copy 
+         operation. It is used in tandem with the 
+         portCopyDestLoVlanMask to identify all possible 4096 IEEE 
+         802.1Q VLAN ID values. This object is used to select or 
+         deselect VLAN IDs 2048 though 4095. 
+        
+         If this object contains a zero-length string, or none 
+         of the octets contain a non-zero value, and the 
+         associated portCopyDestLoVlanMask is not instantiated, 
+         contains a zero-length string, or contains only 
+         zero-valued octets, then network traffic will not 
+         be filtered, based on IEEE 802.1Q or ISL VLAN ID, before 
+         it is copied to the indicated destination port. 
+        
+         If this object has a non-zero length, and at least 
+         one octet contains a non-zero value, or the 
+         portCopyDestLoVlanMask contains at least one non-zero octet, 
+         then traffic will be filtered, based on the indicated 
+         IEEE 802.1Q or ISL VLAN ID, before it is copied to the 
+         indicated destination port. Only frames (tagged or 
+         untagged) which match the indicated VLAN ID(s) will be 
+         copied to the indicated destination port. If a VLAN is
+         included in the portCopyDestHiVlanMask object, it should
+         also be included in the portCopyHiVlanMask object and
+         vice versa.
+        
+         VLAN IDs are encoded as a string of octets containing 
+         one bit per VLAN to be included in the port copy operation. 
+         The first octet corresponds to VLANs with VlanIndex values 
+         of 2048 through 2055; the second octet to VLANs 2056 through 
+         2063; etc. The most significant bit of each octet corresponds 
+         to the lowest value VlanIndex in that octet.  If the bit 
+         corresponding to a VLAN is set to '1', then the traffic 
+         associated with that VLAN will be selected for the 
+         indicated port copy operation. 
+        
+         Note that if the length of this string is less than 
+         256 octets, any 'missing' octets are assumed to contain 
+         the value zero. An NMS may omit any zero-valued octets 
+         from the end of this string in order to reduce SetPDU size, 
+         and the agent may also omit zero-valued trailing octets, 
+         to reduce the size of GetResponse PDUs. 
+        
+         The creation and deletion of instances of this object is 
+         controlled by the portCopyStatus object found in the 
+         augmented portCopyEntry.  It is an implementation-specific 
+         matter as to how many VLANs may be selected from a 
+         particular physical source port at any one time, or whether 
+         this object may be modified while the associated 
+         portCopyStatus object is equal to 'active'."
+    DEFVAL { ''H }
+    ::= { portCopyXEntry 4 }
+
+portCopyOption OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   inpkts(0)
+        --   learningDisable(1)
+        --   dot1q(2)
+        --   isl(3)
+        --   multicast(4)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the additional span configuration on destination 
+        port. Instances of same portCopyDest index must have same 
+        values in portCopyOption. Changes on portCopyOption of 
+        one instance will be applied to all other instances of 
+        same portCopyDest index. 
+        
+        - inpkts(0) 
+          This bit is set to enable the destination port to 
+          receive normal incoming traffic. 
+        
+        - learningDisable(1) 
+          This bit is set to suppress MAC learning for incoming 
+          traffic at the destination port. 
+        
+        - dot1q(2) 
+          This bit is set for dot1q trunking encapsulation of 
+          forwarded traffic at the destination port. This bit can
+          not be set when isl(3) bit is 1. 
+        
+        - isl(3) 
+          This bit is set for isl trunking encapsulation of 
+          forwarded traffic at the destination port. This bit can
+          not be set when dot1q(2) bit is 1.
+        
+        - multicast(4) 
+          This bit is set to enable the destination port to 
+          receive multicast traffic."
+    DEFVAL { '00'h }
+    ::= { portCopyXEntry 5 }
+
+portCopySessionNo OBJECT-TYPE
+    SYNTAX INTEGER(0..2147483647)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the arbitrary unique identifier for this
+        span session.
+        
+        If a non zero value is specified, the agent will check 
+        if a span session that has the same session number exists. 
+        If so, the agent will use this session number when this
+        entry is activated.  This entry will be added to the existing
+        span session (identified by all entries with the same
+        portCopySessionNo value).  If no such session exists, a new 
+        span session is created and assigned the specified value.
+        
+        Otherwise, the agent will check if the destination port
+        belongs to an existing span session. If so, the agent
+        will assign that session number when this entry is activated.
+        This entry will be added to the existing span session 
+        (identified by all entries with the same portCopySessionNo 
+        value).  If no such session exists, a new 
+        span session is created and assigned an arbitrary, locally
+        unique value.
+        
+        If the associated portCopyStatus object is equal to 'active', 
+        then this object may not be modified."
+    DEFVAL { 0 }
+    ::= { portCopyXEntry 6 }
+
+portCopySessionType OBJECT-TYPE
+    SYNTAX INTEGER {
+        notSpecified(1),
+        local(2),
+        remoteSource(3),
+        remoteDestination(4)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the span session type.
+        
+        'remoteSource' refers to session where traffic is copied from
+        source port to RSPAN VLAN as its destination port. 
+        
+        'remoteDestination' refers to session where traffic is copied
+        from RSPAN VLAN to the destination port.
+        
+        For local span session, both source and destination ports
+        reside in the same switch. 
+        
+        In a set operation, agent will decide the actual span type
+        for the session if this mib object is 'notSpecified' based on
+        type of source and destination ports. A read operation will
+        return one of the other three types. 
+        
+        Changes on portCopySessionType of one entry will be applied
+        to all existing active entries having the same value of
+        portCopySessionNo.
+        
+        If the associated portCopyStatus object is equal to 'active',
+        then this object may not be modified."
+    DEFVAL { notSpecified }
+    ::= { portCopyXEntry 7 }
+
+portCopyRemoveSrc OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates how the agent will modify a span session when an
+        entry belonging to this session is deleted. 
+        
+        The value 'true' specifies source port based entry deletion. 
+        In source port based delection, all entries of same index 
+        portCopySource from the session are to be deleted. 
+        
+        The value 'false' specifies destination based entry deletion. 
+        In destination port based deletion, all entries of same 
+        index portCopyDest from the session are to be deleted."
+    DEFVAL { true }
+    ::= { portCopyXEntry 8 }
+
+portCopyReflectorPort OBJECT-TYPE
+    SYNTAX InterfaceIndex
+--    Rsyntax INTEGER(1..2147483647)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the reflector port of this span session. The value
+        of this object is ignored whenever the value of 
+        portCopySessionType is not remoteSource(3)."
+    ::= { portCopyXEntry 9 }
+
+portCopyMaxIngressSessions OBJECT-TYPE
+    SYNTAX INTEGER(0..65535)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The maximum number of local ingress (rx or both) span 
+        session that can be configured on this agent."
+    ::= { ciscoSmonConfigObjects 2 }
+
+portCopyMaxEgressSessions OBJECT-TYPE
+    SYNTAX INTEGER(0..65535)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The maximum number of local egress span sessions that
+        can be configured on this agent."
+    ::= { ciscoSmonConfigObjects 3 }
+
+rmonSampleConfigTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF RmonSampleConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table controls the configuration of RMON collection
+         based on statistical sampling techniques, for each 
+         monitored interface on the RMON probe. It is a SPARSE-AUGMENTS
+         of the ifEntry found in the IF-MIB module.
+        
+         An entry is created in this table at the same time the 
+         augmented ifEntry is created (usually at system startup time), 
+         for each interface which can be monitored by the RMON agent.
+         An associated entry in the SMON MIB dataSourceCapsTable is 
+         also created for each RMON-capable interface at the same time.
+        
+         An RMON collection is associated with a particular
+         interface if the control table dataSource OBJECT
+         IDENTIFIER is of the form 'ifIndex.I', and 'I'
+         is the same value as the ifIndex value for the 
+         ifEntry and rmonSampleConfigEntry."
+    ::= { ciscoSampleConfigObjects 1 }
+
+rmonSampleConfigEntry OBJECT-TYPE
+    SYNTAX RmonSampleConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Describes a particular sampling configuration for the 
+         indicated RMON-capable interface."
+    INDEX { ifIndex }
+    ::= { rmonSampleConfigTable 1 }
+
+RmonSampleConfigEntry ::= SEQUENCE {
+    rmonSamplingEnabled TruthValue
+    }
+
+rmonSamplingEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object affects the way the RMON probe uses statistical
+         sampling to collect packets from the indicated interface.
+        
+         If this object has the value 'false', then the probe
+         will attempt to monitor all packets detected on the 
+         indicated interface, in the event any RMON collections are
+         actually configured.  The data returned in all RMON collection
+         tables associated with this interface will represent 
+         non-sampled monitored counter values. 
+        
+         If this object has the value 'true', then the 
+         probe will use adaptive statistical sampling techniques to 
+         monitor the indicated interface, in the event any RMON 
+         collections are actually configured.  The data returned
+         in RMON collection tables associated with this interface
+         may be based on statistical approximations. In this mode, the 
+         RMON agent will also maintain additional MIB objects to provide
+         the confidence interval information for each sampled counter. 
+         These objects can be found in the CISCO-RMON-SAMPLING-MIB.
+        
+         When this object transitions from 'false' to 'true', 
+         all active packet capture functions will be suspended,
+         without affecting the contents of any associated 
+         filterEntry, filter2Entry, channelEntry, channel2Entry,
+         bufferControlEntry, captureBufferEntry, or
+         captureBufferHighCapacityEntry. Only the low-level packet 
+         capture processing is deactivated.
+        
+         When this object transitions from 'true' to 'false',
+         all suspended packet capture functions associated
+         with the interface will be reactivated. 
+        
+         Note that an NMS application which is unaware of this MIB 
+         object will not be able to detect suspended packet capture 
+         operations or sampled collections, however multi-manager 
+         mis-configuration issues are beyond the scope of this MIB. 
+         The packet capture function Get and Set operations are
+         not affected by this object.
+        
+         If an interface cannot be sampled, or the sampling 
+         configuration cannot be modified, then such an instance
+         of this object will be implemented with read-only access."
+    DEFVAL { false }
+    ::= { rmonSampleConfigEntry 1 }
+
+rmon2ExtensionsGroup OBJECT IDENTIFIER ::= { ciscoRmonConfigGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing configuration extensions 
+--     for the RMON2-MIB module.
+--  objects
+--    rmonTimeFilterMode
+
+smonExtensionsGroup OBJECT IDENTIFIER ::= { ciscoRmonConfigGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing configuration extensions 
+--     for the SMON-MIB module.
+--  objects
+--    portCopyLoVlanMask, portCopyHiVlanMask
+
+rmonSampleConfigGroup OBJECT IDENTIFIER ::= { ciscoRmonConfigGroups 3 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing configuration extensions 
+--     for RMON agent implementations which support statistical 
+--     sampling techniques.
+--  objects
+--    rmonSamplingEnabled
+
+smonExtensions2Group OBJECT IDENTIFIER ::= { ciscoRmonConfigGroups 4 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing additional port copy
+--    configuration for destination vlan filtering for the 
+--    SMON-MIB module.
+--  objects
+--    portCopyDestLoVlanMask, portCopyDestHiVlanMask
+
+smonExtensions3Group OBJECT IDENTIFIER ::= { ciscoRmonConfigGroups 5 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing additional port copy
+--    configuration extensions at destination port for the 
+--    SMON-MIB module.
+--  objects
+--    portCopyOption
+
+smonExtensions4Group OBJECT IDENTIFIER ::= { ciscoRmonConfigGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing additional port copy
+--    configuration extensions for agent that supports SPAN
+--    session concept.
+--  objects
+--    portCopySessionNo, portCopyRemoveSrc
+
+smonExtensions5Group OBJECT IDENTIFIER ::= { ciscoRmonConfigGroups 7 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing additional port copy
+--    configuration extensions for agent that supports local
+--    and remote SPAN.
+--  objects
+--    portCopySessionType
+
+smonExtensions6Group OBJECT IDENTIFIER ::= { ciscoRmonConfigGroups 8 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing additional port copy
+--    information for the SMON-MIB module.
+--  objects
+--    portCopyMaxIngressSessions, portCopyMaxEgressSessions
+
+smonExtensions7Group OBJECT IDENTIFIER ::= { ciscoRmonConfigGroups 9 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing additional port copy
+--    configuration extensions for agent that supports reflector 
+--    port for span session.
+--  objects
+--    portCopySessionType, portCopyReflectorPort
+
+ciscoRmonConfigCompliance OBJECT IDENTIFIER ::= { ciscoRmonConfigCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    Describes the requirements for conformance to Cisco RMON
+--     Configuration Extensions MIB.
+--  Module
+--    >>current<<
+--   OptGroup
+--    rmon2ExtensionsGroup
+--   OptGroup
+--    smonExtensionsGroup
+--   ObjVar
+--    portCopyHiVlanMask
+--   OptGroup
+--    rmonSampleConfigGroup
+--   ObjVar
+--    rmonSamplingEnabled
+
+ciscoRmonConfigComplianceRev1 OBJECT IDENTIFIER ::= { ciscoRmonConfigCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    Describes the requirements for conformance to Cisco RMON
+--     Configuration Extensions MIB.
+--  Module
+--    >>current<<
+--   OptGroup
+--    rmon2ExtensionsGroup
+--   OptGroup
+--    smonExtensionsGroup
+--   ObjVar
+--    portCopyHiVlanMask
+--   OptGroup
+--    smonExtensions2Group
+--   OptGroup
+--    smonExtensions3Group
+--   OptGroup
+--    smonExtensions4Group
+--   OptGroup
+--    smonExtensions5Group
+--   OptGroup
+--    smonExtensions6Group
+--   OptGroup
+--    smonExtensions7Group
+--   ObjVar
+--    portCopyDestHiVlanMask
+--   OptGroup
+--    rmonSampleConfigGroup
+--   ObjVar
+--    rmonSamplingEnabled
+
+
+END
+

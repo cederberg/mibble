@@ -1,0 +1,7307 @@
+--                                       MANAGEMENT INFORMATION BASE
+----------------------------------------------------------------------
+-- Prepared:  EUS/XT/B MOSS              NO.:  3/1553-1/KDV 104 02 Uen
+----------------------------------------------------------------------
+-- Approved:  EUS/XT Dennis Nierman          Date: 1999-05-19    Rev.: PA6
+----------------------------------------------------------------------
+--
+--
+--								SNMPv1
+-- 
+-- NAME:		Signalling System No. 7 (SS7) Gateway MIB
+-- 
+-- Copyright Ericsson 1999
+-- 
+-- REVISION HISTORY:-
+--
+-- REV	DATE		NAME		DESCRIPTION
+-- PA1  990210          EUSMOSS	        -Initial
+-- PA2  990217          EUSMOSS         -combined ISUPRouteTable and
+--					ISUPCicTable
+-- PA3  990226		EUSMOSS		-Reordered tables
+--					-split GeneralCfg Table into Status
+--					table
+-- PA4  990308		EUSMOSS		-changed OID 7 in SS7GWGeneralCfg to
+--					IpAddress
+--					-Removed VirtualNodeCfg Table
+--					-Removed VirtualNodeStatus Table
+--					-Added new Group SS7GWAlarm Group
+--					-changed a couple values for 
+--					commandss7gw in GeneralStatus Table
+--					-updated ISUP table
+--					-renamed TrapReceiverTable.  Moved
+--					2 parameters from ss7gwGeneral Group to
+--					AlarmReceiverTable
+--					-updates made to SCCP Tables
+--
+-- PA5  990512		EUSMOSS		-remove SCCP general group
+--					-remove few parameter out of ISUP and
+--					and SCCP General groups
+--					-changed haConfiguration to systemType
+--					-updates to Isup tables
+--					-update to MTP3LinkConfigTable
+--					-added pending to SCCP AddrTransTable
+--					-added connectpending to TRAConnection
+--
+-- PA6  990519          EXUMIBI         -added ss7gwGeneralLogTxt to be
+--                                      included when sending traps
+--
+-- PA7  990521		EUSMOSS		-added execute to SCCPRouteTable
+--
+-- PB1	990524		EUSMOSS		-changed doc.# to match Drop 1, 
+--					therefore, changed revision to PB1 since
+--					PAXX already exists.
+--
+-- PB2	990526		EUSMOSS		-removed switchover from General Status
+--					-Major overhaul of MTP1, Removed general
+--					table from MTP2.
+--
+-- DESCRIPTION
+--	MIB FOR ERICSSON'S SS7 GATEWAY
+-- 
+	SS7GWMIB
+	
+DEFINITIONS ::= BEGIN
+
+--
+-- Ericsson SS7 Gateway MIB
+--
+
+IMPORTS
+
+	IpAddress
+		FROM RFC1155-SMI
+	Counter
+		FROM RFC1155-SMI
+	enterprises
+		FROM RFC1155-SMI
+	OBJECT-TYPE
+		FROM RFC-1212
+	TRAP-TYPE
+		FROM RFC-1215;
+		
+	ericsson			
+		OBJECT IDENTIFIER ::= { enterprises 193 }
+
+	ss7gateway
+		OBJECT IDENTIFIER ::= { ericsson 49 } 
+
+	ss7GatewayD2			
+		OBJECT IDENTIFIER ::= { ss7gateway 2 }
+
+	ss7GwGeneralCfg
+		OBJECT IDENTIFIER ::= { ss7GatewayD2 1 }
+
+	ss7GwGeneralStatus
+		OBJECT IDENTIFIER ::= { ss7GatewayD2 2 }
+
+	ss7GwAlarm
+		OBJECT IDENTIFIER ::= { ss7GatewayD2 3 }
+
+	ss7GwRasReceiver
+		OBJECT IDENTIFIER ::= { ss7GatewayD2 5 }
+
+	ss7GwswMgmt
+		OBJECT IDENTIFIER ::= { ss7GatewayD2 6 }
+
+	ss7GwSecurity
+		OBJECT IDENTIFIER ::= { ss7GatewayD2 7 }
+
+	mtp
+		OBJECT IDENTIFIER ::= { ss7GatewayD2 10 }
+
+	isup
+		OBJECT IDENTIFIER ::= { ss7GatewayD2 11 }
+
+	sccp
+		OBJECT IDENTIFIER ::= { ss7GatewayD2 12 }
+
+	tcapRelay
+		OBJECT IDENTIFIER ::= { ss7GatewayD2 13 }
+
+	ss7GwTraps
+		OBJECT IDENTIFIER ::= { ss7GatewayD2 14 }
+
+--	ss7gwTrapReceiverTable		ss7GatewayD2  4
+--	ss7gwPhysNodeCfgTable   	ss7GatewayD2  8
+--	ss7gwPhysNodeStatusTable 	ss7GatewayD2  9
+
+
+-- Definition of a Boolean value
+	Boolean ::= INTEGER { false(0), true(1) }
+-- Definition of a string
+	DisplayString ::= OCTET STRING
+
+--===============================================================
+-- SS7 Gateway MIB Objects
+--===============================================================
+-- GENERAL CONFIG ATTRIBUTES
+--===========================
+
+	opc OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Own Point Code (OPC) for the SS7 Gateway
+			entered in the format XXX-XXX-XXX where X is
+			a value from 0 to 9"
+                                                
+		::= { ss7GwGeneralCfg 1}
+
+        ss7gwNodeId OBJECT-TYPE 
+                SYNTAX  DisplayString (SIZE (0..20))
+                ACCESS  read-write
+                STATUS  mandatory
+                DESCRIPTION
+                        "The Node Identification of the SS7 Gateway." 
+                                                
+                ::= { ss7GwGeneralCfg 2}
+
+        ss7gwMtpFlavour OBJECT-TYPE 
+                SYNTAX  INTEGER 
+			{
+                           ituMTP(1),
+                           ansiMTP(2)
+                        }
+                ACCESS  read-write
+                STATUS mandatory
+                DESCRIPTION
+                        "The flavour of the MTP stack."
+                                                
+                ::= { ss7GwGeneralCfg 3}
+
+        ss7gIsupFlavour OBJECT-TYPE 
+                SYNTAX  INTEGER 
+			{
+                           ituISUP(1),
+                           ansiISUP(2)
+                        }
+                ACCESS  read-write
+                STATUS mandatory
+                DESCRIPTION
+                        "The flavour of the ISUP stack."
+                                                
+                ::= { ss7GwGeneralCfg 4}
+
+	systemType	 OBJECT-TYPE
+                SYNTAX  INTEGER 
+			{
+                           singleBoard(1),
+                           multiBoard(2),
+			   haConfiguration(3)
+                        }
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates the configuration of the SS7GW."
+                                                
+		::= { ss7GwGeneralCfg 5}
+
+
+--===========================================================
+	flashDbConsistency OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates the consistency of all data located in 
+			database and all data located in Flash.  If set to
+			true, all data in database (in effect or not) matches 
+			the data stored in Flash memory"
+                                                
+		::= { ss7GwGeneralStatus 1}
+
+	configDataInUse OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates the consistency of configuration data 
+			between data in use by the system and data stored
+			in the configuration database.  If set to true, all
+			configuration data stored in the database is in use
+			by the system"
+                                                
+		::= { ss7GwGeneralStatus 2}
+
+	commandSS7gw OBJECT-TYPE
+		SYNTAX  INTEGER
+		{
+		   start(1),
+		   stop(2),
+		   reboot(3),
+		   saveDatatoFlash(4)
+		}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"commands to be issued on SS7 Gateway"
+                                                
+		::= { ss7GwGeneralStatus 3}
+
+	statusSS7gw OBJECT-TYPE
+		SYNTAX  INTEGER
+		{
+		   stop(1),
+		   startPending(2),
+		   stopPending(3),
+		   run(4),
+		   startFailed(5)
+		}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"status of the SS7 Gateway"
+                                                
+		::= { ss7GwGeneralStatus 4}
+
+--=========================================================
+
+	ss7gwTrapReceiverTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SS7GwTrapReceiverEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds information about the Receivers
+			of Traps sent from the SS7 Gateway.
+
+			Rows are added in this table by setting the rowStatus
+			variable to Create and by specifying a valid value 
+			for all other variables.  All variables must be
+			specified in the SNMP-Set operation in order 
+			for a row to be created.  
+
+			Rows are deleted in this table by setting the
+			rowStatus variable to Destroy.
+			
+			Rows can be updated in this table by setting the
+			rowStatus variable to Update and modifying the
+			variables that need changed.  This is to be done in the 
+			same SNMP-Set request."
+
+		::= { ss7GatewayD2 4}
+
+	ss7gwTrapReceiverEntry OBJECT-TYPE
+		SYNTAX SS7GwTrapReceiverEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the ss7gwTrapReceiver table."
+		INDEX { trapReceiverIpAddressIndex}
+		::= { ss7gwTrapReceiverTable 1 }
+
+	SS7GwTrapReceiverEntry ::=
+		SEQUENCE
+		{
+			trapReceiverIpAddressIndex
+				IpAddress,
+			ss7gwTrapReceiverRowStatus
+				INTEGER,
+			trapCommunityString
+				DisplayString,
+			trapPort
+				INTEGER
+		}
+
+
+	trapReceiverIpAddressIndex OBJECT-TYPE
+		SYNTAX  IpAddress
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"IP address of the manager to send a alarm to"
+                                                
+		::= { ss7gwTrapReceiverEntry 1}
+
+	ss7gwTrapReceiverRowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   update(3),
+			   active(4),
+			   rejected(6)
+			}
+
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Update. These are explained in the Table Definition.
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system
+			Rejected - a variable was changed in this table
+				   and has an invalid value.  Re-enter the
+				   last variable changed or delete the Row."
+                                                
+		::= { ss7gwTrapReceiverEntry 2}
+
+	trapCommunityString OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..31))
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"community name to use in the alarm (trap) sent to 
+			the manager."
+                                                
+		::= { ss7gwTrapReceiverEntry 3}
+
+	trapPort OBJECT-TYPE
+		SYNTAX  INTEGER(0..32767)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"UDP port number used for sending SNMP Trap messages"
+                                                
+		::= { ss7gwTrapReceiverEntry 4}
+--===========================================================
+	rasActive OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"flag indicating if RAS signalling is to be performed
+			(0 - no signalling, 1 -signalling on)"
+                                                
+		::= { ss7GwRasReceiver 1}
+
+	rasMgtSvrAddr OBJECT-TYPE
+		SYNTAX  IpAddress
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"IP address of management server"
+                                                
+		::= { ss7GwRasReceiver 2}
+
+	rasRemPortNum OBJECT-TYPE
+		SYNTAX  INTEGER(0..32767)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Remote Port Number"
+                                                
+		::= { ss7GwRasReceiver 3}
+
+	rasLocPortNum OBJECT-TYPE
+		SYNTAX  INTEGER(0..32767)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Local Port Number"
+                                                
+		::= { ss7GwRasReceiver 4}
+
+	rasRegInt OBJECT-TYPE
+		SYNTAX  INTEGER(1..65535)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Default Registration.  registration interval in
+			 seconds (used at startup, management server may reset 
+			 this value upon successful registration)"
+                                                
+		::= { ss7GwRasReceiver 5}
+
+--===========================================================
+	ss7gwGeneralAlarmStatus OBJECT-TYPE
+		SYNTAX INTEGER {
+			noAlarm(0),
+                        s7syAlarmS7Traffic(1),
+                        s7alAlarmRasAlarm(2),
+                        s7isAlarmVgwUnavailable(4),
+                        s7smAlarmSccpUserStatus(8),
+                        s7pqAlarmMtp1Alarm(16),
+                        s7sdAlarmMtp2Alarm(32),
+                        s7nmAlarmMtp3Alarm(64),
+			s7nmAlarmLinksDown(128),
+			s7nmAlarmDPCsUnavailable(256),
+                        s7pqFirstE1T1OOS(512),
+                        s7pqSecondE1T1OOS(1024),
+			s7trTcpTrafficConnDown(2048),
+			s7trBindUnsucessful(4096)
+			}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"General alarm status which can be a combination of
+                         the following values:
+                         1    - Traffic Stopped
+                         2    - No Connection to Sitekeeper
+                         4    - Connection to Voice Gateway(s) lost
+                         8    - SCCP User(s) unavailable
+                         16   - MTP Layer 1 Alarm(s)
+                         32   - MTP Layer 2 Data Link(s) Down
+                         64   - MTP Layer 3 Alarm(s)
+                         128  - Link(s) Down
+                         256  - Destination Point Code(s) Unavailable
+                         512  - First E1/T1 Out Of Service
+                         1024 - Second E1/T1 Out Of Service
+			 2048 - Tcap Relay Traffic Connection Down
+			 4096 - Tcap Relay Bind Unsuccessful"
+                                                
+	::= { ss7GwAlarm 1}
+
+	ss7gwGeneralEventStatus OBJECT-TYPE
+		SYNTAX INTEGER {
+			noEvent(0),
+                        s7syEventMainChecksumErr(1),
+                        s7syEventBakChecksumErr(2),
+                        s7syEventNodeRestart(4),
+                        s7syEventTrafficStart(8),
+                        s7syEventTrafficStop(16),
+                        s7alEventAlarmManagerEvent(32),
+                        s7isEventIsupEvent(64),
+                        s7smEventSccpStackError(128),
+                        s7smEventSccpInvalidNetworkMessage(256),
+                        s7pqEventMtp1StackError(512),
+                        s7sdEventMtp2StackError(1024),
+                        s7nmEventMtp3StackError(2048),
+                        s7syEventDbReadErr(4096),
+                        s7syEventOSReptErr(8192),
+                        s7syEventApplicErr(16384),
+                        s7syEventRequestToProtocolLayerFailed(32768),
+			s7trRegMsgReqSuccess(65536),
+			s7trRegMsgReqError(131072),
+			s7trDeregMsgReqSuccess(262144),
+			s7trDeregMsgReqError(524288),
+			s7trConfMsgDiscarded(1048576),
+			s7trConfConnAbnClosed(2097152),
+			s7trTraffMsgDiscarded(4194304),
+			s7trTraffMsgRetNAC(8388608)
+                        }
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"General event status which can be a combination of
+			the following values:
+                        1     - Main Safestore Checksum Error
+                        2     - Backup Safestore Checksum Error
+                        4     - Node Restarted
+                        8     - Traffic Start Ordered
+                        16    - Traffic Stop Ordered
+                        32    - Unauthorized SNMP Set Request
+                        64    - ISUP Event
+                        128   - SCCP Stack Error
+                        256   - SCCP Invalid Network Message
+                        512   - MTP Layer 1 Stack Error
+                        1024  - MTP Layer 2 Stack Error
+                        2048  - MTP Layer 3 Stack Error
+                        4096  - Database Read Error
+                        8192  - Error Detected by Operating System
+                        16384 - Error Detected by Application
+                        32767 - Request to Protocol Layer Failed
+			65536 - Tcap Relay Registration Message Request Success
+			131072- Tcap Relay Registration Message Request Error
+			262144- Tcap Deregistration Message Request Success
+			524288- Tcap Relay Deregistration Message Request Error
+			1048576-s7trConfMsgDiscarded
+			2097152-s7trConfConnAbnClosed
+			4194304-s7trTraffMsgDiscarded
+			8388608-s7trTraffMsgRetNAC"
+                                                
+	::= { ss7GwAlarm 2}
+
+	clearEventStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+		{
+		   clearGeneralEventStatus(1)
+		}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"when set, General Event Status is cleared."
+                                                
+		::= { ss7GwAlarm 3}
+
+	ss7gwGeneralLogTxt OBJECT-TYPE
+		SYNTAX DisplayString (SIZE (0..255))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"most recent log entry text string, 
+			used to provide additional information
+			for ss7GwTraps"
+                                                
+		::= { ss7GwAlarm 4}
+
+
+--===========================================================
+	ss7GwswDwnLdMgmt
+		OBJECT IDENTIFIER ::= { ss7GwswMgmt 1 }
+
+	swServerAddress OBJECT-TYPE
+		SYNTAX DisplayString (SIZE (0..16))
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Address to software download server"
+                                                
+		::= { ss7GwswDwnLdMgmt 1}
+
+	swImagePath OBJECT-TYPE
+		SYNTAX DisplayString (SIZE (0..70))
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Path and filename of image to download."
+                                                
+		::= { ss7GwswDwnLdMgmt 2}
+
+	swImageSize OBJECT-TYPE
+		SYNTAX INTEGER 
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Size of the download image in bytes."
+                                                
+		::= { ss7GwswDwnLdMgmt 3}
+
+	swPerformDownload OBJECT-TYPE
+		SYNTAX INTEGER {
+			performDownLoad(1)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Start download of new software when variable is set. 
+		 ServerAddress, ImagePath and ImageSize should be filled in 
+		 before this function is called."
+                                                
+		::= { ss7GwswDwnLdMgmt 4}
+
+	pNodeId OBJECT-TYPE
+		SYNTAX	INTEGER {
+			 allNodes(255)
+		}
+		ACCESS	read-write
+		STATUS mandatory
+		DESCRIPTION
+		"id of the physical node in which the software will be 
+		downloaded to.  Valid values are 1-8, or 255 for all Nodes"
+                                                
+		::= { ss7GwswDwnLdMgmt 5}
+--===========================================================
+	ss7gwSwStatusTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SS7GwSwStatusEntry
+		ACCESS  not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains status information of the software 
+			that is The number of entries
+			is given by the value of swSoftwareTableSize located in
+			the ss7GwswDwnLdMgmt Group."
+		::= { ss7GwswMgmt 2}
+
+	ss7gwSwStatusEntry OBJECT-TYPE
+		SYNTAX SS7GwSwStatusEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"A ss7gwSwStatusEntry entry containing 
+			information about stored software."
+		INDEX	{ softwarePNodeIdIndex, softwareIndex }
+		::= { ss7gwSwStatusTable 1}
+
+	SS7GwSwStatusEntry ::=
+		SEQUENCE {
+			softwarePNodeIdIndex
+				INTEGER,
+			softwareIndex
+				INTEGER,
+			softwareVersion
+				DisplayString (SIZE (0..20)),
+			softwareStatus
+				INTEGER,
+			softwareUpgradeStatus
+				INTEGER,
+			softwareUpgradeProgress
+				INTEGER(0..100),
+			softwareUpgradeResult
+				INTEGER
+		}
+	
+	softwarePNodeIdIndex OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Physical Node ID"
+                                                
+		::= { ss7gwSwStatusEntry 1 }
+
+	softwareIndex OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"A unique value for each entry."
+                                                
+		::= { ss7gwSwStatusEntry 2 }
+
+        softwareVersion OBJECT-TYPE 
+                SYNTAX  DisplayString (SIZE (0..20))
+                ACCESS  read-only
+                STATUS  mandatory
+                DESCRIPTION
+                        "The software version of the SS7 Gateway."
+                                                
+                ::= { ss7gwSwStatusEntry 3}
+
+	softwareStatus OBJECT-TYPE
+		SYNTAX INTEGER {
+			active(1),
+			standby(2),
+			corruptEmpty(3)
+		}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Corrupt_empty indicates that flash area does not 
+		contain a valid image, the two other states indicate
+		valid images. Active means that this software is the
+		currently running, standby is not running."
+                                                
+		::= { ss7gwSwStatusEntry 4}
+
+	softwareUpgradeStatus OBJECT-TYPE
+		SYNTAX INTEGER {
+			noActivity(1),
+			downloadConnecting(2),
+			downloading(3),
+			savingToFlash(4)
+		}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Upgrade status for this program area, will indicate the
+		current phase."
+                                                
+		::= { ss7gwSwStatusEntry 5}
+
+	softwareUpgradeProgress OBJECT-TYPE
+		SYNTAX INTEGER(0..100)
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Progress info used when softwareUpgradeStatus is 
+		downloading or savingToFlash. Range is 0 to 100."
+                                                
+		::= { ss7gwSwStatusEntry 6}
+	
+	softwareUpgradeResult OBJECT-TYPE
+		SYNTAX INTEGER {
+			resOk(0),
+			resCouldNotConnect(1),
+			resTransferFailed(2),
+			resUnpackFailed(3),
+			resSaveFailed(4),
+			resImageCorrupt(5)
+		}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Result of the last software upgrade."
+                                                
+		::= { ss7gwSwStatusEntry 7}
+--!!=========================================================
+
+--      SECURITY
+--!!=========================================================
+
+	ss7gwRandomNumber OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Random number used for challenge-response."
+                                
+		::= { ss7GwSecurity 1}
+		
+	ss7gwMd5Result OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Md5 Result used for challenge-response."
+                                                                
+		::= {ss7GwSecurity 2}
+
+
+
+
+--===========================================================
+	ss7gwPhysNodeCfgTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SS7GwPhysNodeCfgEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds information about the physical 
+			nodes of the system and what software is running 
+			on them.
+			Rows cannot be created nor deleted in this table."
+
+		::= { ss7GatewayD2 8}
+
+	ss7gwPhysNodeCfgEntry OBJECT-TYPE
+		SYNTAX SS7GwPhysNodeCfgEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the ss7gwPhysNodeCfg table."
+		INDEX { ss7gwPnodeCfgIndex}
+		::= { ss7gwPhysNodeCfgTable 1 }
+
+	SS7GwPhysNodeCfgEntry ::=
+		SEQUENCE
+		{
+	        	ss7gwPnodeCfgIndex
+				INTEGER(1..8),
+			ss7gwPnodeName
+				DisplayString (SIZE (0..20)),
+			ss7gwPnodeIpAddress
+				IpAddress,
+			pNodeDefaultState
+				INTEGER,
+			activeFlash
+				INTEGER,
+			timeFlashUpdated
+				DisplayString (SIZE (0..19)),
+			swVersionRunning
+				DisplayString (SIZE (0..20)),
+			oamFuncSupp
+				Boolean,
+			ss7LinksSupp
+				Boolean,
+			ss7NWSupp
+				Boolean,
+			ss7sccpSupp
+				Boolean,
+			isupGwSupp
+				Boolean,
+			tcapRelaySupp
+				Boolean
+
+		}
+
+	ss7gwPnodeCfgIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..8)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Physical Node Id"
+                                                
+		::= { ss7gwPhysNodeCfgEntry 1}
+
+	ss7gwPnodeName OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"symbolic name for the Physical Node"
+                                                
+		::= { ss7gwPhysNodeCfgEntry 2}
+
+	ss7gwPnodeIpAddress OBJECT-TYPE
+		SYNTAX  IpAddress
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"IP address of the physical node"
+                                                
+		::= { ss7gwPhysNodeCfgEntry 3}
+
+	pNodeDefaultState OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   outOfService(2),
+			   active(4),
+			   standby(6)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Default state of the Physical Node"
+                                                
+		::= { ss7gwPhysNodeCfgEntry 4}
+
+	activeFlash OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   flashArea1(0),
+			   flashArea2(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"active flash in use/to be used after next reboot"
+                                                
+		::= { ss7gwPhysNodeCfgEntry 5}
+
+	timeFlashUpdated OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..19))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Time of last flash update. Format used is HH:MM.SS."
+                                                
+		::= { ss7gwPhysNodeCfgEntry 6}
+
+	swVersionRunning OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"software version running on the physical node"
+                                                
+		::= { ss7gwPhysNodeCfgEntry 7}
+
+	oamFuncSupp OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"OAM function is supported on this physical node"
+                                                
+		::= { ss7gwPhysNodeCfgEntry 8}
+
+	ss7LinksSupp OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"ss7 links are terminated on this physical node"
+                                                
+		::= { ss7gwPhysNodeCfgEntry 9}
+
+	ss7NWSupp OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"MTP 3 is supported on this physical node"
+                                                
+		::= { ss7gwPhysNodeCfgEntry 10}
+
+	ss7sccpSupp OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"sccp is supported on this physical node"
+                                                
+		::= { ss7gwPhysNodeCfgEntry 11}
+
+	isupGwSupp OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"isup Gateway is supported on this physical node"
+                                                
+		::= { ss7gwPhysNodeCfgEntry 12}
+
+	tcapRelaySupp OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"tcap Relay is supported on this physical node"
+                                                
+		::= { ss7gwPhysNodeCfgEntry 13}
+
+--===========================================================
+	ss7gwPhysNodeStatusTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SS7GwPhysNodeStatusEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds information about the physical 
+			nodes and their status. This table is only valid if the 
+			SS7 Gateway is in a High Available Configuration.
+			Rows cannot be created nor deleted in this table."
+
+		::= { ss7GatewayD2 9}
+
+	ss7gwPhysNodeStatusEntry OBJECT-TYPE
+		SYNTAX SS7GwPhysNodeStatusEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the ss7gwPhysNodeStatus table."
+		INDEX { ss7gwPnodeStatusIndex}
+		::= { ss7gwPhysNodeStatusTable 1 }
+
+	SS7GwPhysNodeStatusEntry ::=
+		SEQUENCE
+		{
+	        	ss7gwPnodeStatusIndex
+				INTEGER(1..8),
+			pNodeCommand
+				INTEGER,
+			pNodeStatus
+				INTEGER,
+			pNodeRebootCause
+				INTEGER,
+			pNodeRebootFaultCnt
+				Counter
+		}
+
+	ss7gwPnodeStatusIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..8)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Physical Node Id"
+                                                
+		::= { ss7gwPhysNodeStatusEntry 1}
+
+	pNodeCommand OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   goActive(1),
+			   goOutofService(2),
+			   goStandby(3)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"physical node commands"
+                                                
+		::= { ss7gwPhysNodeStatusEntry 2}
+
+	pNodeStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   goingOutOfService(1),
+			   outOfService(2),
+			   goingActive(3),
+			   active(4),
+			   goingStandby(5),
+			   standby(6)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"status of the physical node"
+                                                
+		::= { ss7gwPhysNodeStatusEntry 3}
+
+	pNodeRebootCause OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   operatorInitiated(1),
+			   fault(2)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Reboot cause of the physical Node"
+                                                
+		::= { ss7gwPhysNodeStatusEntry 4}
+
+	pNodeRebootFaultCnt OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Number of Reboot occurences due to a Fault. 
+			Setting this variable to any value causes this 
+			counter to be reset to 0."
+                                                
+		::= { ss7gwPhysNodeStatusEntry 5}
+
+--===========================================================
+
+--===========================================================
+--!!===========================================================
+--          MTP1
+--!!===========================================================
+
+	mtp1
+		OBJECT IDENTIFIER ::= { mtp 1 }
+--===========================================================
+	mtp1TimeSlotMappingTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP1TimeSlotMappingEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table maps the timeslots on an E1/T1 to a 
+			specific processor.  This table is the Master
+			table for all of MTP1 and MTP2.  This means that when
+			configuration data is changed in any MTP1 or MTP2 table,
+			the RowStatus variable in this table will display the
+			current status of that change (whether it was accepted
+			by the system (active), or a reboot needs to take place
+			(pending), or the the change was rejected by the system
+			(rejected)).
+
+			Rows are added in this table by setting the rowStatus
+			variable to Create and by specifying a valid value 
+			for all other variables.  All variables must be
+			specified in the SNMP-Set operation in order 
+			for a row to be created.  
+
+			Rows are deleted by in this table by setting the
+			rowStatus variable to Destroy.  When a row in this
+			table is deleted, then all MTP1 and MTP2 configuration 
+			tables that share this same value for the index will 
+			also be deleted.
+			
+			Rows can be updated in this table by setting the
+			rowStatus variable to Update and by modifying the
+			variables that need changed in that row."
+
+		::= { mtp1 1}
+
+	mtp1TimeSlotMappingEntry OBJECT-TYPE
+		SYNTAX MTP1TimeSlotMappingEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp1TimeSlotMapping table."
+		INDEX { mtp1TimeSlotMappingSs7LinkIdIndex}
+		::= { mtp1TimeSlotMappingTable 1 }
+
+	MTP1TimeSlotMappingEntry ::=
+		SEQUENCE
+		{
+	        	mtp1TimeSlotMappingSs7LinkIdIndex
+				INTEGER(1..32),
+			mtp1TimeSlotMappingRowStatus
+				INTEGER,
+			pnode
+				INTEGER(1..8),
+			lineId
+				INTEGER(1..2),
+			timeslotNumber
+				INTEGER(0..31),
+			bitrate
+				INTEGER,
+			ds0a
+				Boolean
+
+		}
+
+	mtp1TimeSlotMappingSs7LinkIdIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..32)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies each SS7 link 
+			.  This index value is used throughout MTP1
+			and MTP2 tables to uniquely identify the same SS7 link
+			It is also used in the MTP3Link Tables.  These
+			values must be created in ascending, synchronous order."
+                                                
+		::= { mtp1TimeSlotMappingEntry 1}
+
+	mtp1TimeSlotMappingRowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   update(3),
+			   active(4),
+			   pending(5),
+			   rejected(6)
+			}
+
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Update. These are explained in the Table Definition.
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system
+			Pending - a variable has been changed in this table
+				  or another MTP1 or MTP2 configuration table 
+				  and is not currently in use by the system.
+				  The system must be rebooted before the
+				  variable will take effect in the system.
+			Rejected - a variable was changed in this table
+				   before the last reboot.  That change was 
+				   rejected by the system after the reboot. 
+				   The variable needs to be retored to it's
+				   previous value."
+                                                
+		::= { mtp1TimeSlotMappingEntry 2}
+
+	pnode OBJECT-TYPE
+		SYNTAX  INTEGER(1..8)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"physical node Id that this SS7 link is to be 
+			connected to"
+                                                
+		::= { mtp1TimeSlotMappingEntry 3}
+
+	lineId OBJECT-TYPE
+		SYNTAX  INTEGER(1..2)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Id of the E1/T1 terminated on the processor"
+                                                
+		::= { mtp1TimeSlotMappingEntry 4}
+
+	timeslotNumber OBJECT-TYPE
+		SYNTAX  INTEGER(0..31)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"timeslot number on the E1/T1 that is terminated by 
+			the processor"
+                                                
+		::= { mtp1TimeSlotMappingEntry 5}
+
+	bitrate OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   bitrate-64K(1),
+			   bitrate-56K(2),
+			   bitrate-48K(3)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"signalling link bitrate."
+                                                
+		::= { mtp1TimeSlotMappingEntry 6}
+
+	ds0a OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"ds0a link"
+                                                
+		::= { mtp1TimeSlotMappingEntry 7}
+
+--===========================================================
+	mtp1PhysIntTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP1PhysIntEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains variables used to configure 
+			the physical links terminated on the SS7 Gateway.
+
+			Rows are automatically created in this table when
+			a SS7 link (timeslot) is assigned to a processor and
+			an scc in the mtp1TimeSlotMappingTable.
+			Rows are automatically deleted in this table when
+			a SS7 link (timeslot) is deleted from the 
+			mtp1TimeSlotMappingTable.
+
+			Rows can be updated simply by changing setting the
+			new value.  However, the mtp1TimeSlotMappingTable
+			holds the status of the change that was made."
+
+
+		::= { mtp1 2}
+
+	mtp1PhysIntEntry OBJECT-TYPE
+		SYNTAX MTP1PhysIntEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp1PhysInt table."
+		INDEX { mtp1PhysIntPnodeIndex, mtp1PhysIntLineIdIndex}
+		::= { mtp1PhysIntTable 1 }
+
+	MTP1PhysIntEntry ::=
+		SEQUENCE
+		{
+	        	mtp1PhysIntPnodeIndex
+				INTEGER(1..8),
+			mtp1PhysIntLineIdIndex
+				INTEGER(1..2),
+			mtp1PhysIntRowStatus
+				INTEGER,
+			physIntType
+				INTEGER,
+			codingType
+				INTEGER,
+			framingType
+				INTEGER
+		}
+
+	mtp1PhysIntPnodeIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..8)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies each SS7 link 
+			(timeslot).  This index value is used throughout MTP1
+			and MTP2 tables to uniquely identify the same SS7 link
+			It is also used in the MTP3Link Tables"
+                                                
+		::= { mtp1PhysIntEntry 1}
+
+	mtp1PhysIntLineIdIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..2)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"line Id on the physical node"
+                                                
+		::= { mtp1PhysIntEntry 2}
+
+
+	mtp1PhysIntRowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   update(3),
+			   active(4),
+			   pending(5),
+			   rejected(6)
+			}
+
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Update. These are explained in the Table Definition.
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system
+			Pending - a variable has been changed in this table
+				  or another MTP1 or MTP2 configuration table 
+				  and is not currently in use by the system.
+				  The system must be rebooted before the
+				  variable will take effect in the system.
+			Rejected - a variable was changed in this table
+				   before the last reboot.  That change was 
+				   rejected by the system after the reboot. 
+				   The variable needs to be retored to it's
+				   previous value."
+                                                
+		::= { mtp1PhysIntEntry 3}
+
+	physIntType OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   e1(0),
+			   t1(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"physical interface type."
+                                                
+		::= { mtp1PhysIntEntry 4}
+
+	codingType OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   hdb3(1),
+			   b8zs(2)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"coding type used on the link"
+                                                
+		::= { mtp1PhysIntEntry 5}
+
+	framingType OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   crc4Multiframe(1),
+			   esf(2)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"framing format used on the link"
+                                                
+		::= { mtp1PhysIntEntry 6}
+
+
+--===========================================================
+	mtp1PhysIntStatusTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP1PhysIntStatusEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains the status of the physical
+			interface.
+
+			Rows are automatically created in this table when
+			a SS7 link (timeslot) is assigned to a processor and
+			an scc in the mtp1TimeSlotMappingTable.  The ProcessorId
+			used in the mtp1TimeSlotMappingTable will be the index
+			used in this table.  
+			Rows are automatically deleted in this table when all
+			SS7 links are removed from a processor.
+
+			Rows can be updated simply by changing setting the
+			new value.  However, the mtp1TimeSlotMappingTable
+			holds the status of the change that was made.  All
+			rows that links that are connected to this processor
+			will be updated with the appropriate status."
+
+		::= { mtp1 3}
+
+	mtp1PhysIntStatusEntry OBJECT-TYPE
+		SYNTAX MTP1PhysIntStatusEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp1PhysIntStatus table."
+		INDEX { mtp1PhysIntStatusPnodeIndex,
+			mtp1PhysIntStatuslineIdIndex}
+		::= { mtp1PhysIntStatusTable 1 }
+
+	MTP1PhysIntStatusEntry ::=
+		SEQUENCE
+		{
+	        	mtp1PhysIntStatusPnodeIndex
+				INTEGER(1..8),
+			mtp1PhysIntStatuslineIdIndex
+				INTEGER(1..2),
+			linkstatus
+				INTEGER
+		}
+
+	mtp1PhysIntStatusPnodeIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..8)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"The index that uniquely identifies the Physical node 
+			in the SS7 Gateway.  This value is tied back to the
+			pnodeIndex in the mtp1PhysIntTable"
+                                                
+		::= { mtp1PhysIntStatusEntry 1}
+
+	mtp1PhysIntStatuslineIdIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..2)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"line Id on physical node"
+                                                
+		::= { mtp1PhysIntStatusEntry 2}
+
+	linkstatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   noSignalDetected(1),
+			   signalDetectedNoFraming(2),
+			   signalDetectedAndFramed(3)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"status of the link"
+                                                
+		::= { mtp1PhysIntStatusEntry 3}
+
+--===========================================================
+	mtp1StatusTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP1StatusEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains variables used to configure 
+			the physical links terminated on the SS7 Gateway.
+
+			Rows are automatically created in this table when
+			a SS7 link (timeslot) is assigned to a processor and
+			an scc in the mtp1TimeSlotMappingTable.
+			Rows are automatically deleted in this table when
+			a SS7 link (timeslot) is deleted from the 
+			mtp1TimeSlotMappingTable."
+
+		::= { mtp1 4}
+
+	mtp1StatusEntry OBJECT-TYPE
+		SYNTAX MTP1StatusEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp1Status table."
+		INDEX { mtp1StatusSs7LinkIdIndex}
+		::= { mtp1StatusTable 1 }
+
+	MTP1StatusEntry ::=
+		SEQUENCE
+		{
+	        	mtp1StatusSs7LinkIdIndex
+				INTEGER(1..32),
+			glblState
+				INTEGER,
+			elecInt
+				INTEGER
+		}
+
+	mtp1StatusSs7LinkIdIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..32)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies each SS7 link 
+			(timeslot).  This index value is used throughout MTP1
+			and MTP2 tables to uniquely identify the same SS7 link
+			It is also used in the MTP3Link Tables"
+                                                
+		::= { mtp1StatusEntry 1}
+
+	glblState OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"global MTP1 state"
+                                                
+		::= { mtp1StatusEntry 2}
+
+	elecInt OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"electrical interface"
+                                                
+		::= { mtp1StatusEntry 3}
+--===========================================================
+	mtp1StatisticsTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP1StatisticsEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds statistical data on destinations 
+			in the network.
+			Rows cannot be added nor deleted in the table."
+		::= { mtp1 5}
+
+	mtp1StatisticsEntry OBJECT-TYPE
+		SYNTAX MTP1StatisticsEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp3DestinationStatistics table."
+		INDEX { mtp1StatisticsSs7LinkIdIndex}
+		::= { mtp1StatisticsTable 1 }
+
+	MTP1StatisticsEntry ::=
+		SEQUENCE
+		{
+	        	mtp1StatisticsSs7LinkIdIndex
+				INTEGER(1..32),
+			mtp1StatisticsResetStat
+				INTEGER,
+			noBuffer
+				Counter,
+			rxFrmAborted
+				Counter,
+			rxFrmBadCrc
+				Counter,
+			rxFrmBadPar
+				Counter,
+			rxFrmHrdErr
+				Counter,
+			rxFrmLenViol
+				Counter,
+			rxFrmOverrun
+				Counter,
+			rxFrmBreak
+				Counter,
+			rxFrmLostCd
+				Counter,
+			txFrmUnder
+				Counter
+		}
+
+	mtp1StatisticsSs7LinkIdIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..32)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies each SS7 link 
+			(timeslot).  This index value is used throughout MTP1
+			and MTP2 tables to uniquely identify the same SS7 link
+			It is also used in the MTP3Link Tables"
+                                                
+		::= { mtp1StatisticsEntry 1}
+
+	mtp1StatisticsResetStat OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   resetStatistics(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command that resets the statistics in this Row.  
+			Statistics reset each time this variable is set to
+			resetStatistics(1)"
+                                                
+		::= { mtp1StatisticsEntry 2}
+
+	noBuffer  OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of no buffer available occurences"
+                                                
+		::= { mtp1StatisticsEntry 3}
+
+	rxFrmAborted  OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of receive frame - aborted"
+                                                
+		::= { mtp1StatisticsEntry 4}
+
+	rxFrmBadCrc OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of receive frame - bad CRC"
+                                                
+		::= { mtp1StatisticsEntry 5}
+
+	rxFrmBadPar OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of receive frame - bad parity"
+                                                
+		::= { mtp1StatisticsEntry 6}
+
+	rxFrmHrdErr OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of receive frame - hardware error"
+                                                
+		::= { mtp1StatisticsEntry 7}
+
+	rxFrmLenViol OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of receive frame - length violation"
+                                                
+		::= { mtp1StatisticsEntry 8}
+
+	rxFrmOverrun OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of receive frame - overrun"
+                                                
+		::= { mtp1StatisticsEntry 9}
+
+	rxFrmBreak OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of receive frame - break"
+                                                
+		::= { mtp1StatisticsEntry 10}
+
+	rxFrmLostCd OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of receive frame - Carrier Detect (CD) lost"
+                                                
+		::= { mtp1StatisticsEntry 11}
+
+	txFrmUnder OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of transmit frames - underrun"
+                                                
+		::= { mtp1StatisticsEntry 12}
+--===========================================================
+
+
+--!!===========================================================
+--          MTP2
+--!!===========================================================
+
+	mtp2
+		OBJECT IDENTIFIER ::= { mtp 2 }
+--===========================================================
+
+	mtp2ConfigTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP2ConfigEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds configuration data for the SS7 data
+			links.
+			Rows cannot be added nor deleted in the table.
+
+			Rows are automatically created in this table when
+			a SS7 link (timeslot) is assigned to a processor and
+			an scc in the mtp1TimeSlotMappingTable.
+			Rows are automatically deleted in this table when
+			a SS7 link (timeslot) is deleted from the 
+			mtp1TimeSlotMappingTable."
+
+		::= { mtp2 1}
+
+	mtp2ConfigEntry OBJECT-TYPE
+		SYNTAX MTP2ConfigEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp2Config table."
+		INDEX { mtp2ConfigSs7LinkIdIndex}
+		::= { mtp2ConfigTable 1 }
+
+	MTP2ConfigEntry ::=
+		SEQUENCE
+		{
+	        	mtp2ConfigSs7LinkIdIndex
+				INTEGER(1..32),
+			mtp2maxOutsFrms
+				INTEGER,
+			mtp2t1
+				INTEGER,
+			mtp2t2
+				INTEGER,
+			mtp2t3
+				INTEGER,
+			mtp2t5
+				INTEGER,
+			mtp2t6
+				INTEGER,
+			mtp2t7
+				INTEGER,
+			provEmrgcy
+				INTEGER,
+			provNormal
+				INTEGER,
+			lssuLen
+				INTEGER(1..2),
+			mtp2maxFrmLen
+				INTEGER,
+			congDisc
+				Boolean,
+			sdT
+				INTEGER,
+			sdTie
+				INTEGER,
+			sdTin
+				INTEGER,
+			sdN1
+				INTEGER,
+			sdN2
+				INTEGER,
+			sdCp
+				INTEGER,
+			sdtFlcStartTr
+				INTEGER,
+			sdtFlcEndTr
+				INTEGER
+		}
+
+	mtp2ConfigSs7LinkIdIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..32)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies each SS7 link 
+			(timeslot).  This index value is used throughout MTP1
+			and MTP2 tables to uniquely identify the same SS7 link
+			It is also used in the MTP3Link Tables"
+                                                
+		::= { mtp2ConfigEntry 1}
+
+	mtp2maxOutsFrms OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"maximum number of outstanding frames
+			Recommended value: 8"
+                                                
+		::= { mtp2ConfigEntry 2}
+
+	mtp2t1 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for alignment ready"
+                                                
+		::= { mtp2ConfigEntry 3}
+
+	mtp2t2 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for frame not aligned"
+                                                
+		::= { mtp2ConfigEntry 4}
+
+	mtp2t3 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for aligned "
+                                                
+		::= { mtp2ConfigEntry 5}
+
+	mtp2t5 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for ending SIB"
+                                                
+		::= { mtp2ConfigEntry 6}
+
+	mtp2t6 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for remote congestion"
+                                                
+		::= { mtp2ConfigEntry 7}
+
+	mtp2t7 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for excessive delay of 
+			acknowledgement"
+                                                
+		::= { mtp2ConfigEntry 8}
+
+	provEmrgcy OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for emergency proving 
+			period"
+                                                
+		::= { mtp2ConfigEntry 9}
+
+	provNormal OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for normal proving period"
+                                                
+		::= { mtp2ConfigEntry 10}
+
+	lssuLen OBJECT-TYPE
+		SYNTAX  INTEGER(1..2)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"link status signal unit (LSSU) length in octets"
+                                                
+		::= { mtp2ConfigEntry 11}
+
+	mtp2maxFrmLen OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"maximum frame length for a message signal unit (MSU)"
+                                                
+		::= { mtp2ConfigEntry 12}
+
+	congDisc OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"congestion discard"
+                                                
+		::= { mtp2ConfigEntry 13}
+
+	sdT OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"signal unit error rate monitor (SUERM) threshold"
+                                                
+		::= { mtp2ConfigEntry 14}
+
+	sdTie OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"alignment error rate monitor (AERM) threshold for 
+			emergency condition"
+                                                
+		::= { mtp2ConfigEntry 15}
+
+	sdTin OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"alignment error rate monitor (AERM) threshold for 
+			normal condition"
+                                                
+		::= { mtp2ConfigEntry 16}
+
+	sdN1 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"maximum number of message units available for 
+			retransmission under cyclic error method"
+                                                
+		::= { mtp2ConfigEntry 17}
+
+	sdN2 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"maximum number of octets available for retransmission 
+			under cyclic error method"
+                                                
+		::= { mtp2ConfigEntry 18}
+
+	sdCp OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"maximum number of attempts at alignment before 
+			alignment not possible is reached"
+                                                
+		::= { mtp2ConfigEntry 19}
+
+	sdtFlcStartTr OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"threshold for initiating flow control at SDT interface"
+                                                
+		::= { mtp2ConfigEntry 20}
+
+	sdtFlcEndTr OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"threshold to end flow control at SDT interface"
+                                                
+		::= { mtp2ConfigEntry 21}
+--===========================================================
+
+
+	mtp2StatusTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP2StatusEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds MTP2 Status data for the SS7 data
+			links.
+			Rows cannot be added nor deleted in the table."
+
+		::= { mtp2 2}
+
+	mtp2StatusEntry OBJECT-TYPE
+		SYNTAX MTP2StatusEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp2Status table."
+		INDEX { mtp2StatusSs7LinkIdIndex}
+		::= { mtp2StatusTable 1 }
+
+	MTP2StatusEntry ::=
+		SEQUENCE
+		{
+	        	mtp2StatusSs7LinkIdIndex
+				INTEGER(1..32),
+			mtp2Status
+				INTEGER,
+			psOutsFrm
+				INTEGER,
+			cntMaDrop
+				INTEGER,
+			lclBsy
+				Boolean,
+			remBsy
+				Boolean,
+			fsn
+				INTEGER,
+			bsn
+				INTEGER,
+			llSt
+				INTEGER,
+			flcSt
+				INTEGER,
+			rtxCnt
+				INTEGER,
+			qSize
+				INTEGER
+		}
+
+	mtp2StatusSs7LinkIdIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..32)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies each SS7 link 
+			(timeslot).  This index value is used throughout MTP1
+			and MTP2 tables to uniquely identify the same SS7 link
+			It is also used in the MTP3Link Tables"
+                                                
+		::= { mtp2StatusEntry 1}
+
+	mtp2Status OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"internal status of MTP2 data link"
+                                                
+		::= { mtp2StatusEntry 2}
+
+	psOutsFrm OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"outstanding frames to MAC"
+                                                
+		::= { mtp2StatusEntry 3}
+
+	cntMaDrop OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"frames dropped by MAC"
+                                                
+		::= { mtp2StatusEntry 4}
+
+	lclBsy OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"local is busy"
+                                                
+		::= { mtp2StatusEntry 5}
+
+	remBsy OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"remote is busy"
+                                                
+		::= { mtp2StatusEntry 6}
+
+	fsn OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"forward sequence number"
+                                                
+		::= { mtp2StatusEntry 7}
+
+	bsn OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"backward sequence number"
+                                                
+		::= { mtp2StatusEntry 8}
+
+	llSt OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"link level matrix state"
+                                                
+		::= { mtp2StatusEntry 9}
+
+	flcSt OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"flow control state"
+                                                
+		::= { mtp2StatusEntry 10}
+
+	rtxCnt OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"retransmission index for PCR"
+                                                
+		::= { mtp2StatusEntry 11}
+
+	qSize OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Transmit queue size"
+                                                
+		::= { mtp2StatusEntry 12}
+--===========================================================
+
+
+	mtp2StatisticsTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP2StatisticsEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds MTP2 Status data for the SS7 data
+			links.
+			Rows cannot be added nor deleted in the table."
+
+		::= { mtp2 3}
+
+	mtp2StatisticsEntry OBJECT-TYPE
+		SYNTAX MTP2StatisticsEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp2Statistics table."
+		INDEX { mtp2StatisticsSs7LinkIdIndex}
+		::= { mtp2StatisticsTable 1 }
+
+	MTP2StatisticsEntry ::=
+		SEQUENCE
+		{
+	        	mtp2StatisticsSs7LinkIdIndex
+				INTEGER(1..32),
+			mtp2StatisticsResetStat
+				INTEGER,
+			inService
+				INTEGER,
+			lclBusy
+				INTEGER,
+			slFailAll
+				Counter,
+			slFailAb
+				Counter,
+			slFailAck
+				Counter,
+			slFailErr
+				Counter,
+			slFailCong
+				Counter,
+			slFailAlign
+				Counter,
+			slNSUErr
+				Counter,
+			slNegAck
+				Counter,
+			nSifSioTx
+				Counter,
+			nRetrans
+				Counter,
+			mTx
+				Counter,
+			lTx
+				Counter,
+			fTx
+				Counter,
+			nSifSioRx
+				Counter,
+			mRx
+				Counter,
+			lRx
+				Counter,
+			fRx
+				Counter
+		}
+
+	mtp2StatisticsSs7LinkIdIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..32)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies each SS7 link 
+			(timeslot).  This index value is used throughout MTP1
+			and MTP2 tables to uniquely identify the same SS7 link
+			It is also used in the MTP3Link Tables"
+                                                
+		::= { mtp2StatisticsEntry 1}
+
+	mtp2StatisticsResetStat OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   resetStatistics(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command that resets the statistics in this Row.  
+			Statistics reset each time this variable is set to
+			resetStatistics(1)"
+                                                
+		::= { mtp2StatisticsEntry 2}
+
+	inService OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"start of in-service"
+                                                
+		::= { mtp2StatisticsEntry 3}
+
+	lclBusy OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"duration of local-busy"
+                                                
+		::= { mtp2StatisticsEntry 4}
+
+	slFailAll OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of signalling link failures"
+                                                
+		::= { mtp2StatisticsEntry 5}
+
+	slFailAb OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Abnormal FIBR/BSNR link failure"
+                                                
+		::= { mtp2StatisticsEntry 6}
+
+	slFailAck OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"delay of acknowledgement link failure"
+                                                
+		::= { mtp2StatisticsEntry 7}
+
+	slFailErr OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"excessive error rate link failure"
+                                                
+		::= { mtp2StatisticsEntry 8}
+
+	slFailCong OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"excessive congestion link failure"
+                                                
+		::= { mtp2StatisticsEntry 9}
+
+	slFailAlign OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"alignment link failure"
+                                                
+		::= { mtp2StatisticsEntry 10}
+
+	slNSUErr OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of signal units in error"
+                                                
+		::= { mtp2StatisticsEntry 11}
+
+	slNegAck OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of negative acknowledges"
+                                                
+		::= { mtp2StatisticsEntry 12}
+
+	nSifSioTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of SIF/SIO lssu transmitted"
+                                                
+		::= { mtp2StatisticsEntry 13}
+
+	nRetrans OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of retransmitted frames"
+                                                
+		::= { mtp2StatisticsEntry 14}
+
+	mTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"MSU frames transmitted"
+                                                
+		::= { mtp2StatisticsEntry 15}
+
+	lTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"LSSU frames transmitted"
+                                                
+		::= { mtp2StatisticsEntry 16}
+
+	fTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"FISU frames transmitted"
+                                                
+		::= { mtp2StatisticsEntry 17}
+
+	nSifSioRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of SIF/SIO lssu received"
+                                                
+		::= { mtp2StatisticsEntry 18}
+
+	mRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"MSU frames received"
+                                                
+		::= { mtp2StatisticsEntry 19}
+
+	lRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"LSSU frames received"
+                                                
+		::= { mtp2StatisticsEntry 20}
+
+	fRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"FISU frames received"
+                                                
+		::= { mtp2StatisticsEntry 21}
+
+
+
+--!!===========================================================
+--          MTP3
+--!!===========================================================
+
+	mtp3
+		OBJECT IDENTIFIER ::= { mtp 3 }
+
+	mtp3GeneralConfig
+		OBJECT IDENTIFIER ::= { mtp3 1 }
+
+
+	mtp3GeneralConfigStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+		{
+		   active(4),
+		   pending(5),
+		   rejected(6)
+		}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"status of variables in this group.
+			Active - all variables in this group are in use by
+				 the system
+			Pending - a variable has been changed in this group
+				  and is not currently in use by the system.
+				  The system must be rebooted before the
+				  variable will take effect in the system.
+			Rejected - a variable that was changed in this group
+				   before the last reboot, was rejected by
+				   the system.  The variable needs to be
+				   retored to it's previously Active value."
+                                                
+		::= { mtp3GeneralConfig 1}
+
+	niValidation OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   disable(0),
+			   enable(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"enable/disable national/international validation"
+                                                
+		::= { mtp3GeneralConfig 2}
+
+	restartReq OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   disable(0),
+			   enable(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Enable/Disable restart procedures when when first
+			link comes into service"
+                                                
+		::= { mtp3GeneralConfig 3}
+
+	tranRstrReq OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   disable(0),
+			   enable(1)
+			}
+
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Enable/Disable transfer restrict handling"
+                                                
+		::= { mtp3GeneralConfig 4}
+
+	maxLinks OBJECT-TYPE
+		SYNTAX  INTEGER(1..32)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"maximum number of links"
+                                                
+		::= { mtp3GeneralConfig 5}
+
+	maxUsers OBJECT-TYPE
+		SYNTAX  INTEGER(1..3)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"maximum number of MTP3 users"
+                                                
+		::= { mtp3GeneralConfig 6}
+
+	maxDest OBJECT-TYPE
+		SYNTAX  INTEGER(1..32000)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"maximum number of destinations (including our own)"
+                                                
+		::= { mtp3GeneralConfig 7}
+
+	maxLsets OBJECT-TYPE
+		SYNTAX  INTEGER(1..32)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"maximum number of link sets"
+                                                
+		::= { mtp3GeneralConfig 8}
+
+	maxRoutes OBJECT-TYPE
+		SYNTAX  INTEGER(1..32000)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"maximum number of routes"
+                                                
+		::= { mtp3GeneralConfig 9}
+
+--===========================================================
+	mtp3LinkSetConfigTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP3LinkSetConfigEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table defines the MTP3 linksets.  
+			Rows are added in this table by setting the rowStatus
+			variable to Create and by specifying a valid value 
+			for all other variables.  All variables must be
+			specified in the SNMP-Set operation in order 
+			for a row to be created.  
+			Rows are deleted by in this table by setting the
+			rowStatus variable to Destroy.  
+			Rows can be updated in this table by setting the
+			rowStatus variable to Update and by modifying the
+			variables that need changed in that row."
+		::= { mtp3 2}
+
+	mtp3LinkSetConfigEntry OBJECT-TYPE
+		SYNTAX MTP3LinkSetConfigEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the MTP3LinkSetConfig table."
+		INDEX { mtp3LinkSetConfiglinkSetIdIndex}
+		::= { mtp3LinkSetConfigTable 1 }
+
+	MTP3LinkSetConfigEntry ::=
+		SEQUENCE
+		{
+	        	mtp3LinkSetConfiglinkSetIdIndex
+				DisplayString (SIZE (0..20)),
+			mtp3LinkSetrowStatus
+				INTEGER,
+			adjdpc
+				DisplayString (SIZE (0..11)),
+			loadShare
+				INTEGER,
+			numlinks
+				INTEGER(1..16),
+			commandsMTP3linkset
+				INTEGER
+		}
+
+	mtp3LinkSetConfiglinkSetIdIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index of the link set"
+                                                
+		::= { mtp3LinkSetConfigEntry 1}
+
+	mtp3LinkSetrowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   update(3),
+			   active(4),
+			   pending(5),
+			   rejected(6)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Update. These are explained in the Table Definition. 
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system
+			Pending - a variable has been changed in this table
+				  and is not currently in use by the system.
+				  The system must be rebooted before the
+				  variable will take effect in the system.
+			Rejected - a variable was changed in this table
+				   before the last reboot.  That change was 
+				   rejected by the system after the reboot. 
+				   The variable needs to be retored to it's
+				   previous value."
+                                                
+		::= { mtp3LinkSetConfigEntry 2}
+
+	adjdpc OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"the physical dpc the linkset is connected to"
+                                                
+		::= { mtp3LinkSetConfigEntry 3}
+
+	loadShare OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   disabled(0),
+			   enabled(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Enable/Disable load sharing between the links"
+                                                
+		::= { mtp3LinkSetConfigEntry 4}
+
+	numlinks OBJECT-TYPE
+		SYNTAX  INTEGER(1..16)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"number of links in the linkset"
+                                                
+		::= { mtp3LinkSetConfigEntry 5}
+
+	commandsMTP3linkset OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   disable(0),
+			   enable(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command to be performed on the link set"
+                                                
+		::= { mtp3LinkSetConfigEntry 6}
+
+--===========================================================
+
+	mtp3LinkSetStatusTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP3LinkSetStatusEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds the status of the MTP3 linksets.  
+			Rows cannot be added nor deleted in the table."
+		::= { mtp3 3}
+
+	mtp3LinkSetStatusEntry OBJECT-TYPE
+		SYNTAX MTP3LinkSetStatusEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the MTP3LinkSetStatus table."
+		INDEX { mtp3LinkSetStatuslinkSetIdIndex}
+		::= { mtp3LinkSetStatusTable 1 }
+
+	MTP3LinkSetStatusEntry ::=
+		SEQUENCE
+		{
+	        	mtp3LinkSetStatuslinkSetIdIndex
+				DisplayString (SIZE (0..20)),
+			actlinks
+				INTEGER(0..15),
+			conglnks
+				INTEGER(0..15),
+			cong
+				Boolean,
+			lnkSetState
+				INTEGER
+
+		}
+
+	mtp3LinkSetStatuslinkSetIdIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index of the link set"
+                                                
+		::= { mtp3LinkSetStatusEntry 1}
+
+	actlinks OBJECT-TYPE
+		SYNTAX  INTEGER(0..15)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of active links"
+                                                
+		::= { mtp3LinkSetStatusEntry 2}
+
+	conglnks OBJECT-TYPE
+		SYNTAX  INTEGER(0..15)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of congested links"
+                                                
+		::= { mtp3LinkSetStatusEntry 3}
+
+	cong OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"link set congestion.  If set to True, the link set 
+			is congested."
+                                                
+		::= { mtp3LinkSetStatusEntry 4}
+
+	lnkSetState OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   active(0),
+			   inActive(1)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"link set state"
+                                                
+		::= { mtp3LinkSetStatusEntry 5}
+
+--===========================================================
+
+	mtp3LinkConfigTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP3LinkConfigEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds the configuration data for the MTP3 
+			links.
+			Rows are added in this table by setting the rowStatus
+			variable to Create and by specifying a valid value 
+			for all other variables.  All variables must be
+			specified in the SNMP-Set operation in order 
+			for a row to be created.  
+			Rows are deleted by in this table by setting the
+			rowStatus variable to Destroy.  
+			Rows can be updated in this table by setting the
+			rowStatus variable to Update and by modifying the
+			variables that need changed in that row."
+
+		::= { mtp3 4}
+
+	mtp3LinkConfigEntry OBJECT-TYPE
+		SYNTAX MTP3LinkConfigEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the MTP3LinkConfig table."
+		INDEX { mtp3LinkConfigSs7LinkIdIndex}
+		::= { mtp3LinkConfigTable 1 }
+
+	MTP3LinkConfigEntry ::=
+		SEQUENCE
+		{
+	        	mtp3LinkConfigSs7LinkIdIndex
+				INTEGER(1..32),
+			mtp3LinkConfigrowStatus
+				INTEGER,
+			mtp3LinkConfiglinkSetId
+				DisplayString (SIZE (0..20)),
+			mtp3LinkConfigSlc
+				INTEGER(0..15),
+			linkpriority
+				INTEGER(0..3),
+			msgpriority
+				INTEGER(0..3),
+			mtp3LinkConfigNi
+				INTEGER,
+			msgSize
+				INTEGER,
+			mtp3LinkConfigpriority0queue
+				INTEGER,
+			mtp3LinkConfigpriority1queue
+				INTEGER,
+			mtp3LinkConfigpriority2queue
+				INTEGER,
+			mtp3LinkConfigpriority3queue
+				INTEGER,
+			commandsMTP3link
+				INTEGER
+		}
+
+	mtp3LinkConfigSs7LinkIdIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..32)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies each SS7 link 
+			(timeslot)."
+                                                
+		::= { mtp3LinkConfigEntry 1}
+
+	mtp3LinkConfigrowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   update(3),
+			   active(4),
+			   pending(5),
+			   rejected(6)
+			}
+
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Update. These are explained in the Table Definition.
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system
+			Pending - a variable has been changed in this table
+				  and is not currently in use by the system.
+				  The system must be rebooted before the
+				  variable will take effect in the system.
+			Rejected - a variable was changed in this table
+				   before the last reboot.  That change was 
+				   rejected by the system after the reboot. 
+				   The variable needs to be retored to it's
+				   previous value."
+                                                
+		::= { mtp3LinkConfigEntry 2}
+
+	mtp3LinkConfiglinkSetId OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"link set Id"
+                                                
+		::= { mtp3LinkConfigEntry 3}
+
+	mtp3LinkConfigSlc OBJECT-TYPE
+		SYNTAX  INTEGER(0..15)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"signalling link code"
+                                                
+		::= { mtp3LinkConfigEntry 4}
+
+	linkpriority OBJECT-TYPE
+		SYNTAX  INTEGER(0..3)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"priority of link in linkset"
+                                                
+		::= { mtp3LinkConfigEntry 5}
+
+	msgpriority OBJECT-TYPE
+		SYNTAX  INTEGER(0..3)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"management message priority"
+                                                
+		::= { mtp3LinkConfigEntry 6}
+
+	mtp3LinkConfigNi OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   international(0),
+			   national(2)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"national indicator"
+                                                
+		::= { mtp3LinkConfigEntry 7}
+
+	msgSize OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"size of Message acceptable to MTP2"
+                                                
+		::= { mtp3LinkConfigEntry 8}
+
+	mtp3LinkConfigpriority0queue OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"size of priority 0 queue"
+                                                
+		::= { mtp3LinkConfigEntry 9}
+
+	mtp3LinkConfigpriority1queue OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"size of priority 1 queue"
+                                                
+		::= { mtp3LinkConfigEntry 10}
+
+	mtp3LinkConfigpriority2queue OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"size of priority 2 queue"
+                                                
+		::= { mtp3LinkConfigEntry 11}
+
+	mtp3LinkConfigpriority3queue OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"size of priority 3 queue"
+                                                
+		::= { mtp3LinkConfigEntry 12}
+
+	commandsMTP3link OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   inhibit(0),
+			   uninhibit(1),
+			   enable(2),
+			   disable(3),
+			   block(4),
+			   deblock(5)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"commands to be performed on a link"
+                                                
+		::= { mtp3LinkConfigEntry 13}
+
+--===========================================================
+	mtp3LinkStatusTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP3LinkStatusEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds the status of the MTP3 links.  
+			Rows cannot be added nor deleted in the table."
+		::= { mtp3 5}
+
+	mtp3LinkStatusEntry OBJECT-TYPE
+		SYNTAX MTP3LinkStatusEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the MTP3LinkSetStatus table."
+		INDEX { mtp3LinkStatusSs7LinkIdIndex}
+		::= { mtp3LinkStatusTable 1 }
+
+	MTP3LinkStatusEntry ::=
+		SEQUENCE
+		{
+			mtp3LinkStatusSs7LinkIdIndex
+				INTEGER(1..32),
+			mtp3LinkStatusLinksetId
+				DisplayString (SIZE (0..20)),
+			mtp3LinkStatusSlc
+				INTEGER(0..15),
+			linkState
+				INTEGER,
+			flcState
+				INTEGER,
+			blkd
+				Boolean,
+			locBlkd
+				Boolean,
+			remBlkd
+				Boolean,
+			inhbt
+				Boolean,
+			locInhbt
+				Boolean,
+			rmtInhbt
+				Boolean,
+			uninhbt
+				Boolean,
+			linkcong
+				Boolean,
+			emerg
+				Boolean
+		}
+
+	mtp3LinkStatusSs7LinkIdIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..32)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies each SS7 link 
+			(timeslot)."
+                                                
+		::= { mtp3LinkStatusEntry 1}
+
+	mtp3LinkStatusLinksetId OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"link set Id"
+                                                
+		::= { mtp3LinkStatusEntry 2}
+
+	mtp3LinkStatusSlc OBJECT-TYPE
+		SYNTAX  INTEGER(0..15)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"signalling link code"
+                                                
+		::= { mtp3LinkStatusEntry 3}
+
+	 linkState OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   inactive(0),
+			   connecting(1),
+			   active(2),
+			   failed(3),
+			   waitingForConnection(4),
+			   restorationSuspended(5)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"state of the link"
+                                                
+		::= { mtp3LinkStatusEntry 4}
+
+	 flcState OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   disabled(0),
+			   enabled(1)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"flow control state."
+                                                
+		::= { mtp3LinkStatusEntry 5}
+
+	 blkd OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates the link is blocked if set to True."
+                                                
+		::= { mtp3LinkStatusEntry 6}
+
+	 locBlkd OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates the link is locally blocked if set to True"
+                                                
+		::= { mtp3LinkStatusEntry 7}
+
+	 remBlkd OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates the link is remotely blocked is set to True"
+                                                
+		::= { mtp3LinkStatusEntry 8}
+
+	 inhbt OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates the link is inhibited if set to True"
+                                                
+		::= { mtp3LinkStatusEntry 9}
+
+	 locInhbt OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates the link is locally inhibited if set to True"
+                                                
+		::= { mtp3LinkStatusEntry 10}
+
+	 rmtInhbt OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates the link is remotely inhibited if set to
+			True"
+                                                
+		::= { mtp3LinkStatusEntry 11}
+
+	 uninhbt OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates the link has received uninhibit signalling
+			indication if set to True"
+                                                
+		::= { mtp3LinkStatusEntry 12}
+
+	 linkcong OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates the link is congested if set to True"
+                                                
+		::= { mtp3LinkStatusEntry 13}
+
+	 emerg OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates an emergency indication is present if set to
+			True"
+                                                
+		::= { mtp3LinkStatusEntry 14}
+
+--===========================================================
+
+	mtp3DestinationTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP3DestinationEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds the destinations defined in the 
+			network.
+			Rows are added in this table by setting the rowStatus
+			variable to Create and by specifying a valid value 
+			for all other variables.  All variables must be
+			specified in the SNMP-Set operation in order 
+			for a row to be created.  
+			Rows are deleted by in this table by setting the
+			rowStatus variable to Destroy.  
+			Rows can be updated in this table by setting the
+			rowStatus variable to Update and by modifying the
+			variables that need changed in that row."
+
+		::= { mtp3 6}
+
+	mtp3DestinationEntry OBJECT-TYPE
+		SYNTAX MTP3DestinationEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp3Destination table."
+		INDEX { mtp3DestinationDpcIndex}
+		::= { mtp3DestinationTable 1 }
+
+	MTP3DestinationEntry ::=
+		SEQUENCE
+		{
+	        	mtp3DestinationDpcIndex
+				DisplayString (SIZE (0..11)),
+			mtp3DestinationrowStatus
+				INTEGER,
+			dpcName
+				DisplayString (SIZE (0..20)),
+			destLoadShare
+				INTEGER,
+			tfpBcast
+				INTEGER,
+			mtp3DestNi
+				INTEGER
+		}
+
+	mtp3DestinationDpcIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies a Destination Point
+			Code (DPC)"
+                                                
+		::= { mtp3DestinationEntry 1}
+
+	mtp3DestinationrowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   update(3),
+			   active(4)
+			}
+
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Update. These are explained in the Table Definition.
+			All data in this table is run-time (dynamic) data.
+			Therefore, if a variable's value is changed and it is
+			rejected by the system, it will not be stored in the
+			Database.
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system"
+                                                
+		::= { mtp3DestinationEntry 2}
+
+	dpcName OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"common name of the Destination Point Code (DPC)."
+                                                
+		::= { mtp3DestinationEntry 3}
+
+	destLoadShare OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   disable(0),
+			   enable(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Enable/Disable load sharing among equal priority
+			routes to the destination."
+                                                
+		::= { mtp3DestinationEntry 4}
+
+	tfpBcast OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   disable(0),
+			   enable(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Enable/Disable TFP Broadcast Capability."
+                                                
+		::= { mtp3DestinationEntry 5}
+
+	mtp3DestNi OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   international(0),
+			   national(2)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"national indicator"
+                                                
+		::= { mtp3DestinationEntry 6}
+
+
+
+--===========================================================
+	mtp3RouteConfigTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP3RouteConfigEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds the Route Configuration data.
+			Rows are added in this table by setting the rowStatus
+			variable to Create and by specifying a valid value 
+			for all other variables.  All variables must be
+			specified in the SNMP-Set operation in order 
+			for a row to be created.  
+			Rows are deleted by in this table by setting the
+			rowStatus variable to Destroy.  
+			Rows can be updated in this table by setting the
+			rowStatus variable to Update and by modifying the
+			variables that need changed in that row."
+
+		::= { mtp3 7}
+
+	mtp3RouteConfigEntry OBJECT-TYPE
+		SYNTAX MTP3RouteConfigEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp3RouteConfig table."
+		INDEX { mtp3RouteConfigDpcIndex, mtp3RouteConfiglinkSetIdIndex}
+		::= { mtp3RouteConfigTable 1 }
+
+	MTP3RouteConfigEntry ::=
+		SEQUENCE
+		{
+	        	mtp3RouteConfigDpcIndex
+				DisplayString (SIZE (0..11)),
+			mtp3RouteConfiglinkSetIdIndex
+				DisplayString (SIZE (0..20)),
+			mtp3RouteConfigRowStatus
+				INTEGER,
+			routePriority
+				INTEGER(0..3)
+		}
+
+	mtp3RouteConfigDpcIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that identifies a Destination Point
+			Code (DPC)"
+                                                
+		::= { mtp3RouteConfigEntry 1}
+
+	mtp3RouteConfiglinkSetIdIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that identifies a linkset"
+                                                
+		::= { mtp3RouteConfigEntry 2}
+
+	mtp3RouteConfigRowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   update(3),
+			   active(4),
+			   pending(5),
+			   rejected(6)
+			}
+
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Update. These are explained in the Table Definition.
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system
+			Pending - a variable has been changed in this table
+				  and is not currently in use by the system.
+				  The system must be rebooted before the
+				  variable will take effect in the system.
+			Rejected - a variable was changed in this table
+				   before the last reboot.  That change was 
+				   rejected by the system after the reboot. 
+				   The variable needs to be retored to it's
+				   previous value."
+                                                
+		::= { mtp3RouteConfigEntry 3}
+
+	routePriority OBJECT-TYPE
+		SYNTAX  INTEGER(0..3)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"priority of the route to the destination."
+                                                
+		::= { mtp3RouteConfigEntry 4}
+
+--===========================================================
+	mtp3DestinationStatusTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP3DestinationStatusEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds the Destination Status data.
+			Rows cannot be added nor deleted in this table."
+		::= { mtp3 8}
+
+	mtp3DestinationStatusEntry OBJECT-TYPE
+		SYNTAX MTP3DestinationStatusEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp3RouteConfig table."
+		INDEX { mtp3DestinationStatusDpcIndex }
+		::= { mtp3DestinationStatusTable 1 }
+
+	MTP3DestinationStatusEntry ::=
+		SEQUENCE
+		{
+	        	mtp3DestinationStatusDpcIndex
+				DisplayString (SIZE (0..11)),
+			actvLnkSets
+				INTEGER(0..32),
+			congLnkSets
+				INTEGER(0..32),
+			routeState
+				INTEGER,
+			routeCong
+				Boolean,
+			spRest
+				Boolean
+		}
+
+	mtp3DestinationStatusDpcIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that identifies a Destination Point
+			Code (DPC)"
+                                                
+		::= { mtp3DestinationStatusEntry 1}
+
+	 actvLnkSets OBJECT-TYPE
+		SYNTAX  INTEGER(0..32)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of active link sets"
+                                                
+		::= { mtp3DestinationStatusEntry 2}
+
+	 congLnkSets OBJECT-TYPE
+		SYNTAX  INTEGER(0..32)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of congested link sets"
+                                                
+		::= { mtp3DestinationStatusEntry 3}
+
+	 routeState OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   unavailable(0),
+			   available(1)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"route state"
+                                                
+		::= { mtp3DestinationStatusEntry 4}
+
+	 routeCong OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Route set Congestion.  If set to True, the route set
+			is congested."
+                                                
+		::= { mtp3DestinationStatusEntry 5}
+
+	 spRest OBJECT-TYPE
+		SYNTAX  Boolean
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Indicates the signalling point is under restart if set
+			to True."
+                                                
+		::= { mtp3DestinationStatusEntry 6}
+--===========================================================
+
+	mtp3UserTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP3UserEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds the MTP3 User Data"
+		::= { mtp3 9}
+
+	mtp3UserEntry OBJECT-TYPE
+		SYNTAX MTP3UserEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp3User table."
+		INDEX { mtp3UserIndex}
+		::= { mtp3UserTable 1 }
+
+	MTP3UserEntry ::=
+		SEQUENCE
+		{
+	        	mtp3UserIndex
+				INTEGER,
+			mtp3Userpriority0queue
+				INTEGER,
+			mtp3Userpriority1queue
+				INTEGER,
+			mtp3Userpriority2queue
+				INTEGER,
+			mtp3Userpriority3queue
+				INTEGER
+		}
+
+	mtp3UserIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   sccpNational(0),
+			   sccpInternational(1),
+			   isupNational(2),
+			   isupInternational(3)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies a MTP3 User"
+                                                
+		::= { mtp3UserEntry 1}
+
+	mtp3Userpriority0queue OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"size of the priority 0 queue"
+                                                
+		::= { mtp3UserEntry 2}
+
+	mtp3Userpriority1queue OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"size of the priority 1 queue"
+                                                
+		::= { mtp3UserEntry 3}
+
+	mtp3Userpriority2queue OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"size of the priority 2 queue"
+                                                
+		::= { mtp3UserEntry 4}
+
+	mtp3Userpriority3queue OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"size of the priority 3 queue"
+                                                
+		::= { mtp3UserEntry 5}
+--===========================================================
+	mtp3TimerConfig
+		OBJECT IDENTIFIER ::= { mtp3 10 }
+
+	 mtp3t1 OBJECT-TYPE
+		SYNTAX  INTEGER(500..1200)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for the delay to avoid 
+			missequencing on changeover"
+                                                
+		::= { mtp3TimerConfig 1}
+
+	 mtp3t2 OBJECT-TYPE
+		SYNTAX  INTEGER(700..2000)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, waiting for changover ack"
+                                                
+		::= { mtp3TimerConfig 2}
+
+	 mtp3t3 OBJECT-TYPE
+		SYNTAX  INTEGER(500..1200)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, to delay to avoid 
+			missequencing on changeback"
+                                                
+		::= { mtp3TimerConfig 3}
+
+	 mtp3t4 OBJECT-TYPE
+		SYNTAX  INTEGER(500..1200)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, to wait for first 
+			changeback ack"
+                                                
+		::= { mtp3TimerConfig 4}
+
+	 mtp3t5 OBJECT-TYPE
+		SYNTAX  INTEGER(500..1200)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds to wait for second 
+			changeback ack,"
+                                                
+		::= { mtp3TimerConfig 5}
+
+	 mtp3t6 OBJECT-TYPE
+		SYNTAX  INTEGER(500..1200)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, to delay to avoid 
+			missequencing on rerouting"
+                                                
+		::= { mtp3TimerConfig 6}
+
+	 mtp3t7 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, to wait for link 
+			connection ack"
+                                                
+		::= { mtp3TimerConfig 7}
+
+	 mtp3t8 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for transfer prohibited
+			inhibition."
+                                                
+		::= { mtp3TimerConfig 8}
+
+	 mtp3t10 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for route set test"
+                                                
+		::= { mtp3TimerConfig 9}
+
+	 mtp3t11 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for transfer restrict"
+                                                
+		::= { mtp3TimerConfig 10}
+
+	 mtp3t12 OBJECT-TYPE
+		SYNTAX  INTEGER(800..1500)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, to wait for uninhibit ack"
+                                                
+		::= { mtp3TimerConfig 11}
+
+	 mtp3t13 OBJECT-TYPE
+		SYNTAX  INTEGER(800..1500)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, to wait for forced 
+			uninhibit"
+                                                
+		::= { mtp3TimerConfig 12}
+
+	 mtp3t14 OBJECT-TYPE
+		SYNTAX  INTEGER(1..10)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in seconds, to wait for inhibition ack"
+                                                
+		::= { mtp3TimerConfig 13}
+
+	 mtp3t15 OBJECT-TYPE
+		SYNTAX  INTEGER(2..3)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in seconds, to wait to start route set 
+			congestion test"
+                                                
+		::= { mtp3TimerConfig 14}
+
+	 mtp3t16 OBJECT-TYPE
+		SYNTAX  INTEGER(1400..2000)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, to wait for route 
+			congestion status update"
+                                                
+		::= { mtp3TimerConfig 15}
+
+	 mtp3t17 OBJECT-TYPE
+		SYNTAX  INTEGER(800..1500)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, to delay to avoid 
+			oscillation of initial alignment failure"
+                                                
+		::= { mtp3TimerConfig 16}
+
+	 mtp3t18 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, to wait for links to 
+			become available"
+                                                
+		::= { mtp3TimerConfig 17}
+
+	 mtp3t19 OBJECT-TYPE
+		SYNTAX  INTEGER(10..600)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in seconds, to wait to receive all 
+			traffic restart allowed "
+                                                
+		::= { mtp3TimerConfig 18}
+
+	 mtp3t20 OBJECT-TYPE
+		SYNTAX  INTEGER(10..300)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in seconds, to wait to broadcast traffic 
+			restart allowed"
+                                                
+		::= { mtp3TimerConfig 19}
+
+	 mtp3t21 OBJECT-TYPE
+		SYNTAX  INTEGER(10..300)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in seconds, to wait to restart traffic 
+			routed through adjacent signalling point"
+                                                
+		::= { mtp3TimerConfig 20}
+
+	 mtp3t22 OBJECT-TYPE
+		SYNTAX  INTEGER(36..44)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in seconds, for local inhibit test"
+                                                
+		::= { mtp3TimerConfig 21}
+
+	 mtp3t23 OBJECT-TYPE
+		SYNTAX  INTEGER(9..11)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in seconds, for remote inhibit test"
+                                                
+		::= { mtp3TimerConfig 22}
+
+	 mtp3t24 OBJECT-TYPE
+		SYNTAX  INTEGER(9..11)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in seconds, for stabilizing"
+                                                
+		::= { mtp3TimerConfig 23}
+
+	 mtp3t25 OBJECT-TYPE
+		SYNTAX  INTEGER(30..35)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in seconds, to wait for traffic restart 
+			allowed message"
+                                                
+		::= { mtp3TimerConfig 24}
+
+	 mtp3t26 OBJECT-TYPE
+		SYNTAX  INTEGER(12..15)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in seconds, to wait to repeat traffic 
+			restart waiting message"
+                                                
+		::= { mtp3TimerConfig 25}
+
+	 mtp3t30 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in seconds, that a route instance remains  
+			in an internal routing table."
+                                                
+		::= { mtp3TimerConfig 26}
+
+	 mtp3t31 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for Backward Sequence 
+			Number (BSN) requested"
+                                                
+		::= { mtp3TimerConfig 27}
+
+	 mtp3t32 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for SLT"
+                                                
+		::= { mtp3TimerConfig 28}
+
+	 mtp3t33 OBJECT-TYPE
+		SYNTAX  INTEGER(2..20)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in minutes, for connecting MTPL3 to MTPL2. 
+			Upon timeout, MTPL3 will send another Connect_request 
+			to MTPL2"
+                                                
+		::= { mtp3TimerConfig 29}
+
+	 mtp3t34 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for periodic signalling 
+			link test"
+                                                
+		::= { mtp3TimerConfig 30}
+
+	 mtp3t35 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for false link congestion 
+			detection"
+                                                
+		::= { mtp3TimerConfig 31}
+
+	 mtp3t36 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for probation of link 
+			oscillation"
+                                                
+		::= { mtp3TimerConfig 32}
+
+	 mtp3t37 OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for suspension of link 
+			oscillation"
+                                                
+		::= { mtp3TimerConfig 33}
+
+	 mtp3flowTimer OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, for MTP3 to find out from 
+			MTP2 if flow control is still ongoing."
+                                                
+		::= { mtp3TimerConfig 34}
+
+	 mtp3bindTimer OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The value, in milliseconds, that MTP3 waits for MTP2 
+			to confirm binding."
+                                                
+		::= { mtp3TimerConfig 35}
+
+	 mtp3lnkTmrRes OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"the link timer resolution"
+                                                
+		::= { mtp3TimerConfig 36}
+
+	 mtp3rteTmrRes OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"the route timer resolution"
+                                                
+		::= { mtp3TimerConfig 37}
+
+	 mtp3destTmrRes OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"the destination timer resolution"
+                                                
+		::= { mtp3TimerConfig 38}
+
+	 mtp3genTmrRes OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"the general timer resolution"
+                                                
+		::= { mtp3TimerConfig 39}
+
+--===========================================================
+	mtp3GlobalStatistics
+		OBJECT IDENTIFIER ::= { mtp3 11 }
+
+	 mtp3GlobalResetStat OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   resetStatistics(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command that resets the Global Statistics Group.  
+			Statistics reset each time this variable is set to
+			resetStatistics(1)"
+                                                
+		::= { mtp3GlobalStatistics 1}
+
+	  usrUnavailRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of User part unavailable received"
+                                                
+		::= { mtp3GlobalStatistics 2}
+
+	  usrUnavailTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of User part unavailable transmitted"
+                                                
+		::= { mtp3GlobalStatistics 3}
+
+	  traTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Traffic restart allowed transmitted"
+                                                
+		::= { mtp3GlobalStatistics 4}
+
+	  traRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Traffic restart allowed received"
+                                                
+		::= { mtp3GlobalStatistics 5}
+
+	  trwTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Traffic restart waiting transmitted 
+			(ANSI only)"
+                                                
+		::= { mtp3GlobalStatistics 6}
+
+	  trwRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Traffic restart wating received (ANSI only)"
+                                                
+		::= { mtp3GlobalStatistics 7}
+
+	  msuDropRteErr OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of MSU's dropped due to a routing data error"
+                                                
+		::= { mtp3GlobalStatistics 8}
+--===========================================================
+	mtp3LinkStatisticsTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP3LinkStatisticsEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds the status of the MTP3 links.  
+			Rows cannot be added nor deleted in the table."
+		::= { mtp3 12}
+
+	mtp3LinkStatisticsEntry OBJECT-TYPE
+		SYNTAX MTP3LinkStatisticsEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the MTP3LinkStatistics table."
+		INDEX { mtp3LinkStatisticsSs7LinkIdIndex}
+		::= { mtp3LinkStatisticsTable 1 }
+
+	MTP3LinkStatisticsEntry ::=
+		SEQUENCE
+		{
+			mtp3LinkStatisticsSs7LinkIdIndex
+				INTEGER(1..32),
+			mtp3LinkStatisticsResetStat
+				INTEGER,
+			mtp3LinkStatisticsLinksetId
+				DisplayString (SIZE (0..20)),
+			mtp3LinkStatisticsSlc
+				INTEGER(0..15),
+			changeOverTx
+				Counter,
+			changeOverRx
+				Counter,
+			changeOverAckTx
+				Counter,
+			changeOverAckRx
+				Counter,
+			changeBackTx
+				Counter,
+			changeBackRx
+				Counter,
+			changeBackAckTx
+				Counter,
+			changeBackAckRx
+				Counter,
+			emChangeOverTx
+				Counter,
+			emChangeOverRx
+				Counter,
+			emChangeOverAckTx
+				Counter,
+			emChangeOverAckRx
+				Counter,
+			lnkInhTx
+				Counter,
+			lnkInhRx
+				Counter,
+			lnkUninhTx
+				Counter,
+			lnkUninhRx
+				Counter,
+			lnkInhAckTx
+				Counter,
+			lnkInhAckRx
+				Counter,
+			lnkUninhAckTx
+				Counter,
+			lnkUninhAckRx
+				Counter,
+			lnkInhDenTx
+				Counter,
+			lnkInhDenRx
+				Counter,
+			lnkForceUninhTx
+				Counter,
+			lnkForceUninhRx
+				Counter,
+			lnkLocInhTstTx
+				Counter,
+			lnkLocInhTstRx
+				Counter,
+			lnkRmtInhTstTx
+				Counter,
+			lnkRmtInhTstRx
+				Counter,
+			lnkConOrdTx
+				Counter,
+			lnkConOrdRx
+				Counter,
+			lnkConAckTx
+				Counter,
+			lnkConAckRx
+				Counter,
+			txCntrlTx
+				Counter,
+			txCntrlRx
+				Counter,
+			lnkTstTx
+				Counter,
+			lnkTstRx
+				Counter,
+			lnkTstAckTx
+				Counter,
+			lnkTstAckRx
+				Counter,
+			txDrop
+				Counter,
+			txCongDrop
+				Counter,
+			lnksifOctTx
+				Counter,
+			lnksifOctRx
+				Counter,
+			lnksioOctTx
+				Counter,
+			lnksioOctRx
+				Counter,
+			msuTx
+				Counter,
+			msuRx
+				Counter,
+			cong0
+				Counter,
+			cong1
+				Counter,
+			cong2
+				Counter,
+			cong3
+				Counter,
+			durLnkUnav
+				INTEGER,
+			durLnkCong
+				INTEGER,
+			lnkErrPduRx
+				Counter
+		}
+
+	mtp3LinkStatisticsSs7LinkIdIndex OBJECT-TYPE
+		SYNTAX  INTEGER(1..32)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies each SS7 link 
+			(timeslot)."
+                                                
+		::= { mtp3LinkStatisticsEntry 1}
+
+	 mtp3LinkStatisticsResetStat OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   resetStatistics(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command that resets the Link Statistics Row.  
+			Statistics reset each time this variable is set to
+			resetStatistics(1)"
+                                                
+		::= { mtp3LinkStatisticsEntry 2}
+
+	mtp3LinkStatisticsLinksetId OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"link set Id"
+                                                
+		::= { mtp3LinkStatisticsEntry 3}
+
+	mtp3LinkStatisticsSlc OBJECT-TYPE
+		SYNTAX  INTEGER(0..15)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"signalling link code"
+                                                
+		::= { mtp3LinkStatisticsEntry 4}
+
+	  changeOverTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Changover, order transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 5}
+
+	  changeOverRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Changeover, order received"
+                                                
+		::= { mtp3LinkStatisticsEntry 6}
+
+	  changeOverAckTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of changeover, acknowledgement transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 7}
+
+	  changeOverAckRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Changeover, acknowledgement received"
+                                                
+		::= { mtp3LinkStatisticsEntry 8}
+
+	  changeBackTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Changeback, declaration received"
+                                                
+		::= { mtp3LinkStatisticsEntry 9}
+
+	  changeBackRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Changeback, declaration transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 10}
+
+	  changeBackAckTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Changeback, acknowledgement transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 11}
+
+	  changeBackAckRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Changeback, acknowledgement received"
+                                                
+		::= { mtp3LinkStatisticsEntry 12}
+
+	  emChangeOverTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Emergency changeover transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 13}
+
+	  emChangeOverRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Emergency changeover received"
+                                                
+		::= { mtp3LinkStatisticsEntry 14}
+
+	  emChangeOverAckTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Emergency changeover acknowledgement 
+			transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 15}
+
+	  emChangeOverAckRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Emergency changeover acknowledgement 
+			received"
+                                                
+		::= { mtp3LinkStatisticsEntry 16}
+
+	  lnkInhTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Link inhibit transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 17}
+
+	  lnkInhRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Link inhibit received"
+                                                
+		::= { mtp3LinkStatisticsEntry 18}
+
+	  lnkUninhTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Link uninhibit transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 19}
+
+	  lnkUninhRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Link uninhibit received"
+                                                
+		::= { mtp3LinkStatisticsEntry 20}
+
+	  lnkInhAckTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Link inhibited acknowledgement transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 21}
+
+	  lnkInhAckRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Link inhibited acknowledgement received"
+                                                
+		::= { mtp3LinkStatisticsEntry 22}
+
+	  lnkUninhAckTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Link uninhibited acknowledgement transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 23}
+
+	  lnkUninhAckRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Link uninhibited acknowledgement received"
+                                                
+		::= { mtp3LinkStatisticsEntry 24}
+
+	  lnkInhDenTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link inhibit denied transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 25}
+
+	  lnkInhDenRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link inhibit denied received"
+                                                
+		::= { mtp3LinkStatisticsEntry 26}
+
+	  lnkForceUninhTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link force uninhibit transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 27}
+
+	  lnkForceUninhRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link force uninhibit received"
+                                                
+		::= { mtp3LinkStatisticsEntry 28}
+
+	  lnkLocInhTstTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link local inhibit test transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 29}
+
+	  lnkLocInhTstRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link local inhibit test received"
+                                                
+		::= { mtp3LinkStatisticsEntry 30}
+
+	  lnkRmtInhTstTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link remote inhibit test transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 31}
+
+	  lnkRmtInhTstRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link remote inhibit test received"
+                                                
+		::= { mtp3LinkStatisticsEntry 32}
+
+	  lnkConOrdTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link connection order transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 33}
+
+	  lnkConOrdRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link connection order received "
+                                                
+		::= { mtp3LinkStatisticsEntry 34}
+
+	  lnkConAckTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link connection acknowledgement transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 35}
+
+	  lnkConAckRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link connection acknowledgement received"
+                                                
+		::= { mtp3LinkStatisticsEntry 36}
+
+	  txCntrlTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Transfer controlled transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 37}
+
+	  txCntrlRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Transfer controlled received"
+                                                
+		::= { mtp3LinkStatisticsEntry 38}
+
+	  lnkTstTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link test transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 39}
+
+	  lnkTstRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link test received"
+                                                
+		::= { mtp3LinkStatisticsEntry 40}
+
+	  lnkTstAckTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link test acknowledgement transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 41}
+
+	  lnkTstAckRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of link test acknowledgement received"
+                                                
+		::= { mtp3LinkStatisticsEntry 42}
+
+	  txDrop OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of transmit messages dropped"
+                                                
+		::= { mtp3LinkStatisticsEntry 43}
+
+	  txCongDrop OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of MSUs dropped due to link congestion"
+                                                
+		::= { mtp3LinkStatisticsEntry 44}
+
+	  lnksifOctTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of SIF octets transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 45}
+
+	  lnksifOctRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of SIF octets received"
+                                                
+		::= { mtp3LinkStatisticsEntry 46}
+
+	  lnksioOctTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of SIO octets transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 47}
+
+	  lnksioOctRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of SIO octets received"
+                                                
+		::= { mtp3LinkStatisticsEntry 48}
+
+	  msuTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of MSUs transmitted"
+                                                
+		::= { mtp3LinkStatisticsEntry 49}
+
+	  msuRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of MSUs received"
+                                                
+		::= { mtp3LinkStatisticsEntry 50}
+
+	  cong0 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Link congestions at threshold 0"
+                                                
+		::= { mtp3LinkStatisticsEntry 51}
+
+	  cong1 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Link congestions at threshold 1"
+                                                
+		::= { mtp3LinkStatisticsEntry 52}
+
+	  cong2 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Link congestions at threshold 2"
+                                                
+		::= { mtp3LinkStatisticsEntry 53}
+
+	  cong3 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Link congestions at threshold 3"
+                                                
+		::= { mtp3LinkStatisticsEntry 54}
+
+	  durLnkUnav OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Duration of link unavailability"
+                                                
+		::= { mtp3LinkStatisticsEntry 55}
+
+	  durLnkCong OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Duration of link congestion"
+                                                
+		::= { mtp3LinkStatisticsEntry 56}
+
+	  lnkErrPduRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Invalid PDUs received"
+                                                
+		::= { mtp3LinkStatisticsEntry 57}
+--===========================================================
+	mtp3DestinationStatisticsTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP3DestinationStatisticsEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds statistical data on destinations 
+			in the network.
+			Rows cannot be added nor deleted in the table."
+		::= { mtp3 13}
+
+	mtp3DestinationStatisticsEntry OBJECT-TYPE
+		SYNTAX MTP3DestinationStatisticsEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the mtp3DestinationStatistics table."
+		INDEX { mtp3DestinationStatisticsDpcIndex}
+		::= { mtp3DestinationStatisticsTable 1 }
+
+	MTP3DestinationStatisticsEntry ::=
+		SEQUENCE
+		{
+	        	mtp3DestinationStatisticsDpcIndex
+				DisplayString (SIZE (0..11)),
+			mtp3DestinationStatisticsResetStat
+				INTEGER,
+			routeTstTx
+				Counter,
+			routeTstRx
+				Counter,
+			congTstTx
+				Counter,
+			congTstRx
+				Counter,
+			txProhibTx
+				Counter,
+			txProhibRx
+				Counter,
+			txRestrictRx
+				Counter,
+			txAllowTx
+				Counter,
+			txAllowRx
+				Counter,
+			rteUnavCnt
+				Counter,
+			routesifOctTx
+				Counter,
+			routesioOctTx
+				Counter,
+			durRteUnav
+				INTEGER
+		}
+
+	mtp3DestinationStatisticsDpcIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index that uniquely identifies a Destination Point
+			Code (DPC)"
+                                                
+		::= { mtp3DestinationStatisticsEntry 1}
+
+	 mtp3DestinationStatisticsResetStat OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   resetStatistics(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command that resets the statistics in this Row.  
+			Statistics reset each time this variable is set to
+			resetStatistics(1)"
+                                                
+		::= { mtp3DestinationStatisticsEntry 2}
+
+	  routeTstTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Route set test transmitted"
+                                                
+		::= { mtp3DestinationStatisticsEntry 3}
+
+	  routeTstRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Route set test received"
+                                                
+		::= { mtp3DestinationStatisticsEntry 4}
+
+	  congTstTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Route set congestion test transmitted"
+                                                
+		::= { mtp3DestinationStatisticsEntry 5}
+
+	  congTstRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Route set congestion test received"
+                                                
+		::= { mtp3DestinationStatisticsEntry 6}
+
+	  txProhibTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Transfer prohibited transmitted"
+                                                
+		::= { mtp3DestinationStatisticsEntry 7}
+
+	  txProhibRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Transfer prohibited received"
+                                                
+		::= { mtp3DestinationStatisticsEntry 8}
+
+	  txRestrictRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Transfer restricted received"
+                                                
+		::= { mtp3DestinationStatisticsEntry 9}
+
+	  txAllowTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Transfer allowed transmitted"
+                                                
+		::= { mtp3DestinationStatisticsEntry 10}
+
+	  txAllowRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Transfer allowed received"
+                                                
+		::= { mtp3DestinationStatisticsEntry 11}
+
+	  rteUnavCnt OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of route unavailable"
+                                                
+		::= { mtp3DestinationStatisticsEntry 12}
+
+	  routesifOctTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of SIF octets transmitted per Route"
+                                                
+		::= { mtp3DestinationStatisticsEntry 13}
+
+	  routesioOctTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of SIO octets transmitted per route"
+                                                
+		::= { mtp3DestinationStatisticsEntry 14}
+
+	  durRteUnav OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Duration of route unavailability"
+                                                
+		::= { mtp3DestinationStatisticsEntry 15}
+--===========================================================
+	mtp3LinkSetStatisticsTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF MTP3LinkSetStatisticsEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds statistical data for the MTP3 
+			linksets.  
+			Rows cannot be added nor deleted in the table."
+		::= { mtp3 14}
+
+	mtp3LinkSetStatisticsEntry OBJECT-TYPE
+		SYNTAX MTP3LinkSetStatisticsEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the MTP3LinkSetStatistics table."
+		INDEX { mtp3LinkSetStatisticslinkSetIdIndex}
+		::= { mtp3LinkSetStatisticsTable 1 }
+
+	MTP3LinkSetStatisticsEntry ::=
+		SEQUENCE
+		{
+	        	mtp3LinkSetStatisticslinkSetIdIndex
+				DisplayString (SIZE (0..20)),
+			mtp3LinkSetStatisticsResetStat
+				INTEGER,
+			strtLnkSetFail
+				INTEGER,
+			stopLnkSetFail
+				INTEGER,
+			durLnkSetUnav
+				INTEGER
+
+		}
+
+	mtp3LinkSetStatisticslinkSetIdIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"index of the link set"
+                                                
+		::= { mtp3LinkSetStatisticsEntry 1}
+
+	mtp3LinkSetStatisticsResetStat OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   resetStatistics(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command that resets the statistics in this Row.  
+			Statistics reset each time this variable is set to
+			resetStatistics(1)"
+                                                
+		::= { mtp3LinkSetStatisticsEntry 2}
+
+	strtLnkSetFail OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Start of link set failure"
+                                                
+		::= { mtp3LinkSetStatisticsEntry 3}
+
+	stopLnkSetFail OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Stop of link set failure"
+                                                
+		::= { mtp3LinkSetStatisticsEntry 4}
+
+	durLnkSetUnav OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Duration of link set unavailability"
+                                                
+		::= { mtp3LinkSetStatisticsEntry 5}
+--!!===========================================================
+--          SCCP
+--!!===========================================================
+--===========================================================
+	sccpAddressTranslationTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SCCPAddressTranslationEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains the Address Translation 
+			Data.  
+			Rows are added in this table by setting the rowStatus
+			variable to Create and by specifying a valid value 
+			for all other variables.  All variables must be
+			specified in the SNMP-Set operation in order 
+			for a row to be created.  
+			Rows are deleted in this table by setting the
+			rowStatus variable to Destroy.  
+			Rows can be updated in this table by setting the
+			rowStatus variable to Update and by modifying the
+			variables that need changed in that row."
+		::= { sccp 1}
+
+	sccpAddressTranslationEntry OBJECT-TYPE
+		SYNTAX SCCPAddressTranslationEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the sccpAddressTranslation table."
+		INDEX { ttIndex, npIndex, naIndex, nsIndex}
+		::= { sccpAddressTranslationTable 1 }
+
+	SCCPAddressTranslationEntry ::=
+		SEQUENCE
+		{
+	        	ttIndex
+				INTEGER(0..255),
+			npIndex
+				INTEGER,
+			naIndex
+				INTEGER,
+			nsIndex
+				DisplayString (SIZE (1..18)),
+			sccpAddressTranslationRowStatus
+				INTEGER,
+			sccpAddressTranslationReasonCode
+				INTEGER,
+			dpc
+				DisplayString (SIZE (0..11)),
+			ssn
+				INTEGER
+		}
+
+	ttIndex OBJECT-TYPE
+		SYNTAX  INTEGER(0..255)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"translation type Index"
+                                                
+		::= { sccpAddressTranslationEntry 1}
+
+	npIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   notApplicable(255)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"numbering plan Index. valid range (0..14)"
+                                                
+		::= { sccpAddressTranslationEntry 2}
+
+	naIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   notApplicable(255)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"nature of address Index. valid range (0..63)"
+                                                
+		::= { sccpAddressTranslationEntry 3}
+
+	nsIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (1..18))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number series Index"
+                                                
+		::= { sccpAddressTranslationEntry 4}
+
+	sccpAddressTranslationRowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   active(4),
+			   pending(5),
+			   rejected(6)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Update. These are explained in the Table Definition. 
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system
+			Rejected - a variable was changed in this table
+				   before the last reboot.  That change was 
+				   rejected by the system after the reboot. 
+				   The variable needs to be retored to it's
+				   previous value."
+                                                
+		::= { sccpAddressTranslationEntry 5}
+
+	sccpAddressTranslationReasonCode OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   ok(0)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"reason for rejection of row by system.  
+			This variable only has meaning when the RowStatus 
+			is Rejected"
+                                                
+		::= { sccpAddressTranslationEntry 6}
+
+	dpc OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"destination point code"
+                                                
+		::= { sccpAddressTranslationEntry 7}
+
+	ssn OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   noSSN(65535)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"subsystem number located in dpc.
+			If ssn = noSSN, then data in this row is for dpc only."
+                                                
+		::= { sccpAddressTranslationEntry 8}
+--===========================================================
+	sccpRouteTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SCCPRouteEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains the routing data for SCCP.  
+			This table contains a Master Row.
+			The Master Row in this table is defined as a row that
+			has the value (noSSN) in the ssnIndex field. The
+			Master Row controls when the data associated with a 
+			dpcIndex in this table and the dpcIndex in the 
+			sccpRemoteCpcTable is defined in SCCP.  In order to 
+			update any data associated with the Master Row, first, 
+			change any data that needs to be updated in this
+			Table or the the sccpCpcTable, then set the 
+			sccpRouteRowStatus variable to Update.
+			At that time, all data associated with the Master
+			Row in both tables will be updated in the system.
+			There can only be one Master Row per dpcIndex in 
+			this table.
+			Rows are added in this table by setting the rowStatus
+			variable to Create and by specifying a valid value 
+			for all other variables.  All variables must be
+			specified in the SNMP-Set operation in order 
+			for a row to be created.  
+			Rows are deleted in this table by setting the
+			rowStatus variable to Destroy.  When a Destroy is
+			executed, all data associated with this row in other
+			tables will also be deleted"
+		::= { sccp 2}
+
+	sccpRouteEntry OBJECT-TYPE
+		SYNTAX SCCPRouteEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the sccpRoute table."
+		INDEX { sccpRouteDpcIndex, sccpRouteSsnIndex}
+		::= { sccpRouteTable 1 }
+
+	SCCPRouteEntry ::=
+		SEQUENCE
+		{
+	        	sccpRouteDpcIndex
+				DisplayString (SIZE (0..11)),
+			sccpRouteSsnIndex
+				INTEGER,
+			sccpRouteRowStatus
+				INTEGER,
+			sccpRouteReasonCode
+				INTEGER,
+			sccpRoutessnName
+				DisplayString (SIZE (0..20)),
+			sccpRoutebpc
+				DisplayString (SIZE (0..11))
+		}
+
+	sccpRouteDpcIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"translation type Index"
+                                                
+		::= { sccpRouteEntry 1}
+
+	sccpRouteSsnIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   noSSN(65535)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"numbering plan Index"
+                                                
+		::= { sccpRouteEntry 2}
+
+	sccpRouteRowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   update(3),
+			   active(4),
+			   pending(5),
+			   rejected(6),
+			   deletepending(7),
+			   execute(8)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Update. These are explained in the Table Definition.
+
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system
+			Pending - a variable has been changed in this table
+				  and is not currently in use by the system.
+				  The system must be rebooted before the
+				  variable will take effect in the system.
+			Rejected - a variable was changed in this table
+				   before the last reboot.  That change was 
+				   rejected by the system after the reboot. 
+				   The variable needs to be retored to it's
+				   previous value.
+			deletePending - The Rowstatus variable was set to 
+					delete, but a reboot of the system is
+					required before this row is removed
+					from the system.
+
+			ssnName is not required for Row Creation but all other
+			variables are."
+                                                
+		::= { sccpRouteEntry 3}
+
+	sccpRouteReasonCode OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   ok(0)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"reason for rejection of all data associated with 
+			Master row.  This variable only has meaning for the 
+			Master row and when the RowStatus is Rejected"
+                                                
+		::= { sccpRouteEntry 4}
+
+	sccpRoutessnName OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"subsystem name. 
+			If sccpRouteSsnIndex is noSSN, then the recomended value
+			for this field is '-'"
+                                                
+		::= { sccpRouteEntry 5}
+
+	sccpRoutebpc OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"backup point code.  
+			If sccpRouteSsnIndex is noSSN, then this is a bpc to the
+			dpc.  Otherwise, this is a bpc to the dpc and ssn"
+                                                
+		::= { sccpRouteEntry 6}
+
+--===========================================================
+	sccpRemoteCpcTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SCCPRemoteCpcEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains the Concerned Point Codes (CPC) for
+			the Destination listed.  
+			Rows are added in this table by setting the rowStatus
+			variable to Create and by specifying a valid value 
+			for all other indexes.  All indexes must be
+			specified in the SNMP-Set operation in order 
+			for a row to be created.  
+			Rows are deleted in this table by setting the
+			rowStatus variable to Destroy."
+		::= { sccp 3}
+
+	sccpRemoteCpcEntry OBJECT-TYPE
+		SYNTAX SCCPRemoteCpcEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the sccpRemoteCpc table."
+		INDEX {sccpRemoteDpcIndex,sccpRemoteSsnIndex,sccpRemoteCpcIndex}
+		::= { sccpRemoteCpcTable 1 }
+
+	SCCPRemoteCpcEntry ::=
+		SEQUENCE
+		{
+	        	sccpRemoteDpcIndex
+				DisplayString (SIZE (0..11)),
+			sccpRemoteSsnIndex
+				INTEGER,
+			sccpRemoteCpcIndex
+				DisplayString (SIZE (0..11)),
+			sccpRemoteRowStatus
+				INTEGER
+		}
+
+	sccpRemoteDpcIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Destination Point Code Index.  This is the actual
+			DPC."
+                                                
+		::= { sccpRemoteCpcEntry 1}
+
+	sccpRemoteSsnIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   noSSN(65535)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"This is the Remote subsystem number Index.  If this
+			variable is noSSN, then data in this row is for DPC
+			 only."
+                                                
+		::= { sccpRemoteCpcEntry 2}
+
+	sccpRemoteCpcIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"concerned point code for this dpc and ssn or for
+			the dpc only if ssn is noSSN."
+                                                
+		::= { sccpRemoteCpcEntry 3}
+
+	sccpRemoteRowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   active(4),
+			   pending(5),
+			   rejected(6),
+			   deletepending(7)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Update. These are explained in the Table Definition. 
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system
+			Pending - a variable has been changed in this table
+				  and is not currently in use by the system.
+				  The system must be rebooted before the
+				  variable will take effect in the system.
+			Rejected - a variable was changed in this table
+				   before the last reboot.  That change was 
+				   rejected by the system after the reboot. 
+				   The variable needs to be retored to it's
+				   previous value.
+			deletePending - The Rowstatus variable was set to 
+					delete, but a reboot of the system is
+					required before this row is removed
+					from the system."
+                                                
+		::= { sccpRemoteCpcEntry 4}
+
+
+--===========================================================
+	sccpDestSubsysStatusTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SCCPDestSubsysStatusEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains the status of the SCCP Management
+			system and subsystem number at the Destination Point
+			Code.  
+			Rows cannot be added nor deleted from this table."
+		::= { sccp 4}
+
+	sccpDestSubsysStatusEntry OBJECT-TYPE
+		SYNTAX SCCPDestSubsysStatusEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the sccpRemoteCpc table."
+		INDEX {sccpDestSubsysStatusDpcIndex,
+			sccpDestSubsysStatusSsnIndex}
+		::= { sccpDestSubsysStatusTable 1 }
+
+	SCCPDestSubsysStatusEntry ::=
+		SEQUENCE
+		{
+	        	sccpDestSubsysStatusDpcIndex
+				DisplayString (SIZE (0..11)),
+			sccpDestSubsysStatusSsnIndex
+				INTEGER,
+			sccpDpcStatus
+				INTEGER,
+			sccpSsnStatus
+				INTEGER
+		}
+
+	sccpDestSubsysStatusDpcIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Destination Point Code Index.  This is the actual
+			DPC."
+                                                
+		::= { sccpDestSubsysStatusEntry 1}
+
+	sccpDestSubsysStatusSsnIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   noSSN(65535)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"This is the Remote subsystem number Index.  If this
+			variable is 0, then data in this row is for DPC only."
+                                                
+		::= { sccpDestSubsysStatusEntry 2}
+
+	sccpDpcStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   noStatusAvailable(0)
+			}
+
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"status of the SCCP management function in the dpc."
+                                                
+		::= { sccpDestSubsysStatusEntry 3}
+
+	sccpSsnStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   noStatusAvailable(0)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"status of the SSN in the DPC"
+                                                
+		::= { sccpDestSubsysStatusEntry 4}
+
+--===========================================================
+
+	sccpLocalSubsystemTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SCCPLocalSubsystemEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains the local subsystems defined
+			for SCCP.  
+			Rows are added in this table by setting the rowStatus
+			variable to Create and by specifying a valid value 
+			for all other variables.  All variables must be
+			specified in the SNMP-Set operation in order 
+			for a row to be created.  
+			Rows are deleted in this table by setting the
+			rowStatus variable to Destroy.
+			Rows can be updated in this table by setting the
+			rowStatus variable to Update and by modifying the
+			variables that need changed in that row.
+			????????PUT IN MORE INFORMATION ABOUT THIS BEING
+			THE MASTER TABLE FOR THE LOCALCPC TABLE"
+
+		::= { sccp 5}
+
+	sccpLocalSubsystemEntry OBJECT-TYPE
+		SYNTAX SCCPLocalSubsystemEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the sccpLocalSubsystem table."
+		INDEX { sccpLocalSubsystemSsnIndex}
+		::= { sccpLocalSubsystemTable 1 }
+
+	SCCPLocalSubsystemEntry ::=
+		SEQUENCE
+		{
+	        	sccpLocalSubsystemSsnIndex
+				INTEGER(2..255),
+			sccpLocalSubsystemRowStatus
+				INTEGER,
+			sccpLocalSubsystemReasonCode
+				INTEGER,
+			sccpLocalSubsystemssnName
+				DisplayString (SIZE (0..20)),
+			sccpLocalSubsystembpc
+				DisplayString (SIZE (0..11))
+		}
+
+	sccpLocalSubsystemSsnIndex OBJECT-TYPE
+		SYNTAX  INTEGER(2..255)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"local subsystem Index"
+                                                
+		::= { sccpLocalSubsystemEntry 1}
+
+	sccpLocalSubsystemRowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   update(3),
+			   active(4),
+			   pending(5),
+			   rejected(6),
+			   deletepending(7)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Update. These are explained in the Table Definition. 
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system
+			Pending - a variable has been changed in this table
+				  and is not currently in use by the system.
+				  The system must be rebooted before the
+				  variable will take effect in the system.
+			Rejected - a variable was changed in this table
+				   before the last reboot.  That change was 
+				   rejected by the system after the reboot. 
+				   The variable needs to be retored to it's
+				   previous value.
+			DeletePending - a request to Destroy this Row has
+					been made, but the system must be
+					rebooted before this can take effect"
+                                                
+		::= { sccpLocalSubsystemEntry 2}
+
+	sccpLocalSubsystemReasonCode OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   ok(0)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"reason for rejection of all data associated with 
+			This variable only has meaning for the 
+			row and when the RowStatus is Rejected"
+                                                
+		::= { sccpLocalSubsystemEntry 3}
+
+	sccpLocalSubsystemssnName OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"local subsystem name."
+                                                
+		::= { sccpLocalSubsystemEntry 4}
+
+	sccpLocalSubsystembpc OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"backup point code (bpc) for the local subsystem.  If a
+			bpc does not exist, the recommended value is '-'" 
+                                                
+		::= { sccpLocalSubsystemEntry 5}
+
+--===========================================================
+
+
+	sccpLocalSubsystemCpcTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SCCPLocalSubsystemCpcEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains the Concerned Point Codes (CPC) for
+			the local subsystems listed.  
+			Rows are added in this table by setting the rowStatus
+			variable to Create and by specifying a valid value 
+			for all other indexes.  All indexes must be
+			specified in the SNMP-Set operation in order 
+			for a row to be created.  
+			Rows are deleted in this table by setting the
+			rowStatus variable to Destroy.
+
+			If a CPC does not exist for a local subsystem, then
+			an entry in this table IS NOT REQUIRED"
+		::= { sccp 6}
+
+	sccpLocalSubsystemCpcEntry OBJECT-TYPE
+		SYNTAX SCCPLocalSubsystemCpcEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the sccpRemoteCpc table."
+		INDEX {sccpLocalSsnIndex, sccpLocalCpcIndex }
+		::= { sccpLocalSubsystemCpcTable 1 }
+
+	SCCPLocalSubsystemCpcEntry ::=
+		SEQUENCE
+		{
+			sccpLocalSsnIndex
+				INTEGER(2..255),
+			sccpLocalCpcIndex
+				DisplayString (SIZE (0..11)),
+			sccpLocalRowStatus
+				INTEGER
+		}
+
+	sccpLocalSsnIndex OBJECT-TYPE
+		SYNTAX  INTEGER(2..255)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"This is the local subsystem number Index."
+                                                
+		::= { sccpLocalSubsystemCpcEntry 1}
+
+	sccpLocalCpcIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"concerned point code for the local subsystem"
+                                                
+		::= { sccpLocalSubsystemCpcEntry 2}
+
+	sccpLocalRowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   active(4),
+			   pending(5),
+			   rejected(6),
+			   deletepending(7)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Update. These are explained in the Table Definition. 
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system
+			Pending - a variable has been changed in this table
+				  and is not currently in use by the system.
+				  The system must be rebooted before the
+				  variable will take effect in the system.
+			Rejected - a variable was changed in this table
+				   before the last reboot.  That change was 
+				   rejected by the system after the reboot. 
+				   The variable needs to be retored to it's
+				   previous value.
+			DeletePending - a request to Destroy this Row has
+					been made, but the system must be
+					rebooted before this can take effect"
+
+                                                
+		::= { sccpLocalSubsystemCpcEntry 3}
+
+
+--===========================================================
+	sccpLocalSubsystemStatusTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SCCPLocalSubsystemStatusEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains the status of the local subsystems 
+			defined for SCCP.  
+			Rows cannot be added nor destroyed from this table"
+		::= { sccp 7}
+
+	sccpLocalSubsystemStatusEntry OBJECT-TYPE
+		SYNTAX SCCPLocalSubsystemStatusEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the sccpLocalSubsystemStatus table."
+		INDEX { sccpLocalSubsystemStatusSsnIndex}
+		::= { sccpLocalSubsystemStatusTable 1 }
+
+	SCCPLocalSubsystemStatusEntry ::=
+		SEQUENCE
+		{
+	        	sccpLocalSubsystemStatusSsnIndex
+				INTEGER(2..255),
+			sccpLocalSubsystemStatusSsnStatus
+				INTEGER
+		}
+
+	sccpLocalSubsystemStatusSsnIndex OBJECT-TYPE
+		SYNTAX  INTEGER(2..255)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"local Subsystem Index"
+                                                
+		::= { sccpLocalSubsystemStatusEntry 1}
+
+	sccpLocalSubsystemStatusSsnStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   notInService(0),
+			   inService(1)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"status of the Local Subystem"
+                                                
+		::= { sccpLocalSubsystemStatusEntry 2}
+
+--===========================================================
+
+	sccpGlobalStatistics
+		OBJECT IDENTIFIER ::= { sccp 8}
+
+	 sccpGlobalResetStat OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   resetStatistics(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command that resets the Global Statistics Group.  
+			Statistics reset each time this variable is set to
+			resetStatistics(1)"
+                                                
+		::= { sccpGlobalStatistics 1}
+
+	 rfNTASN  OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Routing Failure - no translation for 
+			address of such nature"
+                                                
+		::= { sccpGlobalStatistics 2}
+
+	 rfNTSA  OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Routing failure - no translation for this 
+			specific address"
+                                                
+		::= { sccpGlobalStatistics 3}
+
+	  rfNetFail OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Routing failure - network failure (point 
+			code unavailable)"
+                                                
+		::= { sccpGlobalStatistics 4}
+
+	 rfNetCong  OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Routing failure - network congestion"
+                                                
+		::= { sccpGlobalStatistics 5}
+
+	 rfSsnFail  OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Routing failure - subsystem failure"
+                                                
+		::= { sccpGlobalStatistics 6}
+
+	  rfSsnCong OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Routing failure - subsystem congestion"
+                                                
+		::= { sccpGlobalStatistics 7}
+
+	  rfUnequip OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Routing failure - unequiped user"
+                                                
+		::= { sccpGlobalStatistics 8}
+
+	  rfHopViolate OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Routing failure - hop counter violation"
+                                                
+		::= { sccpGlobalStatistics 9}
+
+	  synError OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Syntax error"
+                                                
+		::= { sccpGlobalStatistics 10}
+
+	  rfUnknown OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Routing failure - reason unknown"
+                                                
+		::= { sccpGlobalStatistics 11}
+
+	  uDataTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Unit data sent"
+                                                
+		::= { sccpGlobalStatistics 12}
+
+	  uDataSrvTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Unit data service sent"
+                                                
+		::= { sccpGlobalStatistics 13}
+
+	  uDataRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Unit data received"
+                                                
+		::= { sccpGlobalStatistics 14}
+
+	  uDataSrvRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Unit data service received"
+                                                
+		::= { sccpGlobalStatistics 15}
+
+	  xuDataTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Extended unit data sent"
+                                                
+		::= { sccpGlobalStatistics 16}
+
+	  xuDataSrvTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Extended unit data service sent"
+                                                
+		::= { sccpGlobalStatistics 17}
+
+	  xuDataRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Extended unit data received"
+                                                
+		::= { sccpGlobalStatistics 18}
+
+	  xuDataSrvRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Extended unit data service received"
+                                                
+		::= { sccpGlobalStatistics 19}
+
+	  msgHand OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Total messages handled"
+                                                
+		::= { sccpGlobalStatistics 20}
+
+	  msgLoc OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Total messages intended for local subsystems"
+                                                
+		::= { sccpGlobalStatistics 21}
+
+	  gttReq OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Messages requiring global address 
+			translation"
+                                                
+		::= { sccpGlobalStatistics 22}
+
+	  sccpGlobalmsgTxC0 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Total class 0 messages sent"
+                                                
+		::= { sccpGlobalStatistics 23}
+
+	  sccpGlobalmsgTxC1 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Total class 1 messages sent"
+                                                
+		::= { sccpGlobalStatistics 24}
+
+	  sccpGlobalmsgRxC0 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Total class 0 messages received"
+                                                
+		::= { sccpGlobalStatistics 25}
+
+	  sccpGlobalmsgRxC1 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Total class 1 messages received"
+                                                
+		::= { sccpGlobalStatistics 26}
+--===========================================================
+	sccpLocalSubsystemStatisticsTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SCCPLocalSubsystemStatisticsEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains the Concerned Point Codes (CPC) for
+			the local subsystems listed.  
+			Rows are added in this table by setting the rowStatus
+			variable to Create and by specifying a valid value 
+			for all other indexes.  All indexes must be
+			specified in the SNMP-Set operation in order 
+			for a row to be created.  
+			Rows are deleted in this table by setting the
+			rowStatus variable to Destroy.
+
+			If a CPC does not exist for a local subsystem, then
+			an entry in this table IS NOT REQUIRED"
+		::= { sccp 9}
+
+	sccpLocalSubsystemStatisticsEntry OBJECT-TYPE
+		SYNTAX SCCPLocalSubsystemStatisticsEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the sccpLocalSubsystemStatistics table."
+		INDEX {sccpLocalSubsysStatisticsSsnIndex }
+		::= { sccpLocalSubsystemStatisticsTable 1 }
+
+	SCCPLocalSubsystemStatisticsEntry ::=
+		SEQUENCE
+		{
+			sccpLocalSubsysStatisticsSsnIndex
+				INTEGER(2..255),
+			sccpLocalSubsysStatisticsResetStat
+				INTEGER,
+			ssOOSReqGr
+				Counter,
+			ssOOSReqDn
+				Counter,
+			msgTxBss
+				Counter,
+			sccpLocalSubsysmsgTxC0
+				Counter,
+			sccpLocalSubsysmsgTxC1
+				Counter,
+			sccpLocalSubsysmsgRxC0
+				Counter,
+			sccpLocalSubsysmsgRxC1
+				Counter
+		}
+
+	sccpLocalSubsysStatisticsSsnIndex OBJECT-TYPE
+		SYNTAX  INTEGER(2..255)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"This is the local subsystem number Index."
+                                                
+		::= { sccpLocalSubsystemStatisticsEntry 1}
+
+	 sccpLocalSubsysStatisticsResetStat OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   resetStatistics(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command that resets the Local Subsystem Statistics in 
+			this row.  
+			Statistics reset each time this variable is set to
+			resetStatistics(1)"
+                                                
+		::= { sccpLocalSubsystemStatisticsEntry 2}
+
+	 ssOOSReqGr OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Subsystem out-of-service request granted"
+                                                
+		::= { sccpLocalSubsystemStatisticsEntry 3}
+
+	 ssOOSReqDn OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Subsystem out-of-service request denied"
+                                                
+		::= { sccpLocalSubsystemStatisticsEntry 4}
+
+	 msgTxBss OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"msgs sent to backup subsystem"
+                                                
+		::= { sccpLocalSubsystemStatisticsEntry 5}
+
+	 sccpLocalSubsysmsgTxC0 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"total msgs sent, class 0"
+                                                
+		::= { sccpLocalSubsystemStatisticsEntry 6}
+
+	 sccpLocalSubsysmsgTxC1 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"total msgs sent, class 1"
+                                                
+		::= { sccpLocalSubsystemStatisticsEntry 7}
+
+	 sccpLocalSubsysmsgRxC0 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"total msgs received, class 0"
+                                                
+		::= { sccpLocalSubsystemStatisticsEntry 8}
+
+	 sccpLocalSubsysmsgRxC1 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"total msgs received, class 1"
+                                                
+		::= { sccpLocalSubsystemStatisticsEntry 9}
+--===========================================================
+	sccpNetworkStatistics
+		OBJECT IDENTIFIER ::= { sccp 10 }
+
+	 sccpNetworkResetStat OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   resetStatistics(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command that resets the Network Statistics Group.  
+			Statistics reset each time this variable is set to
+			resetStatistics(1)"
+                                                
+		::= { sccpNetworkStatistics 1}
+
+	  ssAllTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Subsystem allowed transmitted"
+                                                
+		::= { sccpNetworkStatistics 2}
+
+	 ssOutGTx  OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Subsystem out of service grant transmitted"
+                                                
+		::= { sccpNetworkStatistics 3}
+
+	  ssOutRTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Subsystem out of service request transmitted"
+                                                
+		::= { sccpNetworkStatistics 4}
+
+	  ssProhTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Subsystem prohibited transmitted"
+                                                
+		::= { sccpNetworkStatistics 5}
+
+	  ssStatTx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Subsystem status test transmitted"
+                                                
+		::= { sccpNetworkStatistics 6}
+
+	  ssAllRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Subsystem allowed received"
+                                                
+		::= { sccpNetworkStatistics 7}
+
+	  ssOutGRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Subsystem out of service grant received"
+                                                
+		::= { sccpNetworkStatistics 8}
+
+	  ssOutRRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Subsystem out of service request received"
+                                                
+		::= { sccpNetworkStatistics 9}
+
+	  ssProhRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Subsystem prohibited received"
+                                                
+		::= { sccpNetworkStatistics 10}
+
+	  ssStatRx OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of Subsytem status test received"
+                                                
+		::= { sccpNetworkStatistics 11}
+--===========================================================
+	sccpTimerConfig
+		OBJECT IDENTIFIER ::= { sccp 11 }
+
+	 scliTmr  OBJECT-TYPE
+		SYNTAX  INTEGER(1..30)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"sequenced connectionless instance timer 
+			(milli-seconds)"
+                                                
+		::= { sccpTimerConfig 1}
+
+	  substtTmr OBJECT-TYPE
+		SYNTAX  INTEGER(5..60)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"subsystem status test timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 2}
+
+	  nSapTmr OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"network sap timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 3}
+
+	  srtTmr OBJECT-TYPE
+		SYNTAX  INTEGER(5..60)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"subsystem routing test timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 4}
+
+	  ignSSTTmr OBJECT-TYPE
+		SYNTAX  INTEGER(5..60)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"ignore SST timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 5}
+
+	  coordTmr OBJECT-TYPE
+		SYNTAX  INTEGER(5..60)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"coordinated state change timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 6}
+
+	  asmbTmr OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"extended unit data reassembly timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 7}
+
+	  guardTmr OBJECT-TYPE
+		SYNTAX  INTEGER(23..25)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"guard timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 8}
+
+	  freezeTmr OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"freeze timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 9}
+
+	  connTmr OBJECT-TYPE
+		SYNTAX  INTEGER(3..6)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"connection timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 10}
+
+	  iasTmr OBJECT-TYPE
+		SYNTAX  INTEGER(5..10)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"inactivity send timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 11}
+
+	  iarTmr OBJECT-TYPE
+		SYNTAX  INTEGER(11..22)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"inactivity receive timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 12}
+
+	  relTmr OBJECT-TYPE
+		SYNTAX  INTEGER(10..20)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"release timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 13}
+
+	  repRelTmr OBJECT-TYPE
+		SYNTAX  INTEGER(10..20)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"repeat release timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 14}
+
+	  intTmr OBJECT-TYPE
+		SYNTAX  INTEGER(1..60)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"interval timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 15}
+
+	  resetTmr OBJECT-TYPE
+		SYNTAX  INTEGER(4..10)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"reset timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 16}
+
+	  ifTmr OBJECT-TYPE
+		SYNTAX  INTEGER(1..120)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"interface timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 17}
+
+	  statusEnqTmr OBJECT-TYPE
+		SYNTAX  INTEGER(1..30)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"status enquiry timer (milli-seconds)"
+                                                
+		::= { sccpTimerConfig 18}
+
+--!!=========================================================
+--		ISUP
+--!!=========================================================
+	isupGeneralConfig
+		OBJECT IDENTIFIER ::= { isup 1 }
+
+	 groupBlockingTcpF  OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   disable(0),
+			   enable(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"This function controls if the ISUP Group Blocking
+                         Messages are treated by the application when TCP/IP 
+                         connection is lost."
+		DEFVAL { 1 }
+                                                
+		::= { isupGeneralConfig 1}
+
+	  serverPort OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The Identification of the ISUP Server port."
+                                                
+		::= { isupGeneralConfig 2}
+
+	  portStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   active(4),
+			   pending(5),
+			   rejected(6)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"state of the current Isup serverPort"
+                                                
+		::= { isupGeneralConfig 3}
+
+--===========================================================
+	isupRouteTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF ISUPRouteEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds the Route data. 
+                         There is a row for each Voice Gateway (VG) connected 
+                         to the SS7 Gateway (SS7GW).
+
+                         Each VG consists on the attributes: Ni, Spc, 
+                         SigPointId, and IpAddr, and a set of ranges of Circuit
+                         Identification Codes (CICs), each range of CICs 
+                         consists on attributes: LowestCic and HighestCic.
+
+                         When adding a VG for first time, all attributes in 
+                         current table are set.  A new row is also 
+                         created in following tables: ISUPConnectionTable, 
+                         and ISUPStatusTable.
+
+                         When adding a new CIC range to an existing VG, a new 
+                         row is created with the specified VGIdindex, a new 
+                         CicIndex, and the attributes: NiIndex, SpcIndex, 
+                         LowestCic and HighestCic. The attribute IpAddr is 
+                         optional. No new rows are created in other tables.
+                         If the data setting is successful, the RowStatus 
+                         is set to active state.
+
+                         A VG connected to different Ni/Spc's has the same 
+                         VGIdindex.
+
+                         When deleting a CIC range from an existing VG, the 
+                         row matching the specified VGIdindex, NiIndex, 
+                         SpcIndex, and isupRouteLowCicIndex, is destroyed.
+                         If there is only one row for an existing VG and it 
+                         is deleted, the row matching the specified VGIdindex, 
+                         NiIndex, SpcIndex, and isupRouteLowCicIndex, is
+			 destroyed. Also, 
+                         all rows related to the VG in the following tables 
+                         are deleted too: ISUPConnectionTable, and 
+                         ISUPStatusTable.
+
+                         It is NOT possible to change a single attribute in 
+                         a row."
+		::= { isup 2}
+
+	isupRouteEntry OBJECT-TYPE
+		SYNTAX ISUPRouteEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the isupRoute table."
+		INDEX {isupRouteVgIdIndex, isupRouteNiIndex, isupRouteSpcIndex,
+ 		       isupRouteLowCicIndex}
+		::= { isupRouteTable 1 }
+
+	ISUPRouteEntry ::=
+		SEQUENCE
+		{
+			isupRouteVgIdIndex
+				DisplayString (SIZE (0..20)),
+			isupRouteNiIndex
+				INTEGER(0..3),
+			isupRouteSpcIndex
+				DisplayString (SIZE (0..11)),
+			isupRouteLowCicIndex
+				INTEGER(0..65535),
+			isupRouteHighCic
+				INTEGER(0..65535),
+			isupRouteIpAddr
+				IpAddress,
+			isupRouteRowStatus
+				INTEGER
+		}
+
+	isupRouteVgIdIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"The identification of the Voice Gateway index"
+                                                
+		::= { isupRouteEntry 1}
+
+	isupRouteNiIndex OBJECT-TYPE
+		SYNTAX  INTEGER(0..3)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"The Network Indicator parameter included in a message."
+                                                
+		::= { isupRouteEntry 2}
+
+	isupRouteSpcIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..11))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"The Signalling Point Code identifying the Signalling 
+			Point."
+                                                
+		::= { isupRouteEntry 3}
+
+	isupRouteLowCicIndex OBJECT-TYPE
+		SYNTAX  INTEGER(0..65535)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"The lowest Circuit Identification Code of the range."
+                                                
+		::= { isupRouteEntry 4}
+
+	isupRouteHighCic OBJECT-TYPE
+		SYNTAX  INTEGER(0..65535)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The highest Circuit Identification Code of the range."
+                                                
+		::= { isupRouteEntry 5}
+
+	isupRouteIpAddr OBJECT-TYPE
+		SYNTAX  IpAddress
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The IP address of the destination host (i.e., the 
+			Voice Gateway). Messages whose originating Signalling 
+			Point is Ni - Spc, and the CIC is included in any 
+			defined range of CICs."
+                                                
+		::= { isupRouteEntry 6}
+
+	isupRouteRowStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   create(1),
+			   destroy(2),
+			   active(4)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The status of the row.
+			The only valid writeable values are Create, Destroy 
+			and Active. These are explained in the Table 
+			Definition. 
+			All other values are R/O and will be updated internally
+			by the system. 
+			Active - all variables in this table are in use by
+			         the system"
+                                                
+		::= { isupRouteEntry 7}
+
+--===========================================================
+	isupConnectionTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF ISUPConnectionEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table holds the information related to the 
+			supervision of each TCP/IP connection between the 
+			ISUP Application and the Voice Gateway.
+
+			Rows cannot be created nor destroyed in this table.
+
+			Rows are automatically added whenever a row in the
+			isupRouteTable is added"
+		::= { isup 3}
+
+	isupConnectionEntry OBJECT-TYPE
+		SYNTAX ISUPConnectionEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the isupConnection table."
+		INDEX {isupConnectionVgIdIndex }
+		::= { isupConnectionTable 1 }
+
+	ISUPConnectionEntry ::=
+		SEQUENCE
+		{
+			isupConnectionVgIdIndex
+				DisplayString (SIZE (0..20)),
+			isupheartBeatActivation
+				INTEGER,
+			isupheartBeatTimer
+				INTEGER,
+			isupheartBeatThreshold
+				INTEGER
+		}
+
+	isupConnectionVgIdIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"The identification of the Voice Gateway index"
+                                                
+		::= { isupConnectionEntry 1}
+
+	isupheartBeatActivation OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   disable(0),
+			   enable(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"This parameter controls if the heart beat function 
+			is enabled or disabled. "
+		DEFVAL { 1 }
+                                                
+		::= { isupConnectionEntry 2}
+
+	isupheartBeatTimer OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"The step, in milliseconds, to send a heartbeat 
+			message to supervise the TCP connection.
+			It has meaning when heartBeatActivation is enable"
+		DEFVAL { 1000 }
+                                                
+		::= { isupConnectionEntry 3}
+
+	isupheartBeatThreshold OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"Number of lost heartbeats to consider the TCP 
+			connection is broken.
+			It has meaning when heartBeatActivation is enable"
+		DEFVAL { 3 }
+                                                
+		::= { isupConnectionEntry 4}
+--===========================================================
+	isupStatusTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF ISUPStatusEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains the status of the TCP/IP 
+                         connection which the Voice Gateways are connected to.
+
+			Rows cannot be created nor destroyed in this table.
+
+			Rows are automatically added whenever a row in the
+			isupRouteTable is added"
+		::= { isup 4}
+
+	isupStatusEntry OBJECT-TYPE
+		SYNTAX ISUPStatusEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the isupStaus table."
+		INDEX {isupStatusVgIdIndex }
+		::= { isupStatusTable 1 }
+
+	ISUPStatusEntry ::=
+		SEQUENCE
+		{
+			isupStatusVgIdIndex
+				DisplayString (SIZE (0..20)),
+			tcpConnectionStatus
+				INTEGER
+		}
+
+	isupStatusVgIdIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..20))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"The identification of the Voice Gateway index"
+                                                
+		::= { isupStatusEntry 1}
+
+	tcpConnectionStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   closed(0),
+			   active(1)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"The state of the TCP connection to the remote host. "
+                                                
+		::= { isupStatusEntry 2}
+--===========================================================
+	isupStatistics
+		OBJECT IDENTIFIER ::= { isup 5 }
+
+	  numVg OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Number of VG in the ISUPRouteTable. 
+                         This attribute can not be reset."
+                                                
+		::= { isupStatistics 1}
+
+	  numConnVg OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Number of VG with TCP/IP connection established.
+			This attribute can not be reset."
+                                                
+		::= { isupStatistics 2}
+
+	  numNiSpc OBJECT-TYPE
+		SYNTAX  INTEGER
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Number of PSTN nodes connected to the SS7GW.
+			This attribute can not be reset."
+                                                
+		::= { isupStatistics 3}
+
+	 isupStatisticsResetStat OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   resetStatistics(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command that resets the ISUP Statistics Group.  
+			Statistics reset each time this variable is set to
+			resetStatistics(1)"
+                                                
+		::= { isupStatistics 4}
+
+
+	  nRf OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Number of Routing Failure - unequipped CIC or 
+                         unreachable VG."
+                                                
+		::= { isupStatistics 5}
+
+	  isupMsgRecvSs7 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Number of ISUP messages received from the PSTN 
+			through the MTP."
+                                                
+		::= { isupStatistics 6}
+
+	  primRecvSs7 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Number of MTP primitives received from the PSTN 
+                         through the MTP."
+                                                
+		::= { isupStatistics 7}
+
+	  msgRecvTcp OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Number of MSU messages received from the TCP/IP 
+                         connections."
+                                                
+		::= { isupStatistics 8}
+
+	  tcpMsgNotSentMtp OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"Number of MSU messages which are not sent to PSTN."
+                                                
+		::= { isupStatistics 9}
+--===========================================================
+--!!===========================================================
+--          TcapRelay (TRA)
+--!!===========================================================
+	traGeneral
+		OBJECT IDENTIFIER ::= { tcapRelay 1 }
+
+	 sccpSubsystemNumber OBJECT-TYPE
+		SYNTAX  INTEGER(1..255)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"subsystem this server is attached to the SCCP"
+                                                
+		::= { traGeneral 1}
+
+	  portNumber OBJECT-TYPE
+		SYNTAX  INTEGER(0..65535)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"TRA port number"
+                                                
+		::= { traGeneral 2}
+
+	  traStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   active(4),
+			   pending(5),
+			   rejected(6)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"status of the variables in the group"
+                                                
+		::= { traGeneral 3}
+--===========================================================
+
+
+	traTranslationTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF TRATranslationEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains information used to perform the 
+			translation of a Global Title to an IP address and 
+			TCP port.
+			Rows cannot be created nor destroyed in this table."
+		::= { tcapRelay 2}
+
+	traTranslationEntry OBJECT-TYPE
+		SYNTAX TRATranslationEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the traTranslation table."
+		INDEX {traTransNumPlanIndex, traTransAddrSignalsIndex }
+		::= { traTranslationTable 1 }
+
+	TRATranslationEntry ::=
+		SEQUENCE
+		{
+			traTransNumPlanIndex
+				INTEGER(0..15),
+			traTransAddrSignalsIndex
+				DisplayString (SIZE (0..18)),
+			traTransAppId
+				DisplayString (SIZE (1..20)),
+			traTransIpAddr
+				IpAddress,
+			traTransPort
+				INTEGER(0..65535)
+		}
+
+	traTransNumPlanIndex OBJECT-TYPE
+		SYNTAX  INTEGER(0..15)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"numbering plan of the NAC application address"
+                                                
+		::= { traTranslationEntry 1}
+
+	traTransAddrSignalsIndex OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..18))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"string of digits, in readable format, forming the 
+			address information of the NAC application address"
+                                                
+		::= { traTranslationEntry 2}
+
+	traTransAppId OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (1..20))
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"identification of the NAC application"
+                                                
+		::= { traTranslationEntry 3}
+
+	traTransIpAddr OBJECT-TYPE
+		SYNTAX  IpAddress
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"IP address of the NAC application"
+                                                
+		::= { traTranslationEntry 4}
+
+	traTransPort OBJECT-TYPE
+		SYNTAX  INTEGER(0..65535)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"port where the NAC application is listening to"
+                                                
+		::= { traTranslationEntry 5}
+
+--===========================================================
+	traConnectionTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF TRAConnectionEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains information related to the 
+			supervision of each TCP/IP connection between the 
+			TCAP Relay application in the SS7 Gateway, and MAP 
+			applications in Natwork Access Controllers (NAC).
+			Rows cannot be created nor deleted in this table"
+
+		::= { tcapRelay 3}
+
+	traConnectionEntry OBJECT-TYPE
+		SYNTAX TRAConnectionEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the traConnection table."
+		INDEX {traConnectionIpAddrIndex,traConnectionPortIndex }
+		::= { traConnectionTable 1 }
+
+	TRAConnectionEntry ::=
+		SEQUENCE
+		{
+			traConnectionIpAddrIndex
+				IpAddress,
+			traConnectionPortIndex
+				INTEGER(0..65535),
+			traTcpheartBeatTimer
+				INTEGER(1..10),
+			traTcpheartBeatThreshold
+				INTEGER(1..30),
+			traReconthresh
+				INTEGER(1..96)
+		}
+
+	traConnectionIpAddrIndex OBJECT-TYPE
+		SYNTAX  IpAddress
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"IP address of the NAC application"
+                                                
+		::= { traConnectionEntry 1}
+
+	traConnectionPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER(0..65535)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"port where the NAC appliaction is listening to"
+                                                
+		::= { traConnectionEntry 2}
+
+	traTcpheartBeatTimer OBJECT-TYPE
+		SYNTAX  INTEGER(1..10)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"step, in seconds, to send a heartbeat message to 
+			supervise the TCP connection"
+                                                
+		::= { traConnectionEntry 3}
+
+	traTcpheartBeatThreshold OBJECT-TYPE
+		SYNTAX  INTEGER(1..30)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"time in seconds before considering a connection as 
+			broken if a heartbeat or traffic message is not 
+			received"
+                                                
+		::= { traConnectionEntry 4}
+
+	traReconthresh OBJECT-TYPE
+		SYNTAX  INTEGER(1..96)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"time TRA will attempt to reconnect to a NAC 
+			application before deleting the application's data"
+                                                
+		::= { traConnectionEntry 5}
+
+--===========================================================
+	traConnectionStatisticsTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF TRAConnectionStatisticsEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains information related to the 
+			supervision of each TCP/IP connection between the 
+			TCAP Relay application in the SS7 Gateway, and MAP 
+			applications in Natwork Access Controllers (NAC).
+			Rows cannot be created nor deleted in this table"
+
+		::= { tcapRelay 4}
+
+	traConnectionStatisticsEntry OBJECT-TYPE
+		SYNTAX TRAConnectionStatisticsEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the traConnectionStatistics table."
+		INDEX {traConnectionStatisticsIpAddrIndex,
+			traConnectionStatisticsPortIndex }
+		::= { traConnectionStatisticsTable 1 }
+
+	TRAConnectionStatisticsEntry ::=
+		SEQUENCE
+		{
+			traConnectionStatisticsIpAddrIndex
+				IpAddress,
+			traConnectionStatisticsPortIndex
+				INTEGER(0..65535),
+			traConnectionStatisticsResetStat
+				INTEGER,
+			traTcpConnectionStatus
+				INTEGER,
+			traConnectionNumMsgReceived
+				Counter,
+			traConnectionNumMsgSent
+				Counter
+		}
+
+	traConnectionStatisticsIpAddrIndex OBJECT-TYPE
+		SYNTAX  IpAddress
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"IP address of the NAC application"
+                                                
+		::= { traConnectionStatisticsEntry 1}
+
+	traConnectionStatisticsPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER(0..65535)
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"port where the NAC appliaction is listening to"
+                                                
+		::= { traConnectionStatisticsEntry 2}
+
+	traConnectionStatisticsResetStat OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   resetStatistics(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command that resets the Statistics in this row.  
+			Statistics reset each time this variable is set to
+			resetStatistics(1)"
+                                                
+		::= { traConnectionStatisticsEntry 3}
+
+	traTcpConnectionStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   closed(0),
+			   active(1),
+			   connectpending(2)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"state of the TCP application to the NAC application"
+                                                
+		::= { traConnectionStatisticsEntry 4}
+
+	traConnectionNumMsgReceived OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of GSM MAP messages received from the NAC 
+			application per connection"
+                                                
+		::= { traConnectionStatisticsEntry 5}
+
+	traConnectionNumMsgSent OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of GSM MAP messages sent to the NAC 
+			application per connection"
+                                                
+		::= { traConnectionStatisticsEntry 6}
+
+--===========================================================
+	traConversionTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF TRAConversionEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"This table contains information used to convert the 
+			NP received in a message from a NAC to the Translation 
+			Type (TT) used in the ANSI or ITU message that is 
+			forwarded to the PLMN. Similarly, this information is 
+			used to convert the TT received in a ANSI SS7 message 
+			from the PLMN to the NP used in the message that is 
+			forwarded to the NAC.
+			Rows cannot be created nor deleted in this table"
+		::= { tcapRelay 5}
+
+	traConversionEntry OBJECT-TYPE
+		SYNTAX TRAConversionEntry 
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		    "An entry in the traConversion table."
+		INDEX {traConvNumberingPlanIndex }
+		::= { traConversionTable 1 }
+
+	TRAConversionEntry ::=
+		SEQUENCE
+		{
+			traConvNumberingPlanIndex
+				INTEGER,
+			traConvStatus
+				INTEGER,
+			traConvTranslationType
+				INTEGER(0..255)
+		}
+
+	traConvNumberingPlanIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   e164(1),
+			   e212(6)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"numbering plan to convert"
+                                                
+		::= { traConversionEntry 1}
+
+	traConvStatus OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   active(4),
+			   pending(5),
+			   rejected(6)
+			}
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"status of the row"
+                                                
+		::= { traConversionEntry 2}
+
+	traConvTranslationType OBJECT-TYPE
+		SYNTAX  INTEGER(0..255)
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"status of the row"
+                                                
+		::= { traConversionEntry 3}
+
+--===========================================================
+	traCounter
+		OBJECT IDENTIFIER ::= { tcapRelay 6 }
+
+	traCounterResetStat OBJECT-TYPE
+		SYNTAX  INTEGER
+			{
+			   resetStatistics(1)
+			}
+		ACCESS  read-write
+		STATUS  mandatory
+		DESCRIPTION
+			"command that resets the Statistics in this group.  
+			Statistics reset each time this variable is set to
+			resetStatistics(1)"
+                                                
+		::= { traCounter 1}
+
+
+	 traMsgRecvIp OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of GSM MAP messages received from all the 
+			NACs through the IP interface"
+                                                
+		::= { traCounter 2}
+
+
+	 traMsgRecvSs7 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of GSM MAP messages received from the PSTN 
+			through the SCCP"
+                                                
+		::= { traCounter 3}
+
+
+	 traMsgSentIp OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of GSM MAP messages sent to all the NACs 
+			through the IP interface"
+                                                
+		::= { traCounter 4}
+
+
+	 traMsgSentSs7 OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of GSM MAP messages sent to the PSTN through 
+			the SCCP"
+                                                
+		::= { traCounter 5}
+
+
+	 traUnsuctrans OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of unsuccessful IP-GT translations"
+                                                
+		::= { traCounter 6}
+
+	 traMsgDisc OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of discarded messages"
+                                                
+		::= { traCounter 7}
+
+	traMsgReturned  OBJECT-TYPE
+		SYNTAX  Counter
+		ACCESS  read-only
+		STATUS  mandatory
+		DESCRIPTION
+			"number of returned messages generated by TRA and sent 
+			to a NAC"
+                                                
+		::= { traCounter 8}
+
+-- ==================================================================
+-- TRAPS
+-- ==================================================================
+
+	ss7gwAlarm TRAP-TYPE
+		ENTERPRISE ss7GwTraps
+		VARIABLES { ss7gwGeneralAlarmStatus, ss7gwGeneralLogTxt }
+		DESCRIPTION
+		"Trap is sent when an SS7 Gateway alarm occurs."
+		::= 1
+
+	ss7gwAlarmCeasing TRAP-TYPE
+		ENTERPRISE ss7GwTraps
+		VARIABLES { ss7gwGeneralAlarmStatus, ss7gwGeneralLogTxt }
+		DESCRIPTION
+		"Trap is sent when an SS7 Gateway alarm disappears."
+		::= 2
+
+	ss7gwEvent TRAP-TYPE
+		ENTERPRISE ss7GwTraps
+		VARIABLES { ss7gwGeneralEventStatus, ss7gwGeneralLogTxt }
+		DESCRIPTION
+		"Trap is sent when an SS7 Gateway event occurs."
+		::= 3
+
+
+--===========================================================
+END

@@ -1,0 +1,251 @@
+-- MIB created 3/24/100 14:40:06, by
+--   SMIC (the next generation) version 1.6.29, November 22, 1994.
+
+CISCO-CALL-APPLICATION-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-CALL-APPLICATION-MIB.my"
+
+IMPORTS
+    OBJECT-TYPE
+            FROM RFC-1212
+    RowStatus
+            FROM SNMPv2-TC-v1
+    SnmpAdminString
+            FROM SNMP-FRAMEWORK-MIB
+    ciscoMgmt
+            FROM CISCO-SMI;
+
+ciscoCallApplicationMIB OBJECT IDENTIFIER ::= { ciscoMgmt 146 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    9909220000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--     Cisco Systems
+--     Customer Service
+--    
+--    Postal: 170 W. Tasman Drive
+--     San Jose, CA  95134
+--     USA
+--    
+--    Tel: +1 800 553-NETS
+--    
+--    E-mail: cs-voice@cisco.com
+--  Descr
+--    This MIB allows management of call applications on a
+--                   network device. A 'call application' is a software module
+--     that processes calls, such as data, voice, video, or fax 
+--                   calls.
+
+ciscoCallApplicationMIBObjects OBJECT IDENTIFIER ::= { ciscoCallApplicationMIB 1 }
+ccapConf        OBJECT IDENTIFIER ::= { ciscoCallApplicationMIBObjects 1 }
+ciscoCallApplicationMIBConformance OBJECT IDENTIFIER ::= { ciscoCallApplicationMIB 3 }
+ciscoCallApplicationMIBCompliances OBJECT IDENTIFIER ::= { ciscoCallApplicationMIBConformance 1 }
+ciscoCallApplicationMIBGroups OBJECT IDENTIFIER ::= { ciscoCallApplicationMIBConformance 2 }
+
+URLStringOrNull ::= SnmpAdminString
+-- Rsyntax OCTET STRING(SIZE(0..255))
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    A Uniform Resource Locator represented in accordance
+--     with RFC 1738, or an empty string.
+
+ccapApplicationTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CcapApplicationEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about call applications on this managed device.
+        
+        There is an entry in this table for each call application."
+    ::= { ccapConf 1 }
+
+ccapApplicationEntry OBJECT-TYPE
+    SYNTAX CcapApplicationEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about a call application."
+    INDEX { IMPLIED ccapAppName }
+    ::= { ccapApplicationTable 1 }
+
+CcapApplicationEntry ::= SEQUENCE {
+    ccapAppName SnmpAdminString,
+    ccapAppLocation URLStringOrNull,
+    ccapAppLoadState INTEGER,
+    ccapAppLoadFailReason INTEGER,
+    ccapAppDescr SnmpAdminString,
+    ccapAppCallType OCTET STRING,
+    ccapAppRowStatus RowStatus
+    }
+
+ccapAppName OBJECT-TYPE
+    SYNTAX SnmpAdminString(SIZE(1..40))
+--    Rsyntax OCTET STRING(SIZE(1..40))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The name of this call application."
+    ::= { ccapApplicationEntry 1 }
+
+ccapAppLocation OBJECT-TYPE
+    SYNTAX URLStringOrNull
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Identifies the location from where this application is
+                      loaded.  
+        
+        For built-in applications, the value will always
+                      be an empty string. 
+        
+        If the location is not specified or not known, the value is
+                      an empty string.
+        
+        Note that a particular agent may support only certain types
+                      of URLs (e.g., only tftp://...). Thus, the valid values of
+                      this object are implementation dependent. An agent may
+                      respond with an error (e.g., 'wrongValue') to a management
+                      SET operation which attempts to modify the value of this
+                      object to one which is not supported by the managed device.
+        
+        The value of this object may be changed at any time. However, 
+        note that setting this value for an active row will cause the
+        old application to be deleted, and the new application (i.e. 
+        the program at the newly-specified URL) to be loaded."
+    ::= { ccapApplicationEntry 2 }
+
+ccapAppLoadState OBJECT-TYPE
+    SYNTAX INTEGER {
+        builtIn(1),
+        loading(2),
+        loaded(3),
+        loadFailed(4)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The state of this application.
+        
+        For built-in applications, the value read is always
+               'builtIn'.
+        
+        When this row is made active, the agent attempts to
+               load the application from the URL specified by
+               ccapAppLocation. While loading is in progress, the value of
+               this object reads 'loading'. If the application is
+               successfully loaded, the value changes to 'loaded',
+               otherwise the value changes to 'loadFailed'. 
+               "
+    ::= { ccapApplicationEntry 3 }
+
+ccapAppLoadFailReason OBJECT-TYPE
+    SYNTAX INTEGER {
+        none(1),
+        other(2),
+        notFound(3),
+        timedOut(4),
+        noPermission(5),
+        badSignature(6),
+        noSpace(7)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The reason the last attempted load failed. The possible
+               values are: 
+        none - there was no failure
+        other - failure reason is other than those listed
+                        below
+        notFound - application was not found
+        timedOut - timed out while loading
+        noPermission - was denied permission
+        badSignature - the application did not have the
+                        proper signature. An agent may use an
+                        authentication scheme to protect itself. This
+                        error indicates that the authentication check
+                        failed, hence the application was not loaded.
+        noSpace - lack of memory space.
+        
+        The value is updated after a load attempt."
+    ::= { ccapApplicationEntry 4 }
+
+ccapAppDescr OBJECT-TYPE
+    SYNTAX SnmpAdminString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A description of this application."
+    DEFVAL { "" }
+    ::= { ccapApplicationEntry 5 }
+
+ccapAppCallType OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(1))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the types of call that this application can handle."
+    ::= { ccapApplicationEntry 6 }
+
+ccapAppRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The status of this conceptual row.
+        
+        Note that rows corresponding to built-in applications can
+                      not be modified. Thus, this object is read-only for such
+                      rows. 
+        
+        This object can not be set to 'active' until a value has
+                      been assigned to the corresponding instance of
+                      ccapAppLocation. When a row becomes active, the agent
+                      attempts to load the application from the location
+                      specified by ccapAppLocation. The result of the loading
+                      operation can be monitored by the objects ccapAppLoadState
+                      and ccapAppLoadError.
+        
+        Deleting a row will cause the agent to unload the
+                      corresponding application."
+    ::= { ccapApplicationEntry 7 }
+
+ccapGeneralCfgGroup OBJECT IDENTIFIER ::= { ciscoCallApplicationMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects for general configuration of call 
+--                   applications.
+--  objects
+--    ccapAppLocation, ccapAppLoadState, ccapAppLoadFailReason, 
+--    ccapAppDescr, ccapAppCallType, ccapAppRowStatus
+
+ciscoCallApplicationMIBCompliance OBJECT IDENTIFIER ::= { ciscoCallApplicationMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for Cisco agents which implement
+--    the CISCO-CALL-APPLICATION-MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ccapGeneralCfgGroup
+
+
+END
+

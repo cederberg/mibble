@@ -1,0 +1,528 @@
+-- MIB file created 16-Jan-2002 10:50:14, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-ITP-RT-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-ITP-RT-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+    TimeStamp, TruthValue
+            FROM SNMPv2-TC-v1
+    CItpTcLinksetId, CItpTcPointCode, CItpTcQos, 
+    CItpTcRouteTableName, CItpTcTableLoadStatus
+            FROM CISCO-ITP-TC-MIB
+    ciscoMgmt
+            FROM CISCO-SMI
+    Counter, Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
+
+ciscoItpRtMIB OBJECT IDENTIFIER ::= { ciscoMgmt 228 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200201070000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--           Cisco Systems, Inc
+--            Customer Service
+--    
+--    Postal: 170 W. Tasman Drive
+--            San Jose, CA  95134
+--            USA
+--    
+--       Tel: +1 800 553-NETS
+--    
+--    E-mail: cs-ss7s@cisco.com
+--  Descr
+--    This MIB is for managing route table used to control
+--     messages transported over Signalling System 
+--     No. 7 (SS7) Network via Cisco IP Transfer
+--     Point.  
+--     
+--     The Cisco IP Transfer Point (ITP) is a hardware 
+--     and software solution that transports SS7 traffic 
+--     using IP. Each ITP node provides the functions
+--     necessary to act as a SS7 signaling point.   
+--     
+--     The ITU relevant documents describing this technology are
+--     the ITU Q series, including ITU Q.700: Introduction
+--     to CCITT Signalling System No. 7 and ITU Q.701 
+--     Functional description of the message transfer part
+--     (MTP) of Signalling System No. 7.
+--  RevDate
+--    200201070000Z
+--  RevDescr
+--    The following objects were added to provide information
+--     on time and status of route table loads using the 
+--     file format.
+--     
+--         cItpRtConfigLoad 
+--         cItpRtConfigLoadStatus
+--         
+--     The following objects were added to provide 
+--     information on route state changes.
+--         
+--         cItpRtStateChangeCount
+--         cItpRtStateChangeNotifEnabled
+--         cItpRtMaxDynamicRoutes
+--         cItpRtChangeNotifWindowTime
+--         cItpRtChangeNotifMaxPerWindow
+--         cItpRtNotifInfoSuppressedFlag 
+--         cItpRtNotifInfoStateChanges   
+--         cItpRouteStateChange
+--  RevDate
+--    200108290000Z
+--  RevDescr
+--    Initial version of this MIB module.
+
+cItpRouteNotifications OBJECT IDENTIFIER ::= { ciscoItpRtMIB 0 }
+cItpRtMIBObjects OBJECT IDENTIFIER ::= { ciscoItpRtMIB 1 }
+cItpRtMIBConformance OBJECT IDENTIFIER ::= { ciscoItpRtMIB 2 }
+cItpRtScalars   OBJECT IDENTIFIER ::= { cItpRtMIBObjects 1 }
+cItpRtTables    OBJECT IDENTIFIER ::= { cItpRtMIBObjects 2 }
+cItpRtNotificationsInfo OBJECT IDENTIFIER ::= { cItpRtMIBObjects 3 }
+cItpRtMIBCompliances OBJECT IDENTIFIER ::= { cItpRtMIBConformance 1 }
+cItpRtMIBGroups OBJECT IDENTIFIER ::= { cItpRtMIBConformance 2 }
+
+cItpRtConfigLastChanged OBJECT-TYPE
+    SYNTAX TimeStamp
+--    Rsyntax TimeTicks
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The value of sysUpTime at the time of the last
+         creation or deletion of an entry in the cItpRouteTable.
+         If the local network management subsystem is 
+         re-initialization, then this object contains the 
+         sysUpTime at the time when this occurred. This value 
+         can be used to prevent unnecessary walks of the
+         cItpRouteTable."
+    ::= { cItpRtScalars 1 }
+
+cItpRtConfigLoad OBJECT-TYPE
+    SYNTAX TimeStamp
+--    Rsyntax TimeTicks
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The value of sysUpTime at the time of the last
+         load of the route table using file format."
+    ::= { cItpRtScalars 2 }
+
+cItpRtConfigLoadStatus OBJECT-TYPE
+    SYNTAX CItpTcTableLoadStatus
+--    Rsyntax INTEGER {
+--        loadNotRequested(1),
+--        loadInProgress(2),
+--        loadComplete(3),
+--        loadCompleteWithErrors(4),
+--        loadFailed(5)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The status of the current load or status from
+         the prior load operation.  This object will have
+         a value of loadInProgress while the load operation
+         is in progress.  The cItpRtConfigLoad contains
+         a timestamp indicating when the load operation
+         completed."
+    ::= { cItpRtScalars 3 }
+
+cItpRtStateChangeCount OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "A count of the number of routes that have changed
+         states. This value is incremented whenever the 
+         destination state of a route changes.  
+         This value is used to provide an indicator
+         of the stability of the routing table information."
+    ::= { cItpRtScalars 4 }
+
+cItpRtStateChangeNotifEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A control to enable or disable cItpRouteStateChange
+         notifications as follows:
+        'true'  Indicates that the cItpRouteStateChange 
+               notification should be generated when the state
+               of any route changes. That is, the notification
+               generation is enabled.
+        'false' Indicates that cItpRouteStateChange
+               notification generation is disabled."
+    DEFVAL { false }
+    ::= { cItpRtScalars 5 }
+
+cItpRtChangeNotifDelayTime OBJECT-TYPE
+    SYNTAX Gauge(0..60)
+--  Units
+--    seconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the maximum amount of time to delay
+         before generating the cItpRouteStateChange notification.
+         The delay is introduced to allow multiple route state 
+         changes to be bundled into a single notification.
+         
+         If the value of this object is equal to 0, the device will 
+         generate cItpRouteStateChange notification as each route 
+         changes states.
+        
+         If the value of this object is greater than 0, the device 
+         will not generate notifications as routes change state. 
+         As routes changes state they are accumulated until the time
+         specified in cItpRtChangeNotifDelayTime has elapsed or 
+         enough state changes have been accumulated to fill up the 
+         cItprtNotifInfoStateChanges object.
+         
+         This object is ignored by the agent when the
+         cItpRtStateChangeNotifEnabled object is set to the 'false' 
+         value."
+    DEFVAL { 10 }
+    ::= { cItpRtScalars 6 }
+
+cItpRtMaxDynamicRoutes OBJECT-TYPE
+    SYNTAX INTEGER(100..1000)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The maximum number of dynamic SS7 routes. This
+         object is used to limit the size of the route table
+         by preventing unbounded growth of dynamic entries.
+         Dynamic entries are created when certain MTP3 
+         management messages are received or sent. The removal 
+         of dynamic routes is performed periodically  and the
+         older dynamic routes are removed until the specified 
+         number is reached."
+    DEFVAL { 500 }
+    ::= { cItpRtScalars 7 }
+
+cItpRtChangeNotifWindowTime OBJECT-TYPE
+    SYNTAX INTEGER(30..900)
+--  Units
+--    seconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the time interval used to monitor
+         the rate of route state changes notifications.  This object
+         in combination with cItpRtChangeNotifMaxPerWindow are used
+         to determine the notification transit rate and suppress 
+         route state notifications."
+    DEFVAL { 60 }
+    ::= { cItpRtScalars 8 }
+
+cItpRtChangeNotifMaxPerWindow OBJECT-TYPE
+    SYNTAX INTEGER(10..9000)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the maximum number of route
+         state changes that can occur in the time interval 
+         specified in the cItpRtChangeNotifMaxPerWindow
+         object.  If additional state changes can occur in
+         the specified time interval the notifications 
+         are suppressed."
+    DEFVAL { 60 }
+    ::= { cItpRtScalars 9 }
+
+cItpRouteTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CItpRouteTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The route table for determining the linkset that a
+         packet must traverse to arrive at its destination node
+         given by the destination point code."
+    ::= { cItpRtTables 1 }
+
+cItpRouteTableEntry OBJECT-TYPE
+    SYNTAX CItpRouteTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Each table entry represents a configured route
+         statement."
+    INDEX { cItpRouteTableName, cItpRouteDpc, cItpRouteMask, cItpRouteDestLsCost, cItpRouteDestLinkset }
+    ::= { cItpRouteTable 1 }
+
+CItpRouteTableEntry ::= SEQUENCE {
+    cItpRouteTableName CItpTcRouteTableName,
+    cItpRouteDpc CItpTcPointCode,
+    cItpRouteDestLsCost Gauge,
+    cItpRouteDestLinkset CItpTcLinksetId,
+    cItpRouteMask Gauge,
+    cItpRouteQos CItpTcQos,
+    cItpRouteStatus INTEGER,
+    cItpRouteNonAdjStatus INTEGER
+    }
+
+cItpRouteTableName OBJECT-TYPE
+    SYNTAX CItpTcRouteTableName
+--    Rsyntax OCTET STRING(SIZE(1..19))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The configured name for this route table."
+    ::= { cItpRouteTableEntry 1 }
+
+cItpRouteDpc OBJECT-TYPE
+    SYNTAX CItpTcPointCode
+--    Rsyntax Gauge(0..16777216)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The destination point code."
+    ::= { cItpRouteTableEntry 2 }
+
+cItpRouteDestLsCost OBJECT-TYPE
+    SYNTAX Gauge(1..9)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The cost assigned to this linkset matching this
+        route. Higher numbers represent higher cost."
+    ::= { cItpRouteTableEntry 3 }
+
+cItpRouteDestLinkset OBJECT-TYPE
+    SYNTAX CItpTcLinksetId
+--    Rsyntax OCTET STRING(SIZE(1..19))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The linkset that the packet is to be forwarded to on
+        matching this route."
+    ::= { cItpRouteTableEntry 4 }
+
+cItpRouteMask OBJECT-TYPE
+    SYNTAX Gauge(0..16777215)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The mask used to define which part of
+        cItpRouteDpc  is significant when comparing
+        the cItpRouteDpc  to the destination code
+        point in the packet to be routed."
+    ::= { cItpRouteTableEntry 5 }
+
+cItpRouteQos OBJECT-TYPE
+    SYNTAX CItpTcQos
+--    Rsyntax Gauge(0..7|255)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The quality of service classification to be assigned 
+         to the ip packets used to transport the SS7 messages.
+         The value to specify for packets
+         when they will be transported on SCTP/IP based 
+         linkset."
+    ::= { cItpRouteTableEntry 6 }
+
+cItpRouteStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        unknown(1),
+        available(2),
+        restricted(3),
+        unavailable(4)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "List of the possible route status values.
+            'unknown'     : Status can not be determined.
+            'available'   : Route is available.
+            'restricted'  : Traffic is restricted on route.
+            'unavailable' : Route is unable to service traffic."
+    ::= { cItpRouteTableEntry 7 }
+
+cItpRouteNonAdjStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        unknown(1),
+        allowed(2),
+        restricted(3),
+        prohibited(4)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "List of the possible non-adjacent status values.
+            'unknown'     : Status can not be determined.
+            'allowed'     : traffic is allowed.
+            'restricted'  : Traffic is restricted on route.
+            'prohibited'  : Route is prohibited from providing
+                            traffic."
+    ::= { cItpRouteTableEntry 8 }
+
+cItpRtNotifInfoSuppressedFlag OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "A flag to indicate whether cItpRouteStateChange 
+         notifications have been suppressed in the current time 
+         interval specified by the cItpRtChangeNotifWindowTime 
+         object.
+         
+        'true'  Indicates that the device has suppressed the sending 
+               of cItpRouteStateChange notifications for the 
+               remainder of the time interval. 
+             
+        'false' Indicates that the device has not suppressed the 
+               sending of cItpRouteStateChange notifications in 
+               the current time interval."
+    ::= { cItpRtNotificationsInfo 1 }
+
+cItpRtNotifInfoStateChanges OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(0..480))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object contains a list of route state changes 
+         accumulated until the list is full or the time
+         time interval specified in cItpRtChangeNotifDelayTime
+         has passed.
+         
+         It consists of one or more tuples packed
+         together in the format of '<tuple1><tuple2>...<tuple15>'.
+         
+         Each tuple consist of 32 octets in the following format.
+        
+         '<cItpRouteTableName>       20 octets null padded
+          <cItpRouteDpc>              4 octets
+          <cItpRouteMask>             4 octets
+          routeStatus                 1 octet
+             0 - unknown state
+        1 - route is accessible
+             2 - route is inaccessible
+             3 - route is restricted'
+          reserved1                   1 octet(set to null)
+          reserved2                   1 octet(set to null)
+          reserved3                   1 octet(set to null)
+             
+         The maximum number of tuples is 15."
+    ::= { cItpRtNotificationsInfo 2 }
+
+cItpRouteStateChange TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoItpRtMIB
+    VARIABLES {
+        cItpRtStateChangeCount, cItpRtNotifInfoSuppressedFlag, 
+        cItpRtNotifInfoStateChanges }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification is generated whenever one or more
+         route destination status changes states and includes
+         the count of all route state changes.  This 
+         notification contains a list of route state changes
+         in the cItpRtNotifInfoStateChanges object.  State
+         changes are accumulated until the 
+         cItpRtNotifInfoStateChanges is full or the maximum
+         delay time is reached.  The delay time is specified
+         by the cItpRtChangeNotifDelayTime object.
+         
+         It may be necessary to suppress the sending of 
+         notification when a large number route change 
+         state, due the failure of some common resource.
+         The number of notifications can be controlled by 
+         specifying values for cItpRtChangeNotifWindowTime 
+         and cItpRtChangeNotifMaxPerWindow objects. When the 
+         number of route state changes exceed the specified
+         value the last notification will indicate that
+         notifications are suppressed for the remainder
+         of the window."
+    ::= 1
+
+cItpRtScalarGroup OBJECT IDENTIFIER ::= { cItpRtMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Route scalars Group.
+--  objects
+--    cItpRtConfigLastChanged
+
+cItpRouteGroup OBJECT IDENTIFIER ::= { cItpRtMIBGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Route table group.
+--  objects
+--    cItpRouteQos, cItpRouteStatus, cItpRouteNonAdjStatus
+
+cItpRtScalarGroupRev1 OBJECT IDENTIFIER ::= { cItpRtMIBGroups 4 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Route revision one scalars group.
+--  objects
+--    cItpRtConfigLoad, cItpRtConfigLoadStatus, 
+--    cItpRtStateChangeCount, cItpRtStateChangeNotifEnabled, 
+--    cItpRtChangeNotifDelayTime, cItpRtMaxDynamicRoutes, 
+--    cItpRtChangeNotifWindowTime, cItpRtChangeNotifMaxPerWindow, 
+--    cItpRtNotifInfoSuppressedFlag, cItpRtNotifInfoStateChanges
+
+cItpRtNotificationsGroup OBJECT IDENTIFIER ::= { cItpRtMIBGroups 3 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Route notification objects.
+--  notifications
+--    cItpRouteStateChange
+
+cItpRtMIBCompliance OBJECT IDENTIFIER ::= { cItpRtMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities which implement
+--    the Cisco CISCO-ITP-RT-MIB.my MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    cItpRtScalarGroup
+--   MandGroup
+--    cItpRouteGroup
+
+cItpRtMIBComplianceRev1 OBJECT IDENTIFIER ::= { cItpRtMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for entities which implement
+--     the Cisco CISCO-ITP-RT-MIB.my MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    cItpRtScalarGroup
+--   MandGroup
+--    cItpRouteGroup
+--   MandGroup
+--    cItpRtNotificationsGroup
+--   MandGroup
+--    cItpRtScalarGroupRev1
+
+
+END
+

@@ -1,0 +1,482 @@
+-- MIB created 6/25/99 12:57:05, by
+--   SMIC (the next generation) version 1.6.29, November 22, 1994.
+
+CISCO-CONFIG-COPY-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-CONFIG-COPY-MIB.my"
+
+IMPORTS
+    IpAddress
+            FROM SNMPv2-SMI-v1
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215
+    Unsigned32
+            FROM CISCO-TC
+    DisplayString, TimeStamp, RowStatus, TruthValue
+            FROM SNMPv2-TC-v1
+    ciscoMgmt
+            FROM CISCO-SMI;
+
+ciscoConfigCopyMIB OBJECT IDENTIFIER ::= { ciscoMgmt 96 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    9701150000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--     Cisco Systems
+--     Customer Service
+--    
+--    Postal: 170 W. Tasman Drive
+--     San Jose, CA  95134
+--     USA
+--    
+--    Tel: +1 800 553-NETS
+--    
+--    E-mail: cs-snmp@cisco.com
+--  Descr
+--    This MIB facilitates writing of configuration files
+--    of an SNMP Agent running Cisco's IOS in the following ways:
+--    to and from the net, copying running configurations to startup
+--    configurations and vice-versa, and copying a configuration
+--    (running or startup) to and from the local IOS file system.
+
+ciscoConfigCopyMIBObjects OBJECT IDENTIFIER ::= { ciscoConfigCopyMIB 1 }
+ccCopy          OBJECT IDENTIFIER ::= { ciscoConfigCopyMIBObjects 1 }
+ciscoConfigCopyMIBTrapPrefix OBJECT IDENTIFIER ::= { ciscoConfigCopyMIB 2 }
+ccCopyMIBTraps  OBJECT IDENTIFIER ::= { ciscoConfigCopyMIBTrapPrefix 1 }
+ciscoConfigCopyMIBConformance OBJECT IDENTIFIER ::= { ciscoConfigCopyMIB 3 }
+ccCopyMIBCompliances OBJECT IDENTIFIER ::= { ciscoConfigCopyMIBConformance 1 }
+ccCopyMIBGroups OBJECT IDENTIFIER ::= { ciscoConfigCopyMIBConformance 2 }
+
+ConfigCopyProtocol ::= INTEGER {
+        tftp(1),
+        ftp(2),
+        rcp(3)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The protocol file transfer protocol that should be used
+--    to copy the configuration file over the network. If the
+--    config file transfer is to occur locally on the SNMP agent,
+--    the method of transfer is left upto the implementation, and
+--    is not restricted to the protocols below.
+
+ConfigCopyState ::= INTEGER {
+        waiting(1),
+        running(2),
+        successful(3),
+        failed(4)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The state of a tftp config-copy operation. 
+--     The description of each state is given below:
+--    
+--     waiting:  only one config-copy request can run at any
+--      time. A newly activated config-copy request
+--      is placed in this state if another request
+--      has already been activated.
+--    
+--     running: this state signifies that the config-copy
+--      request is running.
+--    
+--     successsful: the state when a config-copy request is
+--      successfully completed.
+--    
+--     failed: the config-copy request was unsuccesful.
+
+ConfigCopyFailCause ::= INTEGER {
+        unknown(1),
+        badFileName(2),
+        timeout(3),
+        noMem(4),
+        noConfig(5)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The reason a config-copy request failed.
+
+ConfigFileType ::= INTEGER {
+        networkFile(1),
+        iosFile(2),
+        startupConfig(3),
+        runningConfig(4),
+        terminal(5)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The various types of files on which a config-copy
+--    operation can be performed.
+
+ccCopyTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CcCopyEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table of config-copy requests."
+    ::= { ccCopy 1 }
+
+ccCopyEntry OBJECT-TYPE
+    SYNTAX CcCopyEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A config-copy request.
+        
+        A management station wishing to create an entry should
+        first generate a random serial number to be used
+        as the index to this sparse table.  The station should
+        then create the associated instance of the row status
+        and row index objects.  It must also, either in the same
+        or in successive PDUs, create an instance of
+        ccCopySourceFileType and ccCopyDestFileType.
+        At least one of the FileTypes must be an agent-config
+        file type (i.e. startupConfig or runningConfig).
+        If one of the file types is a networkFile, a valid
+        ccCopyServerAddress and ccCopyFileName must be
+        created as well. For a file type of iosFile, only
+        a valid fileName needs to be created as an extra parameter.
+        
+        It should also modify the default values for the other
+        configuration objects if the defaults are not appropriate.
+        
+        Once the appropriate instance of all the configuration
+        objects have been created, either by an explicit SNMP
+        set request or by default, the row status should be set
+        to active to initiate the request. Note that this entire
+        procedure may be initiated via a single set request which
+        specifies a row status of createAndGo as well as specifies
+        valid values for the non-defaulted configuration objects.
+        
+        Once the config-copy request has been created (i.e. the
+        ccCopyEntryRowStatus has been made active), the entry
+        cannot be modified - the only operation possible
+        after this is to delete the row.
+        
+        Once the request completes, the management station should
+        retrieve the values of the status objects of interest, and
+        should then delete the entry.  In order to prevent old
+        entries from clogging the table, entries will be aged out,
+        but an entry will never be deleted within 5 minutes of
+        completing."
+    INDEX { ccCopyIndex }
+    ::= { ccCopyTable 1 }
+
+CcCopyEntry ::= SEQUENCE {
+    ccCopyIndex Unsigned32,
+    ccCopyProtocol ConfigCopyProtocol,
+    ccCopySourceFileType ConfigFileType,
+    ccCopyDestFileType ConfigFileType,
+    ccCopyServerAddress IpAddress,
+    ccCopyFileName DisplayString,
+    ccCopyUserName DisplayString,
+    ccCopyUserPassword DisplayString,
+    ccCopyNotificationOnCompletion TruthValue,
+    ccCopyState ConfigCopyState,
+    ccCopyTimeStarted TimeStamp,
+    ccCopyTimeCompleted TimeStamp,
+    ccCopyFailCause ConfigCopyFailCause,
+    ccCopyEntryRowStatus RowStatus
+    }
+
+ccCopyIndex OBJECT-TYPE
+    SYNTAX Unsigned32(1..2147483647)
+--    Rsyntax Gauge32(1..2147483647)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Object which specifies a unique entry in the
+        ccCopyTable.  A management station wishing
+        to initiate a config-copy operation should use a
+        random value for this object when creating
+        or modifying an instance of a ccCopyEntry.
+        The RowStatus semantics of the ccCopyEntryRowStatus
+        object will prevent access conflicts."
+    ::= { ccCopyEntry 1 }
+
+ccCopyProtocol OBJECT-TYPE
+    SYNTAX ConfigCopyProtocol
+--    Rsyntax INTEGER {
+--        tftp(1),
+--        ftp(2),
+--        rcp(3)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The protocol to be used for any copy. 
+        Will default to tftp if not specified.
+        
+        If the copy operation occurs locally on the SNMP agent
+        (e.g. runningCOnfigToStartupConfig), this object may
+        be ignored by the implementation."
+    DEFVAL { tftp }
+    ::= { ccCopyEntry 2 }
+
+ccCopySourceFileType OBJECT-TYPE
+    SYNTAX ConfigFileType
+--    Rsyntax INTEGER {
+--        networkFile(1),
+--        iosFile(2),
+--        startupConfig(3),
+--        runningConfig(4),
+--        terminal(5)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "specifies the type of file to copy from. Either the
+        ccCopySourceFileType or the ccCopyDestFileType (or both)
+        must be of type runningConfig or startupConfig. Also,
+        the ccCopySourceFileType must be different from the
+        ccCopyDestFileType.
+        
+        If the ccCopySourceFileType has the value of networkFile, the 
+        ccCopyServerAddress and ccCopyFileName must also be created, 
+        and these 3 objects together
+        (ccCopySourceFileType, ccCopyServerAddress, ccCopyFileName)
+        will uniquely identify the source file.
+        
+        If the ccCopySourceFileType is iosFile, the ccCopyFileName
+        must also be created, and the 2 objects together
+        (ccCopySourceFileType, ccCopyFileName) will uniquely identify
+        the source file."
+    ::= { ccCopyEntry 3 }
+
+ccCopyDestFileType OBJECT-TYPE
+    SYNTAX ConfigFileType
+--    Rsyntax INTEGER {
+--        networkFile(1),
+--        iosFile(2),
+--        startupConfig(3),
+--        runningConfig(4),
+--        terminal(5)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "specifies the type of file to copy to. Either the
+        ccCopySourceFileType or the ccCopyDestFileType (or both)
+        must be of type runningConfig or startupConfig. Also,
+        the ccCopySourceFileType must be different from the
+        ccCopyDestFileType.
+        
+        If the ccCopyDestFileType has the value of networkFile, the 
+        ccCopyServerAddress and ccCopyFileName must also be created, 
+        and these 3 objects together
+        (ccCopyDestFileType, ccCopyServerAddress, ccCopyFileName)
+        will uniquely identify the destination file.
+        
+        If the ccCopyDestFileType is iosFile, the ccCopyFileName
+        must also be created, and the 2 objects together
+        (ccCopyDestFileType, ccCopyFileName) will uniquely identify
+        the destination file."
+    ::= { ccCopyEntry 4 }
+
+ccCopyServerAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The ip address of the tftp server from (or to) which to copy
+        the configuration file. This object must be created
+        when either the ccCopySourceFileType or ccCopyDestFileType
+        has the value networkFile. Values of 0.0.0.0 or FF.FF.FF.FF
+        for ccCopyServerAddress are not allowed."
+    ::= { ccCopyEntry 5 }
+
+ccCopyFileName OBJECT-TYPE
+    SYNTAX DisplayString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The file name (including the path, if applicable) of
+        the file. This object must be created when either the
+        ccCopySourceFileType or ccCopyDestFileType has the value
+        networkFile or iosFile."
+    ::= { ccCopyEntry 6 }
+
+ccCopyUserName OBJECT-TYPE
+    SYNTAX DisplayString(SIZE(1..40))
+--    Rsyntax OCTET STRING(SIZE(1..40))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Remote user name for copy via rcp protocol. Optional.
+        This object must be created when the ccCopyProtocol
+        is rcp or ftp.
+        If the protocol is rcp, it will override the remote user-name
+        configured through the 
+         rcmd remote-username <username>
+        configuration command. 
+        The remote user-name is sent as the server user-name 
+        in an rcp command request sent by the system to a
+        remote rcp server."
+    ::= { ccCopyEntry 7 }
+
+ccCopyUserPassword OBJECT-TYPE
+    SYNTAX DisplayString(SIZE(1..40))
+--    Rsyntax OCTET STRING(SIZE(1..40))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Password used by ftp for copying a file to/from
+        an ftp server. This object must be created when the
+        ccCopyProtocol is ftp. Reading it returns a zero-length
+        string for security reasons."
+    ::= { ccCopyEntry 8 }
+
+ccCopyNotificationOnCompletion OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Specifies whether or not a ccCopyCompletion
+        notification should be issued on completion of the tftp
+        transfer. If such a notification is desired, it is the
+        responsibility of the management entity to ensure that the
+        SNMP administrative model is configured in such a way as to
+        allow the notification to be delivered."
+    DEFVAL { false }
+    ::= { ccCopyEntry 9 }
+
+ccCopyState OBJECT-TYPE
+    SYNTAX ConfigCopyState
+--    Rsyntax INTEGER {
+--        waiting(1),
+--        running(2),
+--        successful(3),
+--        failed(4)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Specifies the state of this config-copy request.
+        This value of this object is instantiated only after the row
+        has been instantiated, i.e. after the ccCopyEntryRowStatus
+        has been made active."
+    ::= { ccCopyEntry 10 }
+
+ccCopyTimeStarted OBJECT-TYPE
+    SYNTAX TimeStamp
+--    Rsyntax TimeTicks
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Specifies the time the ccCopyState last transitioned
+        to running, or 0 if the state has never transitioned to
+        running (for e.g., stuck in waiting state).
+        This object is instantiated only after the row has been
+        instantiated."
+    ::= { ccCopyEntry 11 }
+
+ccCopyTimeCompleted OBJECT-TYPE
+    SYNTAX TimeStamp
+--    Rsyntax TimeTicks
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Specifies the time the ccCopyState last transitioned
+        from running to successful or failed states. This object is
+        instantiated only after the row has been instantiated.
+        Its value will remain 0 until he request has completed."
+    ::= { ccCopyEntry 12 }
+
+ccCopyFailCause OBJECT-TYPE
+    SYNTAX ConfigCopyFailCause
+--    Rsyntax INTEGER {
+--        unknown(1),
+--        badFileName(2),
+--        timeout(3),
+--        noMem(4),
+--        noConfig(5)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The reason why the config-copy operation failed.
+        This object is instantiated only when the ccCopyState for this
+        entry is in the failed state."
+    ::= { ccCopyEntry 13 }
+
+ccCopyEntryRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The status of this table entry.  Once the entry status is
+        set to active, the associated entry cannot be modified until
+        the request completes (ccCopyState transitions to
+        successful or failed state)."
+    ::= { ccCopyEntry 14 }
+
+ccCopyCompletion TRAP-TYPE
+--?? Non-reverse mappable trap
+    ENTERPRISE ccCopyMIBTraps
+    VARIABLES {
+        ccCopyServerAddress, ccCopyFileName, ccCopyState, 
+        ccCopyTimeStarted, ccCopyTimeCompleted, ccCopyFailCause }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "A ccCopyCompletion trap is sent at the completion
+        of a config-copy request. The ccCopyFailCause is not
+        instantiated, and hence not included in a trap, when the
+        ccCopyState is success."
+    ::= 1
+
+ccCopyGroup OBJECT IDENTIFIER ::= { ccCopyMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the ability to
+--    copy an agent-configuration file.
+--  objects
+--    ccCopyProtocol, ccCopySourceFileType, ccCopyDestFileType, 
+--    ccCopyServerAddress, ccCopyFileName, ccCopyUserName, 
+--    ccCopyUserPassword, ccCopyNotificationOnCompletion, 
+--    ccCopyState, ccCopyTimeStarted, ccCopyTimeCompleted, 
+--    ccCopyFailCause, ccCopyEntryRowStatus
+
+ccCopyMIBCompliance OBJECT IDENTIFIER ::= { ccCopyMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for Cisco agents which implement
+--    the Cisco ConfigCopy MIB. This MIB should be implemented
+--    on all Cisco agents that support copying of configs
+--    via the CLI.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ccCopyGroup
+
+
+END
+

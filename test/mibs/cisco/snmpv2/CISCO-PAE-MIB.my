@@ -1,0 +1,125 @@
+CISCO-PAE-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS 
+    OBJECT-TYPE,
+    MODULE-IDENTITY 
+        FROM SNMPv2-SMI
+
+    TruthValue 
+        FROM SNMPv2-TC
+
+    MODULE-COMPLIANCE,
+    OBJECT-GROUP
+        FROM SNMPv2-CONF
+
+    dot1xPaePortEntry
+        FROM IEEE8021-PAE-MIB
+
+    ciscoMgmt
+        FROM CISCO-SMI;
+    
+ciscoPaeMIB MODULE-IDENTITY
+    LAST-UPDATED "200105241016Z" 
+    ORGANIZATION "Cisco System, Inc."
+    CONTACT-INFO 
+            "         Cisco Systems
+                      Customer Service
+
+              Postal: 170 W Tasman Drive
+                      San Jose, CA  95134
+                      USA
+
+                 Tel: +1 800 553-NETS
+
+        E-mail: cs-snmp@cisco.com"
+    DESCRIPTION 
+        "Cisco Port Access Entity (PAE) module for managing 
+        IEEE Std 802.1x.
+
+        This MIB provides Port Access Entity information that are 
+        either excluded by IEEE Std 802.1x (IEEE8021-PAE-MIB) or
+        specific to Cisco products."
+
+    REVISION    "200105241016Z"
+    DESCRIPTION
+        "Initial version of this MIB module."
+
+    ::= {ciscoMgmt 220}
+
+
+cpaeMIBObject OBJECT IDENTIFIER ::= {ciscoPaeMIB 1}
+
+cpaePortTable OBJECT-TYPE
+    SYNTAX        SEQUENCE OF CpaePortEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "A table of system level information for each port
+        supported by the Port Access Entity.  An entry 
+        appears in this table for each PAE port of this system.
+        This table contains additional objects for the
+        dot1xPaePortTable."
+    REFERENCE
+        "IEEE 802.1x Subclause 9.6.1"
+    ::= {cpaeMIBObject 1}
+
+cpaePortEntry OBJECT-TYPE
+    SYNTAX        CpaePortEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION    
+        "An entry containing additional management information
+        applicable to a particular PAE port."
+    AUGMENTS    {dot1xPaePortEntry}
+    ::= {cpaePortTable 1}
+
+
+CpaePortEntry ::= SEQUENCE {
+    cpaeMultipleHost    TruthValue
+}
+
+cpaeMultipleHost OBJECT-TYPE
+    SYNTAX        TruthValue
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "Specifies whether the port allows multiple-host connection
+        or not."
+    DEFVAL {false}
+    ::= {cpaePortEntry 1}
+
+------------------------------------------
+-- Conformance Information
+------------------------------------------
+cpaeMIBConformance OBJECT IDENTIFIER ::= {ciscoPaeMIB 2}
+cpaeMIBCompliances OBJECT IDENTIFIER ::= {cpaeMIBConformance 1}
+cpaeMIBGroups OBJECT IDENTIFIER ::= {cpaeMIBConformance 2}
+
+-- Conformance 
+
+cpaeCompliance MODULE-COMPLIANCE
+    STATUS     current
+    DESCRIPTION
+        "The compliance statement for agents which implement
+        the Cisco PAE MIB."
+    MODULE
+        MANDATORY-GROUPS {
+            cpaeMultipleHostGroup
+        }
+    ::= {cpaeMIBCompliances 1}
+
+-- Units of Conformance
+
+cpaeMultipleHostGroup    OBJECT-GROUP
+    OBJECTS {
+        cpaeMultipleHost
+    }
+    STATUS    current
+    DESCRIPTION    
+        "A collection of objects that provide the multiple 
+        host configuration information for a PAE port.  
+        These are in addition to the IEEE Std 802.1x PAE MIB."
+    ::= {cpaeMIBGroups 1}
+END
+
+

@@ -1,0 +1,2528 @@
+-- *****************************************************************
+-- CISCO-CCM-MIB.my: Cisco CallManager MIB file.
+--
+-- November 2000, Sofian Halim
+-- November 1999, Ashok Ranganath
+--
+-- Copyright (c) 1999-2000 by Cisco Systems, Inc.
+-- All rights reserved.
+-- *****************************************************************
+
+
+CISCO-CCM-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, IpAddress,
+    Counter32, Integer32
+        FROM SNMPv2-SMI
+    Unsigned32
+        FROM CISCO-TC
+    DateAndTime, TruthValue, PhysAddress, TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    SnmpAdminString
+        FROM SNMP-FRAMEWORK-MIB
+    MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+        FROM SNMPv2-CONF
+    ciscoMgmt
+        FROM CISCO-SMI
+    InetAddressType, InetAddress
+        FROM INET-ADDRESS-MIB;
+
+ciscoCcmMIB  MODULE-IDENTITY
+    LAST-UPDATED    "200012010000Z"
+    ORGANIZATION    "Cisco Systems, Inc."
+    CONTACT-INFO
+        "    Cisco Systems
+            Customer Service
+
+        Postal: 170 W. Tasman Drive
+            San Jose, CA  95134
+            USA
+
+        Tel: +1 800 553-NETS
+
+        E-mail: cs-selsius@cisco.com"
+
+    DESCRIPTION
+        "The MIB Module for the management of a Cisco CallManager (CCM)
+        application running with a Cisco Communication Network (CCN)
+        System. Cisco CallManager is an IP-PBX which controls the call
+        processing of a Voice Over IP (VoIP) network. A CCN system 
+        comprises multiple regions, with each region consisting of
+        several CallManager groups with multiple CallManagers. The MIB
+        can be used by the CallManager Application to present provision
+        and statistics information."
+    REVISION      "200012010000Z"
+    DESCRIPTION
+            "(1) Add ccmMediaDeviceInfo, ccmGatekeeperInfo,
+                 ccmCTIDeviceInfo, ccmAlarmConfigInfo and
+                 ccmNotificationsInfo objects;
+             (2) Add ccmClusterId to the ccmEntry;
+             (3) Deprecated the ccmGatewayTrunkInfo (this was never
+                 implemented and it should've been in the gateway MIB);
+             (4) Add ccmPhoneFailedTable and ccmPhoneStatusUpdateTable;
+             (5) Add ccmMIBNotifications;
+             (6) Add new ccmGatewayType and ccmPhoneType;
+             (7) Add this Revision clause."
+    REVISION      "200003100000Z"
+    DESCRIPTION
+            "The initial version of this MIB module."
+    ::= { ciscoMgmt 156 }
+
+CcmIndex ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT "d"
+    STATUS       current
+    DESCRIPTION
+        "This syntax is used as the Index into a table. A positive
+        value is used to identify a unique entry in the table."
+    SYNTAX       Unsigned32(1..4294967295)
+
+CcmIndexOrZero ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT "d"
+    STATUS       current
+    DESCRIPTION
+        "This textual convention is an extension of the
+        CcmIndex convention. The latter defines a greater
+        than zero to identify an entry of the CCM MIB table
+        in the managed system. This extension permits the
+        additional value of zero. The value zero is object-
+        specific and must be defined as part of the description
+        of any object which uses this syntax."
+    SYNTAX       Unsigned32(0..4294967295)
+
+CcmDevFailCauseCode ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT "d"
+    STATUS       current
+    DESCRIPTION
+        "This syntax is used as means of identifying the reasons
+        for a device communication error. The devices that this
+        syntax is trying to address is an IP Phone or a Gateway.
+          unknown:                      Unknown error cause
+          noEntryInDatabase:            Device not configured properly
+                                        in the CCM database
+          databaseConfigurationError:   Device configuration error in
+                                        the CCM database
+          deviceNameUnresolveable:      The CallManager is unable to
+                                        resolve the device name to an
+                                        IP Address internally
+          maxDevRegReached:             Maximum number of device
+                                        registrations have been reached
+          connectivityError:            CallManager is unable to
+                                        establish communication with
+                                        the device during registration
+          initializationError:          Indicates an error occured when
+                                        the CallManager tries to
+                                        initialize the device."
+    SYNTAX      INTEGER {
+        unknown(1),
+        noEntryInDatabase(2),
+        databaseConfigurationError(3),
+        deviceNameUnresolveable(4),
+        maxDevRegReached(5),
+        connectivityError(6),
+        initializationError(7)
+    }
+
+ciscoCcmMIBObjects      OBJECT IDENTIFIER ::= { ciscoCcmMIB 1 }
+ccmGeneralInfo          OBJECT IDENTIFIER ::= { ciscoCcmMIBObjects 1 }
+ccmPhoneInfo            OBJECT IDENTIFIER ::= { ciscoCcmMIBObjects 2 }
+ccmGatewayInfo          OBJECT IDENTIFIER ::= { ciscoCcmMIBObjects 3 }
+ccmGatewayTrunkInfo     OBJECT IDENTIFIER ::= { ciscoCcmMIBObjects 4 }
+ccmGlobalInfo           OBJECT IDENTIFIER ::= { ciscoCcmMIBObjects 5 }
+ccmMediaDeviceInfo      OBJECT IDENTIFIER ::= { ciscoCcmMIBObjects 6 }
+ccmGatekeeperInfo       OBJECT IDENTIFIER ::= { ciscoCcmMIBObjects 7 }
+ccmCTIDeviceInfo        OBJECT IDENTIFIER ::= { ciscoCcmMIBObjects 8 }
+ccmAlarmConfigInfo      OBJECT IDENTIFIER ::= { ciscoCcmMIBObjects 9 }
+ccmNotificationsInfo    OBJECT IDENTIFIER ::= { ciscoCcmMIBObjects 10 }
+
+--
+--    THE CALL MANAGER GROUP TABLE
+--
+
+ccmGroupTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmGroupEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing the CallManager groups in a CCN system."
+    ::= { ccmGeneralInfo 1 }
+
+ccmGroupEntry OBJECT-TYPE
+    SYNTAX      CcmGroupEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the CallManager Group table,
+        containing the information about a CallManager group in a
+        CCN system. An entry is created to represent a CallManager
+        Group. New entries to the CallManager Group table in the 
+        database are created when the User inserts a new CallManager
+        Group via the CallManager Web Admin pages. This entry is
+        subsequently picked up by the CCM SNMP Agent."
+    INDEX  { ccmGroupIndex }
+    ::= { ccmGroupTable 1 }
+
+CcmGroupEntry ::= SEQUENCE {
+    ccmGroupIndex        CcmIndex,
+    ccmGroupName         SnmpAdminString,
+    ccmGroupTftpDefault  TruthValue
+}
+
+ccmGroupIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which uniquely identifies a CallManager Group.  The local
+        CCM system is where the CallManager Application is running."
+    ::= { ccmGroupEntry 1 }
+
+ccmGroupName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the CallManager Group."
+    ::= { ccmGroupEntry 2 }
+
+ccmGroupTftpDefault OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Whether this is the default TFTP server group or not."
+    ::= { ccmGroupEntry 3 }
+
+
+--
+--    THE CALL MANAGER TABLE
+--
+
+ccmTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing provision information of all
+        the CallManagers in a CCN system."
+    ::= { ccmGeneralInfo 2 }
+
+ccmEntry OBJECT-TYPE
+    SYNTAX      CcmEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the CallManager table,
+        containing the information about a CallManager in a
+        CCN system."
+    INDEX  { ccmIndex }
+    ::= { ccmTable 1 }
+
+CcmEntry ::= SEQUENCE {
+    ccmIndex            CcmIndex,
+    ccmName             SnmpAdminString,
+    ccmDescription      SnmpAdminString,
+    ccmVersion          SnmpAdminString, 
+    ccmStatus           INTEGER,
+    ccmInetAddressType  InetAddressType,
+    ccmInetAddress      InetAddress,
+    ccmClusterId        SnmpAdminString
+}
+
+ccmIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which uniquely identifies a CallManager in a CCN system."
+    ::= { ccmEntry 1 }
+
+ccmName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The host name of the CallManager."
+    ::= { ccmEntry 2 }
+
+ccmDescription OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The description for the CallManager."
+    ::= { ccmEntry 3 }
+
+ccmVersion OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..24))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The version number of the CallManager software."
+    ::= { ccmEntry 4 }
+
+ccmStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        up(2),
+        down(3)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The current status of the CallManager. A CallManager
+        is up if the SNMP Agent received a system up event
+        from the local CCM system
+            unknown:    Current status of the CallManager is
+                        Unknown
+            up:         CallManager is running & is able to
+                        communicate with other CallManagers
+            down:       CallManager is down or the Agent is
+                        unable to communicate with the local
+                        CallManager."
+    ::= { ccmEntry 5 }
+
+ccmInetAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Represents the type of address stored in ccmInetAddress."
+    ::= { ccmEntry 6 }
+
+ccmInetAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The last known IP address of the CallManager."
+    ::= { ccmEntry 7 }
+
+ccmClusterId OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The unique ID of the Cluster to which this CallManager
+        belongs. At any point in time, the Cluster Id helps in
+        associating a CallManager to any given Cluster."
+    ::= { ccmEntry 8 }
+
+--
+--    THE CALL MANAGER GROUP MAPPING TABLE
+--
+
+ccmGroupMappingTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmGroupMappingEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing the list of all CallManager to
+        group mappings in a CCN system."
+    ::= { ccmGeneralInfo 3 }
+
+ccmGroupMappingEntry OBJECT-TYPE
+    SYNTAX      CcmGroupMappingEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the CallManager group
+        Mapping table, containing the information about a
+        mapping between a CallManager and a CallManager group
+        in a CCN system."
+    INDEX  { ccmGroupIndex, ccmIndex }
+    ::= { ccmGroupMappingTable  1 }
+
+CcmGroupMappingEntry ::= SEQUENCE {
+    ccmCMGroupMappingCMPriority        Unsigned32
+}
+
+ccmCMGroupMappingCMPriority OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The priority of the CallManager in the group. Sets
+        the order of the CallManager in the list."
+    ::= { ccmGroupMappingEntry 1 }
+
+
+--
+--    THE CALL MANAGER REGION TABLE
+--
+
+ccmRegionTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmRegionEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing the list of all geographically 
+        separated regions in a CCN system."
+    ::= { ccmGeneralInfo 4 }
+
+ccmRegionEntry OBJECT-TYPE
+    SYNTAX      CcmRegionEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the Region Table,
+        containing the information about a region in a
+        CCN system."
+    INDEX  { ccmRegionIndex }
+    ::= { ccmRegionTable 1 }
+
+CcmRegionEntry ::= SEQUENCE {
+    ccmRegionIndex  CcmIndex,
+    ccmRegionName   SnmpAdminString
+}
+
+ccmRegionIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which uniquely identifies a Region Name in the table."
+    ::= { ccmRegionEntry 1 }
+
+ccmRegionName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the CallManager region."
+    ::= { ccmRegionEntry 2 }
+
+
+--
+--    THE CALL MANAGER REGION PAIR TABLE
+--
+
+ccmRegionPairTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmRegionPairEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing the list of all geographical
+        region pairs in a CCN system. The pair consists of
+        the Source region and Destination region."
+    ::= { ccmGeneralInfo 5 }
+
+ccmRegionPairEntry OBJECT-TYPE
+    SYNTAX      CcmRegionPairEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the Region Pair Table,
+        containing the information about bandwidth restrictions
+        when communicating between the two specified regions."
+    INDEX  { ccmRegionSrcIndex, ccmRegionDestIndex }
+    ::= { ccmRegionPairTable 1 }
+
+CcmRegionPairEntry ::= SEQUENCE {
+    ccmRegionSrcIndex            CcmIndex,
+    ccmRegionDestIndex           CcmIndex,
+    ccmRegionAvailableBandWidth  INTEGER
+}
+
+ccmRegionSrcIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The index of the Source Region in the Region table."
+    ::= { ccmRegionPairEntry 1 }
+
+ccmRegionDestIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The index of the Destination Region in the Region table."
+    ::= { ccmRegionPairEntry 2 }
+
+ccmRegionAvailableBandWidth OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        other(2),
+        bwG723(3),
+        bwG729(4),
+        bwG711(5)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The maximum available bandwidth between the two given regions.
+            unknown:    Unknown Bandwidth
+            other:      Unidentified Bandwidth
+            bwG723:     For low bandwidth using G.723 codec
+            bwG729:     For low bandwidth using G.729 codec
+            bwG711:     For high bandwidth using G.711 codec."
+    ::= { ccmRegionPairEntry 3 }
+
+
+--
+--    THE CALL MANAGER TIME ZONE TABLE
+--
+
+ccmTimeZoneTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmTimeZoneEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing the list of all time zone
+        groups in a CCN system."
+    ::= { ccmGeneralInfo 6 }
+
+ccmTimeZoneEntry OBJECT-TYPE
+    SYNTAX      CcmTimeZoneEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the time zone Table,
+        containing the information about a particular time
+        zone group in a CCN system."
+    INDEX  { ccmTimeZoneIndex }
+    ::= { ccmTimeZoneTable 1 }
+
+CcmTimeZoneEntry ::= SEQUENCE {
+    ccmTimeZoneIndex   CcmIndex,
+    ccmTimeZoneName    SnmpAdminString,
+    ccmTimeZoneOffset  Integer32 
+}
+
+ccmTimeZoneIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which uniquely identifies a Time Zone group entry
+        in the table."
+    ::= { ccmTimeZoneEntry 1 }
+
+ccmTimeZoneName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the time zone group."
+    ::= { ccmTimeZoneEntry 2 }
+
+ccmTimeZoneOffset OBJECT-TYPE
+    SYNTAX      Integer32 (-12..12)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The offset of the time zone group's time zone from GMT."
+    ::= { ccmTimeZoneEntry 3 }
+
+
+--
+--    THE DEVICE POOL TABLE
+--
+
+ccmDevicePoolTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmDevicePoolEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing the list of all device pools
+        in a CCN system. A Device Pool contains Region,
+        Date/Time Group and CallManager Group criteria that
+        will be common among many devices."
+    ::= { ccmGeneralInfo 7 }
+
+ccmDevicePoolEntry OBJECT-TYPE
+    SYNTAX      CcmDevicePoolEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the device pool Table,
+        containing the information about a particular device
+        pool in a CCN system."
+    INDEX  { ccmDevicePoolIndex }
+    ::= { ccmDevicePoolTable 1 }
+
+CcmDevicePoolEntry ::= SEQUENCE {
+    ccmDevicePoolIndex          CcmIndex,
+    ccmDevicePoolName           SnmpAdminString,
+    ccmDevicePoolRegionIndex    CcmIndexOrZero,
+    ccmDevicePoolTimeZoneIndex  CcmIndexOrZero,
+    ccmDevicePoolGroupIndex     CcmIndexOrZero
+}
+
+ccmDevicePoolIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which uniquely identifies a Device Pool entry in the
+        table. Each entry contains Region, Date/Time Group
+        and CallManager Group criteria that will be common
+        among many devices, for that entry."
+    ::= { ccmDevicePoolEntry 1 }
+
+ccmDevicePoolName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the device pool."
+    ::= { ccmDevicePoolEntry 2 }
+
+ccmDevicePoolRegionIndex OBJECT-TYPE
+    SYNTAX      CcmIndexOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A positive value of this index is used to identify
+        the Region to which this Device Pool entry belongs.
+        A value of 0 indicates that the index to the Region
+        table is Unknown."
+    ::= { ccmDevicePoolEntry 3 }
+
+ccmDevicePoolTimeZoneIndex OBJECT-TYPE
+    SYNTAX      CcmIndexOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A positive value of this index is used to identify
+        the TimeZone to which this Device Pool entry belongs.
+        A value of 0 indicates that the index to the TimeZone
+        table is Unknown."
+    ::= { ccmDevicePoolEntry 4 }
+
+ccmDevicePoolGroupIndex OBJECT-TYPE
+    SYNTAX      CcmIndexOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A positive value of this index is used to identify
+        the CallManager Group to which this Device Pool entry
+        belongs. A value of 0 indicates that the index to the
+        CallManager Group table is Unknown."
+    ::= { ccmDevicePoolEntry 5 }
+
+
+--
+--    THE PHONE TABLE
+--
+
+ccmPhoneTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmPhoneEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing the list of all IP Phone devices
+        which have registered to the local CallManager system
+        at least once."
+    ::= { ccmPhoneInfo 1 }
+
+ccmPhoneEntry OBJECT-TYPE
+    SYNTAX      CcmPhoneEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the phone Table, one
+        for each phone device in a CCN System."
+    INDEX  { ccmPhoneIndex }
+    ::= { ccmPhoneTable 1 }
+
+CcmPhoneEntry ::= SEQUENCE {
+    ccmPhoneIndex               CcmIndex,
+    ccmPhonePhysicalAddress     PhysAddress,
+    ccmPhoneType                INTEGER,
+    ccmPhoneDescription         SnmpAdminString,
+    ccmPhoneUserName            SnmpAdminString,
+    ccmPhoneIpAddress           IpAddress,
+    ccmPhoneStatus              INTEGER,
+    ccmPhoneTimeLastRegistered  DateAndTime,
+    ccmPhoneE911Location        SnmpAdminString,
+    ccmPhoneLoadID              SnmpAdminString,
+    ccmPhoneLastError           Integer32,
+    ccmPhoneTimeLastError       DateAndTime,
+    ccmPhoneDevicePoolIndex     CcmIndexOrZero,
+    ccmPhoneInetAddressType     InetAddressType,
+    ccmPhoneInetAddress         InetAddress
+}
+
+ccmPhoneIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which uniquely identifies a Phone within the CallManager."
+    ::= { ccmPhoneEntry 1 }
+
+ccmPhonePhysicalAddress OBJECT-TYPE
+    SYNTAX      PhysAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The physical address of the IP phones. For example,
+        the phone's MAC address."
+    ::= { ccmPhoneEntry 2 }
+
+ccmPhoneType OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        other(2),
+        cisco30SPplus(3),
+        cisco12SPplus(4),
+        cisco12SP(5),
+        cisco12S(6),
+        cisco30VIP(7),
+        ciscoTeleCasterBid(8),
+        ciscoTeleCasterMgr(9),
+        ciscoTeleCasterBusiness(10),
+        ciscoSoftPhone(11),
+        ciscoConferencePhone(12)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The type of the phone device.
+            unknown:                  Unknown phone type
+            other:                    Unidentified phone type
+            cisco30SPplus:            IP Phone 30 SP+
+            cisco12SPplus:            IP Phone 12 SP+
+            cisco12SP:                IP Phone 12 SP
+            cisco12S:                 IP Phone 12 S
+            cisco30VIP:               IP Phone 30 VIP
+            ciscoTeleCasterBid:       IP Phone Telecaster 7910
+            ciscoTeleCasterMgr:       IP Phone Telecaster 7960
+            ciscoTeleCasterBusiness:  IP Phone Telecaster 7940
+            ciscoSoftPhone:           Softphone
+            ciscoConferencePhone:     IP Conference Station 7935."
+    ::= { ccmPhoneEntry 3 }
+
+ccmPhoneDescription OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The description about the phone itself."
+    ::= { ccmPhoneEntry 4 }
+
+ccmPhoneUserName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the user of the phone. When the phone
+        is not in use, the name would refer to the last known
+        user of the phone."
+    ::= { ccmPhoneEntry 5 }
+
+ccmPhoneIpAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      deprecated
+    DESCRIPTION
+        "The last known IP address of the phone."
+    ::= { ccmPhoneEntry 6 }
+
+ccmPhoneStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        active(2),
+        lostContact(3)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The state of the phone. The state of the Phone changes
+        from Unknown to Active when it registers itself with
+        the local CCM.
+            unknown:      Unknown status
+            active:       Active and is registered with the local CCM
+            lostContact:  LostContact or is no longer registered
+                          with the the local CallManager."
+    ::= { ccmPhoneEntry 7 }
+
+ccmPhoneTimeLastRegistered OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The time when the phone last registered with the
+        CallManager."
+    ::= { ccmPhoneEntry 8 }
+
+ccmPhoneE911Location OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The E911 location of the phone."
+    ::= { ccmPhoneEntry 9 }
+
+ccmPhoneLoadID OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The load ID string of the phone."
+    ::= { ccmPhoneEntry 10 }
+
+ccmPhoneLastError OBJECT-TYPE
+    SYNTAX      Integer32 (-1..65535)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A positive value or 0 indicates the last error
+        reported by the phone. A value of -1 indicates
+        that the last error reported is Unknown."
+    ::= { ccmPhoneEntry 11 }
+
+ccmPhoneTimeLastError OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The amount of time elapsed since the last phone error
+        occured. The reference point for this time is the time
+        the last error occured, as reported by the local CCM."
+    ::= { ccmPhoneEntry 12 }
+
+ccmPhoneDevicePoolIndex OBJECT-TYPE
+    SYNTAX      CcmIndexOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A positive value of this index is used to identify the
+        Device Pool to which this Phone entry belongs. A value
+        of 0 indicates that the index to the Device Pool table
+        is Unknown."
+    ::= { ccmPhoneEntry 13 }
+
+ccmPhoneInetAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Represents the type of address stored in ccmPhoneInetAddress."
+    ::= { ccmPhoneEntry 14 }
+
+ccmPhoneInetAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The last known IP address of the phone."
+    ::= { ccmPhoneEntry 15 }
+
+
+--
+--    THE PHONE EXTENSION TABLE
+--
+
+ccmPhoneExtensionTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmPhoneExtensionEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing the list of all phone extensions
+        for IP phones in a CCM."
+    ::= { ccmPhoneInfo 2 }
+
+ccmPhoneExtensionEntry OBJECT-TYPE
+    SYNTAX      CcmPhoneExtensionEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the phone extension Table,
+        one for each phone extension in the CCM."
+    INDEX  { ccmPhoneExtensionIndex }
+    ::= { ccmPhoneExtensionTable 1 }
+
+CcmPhoneExtensionEntry ::= SEQUENCE {
+    ccmPhoneExtensionIndex            CcmIndex,
+    ccmPhoneExtension                 SnmpAdminString,
+    ccmPhoneExtensionIpAddress        IpAddress,
+    ccmPhoneExtensionMultiLines       Unsigned32,
+    ccmPhoneExtensionInetAddressType  InetAddressType,
+    ccmPhoneExtensionInetAddress      InetAddress
+}
+
+ccmPhoneExtensionIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local system,
+        which uniquely identifies a Phone Extension within the
+        CallManager."
+    ::= { ccmPhoneExtensionEntry 1 }
+
+ccmPhoneExtension OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..24))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The extension number of the extension."
+    ::= { ccmPhoneExtensionEntry 2 }
+
+ccmPhoneExtensionIpAddress OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-only
+    STATUS      deprecated
+    DESCRIPTION
+        "The IP address of the extension."
+    ::= { ccmPhoneExtensionEntry 3 }
+
+ccmPhoneExtensionMultiLines OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of multiline appearances for each phone extension."
+    ::= { ccmPhoneExtensionEntry 4 }
+
+ccmPhoneExtensionInetAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Represents the type of address stored in
+        ccmPhoneExtensionInetAddress."
+    ::= { ccmPhoneExtensionEntry 5 }
+
+ccmPhoneExtensionInetAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The IP address of the extension."
+    ::= { ccmPhoneExtensionEntry 6 }
+
+
+--
+--    THE PHONE FAILED TABLE
+--
+
+ccmPhoneFailedTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmPhoneFailedEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing the list of all initialization and
+        communication failures that happened with respect to a
+        Phone, which attempted to register to the local CallManager.
+        Each entry of this table is stored only for the duration
+        specified in the ccmPhoneFailedStorePeriod object.
+        When this interval is set to 0, all table entries will be
+        deleted and no new entries will be created. Reasons for
+        these failures could be due to configuration error,
+        maximum number of phones has been reached, lost contact,
+        etc."
+    ::= { ccmPhoneInfo 3 }
+
+ccmPhoneFailedEntry OBJECT-TYPE
+    SYNTAX      CcmPhoneFailedEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the PhoneFailed Table,
+        one for each phone failure in the CCM."
+    INDEX  { ccmPhoneFailedIndex }
+    ::= { ccmPhoneFailedTable 1 }
+
+CcmPhoneFailedEntry ::= SEQUENCE {
+    ccmPhoneFailedIndex            CcmIndex,
+    ccmPhoneFailedTime             DateAndTime,
+    ccmPhoneFailedName             SnmpAdminString,
+    ccmPhoneFailedInetAddressType  InetAddressType,
+    ccmPhoneFailedInetAddress      InetAddress,
+    ccmPhoneFailCauseCode          CcmDevFailCauseCode
+}
+
+ccmPhoneFailedIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which is incremented with each new entry in the
+        ccmPhoneFailedTable. This integer value will wrap
+        if needed."
+    ::= { ccmPhoneFailedEntry 1 }
+
+ccmPhoneFailedTime OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The time when the phone failed to register with the
+        CallManager."
+    ::= { ccmPhoneFailedEntry 2 }
+
+ccmPhoneFailedName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..64))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name assigned to the phone when it is added to
+        the CallManager. It contains an ASCII form of the phone's
+        MAC Address."
+    ::= { ccmPhoneFailedEntry 3 }
+
+ccmPhoneFailedInetAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Represents the type of address stored in
+        ccmPhoneFailedInetAddress."
+    ::= { ccmPhoneFailedEntry 4 }
+
+ccmPhoneFailedInetAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The last known IP address of the phone experiencing
+        a communication failure. A value of all zeros indicates
+        that the IP Address of a device is unavailable."
+    ::= { ccmPhoneFailedEntry 5 }
+
+ccmPhoneFailCauseCode OBJECT-TYPE
+    SYNTAX      CcmDevFailCauseCode
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "States the reason for the phone device communication error."
+    ::= { ccmPhoneFailedEntry 6 }
+
+
+--
+--    THE PHONE STATUS UPDATE TABLE
+--
+
+ccmPhoneStatusUpdateTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmPhoneStatusUpdateEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing the list of all phone status update
+        (registration or de-registration with the CallManager).
+        Each entry of this table is stored only for the duration
+        specified in the ccmPhoneStatusUpdateStorePeriod object.
+        When this interval is set to 0, all table entries will be
+        deleted and no new entries will be created."
+    ::= { ccmPhoneInfo 4 }
+
+ccmPhoneStatusUpdateEntry OBJECT-TYPE
+    SYNTAX      CcmPhoneStatusUpdateEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the PhoneStatusUpdate Table,
+        one for each phone status update in the CCM."
+    INDEX  { ccmPhoneStatusUpdateIndex }
+    ::= { ccmPhoneStatusUpdateTable 1 }
+
+CcmPhoneStatusUpdateEntry ::= SEQUENCE {
+    ccmPhoneStatusUpdateIndex            CcmIndex,
+    ccmPhoneStatusPhoneIndex             CcmIndexOrZero,
+    ccmPhoneStatusUpdateTime             DateAndTime,
+    ccmPhoneStatusUpdateType             INTEGER
+}
+
+ccmPhoneStatusUpdateIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which is incremented with each new entry in the
+        ccmPhoneStatusUpdateTable. This integer value will
+        wrap if needed."
+    ::= { ccmPhoneStatusUpdateEntry 1 }
+
+ccmPhoneStatusPhoneIndex OBJECT-TYPE
+    SYNTAX      CcmIndexOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A positive value of this index is used to identify
+        an entry in the ccmPhoneTable. A value of 0 indicates
+        that the index to the ccmPhoneTable is Unknown."
+    ::= { ccmPhoneStatusUpdateEntry 2 }
+
+ccmPhoneStatusUpdateTime OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The time of the phone's registration status change."
+    ::= { ccmPhoneStatusUpdateEntry 3 }
+
+ccmPhoneStatusUpdateType OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        phoneRegistered(2),
+        phoneLostContact(3)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "States the reason for the device communication error.
+           unknown:            Unknown error cause
+           phoneRegistered:    Phone registered with the Callmanager
+           phoneLostContact:   Phone has lost contact with the
+                               Callmanager."
+    ::= { ccmPhoneStatusUpdateEntry 4 }
+
+
+--
+--    THE GATEWAY TABLE
+--
+
+ccmGatewayTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmGatewayEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing the list of all gateway devices
+        which have registered to the local CallManager system
+        at least once."
+    ::= { ccmGatewayInfo 1 }
+
+ccmGatewayEntry OBJECT-TYPE
+    SYNTAX      CcmGatewayEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the gateway Table, one
+        for each gateway device in the CCM."
+    INDEX  { ccmGatewayIndex }
+    ::= { ccmGatewayTable 1 }
+
+CcmGatewayEntry ::= SEQUENCE {
+    ccmGatewayIndex            CcmIndex,
+    ccmGatewayName             SnmpAdminString,
+    ccmGatewayType             INTEGER,
+    ccmGatewayDescription      SnmpAdminString,
+    ccmGatewayStatus           INTEGER,
+    ccmGatewayDevicePoolIndex  CcmIndexOrZero,
+    ccmGatewayInetAddressType  InetAddressType,
+    ccmGatewayInetAddress      InetAddress
+}
+
+ccmGatewayIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which uniquely identifies a Gateway within the scope of
+        a CallManager."
+    ::= { ccmGatewayEntry 1 }
+
+ccmGatewayName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This is the Gateway name assigned to the Gateway in
+        the CallManager. This name is assigned when a new
+        device of type Gateway is added to the CallManager."
+    ::= { ccmGatewayEntry 2 }
+
+ccmGatewayType OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        other(2),
+        ciscoAnalogAccess(3),
+        ciscoDigitalAccessPRI(4),
+        ciscoDigitalAccessT1(5),
+        ciscoDigitalAccessPRIPlus(6),
+        ciscoDigitalAccessWSX6608E1(7),
+        ciscoDigitalAccessWSX6608T1(8),
+        ciscoAnalogAccessWSX6624(9),
+        ciscoMGCPStation(10),
+        ciscoDigitalAccessE1Plus(11),
+        ciscoDigitalAccessT1Plus(12),
+        ciscoDigitalAccessWSX6608PRI(13),
+        ciscoAnalogAccessWSX6612(14),
+        ciscoMGCPTrunk(15),
+        ciscoVG200(16),
+        cisco26XX(17),
+        cisco362X(18),
+        cisco364X(19),
+        cisco366X(20)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The type of the gateway device.
+        unknown(1):                       Unknown Gateway type
+        other(2):                         Unidentified Gateway type
+        ciscoAnalogAccess(3):             Analog Access
+        ciscoDigitalAccessPRI(4):         Digital Access PRI
+        ciscoDigitalAccessT1(5):          Digital Access T1
+        ciscoDigitalAccessPRIPlus(6):     Digital Access PRI Plus
+        ciscoDigitalAccessWSX6608E1(7):   Cat 6000 Digital Access E1
+        ciscoDigitalAccessWSX6608T1(8):   Cat 6000 Digital Access T1
+        ciscoAnalogAccessWSX6624(9):      Cat 6000 Analog Access FXS
+        ciscoMGCPStation(10):             MGCP Gateway
+        ciscoDigitalAccessE1Plus(11):     Digital Access E1 Plus
+        ciscoDigitalAccessT1Plus(12):     Digital Access T1 Plus
+        ciscoDigitalAccessWSX6608PRI(13): Cat 6000 Digital Access PRI
+        ciscoAnalogAccessWSX6612(14):     Cat 6000 Analog Access FXO
+        ciscoMGCPTrunk(15):               MGCP Trunk
+        ciscoVG200(16):                   VG200
+        cisco26XX(17):                    26XX
+        cisco362X(18):                    362X
+        cisco364X(19):                    364X
+        cisco366X(20):                    366X."
+    ::= { ccmGatewayEntry 3 }
+
+ccmGatewayDescription OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The description attached to the gateway device."
+    ::= { ccmGatewayEntry 4 }
+
+ccmGatewayStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        registered(2),
+        lostContact(3)
+    }    
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The state of the gateway. The Gateway status changes from
+        Unknown to Registered when the Gateway registers itself with
+        the local CCM.
+            unknown:        Gateway status is Unknown
+            registered:     Active and is registered with
+                            the local CCM
+            lostContact:    LostContact or is no longer
+                            registered with the the local CCM."
+    ::= { ccmGatewayEntry 5 }
+
+ccmGatewayDevicePoolIndex OBJECT-TYPE
+    SYNTAX      CcmIndexOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A positive value of this index is used to identify
+        the Device Pool to which this Gateway entry belongs.
+        A value of 0 indicates that the index to the Device
+        Pool table is Unknown."
+    ::= { ccmGatewayEntry 6 }
+
+ccmGatewayInetAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Represents the type of address stored in
+        ccmGatewayInetAddress."
+    ::= { ccmGatewayEntry 7 }
+
+ccmGatewayInetAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The last known IP Address of the gateway. A value of
+         all zeros indicates that the IP Address is not available."
+    ::= { ccmGatewayEntry 8 }
+
+
+--
+--    THE GATEWAY TRUNK TABLE
+--
+
+ccmGatewayTrunkTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmGatewayTrunkEntry
+    MAX-ACCESS  not-accessible
+    STATUS      deprecated
+    DESCRIPTION
+        "The table containing the list of all gateway trunks
+        in a CCN system."
+    ::= { ccmGatewayTrunkInfo 1 }
+
+ccmGatewayTrunkEntry OBJECT-TYPE
+    SYNTAX      CcmGatewayTrunkEntry
+    MAX-ACCESS  not-accessible
+    STATUS      deprecated
+    DESCRIPTION
+        "An entry (conceptual row) in the gateway trunk table,
+        one for each gateway trunk in a CCN system."
+    INDEX  { ccmGatewayTrunkIndex }
+    ::= { ccmGatewayTrunkTable 1 }
+
+CcmGatewayTrunkEntry ::= SEQUENCE {
+    ccmGatewayTrunkIndex   CcmIndex,
+    ccmGatewayTrunkType    INTEGER,
+    ccmGatewayTrunkName    SnmpAdminString,
+    ccmTrunkGatewayIndex   CcmIndexOrZero,
+    ccmGatewayTrunkStatus  INTEGER
+}
+
+ccmGatewayTrunkIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      deprecated
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which uniquely identifies a Gateway trunk within the
+        scope of a CallManager."
+    ::= { ccmGatewayTrunkEntry 1 }
+
+ccmGatewayTrunkType OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        other(2),
+        trunkGroundStart(3),
+        trunkLoopStart(4),
+        trunkDID(5),
+        trunkPOTS(6),
+        trunkEM1(7),
+        trunkEM2(8),
+        trunkEM3(9),
+        trunkEM4(10),
+        trunkEM5(11),
+        analog(12),
+        pri(13),
+        bri(14)
+    }
+    MAX-ACCESS  read-only
+    STATUS      deprecated
+    DESCRIPTION
+        "The type of the gateway Trunk.
+         unknown:           Unknown Trunk
+         other:             Unidentified Trunk type
+         trunkGroundStart:  Provides Far-End Disconnect Supervision
+         trunkLoopStart:    Provides No Far-End Disconnect Supervision
+         trunkDID:          Direct Inward Dial
+         trunkPOTS:         Plain Old Telephone Service
+         trunkEM1:          E&M Type 1
+         trunkEM2:          E&M Type 2
+         trunkEM3:          E&M Type 3
+         trunkEM4:          E&M Type 4
+         trunkEM5:          E&M Type 5
+         analog:            Analog 
+         pri:               PRI
+         bri:               BRI."
+    ::= { ccmGatewayTrunkEntry 2 }
+
+ccmGatewayTrunkName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      deprecated
+    DESCRIPTION
+        "The name of the trunk."
+    ::= { ccmGatewayTrunkEntry 3 }
+
+ccmTrunkGatewayIndex OBJECT-TYPE
+    SYNTAX      CcmIndexOrZero
+    MAX-ACCESS  read-only
+    STATUS      deprecated
+    DESCRIPTION
+        "A positive value of this index is used to identify the Gateway
+        to which this Trunk entry belongs. A value of 0 indicates that
+        the index to the Gateway table is Unknown."
+    ::= { ccmGatewayTrunkEntry 4 }
+
+ccmGatewayTrunkStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        up(2),
+        busy(3),
+        down(4)
+    }
+    MAX-ACCESS  read-only
+    STATUS      deprecated
+    DESCRIPTION
+        "The state of the trunk. The Trunk status changes from
+        Unknown to Up when it registers itself with the local CCM.
+            unknown:  Unknown state of Trunk
+            up:       Up and running, and is Idle with no calls
+            busy:     The trunk is in a Busy state
+            down:     The trunk is Down."
+    ::= { ccmGatewayTrunkEntry 5 }
+
+
+--
+--    ALL SCALAR OBJECTS
+--
+
+ccmActivePhones OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of phones connected to this CM and actively
+        in communication (via keepalives) with this CallManager."
+    ::= { ccmGlobalInfo 1 }
+
+ccmInActivePhones OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of phones that are registered with the Call
+        Manager but have lost contact with the CallManager. The
+        phones are said to have lost contact with the CallManager
+        if the CallManager does not receive any keepalives."
+    ::= { ccmGlobalInfo 2 }
+
+ccmActiveGateways OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of gateways configured with this CallManager
+        and actively in communication (via keepalives) with the Call
+        Manager."
+    ::= { ccmGlobalInfo 3 }
+
+ccmInActiveGateways OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of gateways that are registered with the Call
+        Manager but have lost contact with the CallManager. The
+        gateways are said to have lost contact with the CallManager
+        if the CallManager does not receive any keepalives."
+    ::= { ccmGlobalInfo 4 }
+
+
+--
+--    THE MEDIA DEVICE TABLE
+--
+
+ccmMediaDeviceTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmMediaDeviceEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing a list of all Media Devices which have
+        registered to the local CallManager system at least once."
+    ::= { ccmMediaDeviceInfo 1 }
+
+ccmMediaDeviceEntry OBJECT-TYPE
+    SYNTAX      CcmMediaDeviceEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the MediaDevice Table,
+        containing the information about a particular Media
+        Resource device registered with the CallManager system."
+    INDEX  { ccmMediaDeviceIndex }
+    ::= { ccmMediaDeviceTable 1 }
+
+CcmMediaDeviceEntry ::= SEQUENCE {
+    ccmMediaDeviceIndex                CcmIndex,
+    ccmMediaDeviceName                 SnmpAdminString,
+    ccmMediaDeviceType                 INTEGER,
+    ccmMediaDeviceDescription          SnmpAdminString,
+    ccmMediaDeviceStatus               INTEGER,
+    ccmMediaDeviceDevicePoolIndex      CcmIndexOrZero,
+    ccmMediaDeviceInetAddressType      InetAddressType,
+    ccmMediaDeviceInetAddress          InetAddress
+}
+
+ccmMediaDeviceIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which identifies a Media Device entry in the table."
+    ::= { ccmMediaDeviceEntry 1 }
+
+ccmMediaDeviceName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This is the device name assigned to the Media Device.
+        This name is assigned when a new device of this type
+        is added to the CallManager."
+    ::= { ccmMediaDeviceEntry 2 }
+
+ccmMediaDeviceType OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        ciscoMediaTerminPointWSX6608(2),
+        ciscoConfBridgeWSX6608(3)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The types of Media Device.
+        unknown(1):                         Unknown Media Device
+        ciscoMediaTerminPointWSX6608(2):    Media Termination Point
+        ciscoConfBridgeWSX6608(3):          Conference Bridge."
+    ::= { ccmMediaDeviceEntry 3 }
+
+ccmMediaDeviceDescription OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A description of the Media Device. This description
+        is given when the device is configured in the CCM."
+    ::= { ccmMediaDeviceEntry 4 }
+
+ccmMediaDeviceStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        registered(2),
+        lostContact(3)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The state of the Media Device. The status changes
+        from unknown to registered when it registers itself with
+        the local CCM.
+            unknown:        Unknown state of MediaDevice
+            registered:     The MediaDevice is registered with
+                            the local CCM
+            lostContact:    LostContact or is no longer
+                            registered with the the local CCM."
+    ::= { ccmMediaDeviceEntry 5 }
+
+ccmMediaDeviceDevicePoolIndex OBJECT-TYPE
+    SYNTAX      CcmIndexOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A positive value of this index is used to identify the
+        Device Pool to which this MediaDevice entry belongs. A
+        value of 0 indicates that the index to the Device Pool
+        table is Unknown."
+    ::= { ccmMediaDeviceEntry 6 }
+
+ccmMediaDeviceInetAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Represents the type of address stored in
+        ccmMediaDeviceInetAddress."
+    ::= { ccmMediaDeviceEntry 7 }
+
+ccmMediaDeviceInetAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The last known IP Address of the Media Device.
+        A value of all zeros indicates that the IP Address is not
+        available."
+    ::= { ccmMediaDeviceEntry 8 }
+
+
+--
+--    THE GATEKEEPER TABLE
+--
+
+ccmGatekeeperTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmGatekeeperEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing a list of all Gatekeepers
+        which have registered to the local CallManager system
+        at least once."
+    ::= { ccmGatekeeperInfo 1 }
+
+ccmGatekeeperEntry OBJECT-TYPE
+    SYNTAX      CcmGatekeeperEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the Gatekeeper Table,
+        containing the information about a particular Gatekeeper
+        registered with the CallManager system."
+    INDEX  { ccmGatekeeperIndex }
+    ::= { ccmGatekeeperTable 1 }
+
+CcmGatekeeperEntry ::= SEQUENCE {
+    ccmGatekeeperIndex                CcmIndex,
+    ccmGatekeeperName                 SnmpAdminString,
+    ccmGatekeeperType                 INTEGER,
+    ccmGatekeeperDescription          SnmpAdminString,
+    ccmGatekeeperStatus               INTEGER,
+    ccmGatekeeperDevicePoolIndex      CcmIndexOrZero,
+    ccmGatekeeperInetAddressType      InetAddressType,
+    ccmGatekeeperInetAddress          InetAddress
+}
+
+ccmGatekeeperIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which identifies a Gatekeeper entry in the table."
+    ::= { ccmGatekeeperEntry 1 }
+
+ccmGatekeeperName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This is the Gatekeeper name assigned to the
+        Gatekeeper. This name is assigned when a new device
+        of type Gatekeeper is added to the CallManager."
+    ::= { ccmGatekeeperEntry 2 }
+
+ccmGatekeeperType OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        other(2),
+        terminal(3),
+        gateway(4)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The type of Gatekeeper.
+            unknown:                  Unknown Gatekeeper
+            other:                    Unidentified Gatekeeper
+            terminal:                 Terminal
+            gateway:                  Gateway."
+    ::= { ccmGatekeeperEntry 3 }
+
+ccmGatekeeperDescription OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A description of the Gatekeeper. This description
+        is given when the Gatekeeper is configured in the CCM."
+    ::= { ccmGatekeeperEntry 4 }
+
+ccmGatekeeperStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        registered(2),
+        lostContact(3)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The state of the Gatekeeper. The Gatekeeper status changes
+        from unknown to registered when it registers itself with
+        the local CCM.
+            unknown:        Unknown state of Gatekeeper
+            registered:     The Gatekeeper is registered with the
+                            local CCM
+            lostContact:    LostContact or is no longer
+                            registered with the the local CCM."
+    ::= { ccmGatekeeperEntry 5 }
+
+ccmGatekeeperDevicePoolIndex OBJECT-TYPE
+    SYNTAX      CcmIndexOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A positive value of this index is used to identify the
+        Device Pool to which this Gatekeeper entry belongs. A
+        value of 0 indicates that the index to the Device Pool
+        table is Unknown."
+    ::= { ccmGatekeeperEntry 6 }
+
+ccmGatekeeperInetAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Represents the type of address stored in
+        ccmGatekeeperInetAddress."
+    ::= { ccmGatekeeperEntry 7 }
+
+ccmGatekeeperInetAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The last known IP Address of the gatekeeper. A value of
+         all zeros indicates that the IP Address is not available."
+    ::= { ccmGatekeeperEntry 8 }
+
+
+--
+--    THE CTI DEVICE TABLE
+--
+
+ccmCTIDeviceTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmCTIDeviceEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing a list of all CTI (Computer
+        Telephony Integration) Devices which have registered
+        to the local CallManager system at least once."
+    ::= { ccmCTIDeviceInfo 1 }
+
+ccmCTIDeviceEntry OBJECT-TYPE
+    SYNTAX      CcmCTIDeviceEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the CTIDevice Table,
+        containing the information about a particular CTI
+        Device in a CallManager system."
+    INDEX  { ccmCTIDeviceIndex }
+    ::= { ccmCTIDeviceTable 1 }
+
+CcmCTIDeviceEntry ::= SEQUENCE {
+    ccmCTIDeviceIndex            CcmIndex,
+    ccmCTIDeviceName             SnmpAdminString,
+    ccmCTIDeviceType             INTEGER,
+    ccmCTIDeviceDescription      SnmpAdminString,
+    ccmCTIDeviceStatus           INTEGER,
+    ccmCTIDevicePoolIndex        CcmIndexOrZero,
+    ccmCTIDeviceInetAddressType  InetAddressType,
+    ccmCTIDeviceInetAddress      InetAddress,
+    ccmCTIDeviceAppInfo          SnmpAdminString
+}
+
+ccmCTIDeviceIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local CCM,
+        which identifies a CTI Device entry in the table."
+    ::= { ccmCTIDeviceEntry 1 }
+
+ccmCTIDeviceName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..64))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the CTI Device. This name is assigned to the
+        CTI Device when it is added to the CallManager."
+    ::= { ccmCTIDeviceEntry 2 }
+
+ccmCTIDeviceType OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        other(2),
+        ctiRoutePoint(3),
+        ctiPort(4)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The type of CTI Device.
+            unknown:                  Unknown CTI Device
+            other:                    Unidentified CTI Device
+            ctiRoutePoint:            A CTI Route Point
+            ctiPort:                  A CTI Port."
+    ::= { ccmCTIDeviceEntry 3 }
+
+ccmCTIDeviceDescription OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A description of the CTI Device. This description is
+        given when the CTI Device is configured in the CCM."
+    ::= { ccmCTIDeviceEntry 4 }
+
+ccmCTIDeviceStatus OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        registered(2),
+        lostContact(3)
+    }
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The state of the CTI Device. The CTI Device status changes
+        from unknown to registered when it registers itself with
+        the local CCM.
+            unknown:        Unknown state of CTI Device
+            registered:     Active and is registered with the
+                            local CCM
+            lostContact:    LostContact or is no longer
+                            registered with the the local CCM."
+    ::= { ccmCTIDeviceEntry 5 }
+
+ccmCTIDevicePoolIndex OBJECT-TYPE
+    SYNTAX      CcmIndexOrZero
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A positive value of this index is used to identify the
+        Device Pool to which this CTI Device entry belongs. A
+        value of 0 indicates that the index to the Device Pool
+        table is Unknown."
+    ::= { ccmCTIDeviceEntry 6 }
+
+ccmCTIDeviceInetAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Represents the type of address stored in
+        ccmCTIDeviceInetAddress."
+    ::= { ccmCTIDeviceEntry 7 }
+
+ccmCTIDeviceInetAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The IP Address of the host where this CTI Device is
+        running. A value of all zeros indicates that the IP
+        Address is unknown."
+    ::= { ccmCTIDeviceEntry 8 }
+
+ccmCTIDeviceAppInfo OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..64))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The appinfo string indicates the application name/
+        type that uses this CTI Device."
+    ::= { ccmCTIDeviceEntry 9 }
+
+--
+--    THE CTI DEVICE DIRECTORY NUMBER TABLE
+--
+
+ccmCTIDeviceDirNumTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CcmCTIDeviceDirNumEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The table containing a list of directory numbers
+        that are assigned to all of the CTI Devices
+        configured in a CCM system."
+    ::= { ccmCTIDeviceInfo 2 }
+
+ccmCTIDeviceDirNumEntry OBJECT-TYPE
+    SYNTAX      CcmCTIDeviceDirNumEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry (conceptual row) in the CTIDevice Table,
+        containing the information about a particular CTI
+        Device in a CCN system."
+    INDEX  { ccmCTIDeviceIndex, ccmCTIDeviceDirNumIndex }
+    ::= { ccmCTIDeviceDirNumTable 1 }
+
+CcmCTIDeviceDirNumEntry ::= SEQUENCE {
+    ccmCTIDeviceDirNumIndex    CcmIndex,
+    ccmCTIDeviceDirNum         SnmpAdminString
+}
+
+ccmCTIDeviceDirNumIndex OBJECT-TYPE
+    SYNTAX      CcmIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An arbitrary integer, selected by the local system,
+        which identifies a Directory Number of a CTI Device
+        registered to the local CallManager."
+    ::= { ccmCTIDeviceDirNumEntry 1 }
+
+ccmCTIDeviceDirNum OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..24))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "A Directory Number of the CTI Device."
+    ::= { ccmCTIDeviceDirNumEntry 2 }
+
+
+--
+-- THE ALARM CONFIGURATION INFO
+-- MIB Objects used for CCM Alarm configuration
+--
+--
+--    CALL MANAGER ALARM ENABLE
+--
+
+ccmCallManagerAlarmEnable OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Allows the generation of Alarms in response to
+        CallManager general failures.
+            true(1):   Enabling this object will allow the CCM
+                       agent to generate the following alarms -
+                       ccmCallManagerFailure,
+                       ccmMediaResourceListExhausted, and
+                       ccmRouteListExhausted
+            false(2):  This is the default value."
+    ::= { ccmAlarmConfigInfo 1 }
+
+--
+--    PHONE FAILED CONFIG OBJECTS
+--
+
+ccmPhoneFailedAlarmInterval OBJECT-TYPE
+    SYNTAX      Integer32 (0 | 30..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The minimum interval between sending of the ccmPhoneFailed
+        notification in seconds. The ccmPhoneFailed notification is
+        only sent when there is at least one entry in the
+        ccmPhoneFailedTable and the notification has not been sent
+        for the last ccmPhoneFailedAlarmInterval defined in this
+        object. A value of 0 indicates that the alarm notification
+        is disabled. The default value is 0 seconds."
+    ::= { ccmAlarmConfigInfo 2 }
+
+
+ccmPhoneFailedStorePeriod OBJECT-TYPE
+    SYNTAX      Integer32 (0 | 60..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The time duration for storing the phone failure information in
+        seconds. This information is stored in the ccmPhoneFailedTable
+        object. This value should ideally be set to a higher value
+        than the ccmPhoneFailedAlarmInterval object. The default value
+        is 0 seconds."
+    ::= { ccmAlarmConfigInfo 3 }
+
+--
+--    PHONE STATUS UPDATE CONFIG OBJECTS
+--
+
+ccmPhoneStatusUpdateAlarmInterv OBJECT-TYPE
+    SYNTAX      Integer32 (0 | 30..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The minimum interval between sending of the
+        ccmPhoneStatusUpdate notification in seconds. 
+        The ccmPhoneStatusUpdate notification is only sent when
+        there is at least one entry in the ccmPhoneStatusUpdateTable
+        and the notification has not been sent for the last
+        ccmPhoneStatusUpdateAlarmInterv defined in this object.
+        A value of 0 indicates that the alarm notification is
+        disabled. The default value is 0 seconds."
+    ::= { ccmAlarmConfigInfo 4 }
+
+
+ccmPhoneStatusUpdateStorePeriod OBJECT-TYPE
+    SYNTAX      Integer32 (0 | 60..3600)
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The time duration for storing the phone status update
+        information in seconds. This information is stored in the
+        ccmPhoneStatusUpdateTable object. This value should ideally
+        be set to a higher value than the
+        ccmPhoneStatusUpdateAlarmInterv object. The default value
+        is 0 seconds."
+    ::= { ccmAlarmConfigInfo 5 }
+
+--
+--    GATEWAY ALARM ENABLE
+--
+
+ccmGatewayAlarmEnable OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Allows the generation of Alarms in response to Gateway
+        general failures that the CallManager is aware of.
+            true(1):   Enabling this object will allow the CCM
+                       agent to generate the following alarm -
+                       ccmGatewayFailed and
+                       ccmGatewayLayer2Change notifications
+            false(2):  This is the default value."
+    ::= { ccmAlarmConfigInfo 6 }
+
+
+--
+-- THE NOTIFICATION RELATED INFO
+-- MIB Objects used by CCM Notifications/Alarms
+--
+
+ccmAlarmSeverity OBJECT-TYPE
+    SYNTAX      INTEGER {
+        emergency(1),
+        alert(2),
+        critical(3),
+        error(4),
+        warning(5),
+        notice(6),
+        informational(7)
+    }
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The Alarm Severity code.
+            emergency:                System unusable
+            alert:                    Immediate response needed
+            critical:                 Critical condition
+            error:                    Error condition
+            warning:                  Warning condition
+            notice:                   Normal but significant condition
+            informational:            Informational situation."
+    ::= { ccmNotificationsInfo 1 }
+
+ccmFailCauseCode OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        heartBeatStopped(2),
+        routerThreadDied(3),
+        timerThreadDied(4),
+        criticalThreadDied(5),
+        deviceMgrInitFailed(6),
+        digitAnalysisInitFailed(7),
+        callControlInitFailed(8),
+        linkMgrInitFailed(9),
+        dbMgrInitFailed(10),
+        msgTranslatorInitFailed(11),
+        suppServicesInitFailed(12)
+    }
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The Cause code of the failure. This cause is derived from a
+        monitoring thread in the CallManager or from a heartbeat
+        monitoring process.
+          unknown:                   Unknown
+          heartBeatStopped:          The CallManager stops generating
+                                     a heartbeat
+          routerThreadDied:          The CallManager detects the death
+                                     of the router thread
+          timerThreadDied:           The CallManager detects the death
+                                     of the timer thread
+          criticalThreadDied:        The CallManager detects the death
+                                     of one of its critical threads
+          deviceMgrInitFailed:       The CallManager fails to start its
+                                     device manager subsystem
+          digitAnalysisInitFailed:   The CallManager fails to start its
+                                     digit analysis subsystem
+          callControlInitFailed:     The CallManager fails to start its
+                                     call control subsystem
+          linkMgrInitFailed:         The CallManager fails to start its
+                                     link manager subsystem
+          dbMgrInitFailed:           The CallManager fails to start its
+                                     database manager subsystem
+          msgTranslatorInitFailed:   The CallManager fails to start its
+                                     message translation manager
+                                     subsystem
+          suppServicesInitFailed:    The CallManager fails to start its
+                                     supplementary services subsystem."
+    ::= { ccmNotificationsInfo 2 }
+
+ccmPhoneFailures OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The count of the phone initialization or communication
+        failures that are stored in the ccmPhoneFailedTable object."
+    ::= { ccmNotificationsInfo 3 }
+
+ccmPhoneUpdates OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The count of the phone status changes that are stored in
+        the ccmPhoneStatusUpdateTable object."
+    ::= { ccmNotificationsInfo 4 }
+
+ccmGatewayFailCauseCode OBJECT-TYPE
+    SYNTAX      CcmDevFailCauseCode
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "States the reason for a gateway device communication error."
+    ::= { ccmNotificationsInfo 5 }
+
+ccmMediaResourceType OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        mediaTerminationPoint(2),
+        transcoder(3),
+        conferenceBridge(4),
+        musicOnHold(5)
+    }
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Resource Types in a CallManager System.
+            unknown:                Unknown resource type
+            mediaTerminationPoint:  Media Termination Point
+            transcoder:             Transcoder
+            conferenceBridge:       Conference Bridge
+            musicOnHold:            Music On Hold."
+    ::= { ccmNotificationsInfo 6 }
+
+ccmMediaResourceListName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The name of a Media Resource List. This name is assigned
+        when a new Media Resource List is added to the CallManager."
+    ::= { ccmNotificationsInfo 7 }
+
+ccmRouteListName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE(0..128))
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The name of a Route List. This name is assigned when a new
+        Route List is added to the CallManager."
+    ::= { ccmNotificationsInfo 8 }
+
+ccmGatewayPhysIfIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "This object is the identifier of an interface in a
+        gateway that has registered with the local CallManager.
+        On a DS1/E1 interface, this should be the same as the
+        ifIndex value in the gateway."
+    ::= { ccmNotificationsInfo 9 }
+
+ccmGatewayPhysIfL2Status OBJECT-TYPE
+    SYNTAX      INTEGER {
+        unknown(1),
+        up(2),
+        down(3)
+    }
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The layer 2 status of a physical interface in a
+        gateway that has registered with the local CallManager.
+            unknown:        Unknown status
+            up:             Interface is up
+            down:           Interface is down."
+    ::= { ccmNotificationsInfo 10 }
+
+--
+--        Notifications
+--
+ccmMIBNotificationPrefix OBJECT IDENTIFIER ::= { ciscoCcmMIB 2 }
+ccmMIBNotifications      OBJECT IDENTIFIER
+     ::= { ccmMIBNotificationPrefix 0 }
+
+ccmCallManagerFailed NOTIFICATION-TYPE
+    OBJECTS     {
+        ccmAlarmSeverity,
+        ccmFailCauseCode
+    }
+    STATUS      current
+    DESCRIPTION
+        "This Notification signifies that the CallManager process
+        detects a failure in one of its critical subsystems. It can
+        also be detected from a heartbeat/event monitoring process."
+    ::= { ccmMIBNotifications 1 }
+
+ccmPhoneFailed NOTIFICATION-TYPE
+    OBJECTS     {
+        ccmAlarmSeverity,
+        ccmPhoneFailures
+    }
+    STATUS      current
+    DESCRIPTION
+        "This Notification indicates that within the time interval
+        specified in ccmPhoneFailedAlarmInterval, at least one phone
+        has attempted to register or communicate with the CallManager
+        and failed."
+    ::= { ccmMIBNotifications 2 }
+
+ccmPhoneStatusUpdate NOTIFICATION-TYPE
+    OBJECTS     {
+        ccmAlarmSeverity,
+        ccmPhoneUpdates
+    }
+    STATUS      current
+    DESCRIPTION
+        "This Notification indicates that within the time interval
+        specified in ccmPhoneStatusUpdateAlarmInterv, at least one
+        phone has successfully registered with the CallManager or has
+        lost contact with the CallManager."
+    ::= { ccmMIBNotifications 3 }
+
+ccmGatewayFailed NOTIFICATION-TYPE
+    OBJECTS     {
+        ccmAlarmSeverity,
+        ccmGatewayName,
+        ccmGatewayInetAddressType,
+        ccmGatewayInetAddress,
+        ccmGatewayFailCauseCode
+    }
+    STATUS      current
+    DESCRIPTION
+        "This Notification indicates that at least one gateway has
+        attempted to register or communicate with the CallManager
+        and failed."
+    ::= { ccmMIBNotifications 4 }
+
+ccmMediaResourceListExhausted NOTIFICATION-TYPE
+    OBJECTS     {
+        ccmAlarmSeverity,
+        ccmMediaResourceType,
+        ccmMediaResourceListName
+    }
+    STATUS      current
+    DESCRIPTION
+        "This Notification indicates that the CallManager has run out
+        a certain specified type of resource."
+    ::= { ccmMIBNotifications 5 }
+
+ccmRouteListExhausted NOTIFICATION-TYPE
+    OBJECTS     {
+        ccmAlarmSeverity,
+        ccmRouteListName
+    }
+    STATUS      current
+    DESCRIPTION
+        "This Notification indicates that the CallManager could not
+        find an available route in the indicated route list."
+    ::= { ccmMIBNotifications 6 }
+
+ccmGatewayLayer2Change NOTIFICATION-TYPE
+    OBJECTS     {
+        ccmAlarmSeverity,
+        ccmGatewayName,
+        ccmGatewayInetAddressType,
+        ccmGatewayInetAddress,
+        ccmGatewayPhysIfIndex,
+        ccmGatewayPhysIfL2Status
+    }
+    STATUS      current
+    DESCRIPTION
+        "This Notification is sent when the D-Channel/Layer 2 of an
+        interface in a skinny gateway that has registered with the
+        CallManager changes state."
+    ::= { ccmMIBNotifications 7 }
+
+ 
+--
+--        MIB Conformance Statements
+--
+
+ciscoCcmMIBConformance OBJECT IDENTIFIER ::= { ciscoCcmMIB 3 }
+ciscoCcmMIBCompliances OBJECT IDENTIFIER
+    ::= { ciscoCcmMIBConformance 1 }
+ciscoCcmMIBGroups      OBJECT IDENTIFIER
+    ::= { ciscoCcmMIBConformance 2 }
+
+-- Compliance Statements
+
+ciscoCcmMIBCompliance MODULE-COMPLIANCE
+    STATUS      deprecated -- replaced by ciscoCcmMibComplianceRev1
+    DESCRIPTION
+        "The compliance statement for entities which implement
+        the CISCO CCM MIB."
+    MODULE
+    MANDATORY-GROUPS {
+        ccmInfoGroup,
+        ccmPhoneInfoGroup,
+        ccmGatewayInfoGroup
+    }
+    ::= { ciscoCcmMIBCompliances 1 }
+
+ciscoCcmMIBComplianceRev1 MODULE-COMPLIANCE
+    STATUS      current
+    DESCRIPTION
+        "The compliance statement for entities which implement
+        the CISCO CCM MIB."
+    MODULE
+    MANDATORY-GROUPS {
+        ccmInfoGroupRev1,
+        ccmPhoneInfoGroupRev1,
+        ccmGatewayInfoGroupRev1,
+        ccmMediaDeviceInfoGroup,
+        ccmGatekeeperInfoGroup,
+        ccmCTIDeviceInfoGroup,
+        ccmNotificationsInfoGroup,
+        ccmNotificationsGroup
+    }
+    ::= { ciscoCcmMIBCompliances 2 }
+
+-- Units of Conformance
+
+ccmInfoGroup OBJECT-GROUP
+    OBJECTS {
+        ccmGroupName,
+        ccmGroupTftpDefault,
+        ccmName,
+        ccmDescription,
+        ccmVersion,
+        ccmStatus,
+        ccmCMGroupMappingCMPriority,
+        ccmRegionName,
+        ccmRegionAvailableBandWidth,
+        ccmTimeZoneName,
+        ccmTimeZoneOffset,
+        ccmDevicePoolName,
+        ccmDevicePoolRegionIndex,
+        ccmDevicePoolTimeZoneIndex,
+        ccmDevicePoolGroupIndex
+    }
+    STATUS          deprecated  -- replaced by ccmInfoGroupRev1
+    DESCRIPTION
+        "A collection of objects which provide info about
+        all CallManagers and its related information within
+        a CCN system. It comprises of all the CallManager
+        tables, apart from Region, TimeZone and Device Pool tables."
+    ::= { ciscoCcmMIBGroups 1 }
+
+ccmPhoneInfoGroup OBJECT-GROUP
+    OBJECTS {
+        ccmPhonePhysicalAddress,
+        ccmPhoneType,
+        ccmPhoneDescription,
+        ccmPhoneUserName,
+        ccmPhoneIpAddress,
+        ccmPhoneStatus,
+        ccmPhoneTimeLastRegistered,
+        ccmPhoneE911Location,
+        ccmPhoneLoadID,
+        ccmPhoneLastError,
+        ccmPhoneTimeLastError,
+        ccmPhoneDevicePoolIndex,
+        ccmPhoneExtension,
+        ccmPhoneExtensionIpAddress,
+        ccmPhoneExtensionMultiLines,
+        ccmActivePhones,
+        ccmInActivePhones
+    }
+    STATUS          deprecated  -- replaced by ccmPhoneInfoGroupRev1
+    DESCRIPTION
+        "A collection of objects which provide info about
+        all phones within the scope of a CallManager. It
+        comprises of the Phone and Phone Extension tables."
+    ::= { ciscoCcmMIBGroups 2 }
+
+ccmGatewayInfoGroup OBJECT-GROUP
+    OBJECTS {
+        ccmGatewayName,
+        ccmGatewayType,
+        ccmGatewayDescription,
+        ccmGatewayStatus,
+        ccmGatewayDevicePoolIndex,
+        ccmGatewayTrunkType,
+        ccmGatewayTrunkName,
+        ccmTrunkGatewayIndex,
+        ccmGatewayTrunkStatus,
+        ccmActiveGateways,
+        ccmInActiveGateways
+    }
+    STATUS          deprecated  -- replaced by ccmGatewayInfoGroupRev1
+    DESCRIPTION
+        "A collection of objects which provide info about
+        all Gateways and Gateway Trunks within the scope
+        of a CallManager. It comprises of the Gateway and
+        Gateway Trunk tables."
+    ::= { ciscoCcmMIBGroups 3 }
+
+ccmInfoGroupRev1 OBJECT-GROUP
+    OBJECTS {
+        ccmGroupName,
+        ccmGroupTftpDefault,
+        ccmName,
+        ccmDescription,
+        ccmVersion,
+        ccmStatus,
+        ccmInetAddressType,
+        ccmInetAddress,
+        ccmClusterId,
+        ccmCMGroupMappingCMPriority,
+        ccmRegionName,
+        ccmRegionAvailableBandWidth,
+        ccmTimeZoneName,
+        ccmTimeZoneOffset,
+        ccmDevicePoolName,
+        ccmDevicePoolRegionIndex,
+        ccmDevicePoolTimeZoneIndex,
+        ccmDevicePoolGroupIndex
+    }
+    STATUS          current
+    DESCRIPTION
+        "A collection of objects which provide info about
+        all CallManagers and its related information within
+        a CCN system. It comprises of all the CallManager
+        tables, apart from Region, TimeZone and Device Pool tables."
+    ::= { ciscoCcmMIBGroups 4 }
+
+ccmPhoneInfoGroupRev1 OBJECT-GROUP
+    OBJECTS {
+        ccmPhonePhysicalAddress,
+        ccmPhoneType,
+        ccmPhoneDescription,
+        ccmPhoneUserName,
+        ccmPhoneInetAddressType,
+        ccmPhoneInetAddress,
+        ccmPhoneStatus,
+        ccmPhoneTimeLastRegistered,
+        ccmPhoneE911Location,
+        ccmPhoneLoadID,
+        ccmPhoneLastError,
+        ccmPhoneTimeLastError,
+        ccmPhoneDevicePoolIndex,
+        ccmPhoneExtension,
+        ccmPhoneExtensionInetAddressType,
+        ccmPhoneExtensionInetAddress,
+        ccmPhoneExtensionMultiLines,
+        ccmActivePhones,
+        ccmInActivePhones
+    }
+    STATUS          current
+    DESCRIPTION
+        "A collection of objects which provide info about
+        all phones within the scope of a CallManager. It
+        comprises of the Phone and Phone Extension tables."
+    ::= { ciscoCcmMIBGroups 5 }
+
+ccmGatewayInfoGroupRev1 OBJECT-GROUP
+    OBJECTS {
+        ccmGatewayName,
+        ccmGatewayType,
+        ccmGatewayDescription,
+        ccmGatewayStatus,
+        ccmGatewayDevicePoolIndex,
+        ccmGatewayInetAddressType,
+        ccmGatewayInetAddress,
+        ccmActiveGateways,
+        ccmInActiveGateways
+    }
+    STATUS          current
+    DESCRIPTION
+        "A collection of objects which provide info about
+        all Gateways and Gateway Trunks within the scope
+        of a CallManager. It comprises of the Gateway and
+        Gateway Trunk tables."
+    ::= { ciscoCcmMIBGroups 6 }
+
+ccmMediaDeviceInfoGroup OBJECT-GROUP
+    OBJECTS {
+        ccmMediaDeviceName,
+        ccmMediaDeviceType,
+        ccmMediaDeviceDescription,
+        ccmMediaDeviceStatus,
+        ccmMediaDeviceDevicePoolIndex,
+        ccmMediaDeviceInetAddressType,
+        ccmMediaDeviceInetAddress
+    }
+    STATUS          current
+    DESCRIPTION
+        "A collection of objects which provide info about all
+        Media Devices within the scope of a CallManager.
+        It comprises of the MediaDevice table."
+    ::= { ciscoCcmMIBGroups 7 }
+
+ccmGatekeeperInfoGroup OBJECT-GROUP
+    OBJECTS {
+        ccmGatekeeperName,
+        ccmGatekeeperType,
+        ccmGatekeeperDescription,
+        ccmGatekeeperStatus,
+        ccmGatekeeperDevicePoolIndex,
+        ccmGatekeeperInetAddressType,
+        ccmGatekeeperInetAddress
+    }
+    STATUS          current
+    DESCRIPTION
+        "A collection of objects which provide info about
+        all Gatekeeper within the scope of a CallManager.
+        It comprises of the Gatekeeper table."
+    ::= { ciscoCcmMIBGroups 8 }
+
+ccmCTIDeviceInfoGroup OBJECT-GROUP
+    OBJECTS {
+        ccmCTIDeviceName,
+        ccmCTIDeviceType,
+        ccmCTIDeviceDescription,
+        ccmCTIDeviceStatus,
+        ccmCTIDevicePoolIndex,
+        ccmCTIDeviceInetAddressType,
+        ccmCTIDeviceInetAddress,
+        ccmCTIDeviceAppInfo,
+        ccmCTIDeviceDirNum
+    }
+    STATUS          current
+    DESCRIPTION
+        "A collection of objects which provide info about
+        all CTI Devices within the scope of a CallManager.
+        It comprises of the ccmCTIDevice and
+        ccmCTIDeviceDirNum tables."
+    ::= { ciscoCcmMIBGroups 9 }
+
+ccmNotificationsInfoGroup OBJECT-GROUP
+    OBJECTS {
+        ccmAlarmSeverity,
+        ccmCallManagerAlarmEnable,
+        ccmFailCauseCode,
+        ccmPhoneFailures,
+        ccmPhoneFailedTime,
+        ccmPhoneFailedName,
+        ccmPhoneFailedInetAddressType,
+        ccmPhoneFailedInetAddress,
+        ccmPhoneFailCauseCode,
+        ccmPhoneFailedAlarmInterval,
+        ccmPhoneFailedStorePeriod,
+        ccmPhoneUpdates,
+        ccmPhoneStatusPhoneIndex,
+        ccmPhoneStatusUpdateTime,
+        ccmPhoneStatusUpdateType,
+        ccmPhoneStatusUpdateAlarmInterv,
+        ccmPhoneStatusUpdateStorePeriod,
+        ccmGatewayAlarmEnable,
+        ccmGatewayFailCauseCode,
+        ccmMediaResourceType,
+        ccmMediaResourceListName,
+        ccmRouteListName,
+        ccmGatewayPhysIfIndex,
+        ccmGatewayPhysIfL2Status
+    }
+    STATUS          current
+    DESCRIPTION
+        "A collection of objects which provide info about
+        all the Notifications generated by the CISCO CCM Agent."
+    ::= { ciscoCcmMIBGroups 10 }
+
+ccmNotificationsGroup NOTIFICATION-GROUP
+    NOTIFICATIONS {
+        ccmCallManagerFailed,
+        ccmPhoneFailed,
+        ccmPhoneStatusUpdate,
+        ccmGatewayFailed,
+        ccmMediaResourceListExhausted,
+        ccmRouteListExhausted,
+        ccmGatewayLayer2Change
+    }
+    STATUS          current
+    DESCRIPTION
+        "A collection of notifications that are generated by
+        the CISCO CCM Agent."
+    ::= { ciscoCcmMIBGroups 11 }
+END
+
+

@@ -1,0 +1,460 @@
+VOICEGATEWAYLD DEFINITIONS ::= BEGIN
+
+-- 
+--								SNMPv1
+-- 
+-- NAME:		Voice Gateway Long Distance MIB
+-- 
+-- REVISION HISTORY:-
+--
+-- REV	DATE	NAME		DESCRIPTION
+-- PA1	970930	ETXDESW		First try
+-- PA2	971001	ETXDESW		Minor changes in names
+-- PA3	980319	ETXHAIM		Minor changes
+-- A	980422	QTXJOAL		Updated to delivery status
+-- PB1	980622	QTXJOAL		Added traps.
+-- B	980629	QTXJOAL		Rev B.
+-- PC1	980716	QTXSCHU		Updated for Öland (some new OIDs)
+-- PC2	981001	ETXHAIM		Updated for Öland (some new OIDs)
+-- C	981009	ETXHAIM		Rev C.
+-- D	981009  QTXJOAL		New syntax for ChannelStates & ManualBlockedChannels
+--
+-- DESCRIPTION
+-- LATER
+-- 
+
+
+--
+-- Ericsson Long Distance MIB for voice gateway
+--
+IMPORTS
+	enterprises
+		FROM RFC1155-SMI
+	OBJECT-TYPE
+		FROM RFC-1212
+	DisplayString
+-- FIX:		FROM RFC-1213;
+                FROM RFC1213-MIB;
+		
+	
+	ericsson			
+		OBJECT IDENTIFIER ::= { enterprises 193 }
+	phonedoubler		
+		OBJECT IDENTIFIER ::= { ericsson 26 } 
+	voiceGatewayLDMIB			
+		OBJECT IDENTIFIER ::= { phonedoubler 4 }
+	voiceGatewayLDMIBObjects	
+		OBJECT IDENTIFIER ::= { voiceGatewayLDMIB 1 }
+	
+-- Define of a truth value
+	TruthValue ::= INTEGER { true(1), false(2) }
+
+-- ==============================================================================
+-- Voice Gateway Long Distance MIB
+-- ==============================================================================
+
+-- GENERAL ATTRIBUTES
+-- ==================
+
+	vgldLGK1 OBJECT-TYPE
+		SYNTAX DisplayString  -- This is a string of 0 to 255 in length
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is the IP address of the primary Local 
+				Gatekeeper used by this long distance voicegateway. 
+				The address takes the form X.X.X.X where
+				X is an integer between 0 and 255."
+			DEFVAL { "" }
+			::= { voiceGatewayLDMIBObjects 1}
+
+
+	vgldLGK2 OBJECT-TYPE
+		SYNTAX DisplayString  -- This is a string of 0 to 255 in length
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is the IP address of the secondary Local
+				Gatekeeper used by this long distance voicegateway. 
+				The address takes the form X.X.X.X where
+				X is an integer between 0 and 255."
+			DEFVAL { "" }
+            ::= { voiceGatewayLDMIBObjects 2}
+
+	vgldLGKRegistrationTimeInterval OBJECT-TYPE  --vgServerTimeInterval    
+		SYNTAX INTEGER  
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is the registration interval the VG has for
+				registering with the local GateKeeper.
+				The parameter is given in seconds."
+			DEFVAL { 120 }
+			::= { voiceGatewayLDMIBObjects 3}
+
+
+	vgldNumberLength OBJECT-TYPE -- MinMaxDigit
+		SYNTAX INTEGER  
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"The number of digits that must follow the VG route 
+				number in order to form a full number."
+		DEFVAL { 3 }
+		::= { voiceGatewayLDMIBObjects 4 }
+
+	vgldMACAddress OBJECT-TYPE   -- 
+			SYNTAX DisplayString
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"MAC address of the machine."
+		::= { voiceGatewayLDMIBObjects 6}
+
+-- ================================================================================
+-- WATCH DOG
+-- =========
+
+	vgldUseWatchDog OBJECT-TYPE   -- 
+		SYNTAX TruthValue  
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This parameter indicates if true that the Board Watchdog
+				is on or if false that it is off."
+		DEFVAL { false }
+		::= { voiceGatewayLDMIBObjects 7}
+
+	vgldWatchDogDriverType OBJECT-TYPE   -- (PFV)
+		SYNTAX INTEGER {
+						lbc5015(1),
+						psc586(2)
+						}  
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This parameter indicates the board type."
+		DEFVAL { 2 }
+		::= { voiceGatewayLDMIBObjects 8}
+
+	vgldWatchDogTimeInterval OBJECT-TYPE   -- (PFV)
+		SYNTAX INTEGER  
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is the strobe interval of the VG when strobing the boards
+				under the Board Watchdog function. This value is only used when the 
+				vgldUseWatchDog is set to true.
+				The parameter is given in seconds."
+		DEFVAL { 2 }
+		::= { voiceGatewayLDMIBObjects 9}
+
+	vgldUseGracefulShutdown OBJECT-TYPE   -- (PFV)
+		SYNTAX TruthValue
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"Allow a graceful shutdown of the system when the watchdog
+				has triggered when this object has the value true. Otherwise
+				a hardware reboot is given."
+		DEFVAL { true }
+		::= { voiceGatewayLDMIBObjects 10}
+
+-- =========================================================================================
+-- LICENSING
+-- =========
+	vgldNumberOfChannels OBJECT-TYPE   -- (PFV)
+		SYNTAX INTEGER
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"The maximum number of channels the VG can have."
+		DEFVAL { 1 }
+		::= { voiceGatewayLDMIBObjects 11 }
+
+	vgldNumberOfChannelsKey OBJECT-TYPE  -- (PFV)
+		SYNTAX DisplayString  -- This is a string of 0 to 255 in length
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is the key provided by Ericsson which allows
+				use of the channels."
+		DEFVAL { "" }
+		::= { voiceGatewayLDMIBObjects 12 }
+-- ========================================================================================
+-- CONTROL
+-- =======
+
+	vgldServiceState OBJECT-TYPE
+		    SYNTAX INTEGER {
+				stop(1),
+				startpending(2),
+				stoppending(3),
+				run(4),
+				continuepending(5),
+				pausepending(6),
+				pause(7)
+			}
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"This function controls or returns the state of the 
+				 VoiceGateway service."
+		::= { voiceGatewayLDMIBObjects 13}
+
+	vgldMachineReboot OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS write-only
+			STATUS mandatory
+			DESCRIPTION
+				"This function reboots the machine."
+		::= { voiceGatewayLDMIBObjects 14}
+
+-- =======================================================================================
+-- ALARMS
+-- ======
+
+	vgldISDNAlarmStatus OBJECT-TYPE
+			SYNTAX INTEGER {
+                noAlarm(0),
+				lossSignal(1),
+				lossFrameAlignment(2),
+				alarmIndiSignal(4),
+				frameSlipError(8)
+				}
+
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"PSTN alarm status which can be a combination of the
+			    following values:
+					0  No alarm
+					1  Loss of signal
+					2  Loss of frame alignment
+					4  Alarm indication signal
+					8  Frame slip error"
+		::= { voiceGatewayLDMIBObjects 15}
+
+	vgldDSPAlarmStatus OBJECT-TYPE
+			SYNTAX INTEGER {
+			        noAlarm(0),
+					couldNotStart(1),
+					notEnoughDSPResources(2)
+					}
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Alarm status for DSP cards which can be a combination of the
+				following values:
+					0  No alarm
+					1  Failed to start DSP
+					2  Not enough DSP resources"
+		::= { voiceGatewayLDMIBObjects 16}
+
+	vgldLGKAlarmStatus OBJECT-TYPE
+			SYNTAX INTEGER{
+					noAlarm(0),
+					noContactWithPrimarySK(1),
+					noContactWithSecondarySK(2),
+					serviceNotRunning(4),
+					incorrectLicenceKey(8)
+					}
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"General alarm status which can be a combination of the
+				following values:
+					0  No alarm
+					1  No contact with primary sitekeeper
+					2  No contact with secondary sitekeeper
+					4  Service not running
+					8  Incorrect licence key"
+		::= { voiceGatewayLDMIBObjects 17}
+
+	vgldUsedCapacity OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Returns number of busy channels."
+			::= { voiceGatewayLDMIBObjects 18}
+
+	vgldDegradedCapacity OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-only
+			STATUS mandatory
+			DESCRIPTION
+				"Returns number of degraded channels."
+			::= { voiceGatewayLDMIBObjects 19}
+
+-- ==================================================================================
+-- TRACING
+-- =======
+
+	vgldProgramTraceOnErrors OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that errors are traced if set to true."
+		DEFVAL { false }
+		::= { voiceGatewayLDMIBObjects 20 }
+
+	vgldProgramTraceOnWarn OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that warnings are traced if set to true."
+		DEFVAL { false }
+		::= { voiceGatewayLDMIBObjects 21 }
+
+	vgldProgramTraceOnInfo OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that information is logged if set to true."
+		DEFVAL { false }
+		::= { voiceGatewayLDMIBObjects 22 }
+
+	vgldTelephonyTrace OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that a trace is made on all signalling 
+				between exchange and the VG if set to true."
+		DEFVAL { false }
+		::= { voiceGatewayLDMIBObjects 23 }
+
+	vgldAlarmTraceOn OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that alarms are traced if set to true."
+		DEFVAL { false }
+		::= { voiceGatewayLDMIBObjects 24 }
+
+	vgldDialoutCode OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"Dialout code."
+		::= { voiceGatewayLDMIBObjects 25 }
+
+	vgldChannelStates OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+				"Requested manually blocked channels,
+				each digit represents a channel:
+					30 - '0' Idle
+					31 - '1' Busy
+					32 - '2' Outgoing busy
+					33 - '3' Incoming busy
+					34 - '4' Automatic blocked
+					35 - '5' Manual blocked
+					36 - '6' Line blocked"
+		::= { voiceGatewayLDMIBObjects 26}
+
+	vgldManualBlockedChannels OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"Requested manually blocked channels,
+				each digit represents a channel:
+					30 - '0' No manual block
+					31 - '1' Manual block"
+		::= { voiceGatewayLDMIBObjects 27}
+	
+	vgldDefaultIpAddress OBJECT-TYPE
+		SYNTAX DisplayString 
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is the default ip address of the voice gateway service."
+		::= { voiceGatewayLDMIBObjects 28}
+
+	vgldVersionInfo OBJECT-TYPE
+		SYNTAX DisplayString 
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+				"This is the version information of the 
+					installed voice gateway service."
+		::= { voiceGatewayLDMIBObjects 29}
+
+	vgldNumberTag OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"This is the number tag used for 
+					phone doubler configuration."
+			::= { voiceGatewayLDMIBObjects 30}
+
+	vgldNumberOffset OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"This is the number offset used for 
+					phone doubler configuration."
+			::= { voiceGatewayLDMIBObjects 31}
+	
+	serviceStateChange TRAP-TYPE
+		ENTERPRISE voiceGatewayLDMIB
+		VARIABLES { vgldServiceState }
+		DESCRIPTION
+		"Trap is sent when the state of the service is changed."
+		::= 1
+
+	pstnAlarm TRAP-TYPE
+		ENTERPRISE voiceGatewayLDMIB
+		VARIABLES { vgldISDNAlarmStatus }
+		DESCRIPTION
+		"Trap is sent when a PSTN alarm occurs."
+		::= 2
+
+	pstnAlarmCeasing TRAP-TYPE
+		ENTERPRISE voiceGatewayLDMIB
+		VARIABLES { vgldISDNAlarmStatus }
+		DESCRIPTION
+		"Trap is sent when a PSTN alarm disappears."
+		::= 3
+
+	dspAlarm TRAP-TYPE
+		ENTERPRISE voiceGatewayLDMIB
+		VARIABLES { vgldDSPAlarmStatus }
+		DESCRIPTION
+		"Trap is sent when a DSP alarm occurs."
+		::= 4
+
+	dspAlarmCeasing TRAP-TYPE
+		ENTERPRISE voiceGatewayLDMIB
+		VARIABLES { vgldDSPAlarmStatus }
+		DESCRIPTION
+		"Trap is sent when a DSP alarm disappears."
+		::= 5
+	
+	generalAlarm TRAP-TYPE
+		ENTERPRISE voiceGatewayLDMIB
+		VARIABLES { vgldLGKAlarmStatus }
+		DESCRIPTION
+		"Trap is sent when a general alarm occurs."
+		::= 6
+
+	generalAlarmCeasing TRAP-TYPE
+		ENTERPRISE voiceGatewayLDMIB
+		VARIABLES { vgldLGKAlarmStatus }
+		DESCRIPTION
+		"Trap is sent when a general alarm disappears."
+		::= 7
+-- =========================================================================================
+END
+

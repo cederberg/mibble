@@ -1,0 +1,501 @@
+-- MIB file created 08-Feb-2002 12:54:31, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-BGP4-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-BGP4-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+    TruthValue
+            FROM SNMPv2-TC-v1
+    ciscoMgmt
+            FROM CISCO-SMI
+    InetAddressType, InetAddress
+            FROM INET-ADDRESS-MIB
+    Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
+
+ciscoBgp4MIB OBJECT IDENTIFIER ::= { ciscoMgmt 187 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200108130000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--           Cisco Systems
+--            Customer Service
+--    
+--    Postal: 170 W Tasman Drive
+--            San Jose, CA  95134
+--            USA
+--    
+--       Tel: +1 800 553-NETS
+--    
+--    E-mail: cs-iprouting-bgp@cisco.com
+--  Descr
+--    An extension to the IETF BGP4 MIB module defined in 
+--    RFC 1657.
+--                   
+--    Following is the terminology associated with Border
+--    Gateway Protocol(BGP).
+--       
+--    UPDATE message
+--        UPDATE messages are used to transfer routing 
+--        information between BGP peers. An UPDATE message 
+--        is used to advertise a single feasible route to a
+--        peer, or to withdraw multiple unfeasible routes 
+--        from service.                 
+--    
+--    Adj-RIBs-In 
+--       The Adj-RIBs-In store routing information that has
+--       been learned from inbound UPDATE messages. Their 
+--       contents represent routes that are available as an 
+--       input to the Decision Process.
+--    
+--    Loc-RIB(BGP table) 
+--       The Loc-RIB contains the local routing information
+--       that the BGP speaker has selected by applying its 
+--       local policies to the routing information contained 
+--       in its Adj-RIBs-In.
+--    
+--    Adj-RIBs-Out 
+--       The Adj-RIBs-Out store the information that the
+--       local BGP speaker has selected for advertisement to 
+--       its peers. The routing information stored in the 
+--       Adj-RIBs-Out will be carried in the local BGP 
+--       speaker's UPDATE messages and advertised to its
+--       peers.
+--    
+--    Path Attributes
+--       A variable length sequence of path attributes is 
+--       present in every UPDATE. Each path attribute is a 
+--       triple <attribute type, attribute length, 
+--       attribute value> of variable length. 
+--    
+--    Network Layer Reachability Information(NLRI)
+--       A variable length field present in UPDATE messages
+--       which contains a list of Network Layer address 
+--       prefixes.
+--  RevDate
+--    200108130000Z
+--  RevDescr
+--    Initial version of the MIB module.
+
+ciscoBgp4MIBObjects OBJECT IDENTIFIER ::= { ciscoBgp4MIB 1 }
+cbgpRoute       OBJECT IDENTIFIER ::= { ciscoBgp4MIBObjects 1 }
+ciscoBgp4NotificationPrefix OBJECT IDENTIFIER ::= { ciscoBgp4MIB 2 }
+ciscoBgp4MIBConformance OBJECT IDENTIFIER ::= { ciscoBgp4MIB 3 }
+ciscoBgp4MIBCompliances OBJECT IDENTIFIER ::= { ciscoBgp4MIBConformance 1 }
+ciscoBgp4MIBGroups OBJECT IDENTIFIER ::= { ciscoBgp4MIBConformance 2 }
+
+CbgpSafi ::= INTEGER {
+        unicast(1),
+        multicast(2),
+        unicastAndMulticast(3),
+        vpn(128)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    Subsequent Address Family Identifier(SAFI) is used 
+--    by BGP speaker to indicate the type of the the Network
+--    Layer Reachability Information(NLRI) being carried. 
+--    RFC-2858 has defined the following values for SAFI.
+--    1 - Network Layer Reachability Information used for 
+--        unicast forwarding
+--    2 - Network Layer Reachability Information used for 
+--        multicast forwarding
+--    3 - Network Layer Reachability Information used for 
+--        both unicast and multicast forwarding. 
+--    SAFI values 128 through 255 are for private use.
+--  Refer
+--    RFC-2858: Multiprotocol Extensions for BGP-4,
+--     RFC-2547: BGP/MPLS VPNs
+
+CbgpNetworkAddress ::= OCTET STRING(SIZE(0..255))
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    Represents the Network Address prefix carried in the 
+--    BGP UPDATE messages.  In the following table, column 
+--    'Type' gives the kind of Network Layer address which 
+--    will be stored in the object of this type based on the
+--    values of Address Family Identifier(AFI) and SAFI.
+--    
+--     AFI          SAFI                   Type
+--    
+--    ipv4(1)      unicast(1)            IPv4 address 
+--                                            
+--    ipv4(1)      multicast(2)          IPv4 address
+--    
+--    ipv4(1)      vpn(128)             VPN-IPv4 address
+--     
+--    ipv6(2)      unicast(1)            IPv6 address
+--    
+--    A VPN-IPv4 address is a 12-byte quantity, beginning 
+--    with an 8-byte 'Route Distinguisher (RD)' and ending 
+--    with a 4-byte IPv4 address.
+--  Refer
+--    RFC-2858: Multiprotocol Extensions for BGP-4
+--     RFC-2547: BGP/MPLS VPNs, section 4.1
+
+cbgpRouteTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CbgpRouteEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains information about routes to 
+        destination networks from all BGP4 peers.  Since 
+        BGP4 can carry routes for multiple Network Layer 
+        protocols, this table has the Address Family 
+        Identifier(AFI) of the Network Layer protocol as the 
+        first index. Further for a given AFI, routes carried
+        by BGP4 are distinguished based on Subsequent Address 
+        Family Identifiers(SAFI).  Hence that is used as the
+        second index.  Conceptually there is a separate Loc-RIB
+        maintained by the BGP speaker for each combination of 
+        AFI and SAFI supported by it."
+    REFERENCE
+        "RFC-1771: A Border Gateway Protocol 4 (BGP-4),
+         RFC-2858: Multiprotocol Extensions for BGP-4,
+         RFC-2547: BGP/MPLS VPNs"
+    ::= { cbgpRoute 1 }
+
+cbgpRouteEntry OBJECT-TYPE
+    SYNTAX CbgpRouteEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about a path to a network received from
+        a peer."
+    INDEX { cbgpRouteAfi, cbgpRouteSafi, cbgpRoutePeerType, cbgpRoutePeer, cbgpRouteAddrPrefix, cbgpRouteAddrPrefixLen }
+    ::= { cbgpRouteTable 1 }
+
+CbgpRouteEntry ::= SEQUENCE {
+    cbgpRouteAfi InetAddressType,
+    cbgpRouteSafi CbgpSafi,
+    cbgpRoutePeerType InetAddressType,
+    cbgpRoutePeer InetAddress,
+    cbgpRouteAddrPrefix CbgpNetworkAddress,
+    cbgpRouteAddrPrefixLen Gauge,
+    cbgpRouteOrigin INTEGER,
+    cbgpRouteASPathSegment OCTET STRING,
+    cbgpRouteNextHop CbgpNetworkAddress,
+    cbgpRouteMedPresent TruthValue,
+    cbgpRouteMultiExitDisc Gauge,
+    cbgpRouteLocalPrefPresent TruthValue,
+    cbgpRouteLocalPref Gauge,
+    cbgpRouteAtomicAggregate INTEGER,
+    cbgpRouteAggregatorAS Gauge,
+    cbgpRouteAggregatorAddrType InetAddressType,
+    cbgpRouteAggregatorAddr InetAddress,
+    cbgpRouteBest TruthValue,
+    cbgpRouteUnknownAttr OCTET STRING
+    }
+
+cbgpRouteAfi OBJECT-TYPE
+    SYNTAX InetAddressType
+--    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        unknown(0),
+--        ipv4(1),
+--        ipv6(2),
+--        dns(16)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Represents Address Family Identifier(AFI) of the 
+        Network Layer protocol associated with the route."
+    ::= { cbgpRouteEntry 1 }
+
+cbgpRouteSafi OBJECT-TYPE
+    SYNTAX CbgpSafi
+--    Rsyntax INTEGER {
+--        unicast(1),
+--        multicast(2),
+--        unicastAndMulticast(3),
+--        vpn(128)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Represents Subsequent Address Family Identifier(SAFI)
+        of the route. It gives additional information about
+        the type of the route."
+    ::= { cbgpRouteEntry 2 }
+
+cbgpRoutePeerType OBJECT-TYPE
+    SYNTAX InetAddressType
+--    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        unknown(0),
+--        ipv4(1),
+--        ipv6(2),
+--        dns(16)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Represents the type of Network Layer address stored
+        in cbgpRoutePeer."
+    ::= { cbgpRouteEntry 3 }
+
+cbgpRoutePeer OBJECT-TYPE
+    SYNTAX InetAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The Network Layer address of the peer where the route
+        information was learned."
+    ::= { cbgpRouteEntry 4 }
+
+cbgpRouteAddrPrefix OBJECT-TYPE
+    SYNTAX CbgpNetworkAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A Network Address prefix in the Network Layer 
+        Reachability Information field of BGP UPDATE message.
+        This object is a Network Address containing the prefix
+        with length specified by cbgpRouteAddrPrefixLen.  Any
+        bits beyond the length specified by
+        cbgpRouteAddrPrefixLen are zeroed."
+    ::= { cbgpRouteEntry 5 }
+
+cbgpRouteAddrPrefixLen OBJECT-TYPE
+    SYNTAX Gauge(0..2040)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Length in bits of the Network Address prefix in the 
+        Network Layer Reachability Information field."
+    ::= { cbgpRouteEntry 6 }
+
+cbgpRouteOrigin OBJECT-TYPE
+    SYNTAX INTEGER {
+        igp(1),
+        egp(2),
+        incomplete(3)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The ultimate origin of the route information."
+    ::= { cbgpRouteEntry 7 }
+
+cbgpRouteASPathSegment OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The sequence of AS path segments.  Each AS
+        path segment is represented by a triple
+        <type, length, value>.
+        
+        The type is a 1-octet field which has two
+        possible values:
+        1  AS_SET: unordered set of ASs a route in the 
+                  UPDATE message has traversed
+        2  AS_SEQUENCE: ordered set of ASs a route in the
+                       UPDATE message has traversed.
+        
+        The length is a 1-octet field containing the
+        number of ASs in the value field.
+        
+        The value field contains one or more AS
+        numbers, each AS is represented in the octet
+        string as a pair of octets according to the
+        following algorithm:
+        
+        first-byte-of-pair = ASNumber / 256;
+        second-byte-of-pair = ASNumber & 255;"
+    ::= { cbgpRouteEntry 8 }
+
+cbgpRouteNextHop OBJECT-TYPE
+    SYNTAX CbgpNetworkAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The Network Layer address of the border router 
+        that should be used for the destination network."
+    ::= { cbgpRouteEntry 9 }
+
+cbgpRouteMedPresent OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the presence/absence of MULTI_EXIT_DISC 
+        attribute for the route."
+    ::= { cbgpRouteEntry 10 }
+
+cbgpRouteMultiExitDisc OBJECT-TYPE
+    SYNTAX Gauge(0..4294967295)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This metric is used to discriminate between multiple 
+        exit points to an adjacent autonomous system.  The
+        value of this object is irrelevant if the value of
+        of cbgpRouteMedPresent is false(2)."
+    ::= { cbgpRouteEntry 11 }
+
+cbgpRouteLocalPrefPresent OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the presence/absence of LOCAL_PREF 
+        attribute for the route."
+    ::= { cbgpRouteEntry 12 }
+
+cbgpRouteLocalPref OBJECT-TYPE
+    SYNTAX Gauge(0..4294967295)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The degree of preference calculated by the local BGP4
+        speaker for the route. The value of this object is 
+        irrelevant if the value of cbgpRouteLocalPrefPresent 
+        is false(2)."
+    ::= { cbgpRouteEntry 13 }
+
+cbgpRouteAtomicAggregate OBJECT-TYPE
+    SYNTAX INTEGER {
+        lessSpecificRouteNotSelected(1),
+        lessSpecificRouteSelected(2)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Whether or not the local system has selected a less 
+        specific route without selecting a more specific
+        route."
+    ::= { cbgpRouteEntry 14 }
+
+cbgpRouteAggregatorAS OBJECT-TYPE
+    SYNTAX Gauge(0..65535)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The AS number of the last BGP4 speaker that performed
+        route aggregation.  A value of zero (0) indicates the 
+        absence of this attribute."
+    ::= { cbgpRouteEntry 15 }
+
+cbgpRouteAggregatorAddrType OBJECT-TYPE
+    SYNTAX InetAddressType
+--    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        unknown(0),
+--        ipv4(1),
+--        ipv6(2),
+--        dns(16)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Represents the type of Network Layer address stored
+        in cbgpRouteAggregatorAddr."
+    ::= { cbgpRouteEntry 16 }
+
+cbgpRouteAggregatorAddr OBJECT-TYPE
+    SYNTAX InetAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The Network Layer address of the last BGP4 speaker
+        that performed route aggregation.  A value of all zeros
+        indicates the absence of this attribute."
+    ::= { cbgpRouteEntry 17 }
+
+cbgpRouteBest OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "An indication of whether or not this route was chosen
+        as the best BGP4 route."
+    ::= { cbgpRouteEntry 18 }
+
+cbgpRouteUnknownAttr OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "One or more path attributes not understood by this
+        BGP4 speaker.  Size zero (0) indicates the absence of
+        such attribute(s).  Octets beyond the maximum size, if
+        any, are not recorded by this object.  
+              
+        Each path attribute is a triple <attribute type,
+        attribute length, attribute value> of variable length.
+        Attribute Type is a two-octet field that consists of
+        the Attribute Flags octet followed by the Attribute
+        Type Code octet.  If the Extended Length bit of the 
+        Attribute Flags octet is set to 0, the third octet of 
+        the Path Attribute contains the length of the
+        attribute data in octets.  If the Extended Length bit 
+        of the Attribute Flags octet is set to 1, then the
+        third and the fourth octets of the path attribute 
+        contain the length of the attribute data in octets.
+        The remaining octets of the Path Attribute represent 
+        the attribute value and are interpreted according to 
+        the Attribute Flags and the Attribute Type Code."
+    REFERENCE
+        "RFC-1771: A Border Gateway Protocol 4 (BGP-4), 
+        section 4.3"
+    ::= { cbgpRouteEntry 19 }
+
+ciscoBgp4RouteGroup OBJECT IDENTIFIER ::= { ciscoBgp4MIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing information 
+--    about routes received by BGP speaker.
+--  objects
+--    cbgpRouteOrigin, cbgpRouteASPathSegment, cbgpRouteNextHop, 
+--    cbgpRouteMedPresent, cbgpRouteMultiExitDisc, 
+--    cbgpRouteLocalPrefPresent, cbgpRouteLocalPref, 
+--    cbgpRouteAtomicAggregate, cbgpRouteAggregatorAS, 
+--    cbgpRouteAggregatorAddrType, cbgpRouteAggregatorAddr, 
+--    cbgpRouteBest, cbgpRouteUnknownAttr
+
+ciscoBgp4MIBCompliance OBJECT IDENTIFIER ::= { ciscoBgp4MIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for entities which implement
+--     the Cisco BGP4 MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoBgp4RouteGroup
+
+
+END
+

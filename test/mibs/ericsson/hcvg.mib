@@ -1,0 +1,1395 @@
+-- 
+--								SNMPv1
+--
+----------------------------------------------------------------------
+-- Prepared:  ETX/DN/C QTXJOAL           NO.:  3/1553-KDV 104 02-1
+----------------------------------------------------------------------
+-- Approved:  ETX/DN/C				     Date:     Rev.: 
+----------------------------------------------------------------------
+--
+-- 
+--
+-- NAME:		High Capacity Voice Gateway MIB
+-- 
+-- REVISION HISTORY:-
+--
+-- REV	DATE		NAME		DESCRIPTION
+-- PA1  981106      QTXJOAL     Initial.
+-- PA2  990108      QTXJOAL     Changes in swMgmt.
+-- PA3  990122      QTXJOAL     Added gatewaytype, saveRunningConfig and
+--								misc. SS7 gateway variables.
+-- PA4  990205		QTXJOAL		Corrected error in swSoftwareTableEntry.
+-- PA5	990208		QTXJOAL
+-- PA6  990218      QTXJOAL		Added country functions.
+-- PA7  990223		QTXJOAL		Added cfgCurrentCountry variable.
+-- PA8  990223		QTXJOAL		Correction.
+-- PA9	990315		QTXJOAL		Added H.323 & ISDN variables. Separated link type
+--								and link protocol.
+-- PA10 990317		QTXJOAL		Added CRC4 and user/network side variables for links.
+-- PA11 990325		QTXJOAL		Changed values for linkAdminState to match channelAdminState.
+-- PA12 990428		QTXJOAL		New values for DSP and link alarms + added doc.no.
+-- PA13 990503		QTXJOAL		More alarm changes.
+--
+-- DESCRIPTION
+--	MIB FOR ERICSSON'S HIGH-CAPACITY VOICEGATEWAY
+--	FOR IP TELEPHONY.
+-- 
+	VOICEGATEWAYHC
+	
+DEFINITIONS ::= BEGIN
+
+--
+-- Ericsson High Capacity Voice Gateway MIB
+--
+
+IMPORTS
+	enterprises
+		FROM RFC1155-SMI
+	OBJECT-TYPE
+		FROM RFC-1212
+	TRAP-TYPE
+		FROM RFC-1215;
+		
+	ericsson			
+		OBJECT IDENTIFIER ::= { enterprises 193 }
+	phonedoubler		
+		OBJECT IDENTIFIER ::= { ericsson 26 } 
+	hcVoiceGatewayMIB			
+		OBJECT IDENTIFIER ::= { phonedoubler 11 }
+
+	config 
+		OBJECT IDENTIFIER ::= { hcVoiceGatewayMIB 1 }
+
+	performance 
+		OBJECT IDENTIFIER ::= { hcVoiceGatewayMIB 2 }
+
+	ds1Ifc 
+		OBJECT IDENTIFIER ::= { hcVoiceGatewayMIB 3  }
+
+	swMgmt 
+		OBJECT IDENTIFIER ::= { hcVoiceGatewayMIB 4  }
+
+-- Definition of a truth value
+	TruthValue ::= INTEGER { true(1), false(2) }
+-- Definition of a string
+	DisplayString ::= OCTET STRING
+
+-- ==============================================================================
+-- High Capacity Voice Gateway MIB
+-- ==============================================================================
+
+-- ===============================================================
+-- config
+-- ===============================================================
+		
+	cfgLGK1 OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is the IP address of the primary Local 
+				Gatekeeper used by this voicegateway. 
+				The address takes the form X.X.X.X where
+				X is an integer in the range of 0 and 255."
+			DEFVAL { "" }
+	::= { config 1}
+
+	cfgLGK2 OBJECT-TYPE
+		SYNTAX DisplayString  -- This is a string of 0 to 255 in length
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is the IP address of the secondary Local
+				Gatekeeper used by this voicegateway. 
+				The address takes the form X.X.X.X where
+				X is an integer in the range of 0 and 255."
+			DEFVAL { "" }
+    ::= { config 2}
+
+	cfgNumberLength OBJECT-TYPE -- MinMaxDigit
+		SYNTAX INTEGER  
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"The number of digits that must follow the VG route 
+			number in order to form a full number."
+		DEFVAL { 3 }
+	::= { config 3 }
+
+	cfgMACAddress OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"MAC address of the machine."
+	::= { config 4}
+
+	cfgDialoutCode OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"Dialout code."
+	::= { config 5 }
+		
+	cfgNumberTag OBJECT-TYPE
+		SYNTAX INTEGER 
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"Used by the phone doubler service when looking for B-number."
+	::= { config 6}
+
+	cfgNumberOffset OBJECT-TYPE
+		SYNTAX INTEGER 
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"Used by the phone doubler service when looking for B-number."
+	::= { config 7}
+
+	cfgLicenseChannels OBJECT-TYPE   -- (PFV)
+		SYNTAX INTEGER
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"The number of channels license is paid for."
+		DEFVAL { 1 }
+	::= { config 8 }
+
+	cfgLicenseChannelsKey OBJECT-TYPE  -- (PFV)
+		SYNTAX DisplayString  -- This is a string of 0 to 255 in length
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"This is the key provided by Ericsson which allows
+			use of the channels."
+		DEFVAL { "" }
+	::= { config 9 }
+
+	cfgServiceState OBJECT-TYPE
+		SYNTAX INTEGER {
+			stop(1),
+			startpending(2),
+			stoppending(3),
+			run(4),
+			continuepending(5),
+			pausepending(6),
+			pause(7)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"This function controls or returns the state of the 
+			 VoiceGateway service. Set can be done on 1, 4 & 7 only"
+	::= { config 10}
+
+	cfgMachineReboot OBJECT-TYPE
+		SYNTAX INTEGER		-- Extra info
+		ACCESS write-only
+		STATUS mandatory
+		DESCRIPTION
+			"This function reboots the machine."
+	::= { config 11}
+
+	cfgGeneralAlarmStatus OBJECT-TYPE
+		SYNTAX INTEGER {
+			noAlarm(0),
+			noContactWithPrimarySK(1),
+			noContactWithSecondarySK(2),
+			serviceNotRunning(4),
+			noContactWithSS7Gateway(8)
+			}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Indicates the General alarm status. It is a bit map 
+			that can represent multiple alarms simultaneously."
+	::= { config 12}
+
+	cfgDSPAlarmStatus OBJECT-TYPE 
+		SYNTAX INTEGER {
+			noAlarm(0),
+			couldNotStart(1),
+			notEnoughDSPResources(2),
+			codecNotSupported(4)
+			}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Alarm status for DSP's is a bit map that can represent 
+			multiple alarms simultaneously."
+	::= { config 13}
+
+	cfgClearAlarms OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS write-only
+		STATUS mandatory
+		DESCRIPTION
+			"Clear all resetable alarms."
+	::= { config 14}
+
+	cfgProgramTraceOnErrors OBJECT-TYPE
+		SYNTAX TruthValue
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"Indicates that errors are traced if set to true."
+		DEFVAL { false }
+	::= { config 15 }
+
+	cfgProgramTraceOnWarn OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"Indicates that warnings are traced if set to true."
+		DEFVAL { false }
+	::= { config 16 }
+
+	cfgProgramTraceOnInfo OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"Indicates that information is logged if set to true."
+		DEFVAL { false }
+	::= { config 17 }
+
+	cfgTelephonyTrace OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"Indicates that a telephony trace is made
+				between exchange and the VG if set to true."
+		DEFVAL { false }
+	::= { config 18 }
+	
+	cfgLinkLayerTrace OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"Indicates that a link layer trace is made
+				between exchange and the VG if set to true."
+		DEFVAL { false }
+	::= { config 19 }
+	
+	cfgNetworkLayerTrace OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"Indicates that a network layer trace is made
+				between exchange and the VG if set to true."
+		DEFVAL { false }
+	::= { config 20 }
+
+	cfgAlarmTrace OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"Indicates that alarms are traced if set to true."
+		DEFVAL { false }
+	::= { config 21 }
+
+	cfgVersionInfo OBJECT-TYPE
+		SYNTAX DisplayString 
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+				"Version information of the 
+				installed voice gateway service."
+	::= { config 22}
+
+	cfgGatewayType OBJECT-TYPE
+		SYNTAX INTEGER {
+			iptpGw(0),
+			h323Ver2TiphonGw(1),
+			h323Ver2Gw(2),
+			h323Ver1Gw(3)
+			}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		""
+	::= { config 23}
+
+	cfgSaveRunningConfig OBJECT-TYPE
+		SYNTAX TruthValue 
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"Set saves changes from memory to disk.
+				Get returns true if changes have been done 
+				since data was saved."
+	::= { config 24}
+
+	cfgAvailableCountriesTableSize OBJECT-TYPE
+		SYNTAX	INTEGER
+		ACCESS	read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of elements in cfgAvailableCountriesTable."
+	::= { config 25}
+
+	cfgAvailableCountriesTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF AvailableCountriesEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+				"A table of AvailableCountriesEntries."
+	::= { config 26}
+
+	cfgAvailableCountriesEntry OBJECT-TYPE
+		SYNTAX AvailableCountriesEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+				"Entry containing information about 
+				an available country code that is
+				valid for setting cfgSelectedCountry
+				with."
+		INDEX {availableCountriesIndex}
+	::= { cfgAvailableCountriesTable 1}
+
+	AvailableCountriesEntry ::=
+		SEQUENCE {
+			availableCountriesIndex
+				INTEGER,
+			availableCountriesId
+				INTEGER
+		}
+
+	availableCountriesIndex OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"A unique value for each entry."
+		::= { cfgAvailableCountriesEntry 1 }
+
+	availableCountriesId OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"ISO 3166 country number."
+		::= { cfgAvailableCountriesEntry 2 }
+
+	cfgSelectedCountry OBJECT-TYPE	
+		SYNTAX INTEGER
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"Selected country code according to ISO 3166. This setting
+			will be used after reboot."
+	::= { config 27}
+
+	cfgCurrentCountry OBJECT-TYPE	
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Current country code according to ISO 3166. This setting is
+			the currently used."
+	::= { config 28}
+	
+	cfgH323E164 OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"E.164 compliant number used by H.323."	
+	::= { config 29}
+	
+	cfgH323-Id OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"Basic ISO/IEC 10646-1 id used by H.323."
+	::= { config 30}
+
+	cfgH323EmailId OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"Rfc 822 compliant email id used by H.323."
+	::= { config 31}
+
+
+
+-- ==================================================================
+-- performance
+-- ==================================================================
+
+	perfUsedCapacity OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of busy channels."
+	::= { performance 1}
+
+	perfDegradedCapacity OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of degraded channels."
+	::= { performance 2}
+
+	perfPerformanceEnable OBJECT-TYPE
+		SYNTAX TruthValue
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"Enables the performance function."
+	::= { performance 3}
+
+	perfTimeElapsed OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of seconds since the performance function was enabled."
+	::= { performance 4}
+	
+	perfCallTypeTableSize OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of elements in the perfCallTypeTable."
+	::= { performance 5}
+
+	perfCallTypeTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF CallTypeEntry
+		ACCESS  not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"A list of perfCallTypeEntry's. The number of entries
+			is given by the value of perfCallTypeTableSize."
+	::= { performance 6}
+
+	perfCallTypeEntry OBJECT-TYPE
+		SYNTAX CallTypeEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+				"A CallType entry containing information
+				about number of calls per type."
+		INDEX	{ callTypeIndex }
+		::= { perfCallTypeTable 1}
+
+	CallTypeEntry ::=
+		SEQUENCE {
+			callTypeIndex
+				INTEGER,
+			callTypeNumber
+				INTEGER,
+			callTypeType
+				INTEGER
+		}
+	
+	callTypeIndex OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"A unique value for each entry."
+		::= { perfCallTypeEntry 1 }
+
+	callTypeNumber OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of calls for this type."
+		::= { perfCallTypeEntry 2 }
+
+	callTypeType OBJECT-TYPE
+		SYNTAX INTEGER {
+			voice(1),
+			fax(2),
+			data(4)
+			}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Type of call."
+		::= { perfCallTypeEntry 3 }
+
+	perfAlgorithmTypeTableSize OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of elements in the perfAlgorithmTypeTable."
+	::= { performance 7}
+
+	perfAlgorithmTypeTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF AlgorithmEntry
+		ACCESS  not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"A list of perfAlgorithmTypeEntry's. The number of entries
+			is given by the value of perfAlgorithmTypeTableSize."
+	::= { performance 8}
+
+	perfAlgorithmEntry OBJECT-TYPE
+		SYNTAX AlgorithmEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+				"A Performance algorithm entry containing information
+				about number of calls per algorithm."
+		INDEX	{ algorithmIndex }
+		::= { perfAlgorithmTypeTable 1}
+
+	AlgorithmEntry ::=
+		SEQUENCE {
+			algorithmIndex
+				INTEGER,
+			algorithmNumber
+				INTEGER,
+			algorithmType
+				INTEGER
+		}
+	
+	algorithmIndex OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"A unique value for each entry."
+		::= { perfAlgorithmEntry 1 }
+
+	algorithmNumber OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of calls using this algorithm."
+		::= { perfAlgorithmEntry 2 }
+
+	algorithmType OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Algorithm id."
+		::= { perfAlgorithmEntry 3 }
+
+	perfIncompleteCallsTableSize OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of elements in the perfIncompleteCallsTable."
+	::= { performance 9}
+
+	perfIncompleteCallsTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF IncompleteEntry
+		ACCESS  not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"A list of perfIncompleteCallsEntry's. The number of entries
+			is given by the value of perfIncompleteCallsTableSize."
+	::= { performance 10}
+
+	perfIncompleteCallsEntry OBJECT-TYPE
+		SYNTAX IncompleteEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+				"An entry containing information about number of incomplete calls 
+				per cause."
+		INDEX	{ incompleteIndex }
+		::= { perfIncompleteCallsTable 1}
+
+	IncompleteEntry ::=
+		SEQUENCE {
+			incompleteIndex
+				INTEGER,
+			incompleteNumber
+				INTEGER,
+			incompleteCause
+				INTEGER
+		}
+	
+	incompleteIndex OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"A unique value for each entry."
+		::= { perfIncompleteCallsEntry 1 }
+
+	incompleteNumber OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of incomplete calls with this cause."
+		::= { perfIncompleteCallsEntry 2 }
+
+	incompleteCause OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Cause."
+		::= { perfIncompleteCallsEntry 3 }
+
+	perfIncomingCallAttempts OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of completed incoming call attempts."
+		::= { performance 11}
+
+	perfOutgoingCallAttempts OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of completed outgoing call attempts."
+		::= { performance 12}
+
+	perfCompletedIncomingCalls OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of completed incoming calls."
+		::= { performance 13}
+
+	perfCompletedOutgoingCalls OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of completed outgoing calls."
+		::= { performance 14}
+
+	perfAnsweredCalls OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of answered calls."
+		::= { performance 15}
+
+	perfAvgCallDuration OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Average call duration in seconds."
+		::= { performance 16}
+
+	perfPayloadChannels OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Number of payload channels."
+		::= { performance 17}
+
+-- ==================================================================
+-- ds1Ifc
+-- ==================================================================
+
+	ifcLinkTableSize OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Number of installed digital links (e.g. E1's or T1's)
+		on the gateway, also size of the dsLinkTable."
+		::= { ds1Ifc 1}
+
+	ifcLinkTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF LinkEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+				"A list of LinksEntry's. The number of entries
+				is given by the value of ifcLinkTableSize."
+		::= {  ds1Ifc 2}
+
+	ifcLinkEntry OBJECT-TYPE
+		SYNTAX LinkEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+				"A link entry containing objects for management
+				of a digital link."
+		INDEX	{ linkIndex }
+		::= { ifcLinkTable 1}
+
+	LinkEntry ::=
+		SEQUENCE {
+			linkIndex
+				INTEGER,
+			linkDescr
+				DisplayString,
+			linkType
+				INTEGER,
+			linkCicBase
+				INTEGER,
+			linkAdminState
+				INTEGER,
+			linkOperState
+				INTEGER,
+			linkAlarmStatus
+				INTEGER,
+			channelTableSize
+				INTEGER,
+			linkSS7Address
+				DisplayString,
+			linkSS7Opc
+				INTEGER,
+			linkSS7Dpc
+				INTEGER,
+			linkAvailableTypes
+				OCTET STRING,
+			linkProtocol
+				INTEGER,
+			linkIsdnNumberingPlan
+				INTEGER,
+			linkIsdnNumberingType
+				INTEGER,
+			linkIsdnCallProgress
+				INTEGER,
+			linkIsdnAlertWithProgress
+				TruthValue,
+			linkIsdnMapCallProgressToAlert
+				TruthValue,
+			linkAvailableProtocols
+				OCTET STRING,
+			linkIsdnMode 
+				INTEGER,
+			linkIsdnCRC4 
+				INTEGER,
+			linkIsdnLAPDFlavour
+				INTEGER
+		}
+	
+	linkIndex OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"A unique value for each link."
+		::= { ifcLinkEntry 1 }
+
+	linkDescr OBJECT-TYPE
+		SYNTAX DisplayString (SIZE (0..100))
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"A textual string containing information about the link."
+		::= { ifcLinkEntry 2 }
+
+	linkType OBJECT-TYPE
+		SYNTAX INTEGER {
+			tE1(1),
+			tT1(2),
+			tBRI(3)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"PSTN interface type for this link."
+		::= { ifcLinkEntry 3 }
+
+	linkCicBase OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"The base value for the channels numbers when using no 7
+			signalling."
+		::= { ifcLinkEntry 4 }
+
+	linkAdminState OBJECT-TYPE
+		SYNTAX INTEGER {
+			noBlock(0),
+			manualBlock(1)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"The desired manual block state of the link."
+		::= { ifcLinkEntry 5 }
+
+	linkOperState OBJECT-TYPE
+		SYNTAX INTEGER {
+			inService(1),
+			manuallyBlocked(2),
+			autoBlocked(3)
+		}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"The current operational state of the link"
+		::= { ifcLinkEntry 6 }
+
+	linkAlarmStatus OBJECT-TYPE
+		SYNTAX INTEGER {
+			noAlarm(0),
+			notUsed(1),
+			lossOfMultiframeAlign(2),
+			noMultiframeAlignFound(4),
+			auxPatternInd(8),
+			remoteAlarm(16),
+			lossOfFrameAlign(32),
+			ais(64),
+			lossOfSignal(128)
+		}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"This variable indicates the Alarm Status of the link. 
+			The linkAlarmStatus is a bit map that can represent 
+			multiple alarms simultaneously.
+			
+			The various bits are:
+				B0	Not used.
+				B1	Loss of multiframe alignment.
+				B2	No multiframe alignment found.
+				B3	Auxillary pattern indication.
+				B4	Received remote alarm.
+				B5	Loss of frame alignment.
+				B6	Alarm indication signal.
+				B7	Loss of signal."
+		::= { ifcLinkEntry 7 }
+	
+	channelTableSize OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Size of the channelTable"
+		::= { ifcLinkEntry 8 }
+
+	linkSS7Address OBJECT-TYPE
+		SYNTAX DisplayString 
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Address to a ss7 gateway."
+	::= { ifcLinkEntry 9}
+
+	linkSS7Opc OBJECT-TYPE
+		SYNTAX INTEGER 
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Ss7 own point code."
+	::= { ifcLinkEntry 10}
+
+	linkSS7Dpc OBJECT-TYPE
+		SYNTAX INTEGER 
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Ss7 destination point code."
+	::= { ifcLinkEntry 11}
+
+	linkAvailableTypes OBJECT-TYPE
+		SYNTAX OCTET STRING 
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Availabe link types, each octet contains a value that is possible
+		to use in linkType."
+	::= { ifcLinkEntry 12}
+
+	linkProtocol OBJECT-TYPE
+		SYNTAX INTEGER {
+			tIsdn1TR6MPC(1),
+			tIsdn1TR6PBX(2),
+			tIsdn4ESS(3),
+			tIsdn5ESS-B(4),
+			tIsdn5ESS-P(5),
+			tIsdnAUSB(6),
+			tIsdnAUSP(7),
+			tIsdnBC303CSC(8),
+			tIsdnBC303TMC(9),
+			tIsdnCCITT(10),
+			tIsdnDMS250(11),
+			tIsdnETSI(12),
+			tIsdnINSNET(13),
+			tIsdnNI1(14),
+			tIsdnNI2(15),
+			tIsdnNTDMS100-B(16),
+			tIsdnNTDMS100-P(17),
+			tIsdnQSIG(18),
+			tIsdnVN2(19),
+			tIsdnVN3(20),
+			tIsupANSI-88(21),
+			tIsupANSI-92(22),
+			tIsupETSI(23),
+			tIsupFTZ(24),
+			tIsupITU(25),
+			tIsupQ767(26),
+			tIsupSINGTEL(27)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"PSTN protocol for this link."
+		::= { ifcLinkEntry 13 }
+
+	linkIsdnNumberingPlan OBJECT-TYPE
+		SYNTAX INTEGER {
+			tNationalNumberingPlan(0),
+			tInternationalNumberingPlan(1)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"ISDN numbering plan. tNationalNumberingPlan is default."
+		::= { ifcLinkEntry 14 }
+
+	linkIsdnNumberingType OBJECT-TYPE
+		SYNTAX INTEGER {
+			tE164(0),
+			tE164ISDN(1)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"ISDN numbering type. tE.164 is default."
+		::= { ifcLinkEntry 15 }
+
+	linkIsdnCallProgress OBJECT-TYPE
+		SYNTAX INTEGER {
+			tNotHandled(0),
+			tInbandInformationAvailable(1)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"ISDN call progress. tNotHandled is default."
+		::= { ifcLinkEntry 16 }
+
+	linkIsdnAlertWithProgress OBJECT-TYPE
+		SYNTAX TruthValue
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"ISDN alert with progress. False is default."
+		::= { ifcLinkEntry 17 }
+
+	linkIsdnMapCallProgressToAlert OBJECT-TYPE
+		SYNTAX TruthValue
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+			"ISDN Map call progress to alert. False is default."
+		::= { ifcLinkEntry 18 }
+	
+	linkAvailableProtocols OBJECT-TYPE
+		SYNTAX OCTET STRING 
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Availabe link protocols, each octet contains a value that is possible
+		to use in linkProtocol."
+	::= { ifcLinkEntry 19 }
+
+	linkIsdnMode OBJECT-TYPE
+		SYNTAX INTEGER {
+			tUser(0),
+			tNetwork(1)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Specifies isdn user or network side. tUser is default."
+	::= { ifcLinkEntry 20 }
+			
+	linkIsdnCRC4 OBJECT-TYPE
+		SYNTAX INTEGER {
+			tOn(0),
+			tOff(1)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"CRC4 - Cyclic Redundancy Check. tOn is default."
+	::= { ifcLinkEntry 21 }
+
+	linkIsdnLAPDFlavour OBJECT-TYPE
+		SYNTAX INTEGER {
+			tNI1(0),
+			tNI2(1),
+			tVN3(2),
+			tETSI(3)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"LAPD layer 2 flavour for ISDN."
+	::= { ifcLinkEntry 22 }
+
+	channelTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF ChannelEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		"A list of channel entries."
+		::= { ds1Ifc 3}
+
+	channelEntry OBJECT-TYPE
+		SYNTAX ChannelEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+		"A channel entry containing objects for management
+		of an individual channel."
+		INDEX	{ channelLink, channelIndex }
+		::= { channelTable 1}
+
+	ChannelEntry ::=
+		SEQUENCE {
+			channelIndex
+				INTEGER,
+			channelLink
+				INTEGER,
+			channelAdminState
+				INTEGER,
+			channelOperState
+				INTEGER,
+			channelCallAttempts
+				INTEGER,
+			channelCompletedCalls
+				INTEGER,
+			channelAnsweredCalls
+				INTEGER
+		}
+
+	channelIndex OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"A unique value for each channel."
+		::= { channelEntry 1 }
+	
+	channelLink OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"The link that the channel belongs to."
+		::= { channelEntry 2 }
+
+	channelAdminState OBJECT-TYPE
+		SYNTAX INTEGER {
+			noBlock(0),
+			manualBlock(1)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"The requested manually blocked state for this channel."
+		::= { channelEntry 3}	
+
+	channelOperState OBJECT-TYPE
+		SYNTAX INTEGER {
+			idle(0),
+			busy(1),
+			outgoingBusy(2),
+			incomingBusy(3),
+			autoBlocked(4),
+			manualBlocked(5),
+			lineBlocked(6),
+			notConnected(7)
+		}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"The current state for this channel."
+		::= { channelEntry 4}
+
+	channelCallAttempts OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+				"Number of call attempts for this channel."
+		::= { channelEntry 5}	
+
+	channelCompletedCalls OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+				"Number of completed calls for this channel."
+		::= { channelEntry 6}	
+
+	channelAnsweredCalls OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+				"Number of answered calls for this channel."
+		::= { channelEntry 7}	
+
+
+-- ==================================================================
+-- swMgmt
+-- ==================================================================
+
+-- Download functions
+
+	swServerAddress OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Address to software download server"
+		::= { swMgmt 1}
+
+	swImagePath OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Path and filename of image to download."
+		::= { swMgmt 2}
+
+	swImageSize OBJECT-TYPE
+		SYNTAX INTEGER 
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Size of the download image in bytes."
+		::= { swMgmt 3}
+
+	swPerformDownload OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS write-only
+		STATUS mandatory
+		DESCRIPTION
+		"Start download of new software. ServerAddress, ImagePath and
+		ImageSize should be filled in before this function is called.
+		The parameter is not used."
+		::= { swMgmt 4}
+
+-- Loaded software functions
+
+	swSoftwareTableSize OBJECT-TYPE
+		SYNTAX	INTEGER
+		ACCESS	read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Number of elements in swSoftwareTable."
+		::= { swMgmt 5}
+
+	swSoftwareTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SoftwareTableEntry
+		ACCESS  not-accessible
+		STATUS mandatory
+		DESCRIPTION
+			"A list of swSoftwareTableEntry's. The number of entries
+			is given by the value of swSoftwareTableSize."
+		::= { swMgmt 6}
+
+	swSoftwareTableEntry OBJECT-TYPE
+		SYNTAX SoftwareTableEntry
+		ACCESS not-accessible
+		STATUS mandatory
+		DESCRIPTION
+				"A SoftwareTable entry containing information
+				about stored software."
+		INDEX	{ softwareIndex }
+		::= { swSoftwareTable 1}
+
+	SoftwareTableEntry ::=
+		SEQUENCE {
+			softwareIndex
+				INTEGER,
+			softwareProductInfo
+				DisplayString,
+			softwareStatus
+				INTEGER,
+			softwareUpgradeStatus
+				INTEGER,
+			softwareUpgradeProgress
+				INTEGER,
+			softwareUpgradeResult
+				INTEGER
+		}
+	
+	softwareIndex OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"A unique value for each entry."
+		::= { swSoftwareTableEntry 1 }
+
+	softwareProductInfo OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"Product information including version of the software image."
+		::= { swSoftwareTableEntry 2 }
+
+	softwareStatus OBJECT-TYPE
+		SYNTAX INTEGER {
+			running(1),
+			standby(2),
+			corruptEmpty(3)
+		}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"CorruptEmpty indicates that this flash area does not 
+		contain a valid image, the two other states indicate
+		valid images. Running means that this software is the
+		currently executing, standby means it is not running."
+		::= { swSoftwareTableEntry 3}
+
+	softwareUpgradeStatus OBJECT-TYPE
+		SYNTAX INTEGER {
+			noActivity(1),
+			downloadConnecting(2),
+			downloading(3),
+			savingToFlash(4)
+		}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Upgrade status for this program area, will indicate the
+		current phase."
+		::= { swSoftwareTableEntry 4}
+
+	softwareUpgradeProgress OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Progress info used when softwareUpgradeStatus is 
+		downloading or savingToFlash. Range is 0 to 100."
+		::= { swSoftwareTableEntry 5}
+	
+	softwareUpgradeResult OBJECT-TYPE
+		SYNTAX INTEGER {
+			resOk(0),
+			resCouldNotConnect(1),
+			resTransferFailed(2),
+			resUnpackFailed(3),
+			resSaveFailed(4),
+			resImageCorrupt(5)
+		}
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Result of the last software upgrade."
+		::= { swSoftwareTableEntry 6}
+
+-- Active selection
+	
+	swActiveFile OBJECT-TYPE
+		SYNTAX INTEGER {
+			fileArea1(0),
+			fileArea2(1)
+		}
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+		"Area where software will be loaded from after next reboot."
+		::= { swMgmt 7}
+
+
+
+-- ==================================================================
+-- CHALLENGE-RESPONSE SECURITY FUNCTIONS
+-- ==================================================================
+
+	cfgRandomNumber OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+		"Random number used for challenge-response."
+		::= { config 100}
+		
+	cfgMd5Result OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS write-only
+		STATUS mandatory
+		DESCRIPTION
+		"Md5 Result used for challenge-response."
+		::= {config 101}
+
+
+-- ==================================================================
+-- TRAPS
+-- ==================================================================
+
+	serviceStateChange TRAP-TYPE
+		ENTERPRISE config
+		VARIABLES { cfgServiceState }
+		DESCRIPTION
+		"Trap is sent when the state of the service is changed."
+		::= 1
+
+	pstnAlarm TRAP-TYPE
+		ENTERPRISE config
+		VARIABLES { linkAlarmStatus }
+		DESCRIPTION
+		"Trap is sent when a PSTN alarm occurs."
+		::= 2
+
+	pstnAlarmCeasing TRAP-TYPE
+		ENTERPRISE config
+		VARIABLES { linkAlarmStatus }
+		DESCRIPTION
+		"Trap is sent when a PSTN alarm disappears."
+		::= 3
+
+	dspAlarm TRAP-TYPE
+		ENTERPRISE config
+		VARIABLES { cfgDSPAlarmStatus }
+		DESCRIPTION
+		"Trap is sent when a DSP alarm occurs."
+		::= 4
+
+	dspAlarmCeasing TRAP-TYPE
+		ENTERPRISE config
+		VARIABLES { cfgDSPAlarmStatus }
+		DESCRIPTION
+		"Trap is sent when a DSP alarm disappears."
+		::= 5
+	
+	generalAlarm TRAP-TYPE
+		ENTERPRISE config
+		VARIABLES { cfgGeneralAlarmStatus }
+		DESCRIPTION
+		"Trap is sent when a general alarm occurs."
+		::= 6
+
+	generalAlarmCeasing TRAP-TYPE
+		ENTERPRISE config
+		VARIABLES { cfgGeneralAlarmStatus }
+		DESCRIPTION
+		"Trap is sent when a general alarm disappears."
+		::= 7
+
+-- =========================================================================================
+END
+

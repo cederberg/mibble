@@ -1,0 +1,704 @@
+-- MIB file created 15-Feb-2002 14:36:49, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-PROCESS-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-PROCESS-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+    TimeStamp, DisplayString
+            FROM SNMPv2-TC-v1
+    ciscoMgmt
+            FROM CISCO-SMI
+    EntPhysicalIndexOrZero
+            FROM CISCO-TC
+    Counter, Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
+
+ciscoProcessMIB OBJECT IDENTIFIER ::= { ciscoMgmt 109 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200105180000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--           Cisco Systems
+--            Customer Service
+--    
+--    Postal: 170 W Tasman Drive
+--            San Jose, CA  95134
+--            USA
+--    
+--       Tel: +1 800 553-NETS
+--    
+--    E-mail: cs-snmp@cisco.com
+--  Descr
+--    The MIB module to describe active system processes.
+--  RevDate
+--    200105180000Z
+--  RevDescr
+--    The objects cpmProcExtUtil5Sec, cpmProcExtUtil1Min, 
+--    cpmProcExtUtil5Min,cpmCPUTotal5sec, cpmCPUTotal1min 
+--    and cpmCPUTotal5min are deprecated to increase the
+--    value range as 0..100. The table cpmProcessExtTable
+--    is deprecated. The new objects added are 
+--    cpmProcessExtRevTable, cpmProcExtMemAllocatedRev,
+--    cpmProcExtMemFreedRev, cpmProcExtInvokedRev, 
+--    cpmProcExtRuntimeRev, cpmProcExtUtil5SecRev,
+--    cpmProcExtUtil1MinRev, cpmCPUTotal5MinRev, 
+--    cpmCPUTotal5secRev, cpmCPUTotal1minRev and 
+--    cpmCPUTotal5minRev.
+--  RevDate
+--    9804150000Z
+--  RevDescr
+--    Initial version of this MIB.
+
+ciscoProcessMIBObjects OBJECT IDENTIFIER ::= { ciscoProcessMIB 1 }
+cpmCPU          OBJECT IDENTIFIER ::= { ciscoProcessMIBObjects 1 }
+cpmProcess      OBJECT IDENTIFIER ::= { ciscoProcessMIBObjects 2 }
+ciscoProcessMIBNotifPrefix OBJECT IDENTIFIER ::= { ciscoProcessMIB 2 }
+ciscoProcessMIBNotifs OBJECT IDENTIFIER ::= { ciscoProcessMIBNotifPrefix 0 }
+ciscoProcessMIBConformance OBJECT IDENTIFIER ::= { ciscoProcessMIB 3 }
+cpmCompliances  OBJECT IDENTIFIER ::= { ciscoProcessMIBConformance 1 }
+cpmGroups       OBJECT IDENTIFIER ::= { ciscoProcessMIBConformance 2 }
+
+cpmCPUTotalTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CpmCPUTotalEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table of overall CPU statistics. "
+    ::= { cpmCPU 1 }
+
+cpmCPUTotalEntry OBJECT-TYPE
+    SYNTAX CpmCPUTotalEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Overall information about the CPU load. Entries in this
+        table come and go as CPUs are added and removed from the
+        system."
+    INDEX { cpmCPUTotalIndex }
+    ::= { cpmCPUTotalTable 1 }
+
+CpmCPUTotalEntry ::= SEQUENCE {
+    cpmCPUTotalIndex Gauge,
+    cpmCPUTotalPhysicalIndex EntPhysicalIndexOrZero,
+    cpmCPUTotal5sec Gauge,
+    cpmCPUTotal1min Gauge,
+    cpmCPUTotal5min Gauge,
+    cpmCPUTotal5secRev Gauge,
+    cpmCPUTotal1minRev Gauge,
+    cpmCPUTotal5minRev Gauge
+    }
+
+cpmCPUTotalIndex OBJECT-TYPE
+    SYNTAX Gauge(1..4294967295)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An index that uniquely represents a CPU (or group of CPUs)
+        whose CPU load information is reported by a row in this table.
+        This index is assigned arbitrarily by the engine
+        and is not saved over reboots."
+    ::= { cpmCPUTotalEntry 1 }
+
+cpmCPUTotalPhysicalIndex OBJECT-TYPE
+    SYNTAX EntPhysicalIndexOrZero
+--    Rsyntax INTEGER(0..2147483647)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The entPhysicalIndex of the physical entity for which
+         the CPU statistics in this entry are maintained.
+         The physical entity can be a CPU chip, a group of CPUs,
+         a CPU card etc. The exact type of this entity is described by
+         its entPhysicalVendorType value. If the CPU statistics
+         in this entry correspond to more than one physical entity
+         (or to no physical entity), or if the entPhysicalTable is
+         not supported on the SNMP agent, the value of this object
+         must be zero."
+    ::= { cpmCPUTotalEntry 2 }
+
+cpmCPUTotal5sec OBJECT-TYPE
+    SYNTAX Gauge(1..100)
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "The overall CPU busy percentage in the last 5 second 
+        period. This object obsoletes the busyPer object from 
+        the OLD-CISCO-SYSTEM-MIB. This object is deprecated
+        by cpmCPUTotal5secRev which has the changed range of
+        value (0..100)."
+    ::= { cpmCPUTotalEntry 3 }
+
+cpmCPUTotal1min OBJECT-TYPE
+    SYNTAX Gauge(1..100)
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "The overall CPU busy percentage in the last 1 minute
+        period. This object obsoletes the avgBusy1 object from 
+        the OLD-CISCO-SYSTEM-MIB. This object is deprecated
+        by cpmCPUTotal1minRev which has the changed range
+        of value (0..100)."
+    ::= { cpmCPUTotalEntry 4 }
+
+cpmCPUTotal5min OBJECT-TYPE
+    SYNTAX Gauge(1..100)
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "The overall CPU busy percentage in the last 5 minute
+        period. This object deprecates the avgBusy5 object from 
+        the OLD-CISCO-SYSTEM-MIB. This object is deprecated
+        by cpmCPUTotal5minRev which has the changed range 
+        of value (0..100)."
+    ::= { cpmCPUTotalEntry 5 }
+
+cpmCPUTotal5secRev OBJECT-TYPE
+    SYNTAX Gauge(0..100)
+--  Units
+--    percent
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The overall CPU busy percentage in the last 5 second 
+        period. This object deprecates the object cpmCPUTotal5sec 
+        and increases the value range to (0..100)."
+    ::= { cpmCPUTotalEntry 6 }
+
+cpmCPUTotal1minRev OBJECT-TYPE
+    SYNTAX Gauge(0..100)
+--  Units
+--    percent
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The overall CPU busy percentage in the last 1 minute
+        period. This object deprecates the object cpmCPUTotal1min 
+        and increases the value range to (0..100)."
+    ::= { cpmCPUTotalEntry 7 }
+
+cpmCPUTotal5minRev OBJECT-TYPE
+    SYNTAX Gauge(0..100)
+--  Units
+--    percent
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The overall CPU busy percentage in the last 5 minute
+        period. This object deprecates the object cpmCPUTotal5min 
+        and increases the value range to (0..100)."
+    ::= { cpmCPUTotalEntry 8 }
+
+cpmProcessTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CpmProcessEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table of generic information on all active 
+        processes on this device."
+    ::= { cpmProcess 1 }
+
+cpmProcessEntry OBJECT-TYPE
+    SYNTAX CpmProcessEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Generic information about an active process on this 
+        device. Entries in this table come and go as processes are 
+        created and destroyed by the device."
+    INDEX { cpmCPUTotalIndex, cpmProcessPID }
+    ::= { cpmProcessTable 1 }
+
+CpmProcessEntry ::= SEQUENCE {
+    cpmProcessPID Gauge,
+    cpmProcessName DisplayString,
+    cpmProcessuSecs Gauge,
+    cpmProcessAverageUSecs Gauge,
+    cpmProcessTimeCreated TimeStamp
+    }
+
+cpmProcessPID OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object contains the process ID. cpmTimeCreated
+        should be checked against the last time it was polled,
+        and if it has changed the PID has been reused and the
+         entire entry should be polled again."
+    ::= { cpmProcessEntry 1 }
+
+cpmProcessName OBJECT-TYPE
+    SYNTAX DisplayString(SIZE(1..32))
+--    Rsyntax OCTET STRING(SIZE(1..32))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The name associated with this process. If the name is
+        longer than 32 characters, it will be truncated to the first
+        31 characters, and a `*' will be appended as the last
+        character to imply this is a truncated process name."
+    ::= { cpmProcessEntry 2 }
+
+cpmProcessuSecs OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    microseconds
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "Average elapsed CPU time in microseconds when the 
+        process was active. This object is deprecated
+        by cpmProcessAverageUSecs."
+    ::= { cpmProcessEntry 4 }
+
+cpmProcessTimeCreated OBJECT-TYPE
+    SYNTAX TimeStamp
+--    Rsyntax TimeTicks
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The time when the process was created. The process ID 
+        and the time when the process was created, uniquely 
+        identifies a process."
+    ::= { cpmProcessEntry 5 }
+
+cpmProcessAverageUSecs OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    microseconds
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Average elapsed CPU time in microseconds when the 
+        process was active. This object deprecates the
+        object cpmProcessuSecs."
+    ::= { cpmProcessEntry 6 }
+
+cpmProcessExtTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CpmProcessExtEntry
+    ACCESS not-accessible
+    STATUS deprecated
+    DESCRIPTION
+        "This table contains information that may or may
+        not be available on all cisco devices. It contains
+        additional objects for the more general
+        cpmProcessTable. This object is deprecated by
+        cpmProcessExtRevTable."
+    ::= { cpmProcess 2 }
+
+cpmProcessExtEntry OBJECT-TYPE
+    SYNTAX CpmProcessExtEntry
+    ACCESS not-accessible
+    STATUS deprecated
+    DESCRIPTION
+        "An entry containing additional information for
+        a particular process. This object is deprecated by
+        cpmProcessExtRevEntry."
+    INDEX { cpmCPUTotalIndex, cpmProcessPID }
+-- Augments cpmProcessEntry
+    ::= { cpmProcessExtTable 1 }
+
+CpmProcessExtEntry ::= SEQUENCE {
+    cpmProcExtMemAllocated Gauge,
+    cpmProcExtMemFreed Gauge,
+    cpmProcExtInvoked Counter,
+    cpmProcExtRuntime Counter,
+    cpmProcExtUtil5Sec Gauge,
+    cpmProcExtUtil1Min Gauge,
+    cpmProcExtUtil5Min Gauge,
+    cpmProcExtPriority INTEGER
+    }
+
+cpmProcExtMemAllocated OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "The sum of all the dynamically allocated memory that
+        this process has received from the system. This includes
+        memory that may have been returned. The sum of freed
+        memory is provided by cpmProcExtMemFreed. This object
+        is deprecated by cpmProcExtMemAllocatedRev."
+    ::= { cpmProcessExtEntry 1 }
+
+cpmProcExtMemFreed OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "The sum of all memory that this process has returned 
+        to the system. This object is deprecated by 
+        cpmProcExtMemFreedRev."
+    ::= { cpmProcessExtEntry 2 }
+
+cpmProcExtInvoked OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "The number of times since cpmTimeCreated that 
+        the process has been invoked. This object is
+        deprecated by cpmProcExtInvokedRev."
+    ::= { cpmProcessExtEntry 3 }
+
+cpmProcExtRuntime OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    microseconds
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "The amount of CPU time the process has used, in 
+        microseconds. This object is deprecated by
+        cpmProcExtRuntimeRev."
+    ::= { cpmProcessExtEntry 4 }
+
+cpmProcExtUtil5Sec OBJECT-TYPE
+    SYNTAX Gauge(1..100)
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "This object provides a general idea of how busy 
+        a process caused the processor to be over a 5 
+        second period. It is determined as a weighted 
+        decaying average of the current idle time over 
+        the longest idle time. Note that this information 
+        should be used as an estimate only. This object is 
+        deprecated by cpmProcExtUtil5SecRev which has the 
+        changed range of value (0..100)."
+    ::= { cpmProcessExtEntry 5 }
+
+cpmProcExtUtil1Min OBJECT-TYPE
+    SYNTAX Gauge(1..100)
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "This object provides a general idea of how busy 
+        a process caused the processor to be over a 1 
+        minute period. It is determined as a weighted 
+        decaying average of the current idle time over the 
+        longest idle time. Note that this information 
+        should be used as an estimate only. This object is 
+        deprecated by cpmProcExtUtil1MinRev which has
+        the changed range of value (0..100)."
+    ::= { cpmProcessExtEntry 6 }
+
+cpmProcExtUtil5Min OBJECT-TYPE
+    SYNTAX Gauge(1..100)
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "This object provides a general idea of how busy 
+        a process caused the processor to be over a 5 
+        minute period. It is determined as a weighted 
+        decaying average of the current idle time over 
+        the longest idle time. Note that this information 
+        should be used as an estimate only. This object
+        is deprecated by cpmProcExtUtil5MinRev which
+        has the changed range of value (0..100)."
+    ::= { cpmProcessExtEntry 7 }
+
+cpmProcExtPriority OBJECT-TYPE
+    SYNTAX INTEGER {
+        critical(1),
+        high(2),
+        normal(3),
+        low(4),
+        notAssigned(5)
+        }
+    ACCESS read-write
+    STATUS deprecated
+    DESCRIPTION
+        "The priority level at which the process is 
+        running. This object is deprecated by
+        cpmProcExtPriorityRev."
+    ::= { cpmProcessExtEntry 8 }
+
+cpmProcessExtRevTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CpmProcessExtRevEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains information that may or may
+        not be available on all cisco devices. It contains
+        additional objects for the more general
+        cpmProcessTable. This object deprecates 
+        cpmProcessExtTable."
+    ::= { cpmProcess 3 }
+
+cpmProcessExtRevEntry OBJECT-TYPE
+    SYNTAX CpmProcessExtRevEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry containing additional information for
+        a particular process. This object deprecates 
+        cpmProcessExtEntry."
+    INDEX { cpmCPUTotalIndex, cpmProcessPID }
+    ::= { cpmProcessExtRevTable 1 }
+
+CpmProcessExtRevEntry ::= SEQUENCE {
+    cpmProcExtMemAllocatedRev Gauge,
+    cpmProcExtMemFreedRev Gauge,
+    cpmProcExtInvokedRev Counter,
+    cpmProcExtRuntimeRev Counter,
+    cpmProcExtUtil5SecRev Gauge,
+    cpmProcExtUtil1MinRev Gauge,
+    cpmProcExtUtil5MinRev Gauge,
+    cpmProcExtPriorityRev INTEGER
+    }
+
+cpmProcExtMemAllocatedRev OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The sum of all the dynamically allocated memory that
+        this process has received from the system. This includes
+        memory that may have been returned. The sum of freed
+        memory is provided by cpmProcExtMemFreedRev. This object
+        deprecates cpmProcExtMemAllocated."
+    ::= { cpmProcessExtRevEntry 1 }
+
+cpmProcExtMemFreedRev OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The sum of all memory that this process has returned 
+        to the system. This object  deprecates 
+        cpmProcExtMemFreed."
+    ::= { cpmProcessExtRevEntry 2 }
+
+cpmProcExtInvokedRev OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of times since cpmTimeCreated that 
+        the process has been invoked. This object 
+        deprecates cpmProcExtInvoked."
+    ::= { cpmProcessExtRevEntry 3 }
+
+cpmProcExtRuntimeRev OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    microseconds
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The amount of CPU time the process has used, in 
+        microseconds. This object deprecates
+        cpmProcExtRuntime."
+    ::= { cpmProcessExtRevEntry 4 }
+
+cpmProcExtUtil5SecRev OBJECT-TYPE
+    SYNTAX Gauge(0..100)
+--  Units
+--    percent
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object provides a general idea of how busy 
+        a process caused the processor to be over a 5 
+        second period. It is determined as a weighted 
+        decaying average of the current idle time over 
+        the longest idle time. Note that this information 
+        should be used as an estimate only. This object
+        deprecates cpmProcExtUtil5Sec and increases the 
+        value range to (0..100)."
+    ::= { cpmProcessExtRevEntry 5 }
+
+cpmProcExtUtil1MinRev OBJECT-TYPE
+    SYNTAX Gauge(0..100)
+--  Units
+--    percent
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object provides a general idea of how busy 
+        a process caused the processor to be over a 1 
+        minute period. It is determined as a weighted 
+        decaying average of the current idle time over the 
+        longest idle time. Note that this information 
+        should be used as an estimate only. This object 
+        deprecates cpmProcExtUtil1Min and increases the value
+        range to (0..100)."
+    ::= { cpmProcessExtRevEntry 6 }
+
+cpmProcExtUtil5MinRev OBJECT-TYPE
+    SYNTAX Gauge(0..100)
+--  Units
+--    percent
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object provides a general idea of how busy 
+        a process caused the processor to be over a 5 
+        minute period. It is determined as a weighted 
+        decaying average of the current idle time over 
+        the longest idle time. Note that this information 
+        should be used as an estimate only. This object
+        deprecates cpmProcExtUtil5Min and increases the
+        value range to (0..100)."
+    ::= { cpmProcessExtRevEntry 7 }
+
+cpmProcExtPriorityRev OBJECT-TYPE
+    SYNTAX INTEGER {
+        critical(1),
+        high(2),
+        normal(3),
+        low(4),
+        notAssigned(5)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The priority level at which the process is 
+        running. This object deprecates 
+        cpmProcExtPriority."
+    ::= { cpmProcessExtRevEntry 8 }
+
+cpmCPUTotalGroup OBJECT IDENTIFIER ::= { cpmGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--    A collection of objects providing CPU load monitoring
+--    information. This group is mandatory for all cisco devices.
+--    This group is deprecated since the objects cpmCPUTotal5sec,
+--    cpmCPUTotal1min and cpmCPUTotal5min are
+--    deprecated. A new object cpmCPUTotalGroupRev is
+--    added in place of it.
+--  objects
+--    cpmCPUTotalPhysicalIndex, cpmCPUTotal5sec, cpmCPUTotal1min, 
+--    cpmCPUTotal5min
+
+cpmProcessGroup OBJECT IDENTIFIER ::= { cpmGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--    A collection of objects providing common process 
+--    monitoring information. This group is mandatory for 
+--    all cisco devices. This object is deprecated
+--    by cpmProcessGroupRev.
+--  objects
+--    cpmProcessPID, cpmProcessName, cpmProcessuSecs, 
+--    cpmProcessTimeCreated
+
+cpmProcessExtGroup OBJECT IDENTIFIER ::= { cpmGroups 3 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--    A collection of objects providing additional and 
+--    more detailed process monitoring information. This 
+--    group is mandatory for all cisco devices that have 
+--    the internal capability to keep this information. 
+--    This group is deprecated and new group
+--    cpmProcessExtGroupRev is added.
+--  objects
+--    cpmProcExtMemAllocated, cpmProcExtMemFreed, cpmProcExtInvoked, 
+--    cpmProcExtRuntime, cpmProcExtUtil5Sec, cpmProcExtUtil1Min, 
+--    cpmProcExtUtil5Min, cpmProcExtPriority
+
+cpmCPUTotalGroupRev OBJECT IDENTIFIER ::= { cpmGroups 4 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing CPU load monitoring
+--    information. This group is mandatory for all cisco
+--    devices. This group deprecates cpmCPUTotalGroup.
+--  objects
+--    cpmCPUTotalPhysicalIndex, cpmCPUTotal5secRev, 
+--    cpmCPUTotal1minRev, cpmCPUTotal5minRev
+
+cpmProcessExtGroupRev OBJECT IDENTIFIER ::= { cpmGroups 5 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing additional and 
+--    more detailed process monitoring information. This 
+--    group is mandatory for all cisco devices that have 
+--    the internal capability to keep this information.
+--    This group is formed after deprecating cpmProcessExtGroup.
+--    cpmProcExtMemAllocatedRev, cpmProcExtMemFreedRev,
+--    cpmProcExtInvokedRev, cpmProcExtRuntimeRev,
+--    cpmProcExtUtil5SecRev, cpmProcExtUtil1MinRev and 
+--    cpmProcExtUtil5MinRev are the new objects added.
+--  objects
+--    cpmProcExtMemAllocatedRev, cpmProcExtMemFreedRev, 
+--    cpmProcExtInvokedRev, cpmProcExtRuntimeRev, 
+--    cpmProcExtUtil5SecRev, cpmProcExtUtil1MinRev, 
+--    cpmProcExtUtil5MinRev, cpmProcExtPriorityRev
+
+cpmProcessGroupRev OBJECT IDENTIFIER ::= { cpmGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing common process 
+--    monitoring information. This group is mandatory for 
+--    all cisco devices. This object deprecates
+--    cpmProcessGroup.
+--  objects
+--    cpmProcessPID, cpmProcessName, cpmProcessAverageUSecs, 
+--    cpmProcessTimeCreated
+
+cProcessMIBCompliance OBJECT IDENTIFIER ::= { cpmCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities which implement
+--    the Cisco Process MIB. This is deprecated and new 
+--    compliance cProcessMIBComplianceRev is added.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cpmCPUTotalGroup
+--   MandGroup
+--    cpmProcessGroup
+--   OptGroup
+--    cpmProcessExtGroup
+--   ObjVar
+--    cpmProcExtPriority
+
+cProcessMIBComplianceRev OBJECT IDENTIFIER ::= { cpmCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for entities which implement
+--    the Cisco Process MIB. This compliance module
+--    deprecates cProcessMIBCompliance.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cpmCPUTotalGroupRev
+--   MandGroup
+--    cpmProcessGroupRev
+--   OptGroup
+--    cpmProcessExtGroupRev
+
+
+END
+

@@ -1,0 +1,440 @@
+-- MIB created 2/09/100 15:55:56, by
+--   SMIC (the next generation) version 1.6.29, November 22, 1994.
+
+CISCO-NETWORK-REGISTRAR-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-NETWORK-REGISTRAR-MIB.my"
+
+IMPORTS
+    IpAddress
+            FROM SNMPv2-SMI-v1
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215
+    DisplayString
+            FROM SNMPv2-TC-v1
+    Unsigned32
+            FROM CISCO-TC
+    ciscoMgmt
+            FROM CISCO-SMI;
+
+ciscoNetworkRegistrarMIB OBJECT IDENTIFIER ::= { ciscoMgmt 120 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    9901040000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--    Cisco Systems
+--     Customer Service
+--    
+--     Postal: 170 W Tasman Drive
+--             San Jose, CA  95134
+--             USA
+--    
+--     Tel: +1 800 553-NETS
+--    
+--     E-mail: cs-cnr-snmp@cisco.com
+--  Descr
+--    MIB for Cisco Network Registrar (CNR)
+
+ciscoNetworkRegistrarMIBObjects OBJECT IDENTIFIER ::= { ciscoNetworkRegistrarMIB 1 }
+cnrDHCP         OBJECT IDENTIFIER ::= { ciscoNetworkRegistrarMIBObjects 1 }
+cnrNotifObjects OBJECT IDENTIFIER ::= { ciscoNetworkRegistrarMIBObjects 2 }
+ciscoNetRegMIBNotificationPrefix OBJECT IDENTIFIER ::= { ciscoNetworkRegistrarMIB 2 }
+ciscoNetRegMIBNotifications OBJECT IDENTIFIER ::= { ciscoNetRegMIBNotificationPrefix 0 }
+ciscoNetworkRegistrarMIBConformance OBJECT IDENTIFIER ::= { ciscoNetworkRegistrarMIB 2 }
+ciscoNetworkRegistrarMIBCompliances OBJECT IDENTIFIER ::= { ciscoNetworkRegistrarMIBConformance 1 }
+ciscoNetworkRegistrarMIBGroups OBJECT IDENTIFIER ::= { ciscoNetworkRegistrarMIBConformance 2 }
+
+CnrPhysAddress ::= OCTET STRING(SIZE(1..32))
+-- TEXTUAL-CONVENTION
+--  DspHint
+--    t,l,xx[:xx...]
+--  Status
+--    mandatory
+--  Descr
+--    A Layer 1 address which includes the hardware address
+--     space as well as the usual MAC address. This object is
+--     encoded in ASCII as
+--                <type>,<length>,<address>
+--        where
+--                <type>  is the value of the hardware address space
+--                        field, as used in ARP (i.e, 1 for Ethernet,
+--                        6 for token ring...)  IANA has a list of
+--                        registered numbers for this field.
+--                <length> is the length of the address, in bytes (not
+--                         ASCII chars)
+--                <address> is the ASCII hex-encoded address (2 ASCII
+--                         characters per byte; 12 chars for an Ethernet
+--                         address.)
+--        This encoding is intended to mirror the representation
+--        of MAC addresses in DHCP.
+--  Refer
+--    RFC 2131
+
+cnrDHCPScopeTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CnrDHCPScopeEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The table listing characteristics of all scopes.
+         Entries in this table correspond to scopes, which are
+         added and deleted via the CNR GUI or CLI."
+    ::= { cnrDHCP 1 }
+
+cnrDHCPScopeEntry OBJECT-TYPE
+    SYNTAX CnrDHCPScopeEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry in the cnrDHCPScopeTable."
+    INDEX { cnrDHCPScopeName }
+    ::= { cnrDHCPScopeTable 1 }
+
+CnrDHCPScopeEntry ::= SEQUENCE {
+    cnrDHCPScopeName DisplayString(SIZE(1..100)),
+    cnrDHCPScopeFreeAddrLowThreshold Unsigned32,
+    cnrDHCPScopeFreeAddrHighThreshold Unsigned32,
+    cnrDHCPScopeFreeAddrValue Unsigned32,
+    cnrDHCPScopeFreeAddrUnits INTEGER
+    }
+
+cnrDHCPScopeName OBJECT-TYPE
+    SYNTAX DisplayString(SIZE(1..100))
+--    Rsyntax OCTET STRING(SIZE(1..100))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The name of the scope, which uniquely identifies
+         an entry in the cnrDHCPScopeTable."
+    ::= { cnrDHCPScopeEntry 1 }
+
+cnrDHCPScopeFreeAddrLowThreshold OBJECT-TYPE
+    SYNTAX Unsigned32
+--    Rsyntax Gauge32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The low threshold for available free addresses in
+         this scope.  If the value for available free addresses
+         in this scope becomes equal to or less than this value,
+         a cnrDHCPScopeFreeAddrLowThreshold event is generated 
+         for this scope.  No more cnrDHCPScopeFreeAddrLowThreshold
+         events will be generated for this scope during this
+         execution of the DHCP server until the value for available
+         free addresses has exceeded the value of
+         cnrDHCPScopeFreeAddrHighThreshold.
+        
+         This value may be expressed as either an absolute value
+         or a percentage; the units are specified by the value of
+         cnrDHCPScopeFreeAddrUnits."
+    ::= { cnrDHCPScopeEntry 2 }
+
+cnrDHCPScopeFreeAddrHighThreshold OBJECT-TYPE
+    SYNTAX Unsigned32
+--    Rsyntax Gauge32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The high threshold for available free addresses in this
+         scope.  If a cnrDHCPScopeFreeAddrLowThreshold event has
+         been generated for this scope, and the value for available
+         free addresses has exceeded the value of 
+         cnrDHCPScopeFreeAddrHighThreshold, then a
+         ciscoNetRegFreeAddressHigh event will be generated. No
+         more ciscoNetRegFreeAddressHigh events will be generated
+         for this scope during this execution of the DHCP server
+         until the value for available free addresses becomes equal
+         to or less than the value of 
+         cnrDHCPScopeFreeAddrHighThreshold.
+        
+         This value may be expressed as either an absolute value
+         or a percentage; the units are specified by the value of
+         cnrDHCPScopeFreeAddrUnits."
+    ::= { cnrDHCPScopeEntry 3 }
+
+cnrDHCPScopeFreeAddrValue OBJECT-TYPE
+    SYNTAX Unsigned32
+--    Rsyntax Gauge32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of IP addresses which are available
+         within this scope.  May be expressed as either
+         an absolute value or a percentage; the units are
+         given by the value of cnrDHCPScopeFreeAddrUnits."
+    ::= { cnrDHCPScopeEntry 4 }
+
+cnrDHCPScopeFreeAddrUnits OBJECT-TYPE
+    SYNTAX INTEGER {
+        value(1),
+        percent(2)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The units associated with the value of 
+         cnrDHCPScopeFreeAddrValue."
+    ::= { cnrDHCPScopeEntry 5 }
+
+cnrNotifDupIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The IP address which was found to be a duplicate."
+    ::= { cnrNotifObjects 1 }
+
+cnrNotifMACAddress OBJECT-TYPE
+    SYNTAX CnrPhysAddress
+--    Rsyntax OCTET STRING(SIZE(1..32))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The offending MAC address which caused a duplicate IP
+         address to be detected."
+    ::= { cnrNotifObjects 2 }
+
+cnrNotifServer OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The IP Address of a server with which CNR
+         is attempting to communicate."
+    ::= { cnrNotifObjects 3 }
+
+cnrNotifServerType OBJECT-TYPE
+    SYNTAX INTEGER {
+        dns(1),
+        dhcp(2),
+        ldap(3)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The type of server"
+    ::= { cnrNotifObjects 4 }
+
+cnrNotifDupIpAddressDetectedBy OBJECT-TYPE
+    SYNTAX INTEGER {
+        dhcpClient(1),
+        dhcpServer(2)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "For a ciscoNetRegDuplicateAddress notification, this
+         object indicates whether the client or server detected
+         the condition."
+    ::= { cnrNotifObjects 5 }
+
+cnrNotifContestedIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The IP address for which ownership is claimed by two or
+        more DHCP servers."
+    ::= { cnrNotifObjects 6 }
+
+ciscoNetRegFreeAddressLow TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoNetRegMIBNotificationPrefix
+    VARIABLES {
+        cnrDHCPScopeFreeAddrLowThreshold, cnrDHCPScopeFreeAddrValue, 
+        cnrDHCPScopeFreeAddrUnits }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification signifies that the number
+         of available IP addresses for a particular scope
+         has fallen below the value of
+         cnrDHCPScopeFreeAddrLowThreshold for that scope."
+    ::= 1
+
+ciscoNetRegFreeAddressHigh TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoNetRegMIBNotificationPrefix
+    VARIABLES {
+        cnrDHCPScopeFreeAddrHighThreshold, 
+        cnrDHCPScopeFreeAddrValue, cnrDHCPScopeFreeAddrUnits }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification signifies that the number
+         of available IP addresses for a particular scope
+         has risen above the value of
+         cnrDHCPScopeFreeAddrHighThreshold for that scope."
+    ::= 2
+
+ciscoNetRegServerStart TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoNetRegMIBNotificationPrefix
+    VARIABLES {
+        cnrNotifServerType }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification signifies that the server
+         of the specified type has started on the
+         host from which this notification has been sent."
+    ::= 3
+
+ciscoNetRegServerStop TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoNetRegMIBNotificationPrefix
+    VARIABLES {
+        cnrNotifServerType }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification signifies that the server
+         of the specified type has stopped normally on the
+         host from which this notification has been sent."
+    ::= 4
+
+ciscoNetRegDNSQueueTooBig TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoNetRegMIBNotificationPrefix
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification indicates that the number of pending
+         dns updates has reached its limit.  Successive updates
+         may be dropped, and DHCP may stop responding to client
+         requests until this problem has cleared."
+    ::= 5
+
+ciscoNetRegOtherServerNotResponding TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoNetRegMIBNotificationPrefix
+    VARIABLES {
+        cnrNotifServer, cnrNotifServerType }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification signifies that a server is not
+         responding to updates from the DHCP server.  The 
+         identity of the server is given by the cnrNotifServer
+         object.  The type of the server is given by the
+         cnrNotifServerType object."
+    ::= 6
+
+ciscoNetRegDuplicateAddress TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoNetRegMIBNotificationPrefix
+    VARIABLES {
+        cnrNotifDupIpAddress, cnrNotifMACAddress, 
+        cnrNotifDupIpAddressDetectedBy }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification signifies that a  duplicate IP address
+         has been detected.  The DHCP server can detect this
+         condition through the ping-before-offer mechanism.
+         Alternatively, the client may have sent a DHCPDECLINE 
+         back to the server; this is assumed to be the result of
+         the client detecting that the address was in use.  In
+         either case, the DHCP server marks the IP address as
+         unavailable for leasing to clients.  The
+         cnrNotifDupIpAddressDetectedBy object indicates whether
+         the client or server detected this condition."
+    ::= 7
+
+ciscoNetRegAddressConflict TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoNetRegMIBNotificationPrefix
+    VARIABLES {
+        cnrNotifContestedIpAddress, cnrNotifServer }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification indicates that the DHCP server on this
+         host, and a DHCP server on another host, have claimed
+         ownership for the same IP address.  The
+         cnrNotifContestedIpAddress object indicates which address
+         is under contention.  The cnrNotifServer object indicates
+         with which other server a conflict was detected."
+    ::= 8
+
+ciscoNetRegOtherServerResponding TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoNetRegMIBNotificationPrefix
+    VARIABLES {
+        cnrNotifServer, cnrNotifServerType }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification signifies that a server which had formerly
+         been in a 'not responding' state is now responding to
+         updates from the CNR protocol server.  The identity of the
+         server is given by the cnrNotifServer object.  The type of
+         the server is given by the cnrNotifServerType object.
+        
+         NOTE: One should not rely on recieving this notification
+         as an indication that all is well with the network.
+         Several conditions, including restart of the CNR
+         protocol server, could result in either multiple
+         ciscoNetRegOtherServerNotResponding notifications being sent,
+         or in a ciscoNetRegOtherServerResponding notification NOT
+         being sent."
+    ::= 9
+
+ciscoNetRegFailoverConfigMismatch TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoNetRegMIBNotificationPrefix
+    VARIABLES {
+        cnrNotifServer }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification signifies that a server has detected
+         via the failover protocol that its configuration does
+         not match that of its failover peer, and that reliable 
+         DHCP operation in the event of a server failure may not
+         be possible.  The identity of the peer server is given
+         by the cnrNotifServer object."
+    ::= 10
+
+ciscoNetworkRegistrarDHCPScopeObjectsGroup OBJECT IDENTIFIER ::= { ciscoNetworkRegistrarMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Network Registrar MIB objects used in DHCP scopes.
+--  objects
+--    cnrDHCPScopeFreeAddrLowThreshold, 
+--    cnrDHCPScopeFreeAddrHighThreshold, cnrDHCPScopeFreeAddrValue, 
+--    cnrDHCPScopeFreeAddrUnits
+
+ciscoNetworkRegistrarNotifObjectsGroup OBJECT IDENTIFIER ::= { ciscoNetworkRegistrarMIBGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Network Registrar MIB objects used in notifications.
+--  objects
+--    cnrNotifDupIpAddress, cnrNotifMACAddress, 
+--    cnrNotifDupIpAddressDetectedBy, cnrNotifServer, 
+--    cnrNotifServerType, cnrNotifContestedIpAddress
+
+ciscoNetworkRegistrarMIBCompliance OBJECT IDENTIFIER ::= { ciscoNetworkRegistrarMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for entities which implement
+--    the Cisco Network Registrar MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoNetworkRegistrarDHCPScopeObjectsGroup
+--   MandGroup
+--    ciscoNetworkRegistrarNotifObjectsGroup
+
+
+END
+

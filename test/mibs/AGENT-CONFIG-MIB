@@ -1,0 +1,1053 @@
+
+-- File Name : AGENT-CONFIG-MIB
+-- Date      : Tue Jul 10 16:04:17 GMT+05:30 2001
+-- Author    : AdventNet Agent Toolkit (C Edition) - MibEditor 5.0
+
+AGENT-CONFIG-MIB	DEFINITIONS ::= BEGIN
+	IMPORTS
+-- FIX: added additional imports (Integer32, Unsigned32)
+		enterprises, MODULE-IDENTITY, OBJECT-IDENTITY, OBJECT-TYPE, 
+		TimeTicks, IpAddress, Integer32, Unsigned32
+			FROM SNMPv2-SMI
+		DisplayString, RowStatus, TEXTUAL-CONVENTION
+			FROM SNMPv2-TC
+-- FIX:	removed enterprises here
+		DisplayString
+			FROM RFC1213-MIB;
+
+	adventnet	MODULE-IDENTITY
+		LAST-UPDATED	"9912180051Z"
+		ORGANIZATION	"AdventNet Inc"
+		CONTACT-INFO	"
+						AdventNet, Inc.
+						5645 Gibraltar Drive 
+						Pleasanton, CA 94588 USA 
+
+						Phone: +1-925-924-9500 
+						Fax: +1-925-924-9600
+
+						AdventNet Development Center (I) Pvt. Ltd.,
+						Office-A II Floor,
+						Kashyap Enclave
+						Velachery,
+						Chennai - 600 042
+						Tamil Nadu
+						INDIA
+
+						Phone: +91 44 243 2414
+
+						Email: cagent-support@adventnet.com"
+		DESCRIPTION	
+				"This MIB contains management information of AdventNet
+				Agent Toolkit (C Edition) runtime agent. This MIB is
+				used to monitor and manage the C run time agent which
+				supports SNMP, HTTP and TL1 protocols."
+
+		REVISION		"9912180051Z"
+		DESCRIPTION		""
+		::=  {  enterprises  2162  }
+
+
+	--
+	-- Textual Conventions:
+	--           
+
+	TL1CommunicationInterface ::= TEXTUAL-CONVENTION 
+		DISPLAY-HINT	""
+		STATUS			current
+		DESCRIPTION		"An idenitifier that uniquely identifies the 
+						communication interface  supported by the TL1 agent.
+						The values of TL1CommunicationInterface are:
+
+						- Value 1 denotes TCP/IP protocol.
+
+						- Value 2 denotes UDP/IP protocol.
+
+						- Value 3 denotes Craft Interface.
+
+						- Value 4 denotes X.25 protoocol.
+
+						- Value 5 denotes Others."
+		SYNTAX 			INTEGER  { tcp-ip ( 1 ) , udp-ip ( 2 ) , craft-interface ( 3 ) , x-25 ( 4 ) , others ( 5 ) } 
+
+	TcpConnectionState ::= TEXTUAL-CONVENTION 
+		DISPLAY-HINT	""
+		STATUS			current
+		DESCRIPTION		"The TCP/IP connection stated used in tcpConnTable.
+
+						If its value is Operational that means the particular 
+						connection is active, it will accept new connection 
+						and process requests.
+
+						If it is blocked that means the particular connection 
+						is not operational time being, so it can't accept any 
+						new connection and will not process any requests."
+		SYNTAX 			INTEGER  { 
+							operational (1), 
+							blocked (2) 
+							} 
+
+	ProtocolAdminStatus ::= TEXTUAL-CONVENTION 
+		DISPLAY-HINT	""
+		STATUS			current
+		DESCRIPTION		"An identifier that uniquely identifies the	
+						Admiministrative operation performed by the manager 
+						in a protocol adapter (SNMP, TL1 and HTTP). The 
+						values of Administrative Operation status are:
+						
+						- Value 0 denotes that a particular protocol 
+						adapter's operations should be stopped. 
+						
+						- Value 1 denotes a particualar protocol
+						adapter's operations shuould be started or resumed.
+
+						- Value 2 denotes a particualar protocol
+						adapter's operations shuould be stopped first then
+						should be started immediately."
+		SYNTAX 			INTEGER  { stop ( 0 ) , start ( 1 ) , restart ( 2 ) } 
+
+	ProtocolOperStatus ::= TEXTUAL-CONVENTION 
+		DISPLAY-HINT	""
+		STATUS			current
+		DESCRIPTION		"An identifier that uniquely identifies the	operational
+						status of each protocol (SNMP, TL1 and HTTP). The values
+						of Operation status are:
+						
+						- Value 0 denotes that a particular protocol 
+						adapter is not running or is not active. 
+						
+						- Value 1 denotes a particualr prtocol
+						is functionaly active and it will accept the 
+						requests from the manager and process them."
+		SYNTAX 			INTEGER  { not-running ( 0 ) , running ( 1 ) } 
+
+
+
+	--
+	-- To create a complete MIB tree.
+	--
+
+	org			OBJECT IDENTIFIER ::=  { iso  3 }
+	dod			OBJECT IDENTIFIER ::=  { org  6 }
+	internet	OBJECT IDENTIFIER ::=  { dod  1 }
+	private		OBJECT IDENTIFIER ::=  { internet  4 }
+	enterprises	OBJECT IDENTIFIER ::=  { private  1 }
+
+
+	--
+	-- The various groups defined within this MIB definition:
+	--           
+
+	products	OBJECT IDENTIFIER
+		::=  {  adventnet  10  }
+
+	cagent	OBJECT-IDENTITY
+		STATUS			current
+		DESCRIPTION		
+				"The Agent Toolkit (C Edition) is a rapid prototyping and 
+				development tool for building ANSI C based agents best 
+				suited for device and System Management. The toolkit 
+				supports to provide common instrumentation on the agent 
+				and support multiple protocols for management of the agent. 
+				The protocols that are currently supported in this release 
+				are SNMP, TL1 and HTTP."
+		REFERENCE		"Visit our web site http://www.adventnet.com"
+		::=  {  products  1  }
+
+	agent	OBJECT IDENTIFIER
+		::=  {  cagent  1  }
+
+	protocols	OBJECT IDENTIFIER
+		::=  {  cagent  2  }
+
+
+	--
+	-- General information about the agent like id, version, uptime, etc.
+	--
+
+	agentId	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"Identification of the agent. Recomended convention is
+				agent IP address + numeric value (optional)"
+		::=  {  agent  1  }
+
+	agentVersion	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"Version of the agent."
+		::=  {  agent  2  }
+
+	agentVendorName	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"Agent vendor name."
+		::=  {  agent  3  }
+
+	agentUpTime	OBJECT-TYPE	
+		SYNTAX			TimeTicks
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"The time (in hundredths of a second) since the
+				network management portion of the agent was last
+				re-initialized."
+		::=  {  agent  4  }
+
+	agentPlatform	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"The Platform (Operating System) on which the agent is running."
+		::=  {  agent  5  }
+
+	agentContact	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"The textual identification of the contact person
+				for this managed node(agent), together with information
+				on how to contact this person."
+		::=  {  agent  6  }
+
+
+	--
+	-- The various groups defined within the "agent" group:
+	-- 
+
+	snmp	OBJECT IDENTIFIER ::=  { protocols  1 }
+	http	OBJECT IDENTIFIER ::=  { protocols  2 }
+	tl1		OBJECT IDENTIFIER ::=  { protocols  3 }
+
+
+	--
+	-- General information about the snmp agent like supported version,
+	-- uptime, etc.
+	--
+
+	snmpVersion	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"The higher SNMP version supported by the SNMP agent (adapter).
+				The supported SNMP versions are SNMPv1, SNMPv2c and SNMPv3"
+		DEFVAL			{ "SNMPv1" }
+		::=  {  snmp  1  }
+
+	snmpIpAddress	OBJECT-TYPE	
+		SYNTAX			IpAddress
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"IP address used by the SNMP agent (adapter) to receive and send
+				requests and responses."
+		DEFVAL			{ "127.0.0.1" }
+		::=  {  snmp  2  }
+
+	snmpPortNumer	OBJECT-TYPE	
+		SYNTAX			Integer32 
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"Port number used by the SNMP agent (adapter) to receive and send
+				requests and responses."
+		DEFVAL			{ 161 }
+		::=  {  snmp  3  }
+
+	snmpUpTime	OBJECT-TYPE	
+		SYNTAX			TimeTicks
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"SNMP agent(adapter) up time in hundredths second."
+		::=  {  snmp  4  }
+
+	snmpOperStatus	OBJECT-TYPE	
+		SYNTAX			ProtocolOperStatus
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"SNMP agent status, if it is one (1) it means SNMP
+				agent (adapter) is running. If it is zero (0) it
+				means SNMP agent (adapter) is not running."
+		::=  {  snmp  5  }
+
+
+
+	--
+	-- The various groups defined within the snmp group:
+	-- 
+
+	remConfigTables	OBJECT IDENTIFIER
+		::=  {  snmp  6  }
+
+
+	--
+	-- General information about the http agent like supported version,
+	-- uptime, etc.
+	--
+
+	httpVersion	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"Supported HTTP version. The possible values are HTTP 1.0,
+				and HTTP 1.1."
+		::=  {  http  1  }
+
+	httpIpAddress	OBJECT-TYPE	
+		SYNTAX			IpAddress
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"IP address used by the HTTP agent(adpater) to receive and send
+				requests and responses."
+		DEFVAL			{ "127.0.0.1" }
+		::=  {  http  2  }
+
+	httpPortNumber	OBJECT-TYPE	
+		SYNTAX			Integer32 
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"Port number used by the HTTP agent (adapter)  to listen manager
+				requests."
+		DEFVAL			{ 80 }
+		::=  {  http  3  }
+
+	httpUpTime	OBJECT-TYPE	
+		SYNTAX			TimeTicks
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"HTTP agent (adapter) up time in hundredths second"
+		::=  {  http  4  }
+
+	httpOperStatus	OBJECT-TYPE	
+		SYNTAX			ProtocolOperStatus
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"HTTP agent (adapter) status, if it is one (1) it means HTTP
+				agent is running. If it is zero (0) it means HTTP agent is 
+				not running."
+		::=  {  http  5  }
+
+
+
+	--
+	-- General information about the TL1 agent like supported version, uptime,
+	-- operation status, etc.
+	--
+
+	tl1Version	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"TL1 agent (adapter) version."
+		::=  {  tl1  1  }
+
+	tl1UpTime	OBJECT-TYPE	
+		SYNTAX			TimeTicks
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"TL1 agent(adapter) uptime in hundredths second."
+		::=  {  tl1  2  }
+
+	tl1OperStatus	OBJECT-TYPE	
+		SYNTAX			ProtocolOperStatus
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"TL1 agent (adapter) status, if it is one (1) it means 
+				TL1 agent is running. If it is zero (0) it means TL1 
+				agent is not running."
+		::=  {  tl1  3  }
+
+
+
+	--
+	-- TL1 communication table has supported transport protocols information.
+	--
+
+	tl1CommIfcTable	OBJECT-TYPE
+		SYNTAX		SEQUENCE  OF  Tl1CommIfcEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+			" TL1 agent can support more than one transport
+			protocol support like TCP/IP, Serial port, X.25, etc
+			This table is used to list out the supported
+			transport protocols in the TL1 agent."
+		::=  { tl1  4 }
+
+	tl1CommIfcEntry	OBJECT-TYPE
+		SYNTAX		Tl1CommIfcEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+				"Each entry in this table describes about one supported 
+				transport protocol of TL1 agent."
+		INDEX		{  tl1CommIfcIndex  }
+		::=  { tl1CommIfcTable 1 }
+
+	Tl1CommIfcEntry  ::=  SEQUENCE {
+		tl1CommIfcIndex  Integer32,
+		tl1CommIfcType  TL1CommunicationInterface,
+		tl1CommIfcInfo  DisplayString
+		}
+
+
+	tl1CommIfcIndex	OBJECT-TYPE	
+		SYNTAX			Integer32 
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"TL1 communication interface index, it is just a numeric 
+				value which will be assigned during row creation."
+		::=  {  tl1CommIfcEntry  1  }
+
+
+	tl1CommIfcType	OBJECT-TYPE	
+		SYNTAX			TL1CommunicationInterface
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"The supported TL1 communication interface type between NE and OSS."
+		::=  {  tl1CommIfcEntry  2  }
+
+
+	tl1CommIfcInfo	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"Detailed information about the supported TL1 transport protocol."
+		::=  {  tl1CommIfcEntry  3  }
+
+
+	--
+	-- TL1 
+	--
+
+	tl1TcpTable	OBJECT-TYPE
+		SYNTAX		SEQUENCE  OF  Tl1TcpEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+			"Contains information about TCP/IP communication interface
+			supported by the TL1 agent. By default TCP/IP interface is
+			supported in the agent. Also the agent will support more than
+			one connection (port number) to access agent data. This table
+			contains all supported connection information"
+		::=  { tl1  5 }
+
+	tl1tcpEntry	OBJECT-TYPE
+		SYNTAX		Tl1TcpEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+			"Each row stores one TCP/IP connection information like port number
+			IP address, Operational status, etc."
+		INDEX		{  tcpConnIpAddress, tcpConnPortNumber  }
+		::=  { tl1TcpTable 1 }
+
+	Tl1TcpEntry  ::=  SEQUENCE {
+		tcpConnIpAddress  IpAddress,
+		tcpConnPortNumber  Integer32,
+		tcpConnStatus  TcpConnectionState
+		}
+
+
+	tcpConnIpAddress	OBJECT-TYPE	
+		SYNTAX			IpAddress
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"IP address used for this connection."
+		::=  {  tl1tcpEntry  1  }
+
+
+	tcpConnPortNumber	OBJECT-TYPE	
+		SYNTAX			Integer32  
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"Port number used for this connection."
+		::=  {  tl1tcpEntry  2  }
+
+
+	tcpConnStatus	OBJECT-TYPE	
+		SYNTAX			TcpConnectionState
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The state of this TCP/IP connection. The state will be either
+				Operational or Blocked."
+		::=  {  tl1tcpEntry  3  }
+
+
+
+	--
+	-- ACL table contains SNMPv1/v2c supported community string information.
+	--
+
+	aclTable	OBJECT-TYPE
+		SYNTAX		SEQUENCE  OF  AclEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+			"The table maintains  a set of authentication parameters
+			like community and its maximum access of a SNMPv1/v2c 
+			agent."
+		::=  { remConfigTables  1 }
+
+	aclEntry	OBJECT-TYPE
+		SYNTAX		AclEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+			"Each entry in this table describes one valid
+			authentication propertes."
+		INDEX		{  aclCommunity  }
+		::=  { aclTable 1 }
+
+	AclEntry  ::=  SEQUENCE {
+		aclCommunity  DisplayString,
+		aclAccess  INTEGER,
+		aclStatus  RowStatus
+		}
+
+
+	aclCommunity	OBJECT-TYPE	
+		SYNTAX			DisplayString 
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"Community string used by the manager to commnuicate
+				with the SNMPv1/v2c agent."
+		DEFVAL			{ "public" }
+		::=  {  aclEntry  1  }
+
+
+	aclAccess	OBJECT-TYPE	
+		SYNTAX			INTEGER  { 
+							NO_ACCESS (0), 
+							READ_ONLY (1), 
+							WRITE_ONLY (2), 
+							READ_WRITE (3), 
+							READ_CREATE (4), 
+							ACCESS_FOR_NOTIFY (5)
+							} 
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The maximum access allowed for the corresponding
+				community."
+		DEFVAL			{ READ_ONLY }
+		::=  {  aclEntry  2  }
+
+
+	aclStatus	OBJECT-TYPE	
+		SYNTAX			RowStatus
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The status of this conceptual row.
+
+                 Until instances of all corresponding columns are
+                 appropriately configured, the value of the
+                 corresponding instance of the usmUserStatus column
+                 is 'notReady'"
+		::=  {  aclEntry  3  }
+
+
+	--
+	-- Trap Forwarding table of SNMPv1/v2c agent which store all
+	-- managers information  to whom traps will be sent.
+	--
+
+	v1v2TrapForwardingTable	OBJECT-TYPE
+		SYNTAX		SEQUENCE  OF  V1v2TrapForwardingEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+			"This table maintains the SNMP v1 and v2c managers
+			information like manager IP address, port number,
+			community, time out, retires, etc which are used 
+			in trap generation.  Timeout and retires are used 
+			in the case of SNMPv2c INFORM."
+		::=  { remConfigTables  2 }
+
+	v1v2TrapForwardingEntry	OBJECT-TYPE
+		SYNTAX		V1v2TrapForwardingEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+			"Each entry in this table refers one manager
+			information who is registered to receive traps
+			fromt the agent."
+		INDEX		{  v1v2ManagerHost, v1v2ManagerPort  }
+		::=  { v1v2TrapForwardingTable 1 }
+
+	V1v2TrapForwardingEntry  ::=  SEQUENCE {
+		v1v2ManagerHost  IpAddress,
+		v1v2ManagerPort  Unsigned32,
+		v1v2ManagerCommunity  DisplayString,
+		v1v2ManagerTimeOut  Unsigned32,
+		v1v2ManagerRetries  Unsigned32,
+		v1v2ManagerStatus  RowStatus
+		}
+
+
+	v1v2ManagerHost	OBJECT-TYPE	
+		SYNTAX			IpAddress
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"IP address where the manager is listening to
+				receive traps from the agent."
+		DEFVAL			{ "127.0.0.1" }
+		::=  {  v1v2TrapForwardingEntry  1  }
+
+
+	v1v2ManagerPort	OBJECT-TYPE	
+		SYNTAX			Unsigned32
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"The port at which manager is listening for
+				the traps from the agent."
+		DEFVAL			{ 162 }
+		::=  {  v1v2TrapForwardingEntry  2  }
+
+
+	v1v2ManagerCommunity	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The community used by the agent to send trap
+				or inform to this manager."
+		DEFVAL			{ "public" }
+		::=  {  v1v2TrapForwardingEntry  3  }
+
+
+	v1v2ManagerTimeOut	OBJECT-TYPE	
+		SYNTAX			Unsigned32 
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The  time out value in seconds for SNMPv2c INFORM."
+		DEFVAL			{ 5 }	-- seconds
+		::=  {  v1v2TrapForwardingEntry  4  }
+
+
+	v1v2ManagerRetries	OBJECT-TYPE	
+		SYNTAX			Unsigned32
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The number of retries in the case of SNMPV2c INFORM."
+		DEFVAL			{ 0 }
+		::=  {  v1v2TrapForwardingEntry  5  }
+
+
+	v1v2ManagerStatus	OBJECT-TYPE	
+		SYNTAX			RowStatus
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The status of this conceptual row.
+
+                 Until instances of all corresponding columns are
+                 appropriately configured, the value of the
+                 corresponding instance of the usmUserStatus column
+                 is 'notReady'"
+		::=  {  v1v2TrapForwardingEntry  6  }
+
+
+
+	--
+	-- Trap Forwarding table of SNMPv3 agent which store all
+	-- managers information to whom traps will be sent.
+	--
+
+	v3TrapForwardingTable	OBJECT-TYPE
+		SYNTAX		SEQUENCE  OF  V3TrapForwardingEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+			"This table maintains the SNMP v3 managers information
+			like manager IP address, port number, user name,
+			security model, context name, community, time out,
+			retires, etc which are used in trap generation. 
+			Timeout and retires are used in the case of INFORM."
+		::=  { remConfigTables  3 }
+
+	v3TrapForwardingEntry	OBJECT-TYPE
+		SYNTAX		V3TrapForwardingEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+			"Each entry in this table refers one SNMPv3 manager
+			who will listen for TRAP or INFORM."
+		INDEX		{  v3ManagerHost, v3ManagerPort  }
+		::=  { v3TrapForwardingTable 1 }
+
+	V3TrapForwardingEntry  ::=  SEQUENCE {
+		v3ManagerHost  IpAddress,
+		v3ManagerPort  Unsigned32,
+		v3ManagerCommunity  DisplayString,
+		v3ManagerUserName  DisplayString,
+		v3ManagerUserSecModel  Unsigned32,
+		v3ManagerUserContextName  DisplayString,
+		v3ManagerTimeOut  Unsigned32,
+		v3ManagerRetries  Unsigned32,
+		v3ManagerStatus  RowStatus
+		}
+
+
+	v3ManagerHost	OBJECT-TYPE	
+		SYNTAX			IpAddress
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"The IP address where the manager is  listening for
+				TRAPS or INFORMS."
+		DEFVAL			{ "127.0.0.1" }
+		::=  {  v3TrapForwardingEntry  1  }
+
+
+	v3ManagerPort	OBJECT-TYPE	
+		SYNTAX			Unsigned32
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"The UDP port at which manager is listening for
+				TRAPS or INFORMS."
+		DEFVAL			{ 162 }
+		::=  {  v3TrapForwardingEntry  2  }
+
+
+	v3ManagerCommunity	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The community string used by the agent when sending
+				SNMP v1/v2c TRAPS or INFORMS to the manager.
+				It used to support backward compatability,
+				i.e. without any change in the table, user can send
+				both SNMPv1 and v2c TARPS and INFORMS."
+		DEFVAL			{ "public" }
+		::=  {  v3TrapForwardingEntry  3  }
+
+
+	v3ManagerUserName	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"This user name is same  as in USM MIB RFC 2574."
+		REFERENCE		"RFC 2574 USM table ."
+		::=  {  v3TrapForwardingEntry  4  }
+
+
+	v3ManagerUserSecModel	OBJECT-TYPE	
+		SYNTAX			Unsigned32
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"This security model value is same as in USM table 
+				of USM MIB RFC2574."
+		REFERENCE		"RFC 2574 USM table"
+		DEFVAL			{ 3 }
+		::=  {  v3TrapForwardingEntry  5  }
+
+
+	v3ManagerUserContextName	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"This context name is  same as in VacmAccessTable of VACM MIB RFC2575."
+		REFERENCE		"RFC 2575"
+		::=  {  v3TrapForwardingEntry  6  }
+
+
+	v3ManagerTimeOut	OBJECT-TYPE	
+		SYNTAX			Unsigned32
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The  time out value in seconds for INFORM request."
+		DEFVAL			{ 5 }	-- seconds 
+		::=  {  v3TrapForwardingEntry  7  }
+
+
+	v3ManagerRetries	OBJECT-TYPE	
+		SYNTAX			Unsigned32
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The number of retries  for a failed INFORM reqeust."
+		DEFVAL			{ 0 }
+		::=  {  v3TrapForwardingEntry  8  }
+
+
+	v3ManagerStatus	OBJECT-TYPE	
+		SYNTAX			RowStatus
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The status of this conceptual row.
+
+                 Until instances of all corresponding columns are
+                 appropriately configured, the value of the
+                 corresponding instance of the usmUserStatus column
+                 is 'notReady'"
+		::=  {  v3TrapForwardingEntry  9  }
+
+
+
+	--
+	-- Proxy table contains subagents information like proxy oid, sub
+	-- agent IP address, port number, snmp version, etc. 
+	--
+
+	proxyTable	OBJECT-TYPE
+		SYNTAX		SEQUENCE  OF  ProxyEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+			"This table maintains each sub agent information like
+			sub-tree oid, subagent IP address, port number,
+			community,  SNMP version timoOut, retries, etc.
+			The master agent look up this table when a request
+			is received from the manager, to forware the receieved
+			request."
+		::=  { remConfigTables  4 }
+
+	proxyEntry	OBJECT-TYPE
+		SYNTAX		ProxyEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+			"Each entry in this table refers a sub agent."
+		INDEX		{  proxyOid, proxyContextName, proxyEntryInstance  }
+		::=  { proxyTable 1 }
+
+	ProxyEntry  ::=  SEQUENCE {
+		proxyOid  OBJECT IDENTIFIER,
+		proxyContextName  OCTET STRING,
+		proxyEntryInstance  OBJECT IDENTIFIER,
+		proxyHost  IpAddress,
+		proxyPortNumber  Unsigned32,
+		proxySnmpVersion  INTEGER,
+		proxyCommunity  DisplayString,
+		proxyTimeOut  Unsigned32,
+		proxyRetries  Unsigned32,
+		proxyStatus  RowStatus
+		}
+
+
+	proxyOid	OBJECT-TYPE	
+		SYNTAX			OBJECT IDENTIFIER
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION		
+				"The oid sub-tree implemented by the sub agent.
+				If a request starts with this sub-tree oid the
+				master agent do a proxy for sub agent."
+		DEFVAL			{ {  1 3 6 1 2 1 } }	-- MIB-II
+		::=  {  proxyEntry  1  }
+
+
+	proxyContextName	OBJECT-TYPE	
+		SYNTAX			OCTET STRING
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"Context Name to distinguish duplicate registration in the proxy."
+		DEFVAL			{ "default" }
+		::=  {  proxyEntry  2  }
+
+
+	proxyEntryInstance	OBJECT-TYPE	
+		SYNTAX			OBJECT IDENTIFIER
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"Instance value for SNMP table level proxy."
+		::=  {  proxyEntry  3  }
+
+
+	proxyHost	OBJECT-TYPE	
+		SYNTAX			IpAddress
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"Sub  agent IP address where it is running."
+		DEFVAL			{ "127.0.0.1" }
+		::=  {  proxyEntry  4  }
+
+
+	proxyPortNumber	OBJECT-TYPE	
+		SYNTAX			Unsigned32
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"Sub agent port number where it is running."
+		DEFVAL			{ 161 }
+		::=  {  proxyEntry  5  }
+
+
+	proxySnmpVersion	OBJECT-TYPE	
+		SYNTAX			INTEGER  { SNMP_VERSION_1 ( 0 ) , SNMP_VERSION_2C ( 1 ) } 
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The SNMP version used between the master and sub agent."
+		DEFVAL			{ SNMP_VERSION_1 }
+		::=  {  proxyEntry  6  }
+
+
+	proxyCommunity	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"Community  string used  between the master agent
+				and sub agent."
+-- FIX: changed default value to a string
+		DEFVAL			{ "public" }
+		::=  {  proxyEntry  7  }
+
+
+	proxyTimeOut	OBJECT-TYPE	
+		SYNTAX			Unsigned32
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The time out value for each request send to the
+				sub agent.  The value is in seconds."
+		DEFVAL			{ 5 }  -- seconds
+		::=  {  proxyEntry  8  }
+
+
+	proxyRetries	OBJECT-TYPE	
+		SYNTAX			Unsigned32
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The number of retries for a failed proxy SNMP reqeust."
+		DEFVAL			{ 0 }
+		::=  {  proxyEntry  9  }
+
+
+	proxyStatus	OBJECT-TYPE	
+		SYNTAX			RowStatus
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The status of this conceptual row.
+
+                 Until instances of all corresponding columns are
+                 appropriately configured, the value of the
+                 corresponding instance of the usmUserStatus column
+                 is 'notReady'"
+		::=  {  proxyEntry  10  }
+
+
+
+	--
+	-- Trap receiver table stores subagents information who
+	-- will send traps to master agent.
+	--
+
+	trapReceiverTable	OBJECT-TYPE
+		SYNTAX		SEQUENCE  OF  TrapReceiverEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+			"This table maintains each sub agent information like
+			subagent IP address, port number, community, etc. 
+			they are allowed to send traps to the master agent. 
+			This table is used if PROXY is configurd."
+		::=  { remConfigTables  5 }
+
+	trapReceiverEntry	OBJECT-TYPE
+		SYNTAX		TrapReceiverEntry
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION	
+				"An entry of this table corresponds to one subagent
+				who is allowed to send trap to the master agent."
+		INDEX		{  agentHost, agentTrapPortNumber  }
+		::=  { trapReceiverTable 1 }
+
+	TrapReceiverEntry  ::=  SEQUENCE {
+		agentHost  IpAddress,
+		agentTrapPortNumber  Unsigned32,
+		agentCommunity  DisplayString,
+		agentStatus  RowStatus
+		}
+
+	agentHost	OBJECT-TYPE	
+		SYNTAX			IpAddress
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION	
+				"Sub agent IP addres. "
+		DEFVAL			{ "127.0.0.1" }
+		::=  {  trapReceiverEntry  1  }
+
+
+	agentTrapPortNumber	OBJECT-TYPE	
+		SYNTAX			Unsigned32 
+		MAX-ACCESS		read-only
+		STATUS			current
+		DESCRIPTION	
+				"Sub agent port number addres. "
+		DEFVAL			{ 161 }
+		::=  {  trapReceiverEntry  2  }
+
+
+	agentCommunity	OBJECT-TYPE	
+		SYNTAX			DisplayString
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION	
+				"The community string used by the subagent to send 
+				traps to the master agent. "
+		DEFVAL			{ "public" }
+		::=  {  trapReceiverEntry  3  }
+
+
+	agentStatus	OBJECT-TYPE	
+		SYNTAX			RowStatus
+		MAX-ACCESS		read-write
+		STATUS			current
+		DESCRIPTION		
+				"The status of this conceptual row.
+
+                 Until instances of all corresponding columns are
+                 appropriately configured, the value of the
+                 corresponding instance of the usmUserStatus column
+                 is 'notReady'"
+		::=  {  trapReceiverEntry  4  }
+
+END

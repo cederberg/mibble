@@ -1,0 +1,739 @@
+-- MIB file created 15-May-2002 10:40:09, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-GTP-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-GTP-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+    TruthValue
+            FROM SNMPv2-TC-v1
+--    Unsigned32
+--            FROM CISCO-TC
+    InetAddressType, InetAddress
+            FROM INET-ADDRESS-MIB
+    ciscoMgmt
+            FROM CISCO-SMI
+    Counter, Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
+
+cGtpMIB OBJECT IDENTIFIER ::= { ciscoMgmt 188 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200109131535Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--           Cisco Systems
+--            Customer Service
+--    
+--    Postal: 170 W Tasman Drive
+--            San Jose, CA  95134
+--            USA
+--    
+--       Tel: +1 800 553-NETS
+--    
+--    E-mail: cs-gprs@cisco.com
+--  Descr
+--    This MIB module manages the GPRS Tunnelling Protocol
+--    (GTP) on GGSN and SGSN.
+--    
+--    GPRS provides wireless access to packet data network on
+--    the GSM infrastructure.
+--    
+--    The following diagram illustrates a simplified GPRS
+--    logical architecture with the name of inter-node
+--    interface:
+--    
+--    +=============================================+         
+--    |                         +======+   a PLMN   | 
+--    |                         | SGSN |            |
+--    |                         +======+            |
+--    |                            |                |
+--    |                            Gn               |
+--    |                            |                |
+--    |+====+   +====+ +=====+ +======+    +======+ |    +===+
+--    || TE |-R-| MT |-| BSS |-| SGSN |-Gn-| GGSN |-|-Gi-|PDN|
+--    |+====+   +====+ +=====+ +======+    +======+ |    +===+
+--    |                                        |    |  
+--    |                                        |    | 
+--    +========================================|====+ 
+--                                             Gp
+--                                             |
+--                    +=============================+
+--                    | +====+   +=====+   +======+ |   
+--                    | | MS |===| BSS |===| SGSN | |
+--                    | +====+   +=====+   +======+ |  
+--                    |                             | 
+--                    |                other PLMN   |
+--                    +=============================+
+--    
+--    GTP is the protocol between GSN nodes (GSN peers) in
+--    the GPRS backbone network. It includes both the GTP
+--    signalling and data transfer procedures.
+--    
+--    GTP is used both on the Gn interface, i.e. the interface
+--    between GSN peers with in a PLMN, and the Gp
+--    interface between GSN peers in different PLMNs.
+--    
+--    SGSN is the serving GPRS support node, it responsible 
+--    for the delivery of data packets from and to the MS 
+--    within its service area.
+--    
+--    GGSN is the gateway GPRS support node, it provides 
+--    interworking with external PDN and is connected with 
+--    SGSNs via an IP-based GPRS backbone network.
+--    
+--    The GTP protocol is implemented only by SGSNs and GGSN.
+--    
+--    A PDP Context is an information set maintained by MS 
+--    and GSNs which describes the mobile wireless service
+--    call or session.
+--    
+--    A Qos Profile is associated with each PDP context which
+--    defines multiple attributes like precedence, delay, 
+--    reliability, peak throughput and mean throughput.
+--    Based on the precedence, delay and mean throughput an
+--    user is classified into one of the three Qos classes:
+--    Best Effort, Normal and Premium.
+--    
+--    Mean throughput is measured at the Gi and R reference 
+--    points in units of octets per second. It specifies the 
+--    average rate at which data is expected to be 
+--    transferred across the GPRS network during the 
+--    remaining lifetime of an activated PDP context.
+--    
+--    Acronyms and terms:
+--    
+--     APN    Access Point Name
+--     BSS    Base Station Subsystem
+--     ETSI   European Telecommunications Standards Institute
+--     GDM    GTP Director Module
+--     Gi     Reference point between GPRS and an external 
+--            packet data network.
+--     Gn     the interface between GSNs within a PLMN 
+--     Gp     the interface between GSNs in different PLMNs 
+--     GGSN   Gateway GPRS Support Node
+--     GPRS   General Packet Radio Service
+--     GSM    Global System for Mobile communication
+--     GSN    GPRS Support Node
+--     G-PDU  GTP PDU 
+--     MS     Mobile Station = TE + MT
+--     MT     Mobile Termination
+--     NMS    Network Management System
+--     PDN    Public Data Network
+--     PDP    Packet Data Protocol
+--     PDU    Protocol Data Unit
+--     PLMN   Public Land Mobile Network
+--     R      Reference point between a non-ISDN compatible 
+--            TE and MT. 
+--     SGSN   Serving GPRS Support Node
+--     TE     Terminal Equipment
+--     T-PDU  the payload of G-PDU 
+--     
+--  RevDate
+--    200109131535Z
+--  RevDescr
+--    Modified the default value for cGtpMaximumPdps from 
+--    1000 to 10000.
+--    
+--    Added 'gtpdirector' to the enumeration of cGtpService.
+--    
+--    The APN identifies whether the network is corporate 
+--    or service provider network.  
+--    
+--    The Single Access point feature enables the
+--    service provider to add new access-points to the GGSN
+--    without having to provision the HLR. The requests are
+--    sent by the SGSN to the same virtual APN. A virtual
+--    APN is not associated with any actual physical
+--    network.  The GGSN processes the request and forwards
+--    the packet to the appropriate access-point that is
+--    specified in the PCO. This feature is supported only
+--    in Cisco GGSNs.
+--    
+--    The purpose of the GTP-Director is to provide a
+--    mechanism for service providers using non-Cisco GGSN
+--    to use the Single APN feature. 
+--    
+--    +==+  +===+  +====+   ====   +===+  +====+     +===+
+--    |MS|==|BSS|==|SGSN|==|PLMN|==|GDM|==|GGSN|==Gi-|PDN|
+--    +==+  +===+  +====+   ====   +===+  +====+     +===+
+--                                 | |
+--                                 | |   +====+
+--                                 | |___|GGSN|======Gi
+--                                 |     +====+       |
+--                                 |                  |
+--                                 |     +====+     +===+
+--                                 |_____|GGSN|==Gi-|PDN|
+--                                       +====+     +===+
+--    
+--    The GTP-Director also provides load balancing, using 
+--    round robin mechanism, across GGSNs.  The
+--    Cisco GGSNs may use the GTP-Director, but is not
+--    necessary as they can use IOS-SLB ( Server Load
+--    Balancing ).
+--  RevDate
+--    200106111600Z
+--  RevDescr
+--    * Added cGtpDynamicEchoTimerEnable,
+--       cGtpDynamicEchoTimerMinTime, 
+--       cGtpDynamicEchoTimerSmoothFactor.
+--     * Deprecated cGtpGSNTotalBandwidthResrc,
+--       cGtpPremiumQosMeanThroughput, 
+--       cGtpNormalQosMeanThroughput,
+--       cGtpBestEffortQosMeanThroughput, 
+--       cGtpCurrentUsedBandwidth.
+--  RevDate
+--    200102071300Z
+--  RevDescr
+--    Initial version of this MIB module.
+
+cGtpMIBObjects  OBJECT IDENTIFIER ::= { cGtpMIB 1 }
+cGtpConfigurations OBJECT IDENTIFIER ::= { cGtpMIBObjects 1 }
+cGtpStatus      OBJECT IDENTIFIER ::= { cGtpMIBObjects 2 }
+cGtpStatistics  OBJECT IDENTIFIER ::= { cGtpMIBObjects 3 }
+cGtpNotifPrefix OBJECT IDENTIFIER ::= { cGtpMIB 2 }
+cGtpNotifications OBJECT IDENTIFIER ::= { cGtpNotifPrefix 0 }
+cGtpMIBConformances OBJECT IDENTIFIER ::= { cGtpMIB 3 }
+cGtpMIBCompliances OBJECT IDENTIFIER ::= { cGtpMIBConformances 1 }
+cGtpMIBGroups   OBJECT IDENTIFIER ::= { cGtpMIBConformances 2 }
+
+cGtpGSNService OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   undefined(0)
+        --   sgsn(1)
+        --   ggsn(2)
+        --   gtpdirector(3)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates the type of GPRS service that will be
+        enabled on the device:
+           undefined - the GPRS service functionality is turned off.
+           ggsn - the device will function as a GGSN.
+           sgsn - the device will function as SGSN.
+           gtpdirector - the device will function as GDM.
+        
+        When the device is configured to function as GDM, all the other
+        objects in this MIB will not be accessible and the 
+        CISCO-GTP-DIRECTOR-MIB should be used for managing the device."
+    DEFVAL { '80'h }
+    ::= { cGtpConfigurations 1 }
+
+cGtpVersion OBJECT-TYPE
+    SYNTAX INTEGER {
+        version0(1),
+        version1(2)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The gtp version supported by the GSN."
+    ::= { cGtpConfigurations 2 }
+
+cGtpT3TunnelTimer OBJECT-TYPE
+    SYNTAX INTEGER(1..65535)
+--  Units
+--    seconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "When the GSN behaves as SGSN, the T3-TUNNEL timer is used 
+         for mobility management. When a roaming MS moves from one 
+         SGSN(Old SGSN) to a another SGSN(New SGSN), this timer is 
+         started by the 'Old SGSN'. While the timer is running, the 
+         T-PDUs received by the 'Old SGSN' (from the GGSN), and any 
+         buffered T-PDUs are forwarded to the 'New SGSN'. 
+        
+         When the GSN behaves as GGSN, the GGSN starts this timer
+         after receiving a Update PDP Context request message from 
+         'New SGSN'. An Update PDP context request shall be sent by 
+         SGSN as part of mobility management intimating that MS has 
+         moved to this SGSN. While the timer is running, the GGSN will 
+         not be forwarding any PDUs to the requesting 'New SGSN'."
+    DEFVAL { 20 }
+    ::= { cGtpConfigurations 3 }
+
+cGtpT3ResponseTimer OBJECT-TYPE
+    SYNTAX INTEGER(1..65535)
+--  Units
+--    seconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The T3-RESPONSE timer for retransmission. This timer 
+        is started by a GSN, upon the transmission of a signalling 
+        request message; it is used for message retransmission 
+        purposes, in the event that no response is received by 
+        the time the timer expires."
+    DEFVAL { 1 }
+    ::= { cGtpConfigurations 4 }
+
+cGtpN3Request OBJECT-TYPE
+    SYNTAX INTEGER(1..65535)
+--  Units
+--    retransmissions
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Maximum number of retransmissions for a signalling 
+         request message if no corresponding response message 
+         is received for a request in cGtpT3ResponseTimer time.      "
+    DEFVAL { 5 }
+    ::= { cGtpConfigurations 5 }
+
+cGtpN3BufferSize OBJECT-TYPE
+    SYNTAX INTEGER(2048..65535)
+--  Units
+--    bytes
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Maximum size of the receive buffer for G-PDUs and 
+        signalling request messages. If a packet arrives with 
+        more data bytes than the receive buffer can contain, 
+        the packet will be discarded."
+    DEFVAL { 8192 }
+    ::= { cGtpConfigurations 6 }
+
+cGtpEchoRequestTimerEnable OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates whether Echo Request timer
+        is used by the GGSN.
+        - true  : will enable the Echo Request timer.
+        - false : will disable the Echo Request timer."
+    DEFVAL { false }
+    ::= { cGtpConfigurations 7 }
+
+cGtpEchoRequestTimer OBJECT-TYPE
+    SYNTAX INTEGER(60..65535)
+--  Units
+--    seconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The time interval to transmit 'Echo Request' message.
+         'Echo Response' message is normally received in response
+         to 'Echo Request' message. In the event of no response to 
+         the 'Echo Request' message, a notification is generated 
+         identifying the peer GSN (i.e. cGtpGSN Address), which 
+         fails to respond. 
+        
+         This object can be retrieved only if 
+         cGtpEchoRequestTimerEnable is set to 'true'.
+         "
+    DEFVAL { 60 }
+    ::= { cGtpConfigurations 8 }
+
+cGtpGSNTotalBandwidthResrc OBJECT-TYPE
+    SYNTAX Gauge(1..4294967295)
+--  Units
+--    bits/sec
+    ACCESS read-write
+    STATUS deprecated
+    DESCRIPTION
+        "The total amount of bandwidth resource on the GSN,
+         this total depends on various factors like system 
+         throughput, memory size, maximum number of PDP contexts 
+         supported.  A portion of the total resources will be 
+         allocated to a user at the PDP context activation time 
+         based on the Qos class the user is assigned to."
+    DEFVAL { 1048576 }
+    ::= { cGtpConfigurations 9 }
+
+cGtpMaximumPdps OBJECT-TYPE
+    SYNTAX Gauge(1..4294967295)
+--  Units
+--    PDP contexts
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The maximum number of PDP contexts that can be activated 
+        on the GSN."
+    DEFVAL { 10000 }
+    ::= { cGtpConfigurations 10 }
+
+cGtpNotifEnable OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether cGtpNotifications notification will
+         be sent when a notification is generated by the device.
+           - 'true',  it will enable the device to send a notification.
+           - 'false', it will prevent the device from sending out a
+                      notification."
+    DEFVAL { false }
+    ::= { cGtpConfigurations 11 }
+
+cGtpDynamicEchoTimerEnable OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates whether dynamic echo timer is used 
+         by the GGSN.
+         - true  : will enable the dynamic echo timer.
+         - false : will disable the dynamic echo timer."
+    DEFVAL { false }
+    ::= { cGtpConfigurations 12 }
+
+cGtpDynamicEchoTimerMinTime OBJECT-TYPE
+    SYNTAX INTEGER(1..60)
+--  Units
+--    seconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the minimum time used by the 
+         dynamic echo timer. This object can be retrieved
+         only if cGtpDynamicEchoTimerEnable is set to 'true'."
+    DEFVAL { 5 }
+    ::= { cGtpConfigurations 13 }
+
+cGtpDynamicEchoTimerSmoothFactor OBJECT-TYPE
+    SYNTAX INTEGER(1..100)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the smooth factor by which dynamic 
+         echo timer can be adjusted. This object can be retrieved
+         only if cGtpDynamicEchoTimerEnable is set to 'true'."
+    DEFVAL { 2 }
+    ::= { cGtpConfigurations 14 }
+
+cGtpLastNoRespToEchoGSNIpAddrTyp OBJECT-TYPE
+    SYNTAX InetAddressType
+--    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        unknown(0),
+--        ipv4(1),
+--        ipv6(2),
+--        ipv4z(3),
+--        ipv6z(4),
+--        dns(16)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates the type of Internet address
+        by which cGtpLastNoRespToEchoGSNIpAddr is reachable."
+    ::= { cGtpStatus 1 }
+
+cGtpLastNoRespToEchoGSNIpAddr OBJECT-TYPE
+    SYNTAX InetAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The IP address of the last peer GSN device that did not
+        reply to an GTP 'Echo Request' message from the local GSN
+        device."
+    ::= { cGtpStatus 2 }
+
+cGtpPremiumQosMeanThroughput OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes/sec
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "The sum of the mean throughput for premium class QOS 
+         users on the GSN."
+    ::= { cGtpStatus 3 }
+
+cGtpNormalQosMeanThroughput OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes/sec
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "The sum of the mean throughput for normal class QOS 
+         users on the GSN."
+    ::= { cGtpStatus 4 }
+
+cGtpBestEffortQosMeanThroughput OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bytes/sec
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "The sum of the mean throughput for best-effort class 
+         QOS users on the GSN. "
+    ::= { cGtpStatus 5 }
+
+cGtpGSNTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CGtpGSNEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "GSN peer table. The SGSN-GGSN peer relationship is established
+          as given in the following series of steps:
+          1. When Mobile System (MS) wants service, it sends packets 
+             to a SGSN  with specific APN.
+          2. SGSN uses the DNS to resolve this APN to the IP address 
+             of the GGSN which is the designated as the gateway to 
+             this APN. 
+          3. SGSN establishes a path to the GGSN using GTP protocol.
+          4. The SGSN and GGSN peer maintains path by sending echo 
+             request message to each other. If one side fails in echo 
+             reply for certain times, the other side will send a 
+             trap to NMS. A SGSN can have multiple GGSN as peers, 
+             while a GGSN can have multiple SGSN peers, depending 
+             on routing path."
+    ::= { cGtpStatus 6 }
+
+cGtpGSNEntry OBJECT-TYPE
+    SYNTAX CGtpGSNEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "GSN entry. The entry is created when a path between a GGSN
+         and SGSN is setup and the corresponding peer is not yet listed 
+         in the GSN peer table. The entry is deleted when the path 
+         is released, or echo test message on the path times out 
+         after certain retry number defined as cGtpN3Request."
+    INDEX { cGtpGSNAddressType, cGtpGSNAddress }
+    ::= { cGtpGSNTable 1 }
+
+CGtpGSNEntry ::= SEQUENCE {
+    cGtpGSNAddressType InetAddressType,
+    cGtpGSNAddress InetAddress
+    }
+
+cGtpGSNAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+--    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        unknown(0),
+--        ipv4(1),
+--        ipv6(2),
+--        ipv4z(3),
+--        ipv6z(4),
+--        dns(16)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The type of Internet address by which cGtpGSNAddress
+         is reachable."
+    ::= { cGtpGSNEntry 1 }
+
+cGtpGSNAddress OBJECT-TYPE
+    SYNTAX InetAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Ip address that uniquely identify a GSN node."
+    ::= { cGtpGSNEntry 2 }
+
+cGtpPathFailureOccurrences OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    times
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of times that any one of this GSN's peers
+        failed to respond to an GTP 'Echo Request' messages
+        during the waiting intervals."
+    ::= { cGtpStatistics 1 }
+
+cGtpCurrentUsedBandwidth OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    bits/sec
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "The current amount of bandwith resource used on the GSN."
+    ::= { cGtpStatistics 2 }
+
+cGtpTotalDroppedPackets OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of received GTP packets that could not
+         be processed and are dropped since system started. "
+    ::= { cGtpStatistics 3 }
+
+cGtpPathFailedNotification TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cGtpNotifPrefix
+    VARIABLES {
+        cGtpLastNoRespToEchoGSNIpAddrTyp, 
+        cGtpLastNoRespToEchoGSNIpAddr }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification is sent when one of this GSN's peers 
+        failed to respond to the GTP 'Echo Request' message for 
+        the waiting interval."
+    ::= 1
+
+cGtpConfigurationsGroup OBJECT IDENTIFIER ::= { cGtpMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--     A collection of GTP configurations.
+--  objects
+--    cGtpGSNService, cGtpVersion, cGtpT3TunnelTimer, 
+--    cGtpT3ResponseTimer, cGtpN3Request, cGtpN3BufferSize, 
+--    cGtpEchoRequestTimer, cGtpGSNTotalBandwidthResrc, 
+--    cGtpMaximumPdps, cGtpNotifEnable
+
+cGtpStatusGroup OBJECT IDENTIFIER ::= { cGtpMIBGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--     A collection of GTP Status.
+--  objects
+--    cGtpLastNoRespToEchoGSNIpAddrTyp, 
+--    cGtpLastNoRespToEchoGSNIpAddr, cGtpPremiumQosMeanThroughput, 
+--    cGtpNormalQosMeanThroughput, cGtpBestEffortQosMeanThroughput, 
+--    cGtpGSNAddress
+
+cGtpStatisticsGroup OBJECT IDENTIFIER ::= { cGtpMIBGroups 3 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--     A collection of GTP statistics .
+--  objects
+--    cGtpPathFailureOccurrences, cGtpCurrentUsedBandwidth, 
+--    cGtpTotalDroppedPackets
+
+cGtpConfigurationsGroupRev1 OBJECT IDENTIFIER ::= { cGtpMIBGroups 4 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--     A collection of GTP configurations.
+--  objects
+--    cGtpGSNService, cGtpVersion, cGtpT3TunnelTimer, 
+--    cGtpT3ResponseTimer, cGtpN3Request, cGtpN3BufferSize, 
+--    cGtpEchoRequestTimerEnable, cGtpEchoRequestTimer, 
+--    cGtpMaximumPdps, cGtpNotifEnable, cGtpDynamicEchoTimerEnable, 
+--    cGtpDynamicEchoTimerMinTime, cGtpDynamicEchoTimerSmoothFactor
+
+cGtpStatusGroupRev1 OBJECT IDENTIFIER ::= { cGtpMIBGroups 5 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--     A collection of GTP Status.
+--  objects
+--    cGtpLastNoRespToEchoGSNIpAddrTyp, 
+--    cGtpLastNoRespToEchoGSNIpAddr, cGtpGSNAddress
+
+cGtpStatisticsGroupRev1 OBJECT IDENTIFIER ::= { cGtpMIBGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--     A collection of GTP statistics .
+--  objects
+--    cGtpPathFailureOccurrences, cGtpTotalDroppedPackets
+
+cGtpNotifGroup OBJECT IDENTIFIER ::= { cGtpMIBGroups 7 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of GTP notifications.
+--  notifications
+--    cGtpPathFailedNotification
+
+cGtpMIBCompliance OBJECT IDENTIFIER ::= { cGtpMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statements for entities which
+--    implement the CISCO GTP MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cGtpConfigurationsGroup
+--   MandGroup
+--    cGtpStatusGroup
+--   MandGroup
+--    cGtpStatisticsGroup
+--   ObjVar
+--    cGtpVersion
+--   ObjVar
+--    cGtpGSNAddress
+
+cGtpMIBComplianceRev1 OBJECT IDENTIFIER ::= { cGtpMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statements for entities which
+--    implement the CISCO GTP MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cGtpConfigurationsGroupRev1
+--   MandGroup
+--    cGtpStatusGroupRev1
+--   MandGroup
+--    cGtpStatisticsGroupRev1
+--   ObjVar
+--    cGtpVersion
+--   ObjVar
+--    cGtpGSNAddress
+
+cGtpMIBComplianceRev2 OBJECT IDENTIFIER ::= { cGtpMIBCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statements for entities which
+--    implement the CISCO GTP MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cGtpConfigurationsGroupRev1
+--   MandGroup
+--    cGtpStatusGroupRev1
+--   MandGroup
+--    cGtpStatisticsGroupRev1
+--   MandGroup
+--    cGtpNotifGroup
+--   ObjVar
+--    cGtpVersion
+--   ObjVar
+--    cGtpGSNAddress
+
+
+END
+

@@ -1,0 +1,2742 @@
+-- *****************************************************************
+-- CISCO-VOICE-DIAL-CONTROL-MIB.my: Voice Dial Control MIB file
+--
+-- September 1996  Hongchi Shih
+--
+-- Copyright (c) 1996-1999, 1999, 2000 by cisco Systems, Inc.
+-- All rights reserved.
+-- *****************************************************************
+
+CISCO-VOICE-DIAL-CONTROL-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+        MODULE-IDENTITY,
+        OBJECT-TYPE,
+        NOTIFICATION-TYPE,
+        IpAddress,
+        Gauge32,
+        Integer32 
+                FROM SNMPv2-SMI
+        TEXTUAL-CONVENTION,
+        DisplayString,
+        RowStatus,
+        TruthValue 
+                FROM SNMPv2-TC
+        MODULE-COMPLIANCE,
+        OBJECT-GROUP
+--        NOTIFICATION-GROUP
+                FROM SNMPv2-CONF
+        callActiveSetupTime,
+        callActiveIndex,
+        AbsoluteCounter32
+                FROM DIAL-CONTROL-MIB
+        cCallHistoryIndex,
+        cCallHistoryCallOrigin
+                FROM CISCO-DIAL-CONTROL-MIB
+        CvcSpeechCoderRate,
+        CvcFaxTransmitRate,
+        CvcCoderTypeRate,
+        CvcGUid,
+        CvcInBandSignaling,
+        cvCommonDcCallHistoryCoderTypeRate
+                FROM CISCO-VOICE-COMMON-DIAL-CONTROL-MIB
+        QosService
+                FROM INT-SERV-MIB 
+        ifIndex,
+        InterfaceIndexOrZero
+                FROM IF-MIB
+        ciscoMgmt
+                FROM CISCO-SMI;
+ 
+ 
+ciscoVoiceDialControlMIB MODULE-IDENTITY
+        LAST-UPDATED    "9906280000Z"
+        ORGANIZATION    "Cisco Systems, Inc."
+        CONTACT-INFO
+                "       Cisco Systems
+                        Customer Service
+
+                Postal: 170 W. Tasman Drive
+                        San Jose, CA  95134
+                        USA
+ 
+                Tel: +1 800 553-NETS
+ 
+                E-mail: cs-voice@cisco.com"
+        DESCRIPTION
+                "This MIB module enhances the IETF Dial Control MIB
+                 (RFC2128) by providing management of voice telephony
+                 peers on both a circuit-switched telephony network,
+                 and an IP data network.
+                "
+        REVISION        "9802220000Z"
+        DESCRIPTION
+        "Add new objects for handling the following:
+         [1] DNIS number matching.
+         [2] Maximum connection to/from peer.              
+         [3] DID call treatment enable/disable.
+         [4] Dial peer association to lower layer interfaces with
+             CAS group.
+         [5] Lost/Ealy/Late voice packets object in both call active
+             and call history tables.
+         [6] Update compliance statements.
+        "
+        REVISION        "9809110000Z"
+        DESCRIPTION
+        "Add new objects for handling the the following features:
+         [1] FAX page count for call active and history table.
+         [2] Peer Preference for peer configuration.
+         [3] Add FAX rate 12000 bps, G723.1 Annex A codec support.
+         [4] Technology prefix for VoIP encapsulated peer
+             configuration.
+         [5] Modify cvCallActiveACOMLeve, cvCallActiveERLLevel and
+             cvCallHistoryACOMLevel to support undeterminable state.
+         [6] Add digit relay configuration feature.
+        "
+        REVISION        "9901290000Z"
+        DESCRIPTION
+        "Add new enums in cvVoIPPeerCfgDigitRelay object for
+         handling the transmission of dtmf digits across an
+         H.245 channel via the signal and alphanumeric fields.
+        "
+        REVISION        "9906280000Z"
+        DESCRIPTION
+        "Moved common Textual Conventions and the following items in
+         the VoIP Call Active and Call History tables to the
+         CISCO-VOICE-COMMON-DIAL-CONTROL-MIB, as these items apply to 
+         multiple network encapsulations.
+
+             CoderTypeRate
+             VADEnable
+
+         Added new objects for handling the following features:
+         [1] Gatekeeper registration configuration for voice peer 
+             destination pattern.
+         [2] Dialpeer huntstop configuration.
+         [3] Voip configuration support for Coder Bytes, Fax Bytes,
+             settlement server and inband signaling.
+       
+         Added the following objects to the cvdcPoorQoVNotification.
+             cvVoIPCallHistoryRemoteIPAddress,
+             cCallHistoryCallOrigin,
+             cvCommonDcCallHistoryCoderTypeRate
+        "
+        ::= { ciscoMgmt 63 }
+
+--
+-- Textual Conventions
+--
+
+--
+-- Session Protocol textual convention
+--
+CvSessionProtocol ::= TEXTUAL-CONVENTION
+        STATUS      current
+        DESCRIPTION
+        "Represents a Session Protocol used by Voice calls between a
+         local and remote router via the IP backbone.
+
+         other - none of the following.
+         cisco - cisco proprietary H.323 Lite session protocol.
+         sdp   - Session Description Protocol.
+         sip   - Session Initiation Protocol.
+        "
+        SYNTAX      INTEGER {
+            other    (1),
+            cisco    (2),
+            sdp      (3),
+            sip      (4),
+            multicast (5) 
+        }     
+--
+--  Channel Associated Signalling Group (CAS) group definition
+--
+CvCasGroup ::= TEXTUAL-CONVENTION
+        DISPLAY-HINT "d"
+        STATUS      current
+        DESCRIPTION
+            "The Channel Associated Signalling Group of a
+             T1/E1. The valid CAS group range is from 0 to 23 for T1
+             and from 0 to 30 for E1. The value -1 indicates CAS group is
+             disabled.
+            "
+        SYNTAX      Integer32 (-1..30)
+
+
+--
+-- Overview of Voice Gateway Call between Data and Telephony network
+--
+--          |   Network    |  Voice  |   Voice    |   Telephony  |
+-- <========+== Protocol ==+=Gateway=+=== Peer ===+= Interfaces =+==========>
+--  Data    | :  I | U | R |         |            | DS0    T1/E1 | Telephony
+--  Network |    P | D | T | voice   | Voice      | ISDN B       | Network
+--          |      | P | P | session |encapsulation        FXO   |
+--          |      |   |   | protocol|            |        E&M   |
+--          |      |   |   |         |            |        FXS   |
+--                                   |Voice      P|
+--        <==========================+Packet<=*=>C+================>
+--                Voice packet                |  M    PCM data
+--                                          CODEC
+--
+--  CODEC: Coder and Decoder.                  
+--  PCM  : Pulse Code Modulation.
+
+--
+-- Voice Gateway call leg connections are as follows:
+--
+--  [1] Call establishment using a local telephony interface
+--  Call establishment using a local telephony interface involves
+--  the Voice Session Control module, the Voice/FAX Protocol module,
+--  and the Telephony interface itself. Voice Session Control is 
+--  responsible for controlling the local telephony interfaces and
+--  assigning a Voice/FAX encapsulation module, with its associated
+--  CODEC (most CODECs execute in DSP code) to the call. The CODEC is 
+--  responsible for encode/decode, as well has the generation and
+--  detection of signaling information, such as call progress tones,
+--  DTMF or pulse dialing signals, etc. During an active call, the
+--  selected CODEC is responsible for collecting the voice and fax
+--  statistics for the call.
+--
+-- [2] Call establishment using the session protocol over IP backbone
+-- Call establishment using the session protocol over IP backbone
+-- involves the Voice Session Control module, VoIP encapsulation
+-- module, and RTP protocol module. Voice Session Control is
+-- responsible for controlling the selected session protocol and
+-- assigning a VoIP encapsulation module with its associated RTP
+-- (real-time transport protocol) connection to a VoIP call. For an
+-- active VoIP call, the RTP protocol is responsible for collecting
+-- the voice packet statistics for the call.
+--
+-- This MIB uses IETF Dial Control MIB (RFC2128) as a base and adds
+-- features to support voice calls via a Voice-over-IP gateway. The
+-- supports connection establishment of both telephony circuit-switched
+-- call and the Voice-over-IP session. 
+-- The following architectural diagram illustrates this:
+--
+-- +================================================================+
+-- |                          Voice Gateway                         |
+-- +===+ +=========+ +=======+ +=======+ +==========+ +=============+
+--     | |         | |       | |       | |          | | 
+--     | |         | |       | |       | |          | | 
+--     | |         | |       | |       | |          | | 
+--     | |         | |       | |       | |          | | 
+--     | |         | |       | |       | |          | | 
+--     | |         | |       | |       | |          | | 
+--     | |         | |       | |       | |          | |<== appears 
+--     | |         | |       | |       | |          | |    active
+--   +=+ +=+     +=+ +=+   +=+ +=+   +=+ +=+      +=+ +=+
+--   |VOICE|     |VOICE|   |VOICE|   |VOICE|      |VoIP | VOICE
+--   | for |     | for |   | for |   | for |      | for | ifEntry with
+--   |Peer1|     |Peer2|   |Peer3|   |Peer4|      |Peer5| shadow
+--   |     |     |     |   |     |   |     |      |     | Voice PeerEntry
+--   +=====+     +=+ +=+   +=+ +=+   +=+ +=+      +=====+
+--                 | |       | |       | |             <== appears
+--  +=======+   +==+ +==+ +==+ +==+    | |                 active when
+--  |   B   |   |   B   | |  DS0  |    | |                 the VOICE
+--  |channel|   |channel| |channel|    | |                 connects to
+--  +==+ +==+   +==+ +==+ +==+ +==+    | |                 telephony
+--     | |         | |       | |       | |                 interface
+-- +===+ +=========+ +==+ +==+ +==+ +==+ +======+
+-- |  ISDN BRI/PRI      | | T1/E1 | |E&M/FXO/FXS|
+-- +====================+ +=======+ +===========+
+--
+-- 
+-- In this model, each voice peer must have an associated VOICE
+-- encapsulation interface ifEntry. Grouping of peer entries is
+-- supported through the dialCtlPeerCfgId of the IETF Dial Control MIB,
+-- allowing the particular type of telephony interfaces for a call to
+-- be selected at call establishment time. 
+--
+-- The VOICE encapsulation interface is normally used to convert
+-- between PCM (pulse code modulation) voice produced and consumed by
+-- the lower layer telephony interfaces and compressed packetized voice
+-- exchanged between the CODEC and the voice session control module.
+--
+-- Each VOICE encapsulation ifEntry contains the ifType 'voiceEncap'.
+-- The VOICE interface for each voice peer correlates to lower-level
+-- telephony interface via ifStackTable.
+--
+-- Each VoIP encapsulation ifEntry contains the ifType 'voiceOverIp'
+-- For each VoIP encapsulation associated peer, the
+-- dialCtlPeerCfgIfType object of IETF Dial Control MIB must set to
+-- 'other' and dialCtlPeerCfgLowerIf must set to '0'.
+--
+
+
+-- Support for generic peers 
+--
+-- Generic Voice related Peers can be supported by permitting the left 
+-- justified substring of a phone number in
+-- dialCtlPeerCfgOriginateAddress and dialCtlPeerCfgAnswerAddress of
+-- IETF Dial control MIB for specifying a group of voice encapsulation
+-- and voice over IP peers.
+-- The leading '+' in these two objects indicates the E.164 phone
+-- number (e.g. +1408526, +1408, +1, +) substring.
+
+-- The dialCtlPeerCfgOriginateAddress of the peer contains a wild-card
+-- number for the outgoing call. For example, the '+1408526' in
+-- dialCtlPeerCfgOriginateAddress means that the peer is used for the
+-- outgoing call to the phones with a number of the form 1-408-526-xxxx.
+--
+-- The dialCtlPeerCfgAnswerAddress of the voice encapsulation peer
+-- contains the same type of regular expression as the one that is
+-- specified in dialCtlPeerCfgOriginateAddress for filtering incoming
+-- call from telephony interface.
+
+-- The dialCtlPeerCfgAnswerAddress of the voice over IP peer contains
+-- an IP address wild-card (with regular expression rule) for filtering
+-- the incoming call from IP backbone.
+
+-- ifEntry for the 'voiceEncap' Encapsulation
+--
+-- The ifEntry for the 'voiceEncap' encapsulation supports the
+-- ifGeneralInformationGroup of Cisco IF-MIB.
+
+-- ifTable           Comments
+-- ==============    ===========================================
+-- ifIndex           Each voice encapsulation is represented by an
+--                   ifEntry.
+-- ifDescr           Textual description
+--                   "Voice Encapsulation: <tag>".
+-- ifType            The IANA value of voiceEncap(103).
+-- ifSpeed           contains a zero value.
+-- ifPhysAddress     contains an octet string of zero length.
+--
+-- ifAdminStatus     The desired administrative status of the
+--                   voice encapsulation.
+-- ifOperStatus      The current operational status of the voice
+--                   encapsulation.
+-- ifLastChange      Refer to RFC 1573.
+-- ifLinkUpDownTrapEnable
+--                   Only support the read-only ifLinkUpDownTrapEnable.
+--                   It contains a 'disabled(2)' value.
+-- ifConnectorPresent
+--                   Refer to RFC 1573.
+-- ifHighSpeed       contains a zero value.
+-- ifName            Refer to RFC 1573.
+-- ifAlias           Only support the read-only ifAlias. It contains an 
+--                   octet string of zero length.
+--  
+
+
+-- ifEntry for the 'voiceOverIp' encapsulation
+--
+-- The ifEntry for the 'voiceOverIp' encapsulation supports the
+-- ifGeneralInformationGroup of Cisco IF-MIB
+
+-- ifTable           Comments
+-- ==============    ===========================================
+-- ifIndex           Each voiceOverIp encapsulation is represented by
+--                   an ifEntry.
+-- ifDescr           Textual description
+--                   "Voice Over IP Encapsulation: <tag>".
+-- ifType            The IANA value of voiceOverIp(104).
+-- ifSpeed           contains a zero value.
+-- ifPhysAddress     contains an octet string of zero length.
+--
+-- ifAdminStatus     The desired administrative status of the
+--                   VoIP encapsulation.
+-- ifOperStatus      The current operational status of the VoIP
+--                   encapsulation.
+-- ifLastChange      Refer to RFC 1573.
+-- ifLinkUpDownTrapEnable
+--                   Only support the read-only ifLinkUpDownTrapEnable.
+--                   It contains a 'disabled(2)' value.
+-- ifConnectorPresent
+--                   Refer to RFC 1573.
+-- ifHighSpeed       contains a zero value.
+-- ifName            Refer to RFC 1573.
+-- ifAlias           Only support the read-only ifAlias. It contains an 
+--                   octet string of zero length.
+--  
+
+
+-- Voice Dial Control MIB objects definitions
+
+cvdcMIBObjects OBJECT IDENTIFIER ::= { ciscoVoiceDialControlMIB 1 }
+
+
+-- The Voice Dial Control MIB consists of the following group
+-- [1] Voice Dial Control General Configuration group
+--     (cvGeneralConfiguration)
+-- [2] Voice Dial Control Peer Group (cvPeer)
+-- [3] Voice Dial Control Gateway Call Active Group
+--     (cvGatewayCallActive)
+-- [4] Voice Dial Control Gateway Call History Group
+--     (cvGatewayCallHistory)
+
+cvGeneralConfiguration      OBJECT IDENTIFIER ::= { cvdcMIBObjects 1 }
+cvPeer                      OBJECT IDENTIFIER ::= { cvdcMIBObjects 2 }
+cvGatewayCallActive         OBJECT IDENTIFIER ::= { cvdcMIBObjects 3 }
+cvGatewayCallHistory        OBJECT IDENTIFIER ::= { cvdcMIBObjects 4 }
+
+
+
+--********************************************************************
+-- Voice Dial Control General Configuration Group
+--********************************************************************
+--
+-- Voice Dial Control general configuration data/parameters
+--
+
+cvGeneralPoorQoVNotificationEnable OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates whether cvdcPoorQoVNotification traps 
+             should be generated for a poor quality of voice calls. If
+             the value of this object is 'true',
+             cvdcPoorQoVNotification traps will be generated for all
+             voice over IP peers when a poor quality of voice call
+             condition is detected after the voice gateway call
+             disconnection. If the value of this object is 'false',
+             cvdcPoorQoVNotification traps will be generated only for
+             the cvVoIPPeerCfgPoorQoVNotificationEnable object of voice
+             over IP peers having set to 'true'.
+             The default value of this object is 'false'.
+            "
+        ::= { cvGeneralConfiguration 1 }
+
+
+--*********************************************************************
+-- Voice Dial Control Peer Group
+--*********************************************************************
+-- The objects in this group are responsible for the voice related peer 
+-- configuration which controls the dial string and the interface or
+-- session target for the call establishment to a peer on the telephony
+-- network or on the IP backbone.
+
+--
+-- Voice Generic Peer Configuration Table
+--
+
+cvPeerCfgTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF CvPeerCfgEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The table contains the Voice Generic Peer information that
+             is used to create an ifIndexed row with an appropriate
+             ifType that is associated with the cvPeerCfgType object.
+            "
+       ::= { cvPeer 1 }
+
+cvPeerCfgEntry OBJECT-TYPE
+        SYNTAX      CvPeerCfgEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "A single voice generic Peer. The creation of this
+             entry will create an associated ifEntry with an ifType
+             that is associated with cvPeerCfgType, i.e., for
+             'voiceEncap' encapsulation, an ifEntry will contain an
+             ifType voiceEncap(103); for 'voiceOverIp' encapsulation,
+             an ifEntry will contain an ifType voiceOverIp(104). The
+             ifAdminStatus of the newly created ifEntry is set to 'up'
+             and ifOperStatus is set to 'down'. In addition, an
+             associated voiceEncap/voiceOverIp Peer configuration
+             entry is created after the successful ifEntry creation.
+             Then ifIndex of the newly created ifEntry must be used by
+             the network manager to create a peer configuration entry
+             of IETF Dial Control MIB (Refer to RFC 2128 section
+             2.2.3.1 and the description of dialCtlPeerCfgEntry for the
+             detailed information).
+             In summary, the voice dial peer creation steps are as
+             follows:
+             [1] create this entry (voice generic peer entry).
+             [2] read the cvPeerCfgIfIndex of this entry for the
+                 ifIndex of newly created voice generic peer.
+             [3] create the dialCtlPeerCfgEntry of RFC 2128 with the
+                 indices of dialCtlPeerCfgId and the ifIndex of newly
+                 created voice generic peer. 
+         
+             For each VoIP peer, it uses IP address and UDP port with
+             RTP protocol to transfer voice packet. Therefore, it does
+             not have its lower layer interface. The
+             dialCtlPeerCfgIfType object of IETF Dial Control MIB must
+             set to 'other' and the dialCtlPeerCfgLowerIf must set to
+             '0'.
+
+             After the successful creation of peer configuration entry
+             of IETF Dial Control MIB, the dial plan software in
+             managed device will set the ifOperStatus of the newly
+             created voiceEncap/voiceOverIp ifEntry to 'up' for
+             enabling the peer function if the peer configuration is
+             completed.
+             When this entry is deleted, its associated ifEntry,
+             voiceEncap/voiceOverIp specific peer entry and the peer
+             entry of IETF Dial Control MIB are deleted.
+            "
+        INDEX       { cvPeerCfgIndex }
+      ::= { cvPeerCfgTable 1 }
+
+CvPeerCfgEntry ::= SEQUENCE {
+            cvPeerCfgIndex                  Integer32,
+            cvPeerCfgIfIndex                InterfaceIndexOrZero,
+            cvPeerCfgType                   INTEGER,
+            cvPeerCfgRowStatus              RowStatus
+        }
+
+
+cvPeerCfgIndex OBJECT-TYPE
+        SYNTAX      Integer32 (1..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "An arbitrary index that uniquely identifies a generic
+             voice peer."
+        ::= { cvPeerCfgEntry 1 }
+
+cvPeerCfgIfIndex OBJECT-TYPE
+        SYNTAX      InterfaceIndexOrZero
+        MAX-ACCESS  read-only 
+        STATUS      current
+        DESCRIPTION
+            "The ifIndex of the peer associated ifEntry. The ifIndex is 
+             appeared after the associated ifEntry is created
+             successfully.
+             This ifIndex will be used to access the objects in the 
+             Voice over Telephony or Voice over IP peer specific table.
+             In addition, the ifIndex is also used to access the
+             associated peer configuration entry of the IETF Dial
+             Control MIB. If the peer associated ifEntry had not been
+             created, then this object has a value of zero. 
+            "
+        ::= { cvPeerCfgEntry 2 }
+
+cvPeerCfgType OBJECT-TYPE
+        SYNTAX      INTEGER {
+            voice  (1),
+            voip   (2),
+            mmail  (3),
+            voatm  (4),
+            vofr   (5)
+        }
+        MAX-ACCESS  read-create 
+        STATUS      current
+        DESCRIPTION
+            "Specify the type of voice related encapsulation.
+             voice - voice encapsulation (voiceEncap ifType) on the
+                     telephony network.
+             voip  - VoIP encapsulation (voiceOverIp ifType) on the IP
+                     network.
+             mmail - Media Mail over IP encapsulation (mediaMailOverIp
+                     ifType) on the IP network.
+             voatm - VoATM encapsulation (voiceOverATM ifType) on the
+                     ATM network.
+             vofr  - VoFR encapsulation (voiceOverFR ifType) on the
+                     Frame Relay network.
+            "
+        DEFVAL      { voice }
+        ::= { cvPeerCfgEntry 3 }
+
+
+
+cvPeerCfgRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            " This object is used to create a new row or modify or
+              delete an existing row in this table. The cvPeerCfgType
+              object should not be modified once the new row has been
+              created.
+            "
+        ::= { cvPeerCfgEntry 4 }
+
+
+--
+-- Voice over Telephony specific Peer Configuration Table
+--
+
+cvVoicePeerCfgTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF CvVoicePeerCfgEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The table contains the Voice over Telephony peer specific
+             information that is required to accept voice calls or to
+             which it will place them or perform various loopback tests
+             via interface.
+            "
+       ::= { cvPeer 2 }
+
+cvVoicePeerCfgEntry OBJECT-TYPE
+        SYNTAX      CvVoicePeerCfgEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "A single Voice specific Peer. One entry per voice
+             encapsulation.
+             The entry is created when its associated 'voiceEncap(103)'
+             encapsulation ifEntry is created.
+             This entry is deleted when its associated ifEntry is
+             deleted.
+            "
+        INDEX       { ifIndex }
+      ::= { cvVoicePeerCfgTable 1 }
+
+CvVoicePeerCfgEntry ::= SEQUENCE {
+            cvVoicePeerCfgSessionTarget          DisplayString,
+            cvVoicePeerCfgDialDigitsPrefix       DisplayString,
+            cvVoicePeerCfgDIDCallEnable          TruthValue,
+            cvVoicePeerCfgCasGroup               CvCasGroup,
+            cvVoicePeerCfgRegisterE164           TruthValue,
+            cvVoicePeerCfgForwardDigits          Integer32
+        }
+
+cvVoicePeerCfgSessionTarget OBJECT-TYPE
+        SYNTAX      DisplayString (SIZE (0..64))
+        MAX-ACCESS  read-write 
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the session target of the peer.
+             Session Targets definitions:
+             The session target has the syntax used by the IETF service
+             location protocol. The syntax is as follows:
+
+             mapping-type:type-specific-syntax
+
+             the mapping-type specifies a scheme for mapping the
+             matching dial string to a session target.
+
+             The valid Mapping type definitions for the peer are as
+             follows:
+             loopback - Syntax: loopback:where
+                'where' string is defined as follows:
+                compressed - loopback is performed on compressed voice
+                             as close to the CODEC which processes the
+                             data as possible.
+                uncompressed - loopback is performed on the PCM or
+                             analog voice as close to the telephony
+                             endpoint as possible.
+
+             Local loopback case:
+             uncompressed - the PCM voice coming into the DSP is simply
+                 turned around and sent back out, allowing testing of
+                 the transmit--> receive paths in the telephony
+                 endpoint.
+             compressed - the compressed voice coming out of the CODEC is
+                 turned around on the DSP module and fed back into the
+                 decompressor through the jitter buffer. In addition to
+                 the telephony endpoint, this tests both the encode and
+                 decode paths without involving data paths or packet
+                 handling on the host router.
+
+             Remote loopback case:
+             compressed - RTP packets received from the network are
+                 decapsulated and passed to the DSP board. Instead of
+                 feeding these into the CODEC for decompression, they
+                 are immediately sent back to the session application
+                 as if they had originated locally and been compressed.
+             uncompressed - In addition to the above, the voice samples
+                 are sent all the way through the CODEC and then turned
+                 around instead of being sent to the telephony
+                 endpoint
+            "
+        DEFVAL      { "" }
+        ::= { cvVoicePeerCfgEntry 1 }
+
+cvVoicePeerCfgDialDigitsPrefix OBJECT-TYPE
+        SYNTAX      DisplayString (SIZE (0..32))
+        MAX-ACCESS  read-write 
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the prefix of the dial digits for the
+             peer. The dial digits prefix is sent to telephony
+             interface before the real phone number when the system
+             places the outgoing call to the voice encapsulation peer
+             over telephony interface.
+            "
+        DEFVAL      { "" }
+        ::= { cvVoicePeerCfgEntry 2 }
+
+cvVoicePeerCfgDIDCallEnable OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The object enables/disables the DID call treatment for
+             incoming DNIS digits.
+             true  - treat the incoming DNIS digits as if the digits
+                     are received from DID trunk.
+             false - Disable DID call treatment for incoming DNIS
+                     digits.
+            "
+        DEFVAL      { false }
+        ::= { cvVoicePeerCfgEntry 3 }
+ 
+ 
+cvVoicePeerCfgCasGroup OBJECT-TYPE
+        SYNTAX      CvCasGroup
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the CAS group number of a CAS
+             capable T1/E1  that is in the dialCtlPeerCfgLowerIf object
+             of RFC2128.
+             This object can be set to a valid CAS group number only if
+             the dialCtlPeerCfgLowerIf contains a valid ifIndex for a
+             CAS capable T1/E1. The object must set to -1 before the
+             value of the  dialCtlPeerCfgLowerIf object of RFC2128 can
+             be changed.
+            "
+        DEFVAL      { -1 }
+        ::= { cvVoicePeerCfgEntry 4 }
+
+cvVoicePeerCfgRegisterE164 OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies that the E.164 number specified in 
+             the dialCtlPeerCfgOriginateAddress field of the associated
+             dialCtlPeerCfgTable entry be registered with this routers
+             gatekeeper.
+            "
+        DEFVAL      { false }
+        ::= { cvVoicePeerCfgEntry 5 }
+
+cvVoicePeerCfgForwardDigits OBJECT-TYPE
+        SYNTAX      Integer32 (-3..32)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies the number of dialed digits to
+             forward to the remote destination in the setup message.
+             The object can take the value:
+                 0-32 number of right justified digits to forward
+                 -1 default
+                 -2 forward extra digits i.e those over and above
+                    those needed to match to the destination pattern
+                 -3 forward all digits
+            "
+        DEFVAL      { 0 }
+        ::= { cvVoicePeerCfgEntry 6 }
+
+--
+-- Voice over IP specific Peer Configuration Table
+--
+
+cvVoIPPeerCfgTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF CvVoIPPeerCfgEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The table contains the Voice over IP (VoIP) peer specific
+             information that is required to accept voice calls or to 
+             which it will place them via IP backbone with the
+             specified session protocol in cvVoIPPeerCfgSessionProtocol.
+            "
+       ::= { cvPeer 3 }
+
+cvVoIPPeerCfgEntry OBJECT-TYPE
+        SYNTAX      CvVoIPPeerCfgEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "A single VoIP specific Peer. One entry per VoIP
+             encapsulation.
+             The entry is created when its associated 'voiceOverIp(104)' 
+             encapsulation ifEntry is created.
+             This entry is deleted when its associated ifEntry is
+             deleted.
+            "
+        INDEX       { ifIndex }
+      ::= { cvVoIPPeerCfgTable 1 }
+
+CvVoIPPeerCfgEntry ::= SEQUENCE {
+            cvVoIPPeerCfgSessionProtocol            CvSessionProtocol,
+            cvVoIPPeerCfgDesiredQoS                 QosService,
+            cvVoIPPeerCfgMinAcceptableQoS           QosService,
+            cvVoIPPeerCfgSessionTarget              DisplayString,
+            cvVoIPPeerCfgCoderRate                  CvcSpeechCoderRate,
+            cvVoIPPeerCfgFaxRate                    CvcFaxTransmitRate,
+            cvVoIPPeerCfgVADEnable                  TruthValue,
+            cvVoIPPeerCfgExpectFactor               Integer32,
+            cvVoIPPeerCfgIcpif                      Integer32,
+            cvVoIPPeerCfgPoorQoVNotificationEnable  TruthValue,
+            cvVoIPPeerCfgUDPChecksumEnable          TruthValue,
+            cvVoIPPeerCfgIPPrecedence               Integer32,
+            cvVoIPPeerCfgTechPrefix                 DisplayString,
+            cvVoIPPeerCfgDigitRelay                 OCTET STRING,
+            cvVoIPPeerCfgCoderBytes                 Integer32,
+            cvVoIPPeerCfgFaxBytes                   Integer32,
+            cvVoIPPeerCfgInBandSignaling            CvcInBandSignaling
+        }
+
+cvVoIPPeerCfgSessionProtocol OBJECT-TYPE
+        SYNTAX      CvSessionProtocol
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the session protocol to be used
+             for Internet call between local and remote router via
+             IP backbone.
+            "
+        DEFVAL      { cisco }
+        ::= { cvVoIPPeerCfgEntry 1 }
+
+cvVoIPPeerCfgDesiredQoS OBJECT-TYPE
+        SYNTAX      QosService
+        MAX-ACCESS  read-write 
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the user requested Quality of Service
+             for the call.
+            "
+        DEFVAL      { bestEffort }
+        ::= { cvVoIPPeerCfgEntry 2 }
+
+
+cvVoIPPeerCfgMinAcceptableQoS OBJECT-TYPE
+        SYNTAX      QosService
+        MAX-ACCESS  read-write 
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the minimally acceptable Quality of
+             Service for the call.
+
+            "
+        DEFVAL      { bestEffort }
+        ::= { cvVoIPPeerCfgEntry 3 }
+
+cvVoIPPeerCfgSessionTarget OBJECT-TYPE
+        SYNTAX      DisplayString
+        MAX-ACCESS  read-write 
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the session target of the peer.
+             Session Targets definitions:
+             The session target has the syntax used by the IETF service
+             location protocol. The syntax is as follows:
+
+             mapping-type:type-specific-syntax
+
+             the mapping-type specifies a scheme for mapping the
+             matching dial string to a session target. The
+             type-specific-syntax is exactly that, something that the
+             particular mapping scheme can understand.
+             For example,
+             Session target           Meaning
+             ipv4:171.68.13.55:1006   The session target is the IP
+                                      version 4 address of 171.68.13.55
+                                      and port 1006.
+             dns:pots.cisco.com:1661  The session target is the IP host
+                                      with dns name pots.cisco.com, and
+                                      port 1661.
+             ras                      The session target is the
+                                      gatekeeper with RAS (Registration
+                                      , Admission,  Status protocol).
+             settlement               The session target is the
+                                      settlement server.
+ 
+             The valid Mapping type definitions for the peer are as
+             follows:
+             ipv4       - Syntax: ipv4:w.x.y.z:port or  ipv4:w.x.y.z 
+             dns        - Syntax: dns:host.domain:port or
+                                  dns:host.domain
+             ras        - Syntax: ras
+             settlement - Syntax: settlement
+
+             loopback - Syntax: loopback:where
+                'where' string is defined as follows:
+                rtp - loopback is performed at the transport protocol
+                      level.
+
+             Local loopback case:
+             rtp - the session application sets up an RTP stream to
+                 itself (i.e. actually allocates a port pair and opens
+                 the appropriate UDP sockets). It then does the full
+                 RTP encapsulation, sends the packets to the loopback
+                 IP address, receives the RTP packets, and hands the
+                 compressed voice back to the CODEC. This tests the
+                 entire local processing path, both transmit and
+                 receive, in the router, as well as all of the above
+                 paths.
+
+             Remote loopback case:
+             rtp: RTP packets received from the network are decapsulated and
+                  immediately re-encapsulated in the outbound RTP
+                  stream, using the same media clock (i.e. timestamp)
+                  as the received packet. They are then sent back to
+                  the remote source router as if the voice had
+                  originated on a telephony port on the local router.
+            "
+        DEFVAL      { "" }
+        ::= { cvVoIPPeerCfgEntry 4 }
+
+cvVoIPPeerCfgCoderRate OBJECT-TYPE
+        SYNTAX      CvcSpeechCoderRate
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies the most desirable codec of speech
+             for the VoIP peer.
+             "
+        DEFVAL      { g729IETFr8000 }
+        ::= { cvVoIPPeerCfgEntry 5 }
+
+cvVoIPPeerCfgFaxRate OBJECT-TYPE
+        SYNTAX      CvcFaxTransmitRate
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            " This object specifies the default transmit rate of FAX
+              the VoIP peer. If the value of this object is 'none',
+              then the Fax relay feature is disabled; otherwise the Fax
+              relay feature is enabled.
+            "
+        DEFVAL      { voiceRate }
+        ::= { cvVoIPPeerCfgEntry 6 }
+
+cvVoIPPeerCfgVADEnable OBJECT-TYPE
+        SYNTAX      TruthValue 
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies whether or not the VAD (Voice
+             Activity Dete the voice data is continuously transmitted
+             to IP backbone.
+            "
+        DEFVAL      { true }
+        ::= { cvVoIPPeerCfgEntry 7 }
+
+cvVoIPPeerCfgExpectFactor OBJECT-TYPE
+        SYNTAX      Integer32 (0..20)
+        UNITS       "equipment impairment factor (eif)" 
+        MAX-ACCESS  read-write
+        STATUS      current  
+        DESCRIPTION
+            "This object specifies the user requested Expectation
+             Factor of voice quality for the call via this peer.
+            "
+        REFERENCE 
+            "ITU G.113: Sections 8 Considerations Concerning the
+             Expectation Factor A.                                        
+            " 
+        DEFVAL      { 10 }
+        ::= { cvVoIPPeerCfgEntry 8 }
+
+cvVoIPPeerCfgIcpif OBJECT-TYPE
+        SYNTAX      Integer32 (0..55)
+        UNITS       "equipment impairment factor (eif)"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies the user requested Calculated
+             Planning Impairment Factor (Icpif) for the call via this
+             peer.         
+            "
+        REFERENCE
+            "ITU G.113: Sections 9 Considerations associated with the
+             Calculated Planning Impairment Factor (Icpif)
+            "
+        DEFVAL      { 30 }
+        ::= { cvVoIPPeerCfgEntry 9 }
+
+
+cvVoIPPeerCfgPoorQoVNotificationEnable OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies whether cvdcPoorQoVNotification      
+             traps should be generated for the call that is associated
+             with this peer.
+            "
+        DEFVAL      { false }
+        ::= { cvVoIPPeerCfgEntry 10 }
+
+cvVoIPPeerCfgUDPChecksumEnable OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies whether the outgoing voice related
+             UDP packet includes the checksum information.
+             true  - enable the checksum of outgoing voice UDP packets
+             false - disable the checksum of outgoing voice UDP packets
+            "
+        DEFVAL      { false }
+        ::= { cvVoIPPeerCfgEntry 11 }
+
+cvVoIPPeerCfgIPPrecedence OBJECT-TYPE
+        SYNTAX      Integer32 (0..7)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies datagram precedence of voice packet, 
+             with values ranging from 0 (normal precedence) through 7 
+             (network control), allowing the managed system to set the
+             importance of each voice packet for delivering them to the
+             destination peer via an IP network which does not support
+             Resource Reservation Protocol (RSVP).
+             "
+        REFERENCE
+            "RFC 791: Section 3.1.  Internet Header Format; Type of
+             Service.
+            "
+        DEFVAL      { 0 }
+        ::= { cvVoIPPeerCfgEntry 12 }
+
+cvVoIPPeerCfgTechPrefix OBJECT-TYPE
+        SYNTAX      DisplayString (SIZE (0..128))
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies the technology prefix of the peer,   
+             The technology prefix and the called party address       
+             are passed in Admission Request (ARQ) to gatekeeper
+             for the called party address resolution during call setup.
+             "
+        REFERENCE
+            "ITU-T H.225.0: Section 7.6 Common Message Elements.
+            "
+        DEFVAL      { "" }
+        ::= { cvVoIPPeerCfgEntry 13 }
+
+cvVoIPPeerCfgDigitRelay OBJECT-TYPE
+        SYNTAX OCTET STRING(SIZE(1))      
+--       BITS {
+--            rtpCisco        (0),
+--            h245Signal          (1),
+--            h245Alphanumeric    (2)
+--        }
+        MAX-ACCESS  read-write
+        STATUS      current 
+        DESCRIPTION
+            "This object specifies the methods to transmit dial digits
+             (DTMF or MF digits) via IP network.
+             rtpCisco       - Enable capability to transmit dial digits 
+                              with Cisco proprietary RTP payload type.
+             h245Signal     - Enable capability to transmit dtmf digits
+                              across the H.245 channel, via the signal
+                              field of the UserInputIndication message
+             h245Alphanumeric - Enable capability to transmit dtmf
+                              digit across the H.245 channel, via the
+                              string or alphanumeric fields of the
+                              UserInputIndication message
+
+             Modifying the value of cvVoIPPeerCfgSessionProtocol
+             can reset the digit-relay method associated bits value in
+             this object if the modified session protocol does not
+             support  these digit-relay methods.
+            "
+        DEFVAL      { '00'H }
+        ::= { cvVoIPPeerCfgEntry 14 }
+
+cvVoIPPeerCfgCoderBytes OBJECT-TYPE
+        SYNTAX      Integer32 (0 | 10..240)
+        UNITS       "bytes"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies the size of the voice payload sample
+             to be produced by the coder specified in
+             cvVoIPPeerCfgCoderRate.
+             Each coder sample produces 10 bytes of voice payload. The
+             specified value will be rounded down to the nearest valid
+             size.
+
+             A value of 0, specifies that the coder defined by 
+             cvVoIPPeerCfgCoderRate should produce its default payload
+             size. 
+            "
+        DEFVAL      { 0 }
+        ::= { cvVoIPPeerCfgEntry 15 }
+
+cvVoIPPeerCfgFaxBytes OBJECT-TYPE
+        SYNTAX      Integer32 (0 | 10..255)
+        UNITS       "bytes"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies the payload size to be produced by
+             the coder when it is generating fax data. The valid range
+             is 10-255. A value of 0, specifies that the coder
+             specified in cvVoIPCfgPeerCoderRate should produce its
+             default fax payload size.
+            "
+        DEFVAL      { 0 }
+        ::= { cvVoIPPeerCfgEntry 16 }
+
+cvVoIPPeerCfgInBandSignaling OBJECT-TYPE
+        SYNTAX      CvcInBandSignaling
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies the type of in-band signaling that
+             will be used between the end points of the call. It is
+             used by the router to detemine how to interpret ABCD
+             signaling bits sent as part of voice payload data.
+            "
+        DEFVAL      { cas }
+        ::= { cvVoIPPeerCfgEntry 17 }
+
+--
+-- Voice specific common Peer Configuration Table
+--
+
+cvPeerCommonCfgTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF CvPeerCommonCfgEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The table contains the Voice specific peer common
+             configuration information that is required to accept voice
+             calls or to which it will place them or process the
+             incoming calls.
+            "
+       ::= { cvPeer 4 }
+
+cvPeerCommonCfgEntry OBJECT-TYPE
+        SYNTAX      CvPeerCommonCfgEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "A single Voice specific Peer. One entry per voice related
+             encapsulation.
+             The entry is created when a voice related encapsulation
+             ifEntry is created.
+             This entry is deleted when its associated ifEntry is
+             deleted.
+            "
+        INDEX       { ifIndex }
+      ::= { cvPeerCommonCfgTable 1 }
+
+CvPeerCommonCfgEntry ::= SEQUENCE {
+            cvPeerCommonCfgIncomingDnisDigits     DisplayString,
+            cvPeerCommonCfgMaxConnections         Integer32,
+            cvPeerCommonCfgApplicationName        DisplayString,
+            cvPeerCommonCfgPreference             Integer32,
+            cvPeerCommonCfgHuntStop               TruthValue
+        }
+
+
+cvPeerCommonCfgIncomingDnisDigits OBJECT-TYPE
+        SYNTAX      DisplayString (SIZE (0..32))
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the prefix of the incoming Dialed
+             Number Identification Service (DNIS) digits for the peer.
+             The DNIS digits prefix is used to match with the incoming
+             DNIS number for incoming call discrimination. If the
+             digits in this object are matched with incoming DNIS
+             number, the  associated dialCtlPeerCfgInfoType in RFC 2128
+             will be used as a call discriminator for differentiating
+             speech, data, fax, video or modem calls.
+            "
+        DEFVAL      { "" }
+        ::= { cvPeerCommonCfgEntry 1 }
+
+
+cvPeerCommonCfgMaxConnections OBJECT-TYPE
+        SYNTAX      Integer32 (-1 | 1..2147483647)
+        UNITS       "connections"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the maximum allowed connection
+             to/from the peer. A value of -1 disables the limit of
+             maximum connections.
+            "
+        DEFVAL      { -1 }
+        ::= { cvPeerCommonCfgEntry 2 }
+
+ 
+cvPeerCommonCfgApplicationName OBJECT-TYPE
+        SYNTAX      DisplayString 
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the application to handle the incoming     
+             call after the the peer is selected.
+             If no application name is specified, then the default
+             session application will take care of the incoming call.
+            "
+        DEFVAL      { "" }
+        ::= { cvPeerCommonCfgEntry 3 }
+
+cvPeerCommonCfgPreference OBJECT-TYPE
+        SYNTAX      Integer32 (0..10)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies the selection preference of a peer
+             when multiple peers are matched to the selection criteria. 
+             The value of 0 has the lowest preference for peer
+             selection.
+            "
+        DEFVAL      { 0 }
+
+        ::= { cvPeerCommonCfgEntry 4 }
+
+cvPeerCommonCfgHuntStop OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object specifies whether dialpeer hunting should stop
+             when this peer is reached.
+            "
+        DEFVAL      { false }
+        ::= { cvPeerCommonCfgEntry 5 }
+
+
+--*********************************************************************
+-- Voice Dial Control Gateway Call Active Group
+--*********************************************************************
+--
+-- For an end-to-end Gateway call, it normally has two or more call leg
+-- entries appear in the call active table after a successful end-to-end
+-- Gateway call establishment. The unique global call identifier in
+-- each call leg is used to identify a specific end-to-end call.
+-- If the call leg entries in call active table contain the same
+-- global call identifier, they belong to the same gateway call.
+--
+
+--
+-- Voice over Telephony Call Active Table
+--
+
+cvCallActiveTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF CvCallActiveEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This table is the voice extension to the call active table
+             of IETF Dial Control MIB. It contains voice encapsulation
+             call leg information that is derived from the statistics
+             of lower layer telephony interface.
+            "
+        ::= { cvGatewayCallActive 1 }
+
+cvCallActiveEntry OBJECT-TYPE
+        SYNTAX      CvCallActiveEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The information regarding a single voice encapsulation
+             call leg.
+             The call leg entry is identified by using the same index
+             objects that are used by Call Active table of IETF Dial
+             Control MIB to identify the call.
+             An entry of this table is created when its associated call
+             active entry in the IETF Dial Control MIB is created and
+             call active entry contains the call establishment to a
+             voice over telephony network peer.             
+             The entry is deleted when its associated call active entry
+             in the IETF Dial Control MIB is deleted.
+            "
+        INDEX       { callActiveSetupTime, callActiveIndex }
+        ::= { cvCallActiveTable 1 }
+
+
+CvCallActiveEntry ::=
+        SEQUENCE {
+            cvCallActiveConnectionId              CvcGUid,
+            cvCallActiveTxDuration                AbsoluteCounter32,
+            cvCallActiveVoiceTxDuration           AbsoluteCounter32,
+            cvCallActiveFaxTxDuration             AbsoluteCounter32,
+            cvCallActiveCoderTypeRate             CvcCoderTypeRate,
+            cvCallActiveNoiseLevel                Integer32, 
+            cvCallActiveACOMLevel                 Integer32,
+            cvCallActiveOutSignalLevel            Integer32,
+            cvCallActiveInSignalLevel             Integer32,
+            cvCallActiveERLLevel                  Integer32, 
+            cvCallActiveSessionTarget             DisplayString,
+            cvCallActiveImgPageCount              AbsoluteCounter32
+        }
+
+
+cvCallActiveConnectionId OBJECT-TYPE
+        SYNTAX      CvcGUid 
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The global call identifier for the gateway call."
+        ::= { cvCallActiveEntry 1 }
+
+cvCallActiveTxDuration  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of Transmit path open from this peer to the
+             voice gateway for the call.
+            "
+        ::= { cvCallActiveEntry 2 }
+
+cvCallActiveVoiceTxDuration  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of voice transmitted from this peer to voice
+             gateway for this call. The Voice Utilization Rate can be
+             obtained by dividing this by cvCallActiveTXDuration object.
+            "
+        ::= { cvCallActiveEntry 3 }
+
+cvCallActiveFaxTxDuration  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of fax transmitted from this peer to voice gateway
+             for this call. The FAX Utilization Rate can be obtained by
+             dividing this by cvCallActiveTXDuration object.
+            "
+        ::= { cvCallActiveEntry 4 }
+
+cvCallActiveCoderTypeRate OBJECT-TYPE
+        SYNTAX      CvcCoderTypeRate
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The negotiated coder rate. It specifies the transmit rate of
+             voice/fax compression to its associated call leg for the
+             call.
+            "
+        ::= { cvCallActiveEntry 5 }
+
+cvCallActiveNoiseLevel  OBJECT-TYPE
+        SYNTAX      Integer32 (-100..8)
+        UNITS       "dBm"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The object contains the active noise level for the call.
+            "
+        ::= { cvCallActiveEntry 6 }
+
+cvCallActiveACOMLevel OBJECT-TYPE
+        SYNTAX      Integer32 (-1..45)
+        UNITS       "dB"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The object contains the sum of Echo Return Loss (ERL), 
+             cancellation loss (Echo Return Loss Enhancement) and
+             nonlinear processing loss for the call.
+             The value -1 indicates the level can not be determined or
+             level detection is disabled. 
+            "
+        ::= { cvCallActiveEntry 7 }
+
+cvCallActiveOutSignalLevel OBJECT-TYPE
+        SYNTAX      Integer32 (-100..8)
+        UNITS      "dBm"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The object contains the active output signal level to
+             telephony interface that is used by the call.
+            "
+        ::= { cvCallActiveEntry 8 }
+
+cvCallActiveInSignalLevel OBJECT-TYPE
+        SYNTAX      Integer32 (-100..8)
+        UNITS      "dBm"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The object contains the active input signal level from
+             telephony interface that is used by the call.
+            "
+        ::= { cvCallActiveEntry 9 }
+
+
+cvCallActiveERLLevel  OBJECT-TYPE
+        SYNTAX      Integer32 (-1..45)
+        UNITS       "dB"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The object contains the current Echo Return Loss (ERL)
+             level for the call.
+             The value -1 indicates the level can not be determined or 
+             level detection is disabled. 
+            "
+        ::= { cvCallActiveEntry 10 }
+
+
+cvCallActiveSessionTarget OBJECT-TYPE
+        SYNTAX      DisplayString (SIZE (0..64))
+        MAX-ACCESS  read-only 
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the session target of the peer that
+             is used for the call. This object is set with the
+             information in the call associated
+             cvVoicePeerCfgSessionTarget object when the call is
+             connected.  
+            "
+        ::= { cvCallActiveEntry 11 }
+
+cvCallActiveImgPageCount  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "pages"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The number of FAX related image pages are received or
+             transmitted via the peer for the call.
+            "
+        ::= { cvCallActiveEntry 12 }
+
+
+--
+-- Voice over IP Call Active Table
+--
+
+cvVoIPCallActiveTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF CvVoIPCallActiveEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This table is the VoIP extension to the call active table of
+             IETF Dial Control MIB. It contains VoIP call leg
+             information about specific VoIP call destination and the
+             selected QoS for the call leg.
+            "
+        ::= { cvGatewayCallActive  2 }
+
+cvVoIPCallActiveEntry OBJECT-TYPE
+        SYNTAX      CvVoIPCallActiveEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The information regarding a single VoIP call leg.
+             The call leg entry is identified by using the same index
+             objects that are used by Call Active table of IETF Dial
+             Control MIB to identify the call.
+             An entry of this table is created when its associated call
+             active entry in the IETF Dial Control MIB is created and
+             the call active entry contains information for the call 
+             establishment to the peer on the IP backbone via a voice
+             over  IP peer.             
+             The entry is deleted when its associated call active entry
+             in the IETF Dial Control MIB is deleted.
+            "
+        INDEX       { callActiveSetupTime, callActiveIndex }
+        ::= { cvVoIPCallActiveTable 1 }
+
+
+CvVoIPCallActiveEntry ::=
+        SEQUENCE {
+            cvVoIPCallActiveConnectionId             CvcGUid,
+            cvVoIPCallActiveRemoteIPAddress          IpAddress,
+            cvVoIPCallActiveRemoteUDPPort            INTEGER,
+            cvVoIPCallActiveRoundTripDelay           Gauge32,
+            cvVoIPCallActiveSelectedQoS              QosService,
+            cvVoIPCallActiveSessionProtocol          CvSessionProtocol,
+            cvVoIPCallActiveSessionTarget            DisplayString,
+            cvVoIPCallActiveOnTimeRvPlayout          AbsoluteCounter32,
+            cvVoIPCallActiveGapFillWithSilence       AbsoluteCounter32,
+            cvVoIPCallActiveGapFillWithPrediction    AbsoluteCounter32,
+            cvVoIPCallActiveGapFillWithInterpolation AbsoluteCounter32,
+            cvVoIPCallActiveGapFillWithRedundancy    AbsoluteCounter32,
+            cvVoIPCallActiveHiWaterPlayoutDelay      AbsoluteCounter32,
+            cvVoIPCallActiveLoWaterPlayoutDelay      Gauge32,
+            cvVoIPCallActiveReceiveDelay             Gauge32,
+            cvVoIPCallActiveVADEnable                TruthValue,
+            cvVoIPCallActiveCoderTypeRate            CvcCoderTypeRate,
+            cvVoIPCallActiveLostPackets              AbsoluteCounter32, 
+            cvVoIPCallActiveLatePackets              AbsoluteCounter32,
+            cvVoIPCallActiveEarlyPackets             AbsoluteCounter32
+        }
+
+cvVoIPCallActiveConnectionId OBJECT-TYPE
+        SYNTAX      CvcGUid 
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The global call identifier for the gateway call."
+        ::= { cvVoIPCallActiveEntry 1 }
+
+
+cvVoIPCallActiveRemoteIPAddress OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Remote system IP address for the VoIP call.
+            "
+        ::= { cvVoIPCallActiveEntry 2 }
+
+cvVoIPCallActiveRemoteUDPPort OBJECT-TYPE
+        SYNTAX      INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Remote system UDP listener port to which to transmit voice
+             packets.
+            "
+        ::= { cvVoIPCallActiveEntry 3 }
+
+cvVoIPCallActiveRoundTripDelay OBJECT-TYPE
+        SYNTAX      Gauge32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The voice packet round trip delay between local and
+             the remote system on the IP backbone during the call.
+            "
+        ::= { cvVoIPCallActiveEntry 4 }
+
+cvVoIPCallActiveSelectedQoS OBJECT-TYPE
+        SYNTAX      QosService
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The selected RSVP QoS for the voice call."
+        ::= { cvVoIPCallActiveEntry 5 }
+
+cvVoIPCallActiveSessionProtocol OBJECT-TYPE
+        SYNTAX      CvSessionProtocol
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the session protocol to be used
+             for Internet call between local and remote router via
+             IP backbone.
+            "
+        ::= { cvVoIPCallActiveEntry 6 }
+
+cvVoIPCallActiveSessionTarget OBJECT-TYPE
+        SYNTAX      DisplayString
+        MAX-ACCESS  read-only 
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the session target of the peer that
+             is used for the call. This object is set with the
+             information in the call associated 
+             cvVoIPPeerCfgSessionTarget object when the voice over IP
+             call is connected.  
+            "
+        ::= { cvVoIPCallActiveEntry 7 }
+
+cvVoIPCallActiveOnTimeRvPlayout  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of voice playout from data received on time for
+             this call. This plus the durations for the GapFills in the
+             following entries gives the Total Voice Playout Duration
+             for Active Voice.
+             This does not include duration for which no data was sent by the
+             Transmit end as voice signal, e.g., silence suppression
+             and fax signal. The On Time Playout Rate can be computed
+             by dividing this entry by the Total Voice Playout Duration.
+            "
+        ::= { cvVoIPCallActiveEntry 8 }
+
+cvVoIPCallActiveGapFillWithSilence  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of voice signal replaced with signal played out
+             during silence due to voice data not received on time
+             (or lost) from voice gateway this call.
+            "
+        ::= { cvVoIPCallActiveEntry 9 }
+
+cvVoIPCallActiveGapFillWithPrediction  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of voice signal played out with signal synthesized
+             from parameters or samples of data preceding in time due
+             to voice data not received on time (or lost) from voice
+             gateway for this call. An example of such playout is
+             frame-erasure or frame-concealment strategies in G.729 and
+             G.723.1 compression algorithms.
+            "
+        ::= { cvVoIPCallActiveEntry 10 }
+
+cvVoIPCallActiveGapFillWithInterpolation  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of voice signal played out with signal synthesized
+             from parameters or samples of data preceding and following
+             in time due to voice data not received on time (or lost)
+             from voice gateway for this call.
+            "
+        ::= { cvVoIPCallActiveEntry 11 }
+
+cvVoIPCallActiveGapFillWithRedundancy  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of voice signal played out with signal synthesized
+             from redundancy parameters available due to voice data not
+             received on time (or lost) from voice gateway for this call.
+            "
+        ::= { cvVoIPCallActiveEntry 12 }
+
+
+cvVoIPCallActiveHiWaterPlayoutDelay OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            " The high water mark Voice Playout FIFO Delay during
+              the voice call."
+        ::= { cvVoIPCallActiveEntry 13 }
+
+cvVoIPCallActiveLoWaterPlayoutDelay OBJECT-TYPE
+        SYNTAX      Gauge32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            " The low water mark Voice Playout FIFO Delay during
+              the voice call."
+        ::= { cvVoIPCallActiveEntry 14 }
+
+cvVoIPCallActiveReceiveDelay OBJECT-TYPE
+        SYNTAX      Gauge32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The average Playout FIFO Delay plus the decoder delay
+             during the voice call."
+        ::= { cvVoIPCallActiveEntry 15 }
+
+cvVoIPCallActiveVADEnable OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-only
+        STATUS      deprecated
+                    -- moved to CISCO-VOICE-COMMON-DIAL-CONTROL-MIB
+        DESCRIPTION
+            "The object indicates whether or not the VAD (Voice Activity
+             Detection) was enabled for the voice call."
+        ::= { cvVoIPCallActiveEntry 16  }
+
+cvVoIPCallActiveCoderTypeRate OBJECT-TYPE
+        SYNTAX      CvcCoderTypeRate
+        MAX-ACCESS  read-only
+        STATUS      deprecated
+                    -- moved to CISCO-VOICE-COMMON-DIAL-CONTROL-MIB
+        DESCRIPTION
+            "The negotiated coder rate. It specifies the transmit rate of
+             voice/fax compression to its associated call leg for the
+             call. This rate is different from the configuration rate
+             because of rate negotiation during the call.
+            "
+        ::= { cvVoIPCallActiveEntry 17 }
+
+cvVoIPCallActiveLostPackets OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "packets"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            " The number of lost voice packets during the call.
+            "
+        ::= { cvVoIPCallActiveEntry 18 }
+
+cvVoIPCallActiveEarlyPackets OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "packets"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            " The number of received voice packets that are
+              arrived too early to store in jitter buffer
+              during the call.
+            "
+        ::= { cvVoIPCallActiveEntry 19 }
+
+cvVoIPCallActiveLatePackets OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "packets"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            " The number of received voice packets that are
+              arrived too late to playout with CODEC (Coder/Decoder)
+              during the call.
+            "
+        ::= { cvVoIPCallActiveEntry 20 }
+
+
+
+
+
+--*********************************************************************
+-- Voice Dial Control Gateway Call History Group
+--*********************************************************************
+
+--
+-- Voice over Telephony Call History Table
+-- 
+
+cvCallHistoryTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF CvCallHistoryEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This table is the voice extension to the call history table
+             of IETF Dial Control MIB. It contains voice encapsulation
+             call leg information such as voice packet statistics,
+             coder usage and end to end bandwidth of the call leg.
+            "
+        ::= { cvGatewayCallHistory 1 }
+
+cvCallHistoryEntry OBJECT-TYPE
+        SYNTAX      CvCallHistoryEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The information regarding a single voice encapsulation
+             call leg.
+             The call leg entry is identified by using the same index
+             objects that are used by Call Active table of IETF Dial
+             Control MIB to identify the call.
+             An entry of this table is created when its associated call
+             history entry in the IETF Dial Control MIB is created and
+             the call history entry contains the call establishment to
+             a voice encapsulation peer.
+             The entry is deleted when its associated call active entry
+             in the IETF Dial Control MIB is deleted.
+            "
+        INDEX       { cCallHistoryIndex }
+        ::= { cvCallHistoryTable 1 }
+
+
+CvCallHistoryEntry ::=
+        SEQUENCE {
+            cvCallHistoryConnectionId              CvcGUid,
+            cvCallHistoryTxDuration                AbsoluteCounter32,
+            cvCallHistoryVoiceTxDuration           AbsoluteCounter32,
+            cvCallHistoryFaxTxDuration             AbsoluteCounter32,
+            cvCallHistoryCoderTypeRate             CvcCoderTypeRate,
+            cvCallHistoryNoiseLevel                Integer32,
+            cvCallHistoryACOMLevel                 Integer32,
+            cvCallHistorySessionTarget             DisplayString,
+            cvCallHistoryImgPageCount              AbsoluteCounter32
+        }
+
+
+cvCallHistoryConnectionId OBJECT-TYPE
+        SYNTAX      CvcGUid 
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The global call identifier for the gateway call."
+        ::= { cvCallHistoryEntry 1 }
+
+cvCallHistoryTxDuration  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of Transmit path open from this peer to the
+             voice gateway for the call.
+            "
+        ::= { cvCallHistoryEntry 2 }
+
+cvCallHistoryVoiceTxDuration  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duratio for this call. The Voice Utilization Rate can be 
+             obtained by dividing this by cvCallHistoryTXDuration
+             object.
+            "
+        ::= { cvCallHistoryEntry 3 }
+
+cvCallHistoryFaxTxDuration  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of fax transmitted from this peer to voice
+             gateway for this call. The FAX Utilization Rate can be
+             obtained by dividing this by cvCallHistoryTXDuration
+             object.
+            "
+        ::= { cvCallHistoryEntry 4 }
+
+cvCallHistoryCoderTypeRate OBJECT-TYPE
+        SYNTAX      CvcCoderTypeRate
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The negotiated coder rate. It specifies the transmit rate
+             of voice/fax compression to its associated call leg for
+             the call.
+            "
+        ::= { cvCallHistoryEntry 5 }
+
+cvCallHistoryNoiseLevel  OBJECT-TYPE
+        SYNTAX      Integer32 (-100..8)
+        UNITS       "dBm"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The object contains the average noise level for the call.
+            "
+        ::= { cvCallHistoryEntry 6 }
+
+cvCallHistoryACOMLevel OBJECT-TYPE
+        SYNTAX      Integer32 (-1..45)
+        UNITS       "dB"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The object contains the average ACOM level for the call.
+             The value -1 indicates the level can not be determined or 
+             level detection is disabled. 
+            "
+        ::= { cvCallHistoryEntry 7 }
+
+cvCallHistorySessionTarget OBJECT-TYPE
+        SYNTAX      DisplayString (SIZE (0..64))
+        MAX-ACCESS  read-only 
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the session target of the peer that
+             is used for the call via telephony interface.
+            "
+        ::= { cvCallHistoryEntry 8 }
+
+cvCallHistoryImgPageCount  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "pages"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The number of FAX related image pages are received or
+             transmitted via the peer for the call.
+            "
+        ::= { cvCallHistoryEntry 9 }
+
+
+
+--
+-- Voice over IP Call History Table
+-- 
+
+cvVoIPCallHistoryTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF CvVoIPCallHistoryEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This table is the VoIP extension to the call history table
+             of IETF Dial Control MIB. It contains VoIP call leg
+             information about specific VoIP call destination and the
+             selected QoS for the call leg.
+            "
+        ::= { cvGatewayCallHistory 2 }
+
+cvVoIPCallHistoryEntry OBJECT-TYPE
+        SYNTAX      CvVoIPCallHistoryEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The information regarding a single VoIP call leg.
+             The call leg entry is identified by using the same index
+             objects that are used by Call Active table of IETF Dial
+             Control MIB to identify the call.
+             An entry of this table is created when its associated call
+             history entry in the IETF Dial Control MIB is created and
+             the call history entry contains information for the call
+             establishment to the peer on the IP backbone via a voice
+             over IP peer.
+             The entry is deleted when its associated call history
+             entry in the IETF Dial Control MIB is deleted.
+            "
+        INDEX       { cCallHistoryIndex }
+        ::= { cvVoIPCallHistoryTable 1 }
+
+
+CvVoIPCallHistoryEntry ::=
+        SEQUENCE {
+            cvVoIPCallHistoryConnectionId             CvcGUid,
+            cvVoIPCallHistoryRemoteIPAddress          IpAddress,
+            cvVoIPCallHistoryRemoteUDPPort            INTEGER,
+            cvVoIPCallHistoryRoundTripDelay           Gauge32,
+            cvVoIPCallHistorySelectedQoS              QosService, 
+            cvVoIPCallHistorySessionProtocol          CvSessionProtocol,
+            cvVoIPCallHistorySessionTarget            DisplayString,
+            cvVoIPCallHistoryOnTimeRvPlayout          AbsoluteCounter32,
+            cvVoIPCallHistoryGapFillWithSilence       AbsoluteCounter32,
+            cvVoIPCallHistoryGapFillWithPrediction    AbsoluteCounter32,
+            cvVoIPCallHistoryGapFillWithInterpolation AbsoluteCounter32,
+            cvVoIPCallHistoryGapFillWithRedundancy    AbsoluteCounter32,
+            cvVoIPCallHistoryHiWaterPlayoutDelay      AbsoluteCounter32,
+            cvVoIPCallHistoryLoWaterPlayoutDelay      Gauge32,
+            cvVoIPCallHistoryReceiveDelay             Gauge32,
+            cvVoIPCallHistoryVADEnable                TruthValue,
+            cvVoIPCallHistoryCoderTypeRate            CvcCoderTypeRate, 
+            cvVoIPCallHistoryIcpif                    Integer32,
+            cvVoIPCallHistoryLostPackets              AbsoluteCounter32, 
+            cvVoIPCallHistoryLatePackets              AbsoluteCounter32,
+            cvVoIPCallHistoryEarlyPackets             AbsoluteCounter32
+        }
+
+cvVoIPCallHistoryConnectionId OBJECT-TYPE
+        SYNTAX      CvcGUid 
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The global call identifier for the gateway call."
+        ::= { cvVoIPCallHistoryEntry 1 }
+
+
+cvVoIPCallHistoryRemoteIPAddress OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Remote system IP address for the call.
+            "
+        ::= { cvVoIPCallHistoryEntry 2 }
+
+cvVoIPCallHistoryRemoteUDPPort OBJECT-TYPE
+        SYNTAX      INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Remote system UDP listener port to which to transmit voice 
+             packets for the call.
+            "
+        ::= { cvVoIPCallHistoryEntry 3 }
+
+cvVoIPCallHistoryRoundTripDelay OBJECT-TYPE
+        SYNTAX      Gauge32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The voice packet round trip delay between local and
+             the remote system on the IP backbone during the call.
+            "
+        ::= { cvVoIPCallHistoryEntry 4 }
+
+cvVoIPCallHistorySelectedQoS OBJECT-TYPE
+        SYNTAX      QosService
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The selected RSVP QoS for the call."
+        ::= { cvVoIPCallHistoryEntry 5 }
+
+cvVoIPCallHistorySessionProtocol OBJECT-TYPE
+        SYNTAX      CvSessionProtocol
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the session protocol to be used
+             for Internet call between local and remote router via
+             IP backbone.
+            "
+        ::= { cvVoIPCallHistoryEntry 6 }
+
+cvVoIPCallHistorySessionTarget OBJECT-TYPE
+        SYNTAX      DisplayString
+        MAX-ACCESS  read-only 
+        STATUS      current
+        DESCRIPTION
+            "The object specifies the session target of the peer that
+             is used for the Voice over IP call.
+            "
+        ::= { cvVoIPCallHistoryEntry 7 }
+
+cvVoIPCallHistoryOnTimeRvPlayout  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of voice playout from data received on time for
+             this call. This plus the durations for the GapFills in the
+             following entries gives the Total Voice Playout Duration
+             for Active Voice.
+             This does not include duration for which no data was sent by the
+             Transmit end as voice signal, e.g., silence suppression
+             and fax signal. The On Time Playout Rate can be computed
+             by dividing this entry by the Total Voice Playout Duration.
+            "
+        ::= { cvVoIPCallHistoryEntry 8 }
+
+cvVoIPCallHistoryGapFillWithSilence  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of voice signal replaced with signal played out
+             during silence due to voice data not received on time
+             (or lost) from voice gateway this call.
+            "
+        ::= { cvVoIPCallHistoryEntry 9 }
+
+cvVoIPCallHistoryGapFillWithPrediction  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of voice signal played out with signal synthesized
+             from parameters or samples of data preceding in time due to
+             voice data not received on time (or lost) from voice gateway
+             for this call. An example of such playout is frame-erasure
+             or  frame-concealment strategies in G.729 and G.723.1
+             compression algorithms.
+            "
+        ::= { cvVoIPCallHistoryEntry 10 }
+
+cvVoIPCallHistoryGapFillWithInterpolation  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of voice signal played out with signal synthesized
+             from parameters or samples of data preceding and following
+             in time due to voice data not received on time (or lost)
+             from voice gateway for this call.
+            "
+        ::= { cvVoIPCallHistoryEntry 11 }
+
+cvVoIPCallHistoryGapFillWithRedundancy  OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Duration of voice signal played out with signal synthesized
+             from redundancy parameters available due to voice data not
+             received on time (or lost) from voice gateway for this call.
+            "
+        ::= { cvVoIPCallHistoryEntry 12 }
+
+
+cvVoIPCallHistoryHiWaterPlayoutDelay OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            " The high water mark Voice Playout FIFO Delay during
+              the voice call."
+        ::= { cvVoIPCallHistoryEntry 13 }
+
+cvVoIPCallHistoryLoWaterPlayoutDelay OBJECT-TYPE
+        SYNTAX      Gauge32
+        UNITS       "milliseconds"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            " The low water mark Voice Playout FIFO Delay during
+              the voice call."
+        ::= { cvVoIPCallHistoryEntry 14 }
+
+cvVoIPCallHistoryReceiveDelay OBJECT-TYPE
+        SYNTAX      Gauge32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The average Playout FIFO Delay plus the decoder delay
+             during the voice call."
+        ::= { cvVoIPCallHistoryEntry 15 }
+
+cvVoIPCallHistoryVADEnable OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-only
+        STATUS      deprecated
+                    -- moved to CISCO-VOICE-COMMON-DIAL-CONTROL-MIB
+        DESCRIPTION
+            "The object indicates whether or not the VAD (Voice Activity
+             Detection) was enabled for the voice call."
+        ::= { cvVoIPCallHistoryEntry 16  }
+
+cvVoIPCallHistoryCoderTypeRate OBJECT-TYPE
+        SYNTAX      CvcCoderTypeRate
+        MAX-ACCESS  read-only
+        STATUS      deprecated
+                    -- moved to CISCO-VOICE-COMMON-DIAL-CONTROL-MIB
+        DESCRIPTION
+            "The negotiated coder rate. It specifies the transmit rate of
+             voice/fax compression to its associated call leg for the
+             call. This rate is different from the configuration rate
+             because of rate negotiation during the call.
+            "
+        ::= { cvVoIPCallHistoryEntry 17 }
+
+cvVoIPCallHistoryIcpif OBJECT-TYPE
+        SYNTAX      Integer32 (0..55)
+        UNITS       "equipment impairment factor (eif)"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The Calculated Planning Impairment Factor (Icpif) of the
+             call  that is associated to this call leg. 
+             The value in this object is computed by the following
+             equation.
+             Icpif of the call = 
+             Itotal (total impairment value) of the call - A
+             (Expectation Factor) in the cvVoIPPeerCfgExpectFactor of
+             the call leg associated peer. 
+            "
+        REFERENCE
+            "[1] ITU G.113: Section 7.2 Impairment factors and the total
+                 impairment value.
+             [2] ITU G.113: Sections 9 Considerations associated with
+                 the Calculated Planning Impairment Factor (Icpif).
+            "
+        ::= { cvVoIPCallHistoryEntry 18 }
+
+
+cvVoIPCallHistoryLostPackets OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "packets"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            " The number of lost voice packets during the call.
+            "
+        ::= { cvVoIPCallHistoryEntry 19 }
+
+cvVoIPCallHistoryEarlyPackets OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "packets"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            " The number of received voice packets that are
+              arrived too early to store in jitter buffer
+              during the call.
+            "
+        ::= { cvVoIPCallHistoryEntry 20 }
+
+cvVoIPCallHistoryLatePackets OBJECT-TYPE
+        SYNTAX      AbsoluteCounter32
+        UNITS       "packets"
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            " The number of received voice packets that are
+              arrived too late to playout with CODEC (Coder/Decoder)
+              during the call.
+            "
+        ::= { cvVoIPCallHistoryEntry 21 }
+
+
+
+--*********************************************************************
+-- Notifications
+--*********************************************************************
+cvdcMIBNotificationPrefix OBJECT IDENTIFIER ::=
+                          { ciscoVoiceDialControlMIB 2 }
+cvdcMIBNotifications      OBJECT IDENTIFIER ::=
+                          { cvdcMIBNotificationPrefix 0 }
+
+cvdcPoorQoVNotification NOTIFICATION-TYPE
+        OBJECTS {
+            cvVoIPCallHistoryConnectionId,
+            cvVoIPCallHistoryIcpif,
+            cvVoIPCallHistoryRemoteIPAddress,
+            cCallHistoryCallOrigin,
+            cvCommonDcCallHistoryCoderTypeRate
+        }
+        STATUS      current
+        DESCRIPTION
+            "Poor quality of voice notification. A
+             cvdcPoorQoVNotification is sent at the call disconnection
+             time if the value of cvVoIPCallHistoryIcpif exceeds the
+             value of cvVoIPPeerCfgIcpif in the call associated peer.
+            "
+     ::= { cvdcMIBNotifications 1 }
+
+
+cvdcMIBConformance OBJECT IDENTIFIER ::=
+                                { ciscoVoiceDialControlMIB 3 }
+cvdcMIBCompliances OBJECT IDENTIFIER ::=
+                                { cvdcMIBConformance 1 }
+cvdcMIBGroups      OBJECT IDENTIFIER ::=
+                                { cvdcMIBConformance 2 }
+
+-- compliance statements
+
+cvdcMIBCompliance MODULE-COMPLIANCE
+        STATUS      deprecated -- superceded by cvdcMIBComplianceRev1
+        DESCRIPTION
+            "The compliance statement for entities which
+             implement the CISCO VOICE DIAL CONTROL MIB"
+        MODULE      -- this module
+        MANDATORY-GROUPS
+            { cvdcGeneralCfgGroup }
+
+        GROUP cvdcVoiceCfgGroup
+        DESCRIPTION
+            "This group is mandatory for voice dial control
+             configuration which is related to GSTN(General Switched
+             Telephony Network).
+             GSTN encompasses analog, ISDN, Cellular - essentially
+             anything circuit switched over the TDM infrastructure.
+            "
+        GROUP cvdcVoIPCfgGroup
+        DESCRIPTION
+            "This group is mandatory for VoIP dial control configuration
+             which is related to transmit voice packet via IP network.
+            "
+        GROUP cvCallGroup
+        DESCRIPTION
+            "This group is mandatory for all voice related active call
+             and call history via GSTN.
+            "
+        GROUP cvVoIPCallGroup
+        DESCRIPTION
+            "This group is mandatory for all VoIP related active call
+             and call history via IP network.
+            "
+        ::= { cvdcMIBCompliances 1 }
+
+cvdcMIBComplianceRev1 MODULE-COMPLIANCE
+        STATUS      deprecated -- superceded by cvdcMIBComplianceRev2
+        DESCRIPTION
+            "The compliance statement for entities which
+             implement the CISCO VOICE DIAL CONTROL MIB"
+        MODULE      -- this module
+        MANDATORY-GROUPS
+            { cvdcGeneralCfgGroupRev1 }
+
+        GROUP cvdcVoiceCfgGroupRev1
+        DESCRIPTION
+            "This group is mandatory for voice dial control
+             configuration which is related to GSTN(General Switched
+             Telephony Network).
+             GSTN encompasses analog, ISDN, Cellular - essentially
+             anything circuit switched over the TDM infrastructure.
+            "
+        GROUP cvdcVoIPCfgGroup
+        DESCRIPTION
+            "This group is mandatory for VoIP dial control configuration
+             which is related to transmit voice packet via IP network.
+            "
+        GROUP cvCallGroup
+        DESCRIPTION
+            "This group is mandatory for all voice related active call
+             and call history via GSTN.
+            "
+        GROUP cvVoIPCallGroupRev1
+        DESCRIPTION
+            "This group is mandatory for all VoIP related active call
+             and call history via IP network.
+            "
+        ::= { cvdcMIBCompliances 2 }
+
+cvdcMIBComplianceRev2 MODULE-COMPLIANCE
+        STATUS      deprecated -- superceded by cvdcMIBComplianceRev3
+        DESCRIPTION
+            "The compliance statement for entities which
+             implement the CISCO VOICE DIAL CONTROL MIB"
+        MODULE      -- this module
+        MANDATORY-GROUPS
+            { cvdcGeneralCfgGroupRev2 }
+
+        GROUP cvdcVoiceCfgGroupRev1
+        DESCRIPTION
+            "This group is mandatory for voice dial control
+             configuration which is related to GSTN(General Switched
+             Telephony Network).
+             GSTN encompasses analog, ISDN, Cellular - essentially
+             anything circuit switched over the TDM infrastructure.
+            "
+        GROUP cvdcVoIPCfgGroupRev1
+        DESCRIPTION
+            "This group is mandatory for VoIP dial control configuration
+             which is related to transmit voice packet via IP network.
+            "
+        GROUP cvCallGroupRev1
+        DESCRIPTION
+            "This group is mandatory for all voice related active call
+             and call history via GSTN.
+            "
+        GROUP cvVoIPCallGroupRev1
+        DESCRIPTION
+            "This group is mandatory for all VoIP related active call
+             and call history via IP network.
+            "
+        ::= { cvdcMIBCompliances 3 }
+
+cvdcMIBComplianceRev3 MODULE-COMPLIANCE
+        STATUS      current
+        DESCRIPTION
+            "The compliance statement for entities which
+             implement the CISCO VOICE DIAL CONTROL MIB"
+        MODULE      -- this module
+        MANDATORY-GROUPS
+            { cvdcGeneralCfgGroupRev3 }
+
+        GROUP cvdcVoiceCfgGroupRev2
+        DESCRIPTION
+            "This group is mandatory for voice dial control
+             configuration which is related to GSTN(General Switched
+             Telephony Network).
+             GSTN encompasses analog, ISDN, Cellular - essentially
+             anything circuit switched over the TDM infrastructure.
+            "
+        GROUP cvdcVoIPCfgGroupRev2
+        DESCRIPTION
+            "This group is mandatory for VoIP dial control configuration
+             which is related to transmit voice packet via IP network.
+            "
+        GROUP cvCallGroupRev1
+        DESCRIPTION
+            "This group is mandatory for all voice related active call
+             and call history via GSTN.
+            "
+        GROUP cvVoIPCallGroupRev3
+        DESCRIPTION
+            "This group is mandatory for all VoIP related active call
+             and call history via IP network.
+            "
+        ::= { cvdcMIBCompliances 4 }
+
+
+-- units of conformance
+
+
+cvdcGeneralCfgGroup OBJECT-GROUP
+        OBJECTS {
+            cvGeneralPoorQoVNotificationEnable,
+            cvPeerCfgIfIndex,
+            cvPeerCfgType,
+            cvPeerCfgRowStatus
+        }
+        STATUS      deprecated -- superceded by cvdcGeneralCfgGroupRev1
+        DESCRIPTION
+            "A collection of objects providing the general 
+             Voice Gateway Call Dial Control configuration capability."
+        ::= { cvdcMIBGroups 1 }
+
+cvdcVoiceCfgGroup OBJECT-GROUP
+        OBJECTS {
+            cvVoicePeerCfgSessionTarget,
+            cvVoicePeerCfgDialDigitsPrefix
+        }
+        STATUS      deprecated -- superceded by cvdcVoiceCfgGroupRev1
+        DESCRIPTION
+            "A collection of objects providing the GSTN (General
+             Switched Telephony Network Voice Dial Control configuration
+             capability.
+             GSTN (General Switched Telephony Network), which is
+             supposed to encompass analog, ISDN, Cellular - essentially
+             anything circuit switched over the TDM infrastructure.
+            "
+        ::= { cvdcMIBGroups 2 }
+
+cvdcVoIPCfgGroup OBJECT-GROUP
+        OBJECTS {
+            cvVoIPPeerCfgSessionProtocol,
+            cvVoIPPeerCfgSessionTarget,
+            cvVoIPPeerCfgCoderRate,
+            cvVoIPPeerCfgFaxRate,
+            cvVoIPPeerCfgDesiredQoS,
+            cvVoIPPeerCfgMinAcceptableQoS,
+            cvVoIPPeerCfgVADEnable,
+            cvVoIPPeerCfgExpectFactor,
+            cvVoIPPeerCfgIcpif,
+            cvVoIPPeerCfgPoorQoVNotificationEnable,
+            cvVoIPPeerCfgUDPChecksumEnable,
+            cvVoIPPeerCfgIPPrecedence
+        }
+        STATUS      deprecated -- superceded by cvdcVoIPCfgGroupRev1
+        DESCRIPTION
+            "A collection of objects providing the VoIP Dial Control
+             configuration capability.
+            "
+        ::= { cvdcMIBGroups 3 }
+
+
+cvCallGroup OBJECT-GROUP
+        OBJECTS {
+            cvCallActiveConnectionId,
+            cvCallActiveTxDuration,
+            cvCallActiveVoiceTxDuration,
+            cvCallActiveFaxTxDuration,
+            cvCallActiveCoderTypeRate,
+            cvCallActiveNoiseLevel,
+            cvCallActiveACOMLevel,
+            cvCallActiveOutSignalLevel,
+            cvCallActiveInSignalLevel,
+            cvCallActiveERLLevel,
+            cvCallActiveSessionTarget,
+            cvCallHistoryConnectionId,
+            cvCallHistoryTxDuration,
+            cvCallHistoryVoiceTxDuration,
+            cvCallHistoryFaxTxDuration,
+            cvCallHistoryCoderTypeRate,
+            cvCallHistoryNoiseLevel,
+            cvCallHistoryACOMLevel,
+            cvCallHistorySessionTarget
+        }
+        STATUS      deprecated -- superceded by cvCallGroupRev1
+        DESCRIPTION
+            "A collection of objects providing the GSTN (General
+             Switched Telephony Network Voice Call capability.
+             GSTN (General Switched Telephony Network), which is
+             supposed to encompass analog, ISDN, Cellular - essentially
+             anything circuit switched over the TDM infrastructure.
+            "
+        ::= { cvdcMIBGroups 4 }
+
+
+cvVoIPCallGroup OBJECT-GROUP
+        OBJECTS {
+            cvVoIPCallActiveConnectionId,
+            cvVoIPCallActiveRemoteIPAddress,
+            cvVoIPCallActiveRemoteUDPPort,
+            cvVoIPCallActiveRoundTripDelay,
+            cvVoIPCallActiveSelectedQoS,
+            cvVoIPCallActiveSessionProtocol,
+            cvVoIPCallActiveSessionTarget,
+            cvVoIPCallActiveOnTimeRvPlayout,
+            cvVoIPCallActiveGapFillWithSilence,
+            cvVoIPCallActiveGapFillWithPrediction,
+            cvVoIPCallActiveGapFillWithInterpolation,
+            cvVoIPCallActiveGapFillWithRedundancy,
+            cvVoIPCallActiveHiWaterPlayoutDelay,
+            cvVoIPCallActiveLoWaterPlayoutDelay,
+            cvVoIPCallActiveReceiveDelay,
+            cvVoIPCallActiveVADEnable,
+            cvVoIPCallActiveCoderTypeRate,
+            cvVoIPCallHistoryConnectionId,
+            cvVoIPCallHistoryRemoteIPAddress,
+            cvVoIPCallHistoryRemoteUDPPort,
+            cvVoIPCallHistoryRoundTripDelay,
+            cvVoIPCallHistorySelectedQoS,
+            cvVoIPCallHistorySessionProtocol,
+            cvVoIPCallHistorySessionTarget,
+            cvVoIPCallHistoryOnTimeRvPlayout,
+            cvVoIPCallHistoryGapFillWithSilence,
+            cvVoIPCallHistoryGapFillWithPrediction,
+            cvVoIPCallHistoryGapFillWithInterpolation,
+            cvVoIPCallHistoryGapFillWithRedundancy,
+            cvVoIPCallHistoryHiWaterPlayoutDelay,
+            cvVoIPCallHistoryLoWaterPlayoutDelay,
+            cvVoIPCallHistoryReceiveDelay,
+            cvVoIPCallHistoryVADEnable,
+            cvVoIPCallHistoryCoderTypeRate,
+            cvVoIPCallHistoryIcpif
+        }
+        STATUS      deprecated -- superceded by cvVoIPCallGroupRev1
+        DESCRIPTION
+            "A collection of objects providing the VoIP Call
+             capability."
+        ::= { cvdcMIBGroups 5 }
+
+
+cvdcGeneralCfgGroupRev1 OBJECT-GROUP
+        OBJECTS {
+            cvGeneralPoorQoVNotificationEnable,
+            cvPeerCfgIfIndex,
+            cvPeerCfgType, 
+            cvPeerCfgRowStatus,
+            cvPeerCommonCfgIncomingDnisDigits,
+            cvPeerCommonCfgMaxConnections,
+            cvPeerCommonCfgApplicationName
+        }
+        STATUS      deprecated -- superceded by cvdcGeneralCfgGroupRev2
+        DESCRIPTION
+            "A collection of objects providing the general
+             Voice Gateway Call Dial Control configuration capability."
+        ::= { cvdcMIBGroups 6 }
+
+cvdcVoiceCfgGroupRev1 OBJECT-GROUP
+        OBJECTS {
+            cvVoicePeerCfgSessionTarget,
+            cvVoicePeerCfgDialDigitsPrefix,
+            cvVoicePeerCfgDIDCallEnable,
+            cvVoicePeerCfgCasGroup
+        }
+        STATUS      deprecated -- superceded by cvdcVoiceCfgGroupRev2
+        DESCRIPTION
+            "A collection of objects providing the GSTN (General
+             Switched Telephony Network Voice Dial Control configuration
+             capability.
+             GSTN (General Switched Telephony Network), which is
+             supposed to encompass analog, ISDN, Cellular - essentially
+             anything circuit switched over the TDM infrastructure.
+            "
+        ::= { cvdcMIBGroups 7 }
+
+
+cvVoIPCallGroupRev1 OBJECT-GROUP
+        OBJECTS {
+            cvVoIPCallActiveConnectionId,
+            cvVoIPCallActiveRemoteIPAddress,
+            cvVoIPCallActiveRemoteUDPPort,
+            cvVoIPCallActiveRoundTripDelay,
+            cvVoIPCallActiveSelectedQoS,
+            cvVoIPCallActiveSessionProtocol,
+            cvVoIPCallActiveSessionTarget,
+            cvVoIPCallActiveOnTimeRvPlayout,
+            cvVoIPCallActiveGapFillWithSilence,
+            cvVoIPCallActiveGapFillWithPrediction,
+            cvVoIPCallActiveGapFillWithInterpolation,
+            cvVoIPCallActiveGapFillWithRedundancy,
+            cvVoIPCallActiveHiWaterPlayoutDelay,
+            cvVoIPCallActiveLoWaterPlayoutDelay,
+            cvVoIPCallActiveReceiveDelay,
+            cvVoIPCallActiveVADEnable,
+            cvVoIPCallActiveCoderTypeRate, 
+            cvVoIPCallActiveLostPackets, 
+            cvVoIPCallActiveLatePackets,
+            cvVoIPCallActiveEarlyPackets,
+            cvVoIPCallHistoryConnectionId,
+            cvVoIPCallHistoryRemoteIPAddress,
+            cvVoIPCallHistoryRemoteUDPPort,
+            cvVoIPCallHistoryRoundTripDelay,
+            cvVoIPCallHistorySelectedQoS,
+            cvVoIPCallHistorySessionProtocol,
+            cvVoIPCallHistorySessionTarget,
+            cvVoIPCallHistoryOnTimeRvPlayout,
+            cvVoIPCallHistoryGapFillWithSilence,
+            cvVoIPCallHistoryGapFillWithPrediction,
+            cvVoIPCallHistoryGapFillWithInterpolation,
+            cvVoIPCallHistoryGapFillWithRedundancy,
+            cvVoIPCallHistoryHiWaterPlayoutDelay,
+            cvVoIPCallHistoryLoWaterPlayoutDelay,
+            cvVoIPCallHistoryReceiveDelay,
+            cvVoIPCallHistoryVADEnable,
+            cvVoIPCallHistoryCoderTypeRate,
+            cvVoIPCallHistoryIcpif,
+            cvVoIPCallHistoryLostPackets, 
+            cvVoIPCallHistoryLatePackets,
+            cvVoIPCallHistoryEarlyPackets
+        }
+        STATUS      deprecated -- superceded by cvVoIPCallGroupRev2
+        DESCRIPTION
+            "A collection of objects providing the VoIP Call 
+             capability."
+        ::= { cvdcMIBGroups 8 }
+
+
+cvCallGroupRev1 OBJECT-GROUP
+        OBJECTS {
+            cvCallActiveConnectionId,
+            cvCallActiveTxDuration,
+            cvCallActiveVoiceTxDuration,
+            cvCallActiveFaxTxDuration,
+            cvCallActiveCoderTypeRate,
+            cvCallActiveNoiseLevel,
+            cvCallActiveACOMLevel,
+            cvCallActiveOutSignalLevel,
+            cvCallActiveInSignalLevel,
+            cvCallActiveERLLevel,
+            cvCallActiveSessionTarget,
+            cvCallActiveImgPageCount,
+            cvCallHistoryConnectionId,
+            cvCallHistoryTxDuration,
+            cvCallHistoryVoiceTxDuration,
+            cvCallHistoryFaxTxDuration,
+            cvCallHistoryCoderTypeRate,
+            cvCallHistoryNoiseLevel,
+            cvCallHistoryACOMLevel,
+            cvCallHistorySessionTarget,
+            cvCallHistoryImgPageCount
+        }
+        STATUS      current
+        DESCRIPTION
+            "A collection of objects providing the GSTN (General
+             Switched Telephony Network Voice Dial Control configuration
+             capability.
+             GSTN (General Switched Telephony Network), which is
+             supposed to encompass analog, ISDN, Cellular - essentially
+             anything circuit switched over the TDM infrastructure.
+             anything circuit switched over the TDM infrastructure.
+            "
+        ::= { cvdcMIBGroups 9 }
+
+cvdcGeneralCfgGroupRev2 OBJECT-GROUP
+        OBJECTS {
+            cvGeneralPoorQoVNotificationEnable,
+            cvPeerCfgIfIndex,
+            cvPeerCfgType, 
+            cvPeerCfgRowStatus,
+            cvPeerCommonCfgIncomingDnisDigits,
+            cvPeerCommonCfgMaxConnections,
+            cvPeerCommonCfgApplicationName,
+            cvPeerCommonCfgPreference
+        }
+        STATUS      deprecated -- superceded by cvdcGeneralCfgGroupRev3
+        DESCRIPTION
+            "A collection of objects providing the general
+             Voice Gateway Call Dial Control configuration capability."
+        ::= { cvdcMIBGroups 10 }
+
+cvdcVoIPCfgGroupRev1 OBJECT-GROUP
+        OBJECTS {
+            cvVoIPPeerCfgSessionProtocol,
+            cvVoIPPeerCfgSessionTarget,
+            cvVoIPPeerCfgCoderRate,
+            cvVoIPPeerCfgFaxRate,
+            cvVoIPPeerCfgDesiredQoS,
+            cvVoIPPeerCfgMinAcceptableQoS,
+            cvVoIPPeerCfgVADEnable,
+            cvVoIPPeerCfgExpectFactor,
+            cvVoIPPeerCfgIcpif,
+            cvVoIPPeerCfgPoorQoVNotificationEnable,
+            cvVoIPPeerCfgUDPChecksumEnable,
+            cvVoIPPeerCfgIPPrecedence,
+            cvVoIPPeerCfgTechPrefix,
+            cvVoIPPeerCfgDigitRelay
+        }
+        STATUS      deprecated -- superceded by cvdcVoIPCfgGroupRev2
+        DESCRIPTION
+            "A collection of objects providing the VoIP Dial Control
+             configuration capability.
+            "
+        ::= { cvdcMIBGroups 11 }
+
+cvdcGeneralCfgGroupRev3 OBJECT-GROUP
+        OBJECTS {
+            cvGeneralPoorQoVNotificationEnable,
+            cvPeerCfgIfIndex,
+            cvPeerCfgType, 
+            cvPeerCfgRowStatus,
+            cvPeerCommonCfgIncomingDnisDigits,
+            cvPeerCommonCfgMaxConnections,
+            cvPeerCommonCfgApplicationName,
+            cvPeerCommonCfgPreference,
+            cvPeerCommonCfgHuntStop
+        }
+        STATUS      current
+        DESCRIPTION
+            "A collection of objects providing the general
+             Voice Gateway Call Dial Control configuration capability."
+        ::= { cvdcMIBGroups 12 }
+
+cvdcVoiceCfgGroupRev2 OBJECT-GROUP
+        OBJECTS {
+            cvVoicePeerCfgSessionTarget,
+            cvVoicePeerCfgDialDigitsPrefix,
+            cvVoicePeerCfgDIDCallEnable,
+            cvVoicePeerCfgCasGroup,
+            cvVoicePeerCfgRegisterE164,
+            cvVoicePeerCfgForwardDigits
+        }
+        STATUS      current
+        DESCRIPTION
+            "A collection of objects providing the GSTN (General
+             Switched Telephony Network Voice Dial Control configuration
+             capability.
+             GSTN (General Switched Telephony Network), which is
+             supposed to encompass analog, ISDN, Cellular - essentially
+             anything circuit switched over the TDM infrastructure.
+            "
+        ::= { cvdcMIBGroups 13 }
+
+cvdcVoIPCfgGroupRev2 OBJECT-GROUP
+        OBJECTS {
+            cvVoIPPeerCfgSessionProtocol,
+            cvVoIPPeerCfgSessionTarget,
+            cvVoIPPeerCfgCoderRate,
+            cvVoIPPeerCfgFaxRate,
+            cvVoIPPeerCfgDesiredQoS,
+            cvVoIPPeerCfgMinAcceptableQoS,
+            cvVoIPPeerCfgVADEnable,
+            cvVoIPPeerCfgExpectFactor,
+            cvVoIPPeerCfgIcpif,
+            cvVoIPPeerCfgPoorQoVNotificationEnable,
+            cvVoIPPeerCfgUDPChecksumEnable,
+            cvVoIPPeerCfgIPPrecedence,
+            cvVoIPPeerCfgTechPrefix,
+            cvVoIPPeerCfgDigitRelay,
+            cvVoIPPeerCfgCoderBytes,
+            cvVoIPPeerCfgFaxBytes,
+            cvVoIPPeerCfgInBandSignaling
+        }
+        STATUS      current
+        DESCRIPTION
+            "A collection of objects providing the VoIP Dial Control
+             configuration capability.
+            "
+        ::= { cvdcMIBGroups 14 }
+
+cvVoIPCallGroupRev3 OBJECT-GROUP
+        OBJECTS {
+            cvVoIPCallActiveConnectionId,
+            cvVoIPCallActiveRemoteIPAddress,
+            cvVoIPCallActiveRemoteUDPPort,
+            cvVoIPCallActiveRoundTripDelay,
+            cvVoIPCallActiveSelectedQoS,
+            cvVoIPCallActiveSessionProtocol,
+            cvVoIPCallActiveSessionTarget,
+            cvVoIPCallActiveOnTimeRvPlayout,
+            cvVoIPCallActiveGapFillWithSilence,
+            cvVoIPCallActiveGapFillWithPrediction,
+            cvVoIPCallActiveGapFillWithInterpolation,
+            cvVoIPCallActiveGapFillWithRedundancy,
+            cvVoIPCallActiveHiWaterPlayoutDelay,
+            cvVoIPCallActiveLoWaterPlayoutDelay,
+            cvVoIPCallActiveReceiveDelay,
+            cvVoIPCallActiveLostPackets, 
+            cvVoIPCallActiveLatePackets,
+            cvVoIPCallActiveEarlyPackets,
+            cvVoIPCallHistoryConnectionId,
+            cvVoIPCallHistoryRemoteIPAddress,
+            cvVoIPCallHistoryRemoteUDPPort,
+            cvVoIPCallHistoryRoundTripDelay,
+            cvVoIPCallHistorySelectedQoS,
+            cvVoIPCallHistorySessionProtocol,
+            cvVoIPCallHistorySessionTarget,
+            cvVoIPCallHistoryOnTimeRvPlayout,
+            cvVoIPCallHistoryGapFillWithSilence,
+            cvVoIPCallHistoryGapFillWithPrediction,
+            cvVoIPCallHistoryGapFillWithInterpolation,
+            cvVoIPCallHistoryGapFillWithRedundancy,
+            cvVoIPCallHistoryHiWaterPlayoutDelay,
+            cvVoIPCallHistoryLoWaterPlayoutDelay,
+            cvVoIPCallHistoryReceiveDelay,
+            cvVoIPCallHistoryIcpif,
+            cvVoIPCallHistoryLostPackets, 
+            cvVoIPCallHistoryLatePackets,
+            cvVoIPCallHistoryEarlyPackets
+        }
+        STATUS      current
+        DESCRIPTION
+            "A collection of objects providing the VoIP Call 
+             capability."
+        ::= { cvdcMIBGroups 15 }
+
+--cvdcNotificationGroup NOTIFICATION-GROUP
+--        NOTIFICATIONS{
+--            cvdcPoorQoVNotification
+--        }
+--        STATUS      current
+--        DESCRIPTION
+--            "The notifications for the CISCO-VOICE-DIAL-CONTROL-MIB"
+--        ::= { cvdcMIBGroups 16 }
+
+END

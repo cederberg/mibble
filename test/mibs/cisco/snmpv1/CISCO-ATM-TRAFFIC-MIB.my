@@ -1,0 +1,266 @@
+-- MIB created 2/17/98 12:25:29, by
+--   SMIC (the next generation) version 1.6.29, November 22, 1994.
+
+CISCO-ATM-TRAFFIC-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-ATM-TRAFFIC-MIB.my"
+
+IMPORTS
+    OBJECT-TYPE
+            FROM RFC-1212
+    atmTrafficDescrParamIndex
+            FROM ATM-MIB
+    ciscoExperiment
+            FROM CISCO-SMI;
+
+ciscoAtmTrafficExtMIB OBJECT IDENTIFIER ::= { ciscoExperiment 11 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    9705290000Z
+--  OrgName
+--    Cisco System Inc.
+--  ContactInfo
+--        Cisco System Inc.
+--  Descr
+--    This MIB module is an extension to traffic OIDs
+--     and variables defined in rfc1695.
+--  RevDate
+--    9705290000Z
+--  RevDescr
+--    Added traffic for types dual-leaky bucket and mcr support
+--    made possible on the LS1010 by the Feature Card Per Flow
+--     Queueing support for per-VC queueing hardware structures.
+
+ciscoAtmTrafficExtMIBObjects OBJECT IDENTIFIER ::= { ciscoAtmTrafficExtMIB 1 }
+ciscoAtmTrafficTypeExt OBJECT IDENTIFIER ::= { ciscoAtmTrafficExtMIBObjects 1 }
+ciscoAtmTrafficTableExt OBJECT IDENTIFIER ::= { ciscoAtmTrafficExtMIBObjects 2 }
+ciscoAtmTrafficExtMIBConformance OBJECT IDENTIFIER ::= { ciscoAtmTrafficExtMIB 3 }
+ciscoAtmTrafficExtMIBCompliances OBJECT IDENTIFIER ::= { ciscoAtmTrafficExtMIBConformance 1 }
+ciscoAtmTrafficExtMIBGroups OBJECT IDENTIFIER ::= { ciscoAtmTrafficExtMIBConformance 2 }
+
+atmNoClpNoScrCdvt OBJECT IDENTIFIER ::= { ciscoAtmTrafficTypeExt 1 }
+-- OBJECT-IDENTITY
+--  Status
+--    mandatory
+--  Descr
+--    Specifies peak cell rate for CLP, and
+--     cell delay variation tolerance:
+--     Parameter 1: CLP=0+1 peak cell rate in
+--                  cells per second
+--     Parameter 2: CDVT in cell-times
+--     Parameter 3: not used
+--     Parameter 4: not used
+--     Parameter 5: not used.
+--     This traffic descriptor is for cbr, abr
+--     or ubr service categories, desiring to
+--     specify the cdvt as well as pcr.
+
+atmClpScrMbsCdvt OBJECT IDENTIFIER ::= { ciscoAtmTrafficTypeExt 2 }
+-- OBJECT-IDENTITY
+--  Status
+--    mandatory
+--  Descr
+--    This traffic descriptor is for Peak
+--     Cell Rate (PCR), Sustained Cell Rate (SCR),
+--     Maximum Burst Size applied to SCR,
+--     and Cell Delay Variation Tolerance
+--     applied to PCR.
+--     The use of the parameter vector for this type:
+--     Parameter 1: CLP=0+1 peak cell rate in
+--                  cells per second
+--     Parameter 2: CLP=0 sustained cell rate in
+--                  cells per second.
+--     Parameter 3: maximum burst size in cells
+--     Parameter 4: CDVT in cell-times
+--     Parameter 5: not used.
+
+atmNoClpScrMbsCdvt OBJECT IDENTIFIER ::= { ciscoAtmTrafficTypeExt 3 }
+-- OBJECT-IDENTITY
+--  Status
+--    mandatory
+--  Descr
+--    This traffic descriptor is for Peak
+--     Cell Rate (PCR), Sustained Cell Rate (SCR),
+--     Maximum Burst Size applied to SCR,
+--     and Cell Delay Variation Tolerance
+--     applied to PCR.
+--     The use of the parameter vector for this type:
+--     Parameter 1: CLP=0+1 peak cell rate in
+--                  cells per second
+--     Parameter 2: CLP=0+1 sustained cell rate in
+--                  cells per second.
+--     Parameter 3: maximum burst size in cells
+--     Parameter 4: CDVT in cell-times
+--     Parameter 5: not used.
+
+atmNoClpMcr OBJECT IDENTIFIER ::= { ciscoAtmTrafficTypeExt 4 }
+-- OBJECT-IDENTITY
+--  Status
+--    mandatory
+--  Descr
+--    This traffic descriptor is for Peak
+--     Cell Rate (PCR) and Minimum Cell Rate 
+--     (MCR).
+--     The use of the parameter vector for this type:
+--     Parameter 1: CLP=0+1 peak cell rate in
+--                  cells per second
+--     Parameter 2: CLP=0+1 minimum cell rate in
+--                  cells per second.
+--     Parameter 3: not used.
+--     Parameter 4: not used.
+--     Parameter 5: not used.
+
+atmNoClpMcrCdvt OBJECT IDENTIFIER ::= { ciscoAtmTrafficTypeExt 5 }
+-- OBJECT-IDENTITY
+--  Status
+--    mandatory
+--  Descr
+--    This traffic descriptor is for Peak
+--     Cell Rate (PCR), Minimum Cell Rate (MCR),
+--     and Cell Delay Variation Tolerance
+--     applied to PCR.
+--     The use of the parameter vector for this type:
+--     Parameter 1: CLP=0+1 peak cell rate in
+--                  cells per second
+--     Parameter 2: CDVT in cell-times
+--     Parameter 3: CLP=0+1 minimum cell rate in
+--                  cells per second.
+--     Parameter 4: not used.
+--     Parameter 5: not used.
+
+atmTrafficDescrParamExtTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF AtmTrafficDescrParamExtEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Provide additional information specifying traffic parameters
+         for a VC/VP."
+    ::= { ciscoAtmTrafficTableExt 1 }
+
+atmTrafficDescrParamExtEntry OBJECT-TYPE
+    SYNTAX AtmTrafficDescrParamExtEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        " An entry in the Traffic Parameter Descriptor extension
+          table."
+    INDEX { atmTrafficDescrParamIndex }
+-- Augments atmTrafficDescrParamEntry FROM ATM-MIB
+    ::= { atmTrafficDescrParamExtTable 1 }
+
+AtmTrafficDescrParamExtEntry ::= SEQUENCE {
+    atmTrafficExplicitServCategory INTEGER,
+    atmTrafficDerivedServCategory INTEGER
+    }
+
+atmTrafficExplicitServCategory OBJECT-TYPE
+    SYNTAX INTEGER {
+        cbr(1),
+        vbrRt(2),
+        vbrNrt(3),
+        abr(4),
+        ubr(5),
+        notDef(6)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This objects indicates the Service Category
+         specified by the Traffic Descriptor.
+         If it is defined, the setting of this
+         object determines the Service Category used
+         for the connection. This then limits the
+         possible Traffic Descriptor Types as follows:
+        
+         Explicit
+         Service
+         Category       Type may only be
+         -----------------------------------------
+         cbr            atmNoClpNoScr.
+                        atmClpNoTaggingNoScr
+                        atmClpTaggingNoScr
+                        atmNoClpNoScrCdvt
+        
+         abr/ubr        atmNoTrafficDescriptor
+                        atmNoClpNoScr.
+                        atmNoClpNoScrCdvt
+        atmNoClpMcr -- ubr+/abr
+        atmNoClpMcrCdvt -- ubr+/abr
+        
+         vbr            atmNoClpScr
+                        atmClpNoTaggingScr
+                        atmClpTaggingScr
+        atmClpScrMbsCdvt
+        atmNoClpScrMbsCdvt
+         -----------------------------------------
+         If the settings of Service Category and Traffic
+         Descriptor Type are not compatible, the row can
+         not be made active."
+    DEFVAL { notDef }
+    ::= { atmTrafficDescrParamExtEntry 1 }
+
+atmTrafficDerivedServCategory OBJECT-TYPE
+    SYNTAX INTEGER {
+        cbr(1),
+        vbrRt(2),
+        vbrNrt(3),
+        abr(4),
+        ubr(5)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates the Service Category
+         derived from the Traffic Descriptor. If the
+         object atmTrafficExplicitServCategory has
+         a defined value, then this object mirrors
+         that value. If Explicit Service Category
+         has the value notDef, then this object
+         reflects the Service Category derived from
+         the Traffic Descriptor Type as follows:
+        
+         Traffic Descriptor       Service
+             Type                 Category
+         -----------------------------------------
+         atmNoTrafficDescriptor   ubr
+        
+        atmNoClpMcr    abr
+         atmNoClpMcrCdvt          abr
+        
+         atmNoClpNoScr      --|
+         atmClpNoTaggingNoScr |-- cbr
+         atmClpTaggingNoScr   |
+         atmNoClpNoScrCdvt  --|
+        
+         atmNoClpScr        --|
+         atmClpNoTaggingScr   |-- vbr-rt
+        atmClpScrMbsCdvt     |
+        atmNoClpScrMbsCdvt   |
+         atmClpTaggingScr   --|
+         -----------------------------------------"
+    ::= { atmTrafficDescrParamExtEntry 2 }
+
+ciscoAtmTrafficTableExtMIBGroup OBJECT IDENTIFIER ::= { ciscoAtmTrafficExtMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects which provide extensions to  the
+--     ATM Traffic Parameter Descriptor Table.
+--  objects
+--    atmTrafficExplicitServCategory, atmTrafficDerivedServCategory
+
+ciscoAtmTrafficExtMIBCompliance OBJECT IDENTIFIER ::= { ciscoAtmTrafficExtMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for the Cisco ATM Traffic Extension MIB. 
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoAtmTrafficTableExtMIBGroup
+
+
+END
+

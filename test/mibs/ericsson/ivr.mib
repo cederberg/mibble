@@ -1,0 +1,315 @@
+IVR DEFINITIONS ::= BEGIN
+
+-- 
+--								SNMPv1
+-- 
+-- NAME:		IVR Seamac MIB
+-- 
+-- REVISION HISTORY:-
+--
+-- REV	DATE		NAME		DESCRIPTION
+-- PA1	980220		ETXHAIM		First try
+-- PA2	980226		ETXHAIM		New Parameters
+-- PA3	980320		ETXHAIM		Minor changes
+-- A	980424		QTXJOAL		Updated with same values as the dll.
+-- PB1	980623		QTXJOAL		Added traps.
+-- B	980629		QTXJOAL		Rev. B
+-- PC1	980716		QTXSCHU		Added oids VersionInfo and DefaultIpAddress
+-- C	981010		ETXHAIM		Rev. C
+--
+-- DESCRIPTION
+-- LATER
+-- 
+
+-- Ericsson Long Distance MIB for IVR
+
+IMPORTS
+	enterprises
+		FROM RFC1155-SMI
+	OBJECT-TYPE
+		FROM RFC-1212   
+	DisplayString
+-- FIX:		FROM RFC-1213;
+                FROM RFC1213-MIB;
+		
+		
+	ericsson		  OBJECT IDENTIFIER ::= { enterprises 193 }
+	phonedoubler		  OBJECT IDENTIFIER ::= { ericsson 26 } 
+	ivrMIB 	                  OBJECT IDENTIFIER ::= { phonedoubler 8 }
+	ivrMIBObjects 		  OBJECT IDENTIFIER ::= { ivrMIB 1 }
+	
+-- Define of a truth value
+	TruthValue ::= INTEGER { true(1), false(2) }
+
+-- =======================================================================================
+-- IVR MIB
+
+-- =======================================================================================
+-- GENERAL ATTRIBUTES
+-- ==================
+
+	ivrMACAddress OBJECT-TYPE
+		SYNTAX	DisplayString
+		ACCESS	read-only
+		STATUS	mandatory
+		DESCRIPTION "This is the address of the network card."
+		::= { ivrMIBObjects 1}
+
+	priSiteKeeper OBJECT-TYPE
+			SYNTAX DisplayString -- This is a string of 0 to 255 in length
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"This is the IP address of the primary
+				 Sitekeeper used by this ivr. 
+				The address takes the form X.X.X.X where
+				X is an integer between 0 and 255."
+		::= { ivrMIBObjects 2}
+
+	secSiteKeeper OBJECT-TYPE
+			SYNTAX DisplayString -- This is a string of 0 to 255 in length
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"This is the IP address of the secondary
+				 Sitekeeper used by this ivr. 
+				The address takes the form X.X.X.X where
+				X is an integer between 0 and 255."
+		::= { ivrMIBObjects 3}
+
+	priRadiusServer OBJECT-TYPE
+			SYNTAX DisplayString -- This is a string of 0 to 255 in length
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"This is the IP address of the primary
+				 billing server used by this ivr. 
+				The address takes the form X.X.X.X where
+				X is an integer between 0 and 255."
+		::= { ivrMIBObjects 4}
+
+	secRadiusServer OBJECT-TYPE
+			SYNTAX DisplayString -- This is a string of 0 to 255 in length
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"This is the IP address of the secondary
+				 billing server used by this ivr. 
+				The address takes the form X.X.X.X where
+				X is an integer between 0 and 255."
+		::= { ivrMIBObjects 5}
+
+    radiusServerSecret OBJECT-TYPE
+		SYNTAX DisplayString 
+		ACCESS write-only
+		STATUS mandatory
+		DESCRIPTION
+			"This is the common secret with the radius server used by this ivr."
+	::= { ivrMIBObjects 6}
+
+
+	maxBnr OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"This is the maximum B-number length in the ivr."
+		::= { ivrMIBObjects 7}
+
+	accPINCodeLength OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"This is the Account number/PIN code length in the ivr."
+		::= { ivrMIBObjects 8}
+
+	defaultLanguage OBJECT-TYPE
+			SYNTAX DisplayString
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"This is the default language for the ivr"
+		::= { ivrMIBObjects 10}
+-- =========================================================================================
+-- LICENSING
+-- =========
+	maxNrOfChannels OBJECT-TYPE   -- (PFV)
+		SYNTAX INTEGER
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"The maximum number of channels the ivr can have."
+		DEFVAL { 1 }
+		::= { ivrMIBObjects 9 }
+
+	maxNrOfChannelsKey OBJECT-TYPE   -- (PFV)
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This is the key provided by Ericsson which allows
+				use of the channels."
+		DEFVAL { "" }
+		::= { ivrMIBObjects 19 }
+
+-- =======================================================================================
+-- CONTROL and ALARM
+-- =================
+
+	serviceState OBJECT-TYPE
+		    SYNTAX INTEGER {
+				stop(1),
+				startpending(2),
+				stoppending(3),
+				run(4),
+				continuepending(5),
+				pausepending(6),
+				pause(7)
+			}
+			ACCESS read-write
+			STATUS mandatory
+			DESCRIPTION
+				"This function controls or returns the state of the 
+				 ivr service."
+		::= { ivrMIBObjects 12}
+
+	alarmState OBJECT-TYPE
+		SYNTAX INTEGER {
+				noAlarm(0),
+				pBillingServerAlarm(1),
+				sBillingServerAlarm(2),
+				failedToLoadConfigFiles(4),
+				noContactWithPrimarySiteKeeper(8),
+				noContactWithSecondSiteKeeper(16),
+				serviceNotRunning(32),
+				incorrectLicenseKey(64)
+				}
+
+		ACCESS read-only
+		STATUS mandatory
+		DESCRIPTION
+			"The current alarm state which can take a combination of the
+			following values
+				 0   No alarm
+				 1   No contact with primary billing server 
+				 2   No contact with secondary billing server
+				 4   Failed to load configuration files
+				 8   No contact with primary sitekeeper
+				16   No contact with secondary sitekeeper
+				32   Service not running
+				64   Incorrect licence key"
+		::= { ivrMIBObjects 13}
+
+	machineReboot OBJECT-TYPE
+			SYNTAX INTEGER
+			ACCESS write-only
+			STATUS mandatory
+			DESCRIPTION
+				"This function reboots the machine."
+		::= { ivrMIBObjects 11}
+-- ==================================================================================
+-- TRACING
+-- =======
+	balPromptForFCalls OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"Balance prompt for follow-on call."
+		DEFVAL { false }
+		::= { ivrMIBObjects 14}
+
+
+	programTraceOnErrors OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that errors are traced if set to true."
+		DEFVAL { false }
+		::= { ivrMIBObjects 15}
+
+	programTraceOnWarn OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that warnings are traced if set to true."
+		DEFVAL { false }
+		::= { ivrMIBObjects 16}
+
+	programTraceOnInfo OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that information is logged if set to true."
+		DEFVAL { false }
+		::= { ivrMIBObjects 17}
+
+	ivrAlarmTrace OBJECT-TYPE
+		SYNTAX TruthValue   
+		ACCESS read-write
+		STATUS mandatory
+		DESCRIPTION
+				"This indicates that alarms is logged if set to true."
+		DEFVAL { false }
+		::= { ivrMIBObjects 18}
+
+-- =======================================================================================
+	accNumberLength OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-write
+		STATUS mandatory
+			DESCRIPTION
+				"Account number length."
+		::= { ivrMIBObjects 20}
+
+	numberOfUsedChannels OBJECT-TYPE
+		SYNTAX INTEGER
+		ACCESS read-only
+		STATUS mandatory
+			DESCRIPTION
+				"Number of used channels on the ivr."
+		::= { ivrMIBObjects 21}
+
+	defaultIpAddress OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-write
+		STATUS mandatory
+			DESCRIPTION
+				"This is the default ip address of the ivr service."
+		::= { ivrMIBObjects 22}
+
+	ivrVersionInfo OBJECT-TYPE
+		SYNTAX DisplayString
+		ACCESS read-only
+		STATUS mandatory
+			DESCRIPTION
+				"This is the version information of the installed
+					ivr service."
+		::= { ivrMIBObjects 23}
+
+	serviceStateChange TRAP-TYPE
+		ENTERPRISE ivrMIB
+		VARIABLES { serviceState }
+		DESCRIPTION
+		"Trap is sent when the state of the ivr service is changed."
+		::= 1
+
+	alarm TRAP-TYPE
+		ENTERPRISE ivrMIB
+		VARIABLES { alarmState }
+		DESCRIPTION
+		"Trap is sent when an alarm occurs."
+		::= 2
+
+	alarmCeasing TRAP-TYPE
+		ENTERPRISE ivrMIB
+		VARIABLES { alarmState }
+		DESCRIPTION
+		"Trap is sent when an alarm disappears."
+		::= 3
+
+END

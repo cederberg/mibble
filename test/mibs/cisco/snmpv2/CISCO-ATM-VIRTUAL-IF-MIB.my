@@ -1,0 +1,868 @@
+-- *****************************************************************
+-- ciscoAtmVirtualIf MIB
+--
+-- January 2000, Shilpa Kale
+--
+-- Copyright (c) 1999 by cisco Systems, Inc.
+-- All rights reserved.
+-- *****************************************************************
+ 
+CISCO-ATM-VIRTUAL-IF-MIB DEFINITIONS ::= BEGIN
+IMPORTS
+        MODULE-IDENTITY, 
+        OBJECT-TYPE,
+        Integer32,
+        Counter64,
+        Counter32               FROM SNMPv2-SMI
+        RowStatus               FROM SNMPv2-TC
+        AtmVpIdentifier         FROM ATM-TC-MIB
+        MODULE-COMPLIANCE,
+        OBJECT-GROUP            FROM SNMPv2-CONF
+        InterfaceIndex,
+        ifIndex                 FROM IF-MIB
+        Unsigned32              FROM CISCO-TC
+        ciscoMgmt               FROM CISCO-SMI;
+
+ciscoAtmVirtualIfMIB MODULE-IDENTITY
+        LAST-UPDATED        "200008110000Z"
+        ORGANIZATION        "Cisco Systems, Inc."
+        CONTACT-INFO
+                "       Cisco Systems
+                        Customer Service
+ 
+                Postal: 170 W Tasman Drive
+                        San Jose, CA  95134
+                        USA
+ 
+                   Tel: +1 800 553-NETS
+ 
+                E-mail: cs-wanatm@cisco.com"
+ 
+         DESCRIPTION
+            "The MIB module to manage ATM Virtual interface objects.
+             ATM virtual interfaces are configured on a physical line."
+         REVISION        "200008110000Z"
+         DESCRIPTION
+            "Changed description of objects caviMinRate and caviMaxRate.
+             Modified range for caviMinRate, caviMaxRate and 
+             caviFileId."
+
+         REVISION        "200001140000Z"
+         DESCRIPTION
+            "Initial version of this MIB module."
+
+         ::= {ciscoMgmt 129 }
+
+ciscoAtmVirtualIfMIBObjects 
+                        OBJECT IDENTIFIER ::= { ciscoAtmVirtualIfMIB 1}
+caviConfig              OBJECT IDENTIFIER ::= { ciscoAtmVirtualIfMIBObjects 1}
+caviStatistics          OBJECT IDENTIFIER ::= { ciscoAtmVirtualIfMIBObjects 2}
+
+-- ---------------------------------------------------------------------
+-- cisco ATM Virtual Interface Config Group
+-- ---------------------------------------------------------------------
+ 
+caviTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF CaviEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+          "This table is used for creating ATM virtual Interfaces.
+           The ATM virtual interfaces are created on physical interfaces.
+           For each entry created in this table, there will be an entry
+           created in the ifTable with ifType atmVirtual(149).
+           For each entry deleted from this table, the corresponding entry
+           from ifTable will be deleted. The ifIndex value for ifType 
+           atmVirtual(149) is used for indexing to atmInterfaceConfTable
+           for getting information on a ATM virtual interface."
+        ::= { caviConfig 1 }
+
+caviEntry OBJECT-TYPE
+        SYNTAX     CaviEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+            "An entry in the caviTable table for each ATM virtual interface.
+             An entry in this table can only be created if values for all
+             objects in a row are provided. caviVpiNum value is required only if
+             caviIfType is vuni(4) or vnni(5)."
+        INDEX   { caviIndex }
+        ::= { caviTable 1 }
+
+CaviEntry ::=
+        SEQUENCE {
+              caviIndex              Integer32,
+              caviPhyIfIndex         InterfaceIndex ,
+              caviViIfIndex          InterfaceIndex,
+              caviMinRate            Unsigned32,
+              caviMaxRate            Unsigned32,
+              caviFileId             Unsigned32,
+              caviIfType             INTEGER,
+              caviVpiNum             AtmVpIdentifier,
+              caviRowStatus          RowStatus
+              }
+
+caviIndex OBJECT-TYPE
+        SYNTAX Integer32  (1..2147483647)
+        MAX-ACCESS not-accessible
+        STATUS  current
+        DESCRIPTION
+           "A unique value for the ATM virtual interface."
+        ::= { caviEntry 1 }
+ 
+caviPhyIfIndex OBJECT-TYPE
+        SYNTAX InterfaceIndex
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+           "This object identifies the interface number ( 'ifIndex' ) assigned
+            to  sonet(39),ds3(30),ds1(18),atmIma(107)."
+        ::= { caviEntry 2 }
+ 
+caviViIfIndex OBJECT-TYPE
+        SYNTAX InterfaceIndex
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object identifies the ATM virtual interface number
+              ('ifIndex') assigned to this entry, and is used
+              to identify corresponding rows in the IF-MIB.
+              Note that re-inititalization of the management agent may  
+              cause a client's 'caviViIfIndex' to change."
+        ::= { caviEntry 3 }
+
+caviMinRate OBJECT-TYPE
+        SYNTAX     Unsigned32 
+        UNITS      "cells-per-second"
+        MAX-ACCESS read-create
+        STATUS current 
+        DESCRIPTION 
+             "ATM virtual interface's guaranteed cell rate.
+              This is the guaranteed bandwidth allocated for
+              the interface. The sum of caviMinRate of all ATM
+              virtual interfaces configured on a single physical line,
+              must not exceed the bandwidth of the physical line. Creation
+              of a row is rejected when the sum of caviMinRate of all existing
+              ATM virtual interfaces exceeds the physical line bandwidth.
+              The value of this object can't exceed the 'ifSpeed' or
+              'ifHighSpeed' value in ifTable for the associated 
+              'caviPhyIfIndex'.
+              ATM cell bandwidths for various physical lines are:
+ 
+              OC192 line : 22605280 cells/sec
+              OC48  line : 5651320 cells/sec
+              OC12  line : 1412830 cells/sec
+              OC3   line :  353207 cells/sec
+              T3    line :   96000 cells/sec
+              E3    line :   80000 cells/sec."
+        ::= { caviEntry 4 }
+ 
+caviMaxRate OBJECT-TYPE
+        SYNTAX     Unsigned32 
+        UNITS     "cells-per-second"
+        MAX-ACCESS read-create
+        STATUS     current
+        DESCRIPTION 
+            "ATM virtual interface's maximum cell rate.
+             If bandwidth is available, the interface will
+             be allocated bandwidth upto this value.
+             The total bandwidth of connections configured over this
+             interface cannot exceed this value. 
+             The value of this object can't exceed the 'ifSpeed' or
+             'ifHighSpeed' value in ifTable for the associated 
+             'caviPhyIfIndex'.
+             ATM cell bandwidths for various physical lines are:
+ 
+             OC192 line : 22605280 cells/sec
+             OC48  line : 5651320 cells/sec
+             OC12  line : 1412830 cells/sec
+             OC3   line :  353207 cells/sec
+             T3    line :   96000 cells/sec
+             E3    line :   80000 cells/sec."
+        ::= {caviEntry 5 }
+
+caviFileId OBJECT-TYPE
+        SYNTAX     Unsigned32  
+        MAX-ACCESS read-create
+        STATUS     current
+        DESCRIPTION
+           "The ID of the  file that holds module specific configuration
+            parameters for this ATM virtual interface."
+        DEFVAL { 0 }
+        ::= { caviEntry 6 }
+
+caviIfType OBJECT-TYPE
+    SYNTAX  INTEGER  {
+               uni(1),
+               nni(2),
+               vnni(3),
+               vuni(4)
+               }
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION
+       "This object reflects the format of the cellstransmitted by the
+        physical interface. The following formats can be configured:
+        uni : user port
+        nni : network port
+        vnni: virtual network port
+        vuni: virtual user port"
+    DEFVAL { uni }
+    ::= { caviEntry 7 }
+ 
+ 
+caviVpiNum OBJECT-TYPE
+        SYNTAX  AtmVpIdentifier 
+        MAX-ACCESS read-create
+        STATUS     current
+        DESCRIPTION
+           "This object is used to configure this ATM virtual interface
+            to be a virtual trunk.  A non-zero value is required for
+            virtual trunk operation.  A value of 0 means the ATM virtual
+            interface is configured as a user port or a network port."   
+        DEFVAL { 0 }
+        ::= { caviEntry 8 }
+ 
+caviRowStatus OBJECT-TYPE
+    SYNTAX     RowStatus
+    MAX-ACCESS read-create
+    STATUS     current
+    DESCRIPTION
+       "This object allows create and delete operations on caviTable
+        entries.
+        An entry is created in the table by setting this object to
+        createAndGo(4).
+        An entry is deleted from the table by setting this object to
+        destroy(6). 
+        An entry in this table may be modified after creation."
+    ::= {caviEntry 9 }
+       
+-- ---------------------------------------------------------------------
+-- ATM Virtual Interface Egress Statistics Table
+-- ---------------------------------------------------------------------
+ 
+caviStatEgressTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF CaviStatEgressEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION 
+           "This table reflects real time statistics associated with
+            each of the ATM virtual interfaces on the egress side.
+
+            Ingress direction means coming from network into switch, 
+            Egress direction means going from switch into the network."
+        ::= { caviStatistics 1 }
+
+caviStatEgressEntry OBJECT-TYPE
+        SYNTAX     CaviStatEgressEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION 
+          "An entry for egress ATM virtual interface statistics. In all the following 
+           descriptions, 
+           CLP-0 means Cell Loss Priority = 0, 
+           CLP-1 means Cell Loss Priority = 1.
+
+           Statistics are being collected before and after the traffic 
+           management and policing device."
+        INDEX   { ifIndex }
+        ::= { caviStatEgressTable 1 }
+
+CaviStatEgressEntry ::=
+        SEQUENCE {
+            caviEgrRcvClp0Cells      Counter32,
+            caviEgrRcvClp1Cells      Counter32,
+            caviEgrClp0DiscCells     Counter32,
+            caviEgrClp1DiscCells     Counter32,
+            caviEgrXmtClp0Cells      Counter32,
+            caviEgrXmtClp1Cells      Counter32,
+            caviEgrRcvOAMCells       Counter32,
+            caviEgrRMCells           Counter32,
+            caviEgrXmtEFCICells      Counter32,
+            caviEgrRcvEFCICells      Counter32,
+            caviEgrXmtOAMCells       Counter32,
+            caviHEgrXmtClp0Cells     Counter64,
+            caviHEgrXmtClp1Cells     Counter64
+            }
+
+caviEgrRcvClp0Cells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of CLP-0 cells received from switch
+            at the traffic management and policing device." 
+        ::= {caviStatEgressEntry 1 }
+
+caviEgrRcvClp1Cells OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+           "The number of CLP-1 cells received from switch
+            at the traffic management and policing device." 
+        ::= {caviStatEgressEntry 2 }
+
+caviEgrClp0DiscCells OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The number of CLP-0 cells discarded due to policing."
+        ::= {caviStatEgressEntry 3 }
+
+caviEgrClp1DiscCells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of CLP-1 cells discarded due to policing."
+        ::= {caviStatEgressEntry 4 }
+
+caviEgrXmtClp0Cells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of CLP-0 cells transmitted to the network
+            after traffic management and policing."
+        ::= {caviStatEgressEntry 5 }
+
+caviEgrXmtClp1Cells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of CLP-1 cells transmitted to the network
+            after traffic management and policing."
+        ::= {caviStatEgressEntry 6 }
+
+caviEgrRcvOAMCells OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+       "The number of OAM cells received from the switch
+        at the traffic management and policing device." 
+    ::= {caviStatEgressEntry 7 }
+ 
+caviEgrRMCells OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+       "The number of RM cells transmitted to the network from the switch." 
+    ::= {caviStatEgressEntry 8 }
+ 
+caviEgrXmtEFCICells OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+       "The number of EFCI cells transmitted to the network 
+        after traffic management and policing."
+    ::= {caviStatEgressEntry 9 }
+ 
+caviEgrRcvEFCICells OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+       "The number of EFCI cells received from the switch
+        at traffic management and policing device."
+    ::= {caviStatEgressEntry 10 }
+
+caviEgrXmtOAMCells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of OAM loopback cells transmitted to network
+            after traffic management and policing." 
+        ::= {caviStatEgressEntry 11 }
+
+caviHEgrXmtClp0Cells OBJECT-TYPE
+        SYNTAX     Counter64
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The 64-bit version of caviEgrXmtClp0Cells." 
+        ::= {caviStatEgressEntry 12 }
+
+caviHEgrXmtClp1Cells OBJECT-TYPE
+        SYNTAX     Counter64
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The 64-bit version of caviEgrXmtClp1Cells." 
+        ::= {caviStatEgressEntry 13 }
+
+       
+-- ---------------------------------------------------------------------
+-- ATM Virtual Interface Egress Interval Statistics Table
+-- ---------------------------------------------------------------------
+ 
+caviEgressIntervalTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF CaviEgressIntervalEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION 
+           "This table reflects interval statistics associated with
+            each of the ATM virtual interfaces in egress direction."
+        ::= { caviStatistics 2 }
+
+caviEgressIntervalEntry OBJECT-TYPE
+        SYNTAX     CaviEgressIntervalEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION 
+          "An entry for egress ATM virtual interface interval statistics. 
+           In addition to the current 15-minute interval bucket, the previous
+           24 hours worth of 15-minute interval buckets are collected for each 
+           ATM virtual interface.
+
+           Statistics are being collected before and after the traffic 
+           management and policing device, in egress direction."
+        INDEX   { ifIndex, caviEgressIntervalNumber }
+        ::= { caviEgressIntervalTable 1 }
+
+CaviEgressIntervalEntry ::=
+        SEQUENCE {
+            caviEgressIntervalNumber    Unsigned32,
+            caviIntEgrRcvClp0Cells      Counter32,
+            caviIntEgrRcvClp1Cells      Counter32,
+            caviIntEgrClp0DiscCells     Counter32,
+            caviIntEgrClp1DiscCells     Counter32,
+            caviIntEgrXmtClp0Cells      Counter32,
+            caviIntEgrXmtClp1Cells      Counter32,
+            caviIntEgrRcvOAMCells       Counter32,
+            caviIntEgrRMCells           Counter32,
+            caviIntEgrXmtEFCICells      Counter32,
+            caviIntEgrRcvEFCICells      Counter32,
+            caviIntEgrXmtOAMCells       Counter32
+            }
+
+caviEgressIntervalNumber OBJECT-TYPE
+        SYNTAX  Unsigned32(0..96)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+          "A number used to uniquely identify a ATM virtual interface's
+           interval statistics. 0 is used to identify the current
+           15-minute interval. 1-96 identify the previous 24 hours
+           of 15-minute interval buckets."
+        ::= { caviEgressIntervalEntry 1 }
+
+caviIntEgrRcvClp0Cells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of CLP-0 cells received from switch
+            at the traffic management and policing device
+            during a 15 minute interval." 
+        ::= { caviEgressIntervalEntry 2 }
+
+caviIntEgrRcvClp1Cells OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+           "The number of CLP-1 cells received from switch
+            at the traffic management and policing device 
+            during a 15 minute interval." 
+        ::= { caviEgressIntervalEntry 3 }
+
+caviIntEgrClp0DiscCells OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The number of CLP-0 cells discarded due to policing
+             during a 15 minute interval."
+        ::= { caviEgressIntervalEntry 4 }
+
+caviIntEgrClp1DiscCells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of CLP-1 cells discarded due to policing
+            during a 15 minute interval."
+        ::= { caviEgressIntervalEntry 5 }
+
+caviIntEgrXmtClp0Cells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of CLP-0 cells transmitted to the network
+            after traffic management and policing
+            during a 15 minute interval."
+        ::= { caviEgressIntervalEntry 6 }
+
+caviIntEgrXmtClp1Cells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of CLP-1 cells transmitted to the network
+            after traffic management and policing during a 15 minute
+            interval."
+        ::= { caviEgressIntervalEntry 7 }
+
+caviIntEgrRcvOAMCells OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+       "The number of OAM cells received from the switch
+        at the traffic management and policing device 
+        during a 15 minute interval." 
+    ::= { caviEgressIntervalEntry 8 }
+ 
+caviIntEgrRMCells OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+       "The number of RM cells transmitted to the network from the switch
+        during a 15 minute interval." 
+    ::= { caviEgressIntervalEntry 9 }
+ 
+caviIntEgrXmtEFCICells OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+       "The number of EFCI cells transmitted to the network 
+        after traffic management and policing during a 15 minute
+        interval."
+    ::= { caviEgressIntervalEntry 10 }
+ 
+caviIntEgrRcvEFCICells OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+       "The number of EFCI cells received from the switch
+        at traffic management and policing device during a 15
+        minute interval."
+    ::= { caviEgressIntervalEntry 11 }
+
+caviIntEgrXmtOAMCells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of OAM loopback cells transmitted to network
+            after traffic management and policing during a 15 minute 
+            interval." 
+        ::= { caviEgressIntervalEntry 12 }
+
+-- ---------------------------------------------------------------------
+-- ATM Virtual Interface Ingress Statistics Table
+-- ---------------------------------------------------------------------
+ 
+caviStatIngressTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF CaviStatIngressEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION 
+           "This table reflects real time statistics associated with
+            each of the ATM virtual interfaces on the ingress side."
+        ::= { caviStatistics 3 }
+
+caviStatIngressEntry OBJECT-TYPE
+        SYNTAX     CaviStatIngressEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION 
+          "An entry for egress ATM virtual  interface statistics. In all the following 
+           descriptions, 
+           CLP-0 means Cell Loss Priority = 0, 
+           CLP-1 means Cell Loss Priority = 1.
+
+           Statistics are being collected before and after the traffic 
+           management and policing device."
+        INDEX   { ifIndex }
+        ::= { caviStatIngressTable 1 }
+
+CaviStatIngressEntry ::=
+        SEQUENCE {
+            caviIngRcvClp0Cells      Counter32,
+            caviIngRcvClp1Cells      Counter32,
+            caviIngClp0DiscCells     Counter32,
+            caviIngClp1DiscCells     Counter32,
+            caviIngXmtClp0Cells      Counter32,
+            caviIngXmtClp1Cells      Counter32,
+            caviIngRcvOAMCells       Counter32,
+            caviIngRMCells           Counter32,
+            caviIngXmtEFCICells      Counter32,
+            caviIngRcvEFCICells      Counter32,
+            caviIngXmtOAMCells       Counter32,
+            caviHIngRcvClp0Cells     Counter64,
+            caviHIngRcvClp1Cells     Counter64
+            }
+
+caviIngRcvClp0Cells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of CLP-0 cells received from switch
+            at the traffic management and policing device in
+            ingress direction." 
+        ::= {caviStatIngressEntry 1 }
+
+caviIngRcvClp1Cells OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+           "The number of CLP-1 cells received from network
+            at the traffic management and policing device in
+            ingress direction." 
+        ::= {caviStatIngressEntry 2 }
+
+caviIngClp0DiscCells OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The number of CLP-0 cells discarded due to policing in
+            ingress direction."
+        ::= {caviStatIngressEntry 3 }
+
+caviIngClp1DiscCells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of CLP-1 cells discarded due to policing in
+            ingress direction."
+        ::= {caviStatIngressEntry 4 }
+
+caviIngXmtClp0Cells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of CLP-0 cells transmitted to the switch
+            after traffic management and policing in
+            ingress direction."
+        ::= {caviStatIngressEntry 5 }
+
+caviIngXmtClp1Cells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of CLP-1 cells transmitted to the switch
+            after traffic management and policing in
+            ingress direction."
+        ::= {caviStatIngressEntry 6 }
+
+caviIngRcvOAMCells OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+       "The number of OAM cells received from the network
+        at the traffic management and policing device in
+        ingress direction." 
+    ::= {caviStatIngressEntry 7 }
+ 
+caviIngRMCells OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+       "The number of RM cells transmitted to the switch from the network in
+        ingress direction." 
+    ::= {caviStatIngressEntry 8 }
+ 
+caviIngXmtEFCICells OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+       "The number of EFCI cells transmitted to the switch 
+        after traffic management and policing in
+        ingress direction."
+    ::= {caviStatIngressEntry 9 }
+ 
+caviIngRcvEFCICells OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+       "The number of EFCI cells received from the network
+        at traffic management and policing device in
+        ingress direction."
+    ::= {caviStatIngressEntry 10 }
+
+caviIngXmtOAMCells OBJECT-TYPE
+        SYNTAX     Counter32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The number of OAM loopback cells transmitted to switch
+            after traffic management and policing in
+            ingress direction." 
+        ::= {caviStatIngressEntry 11 }
+
+caviHIngRcvClp0Cells OBJECT-TYPE
+        SYNTAX     Counter64
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The 64-bit version of caviIngRcvClp0Cells in
+            ingress direction." 
+        ::= {caviStatIngressEntry 12 }
+
+caviHIngRcvClp1Cells OBJECT-TYPE
+        SYNTAX     Counter64
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+           "The 64-bit version of caviIngRcvClp1Cells in
+            ingress direction." 
+        ::= {caviStatIngressEntry 13 }
+
+-- conformance information
+
+caviMIBConformance OBJECT IDENTIFIER ::= {ciscoAtmVirtualIfMIB 3}
+
+caviMIBCompliances OBJECT IDENTIFIER ::= {caviMIBConformance 1}
+caviMIBGroups      OBJECT IDENTIFIER ::= {caviMIBConformance 2}
+
+caviMIBCompliance MODULE-COMPLIANCE 
+        STATUS current
+        DESCRIPTION
+           "The Compliance statement for cisco AtmVirtualIf management group."
+        MODULE -- this module
+        MANDATORY-GROUPS { caviMIBGroup, caviEgressStatMIBGroup }
+        GROUP caviEgressHighSpeedStatMIBGroup
+        DESCRIPTION
+            "This group is mandatory for the system that has interface speeds of OC12 or
+             higher."
+        GROUP caviEgressIntervalMIBGroup
+        DESCRIPTION
+            "This group is mandatory for the system that supports ATM virtual interface
+             interval statistics."
+        GROUP caviIngressStatMIBGroup
+        DESCRIPTION
+            "This group is mandatory for the system that supports ATM  virtual interface
+             Ingress statistics."
+        GROUP caviIngressHighSpeedStatMIBGroup
+        DESCRIPTION
+            "This group is mandatory for the system that supports ATM  virtual interface
+             Ingress statistics for interface speeds of OC12 or higher."
+        ::= {caviMIBCompliances 1}
+    
+-- units of conformance
+caviMIBGroup OBJECT-GROUP
+        OBJECTS {
+        caviPhyIfIndex,
+        caviViIfIndex,
+        caviMinRate,
+        caviMaxRate,
+        caviFileId,
+        caviIfType,
+        caviVpiNum,
+        caviRowStatus
+        }
+       STATUS current
+       DESCRIPTION
+          "These are objects related to ciscoAtmVirtualIf configuration group."
+       ::= { caviMIBGroups 1}
+   
+caviEgressStatMIBGroup OBJECT-GROUP
+        OBJECTS {
+        caviEgrRcvClp0Cells,
+        caviEgrRcvClp1Cells,
+        caviEgrClp0DiscCells,
+        caviEgrClp1DiscCells,
+        caviEgrXmtClp0Cells,
+        caviEgrXmtClp1Cells,
+        caviEgrRcvOAMCells,
+        caviEgrRMCells,
+        caviEgrXmtEFCICells,
+        caviEgrRcvEFCICells,
+        caviEgrXmtOAMCells
+        }
+       STATUS current
+       DESCRIPTION
+          "These are objects related to the ATM virtual interface statistics 
+           group caviStatistics."
+       ::= { caviMIBGroups 2}
+
+caviEgressHighSpeedStatMIBGroup OBJECT-GROUP
+        OBJECTS {
+        caviHEgrXmtClp0Cells,
+        caviHEgrXmtClp1Cells
+        }
+       STATUS current
+       DESCRIPTION
+          "These statistics apply to ingress ATM virtual interfaces with speed of
+           OC12 or higher."
+       ::= { caviMIBGroups 3}
+
+caviEgressIntervalMIBGroup OBJECT-GROUP
+        OBJECTS {
+        caviEgressIntervalNumber,
+        caviIntEgrRcvClp0Cells,
+        caviIntEgrRcvClp1Cells,
+        caviIntEgrClp0DiscCells,
+        caviIntEgrClp1DiscCells,
+        caviIntEgrXmtClp0Cells,
+        caviIntEgrXmtClp1Cells,
+        caviIntEgrRcvOAMCells,
+        caviIntEgrRMCells,
+        caviIntEgrXmtEFCICells,
+        caviIntEgrRcvEFCICells,
+        caviIntEgrXmtOAMCells
+        }
+        STATUS current
+        DESCRIPTION
+           "These are objects related to the ATM virtual interface 
+            interval statistics group."
+        ::= { caviMIBGroups 4}
+
+caviIngressStatMIBGroup OBJECT-GROUP
+        OBJECTS {
+        caviIngRcvClp0Cells,
+        caviIngRcvClp1Cells,
+        caviIngClp0DiscCells,
+        caviIngClp1DiscCells,
+        caviIngXmtClp0Cells,
+        caviIngXmtClp1Cells,
+        caviIngRcvOAMCells,
+        caviIngRMCells,
+        caviIngXmtEFCICells,
+        caviIngRcvEFCICells,
+        caviIngXmtOAMCells
+        }
+       STATUS current
+       DESCRIPTION
+          "These are objects related to the ingress ATM virtual
+           interface statistics."
+       ::= { caviMIBGroups 5}
+
+caviIngressHighSpeedStatMIBGroup OBJECT-GROUP
+        OBJECTS {
+        caviHIngRcvClp0Cells,
+        caviHIngRcvClp1Cells
+        }
+       STATUS current
+       DESCRIPTION
+          "These statistics apply to ingress ATM virtual interfaces with speed of
+           OC12 or higher."
+       ::= { caviMIBGroups 6}
+
+ END
+
+
+
+

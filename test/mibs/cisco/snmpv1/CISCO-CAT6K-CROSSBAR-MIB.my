@@ -1,0 +1,560 @@
+-- MIB file created 26-Jun-2001 15:25:57, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-CAT6K-CROSSBAR-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-CAT6K-CROSSBAR-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+    ciscoMgmt
+            FROM CISCO-SMI
+    Percent
+            FROM CISCO-QOS-PIB-MIB
+--    Unsigned32
+--            FROM CISCO-TC
+    TruthValue, DisplayString
+            FROM SNMPv2-TC-v1
+    Counter, Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
+
+ciscoCat6kCrossbarMIB OBJECT IDENTIFIER ::= { ciscoMgmt 217 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200106250000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--    Cisco Systems
+--     Customer Service
+--     Postal: 170 W Tasman Drive
+--     San Jose, CA  95134
+--     USA
+--     Tel: +1 800 553-NETS
+--    
+--     E-mail: cs-cat6000@cisco.com
+--  Descr
+--    The Catalyst 6000 Crossbar MIB provides instrumentation for
+--    configuration and operation of the crossbar switching fabric
+--    module.
+--  RevDate
+--    200106250000Z
+--  RevDescr
+--    Initial version of this MIB module.
+
+ciscoCat6kXbarMIBObjects OBJECT IDENTIFIER ::= { ciscoCat6kCrossbarMIB 1 }
+cc6kxbarConfiguration OBJECT IDENTIFIER ::= { ciscoCat6kXbarMIBObjects 1 }
+cc6kxbarStatus  OBJECT IDENTIFIER ::= { ciscoCat6kXbarMIBObjects 2 }
+cc6kxbarStatistics OBJECT IDENTIFIER ::= { ciscoCat6kXbarMIBObjects 3 }
+cc6kxbarMIBConformance OBJECT IDENTIFIER ::= { ciscoCat6kCrossbarMIB 3 }
+cc6kxbarMIBCompliances OBJECT IDENTIFIER ::= { cc6kxbarMIBConformance 1 }
+cc6kxbarMIBGroups OBJECT IDENTIFIER ::= { cc6kxbarMIBConformance 2 }
+
+ModuleSlotNumber ::= Gauge
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    Slot number of the module.
+
+FabricChannelNumber ::= Gauge
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    Fabric channel number.
+
+ChannelStatus ::= INTEGER {
+        ok(1),
+        syncError(2),
+        heartbeatError(3),
+        crcError(4),
+        bufferError(5),
+        timeoutError(6),
+        unused(7)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    Status of the Channel.
+
+cc6kxbarFallbackMode OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "cc6kxbarFallbackMode controls system fallback to bus-mode
+        after loss of switching fabric module.
+        'true'  - When the last fabric card is removed
+                  system will adjust the supervisor and
+                  line cards switching mode automatically without
+                  resetting the system. With this feature enabled,
+                  the switch might lose traffic while it's
+                  changing the switching mode.
+        'false'  - All the ports in the system will be
+                  disabled when the last fabric card is removed."
+    DEFVAL { true }
+    ::= { cc6kxbarConfiguration 1 }
+
+cc6kxbarBusOnlyModeAllowed OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object determines the value of
+         cc6kxbarModuleModeSwitchingMode of each module.
+         'true' - Each and every module is allowed to run in bus-only 
+                  mode.
+         'false' - None of the modules are allowed to run in bus-only 
+                   mode.i.e., All the non-fabric capable modules will 
+                   be powered off.  Absence of fabric module results 
+                   in all the fabric capable modules being powered 
+                   off."
+    DEFVAL { true }
+    ::= { cc6kxbarConfiguration 2 }
+
+cc6kxbarTruncatedModeAllowed OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object determines the value of
+         cc6kxbarModuleModeSwitchingMode of each module.
+         'true' - With the cc6kxbarMinFabricPresent fabric capable
+                  modules present in the system, 
+                  cc6kxbarModuleModeSwitchingMode
+                  will be 'crossbarmode' for each module.
+         'false' - truncation mode is not allowed."
+    DEFVAL { true }
+    ::= { cc6kxbarConfiguration 3 }
+
+cc6kxbarMinFabricPresent OBJECT-TYPE
+    SYNTAX ModuleSlotNumber
+--    Rsyntax Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates the minimum number 
+         of switching fabric capable modules to be present in the 
+         system, for any switching fabric capable module to be in
+         'crossbarmode' indicated by  cc6kxbarModuleModeSwitchingMode,
+         when cc6kxbarTruncatedModeAllowed is set to 'true'.
+         When cc6kxbarMinFabricPresent has a 
+         value larger than the number of slots in the system then 
+         the value of cc6kxbarTruncatedModeAllowed has no effect."
+    DEFVAL { 2 }
+    ::= { cc6kxbarConfiguration 4 }
+
+cc6kxbarLcdBannerTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF Cc6kxbarLcdBannerEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "cc6kxbarLcdBannerTable configures the Lcd banner of the
+         fabric module."
+    ::= { cc6kxbarConfiguration 5 }
+
+cc6kxbarLcdBannerEntry OBJECT-TYPE
+    SYNTAX Cc6kxbarLcdBannerEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry in cc6kxbarLcdBannerTable.
+         Entries are created by the agent based on the
+         size of the lcd banner."
+    INDEX { cc6kxbarLcdBannerIndex }
+    ::= { cc6kxbarLcdBannerTable 1 }
+
+Cc6kxbarLcdBannerEntry ::= SEQUENCE {
+    cc6kxbarLcdBannerIndex Gauge,
+    cc6kxbarLcdBannerBanner DisplayString,
+    cc6kxbarLcdBannerMaxSize Gauge
+    }
+
+cc6kxbarLcdBannerIndex OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Object which specifies a unique entry in the
+         table."
+    ::= { cc6kxbarLcdBannerEntry 1 }
+
+cc6kxbarLcdBannerBanner OBJECT-TYPE
+    SYNTAX DisplayString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Message that would be displayed on the fabric card LCD.
+         The size of cc6kxbarLcdBannerBanner should be less than 
+         or equal to the cc6kxbarLcdBannerMaxSize value."
+    ::= { cc6kxbarLcdBannerEntry 2 }
+
+cc6kxbarLcdBannerMaxSize OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Maximum size of the associated cc6kxbarLcdBannerBanner
+         object."
+    ::= { cc6kxbarLcdBannerEntry 3 }
+
+cc6kxbarFabricActiveSlot OBJECT-TYPE
+    SYNTAX ModuleSlotNumber
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "cc6kxbarFabricActiveSlot indicates the slot number of the 
+         active switching fabric module. A value of zero indicates 
+         that the active switching fabric module is either powered 
+         down or not present in the chassis."
+    ::= { cc6kxbarStatus 1 }
+
+cc6kxbarFabricBackupSlot OBJECT-TYPE
+    SYNTAX ModuleSlotNumber
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "cc6kxbarFabricBackupSlot indicates the slot number of the 
+         backup switching fabric module. A value of zero indicates 
+         that the backup switching fabric module is either powered
+         down or not present in the chassis."
+    ::= { cc6kxbarStatus 2 }
+
+cc6kxbarModuleModeTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF Cc6kxbarModuleModeEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "cc6kxbarModuleModeTable indicates the switching mode of each 
+         module in the system."
+    ::= { cc6kxbarStatus 3 }
+
+cc6kxbarModuleModeEntry OBJECT-TYPE
+    SYNTAX Cc6kxbarModuleModeEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry in cc6kxbarModuleModeTable. The agent creates
+        an entry when a non switching fabric module 
+        is inserted in the chassis.
+        The agent destroys an entry when a non switching fabric
+        module is power down or reset or removed from the chassis."
+    INDEX { cc6kxbarModuleModeModule }
+    ::= { cc6kxbarModuleModeTable 1 }
+
+Cc6kxbarModuleModeEntry ::= SEQUENCE {
+    cc6kxbarModuleModeModule ModuleSlotNumber,
+    cc6kxbarModuleModeSwitchingMode INTEGER
+    }
+
+cc6kxbarModuleModeModule OBJECT-TYPE
+    SYNTAX ModuleSlotNumber
+--    Rsyntax Gauge
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The module slot number."
+    ::= { cc6kxbarModuleModeEntry 1 }
+
+cc6kxbarModuleModeSwitchingMode OBJECT-TYPE
+    SYNTAX INTEGER {
+        busmode(1),
+        crossbarmode(2),
+        dcefmode(3)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "cc6kxbarModuleModeSwitchingMode indicates switching mode 
+         of the cc6kxbarModuleModeModule.
+         'busmode'     -  Modules  in this mode don't use fabric.
+                          Backplane is used for both lookup and data
+                          forwarding.
+         'crossbarmode' -  Modules in this mode use backplane 
+                           for forwarding decision and fabric for data 
+                           forwarding
+         'dcefmode'    -  Modules in this mode use fabric for data 
+                          forwarding and local forwarding is enabled."
+    ::= { cc6kxbarModuleModeEntry 2 }
+
+cc6kxbarModuleChannelTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF Cc6kxbarModuleChannelEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "cc6kxbarModuleChannelTable shows the operational status
+        of fabric channels. This table will be instantiated only when 
+        cc6kxbarFabricActiveSlot has a valid value other than zero."
+    ::= { cc6kxbarStatus 4 }
+
+cc6kxbarModuleChannelEntry OBJECT-TYPE
+    SYNTAX Cc6kxbarModuleChannelEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry in cc6kxbarModuleChannelTable."
+    INDEX { cc6kxbarModuleChannelModule, cc6kxbarModuleChannelChannel }
+    ::= { cc6kxbarModuleChannelTable 1 }
+
+Cc6kxbarModuleChannelEntry ::= SEQUENCE {
+    cc6kxbarModuleChannelModule ModuleSlotNumber,
+    cc6kxbarModuleChannelChannel FabricChannelNumber,
+    cc6kxbarModuleChannelModStatus ChannelStatus,
+    cc6kxbarModuleChannelFabStatus ChannelStatus
+    }
+
+cc6kxbarModuleChannelModule OBJECT-TYPE
+    SYNTAX ModuleSlotNumber
+--    Rsyntax Gauge
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The module slot number."
+    ::= { cc6kxbarModuleChannelEntry 1 }
+
+cc6kxbarModuleChannelChannel OBJECT-TYPE
+    SYNTAX FabricChannelNumber
+--    Rsyntax Gauge
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Fabric channel number of the  cc6kxbarModuleChannelModule."
+    ::= { cc6kxbarModuleChannelEntry 2 }
+
+cc6kxbarModuleChannelModStatus OBJECT-TYPE
+    SYNTAX ChannelStatus
+--    Rsyntax INTEGER {
+--        ok(1),
+--        syncError(2),
+--        heartbeatError(3),
+--        crcError(4),
+--        bufferError(5),
+--        timeoutError(6),
+--        unused(7)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The status of the fabric channel at the 
+         cc6kxbarModuleChannelModule."
+    ::= { cc6kxbarModuleChannelEntry 3 }
+
+cc6kxbarModuleChannelFabStatus OBJECT-TYPE
+    SYNTAX ChannelStatus
+--    Rsyntax INTEGER {
+--        ok(1),
+--        syncError(2),
+--        heartbeatError(3),
+--        crcError(4),
+--        bufferError(5),
+--        timeoutError(6),
+--        unused(7)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The status of the fabric channel at the 
+         cc6kxbarFabricActiveSlot."
+    ::= { cc6kxbarModuleChannelEntry 4 }
+
+cc6kxbarStatisticsTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF Cc6kxbarStatisticsEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "cc6kxbarStatisticsTable gives the 
+         fabric channel counters and utilization
+         information.  This table will be instantiated when 
+         cc6kxbarFabricActiveSlot has a valid value other than
+         zero."
+    ::= { cc6kxbarStatistics 1 }
+
+cc6kxbarStatisticsEntry OBJECT-TYPE
+    SYNTAX Cc6kxbarStatisticsEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry in cc6kxbarStatisticsTable."
+    INDEX { cc6kxbarStatisticsModule, cc6kxbarStatisticsChannel }
+    ::= { cc6kxbarStatisticsTable 1 }
+
+Cc6kxbarStatisticsEntry ::= SEQUENCE {
+    cc6kxbarStatisticsModule ModuleSlotNumber,
+    cc6kxbarStatisticsChannel FabricChannelNumber,
+    cc6kxbarStatisticsInErrors Counter,
+    cc6kxbarStatisticsOutErrors Counter,
+    cc6kxbarStatisticsOutDropped Counter,
+    cc6kxbarStatisticsInUtil Percent,
+    cc6kxbarStatisticsOutUtil Percent
+    }
+
+cc6kxbarStatisticsModule OBJECT-TYPE
+    SYNTAX ModuleSlotNumber
+--    Rsyntax Gauge
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The module slot number."
+    ::= { cc6kxbarStatisticsEntry 1 }
+
+cc6kxbarStatisticsChannel OBJECT-TYPE
+    SYNTAX FabricChannelNumber
+--    Rsyntax Gauge
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Fabric channel number associated with the  
+         cc6kxbarStatisticsModule."
+    ::= { cc6kxbarStatisticsEntry 2 }
+
+cc6kxbarStatisticsInErrors OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of error packets received on 
+         cc6kxbarStatisticsChannel for cc6kxbarStatisticsModule
+         since this entry was last initialized."
+    ::= { cc6kxbarStatisticsEntry 3 }
+
+cc6kxbarStatisticsOutErrors OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of error packets transmitted on 
+         cc6kxbarStatisticsModule through the 
+         cc6kxbarStatisticsChannel since this entry was 
+         last initialized."
+    ::= { cc6kxbarStatisticsEntry 4 }
+
+cc6kxbarStatisticsOutDropped OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of  dropped packets transmitted on the
+         cc6kxbarStatisticsChannel for cc6kxbarStatisticsModule
+         since this entry was last initialized."
+    ::= { cc6kxbarStatisticsEntry 5 }
+
+cc6kxbarStatisticsInUtil OBJECT-TYPE
+    SYNTAX Percent
+--    Rsyntax INTEGER(0..100)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Input utilization of the cc6kxbarStatisticsChannel for 
+         cc6kxbarStatisticsModule."
+    ::= { cc6kxbarStatisticsEntry 6 }
+
+cc6kxbarStatisticsOutUtil OBJECT-TYPE
+    SYNTAX Percent
+--    Rsyntax INTEGER(0..100)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Output utilization of the cc6kxbarStatisticsChannel for
+         cc6kxbarStatisticsModule."
+    ::= { cc6kxbarStatisticsEntry 7 }
+
+cc6kxbarModuleStatusGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing 
+--     configuration and operation of the crossbar 
+--     switching fabric module and switching capable 
+--     module.
+--  objects
+--    cc6kxbarLcdBannerMaxSize, cc6kxbarLcdBannerBanner, 
+--    cc6kxbarTruncatedModeAllowed, cc6kxbarMinFabricPresent, 
+--    cc6kxbarFabricActiveSlot, cc6kxbarFabricBackupSlot, 
+--    cc6kxbarModuleModeSwitchingMode
+
+cc6kxbarChannelStatusGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing 
+--    status and configuration of the fabric channel.
+--  objects
+--    cc6kxbarModuleChannelModStatus, 
+--    cc6kxbarModuleChannelFabStatus
+
+cc6kxbarChannelStatisticsGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 3 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing statistics for
+--     the fabric channel.
+--  objects
+--    cc6kxbarStatisticsInErrors, cc6kxbarStatisticsOutErrors, 
+--    cc6kxbarStatisticsOutDropped, cc6kxbarStatisticsInUtil, 
+--    cc6kxbarStatisticsOutUtil
+
+cc6kxbarFallbackGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 4 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    This object controls system fallback to bus-mode
+--     after loss of switching fabric module.
+--  objects
+--    cc6kxbarFallbackMode
+
+cc6kxbarBusOnlyAllowedGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 5 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    This object determines the value of
+--     cc6kxbarModuleModeSwitchingMode of each module.
+--  objects
+--    cc6kxbarBusOnlyModeAllowed
+
+cc6kxbarMIBCompliance OBJECT IDENTIFIER ::= { cc6kxbarMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for
+--     the CISCO-CROSSBAR-MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cc6kxbarModuleStatusGroup
+--   MandGroup
+--    cc6kxbarChannelStatusGroup
+--   MandGroup
+--    cc6kxbarChannelStatisticsGroup
+--   OptGroup
+--    cc6kxbarFallbackGroup
+--   OptGroup
+--    cc6kxbarBusOnlyAllowedGroup
+
+
+END
+

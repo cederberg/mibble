@@ -1,0 +1,2311 @@
+-- MIB file created 01-Jul-2002 14:20:06, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-SLB-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-SLB-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+--    CiscoPort, CiscoIpProtocol, Unsigned32
+    CiscoPort, CiscoIpProtocol
+            FROM CISCO-TC
+    TimeInterval, TruthValue, RowStatus
+            FROM SNMPv2-TC-v1
+    ciscoMgmt
+            FROM CISCO-SMI
+    Counter, Gauge, IpAddress
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
+
+ciscoSlbMIB OBJECT IDENTIFIER ::= { ciscoMgmt 161 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200201151500Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--           Cisco Systems
+--            Customer Service
+--    
+--    Postal: 170 W. Tasman Drive
+--            San Jose, CA  95134
+--            USA
+--    
+--       Tel: +1 800 553-NETS
+--    
+--    E-mail: cs-slb@cisco.com
+--  Descr
+--    The MIB for managing Server Load Balancing Manager(s),
+--    such as the Cisco IOS SLB product. 
+--    
+--    This MIB includes instrumentation for the manager-side
+--    implementation of the Dynamic Feedback Protocol (DFP).
+--    A DFP uses the DFP protocol to communicate with
+--    DFP agents in order to obtain information about
+--    Servers.
+--    
+--    Acronyms and terms:
+--    
+--      GGSN   Gateway GPRS Support Node
+--      GPRS   General Packet Radio Service
+--      GTP    GPRS Tunneling Protocol
+--      SGSN   Serving GPRS Support Node
+--  RevDate
+--    200201151500Z
+--  RevDescr
+--    Extending MIB to support GTP service.  Updated
+--    SlbRealServerState and SlbVirtualServState with
+--    more states.
+--  RevDate
+--    200010200000Z
+--  RevDescr
+--    Extending MIB to support VirtualMask and
+--     service wsp.
+--  RevDate
+--    200005080000Z
+--  RevDescr
+--    Initial version of this MIB module.
+
+ciscoSlbMIBObjects OBJECT IDENTIFIER ::= { ciscoSlbMIB 1 }
+slbStats        OBJECT IDENTIFIER ::= { ciscoSlbMIBObjects 1 }
+slbServerFarms  OBJECT IDENTIFIER ::= { ciscoSlbMIBObjects 2 }
+slbRealServers  OBJECT IDENTIFIER ::= { ciscoSlbMIBObjects 3 }
+slbVirtualServers OBJECT IDENTIFIER ::= { ciscoSlbMIBObjects 4 }
+slbConnections  OBJECT IDENTIFIER ::= { ciscoSlbMIBObjects 5 }
+slbVirtualClients OBJECT IDENTIFIER ::= { ciscoSlbMIBObjects 6 }
+slbStickyObjects OBJECT IDENTIFIER ::= { ciscoSlbMIBObjects 7 }
+slbNotificationObjects OBJECT IDENTIFIER ::= { ciscoSlbMIBObjects 8 }
+slbDfpPassword  OBJECT IDENTIFIER ::= { ciscoSlbMIBObjects 9 }
+slbDfpAgents    OBJECT IDENTIFIER ::= { ciscoSlbMIBObjects 10 }
+slbDfpReal      OBJECT IDENTIFIER ::= { ciscoSlbMIBObjects 11 }
+ciscoSlbMIBNotificationPrefix OBJECT IDENTIFIER ::= { ciscoSlbMIB 2 }
+ciscoSlbMIBNotifications OBJECT IDENTIFIER ::= { ciscoSlbMIBNotificationPrefix 0 }
+ciscoSlbMIBConformance OBJECT IDENTIFIER ::= { ciscoSlbMIB 3 }
+ciscoSlbMIBCompliances OBJECT IDENTIFIER ::= { ciscoSlbMIBConformance 1 }
+ciscoSlbMIBGroups OBJECT IDENTIFIER ::= { ciscoSlbMIBConformance 2 }
+
+SlbServerString ::= OCTET STRING(SIZE(1..15))
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The configured name associated with an SLB object.
+
+SlbPasswordString ::= OCTET STRING(SIZE(0..32))
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The string for the Dynamic Feedback Protocol (DFP)
+--    password.  A zero-length value when writing this object
+--    will unset the password.
+
+SlbConnectionState ::= INTEGER {
+        init(1),
+        synClient(2),
+        synServer(3),
+        synBoth(4),
+        estab(5),
+        finClient(6),
+        finServer(7),
+        closing(8),
+        zombie(9),
+        conclient(10),
+        conserver(11)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The state for TCP, UDP, and WSP connections being
+--    load-balanced by the SLB feature.  Each protocol uses a 
+--    subset of these states.
+--    'init'     : Connection has seen traffic and is in the
+--                 process of being load-balanced.
+--    'synClient': SLB has seen a client SYN for this
+--                 connection.
+--    'synServer': SLB has seen a server SYN for this
+--                 connection.
+--    'synBoth'  : SLB has seen both client and server SYNs
+--                 for this connection.
+--    'estab'    : Connection is established.
+--    'finClient': SLB has seen a client FIN for this
+--                 connection.
+--    'finServer': SLB has seen a server FIN for this
+--                 connection.
+--    'closing'  : Connection is in the process of coming
+--                 down.
+--    'zombie'   : Connection exists but is not in use,
+--                 waiting for timers to expire.
+--    'conclient': Session has seen a connection request from 
+--                 client.
+--    'conserver': Session has seen a connection request from 
+--                 server.
+
+SlbPredictor ::= INTEGER {
+        roundRobin(1),
+        leastConns(2)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The predictor represents the load-balancing algorithm
+--    being used on a serverfarm to distribute load evenly
+--    among real servers. 'roundRobin' load-balancing
+--    delivers connections evenly amongst real server while
+--    'leastConns' gives new connections to the real server
+--    with the fewest active connections.
+
+SlbRealServerState ::= INTEGER {
+        outOfService(1),
+        inService(2),
+        failed(3),
+        readyToTest(4),
+        testing(5),
+        maxConnsThrottle(6),
+        maxClientsThrottle(7),
+        dfpThrottle(8),
+        probeFailed(9),
+        probeTesting(10),
+        operWait(11),
+        testWait(12)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The server state represents the state of a real server
+--    being load-balanced by SLB.
+--    'outOfService'     : Server is not in use by SLB as a
+--                         destination for client
+--                         connections.  This state can be
+--                         written and read.
+--    'inService'        : Server is in use as a destination
+--                         for SLB client connections.  This
+--                         state can be written and read.
+--    'failed'           : Server has failed and will not be
+--                         retried for retry timer seconds.
+--                         This state can only be read.
+--    'readyToTest'      : Server has failed and has an
+--                         expired retry timer, test
+--                         connections will begin flow to
+--                         it soon. This state can only be
+--                         read.
+--    'testing'          : Server has failed and been given
+--                         another test connection, success
+--                         of this connection is not known
+--                         yet.  This state can only be read.
+--    'maxConnsThrottle' : Server has reached its maximum
+--                         number of connections and is no
+--                         longer being given connections.
+--                         This state can only be read.
+--    'maxClientsThrottle': Server has reached the maximum
+--                          allowed clients.  This state
+--                          can only be read.
+--    'dfpThrottle'      : DFP has lowered the weight of 
+--                         this server to throttle level, so
+--                         that no new connections will be 
+--                         assigned to it until DFP raises
+--                         its weight. 
+--                         This state can only be read.
+--    'probeFailed'      : SLB probe to this this server has
+--                         failed.  No new connections will be
+--                         assigned to it until a probe to 
+--                         this server succeeds.  This state 
+--                         can only be read.
+--    'probeTesting'     : Server has received a test probe
+--                         from SLB.  This state can only 
+--                         be read.
+--    'operWait'         : Server is ready to go operational,
+--                         but is waiting for the associated
+--                         redirect virtual to be inservice.
+--                         This state can only be read.
+--    'testWait'         : Server is ready to be tested. This
+--                         state is applicable only when the
+--                         server is used for http redirect
+--                         load balancing. This state can
+--                         only be read.
+
+SlbVirtualServState ::= INTEGER {
+        outOfService(1),
+        inService(2),
+        standby(3),
+        inOperReal(4),
+        stbInOperReal(5),
+        testReal(6)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The state of SLB virtual server
+--    'outOfService' : Virtual server is not active and is
+--                     not affecting client traffic in any
+--                     way.
+--    'inService'    : Virtual server is active and is
+--                     load-balancing matching client traffic
+--                     to available real servers.
+--    'standby'      : Virtual server is a backup for a
+--                     virtual server on another SLB device,
+--                     and is currently inactive.
+--    'inOperReal'   : Real server associated with this
+--                     redirect virtual server is not
+--                     operational.  This state can only 
+--                     be read.
+--    'stbInOperReal': Real server associated with this 
+--                     redirect virtual server is not
+--                     operational, and this virtual server
+--                     is in standby state.  This state 
+--                     can only be read.
+--    'testReal'     : This is a redirect virtual server and
+--                     the real server associated with it is 
+--                     being tested.  This state can only 
+--                     be read.
+
+SlbVirtualService ::= INTEGER {
+        none(1),
+        ftp(2),
+        wsp(3),
+        gtp(4)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The special service configured for this virtual server.
+--    Such a specification ensures that session(s) for a given
+--    protocol are tracked and assigned to the same real 
+--    machine.  These services include:
+--    'ftp' : File Transfer Protocol
+--    'wsp' : Wireless Session Protocol
+--    'gtp' : GPRS Tunnelling Protocol
+
+SlbDfpAgentState ::= INTEGER {
+        notOpen(1),
+        trying(2),
+        connecting(3),
+        open(4),
+        failed(5),
+        securityError(6)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The status of a remote Dynamic Feedback Protocol (DFP)
+--    agent as it appears to a local DFP manager.
+--    'notOpen'       : The initial state when the DFP Agent
+--                      block is instantiated.
+--    'trying'        : The state when the Agent tries to
+--                      open the socket to the DFP manger.
+--    'connecting'    : The state when the Agent opens the
+--                      socket, and is connecting to the
+--                      DFP manager.
+--    'open'          : The state when an Agent is talking to
+--                      the DFP manager. This is the desirable
+--                      place to be.
+--    'failed'        : The state when there is an error in
+--                      the data, or when the maximum number
+--                      of retries is reached.
+--    'securityError' : The state when there is a security
+--                      error in the received message. Either
+--                      there is no security vector when one
+--                      was required, or the MD5 string in
+--                      the message did not match the
+--                      expected result (password not
+--                      correct).
+
+SlbNatSetting ::= INTEGER {
+        noNat(1),
+        clientNat(2),
+        serverNat(3),
+        clientAndServerNat(4)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The current network address translation (NAT) setting
+--    for a server farm.
+--    'noNat'             : The server farm is not configured
+--                          for NAT.
+--    'clientNat'         : The server farm is configured to
+--                          translate client IP addresses.
+--    'serverNat'         : The server farm is configured to
+--                          translate server IP addresses.
+--    'clientAndServerNat': The server farm is configured to
+--                          translate client and server IP
+--                          addresses.
+
+slbStatsTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SlbStatsTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table of SLB statistics for all local SLB entities."
+    ::= { slbStats 1 }
+
+slbStatsTableEntry OBJECT-TYPE
+    SYNTAX SlbStatsTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A list of SLB statistics for a particular SLB entity."
+    INDEX { slbEntity }
+    ::= { slbStatsTable 1 }
+
+SlbStatsTableEntry ::= SEQUENCE {
+    slbEntity Gauge,
+    slbStatsUnassistedSwitchingPkts Counter,
+    slbStatsUnassistedSwitchingHCPks Counter,
+    slbStatsAssistedSwitchingPkts Counter,
+    slbStatsAssistedSwitchingHCPkts Counter,
+    slbStatsCreatedConnections Counter,
+    slbStatsCreatedHCConnections Counter,
+    slbStatsEstablishedConnections Counter,
+    slbStatsEstablishedHCConnections Counter,
+    slbStatsDestroyedConnections Counter,
+    slbStatsDestroyedHCConnections Counter,
+    slbStatsReassignedConnections Counter,
+    slbStatsReassignedHCConnections Counter,
+    slbStatsZombies Counter,
+    slbStatsHCZombies Counter
+    }
+
+slbEntity OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The SLB instance reference number for this server.
+        This allows multiple SLB's to exist on the same SNMP
+        system."
+    ::= { slbStatsTableEntry 1 }
+
+slbStatsUnassistedSwitchingPkts OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of packets forwarded by the Software Load
+        Balancing manager's software."
+    ::= { slbStatsTableEntry 2 }
+
+slbStatsUnassistedSwitchingHCPks OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of packets forwarded by the Software Load
+        Balancing manager's software.  This is the 64-bit
+        version of slbStatsUnassistedPkts."
+    ::= { slbStatsTableEntry 3 }
+
+slbStatsAssistedSwitchingPkts OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of packets handled by SLB which were
+        switched via the highest-performance switching path."
+    ::= { slbStatsTableEntry 4 }
+
+slbStatsAssistedSwitchingHCPkts OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of packets handled by SLB which were
+        switched via the highest-performance switching path.
+        This is the 64-bit version of
+        slbStatsAssistedSwitchingPkts."
+    ::= { slbStatsTableEntry 5 }
+
+slbStatsCreatedConnections OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    connections
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of TCP and UDP connections created since
+        SLB was configured.  TCP connections are created
+        after seeing a SYN for a connection.  UDP connections
+        are created based on the source and destination and
+        are removed based on a timer."
+    ::= { slbStatsTableEntry 6 }
+
+slbStatsCreatedHCConnections OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    connections
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of connections created by SLB since it was
+        configured.  TCP connections are created after seeing a
+        SYN for a connection.  UDP connections are created
+        based on the source and destination and are removed
+        based on a timer.  This is the 64-bit version of
+        slbStatsCreatedConnections."
+    ::= { slbStatsTableEntry 7 }
+
+slbStatsEstablishedConnections OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    connections
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of connections established through SLB
+        (reached the ESTAB state).  TCP connections reach
+        the ESTAB state after a SYN - SYN/ACK exchange.  UDP
+        connections reach the ESTAB state after data is sent
+        from the client or server."
+    ::= { slbStatsTableEntry 8 }
+
+slbStatsEstablishedHCConnections OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    connections
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of connections established through SLB
+        (reached the ESTAB state).  TCP connections reach
+        the ESTAB state after a SYN - SYN/ACK exchange.  UDP
+        connections reach the ESTAB state after data is sent
+        from the client or server.  This is the 64-bit version
+        of slbStatsEstablisedConnections."
+    ::= { slbStatsTableEntry 9 }
+
+slbStatsDestroyedConnections OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    connections
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of TCP and UDP connections destroyed by
+        SLB, either by TCPIP teardown or timeout.  UDP
+        connections can only be timed out."
+    ::= { slbStatsTableEntry 10 }
+
+slbStatsDestroyedHCConnections OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    connections
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of TCP and UDP connections destroyed by SLB,
+        either by TCPIP teardown or timeout.  UDP connections
+        can only be timed out.  This is the 64-bit version of
+        slbStatsDestroyedConnections."
+    ::= { slbStatsTableEntry 11 }
+
+slbStatsReassignedConnections OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    connections
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of TCP and UDP connections reassigned from
+        one real server to another."
+    ::= { slbStatsTableEntry 12 }
+
+slbStatsReassignedHCConnections OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    connections
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of TCP and UDP connections reassigned from
+        one real server to another.  This is the 64-bit version
+        of slbStatsReassignedConnections."
+    ::= { slbStatsTableEntry 13 }
+
+slbStatsZombies OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    zombies
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of TCP and UDP connections currently in
+        the zombie state waiting for timers to expire."
+    ::= { slbStatsTableEntry 14 }
+
+slbStatsHCZombies OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    zombies
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of TCP and UDP connections currently in
+        the zombie state waiting for timers to expire.  This
+        is the 64-bit version of slbStatsZombies."
+    ::= { slbStatsTableEntry 15 }
+
+slbServerFarmTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SlbServerFarmTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This is a table of server farms, each of which is a
+        group of real servers to be used by SLB for load
+        balancing.  Columnar objects can be modified when the
+        row is 'active'.  Rows can be created and destroyed.
+        Entries are added to this table via
+        slbServerFarmRowStatus in accordance with the
+        RowStatus convention."
+    ::= { slbServerFarms 1 }
+
+slbServerFarmTableEntry OBJECT-TYPE
+    SYNTAX SlbServerFarmTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about a particular server farm served by
+        a particular local SLB entity."
+    INDEX { slbEntity, slbServerFarmName }
+    ::= { slbServerFarmTable 1 }
+
+SlbServerFarmTableEntry ::= SEQUENCE {
+    slbServerFarmName SlbServerString,
+    slbServerFarmPredictor SlbPredictor,
+    slbServerFarmNat SlbNatSetting,
+    slbServerFarmNumberOfRealServers Gauge,
+    slbServerFarmBindId Gauge,
+    slbServerFarmRowStatus RowStatus
+    }
+
+slbServerFarmName OBJECT-TYPE
+    SYNTAX SlbServerString
+--    Rsyntax OCTET STRING(SIZE(1..15))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The name of server farm."
+    ::= { slbServerFarmTableEntry 1 }
+
+slbServerFarmPredictor OBJECT-TYPE
+    SYNTAX SlbPredictor
+--    Rsyntax INTEGER {
+--        roundRobin(1),
+--        leastConns(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The load balancing algorithm in use by the server farm
+        for its real servers for the local SLB entity."
+    DEFVAL { roundRobin }
+    ::= { slbServerFarmTableEntry 2 }
+
+slbServerFarmNat OBJECT-TYPE
+    SYNTAX SlbNatSetting
+--    Rsyntax INTEGER {
+--        noNat(1),
+--        clientNat(2),
+--        serverNat(3),
+--        clientAndServerNat(4)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The type of NAT employed by the local SLB entity for
+        servers in this server farm."
+    DEFVAL { noNat }
+    ::= { slbServerFarmTableEntry 3 }
+
+slbServerFarmNumberOfRealServers OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The number of real servers in this server farm."
+    DEFVAL { 0 }
+    ::= { slbServerFarmTableEntry 4 }
+
+slbServerFarmBindId OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "slbServerFarmBindId is used to identify one or more
+        real servers for which slbDfpRealWeight applies to the
+        real server's slbRealOperWeight. The identification
+        is done by finding rows in slbServerFarmTable for which
+        slbServerFarmBindId matches slbDfpRealBindId. For each
+        identified server farm, extract the slbServerFarmName
+        and use this value together with slbDfpRealIpAddress
+        and slbDfpRealPort to identify the row in
+        slbRealTable."
+    DEFVAL { 0 }
+    ::= { slbServerFarmTableEntry 5 }
+
+slbServerFarmRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The object is used by a management station to create
+        or delete the row entry in slbServerFarmTable following
+        the RowStatus textual convention."
+    ::= { slbServerFarmTableEntry 6 }
+
+slbRealTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SlbRealTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table of real servers.  Columnar objects can be
+        modified when the row is 'active'.  Rows can be created
+        and destroyed.  Entries are added to this table via
+        slbRealRowStatus in accordance with the RowStatus
+        convention."
+    ::= { slbRealServers 1 }
+
+slbRealTableEntry OBJECT-TYPE
+    SYNTAX SlbRealTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about a particular real server in a
+        particular server farm, served by a particular local
+        SLB entity.  "
+    INDEX { slbEntity, slbRealServerFarmName, slbRealIpAddress, slbRealPort }
+    ::= { slbRealTable 1 }
+
+SlbRealTableEntry ::= SEQUENCE {
+    slbRealServerFarmName SlbServerString,
+    slbRealIpAddress IpAddress,
+    slbRealPort CiscoPort,
+    slbRealState SlbRealServerState,
+    slbRealNumberOfConnections Gauge,
+    slbRealNumberOfDummyConnections Gauge,
+    slbRealMaxConnections Gauge,
+    slbRealAdminWeight Gauge,
+    slbRealOperWeight Gauge,
+    slbRealMetric Gauge,
+    slbRealReassign Gauge,
+    slbRealRetryInterval TimeInterval,
+    slbRealFailedConnections Gauge,
+    slbRealFailedClients Gauge,
+    slbRealConsecutiveFails Gauge,
+    slbRealTotalFails Counter,
+    slbRealRowStatus RowStatus,
+    slbRealTotalConnections Counter,
+    slbRealHCTotalConnections Counter
+    }
+
+slbRealServerFarmName OBJECT-TYPE
+    SYNTAX SlbServerString
+--    Rsyntax OCTET STRING(SIZE(1..15))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The real server's server farm name."
+    ::= { slbRealTableEntry 1 }
+
+slbRealIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The IP address of real server."
+    ::= { slbRealTableEntry 2 }
+
+slbRealPort OBJECT-TYPE
+    SYNTAX CiscoPort
+--    Rsyntax INTEGER(0..65535)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The TCP or UDP port of real server.  This is used if
+        SLB NAT is configured (see slbServerFarmNat).  If SLB
+        is not using NAT, this value will be 0."
+    REFERENCE
+        "slbServerFarmNat"
+    ::= { slbRealTableEntry 3 }
+
+slbRealState OBJECT-TYPE
+    SYNTAX SlbRealServerState
+--    Rsyntax INTEGER {
+--        outOfService(1),
+--        inService(2),
+--        failed(3),
+--        readyToTest(4),
+--        testing(5),
+--        maxConnsThrottle(6),
+--        maxClientsThrottle(7),
+--        dfpThrottle(8),
+--        probeFailed(9),
+--        probeTesting(10),
+--        operWait(11),
+--        testWait(12)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The current state of real server."
+    DEFVAL { outOfService }
+    ::= { slbRealTableEntry 4 }
+
+slbRealNumberOfConnections OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number TCP and UDP connections currently assigned
+        to this real server."
+    ::= { slbRealTableEntry 5 }
+
+slbRealNumberOfDummyConnections OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The current number of idle dummy connections that are
+        not in use but are reserved for this real server to
+        accomplish slow-start."
+    ::= { slbRealTableEntry 6 }
+
+slbRealMaxConnections OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The configured maximum number of concurrent connections
+        which SLB will deliver to this real server."
+    DEFVAL { 4294967295 }
+    ::= { slbRealTableEntry 7 }
+
+slbRealAdminWeight OBJECT-TYPE
+    SYNTAX Gauge(0..65535)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The user configured weight of the real server for the
+        load-balancing algorithms.  A weight of zero indicates
+        that no new connections will be assigned to this real
+        server.  Higher weight values indicate to the
+        load-balancing algorithms a higher availability of this
+        real server to accept more work."
+    DEFVAL { 8 }
+    ::= { slbRealTableEntry 8 }
+
+slbRealOperWeight OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The actual operating weight of the real server used
+        by the load-balancing algorithms.  This can be adjusted
+        dynamically by DFP.  A weight of zero indicates that no
+        new connections will be assigned to this real server.
+        Higher weight values indicate to the load-balancing
+        algorithms a higher availability of this real server to
+        accept more work."
+    ::= { slbRealTableEntry 9 }
+
+slbRealMetric OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The value used by the least connections load-balancing
+        algorithm.  It is the number of connections divided by
+        the actual operating weight.  New connections will be
+        given to the server with the smaller metric."
+    ::= { slbRealTableEntry 10 }
+
+slbRealReassign OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The number of consecutive TCP SYNs sent to the real
+        server with no answer before reassigning the
+        connection to another real server."
+    DEFVAL { 3 }
+    ::= { slbRealTableEntry 11 }
+
+slbRealRetryInterval OBJECT-TYPE
+    SYNTAX TimeInterval
+--    Rsyntax INTEGER(0..2147483647)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The time interval between retries while the server is
+        in the Failed state."
+    DEFVAL { 60 }
+    ::= { slbRealTableEntry 12 }
+
+slbRealFailedConnections OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The number of failed connections after which the real
+        server goes to Failed state.  A failed connection is
+        when a SYN timeouts or a RST is received from the
+        real server."
+    DEFVAL { 8 }
+    ::= { slbRealTableEntry 13 }
+
+slbRealFailedClients OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The number of connections with distinct client IP
+        addresses which need to fail on this real server
+        before it goes to Failed state.  A failed connection
+        is when a SYN timeouts or a RST is received from the
+        real server."
+    DEFVAL { 8 }
+    ::= { slbRealTableEntry 14 }
+
+slbRealConsecutiveFails OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of connection failures to this real
+        server without a successful connection.  A failed
+        connection is when a SYN timeouts or a RST is received
+        from the real server."
+    ::= { slbRealTableEntry 15 }
+
+slbRealTotalFails OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of times this real server has failed
+        since the creation of this row."
+    ::= { slbRealTableEntry 16 }
+
+slbRealRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The object used by a management station to create
+        or delete the row entry in slbRealTable following the
+        RowStatus textual convention."
+    ::= { slbRealTableEntry 17 }
+
+slbRealTotalConnections OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of assigned connections handled by this
+        real server since this server was configured."
+    ::= { slbRealTableEntry 18 }
+
+slbRealHCTotalConnections OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of assigned connections handled by this
+        real server since this server was configured.  This
+        is the 64-bit version of slbRealTotalConnections."
+    ::= { slbRealTableEntry 19 }
+
+slbVirtualServerTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SlbVirtualServerTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Table of virtual servers.  Columnar objects can be
+        modified when the row is 'active'.  Rows can be
+        created and destroyed.  Entries are added to this
+        table via slbVirtualRowStatus in accordance with the
+        RowStatus convention."
+    ::= { slbVirtualServers 1 }
+
+slbVirtualServerTableEntry OBJECT-TYPE
+    SYNTAX SlbVirtualServerTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about a particular virtual server served
+        by a particular local SLB entity."
+    INDEX { slbEntity, slbVirtualServerName }
+    ::= { slbVirtualServerTable 1 }
+
+SlbVirtualServerTableEntry ::= SEQUENCE {
+    slbVirtualServerName SlbServerString,
+    slbVirtualServerState SlbVirtualServState,
+    slbVirtualIndex Gauge,
+    slbVirtualIpAddress IpAddress,
+    slbVirtualPort CiscoPort,
+    slbVirtualProtocol CiscoIpProtocol,
+    slbVirtualService SlbVirtualService,
+    slbVirtualAdvertise TruthValue,
+    slbVirtualFarmName SlbServerString,
+    slbVirtualDelayTimer Gauge,
+    slbVirtualIdleTimer Gauge,
+    slbVirtualStickyTimer TimeInterval,
+    slbVirtualStickyGroup Gauge,
+    slbVirtualSynguardCount Gauge,
+    slbVirtualSynguardPeriod Gauge,
+    slbVirtualRowStatus RowStatus,
+    slbVirtualNumberOfConnections Gauge,
+    slbVirtualTotalConnections Counter,
+    slbVirtualHCTotalConnections Counter,
+    slbVirtualMask IpAddress
+    }
+
+slbVirtualServerName OBJECT-TYPE
+    SYNTAX SlbServerString
+--    Rsyntax OCTET STRING(SIZE(1..15))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The name of the virtual server."
+    ::= { slbVirtualServerTableEntry 1 }
+
+slbVirtualServerState OBJECT-TYPE
+    SYNTAX SlbVirtualServState
+--    Rsyntax INTEGER {
+--        outOfService(1),
+--        inService(2),
+--        standby(3),
+--        inOperReal(4),
+--        stbInOperReal(5),
+--        testReal(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The state of virtual server."
+    DEFVAL { outOfService }
+    ::= { slbVirtualServerTableEntry 2 }
+
+slbVirtualIndex OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The index assigned to a virtual server, used to
+        correlate connections with virtual servers."
+    ::= { slbVirtualServerTableEntry 3 }
+
+slbVirtualIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The IP address of this virtual server."
+    DEFVAL { '00000000'H }
+    ::= { slbVirtualServerTableEntry 4 }
+
+slbVirtualPort OBJECT-TYPE
+    SYNTAX CiscoPort
+--    Rsyntax INTEGER(0..65535)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The port of this virtual server."
+    DEFVAL { 0 }
+    ::= { slbVirtualServerTableEntry 5 }
+
+slbVirtualProtocol OBJECT-TYPE
+    SYNTAX CiscoIpProtocol
+--    Rsyntax INTEGER(0..255)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The protocol for this virtual server."
+    DEFVAL { 0 }
+    ::= { slbVirtualServerTableEntry 6 }
+
+slbVirtualService OBJECT-TYPE
+    SYNTAX SlbVirtualService
+--    Rsyntax INTEGER {
+--        none(1),
+--        ftp(2),
+--        wsp(3),
+--        gtp(4)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The service setting for this virtual server.  Setting
+        this to other than 'none' results in an association
+        being formed between clients using this service and
+        this virtual server. Subsequent packets from clients
+        requiring this service will be forwarded to the
+        nominated real server."
+    DEFVAL { none }
+    ::= { slbVirtualServerTableEntry 7 }
+
+slbVirtualAdvertise OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The setting for virtual address advertising.  It is
+        set to 'true' if this virtual server has added a static
+        route to the routing table attracting traffic destined
+        for slbVirtualIpAddress."
+    DEFVAL { false }
+    ::= { slbVirtualServerTableEntry 8 }
+
+slbVirtualFarmName OBJECT-TYPE
+    SYNTAX SlbServerString
+--    Rsyntax OCTET STRING(SIZE(1..15))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The name of virtual server farm bound to this virtual
+        server."
+    DEFVAL { "               " }
+    ::= { slbVirtualServerTableEntry 9 }
+
+slbVirtualDelayTimer OBJECT-TYPE
+    SYNTAX Gauge(1..600)
+--  Units
+--    seconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The amount of time this SLB entity will maintain TCP
+        connection context after a connection has terminated."
+    DEFVAL { 10 }
+    ::= { slbVirtualServerTableEntry 10 }
+
+slbVirtualIdleTimer OBJECT-TYPE
+    SYNTAX Gauge(10..65535)
+--  Units
+--    seconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The amount of time this SLB entity will maintain
+        connection information in the absence of packet
+        activity for a connection. When the service is 
+        configured as 'gtp', this is the amount of time 
+        the SLB entity will forward SGSN retries for a 
+        SLB session to the same GGSN"
+    DEFVAL { 3600 }
+    ::= { slbVirtualServerTableEntry 11 }
+
+slbVirtualStickyTimer OBJECT-TYPE
+    SYNTAX TimeInterval
+--    Rsyntax INTEGER(0..2147483647)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The amount of time that a connection's real server is
+        remembered after a connection has terminated."
+    DEFVAL { 0 }
+    ::= { slbVirtualServerTableEntry 12 }
+
+slbVirtualStickyGroup OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The group ID associated with the 'sticky group' that
+        this virtual server is placed in.  A value of zero
+        indicates that no 'sticky group' is associated with
+        this virtual server."
+    DEFVAL { 0 }
+    ::= { slbVirtualServerTableEntry 13 }
+
+slbVirtualSynguardCount OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The number of unanswered SYNs that are allowed to be
+        outstanding to this virtual server. After this number
+        is reached, SYNs are dropped depending on the value
+        of slbVirtualSynguardPeriod."
+    DEFVAL { 0 }
+    ::= { slbVirtualServerTableEntry 14 }
+
+slbVirtualSynguardPeriod OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    milliseconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The interval of time that this virtual server can
+        have outstanding unanswered SYNs.  This is used
+        with slbVirtualSynguardCount to limit outstanding
+        SYNs."
+    DEFVAL { 0 }
+    ::= { slbVirtualServerTableEntry 15 }
+
+slbVirtualRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object is used by a management station to create
+        or delete the row entry in slbVirtualServerTable
+        following the RowStatus textual convention."
+    ::= { slbVirtualServerTableEntry 16 }
+
+slbVirtualNumberOfConnections OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of currently assigned connections being
+        handled by this virtual server."
+    ::= { slbVirtualServerTableEntry 17 }
+
+slbVirtualTotalConnections OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of assigned connections handled by this
+        virtual server since this server was configured."
+    ::= { slbVirtualServerTableEntry 18 }
+
+slbVirtualHCTotalConnections OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of assigned connections handled by this
+        virtual server since this server was configured.  This
+        is the 64-bit version of slbVirtualTotalConnections."
+    ::= { slbVirtualServerTableEntry 19 }
+
+slbVirtualMask OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The IP subnet mask which is applied to the address 
+         of this virtual server for traffic filtering."
+    DEFVAL { 'ffffffff'H }
+    ::= { slbVirtualServerTableEntry 20 }
+
+slbConnectionTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SlbConnectionTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Table of connections being load-balanced by SLB."
+    ::= { slbConnections 1 }
+
+slbConnectionTableEntry OBJECT-TYPE
+    SYNTAX SlbConnectionTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A list of attributes for a particular SLB connection."
+    INDEX { slbEntity, slbConnectionIndex, slbConnectionVirtualIpAddress, slbConnectionVirtualPort, slbConnectionProtocol, slbConnectionClientIpAddr, slbConnectionClientPort }
+    ::= { slbConnectionTable 1 }
+
+SlbConnectionTableEntry ::= SEQUENCE {
+    slbConnectionIndex Gauge,
+    slbConnectionVirtualIpAddress IpAddress,
+    slbConnectionVirtualPort CiscoPort,
+    slbConnectionClientIpAddr IpAddress,
+    slbConnectionClientPort CiscoPort,
+    slbConnectionProtocol CiscoIpProtocol,
+    slbConnectionState SlbConnectionState,
+    slbConnectionRealIpAddr IpAddress,
+    slbConnectionServerPort CiscoPort,
+    slbConnectionNumCacheEntries Gauge,
+    slbConnectionSynCount Counter
+    }
+
+slbConnectionIndex OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The index to internal structures for the connection."
+    ::= { slbConnectionTableEntry 1 }
+
+slbConnectionVirtualIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The IP address of the virtual server."
+    ::= { slbConnectionTableEntry 2 }
+
+slbConnectionVirtualPort OBJECT-TYPE
+    SYNTAX CiscoPort
+--    Rsyntax INTEGER(0..65535)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The port of the virtual server."
+    ::= { slbConnectionTableEntry 3 }
+
+slbConnectionProtocol OBJECT-TYPE
+    SYNTAX CiscoIpProtocol
+--    Rsyntax INTEGER(0..255)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The connection protocol."
+    ::= { slbConnectionTableEntry 4 }
+
+slbConnectionClientIpAddr OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The client IP address."
+    ::= { slbConnectionTableEntry 5 }
+
+slbConnectionClientPort OBJECT-TYPE
+    SYNTAX CiscoPort
+--    Rsyntax INTEGER(0..65535)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The client port."
+    ::= { slbConnectionTableEntry 6 }
+
+slbConnectionState OBJECT-TYPE
+    SYNTAX SlbConnectionState
+--    Rsyntax INTEGER {
+--        init(1),
+--        synClient(2),
+--        synServer(3),
+--        synBoth(4),
+--        estab(5),
+--        finClient(6),
+--        finServer(7),
+--        closing(8),
+--        zombie(9),
+--        conclient(10),
+--        conserver(11)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The current state of this connection."
+    ::= { slbConnectionTableEntry 7 }
+
+slbConnectionRealIpAddr OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The IP Address of the real server to which this
+        client is being load-balanced."
+    ::= { slbConnectionTableEntry 8 }
+
+slbConnectionServerPort OBJECT-TYPE
+    SYNTAX CiscoPort
+--    Rsyntax INTEGER(0..65535)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The port number at the real server to which this
+        client is being load-balanced."
+    ::= { slbConnectionTableEntry 9 }
+
+slbConnectionNumCacheEntries OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of netflow cache entries for this
+        connection.  An entry for a terminated connection
+        cannot be deleted while this number is non-zero."
+    ::= { slbConnectionTableEntry 10 }
+
+slbConnectionSynCount OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of SYNs seen from client."
+    ::= { slbConnectionTableEntry 11 }
+
+slbVirtualClientTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SlbVirtualClientTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Table of virtual clients for a particular virtual
+        server.  Columnar objects can be modified when the
+        row is 'active'.  Entries are added to this table via
+        slbVirtualClientRowStatus in accordance with the
+        RowStatus convention."
+    ::= { slbVirtualClients 1 }
+
+slbVirtualClientTableEntry OBJECT-TYPE
+    SYNTAX SlbVirtualClientTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about a particular client range for a
+        virtual server served by a particular local SLB entity.
+        If client ranges overlap, the entry with the longest
+        match will be used."
+    INDEX { slbEntity, slbVirtualServerName, slbVirtualClientIpAddress, slbVirtualClientMask }
+    ::= { slbVirtualClientTable 1 }
+
+SlbVirtualClientTableEntry ::= SEQUENCE {
+    slbVirtualClientIpAddress IpAddress,
+    slbVirtualClientMask IpAddress,
+    slbVirtualClientExclude TruthValue,
+    slbVirtualClientRowStatus RowStatus
+    }
+
+slbVirtualClientIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The IP address of the client.  It is used along with
+        the slbVirtualClientMask to represent subsets of client
+        traffic being handled by the particular virtual server."
+    ::= { slbVirtualClientTableEntry 1 }
+
+slbVirtualClientMask OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The general purpose mask of the client.  It is used
+        along with the slbVirtualClientIpAddress to represent
+        subsets of client traffic being handled by the
+        particular virtual server."
+    ::= { slbVirtualClientTableEntry 2 }
+
+slbVirtualClientExclude OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The truth value that determines if the client range
+        should be included or excluded on the virtual server."
+    DEFVAL { false }
+    ::= { slbVirtualClientTableEntry 3 }
+
+slbVirtualClientRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The row status is used by a management station to
+        create or delete the row entry in slbVirtualClientTable
+        following the RowStatus textual convention."
+    ::= { slbVirtualClientTableEntry 4 }
+
+slbStickyObjectTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SlbStickyObjectTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Table of sticky objects.  Sticky objects allow
+        related connections to be sent to the same real
+        server on a per client basis.  Sticky objects are
+        useful for FTP and SSL connections.  Columnar objects
+        can be modified when the row is 'active'.  Entries
+        are added to this table via slbStickyObjectRowStatus
+        in accordance with the RowStatus convention."
+    ::= { slbStickyObjects 1 }
+
+slbStickyObjectTableEntry OBJECT-TYPE
+    SYNTAX SlbStickyObjectTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about a particular sticky object for 
+        clients at a particular IP address served by a
+        particular local SLB entity."
+    INDEX { slbEntity, slbStickyObjectGroupId, slbStickyObjectClientIpAddress }
+    ::= { slbStickyObjectTable 1 }
+
+SlbStickyObjectTableEntry ::= SEQUENCE {
+    slbStickyObjectClientIpAddress IpAddress,
+    slbStickyObjectGroupId Gauge,
+    slbStickyObjectRealIpAddress IpAddress,
+    slbStickyObjectConnectionCount Gauge,
+    slbStickyObjectFtpControlCount Gauge,
+    slbStickyObjectRowStatus RowStatus
+    }
+
+slbStickyObjectGroupId OBJECT-TYPE
+    SYNTAX Gauge(1..65535)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The group ID for this sticky object."
+    ::= { slbStickyObjectTableEntry 1 }
+
+slbStickyObjectClientIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The client IP address with which this object is
+        associated."
+    ::= { slbStickyObjectTableEntry 2 }
+
+slbStickyObjectRealIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The real server IP address selected for all clients
+        bound to this sticky object."
+    DEFVAL { '00000000'H }
+    ::= { slbStickyObjectTableEntry 3 }
+
+slbStickyObjectConnectionCount OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of connections currently associated with
+        this sticky object."
+    ::= { slbStickyObjectTableEntry 4 }
+
+slbStickyObjectFtpControlCount OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of FTP control connections currently
+        associated with this sticky object."
+    ::= { slbStickyObjectTableEntry 5 }
+
+slbStickyObjectRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The row status is used by a management station to
+        create or delete the row entry in slbStickyObjectTable
+        following the RowStatus textual convention."
+    ::= { slbStickyObjectTableEntry 6 }
+
+cSlbVirtStateChangeNotifEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The virtual server notification truth value.
+        'true'  Indicates that ciscoSlbVirtualStateChange
+                notification is to be generated when the state
+                changes. That is, the notification generation 
+                is enabled.
+        'false' Indicates that ciscoSlbVirtualStateChange
+                notification generation is disabled."
+    DEFVAL { false }
+    ::= { slbNotificationObjects 1 }
+
+cSlbRealStateChangeNotifEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The real server notification truth value.
+        'true'  Indicates that ciscoSlbRealStateChange
+                notification is to be generated when the state
+                changes. That is, the notification generation 
+                is enabled.
+        'false' Indicates that ciscoSlbRealStateChange
+                notification generation is disabled."
+    DEFVAL { false }
+    ::= { slbNotificationObjects 2 }
+
+slbDfpPasswordTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SlbDfpPasswordTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table of password values which a local Server Load
+        Balancing Manager uses so that it can communicate with
+        remote DFP agents.  Entries are added to this table via
+        slbDfpPasswordRowStatus in accordance with the
+        RowStatus convention.  Columnar objects can be modified
+        when in row is 'active'. Rows can be created and
+        destroyed."
+    ::= { slbDfpPassword 1 }
+
+slbDfpPasswordTableEntry OBJECT-TYPE
+    SYNTAX SlbDfpPasswordTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry in this table represents the password used
+        by a particular DFP manager (identified by slbEntity)
+        when it exchanges messages with DFP agents."
+    INDEX { slbEntity }
+    ::= { slbDfpPasswordTable 1 }
+
+SlbDfpPasswordTableEntry ::= SEQUENCE {
+    slbDfpPasswordPending SlbPasswordString,
+    slbDfpPasswordTimeout TimeInterval,
+    slbDfpPasswordRowStatus RowStatus
+    }
+
+slbDfpPasswordPending OBJECT-TYPE
+    SYNTAX SlbPasswordString
+--    Rsyntax OCTET STRING(SIZE(0..32))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The pending password which will be used by DFP for MD5
+        authentication within password timeout ticks.  When
+        read, this object returns a zero-length string and
+        writing a zero-length string unsets the password.  If
+        this object is modified twice within the time interval
+        given by slbDfpPasswordTimeout, the password and
+        timeout of the first modification are forgotten and
+        replaced by the password and timeout of the second."
+    DEFVAL { "" }
+    ::= { slbDfpPasswordTableEntry 1 }
+
+slbDfpPasswordTimeout OBJECT-TYPE
+    SYNTAX TimeInterval
+--    Rsyntax INTEGER(0..2147483647)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The time interval between the setting of the pending
+        password and the removal of the current password."
+    DEFVAL { 0 }
+    ::= { slbDfpPasswordTableEntry 2 }
+
+slbDfpPasswordRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The object is used by a management station to create
+        or delete the row entry in slbDfpPasswordTable
+        following the RowStatus textual convention."
+    ::= { slbDfpPasswordTableEntry 3 }
+
+slbDfpAgentTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SlbDfpAgentTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table of remote DFP agents with which the local
+        DFP managers communicate.  Rows can be created and
+        destroyed. Columnar objects can be modified when the
+        row is 'active'.  Entries are added to this table via
+        slbDfpAgentRowStatus in accordance with the RowStatus
+        convention."
+    ::= { slbDfpAgents 1 }
+
+slbDfpAgentTableEntry OBJECT-TYPE
+    SYNTAX SlbDfpAgentTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about the communication between a local
+        DFP manager and a particular remote DFP agent."
+    INDEX { slbEntity, slbDfpAgentIpAddress, slbDfpAgentPort }
+    ::= { slbDfpAgentTable 1 }
+
+SlbDfpAgentTableEntry ::= SEQUENCE {
+    slbDfpAgentIpAddress IpAddress,
+    slbDfpAgentPort CiscoPort,
+    slbDfpAgentState SlbDfpAgentState,
+    slbDfpAgentTimeout TimeInterval,
+    slbDfpAgentRetryCount Gauge,
+    slbDfpAgentInterval TimeInterval,
+    slbDfpAgentRowStatus RowStatus
+    }
+
+slbDfpAgentIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The DFP agent's IP address."
+    ::= { slbDfpAgentTableEntry 1 }
+
+slbDfpAgentPort OBJECT-TYPE
+    SYNTAX CiscoPort
+--    Rsyntax INTEGER(0..65535)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The DFP agent's port."
+    ::= { slbDfpAgentTableEntry 2 }
+
+slbDfpAgentState OBJECT-TYPE
+    SYNTAX SlbDfpAgentState
+--    Rsyntax INTEGER {
+--        notOpen(1),
+--        trying(2),
+--        connecting(3),
+--        open(4),
+--        failed(5),
+--        securityError(6)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The state of the DFP agent."
+    ::= { slbDfpAgentTableEntry 3 }
+
+slbDfpAgentTimeout OBJECT-TYPE
+    SYNTAX TimeInterval
+--    Rsyntax INTEGER(0..2147483647)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Time interval during which the agent must send at
+        least one message to the manager."
+    ::= { slbDfpAgentTableEntry 4 }
+
+slbDfpAgentRetryCount OBJECT-TYPE
+    SYNTAX Gauge(0..65535)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The number of times the manager will attempt to
+        re-establish a connection with the agent.  If this
+        value is exceeded, the agent is placed in 'failed'
+        state, and the manager does not attempt to re-establish
+        a connection with the agent."
+    ::= { slbDfpAgentTableEntry 5 }
+
+slbDfpAgentInterval OBJECT-TYPE
+    SYNTAX TimeInterval
+--    Rsyntax INTEGER(0..2147483647)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Time interval before SLB retries connecting to a DFP
+        agent."
+    ::= { slbDfpAgentTableEntry 6 }
+
+slbDfpAgentRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The row status is used by a management station to
+        create or delete the row entry in slbDfpAgentTable
+        following the RowStatus textual convention."
+    ::= { slbDfpAgentTableEntry 7 }
+
+slbDfpRealTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF SlbDfpRealTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table containing information about Real Servers
+        obtained through communications between local DFP
+        manager and remote DFP agents.  Rows can be created
+        and destroyed.  Columnar objects can be modified when
+        the row is 'active'.  Entries are added to this table
+        via slbDfpRowStatus in accordance with the RowStatus
+        convention."
+    ::= { slbDfpReal 1 }
+
+slbDfpRealTableEntry OBJECT-TYPE
+    SYNTAX SlbDfpRealTableEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about a particular real server, within
+        one or more server farms (identified with 'bindId'),
+        reported by a DFP agent for a particular local SLB
+        entity. The real servers are identified by finding
+        rows in slbServerFarmTable for which
+        slbServerFarmBindId matches slbDfpRealBindId. For each
+        identified server farm, extract the slbServerFarmName
+        and use this value together with slbDfpRealIpAddress
+        and slbDfpRealPort to identify the row in
+        slbRealTable."
+    INDEX { slbEntity, slbDfpRealIpAddress, slbDfpRealProtocol, slbDfpRealPort, slbDfpRealBindId }
+    ::= { slbDfpRealTable 1 }
+
+SlbDfpRealTableEntry ::= SEQUENCE {
+    slbDfpRealIpAddress IpAddress,
+    slbDfpRealProtocol CiscoIpProtocol,
+    slbDfpRealPort CiscoPort,
+    slbDfpRealBindId Gauge,
+    slbDfpRealWeight Gauge,
+    slbDfpRealRowStatus RowStatus
+    }
+
+slbDfpRealIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The DFP agent's IP address"
+    ::= { slbDfpRealTableEntry 1 }
+
+slbDfpRealProtocol OBJECT-TYPE
+    SYNTAX CiscoIpProtocol
+--    Rsyntax INTEGER(0..255)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The protocol of the real server."
+    ::= { slbDfpRealTableEntry 2 }
+
+slbDfpRealPort OBJECT-TYPE
+    SYNTAX CiscoPort
+--    Rsyntax INTEGER(0..65535)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The port number of the real server."
+    ::= { slbDfpRealTableEntry 3 }
+
+slbDfpRealBindId OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The Bind ID identifies one or more server farms to
+        which the real server belongs. The real servers are
+        identified by finding rows in slbServerFarmTable for
+        which slbServerFarmBindId matches
+        slbDfpRealBindId. For each identified server farm,
+        extract the slbServerFarmName and use this value
+        together with slbDfpRealIpAddress and slbDfpRealPort
+        to identify the row in slbRealTable."
+    ::= { slbDfpRealTableEntry 4 }
+
+slbDfpRealWeight OBJECT-TYPE
+    SYNTAX Gauge(0..65535)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The weight of the real server reported from a
+        DFP agent.  The weight represents a relative capacity
+        to accept new connections."
+    DEFVAL { 0 }
+    ::= { slbDfpRealTableEntry 5 }
+
+slbDfpRealRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The row status is used by a management station to
+        create or delete the row entry in slbDfpRealTable
+        following the RowStatus textual convention."
+    ::= { slbDfpRealTableEntry 6 }
+
+ciscoSlbVirtualStateChange TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoSlbMIBNotificationPrefix
+    VARIABLES {
+        slbVirtualServerState }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "The notification generated when a virtual
+        server changes to a new state.  The value of
+        slbVirtualServerState indicates the new state."
+    ::= 1
+
+ciscoSlbRealStateChange TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoSlbMIBNotificationPrefix
+    VARIABLES {
+        slbRealState }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "The notification generated when a real server
+        changes to a new state.  The value of
+        slbRealServerState indicates the new state."
+    ::= 2
+
+ciscoSlbStatsGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    SLB Statistic objects.
+--  objects
+--    slbStatsUnassistedSwitchingPkts, 
+--    slbStatsUnassistedSwitchingHCPks, 
+--    slbStatsAssistedSwitchingPkts, 
+--    slbStatsAssistedSwitchingHCPkts, slbStatsCreatedConnections, 
+--    slbStatsCreatedHCConnections, slbStatsEstablishedConnections, 
+--    slbStatsEstablishedHCConnections, 
+--    slbStatsDestroyedConnections, slbStatsDestroyedHCConnections, 
+--    slbStatsReassignedConnections, 
+--    slbStatsReassignedHCConnections, slbStatsZombies, 
+--    slbStatsHCZombies
+
+ciscoSlbServerFarmsGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The SLB serverfarm objects.
+--  objects
+--    slbServerFarmPredictor, slbServerFarmNat, 
+--    slbServerFarmNumberOfRealServers, slbServerFarmBindId, 
+--    slbServerFarmRowStatus
+
+ciscoSlbRealServersGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 3 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The SLB real server objects.
+--  objects
+--    slbRealState, slbRealNumberOfConnections, 
+--    slbRealNumberOfDummyConnections, slbRealMaxConnections, 
+--    slbRealAdminWeight, slbRealOperWeight, slbRealMetric, 
+--    slbRealReassign, slbRealRetryInterval, 
+--    slbRealFailedConnections, slbRealFailedClients, 
+--    slbRealConsecutiveFails, slbRealTotalFails, slbRealRowStatus, 
+--    slbRealTotalConnections, slbRealHCTotalConnections
+
+ciscoSlbVirtualServersGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 4 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The SLB virtual server objects.
+--  objects
+--    slbVirtualServerState, slbVirtualIndex, slbVirtualIpAddress, 
+--    slbVirtualPort, slbVirtualProtocol, slbVirtualService, 
+--    slbVirtualAdvertise, slbVirtualFarmName, slbVirtualDelayTimer, 
+--    slbVirtualIdleTimer, slbVirtualStickyTimer, 
+--    slbVirtualStickyGroup, slbVirtualSynguardCount, 
+--    slbVirtualSynguardPeriod, slbVirtualRowStatus, 
+--    slbVirtualNumberOfConnections, slbVirtualTotalConnections, 
+--    slbVirtualHCTotalConnections
+
+ciscoSlbConnectionsGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 5 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The SLB connection objects.
+--  objects
+--    slbConnectionState, slbConnectionRealIpAddr, 
+--    slbConnectionServerPort, slbConnectionNumCacheEntries, 
+--    slbConnectionSynCount
+
+ciscoSlbVirtualClientsGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The SLB virtual client objects.
+--  objects
+--    slbVirtualClientExclude, slbVirtualClientRowStatus
+
+ciscoSlbStickyObjectsGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 7 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The SLB sticky objects.
+--  objects
+--    slbStickyObjectRealIpAddress, slbStickyObjectConnectionCount, 
+--    slbStickyObjectFtpControlCount, slbStickyObjectRowStatus
+
+ciscoSlbDfpPasswordGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 8 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    SLB DFP password objects.
+--  objects
+--    slbDfpPasswordPending, slbDfpPasswordTimeout, 
+--    slbDfpPasswordRowStatus
+
+ciscoSlbDfpAgentGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 9 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The SLB DFP agent objects.
+--  objects
+--    slbDfpAgentState, slbDfpAgentTimeout, slbDfpAgentRetryCount, 
+--    slbDfpAgentInterval, slbDfpAgentRowStatus
+
+ciscoSlbDfpRealGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 10 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The SLB DFP real server objects.
+--  objects
+--    slbDfpRealWeight, slbDfpRealRowStatus
+
+ciscoSlbNotifEnabledGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 11 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The SLB Notification Truth Value objects.
+--  objects
+--    cSlbVirtStateChangeNotifEnabled, 
+--    cSlbRealStateChangeNotifEnabled
+
+ciscoSlbVirtualServersAddGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 12 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of additional SlbVirtualServer objects used to
+--     further define an Slb virtual server. 
+--  objects
+--    slbVirtualMask
+
+ciscoSlbNotifGroup OBJECT IDENTIFIER ::= { ciscoSlbMIBGroups 13 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing SLB notifications.
+--  notifications
+--    ciscoSlbVirtualStateChange, ciscoSlbRealStateChange
+
+ciscoSlbMIBCompliance OBJECT IDENTIFIER ::= { ciscoSlbMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities which implement
+--    the Cisco SLB MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoSlbStatsGroup
+--   MandGroup
+--    ciscoSlbDfpPasswordGroup
+--   MandGroup
+--    ciscoSlbServerFarmsGroup
+--   MandGroup
+--    ciscoSlbRealServersGroup
+--   MandGroup
+--    ciscoSlbVirtualServersGroup
+--   MandGroup
+--    ciscoSlbConnectionsGroup
+--   MandGroup
+--    ciscoSlbVirtualClientsGroup
+--   MandGroup
+--    ciscoSlbStickyObjectsGroup
+--   MandGroup
+--    ciscoSlbDfpAgentGroup
+--   MandGroup
+--    ciscoSlbDfpRealGroup
+--   MandGroup
+--    ciscoSlbNotifEnabledGroup
+--   ObjVar
+--    slbServerFarmNat
+--   ObjVar
+--    slbServerFarmNumberOfRealServers
+--   ObjVar
+--    slbServerFarmBindId
+--   ObjVar
+--    slbServerFarmRowStatus
+--   ObjVar
+--    slbRealState
+--   ObjVar
+--    slbRealMaxConnections
+--   ObjVar
+--    slbRealAdminWeight
+--   ObjVar
+--    slbRealReassign
+--   ObjVar
+--    slbRealRetryInterval
+--   ObjVar
+--    slbRealFailedConnections
+--   ObjVar
+--    slbRealFailedClients
+--   ObjVar
+--    slbRealRowStatus
+--   ObjVar
+--    slbVirtualServerState
+--   ObjVar
+--    slbVirtualIpAddress
+--   ObjVar
+--    slbVirtualPort
+--   ObjVar
+--    slbVirtualProtocol
+--   ObjVar
+--    slbVirtualService
+--   ObjVar
+--    slbVirtualAdvertise
+--   ObjVar
+--    slbVirtualFarmName
+--   ObjVar
+--    slbVirtualDelayTimer
+--   ObjVar
+--    slbVirtualIdleTimer
+--   ObjVar
+--    slbVirtualStickyTimer
+--   ObjVar
+--    slbVirtualStickyGroup
+--   ObjVar
+--    slbVirtualSynguardCount
+--   ObjVar
+--    slbVirtualSynguardPeriod
+--   ObjVar
+--    slbVirtualRowStatus
+--   ObjVar
+--    slbVirtualClientExclude
+--   ObjVar
+--    slbVirtualClientRowStatus
+--   ObjVar
+--    slbStickyObjectRealIpAddress
+--   ObjVar
+--    slbStickyObjectRowStatus
+--   ObjVar
+--    slbDfpPasswordPending
+--   ObjVar
+--    slbDfpPasswordTimeout
+--   ObjVar
+--    slbDfpPasswordRowStatus
+--   ObjVar
+--    slbDfpAgentTimeout
+--   ObjVar
+--    slbDfpAgentRetryCount
+--   ObjVar
+--    slbDfpAgentInterval
+--   ObjVar
+--    slbDfpAgentRowStatus
+--   ObjVar
+--    slbDfpRealWeight
+--   ObjVar
+--    slbDfpRealRowStatus
+
+ciscoSlbMIBComplianceRev1 OBJECT IDENTIFIER ::= { ciscoSlbMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for entities which implement
+--    the Cisco SLB MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoSlbStatsGroup
+--   MandGroup
+--    ciscoSlbDfpPasswordGroup
+--   MandGroup
+--    ciscoSlbServerFarmsGroup
+--   MandGroup
+--    ciscoSlbRealServersGroup
+--   MandGroup
+--    ciscoSlbVirtualServersGroup
+--   MandGroup
+--    ciscoSlbConnectionsGroup
+--   MandGroup
+--    ciscoSlbVirtualClientsGroup
+--   MandGroup
+--    ciscoSlbStickyObjectsGroup
+--   MandGroup
+--    ciscoSlbDfpAgentGroup
+--   MandGroup
+--    ciscoSlbDfpRealGroup
+--   MandGroup
+--    ciscoSlbNotifEnabledGroup
+--   MandGroup
+--    ciscoSlbNotifGroup
+--   ObjVar
+--    slbServerFarmNat
+--   ObjVar
+--    slbServerFarmNumberOfRealServers
+--   ObjVar
+--    slbServerFarmBindId
+--   ObjVar
+--    slbServerFarmRowStatus
+--   ObjVar
+--    slbRealState
+--   ObjVar
+--    slbRealMaxConnections
+--   ObjVar
+--    slbRealAdminWeight
+--   ObjVar
+--    slbRealReassign
+--   ObjVar
+--    slbRealRetryInterval
+--   ObjVar
+--    slbRealFailedConnections
+--   ObjVar
+--    slbRealFailedClients
+--   ObjVar
+--    slbRealRowStatus
+--   ObjVar
+--    slbVirtualServerState
+--   ObjVar
+--    slbVirtualIpAddress
+--   ObjVar
+--    slbVirtualPort
+--   ObjVar
+--    slbVirtualProtocol
+--   ObjVar
+--    slbVirtualService
+--   ObjVar
+--    slbVirtualAdvertise
+--   ObjVar
+--    slbVirtualFarmName
+--   ObjVar
+--    slbVirtualDelayTimer
+--   ObjVar
+--    slbVirtualIdleTimer
+--   ObjVar
+--    slbVirtualStickyTimer
+--   ObjVar
+--    slbVirtualStickyGroup
+--   ObjVar
+--    slbVirtualSynguardCount
+--   ObjVar
+--    slbVirtualSynguardPeriod
+--   ObjVar
+--    slbVirtualRowStatus
+--   ObjVar
+--    slbVirtualClientExclude
+--   ObjVar
+--    slbVirtualClientRowStatus
+--   ObjVar
+--    slbStickyObjectRealIpAddress
+--   ObjVar
+--    slbStickyObjectRowStatus
+--   ObjVar
+--    slbDfpPasswordPending
+--   ObjVar
+--    slbDfpPasswordTimeout
+--   ObjVar
+--    slbDfpPasswordRowStatus
+--   ObjVar
+--    slbDfpAgentTimeout
+--   ObjVar
+--    slbDfpAgentRetryCount
+--   ObjVar
+--    slbDfpAgentInterval
+--   ObjVar
+--    slbDfpAgentRowStatus
+--   ObjVar
+--    slbDfpRealWeight
+--   ObjVar
+--    slbDfpRealRowStatus
+
+
+END
+

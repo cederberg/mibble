@@ -1,0 +1,4305 @@
+-- MIB file created 25-Sep-2002 18:41:18, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-CDMA-PDSN-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-CDMA-PDSN-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+    DateAndTime, TruthValue
+            FROM SNMPv2-TC-v1
+    SnmpAdminString
+            FROM SNMP-FRAMEWORK-MIB
+    ciscoMgmt
+            FROM CISCO-SMI
+--  Unsigned32
+--          FROM CISCO-TC
+    ZeroBasedCounter32
+            FROM RMON2-MIB
+    InetAddress, InetAddressType
+            FROM INET-ADDRESS-MIB
+    Counter, Gauge, IpAddress, TimeTicks
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
+
+ciscoCdmaPdsnMIB OBJECT IDENTIFIER ::= { ciscoMgmt 157 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200202190000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--            Cisco Systems
+--             Customer Service
+--    
+--    Postal: 170 W Tasman Drive
+--             San Jose, CA  95134
+--             USA
+--    
+--       Tel: +1 800 553-NETS
+--    
+--    E-mail: cdma@cisco.com
+--  Descr
+--    This MIB is to support the CDMA PDSN (Packet Data Serving
+--     Node) feature.  A CDMA2000 network supports wireless data
+--     communication through 3G CDMA radio access technology and
+--     3G A10/A11 interface.  PDSN acts as a foreign agent that
+--     establishes, maintains and terminates the link layer to a
+--     mobile station.
+--    
+--     The high level architecture of a third generation CDMA2000
+--     network is shown below:
+--    
+--          +========+=+            +=========+          +=========+
+--          | RAdio  |P|            |         |   Data   |  Home   |
+--          | Network|C|==A10/A11==-|  PDSN   |===Core===| Network |
+--          |  (RAN) |F| Interface  |         |  Network |         |
+--          +========+=+            +=========+   (DCN)  +=========+
+--             /|\                 Foreign Agent         Home Agent
+--              |                     (FA)                  (HA)
+--              |   Visited Access
+--              |  Provider Network               
+--              |                                 
+--             \|/                                
+--          +========+
+--          | Mobile |
+--          | Station|
+--          |  (MS)  |
+--          +========+
+--    
+--     The following diagram illustrates protocols usage by the
+--     CDMA2000 network elements:
+--    
+--       MS ===== RAN ======== PDSN ======== DCN ====== Home Network
+--       |        |  A10/A11   |                        |
+--       |        +=signaling==+                        |
+--       |                     |                        |
+--       |                     +...L2TP/L2F tunnelling..+
+--       |                     |                        |
+--       +======== PPP ========+                        |
+--       |                     |                        |
+--       |                     +..Mobile IP tunnelling..+
+--       |                                              |
+--       |                                              |
+--       |                                              |
+--       +=================Mobile IP====================+
+--       |                                              |
+--       |                                              |
+--       +======================data====================+
+--    
+--    
+--     The CDMA PDSN MIB provides operational information for a 
+--     CDMA PDSN implementation.  The following areas are managed:
+--    
+--         1) Global PDSN information.  This area contains generic
+--            information such as the number of active/failed
+--            sessions, PDSN hostname.
+--    
+--         2) PDSN session information.  This area contains 
+--            details about PPP sessions maintained by the
+--            PDSN router and other related information such as
+--            flows or PCF. 
+--    
+--         3) Failure notification.  This area contains details
+--            of notifications sent to network management
+--            applications in case of session failure.
+--    
+--    
+--     Acronyms and terms:
+--    
+--       CDMA            Code Division Multiple Access
+--    
+--       DCN             Data Core Network
+--    
+--       ESN             Electronic Serial Number
+--    
+--       FA              Foreign Agent
+--    
+--       GRE             Generic Routing Encapsulation.  Refer to
+--                       RFC 1701 for more details.
+--    
+--       HA              Home Agent
+--    
+--       IMSI            International Mobile Station Identifier
+--    
+--       IS              In service
+--    
+--       IRM             International Roaming MIN
+--    
+--       MC              Mobile Client
+--    
+--       MIN             Mobile Identifier Number
+--    
+--       MSID            Mobile Station Identifier
+--    
+--       MS              Mobile Station
+--    
+--       MoIP            Mobile IP
+--    
+--       NAI             Network Access Identifier   
+--      
+--       OOS             Out of service
+--    
+--       PCF             Packet Control Function
+--    
+--       PDSN            Packet Data Serving Node
+--    
+--       RAN             Radio Network
+--    
+--       RP              Radio Packet
+--    
+--    
+--       Mobile Station  A host or router that changes its point of
+--                       attachment from one network or subnetwork
+--                       to another.  A mobile node may change its
+--                       location without changing its IP address.
+--    
+--       Mobile IP       Protocol enhancements that allow transparent
+--                       routing of IP datagrams to mobile nodes.
+--                       Refer to RFC 2002 for more details.
+--    
+--       Mobile Client   A component which can interact with
+--                       MoIP entities such as Foreign Agent and
+--                       Home Agent.
+--    
+--       Home Agent      A router on a mobile node's home network
+--                       which tunnels datagrams for delivery to
+--                       the mobile node when it is away from
+--                       home, and maintains current location
+--                       information for the mobile node.  Refer to
+--                       RFC 2002 for more details.
+--    
+--       Foreign Agent   A router on a mobile node's visited network
+--                       which provides routing services to the
+--                       mobile node while registered.  The foreign
+--                       agent delivers datagrams to the mobile
+--                       node that were tunneled by the mobile
+--                       node's home agent.  For datagrams sent
+--                       by a mobile node, the foreign agent may
+--                       serve as a default router for registered
+--                       mobile nodes.  Refer to RFC 2002
+--                       for more details.
+--    
+--       Proxy           Mechanism used by PDSN to provide MoIP
+--       mobile IP       services to a MS which does not implement
+--                       a mobile client.  PDSN will be the proxy
+--                       MC for the MS.
+--    
+--       Simple IP       IP routing used by a MS when MoIP
+--                       services are not needed.
+--    
+--       PDSN flow       A conversation between one user (identified
+--                       by an IP address) and a HA using a PDSN
+--                       session.
+--    
+--       PDSN session    A PPP connection between a MS and the PDSN.
+--                       One session may contain one or multiple
+--                       PDSN flows.
+--    
+--       A10/A11         A10 interface is a virtual interface
+--       interface       used for transporting data between the RAN
+--                       and the PDSN.
+--    
+--                       A11 interface is the signaling protocol
+--                       used for maintaining a logical connection
+--                       between the RAN and PDSN. 
+--    
+--       PCF             Physical interface connecting the RAN to
+--                       a PDSN.
+--  RevDate
+--    200202190000Z
+--  RevDescr
+--    Added PDSN cluster feature and added/appended the 
+--     following groups:
+--     Appended cCdmaPerformanceStats group with following:
+--         cCdmaServiceOptionStats, cCdmaHandoffStats,
+--         cCdmaStatusChangeStats, cCdmaAddressSchemeStats.
+--     Appended cCdmaFlowTypeStats with failuure statitics.
+--     Appended cCdmaSystemInfo with cCdmaSystemStatus.
+--     Added cCdmaConfig group with three subgroups:
+--         cCdmaThresholdConfig, cCdmaPdsnCluster and
+--         cCdmaNotifConfig.
+--  RevDate
+--    200110180000Z
+--  RevDescr
+--    Create a new cCdmaPerformanceStats to hold all new performance
+--     statistics related counters for PDSN release 1.1 and newer.
+--  RevDate
+--    200104100000Z
+--  RevDescr
+--    Syntax for cCdmaSessionServiceOption changed.
+--  RevDate
+--    200101220000Z
+--  RevDescr
+--    New Objects Definitions for
+--     R-P Registration Statistics & Update Statistics
+--     were added.
+--  RevDate
+--    200003060000Z
+--  RevDescr
+--    Initial revision of this MIB module.
+
+ciscoCdmaPdsnMIBObjects OBJECT IDENTIFIER ::= { ciscoCdmaPdsnMIB 1 }
+cCdmaSystemInfo OBJECT IDENTIFIER ::= { ciscoCdmaPdsnMIBObjects 1 }
+cCdmaPcfInfo    OBJECT IDENTIFIER ::= { ciscoCdmaPdsnMIBObjects 2 }
+cCdmaSessionInfo OBJECT IDENTIFIER ::= { ciscoCdmaPdsnMIBObjects 3 }
+cCdmaFailHistInfo OBJECT IDENTIFIER ::= { ciscoCdmaPdsnMIBObjects 4 }
+cCdmaRPRegistrationStats OBJECT IDENTIFIER ::= { ciscoCdmaPdsnMIBObjects 5 }
+cCdmaRPUpdateStats OBJECT IDENTIFIER ::= { ciscoCdmaPdsnMIBObjects 6 }
+cCdmaPerformanceStats OBJECT IDENTIFIER ::= { ciscoCdmaPdsnMIBObjects 7 }
+cCdmaConfig     OBJECT IDENTIFIER ::= { ciscoCdmaPdsnMIBObjects 8 }
+cCdmaNotifObjects OBJECT IDENTIFIER ::= { ciscoCdmaPdsnMIBObjects 9 }
+cCdmaRpRegStats OBJECT IDENTIFIER ::= { cCdmaPerformanceStats 1 }
+cCdmaRpUpdStats OBJECT IDENTIFIER ::= { cCdmaPerformanceStats 2 }
+cCdmaPppStats   OBJECT IDENTIFIER ::= { cCdmaPerformanceStats 3 }
+cCdmaTrafficStats OBJECT IDENTIFIER ::= { cCdmaPerformanceStats 4 }
+cCdmaFlowTypeStats OBJECT IDENTIFIER ::= { cCdmaPerformanceStats 5 }
+cCdmaServiceOptionStats OBJECT IDENTIFIER ::= { cCdmaPerformanceStats 6 }
+cCdmaHandoffStats OBJECT IDENTIFIER ::= { cCdmaPerformanceStats 7 }
+cCdmaStatusChangeStats OBJECT IDENTIFIER ::= { cCdmaPerformanceStats 8 }
+cCdmaAddressSchemeStats OBJECT IDENTIFIER ::= { cCdmaPerformanceStats 9 }
+cCdmaThresholdConfig OBJECT IDENTIFIER ::= { cCdmaConfig 1 }
+cCdmaPdsnCluster OBJECT IDENTIFIER ::= { cCdmaConfig 2 }
+cCdmaNotifConfig OBJECT IDENTIFIER ::= { cCdmaConfig 3 }
+cCdmaClusterCommon OBJECT IDENTIFIER ::= { cCdmaPdsnCluster 1 }
+cCdmaClusterMemberInfo OBJECT IDENTIFIER ::= { cCdmaPdsnCluster 2 }
+cCdmaClusterControllerInfo OBJECT IDENTIFIER ::= { cCdmaPdsnCluster 3 }
+cCdmaPppSetupStats OBJECT IDENTIFIER ::= { cCdmaPppStats 1 }
+cCdmaPppReNegoStats OBJECT IDENTIFIER ::= { cCdmaPppStats 2 }
+cCdmaPppAuthStats OBJECT IDENTIFIER ::= { cCdmaPppStats 3 }
+cCdmaPppReleaseStats OBJECT IDENTIFIER ::= { cCdmaPppStats 4 }
+cCdmaPppMiscStats OBJECT IDENTIFIER ::= { cCdmaPppStats 99 }
+cCdmaPdsnMIBNotifPrefix OBJECT IDENTIFIER ::= { ciscoCdmaPdsnMIB 2 }
+cCdmaPdsnMIBNotifs OBJECT IDENTIFIER ::= { cCdmaPdsnMIBNotifPrefix 0 }
+cCdmaPdsnMIBConformance OBJECT IDENTIFIER ::= { ciscoCdmaPdsnMIB 3 }
+cCdmaPdsnMIBCompliances OBJECT IDENTIFIER ::= { cCdmaPdsnMIBConformance 1 }
+cCdmaPdsnMIBGroups OBJECT IDENTIFIER ::= { cCdmaPdsnMIBConformance 2 }
+
+CCdmaMsidType ::= INTEGER {
+        other(1),
+        imsi(2),
+        min(3),
+        irm(4)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    obsolete
+--  Descr
+--    Mobile Station Identifier format type of a mobile 
+--     station:
+--    
+--        - 'imsi' indicates IMSI format (15 digits max)
+--    
+--        - 'min' indicates MIN format (10 digits max)
+--    
+--        - 'irm' indicates IRM (10 digits max)
+--    
+--        - 'other' in other cases
+--  Refer
+--    ITU-T, TIA, EIA are international telecommunications
+--     organizations.  For more details on:
+--    
+--        - IMSI refer to ITU-T document E.212 
+--    
+--        - MIN refer to TIA document TIA/EIA-41-E
+--    
+--        - IRM refer to TIA document TSB-29
+
+CCdmaSystemStatus ::= INTEGER {
+        --?? enum value of zero may cause problems
+        unknown(0),
+        up(1),
+        down(2),
+        testing(3),
+        insufficientResources(4)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    PDSN operational status. The valid value are:
+--        - 'unknown' indicates status is unknown.
+--    
+--        - 'up' indicates system is up and providing
+--          service.
+--    
+--        - 'down' indicates system is down and not
+--          providing service.
+--    
+--        - 'testing' indicates system is up, but is in
+--          testing state, call can only be made through
+--          CLI, not through regular through A11/A10
+--          interface.
+--    
+--        - 'insufficientResources' indicates system is 
+--          up and runs out of system resource.
+
+CCdmaServiceAffectedLevel ::= INTEGER {
+        warning(1),
+        minor(2),
+        major(3),
+        critical(4)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    CDMA severity level of affected service:
+--       - 'warning' indicates something is abnormal, but 
+--         service is not affected.
+--       - 'minor' indicates service has been slightly 
+--         affected.
+--       - 'major' indicates service has been severely
+--         affetcted.
+--       - 'critical' indicates service can not be provided
+--         anymore.
+
+cCdmaSessionTotal OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of sessions currently established with
+         this system."
+    ::= { cCdmaSystemInfo 1 }
+
+cCdmaSessionMaxAllowed OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The maximum number of sessions allowed by this system."
+    ::= { cCdmaSystemInfo 2 }
+
+cCdmaPcfTotal OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of PCF currently interacting with this
+         system."
+    ::= { cCdmaSystemInfo 3 }
+
+cCdmaPcfMaxAllowed OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The maximum number of PCF allowed by this system."
+    ::= { cCdmaSystemInfo 4 }
+
+cCdmaSimpleIpFlowTotal OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of flows currently using simple IP service."
+    ::= { cCdmaSystemInfo 5 }
+
+cCdmaMobileIpFlowTotal OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of flows currently using MoIP services."
+    ::= { cCdmaSystemInfo 6 }
+
+cCdmaProxyMobileIpFlowTotal OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of flows currently using proxy MoIP service."
+    ::= { cCdmaSystemInfo 7 }
+
+cCdmaSessionFailTotal OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of A10/A11 session failures occuring since
+         PDSN agent restarted.  sysUpTime can be polled to 
+         determine if the agent has been restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about 
+         A10/A11 interface."
+    ::= { cCdmaSystemInfo 8 }
+
+cCdmaServingPdsnHostname OBJECT-TYPE
+    SYNTAX SnmpAdminString(SIZE(0..32))
+--    Rsyntax OCTET STRING(SIZE(0..32))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Hostname of the serving PDSN."
+    ::= { cCdmaSystemInfo 9 }
+
+cCdmaSessionPdsnAuthenTimer OBJECT-TYPE
+    SYNTAX TimeTicks
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Timer (measured in hundredths of a second) for MoIP
+         users not using PPP authentication.  After PPP session
+         establishment, the session will be terminated if the 
+         MoIP user is not authenticated via MoIP for a period 
+         longer than this timer."
+    ::= { cCdmaSystemInfo 10 }
+
+cCdmaSessionPdsnMaxFailHistory OBJECT-TYPE
+    SYNTAX Gauge(0..2000)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Maximum number of entries in the user failure information
+         table."
+    DEFVAL { 100 }
+    ::= { cCdmaSystemInfo 11 }
+
+cCdmaSessionMaxNotifEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "'true' indicates failure notification will be sent out
+         when the maximum number of sessions has been reached."
+    DEFVAL { false }
+    ::= { cCdmaSystemInfo 12 }
+
+cCdmaPcfMaxAllowedNotifEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "'true' indicates failure notification will be sent out
+          when the maximum number of interconnected PCF has 
+          been reached."
+    DEFVAL { false }
+    ::= { cCdmaSystemInfo 13 }
+
+cCdmaFormatErrorNotifEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS obsolete
+    DESCRIPTION
+        "'true' indicates failure notification will be sent 
+         out when invalid arguments are received from PCF 
+         leading to session termination."
+    DEFVAL { false }
+    ::= { cCdmaSystemInfo 14 }
+
+cCdmaRegReqFailedNotifEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "'true' indicates failure notification will be sent out
+         when registration request fails termination."
+    DEFVAL { false }
+    ::= { cCdmaSystemInfo 15 }
+
+cCdmaSystemVersion OBJECT-TYPE
+    SYNTAX SnmpAdminString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "CISCO PDSN Release Version, example output: 1.1."
+    ::= { cCdmaSystemInfo 16 }
+
+cCdmaSystemStatus OBJECT-TYPE
+    SYNTAX CCdmaSystemStatus
+--    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        unknown(0),
+--        up(1),
+--        down(2),
+--        testing(3),
+--        insufficientResources(4)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "PDSN subsystem operational status."
+    ::= { cCdmaSystemInfo 17 }
+
+cCdmaPcfTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CCdmaPcfEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "PDSN PCF table.  Contains the reference about PCF in 
+         the RAN currently interacting with the PDSN.  An entry
+         is created for every session opened by a PCF not 
+         recorded in this table.  An entry is deleted when all
+         session initiated by a PCF are dismantled."
+    ::= { cCdmaPcfInfo 1 }
+
+cCdmaPcfEntry OBJECT-TYPE
+    SYNTAX CCdmaPcfEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A conceptual row in the PCF table."
+    INDEX { cCdmaPcfIpAddress }
+    ::= { cCdmaPcfTable 1 }
+
+CCdmaPcfEntry ::= SEQUENCE {
+    cCdmaPcfIpAddress IpAddress,
+    cCdmaPcfSessionTotal Gauge,
+    cCdmaPcfSessionMaxTotal Gauge,
+    cCdmaPcfErrorTotal Gauge
+    }
+
+cCdmaPcfIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "IP address identifying a PCF."
+    ::= { cCdmaPcfEntry 1 }
+
+cCdmaPcfSessionTotal OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of sessions currently established with a 
+         PCF."
+    ::= { cCdmaPcfEntry 2 }
+
+cCdmaPcfSessionMaxTotal OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Historical maximum number of connections that were
+         simultaneously established for a PCF."
+    ::= { cCdmaPcfEntry 3 }
+
+cCdmaPcfErrorTotal OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of session errors for a PCF."
+    ::= { cCdmaPcfEntry 4 }
+
+cCdmaSessionTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CCdmaSessionEntry
+    ACCESS not-accessible
+    STATUS obsolete
+    DESCRIPTION
+        "PDSN Session table.  Contains the parameters
+         and statistics related to a session.  An entry is created
+         for every PPP connection opened by a PCF.  An entry is deleted
+         when the session is dismantled, either by PDSN or PCF."
+    ::= { cCdmaSessionInfo 1 }
+
+cCdmaSessionEntry OBJECT-TYPE
+    SYNTAX CCdmaSessionEntry
+    ACCESS not-accessible
+    STATUS obsolete
+    DESCRIPTION
+        "A conceptual row in the PDSN session table."
+    INDEX { cCdmaSessionMsid }
+    ::= { cCdmaSessionTable 1 }
+
+CCdmaSessionEntry ::= SEQUENCE {
+    cCdmaSessionMsid OCTET STRING,
+    cCdmaSessionMsidType CCdmaMsidType,
+    cCdmaSessionEsn OCTET STRING,
+    cCdmaSessionPdsnIp IpAddress,
+    cCdmaSessionFaIp IpAddress,
+    cCdmaSessionA11HaIp IpAddress,
+    cCdmaSessionA11FaIp IpAddress,
+    cCdmaSessionKey OCTET STRING,
+    cCdmaSessionConnId OCTET STRING,
+    cCdmaSessionMoMtInd INTEGER,
+    cCdmaSessionPppCompressEnabled TruthValue,
+    cCdmaSessionVJCompressEnabled TruthValue,
+    cCdmaSessionServiceOption Gauge,
+    cCdmaSessionSentOctets ZeroBasedCounter32,
+    cCdmaSessionRcvdOctets ZeroBasedCounter32,
+    cCdmaSessionSentPkts ZeroBasedCounter32,
+    cCdmaSessionRcvdPkts ZeroBasedCounter32,
+    cCdmaSessionDiscardedOutPkts ZeroBasedCounter32,
+    cCdmaSessionDiscardedInPkts ZeroBasedCounter32,
+    cCdmaSessionConnStartTime DateAndTime,
+    cCdmaActiveConnTime Gauge,
+    cCdmaSessionFlowCount Gauge,
+    cCdmaSessionStatus INTEGER,
+    cCdmaSessionRegLifeTime TimeTicks,
+    cCdmaSessionRegTimeToExpire TimeTicks,
+    cCdmaSessionGREFromIPPkts ZeroBasedCounter32,
+    cCdmaSessionGREToIPPkts ZeroBasedCounter32
+    }
+
+cCdmaSessionMsid OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(5..15))
+    ACCESS not-accessible
+    STATUS obsolete
+    DESCRIPTION
+        "Mobile Station Identifier (MSID) of a MS."
+    REFERENCE
+        "For more details on MSID refer to international  
+         telecommunications organization TIA document TR-45.5, IS-2000"
+    ::= { cCdmaSessionEntry 1 }
+
+cCdmaSessionMsidType OBJECT-TYPE
+    SYNTAX CCdmaMsidType
+--    Rsyntax INTEGER {
+--        other(1),
+--        imsi(2),
+--        min(3),
+--        irm(4)
+--        }
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Mobile Station Identifier (MSID) format type of a mobile 
+         station.  Valid choices are:
+        
+            - 'imsi' indicates IMSI format (15 digits max)
+        
+            - 'min' indicates MIN format (10 digits max)
+        
+            - 'irm' indicates IRM (10 digits max)
+        
+            - 'other' in other cases"
+    ::= { cCdmaSessionEntry 2 }
+
+cCdmaSessionEsn OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(4))
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Electronic serial number of a MS."
+    REFERENCE
+        "TIA, EIA are international telecommunications 
+         organizations.  For more details on ESN refer to 
+         TIA/EIA document TR-45.5, IS-2000."
+    ::= { cCdmaSessionEntry 3 }
+
+cCdmaSessionPdsnIp OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Serving PDSN IP address."
+    ::= { cCdmaSessionEntry 4 }
+
+cCdmaSessionFaIp OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "PDSN IP address serving as Foreign Agent to the MS."
+    ::= { cCdmaSessionEntry 5 }
+
+cCdmaSessionA11HaIp OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "MoIP Home Agent address on the A11 interface.
+        (This is nothing but PDSN IP Address)"
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about 
+         A10/A11 interface."
+    ::= { cCdmaSessionEntry 6 }
+
+cCdmaSessionA11FaIp OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "MoIP Foreign Agent address on the A11 interface.
+        (This is nothing but PCF IP Address)"
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about 
+         A10/A11 interface."
+    ::= { cCdmaSessionEntry 7 }
+
+cCdmaSessionKey OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(4))
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Session identification key used by GRE protocol."
+    REFERENCE
+        "Refer to RFC 1701 for more details."
+    ::= { cCdmaSessionEntry 8 }
+
+cCdmaSessionConnId OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(4))
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Connection ID of the IP/GRE session.  Consists of 4 
+         octets locally unique within a PDSN session."
+    ::= { cCdmaSessionEntry 9 }
+
+cCdmaSessionMoMtInd OBJECT-TYPE
+    SYNTAX INTEGER {
+        other(1),
+        mobileOriginated(2),
+        mobileTerminated(3)
+        }
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Mobile Originated/Mobile Terminated Indicator.
+        
+           - mobileOriginated, MS initiated the session
+        
+           - mobileTerminated, PDSN initiated the session"
+    ::= { cCdmaSessionEntry 10 }
+
+cCdmaSessionPppCompressEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "'true' indicates compression of PPP is enabled."
+    ::= { cCdmaSessionEntry 11 }
+
+cCdmaSessionVJCompressEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "'true' indicates Van-Jacobson compression of TCP/IP 
+         header is enabled."
+    ::= { cCdmaSessionEntry 12 }
+
+cCdmaSessionServiceOption OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Defines type of data service and rate set utilized."
+    REFERENCE
+        "TIA, EIA are international telecommunications 
+         organizations.  For more details on the type of data 
+         and rate set utilized refer to EIA/TIA document 
+         TSB 58-B."
+    ::= { cCdmaSessionEntry 13 }
+
+cCdmaSessionSentOctets OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of data octets sent to the mobile user
+         since session established."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.6 Accounting Model for 
+         details."
+    ::= { cCdmaSessionEntry 14 }
+
+cCdmaSessionRcvdOctets OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of data octets received from the mobile 
+         user since session established."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.6 Accounting Model for
+         details."
+    ::= { cCdmaSessionEntry 15 }
+
+cCdmaSessionSentPkts OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of data packets sent to the mobile user
+         since session established."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.6 Accounting Model for
+         details."
+    ::= { cCdmaSessionEntry 16 }
+
+cCdmaSessionRcvdPkts OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of data packets received from the mobile 
+         since session established."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.6 Accounting Model for
+         details."
+    ::= { cCdmaSessionEntry 17 }
+
+cCdmaSessionDiscardedOutPkts OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of outgoing data packets dropped by PDSN
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.6 Accounting Model for
+         details."
+    ::= { cCdmaSessionEntry 18 }
+
+cCdmaSessionDiscardedInPkts OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of incoming data packets dropped by PDSN
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.6 0Accounting Model for 
+         details."
+    ::= { cCdmaSessionEntry 19 }
+
+cCdmaSessionConnStartTime OBJECT-TYPE
+    SYNTAX DateAndTime
+--    Rsyntax OCTET STRING(SIZE(8|11))
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Indicates starting date and time of a session.  This 
+         value is provided by the RAN.  The agent is only 
+         propagating this information."
+    ::= { cCdmaSessionEntry 20 }
+
+cCdmaActiveConnTime OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    seconds
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Amount of time while a session was established minus 
+         amount of time while the session was inactive on the 
+         RAN (no data channel assigned on the RAN)."
+    ::= { cCdmaSessionEntry 21 }
+
+cCdmaSessionFlowCount OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Number of existing IP flows for an established session."
+    ::= { cCdmaSessionEntry 22 }
+
+cCdmaSessionStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        unknown(1),
+        airlinksetup(2),
+        airlinkstart(3),
+        airlinkstop(4)
+        }
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Session Status, airlinksetup(2), airlinkstart(3), 
+         airlinkstop(4)."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.6 Accounting Model for 
+         details."
+    ::= { cCdmaSessionEntry 23 }
+
+cCdmaSessionRegLifeTime OBJECT-TYPE
+    SYNTAX TimeTicks
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The amount of time, measured in hundredths of a 
+         second, granted before registration is considered 
+         expired."
+    ::= { cCdmaSessionEntry 24 }
+
+cCdmaSessionRegTimeToExpire OBJECT-TYPE
+    SYNTAX TimeTicks
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The amount of time, measured in hundredths of a 
+         second, remaining before registration is considered 
+         expired."
+    ::= { cCdmaSessionEntry 25 }
+
+cCdmaSessionGREFromIPPkts OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Number of GRE encapsulated packets received from IP
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.6 Accounting Model for 
+         details."
+    ::= { cCdmaSessionEntry 26 }
+
+cCdmaSessionGREToIPPkts OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Number of GRE encapsulated packets delivered 
+         to IP for transmission since system was last 
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.6 Accounting Model for 
+         details."
+    ::= { cCdmaSessionEntry 27 }
+
+cCdmaSessionFlowTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CCdmaSessionFlowEntry
+    ACCESS not-accessible
+    STATUS obsolete
+    DESCRIPTION
+        "PDSN IP flows table.  Each entry is created when a new
+         conversation is initiated  between a MS and a HA.  A 
+         flow is linked to a PDSN session.  An IP flow is 
+         deleted when the conversation or the PDSN session is 
+         dismantled."
+    ::= { cCdmaSessionInfo 2 }
+
+cCdmaSessionFlowEntry OBJECT-TYPE
+    SYNTAX CCdmaSessionFlowEntry
+    ACCESS not-accessible
+    STATUS obsolete
+    DESCRIPTION
+        "A conceptual row in the PDSN IP flow table."
+    INDEX { cCdmaSessionMsid, cCdmaSessionUserFlowIpAddress }
+    ::= { cCdmaSessionFlowTable 1 }
+
+CCdmaSessionFlowEntry ::= SEQUENCE {
+    cCdmaSessionUserFlowIpAddress IpAddress,
+    cCdmaSessionNai SnmpAdminString,
+    cCdmaSessionAddressingScheme INTEGER,
+    cCdmaSessionFlowTechnology INTEGER,
+    cCdmaSessionHaIpAddress IpAddress,
+    cCdmaSessionTunnelProt INTEGER
+    }
+
+cCdmaSessionUserFlowIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS not-accessible
+    STATUS obsolete
+    DESCRIPTION
+        "User flow Ip address."
+    ::= { cCdmaSessionFlowEntry 1 }
+
+cCdmaSessionNai OBJECT-TYPE
+    SYNTAX SnmpAdminString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Network Acess Identifier of the user.  User@domain 
+         construct which identifies the home network of the 
+         mobile user."
+    REFERENCE
+        "Refer to IETF RFC 2486 for more details."
+    ::= { cCdmaSessionFlowEntry 2 }
+
+cCdmaSessionAddressingScheme OBJECT-TYPE
+    SYNTAX INTEGER {
+        other(1),
+        static(2),
+        dynamic(3)
+        }
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Indicates MS IP address type:
+        
+           - 'static' MS has a static IP address configured
+        
+           - 'dynamic' MS is dynamically assigned an IP address
+        
+           - 'other' in other cases"
+    ::= { cCdmaSessionFlowEntry 3 }
+
+cCdmaSessionFlowTechnology OBJECT-TYPE
+    SYNTAX INTEGER {
+        other(1),
+        simpleIp(2),
+        mobileIp(3),
+        proxyMobileIp(4)
+        }
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Routing technology used by a flow:
+        
+           - 'simpleIp' indicates IP routing
+        
+           - 'mobileIp' indicates MoIP routing
+        
+           - 'proxyMobileIp' indicates MoIP routing with PDSN acting
+             as a proxy MC.
+        
+           - 'other' in other cases"
+    ::= { cCdmaSessionFlowEntry 4 }
+
+cCdmaSessionHaIpAddress OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "MoIP home agent address.  Relevant only if MoIP or proxy
+         MoIP are used."
+    ::= { cCdmaSessionFlowEntry 5 }
+
+cCdmaSessionTunnelProt OBJECT-TYPE
+    SYNTAX INTEGER {
+        other(1),
+        notunnel(2),
+        l2tp(3),
+        l2f(4),
+        gre(5),
+        ipinip(6)
+        }
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "Tunneling protocol used between MS and PDSN:
+        
+           - 'notunnel' indicates no tunnel encapsulation
+        
+           - 'l2tp' indicates tunnel encapsulation using l2tp protocol
+        
+           - 'l2f' indicates tunnel encapsulation using l2f protocol
+        
+           - 'gre' indicates tunnel encapsulation using
+             GRE protocol for mobileip
+        
+           - 'ip-in-ip' indicates tunnel encapsulation using
+              IP-in-IP protocol for mobile
+        
+           - 'other' in other cases"
+    ::= { cCdmaSessionFlowEntry 6 }
+
+cCdmaFailHistInfoTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CCdmaFailHistInfoEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Session failures table.  An entry is created for 
+         every failed session.  cCdmaSessionPdsnMaxFailHistory
+         determines the maximum number of entries kept in this
+         table.  Once the table reaches the limit set, the 
+         oldest entries will be discarded to allow new entries
+         to be recorded."
+    ::= { cCdmaFailHistInfo 1 }
+
+cCdmaFailHistInfoEntry OBJECT-TYPE
+    SYNTAX CCdmaFailHistInfoEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A conceptual row in the PDSN Failure table."
+    INDEX { cCdmaFailSessionIndex }
+    ::= { cCdmaFailHistInfoTable 1 }
+
+CCdmaFailHistInfoEntry ::= SEQUENCE {
+    cCdmaFailSessionIndex Gauge,
+    cCdmaFailSessionMsid OCTET STRING,
+    cCdmaFailSessionMsidType CCdmaMsidType,
+    cCdmaFailSessionEsn OCTET STRING,
+    cCdmaFailSessionA11HaIp IpAddress,
+    cCdmaFailSessionA11FaIp IpAddress,
+    cCdmaFailSessionConnId OCTET STRING,
+    cCdmaFailSessionKey OCTET STRING,
+    cCdmaFailHistFailTime DateAndTime,
+    cCdmaFailHistFailType INTEGER
+    }
+
+cCdmaFailSessionIndex OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An arbitrary integer to uniquely identify this entry.
+         Increases monotonically then wrap to zero."
+    ::= { cCdmaFailHistInfoEntry 1 }
+
+cCdmaFailSessionMsid OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(5..15))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "MSID of the mobile station for the failed session."
+    ::= { cCdmaFailHistInfoEntry 2 }
+
+cCdmaFailSessionMsidType OBJECT-TYPE
+    SYNTAX CCdmaMsidType
+--    Rsyntax INTEGER {
+--        other(1),
+--        imsi(2),
+--        min(3),
+--        irm(4)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "MSID format type of a mobile station for the failed 
+         session."
+    ::= { cCdmaFailHistInfoEntry 3 }
+
+cCdmaFailSessionEsn OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(4))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Electronic serial number of the mobile user for the 
+         failed session."
+    ::= { cCdmaFailHistInfoEntry 4 }
+
+cCdmaFailSessionA11HaIp OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "MoIP Home Agent address on the A11 interface for the 
+         failed session."
+    ::= { cCdmaFailHistInfoEntry 5 }
+
+cCdmaFailSessionA11FaIp OBJECT-TYPE
+    SYNTAX IpAddress
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "MoIP Foreign Agent address on the A11 interface for the
+         failed session."
+    ::= { cCdmaFailHistInfoEntry 6 }
+
+cCdmaFailSessionConnId OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(4))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Connection ID of the failed session."
+    ::= { cCdmaFailHistInfoEntry 7 }
+
+cCdmaFailSessionKey OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(4))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "GRE session identification key of the failed session."
+    ::= { cCdmaFailHistInfoEntry 8 }
+
+cCdmaFailHistFailTime OBJECT-TYPE
+    SYNTAX DateAndTime
+--    Rsyntax OCTET STRING(SIZE(8|11))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Date and time of the failure occurence."
+    ::= { cCdmaFailHistInfoEntry 9 }
+
+cCdmaFailHistFailType OBJECT-TYPE
+    SYNTAX INTEGER {
+        other(1),
+        pppAuthenticationFailure(2),
+        mobileIpAuthenticationFailure(3),
+        mobileIpRegistrationTimeout(4),
+        a10a11SessionTimeout(5),
+        maxAllowedSessionReached(6),
+        maxAllowedPcfReached(7),
+        sessionFormatError(8),
+        adminProhibited(9),
+        insufficientResource(10),
+        mnAuthenticationFailed(11),
+        registrationIdentMismatched(12),
+        poorlyFormedRequest(13),
+        unknownHAAddress(14),
+        reverseTunnelUnavail(15),
+        tbitNotSet(16),
+        unsupportedVIDorBadCVSE(17)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Type of failure for the current record."
+    ::= { cCdmaFailHistInfoEntry 10 }
+
+cCdmaRPRegValidRequests OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of valid Registration Requests Received
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about 
+         A10/A11(R-P) interface."
+    ::= { cCdmaRPRegistrationStats 1 }
+
+cCdmaRPRegAcceptedReplies OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of registration replies accepted
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about 
+         A10/A11(R-P) interface."
+    ::= { cCdmaRPRegistrationStats 2 }
+
+cCdmaRPRegLifeTimeZeroRequests OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of valid registration requests received with
+         life time zero since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about 
+         A10/A11(R-P) interface."
+    ::= { cCdmaRPRegistrationStats 3 }
+
+cCdmaRPDeRegAcceptedReplies OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of valid registration requests with life
+         time zero accepted since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about 
+         A10/A11(R-P) interface."
+    ::= { cCdmaRPRegistrationStats 4 }
+
+cCdmaRPRegReasonUnSpecFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of registration requests failed because PCF
+         address not in PDSN's list of configured PCFs for 
+         unspecified reason since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPRegistrationStats 5 }
+
+cCdmaRPRegAdminProhibFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of registration requests failed because PCF
+         address is not in PDSN's list of configured PCFs since
+         system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPRegistrationStats 6 }
+
+cCdmaRPRegInsuffResFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of registration requests failed because
+         of insufficient resources since the system was last
+         restarted.  Factors causing insuffient resources may
+         be due to the max number of PCFs, the max number of 
+         sessions reached, or exhaustion of other system 
+         resources."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPRegistrationStats 7 }
+
+cCdmaRPRegMNAuthenFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of registration requests failed due to 
+         MN authentication failure since system was last 
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPRegistrationStats 8 }
+
+cCdmaRPRegIdentMismatchFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of registration requests failed because 
+         of identification mismatch since system was last 
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPRegistrationStats 9 }
+
+cCdmaRPRegBadRequestFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of registration requests failed 
+         because of badly formed request since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPRegistrationStats 10 }
+
+cCdmaRPRegUnknownHAAddrFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of registration requests failed 
+         because of unknown Home Agent Address since system was
+         last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPRegistrationStats 11 }
+
+cCdmaRPRegNoRevTunnelFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of registration requests  failed because 
+         FA to HA tunnel setup failed since system was last
+         restarted."
+    REFERENCE
+        "RFC-2344."
+    ::= { cCdmaRPRegistrationStats 12 }
+
+cCdmaRPRegTBitNotSetFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of registration requests failed because 
+         Reverse Tunnel bit Not set since system was last 
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPRegistrationStats 13 }
+
+cCdmaRPRegBadCVSEFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of registration requests failed because of 
+         unsupported vendor codes in CVSE since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPRegistrationStats 14 }
+
+cCdmaRPUpdValidRequests OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of valid update registration requests 
+         received since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for A10 session update 
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRPUpdateStats 1 }
+
+cCdmaRPUpdAcceptedReplies OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of valid update registration replies 
+         accepted since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for A10 session update 
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRPUpdateStats 2 }
+
+cCdmaRPUpdReasonUnSpecFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of update registrations failed for 
+         unspecified reason since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPUpdateStats 3 }
+
+cCdmaRPUpdAdminProhibFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of update registrations failed due to 
+         administrative prohibition since system was last 
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPUpdateStats 4 }
+
+cCdmaRPUpdMNAuthenFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of update registrations failed due to MN 
+         authentication failure since system was last 
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPUpdateStats 5 }
+
+cCdmaRPUpdIdentMismatchFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of registrations failed due to registration
+         identity mismatch since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPUpdateStats 6 }
+
+cCdmaRPUpdBadRequestFailures OBJECT-TYPE
+    SYNTAX ZeroBasedCounter32
+--    Rsyntax Gauge
+    ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION
+        "The number of update registrations failed due to 
+         poorly formed request since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications 
+         organization standard TR 45.4 for details about A10 
+         session setup errors."
+    ::= { cCdmaRPUpdateStats 7 }
+
+cCdmaRpRegReceivedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of A-11 Registration Requests received
+         since the system was last restarted. "
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about
+         A10/A11(R-P) interface."
+    ::= { cCdmaRpRegStats 1 }
+
+cCdmaRpRegAcceptedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of A-11 Registration Requests accepted
+         since the system was last restarted. The Code field
+         in the corresponding Registration Reply message, is
+         set to zero. "
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about
+         A10/A11(R-P) interface."
+    ::= { cCdmaRpRegStats 2 }
+
+cCdmaRpRegDeniedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of A-11 Registration Requests denied
+         since the system was last restarted. The Code field
+         in the corresponding Registration Reply message is
+         set to non-zero. "
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+        
+         organization standard TR 45.4 for details about
+         A10/A11(R-P) interface."
+    ::= { cCdmaRpRegStats 3 }
+
+cCdmaRpRegDiscardedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of A-11 Registration Requests silently
+         discarded  since the system was last restarted. A
+         corresponding Registration Reply message is not
+         returned for these A-11 Registration Requests."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about
+         A10/A11(R-P) interface."
+    ::= { cCdmaRpRegStats 4 }
+
+cCdmaRpInitRegAcceptedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of accepted A-11 Registration Requests
+         meant for establishing new R-P connections, since
+         the system was last restarted. These A-11 Registration
+         Requests contain the Connection Setup Airlink Record.
+         The Code field in the corresponding Registration Reply
+         message is set to zero."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about
+         A10/A11(R-P) interface."
+    ::= { cCdmaRpRegStats 5 }
+
+cCdmaRpInitRegDeniedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of denied A-11 Registration Requests
+         meant for establishing new R-P connections, since
+         the system was last restarted. These A-11 Registration
+         Requests contain the Connection Setup Airlink Record.
+         The Code field in the corresponding Registration Reply
+         message set to non-zero."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about
+         A10/A11(R-P) interface."
+    ::= { cCdmaRpRegStats 6 }
+
+cCdmaRpReRegAcceptedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of accepted A-11 Registration Requests
+         meant for refreshing the already established R-P
+         connections, since the system was last restarted. The
+         Code field in the corresponding Registration Reply
+         message is set to zero."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about
+         A10/A11(R-P) interface."
+    ::= { cCdmaRpRegStats 7 }
+
+cCdmaRpReRegDeniedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of denied A-11 Registration Requests
+         meant for refreshing the already established R-P
+         connections, since the system was last restarted. The
+         Code field in the corresponding Registration Reply
+         message is set to non-zero."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about
+         A10/A11(R-P) interface."
+    ::= { cCdmaRpRegStats 8 }
+
+cCdmaRpDeRegAcceptedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of accepted A-11 Registration Requests
+         meant for de-establishing the already established R-P
+         connections, since the system was last restarted. The
+         Code field in the corresponding Registration Reply
+         message is set to zero."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about
+         A10/A11(R-P) interface."
+    ::= { cCdmaRpRegStats 9 }
+
+cCdmaRpDeRegDeniedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of denied A-11 Registration Requests
+         meant for de-establishing the already established R-P
+         connections, since the system was last restarted. The
+         Code field in the corresponding Registration Reply
+         message is set to non-zero."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about
+         A10/A11(R-P) interface."
+    ::= { cCdmaRpRegStats 10 }
+
+cCdmaRpRegReasonlUnSpecFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of registration requests failed because PCF
+         address not in PDSN's list of configured PCFs for
+         unspecified reason since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpRegStats 11 }
+
+cCdmaRpRegAdminProhibFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of registration requests failed because PCF
+         address is not in PDSN's list of configured PCFs since
+         system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+        
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpRegStats 12 }
+
+cCdmaRpRegInsuffResFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of registration requests failed because
+         max number of PCFs or max number of sessions reached
+         or out of system resources since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpRegStats 13 }
+
+cCdmaRpRegMNAuthFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of registration requests failed due to
+         MN authentication failure since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpRegStats 14 }
+
+cCdmaRpRegIdMismatchFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of registration requests failed because
+         of identification mismatch since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpRegStats 15 }
+
+cCdmaRpRegBadReqFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of registration requests failed
+         because of badly formed request since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpRegStats 16 }
+
+cCdmaRpRegUnknownPdsnFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of registration requests failed
+         because of unknown PDSN/HA Address since system was
+         last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpRegStats 17 }
+
+cCdmaRpRegNoRevTunnelFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of registration requests failed because
+         FA to HA reverse tunnel setup failed since system was
+         last restarted."
+    REFERENCE
+        "RFC-2344."
+    ::= { cCdmaRpRegStats 18 }
+
+cCdmaRpRegTBitNotSetFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of registration requests failed because
+         reverse tunnel is required,but T bit is not set since
+         system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpRegStats 19 }
+
+cCdmaRpRegBadCVSEFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of registration requests failed because of
+         unsupported vendor codes in CVSE since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpRegStats 20 }
+
+cCdmaRpUpdTransmittedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of A-11 Registration Updates transmitted
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRpUpdStats 1 }
+
+cCdmaRpUpdAcceptedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of A-11 Registration Acknowledgements
+         received with the Status field set to zero (indicating
+         that the corresponding Registration Update was
+         accepted), since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRpUpdStats 2 }
+
+cCdmaRpUpdDeniedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of A-11 Registration Acknowledgements
+         received with the Status field set to non-zero
+         indicating that the corresponding Registration Update
+         was denied, since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRpUpdStats 3 }
+
+cCdmaRpUpdNotAckedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of A-11 Registration Updates sent,
+         for which no corresponding A-11 Registration
+         Acknowledgements received, since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRpUpdStats 4 }
+
+cCdmaRpUpdInitTransmittedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of initial A-11 Registration Updates
+         sent, excluding the re-transmitted A-11 Registration
+         Updates, since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRpUpdStats 5 }
+
+cCdmaRpUpdReTransmittedReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of re-transmitted A-11 Registration
+         Updates, since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRpUpdStats 6 }
+
+cCdmaRpUpdReceivedAcks OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of A-11 Registration Acknowledgements
+         received, since system was last restarted. "
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRpUpdStats 7 }
+
+cCdmaRpUpdDiscardedAcks OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of A-11 Registration Acknowledgements
+         discarded, since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+        
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRpUpdStats 8 }
+
+cCdmaRpUpdRpLifeExpReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of initial A-11 Registration Updates
+         sent due to RP lifetime expiry since system was
+         last restarted. Note that this count does not include
+         any retransmissions."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRpUpdStats 9 }
+
+cCdmaRpUpdPPPtermReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of initial A-11 Registration Updates
+         sent as a result of PPP termination, since system
+         was last restarted. Note that this count
+         does not include any retransmissions."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRpUpdStats 10 }
+
+cCdmaRpUpdOtherReasonReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of initial A-11 Registration Updates
+         sent due to reasons other than RP lifetime expiry,
+         or PPP termination, since system was last restarted.
+         Note that this count does not include any retransmissions."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaRpUpdStats 11 }
+
+cCdmaRpUpdReasonUnSpecFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of update registrations failed for
+         unspecified reason since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpUpdStats 12 }
+
+cCdmaRpUpdAdminProhibFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of update registrations failed due to
+         administrative prohibition since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpUpdStats 13 }
+
+cCdmaRpUpdMNAuthenFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of update registrations failed due to MN
+         authentication failure since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpUpdStats 14 }
+
+cCdmaRpUpdIdentMismatchFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of registrations failed due to registration
+         identity mismatch since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpUpdStats 15 }
+
+cCdmaRpUpdBadReqFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of update registrations failed due to
+         poorly formed request since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for details about A10
+         session setup errors."
+    ::= { cCdmaRpUpdStats 16 }
+
+cCdmaPppCurrentConnections OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of currently active PPP connections"
+    REFERENCE
+        "Refer to PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppSetupStats 1 }
+
+cCdmaPppConnectionInitiateReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connection initiate requests
+         sent out since system was last restarted."
+    REFERENCE
+        "Refer to PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppSetupStats 2 }
+
+cCdmaPppConnectionSuccesses OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections that have been successfully
+         brought to active state since system was last restarted."
+    REFERENCE
+        "Refer to PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppSetupStats 3 }
+
+cCdmaPppConnectionFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of PPP connection setup request failed since
+         system was last restarted."
+    REFERENCE
+        "Refer to PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppSetupStats 4 }
+
+cCdmaPppLcpFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connection request that failed at LCP
+         stage since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppSetupStats 5 }
+
+cCdmaPppAuthFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP Setup connections that failed at
+         authentication stage since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppSetupStats 6 }
+
+cCdmaPppIpcpFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP Setup connections that failed at
+         IPCP stage since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppSetupStats 7 }
+
+cCdmaPppEnterLcpNums OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections entering LCP stage
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppSetupStats 8 }
+
+cCdmaPppEnterAuthNums OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections entering authentication
+         stage since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppSetupStats 9 }
+
+cCdmaPppEnterIpcpNums OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections entering IPCP stage
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppSetupStats 10 }
+
+cCdmaPppRenegTotalReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections renegotiated by either
+         PDSN or mobile node since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReNegoStats 1 }
+
+cCdmaPppRenegByPdsnReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connection renegotiation requestes 
+         initiated by PDSN  since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReNegoStats 2 }
+
+cCdmaPppRenegByMobileReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connection renegotiations requests 
+         initiated by mobile node since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReNegoStats 3 }
+
+cCdmaPppRenegLcpIpcpReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total Number of PPP connection renegotiate request sent 
+         during setup (LCP and IPCP stages) since PDSN was last restarted."
+    REFERENCE
+        "Refer to PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReNegoStats 4 }
+
+cCdmaPppRenegAddrMismatchReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections renegotiated due to ip
+         address mismatch since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReNegoStats 5 }
+
+cCdmaPppRenegOtherReasonReqs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections renegotiated due to
+         reasons other than IP address mismatch since system was
+         last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReNegoStats 10 }
+
+cCdmaPppAuthChapAttempts OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP CHAP authentication requests sent
+         out since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppAuthStats 1 }
+
+cCdmaPppAuthChapSuccesses OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP CHAP authentication successes
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppAuthStats 2 }
+
+cCdmaPppAuthChapFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP CHAP authentication failures
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppAuthStats 3 }
+
+cCdmaPppAuthPapAttempts OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP PAP authentication requests sent
+         out since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppAuthStats 4 }
+
+cCdmaPppAuthPapSuccesses OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP PAP authentication successes since
+         system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppAuthStats 5 }
+
+cCdmaPppAuthPapFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP PAP authentication failures since
+         system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppAuthStats 6 }
+
+cCdmaPppAuthMschapAttempts OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP MSCHAP authentication requests
+         sent out since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppAuthStats 7 }
+
+cCdmaPppAuthMschapSuccesses OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP MSCHAP authentication successes
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppAuthStats 8 }
+
+cCdmaPppAuthMschapFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP MSCHAP authentication failures
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppAuthStats 9 }
+
+cCdmaPppAuthEapAttempts OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP EAP authentication requests sent
+         out since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppAuthStats 10 }
+
+cCdmaPppAuthEapSuccesses OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP EAP authentication successes
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppAuthStats 11 }
+
+cCdmaPppAuthEapFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP EAP authentication failures since
+         system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppAuthStats 12 }
+
+cCdmaPppAuthMsidAttempts OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP MSID authentication requests tried
+         since system was last restarted."
+    ::= { cCdmaPppAuthStats 13 }
+
+cCdmaPppAuthMsidSuccesses OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP MSID authentication successes
+         since system was last restarted."
+    ::= { cCdmaPppAuthStats 14 }
+
+cCdmaPppAuthMsidFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP MSID authentication failures since
+         system was last restarted."
+    ::= { cCdmaPppAuthStats 15 }
+
+cCdmaPppTotalReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of active PPP connections released by either
+         PDSN or mobile node since system was last restarted."
+    REFERENCE
+        "Refer to PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 1 }
+
+cCdmaPppPdsnReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of active PPP connection release
+         request initiated by the PDSN since system was
+         last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 2 }
+
+cCdmaPppMobileReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of active PPP connection release request
+         initiated by mobile node since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 3 }
+
+cCdmaPppAddrFilterReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connection release due to ingress address
+         filering since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 4 }
+
+cCdmaPppAdminReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections released due to
+         administrative command  since system was last restarted"
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 5 }
+
+cCdmaPppLcpTermReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections released due to LCP Term 
+         REQ since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962,1990, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 6 }
+
+cCdmaPppIdleTimeoutReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections released because of
+         PPP idle timeout since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962,1990, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 7 }
+
+cCdmaPppL2tpTunnelReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections released due to L2TP
+         tunnel release since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+        
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962,1990, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 8 }
+
+cCdmaPppInsufResReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections released due to
+         insufficient resources since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962,1990, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 9 }
+
+cCdmaPppSessTimeoutReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections released due to
+         session timeout since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962,1990, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 10 }
+
+cCdmaPppSrvIntReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections released due to
+         service interruption since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962,1990, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 11 }
+
+cCdmaPppSrvUnavailReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections released due to
+         service unavailable since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962,1990, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 12 }
+
+cCdmaPppOtherReasonReleases OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections released due to unknown
+         reasons since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962,1990, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppReleaseStats 99 }
+
+cCdmaPppCompressNegoCons OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections that negotiated compression
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppMiscStats 1 }
+
+cCdmaPppCompressMsftCons OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections that use Microsoft
+         compression since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppMiscStats 2 }
+
+cCdmaPppCompressAscendCons OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections that use Ascend compression
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppMiscStats 3 }
+
+cCdmaPppCompressStackCons OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections that use stack compression
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppMiscStats 4 }
+
+cCdmaPppCompressDeflateCons OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections that use deflate compression
+         since system was last restarted. "
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppMiscStats 5 }
+
+cCdmaPppCompressOtherCons OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections that use compression type
+         other than above since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppMiscStats 10 }
+
+cCdmaPppNegoMrruCons OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections that have negotiated MRRU
+         since system was last restarted. "
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962,1990, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppMiscStats 11 }
+
+cCdmaPppNegoIpxCons OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections that have negotiated IPX
+         protocol since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppMiscStats 12 }
+
+cCdmaPppNegoIpCons OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections that have negotiated
+         IP protocol since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppMiscStats 13 }
+
+cCdmaPppNegoVjCompCons OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections that have negotiated header
+         VJ-Compression since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962,1990, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppMiscStats 14 }
+
+cCdmaPppNegoBapCons OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP connections that negotiated BAP (Bandwidth 
+         Allocation protocol, RFC 2125) since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979, 2125,
+         1962,1990, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppMiscStats 15 }
+
+cCdmaPppConFormedBundles OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of PPP bundles formed since system was
+         last restarted. "
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A11/A10 interface
+         and PPP related RFC 1661, 1662, 1332, 1570, 1979
+         1962,1990, 1974, 2509, 2661, 2716, 2284, 2118, 1994"
+    ::= { cCdmaPppMiscStats 16 }
+
+cCdmaTransmittedSipKiloOctets OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of simple IP data octets (in unit of 1024 octets) 
+         sent to mobile stations from PDSN since system was last 
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaTrafficStats 1 }
+
+cCdmaReceivedSipKiloOctets OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of simple IP data octets (in unit of 1024 octets) 
+         received from mobile stations by PDSN since system was last 
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaTrafficStats 2 }
+
+cCdmaTransmittedSipPkts OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of simple IP data packets sent to mobile stations 
+         since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaTrafficStats 3 }
+
+cCdmaReceivedSipPkts OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of simple IP data packets received from mobile 
+         stations since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaTrafficStats 4 }
+
+cCdmaTransmittedMipKiloOctets OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of mobile IP data octets (in unit of 1024 octets) 
+         sent to mobile stations from PDSN since system was last 
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaTrafficStats 5 }
+
+cCdmaReceivedMipKiloOctets OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of mobile IP data octets (in unit of 1024 octets) 
+         received from mobile stations by PDSN since system was last 
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaTrafficStats 6 }
+
+cCdmaTransmittedMipPkts OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of mobile IP data packets sent to mobile stations 
+         from PDSN since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaTrafficStats 7 }
+
+cCdmaReceivedMipPkts OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of mobile IP data packets received from mobile 
+         stations since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model."
+    ::= { cCdmaTrafficStats 8 }
+
+cCdmaTransmittedPmipKiloOctets OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of proxy mobile IP data octets (in unit of 1024 
+         octets) sent to mobile stations from PDSN since system was
+         last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model and CISCO PDSN 
+         release note."
+    ::= { cCdmaTrafficStats 9 }
+
+cCdmaReceivedPmipKiloOctets OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of proxy mobile IP data octets (in unit of 1024 
+         octets) received from mobile stations  since system was last
+         restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model and CISCO PDSN 
+         release note."
+    ::= { cCdmaTrafficStats 10 }
+
+cCdmaTransmittedPmipPkts OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of proxy mobile IP data packets sent to mobile 
+         stations from PDSN since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model and CISCO PDSN 
+         release note."
+    ::= { cCdmaTrafficStats 11 }
+
+cCdmaReceivedPmipPkts OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of proxy mobile IP data packets received from 
+         mobile stations by PDSN since system was last restarted."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model and CISCO PDSN 
+         release note."
+    ::= { cCdmaTrafficStats 12 }
+
+cCdmaFlowSimpleIpSuccesses OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of Simple IP flow that has been established
+         successfully since system reboot."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for simple IP service."
+    ::= { cCdmaFlowTypeStats 1 }
+
+cCdmaFlowMobilIpSuccesses OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of mobile IP flow that has been established
+         successfully since system reboot."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for mobile IP service."
+    ::= { cCdmaFlowTypeStats 2 }
+
+cCdmaFlowProxyIpSuccesses OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of proxy mobile IP flow that has been
+         established successfully since system reboot."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model and CISCO PDSN 
+         release note."
+    ::= { cCdmaFlowTypeStats 3 }
+
+cCdmaFlowVpdnSuccesses OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of VPDN flow that has been
+         established successfully since system reboot."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45.4 for A10 session update
+         message and TR 45.6 for Accounting Model and CISCO PDSN 
+         release note."
+    ::= { cCdmaFlowTypeStats 4 }
+
+cCdmaFlowSimpleIpFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of simple IP flow setup request failed
+         since last system reboot."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45."
+    ::= { cCdmaFlowTypeStats 5 }
+
+cCdmaFlowMobileIpFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of mobile IP flow setup request failed
+         since last system reboot."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45."
+    ::= { cCdmaFlowTypeStats 6 }
+
+cCdmaFlowProxyIpFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of proxy mobile IP flow setup request 
+         failed since last system reboot."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45."
+    ::= { cCdmaFlowTypeStats 7 }
+
+cCdmaFlowVpdnFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of VPDN flow setup request failed
+         since last system reboot."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45."
+    ::= { cCdmaFlowTypeStats 8 }
+
+cCdmaFlowUnknownTypeFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of unknown type flow setup request failed
+         since last system reboot."
+    REFERENCE
+        "Refer to TIA/EIA international telecommunications
+         organization standard TR 45."
+    ::= { cCdmaFlowTypeStats 9 }
+
+cCdmaServiceTotalOptions OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of service options supported by this
+         PDSN."
+    REFERENCE
+        "Refer to 3GPP2 IOS 4.1 for description of defined
+         service options."
+    ::= { cCdmaServiceOptionStats 1 }
+
+cCdmaServiceOptionTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CCdmaServiceOptionEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This is an independent table maintained by PDSN node. 
+         Each entry in this table is created when a new 
+         non-zero service option is processed during call
+         setup. An existing entry is not expected to be 
+         deleted unless system is restarted."
+    ::= { cCdmaServiceOptionStats 2 }
+
+cCdmaServiceOptionEntry OBJECT-TYPE
+    SYNTAX CCdmaServiceOptionEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A conceptual row in the cCdmaServiceOptionTable
+         table. Each row contains success and failures
+         statistics of a particular service option."
+    INDEX { cCdmaServiceOptionIndex }
+    ::= { cCdmaServiceOptionTable 1 }
+
+CCdmaServiceOptionEntry ::= SEQUENCE {
+    cCdmaServiceOptionIndex INTEGER,
+    cCdmaServiceOptionSucesses Counter,
+    cCdmaServiceOptionFailures Counter
+    }
+
+cCdmaServiceOptionIndex OBJECT-TYPE
+    SYNTAX INTEGER {
+        smsRate1(6),
+        loopback13K(9),
+        asyncDataRate2(12),
+        group3FaxRate2(13),
+        smsRate2(14),
+        packetData144k(15),
+        otapaRate1(18),
+        otapaRate2(19),
+        packetDataRs1fRs1r(22),
+        packetDataRs1fRs2r(23),
+        packetDataRs2fRs1r(24),
+        packetDataRs2fRs2(25),
+        is2000TestData(32),
+        packetData3G(33),
+        isdn64k(37),
+        is2000Markov(54),
+        is2000Loopback(55),
+        packetDataRev1(4103)
+        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This object reflects a service option as defined by 
+         IOS 4.1. It is used to uniquely index entries in this 
+         table. The following options are defined in 3GPP2 4.1:
+        
+         - smsRate1(6): SMS rate set 1
+        
+         - loopback13K(9): 13K loopback
+        
+         - asyncDataRate2(12) Asynchronous data rate set 2
+        
+         - group3FaxRate2(13) Group 3 fax rate set 2
+        
+         - smsRate2(14) SMS rate set 2
+        
+         - packetData144k(15) Packet data service: Internet
+            or ISO protocol stack (14.4kbps)
+         - otapaRate1(18): OTAPA rate set 1
+        
+         - otapaRate2(19): OTAPA rate set 2
+        
+         - is2000TestData(32): IS-2000 test data
+        
+         - is2000Markov(54): IS-2000 Markov
+        
+         - is2000Loopback(55): IS-2000 loopback
+        
+         - packetDataRs1fRs1r(22): High speed packet data 
+           service: internet or ISO protocol stack (RS1 
+           forward, RS1 reverse)
+        
+         - packetDataRs1fRs2r(23): High speed packet data 
+           service: internet or ISO protocol stack (RS1
+           forward, RS2 reverse)
+        
+         - packetDataRs2fRs1r(24): High speed packet data 
+           service: internet or ISO protocol stack (RS2
+           forward, RS1 reverse)
+        
+         - packetDataRs2fRs2(25): High speed packet data 
+           service: internet or ISO protocol stack (RS2 
+           forward, RS2 reverse)
+        
+         - packetData3G(33): 3G high speed packet data
+        
+         - isdn64k(37),: ISDN interworking service (64kbps)
+        
+         - packetDataRev1(4103): Packet data service: 
+           Internet or ISO protocol stack, revision 1
+           (9.6 or 14.4kbps)"
+    REFERENCE
+        "Refer to 3GPP2 IOS 4.1 for details."
+    ::= { cCdmaServiceOptionEntry 1 }
+
+cCdmaServiceOptionSucesses OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of RP session setup success for a 
+         particular service option as defined by IOS 4.1."
+    ::= { cCdmaServiceOptionEntry 2 }
+
+cCdmaServiceOptionFailures OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of RP session setup failure for a 
+         particular service option as defined by IOS 4.1."
+    ::= { cCdmaServiceOptionEntry 3 }
+
+cCdmaInterPcfHandoffs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of inter PCF handoffs since system last
+         restart."
+    REFERENCE
+        "Refer to 3GPP2 IOS 4.1 for details."
+    ::= { cCdmaHandoffStats 1 }
+
+cCdmaInterPdsnHandoffs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of inter PDSN handoffs since system last
+         restart."
+    REFERENCE
+        "Refer to 3GPP2 IOS 4.1 for details."
+    ::= { cCdmaHandoffStats 2 }
+
+cCdmaIdChangeHandoffs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of handoffs due to CANID/PANID change 
+         since system last restart."
+    REFERENCE
+        "Refer to 3GPP2 IOS 4.1 for details."
+    ::= { cCdmaHandoffStats 3 }
+
+cCdmaStatusIS2OOSes OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of status changes from IS to OOS."
+    ::= { cCdmaStatusChangeStats 1 }
+
+cCdmaStatusOOS2ISes OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of status changes from OOS to IS."
+    ::= { cCdmaStatusChangeStats 2 }
+
+cCdmaAddressStaticSIPs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of simple IP calls which negotiated
+         static IP addresses."
+    ::= { cCdmaAddressSchemeStats 1 }
+
+cCdmaAddressDynamicSIPs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of simple IP calls which negotiated
+         dynamic IP addresses."
+    ::= { cCdmaAddressSchemeStats 2 }
+
+cCdmaAddressStaticMIPs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of mobile IP calls which negotiated
+         static IP addresses."
+    ::= { cCdmaAddressSchemeStats 3 }
+
+cCdmaAddressDynamicMIPs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of mobile IP calls which negotiated
+         dynamic IP addresses."
+    ::= { cCdmaAddressSchemeStats 4 }
+
+cCdmaAddressStaticPMIPs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of proxy mobile IP calls which 
+         negotiated static IP addresses."
+    ::= { cCdmaAddressSchemeStats 5 }
+
+cCdmaAddressDynamicPMIPs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of proxy mobile IP calls which 
+         negotiated dynamic IP addresses."
+    ::= { cCdmaAddressSchemeStats 6 }
+
+cCdmaAddressStaticVPDNs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of VPDN calls which negotiated
+         static IP addresses."
+    ::= { cCdmaAddressSchemeStats 7 }
+
+cCdmaAddressDynamicVPDNs OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Total number of VPDN calls which negotiated
+         dynamic IP addresses."
+    ::= { cCdmaAddressSchemeStats 8 }
+
+cCdmaSessionHighThreshold OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A threshold marking the high number of allowed 
+         sessions. Agent generates a notification when 
+         this threshold is reached during call setup."
+    ::= { cCdmaThresholdConfig 1 }
+
+cCdmaSessionLowThreshold OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A threshold marking the low number of allowed 
+         sessions. Agent generates a notification when
+         this threshold is reached during call release."
+    ::= { cCdmaThresholdConfig 2 }
+
+cCdmaClusterType OBJECT-TYPE
+    SYNTAX INTEGER {
+        --?? enum value of zero may cause problems
+        nonCluster(0),
+        peerToPeer(1),
+        controllerMember(2)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The type of this PDSN cluster. 
+           - 'nonCluster' indicates cluster is not provisioned.
+           - 'peerToPeer' indicates cluster type is peer-to-
+             peer.
+           - 'controllerMember' indicates cluster type is 
+             controller-member type."
+    ::= { cCdmaClusterCommon 1 }
+
+cCdmaClusterRole OBJECT-TYPE
+    SYNTAX INTEGER {
+        --?? enum value of zero may cause problems
+        notApply(0),
+        controller(1),
+        member(2)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The role this PDSN plays within a controller-member
+         type of cluster:
+           - 'notApply' indicates this PDSN does not play
+             any cluster role. PDSN has this role if the
+             cCdmaClusterType is not controller-member.
+           - 'controller' indicates this PDSN is the controller
+             of this cluster.
+           - 'member' indicates this PDSN is a member of
+             this cluster."
+    ::= { cCdmaClusterCommon 2 }
+
+cCdmaClusterTotalControllers OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of cluster controllers within this
+         cluster."
+    ::= { cCdmaClusterMemberInfo 1 }
+
+cCdmaClusterCtrlTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CCdmaClusterCtrlEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A list of cluster controllers maintained by a PDSN
+         cluster member. An entry is created when a cluster
+         controller is added through provisioning command.
+         An entry is deleted when a cluster controller is 
+         removed through provisioning command."
+    ::= { cCdmaClusterMemberInfo 2 }
+
+cCdmaClusterCtrlEntry OBJECT-TYPE
+    SYNTAX CCdmaClusterCtrlEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A conceptual row in cluster controller table, which
+         represents a cluster controller of a particular 
+         InetAddress type and address."
+    INDEX { cCdmaClusterCtrlAddressType, cCdmaClusterCtrlAddress }
+    ::= { cCdmaClusterCtrlTable 1 }
+
+CCdmaClusterCtrlEntry ::= SEQUENCE {
+    cCdmaClusterCtrlAddressType InetAddressType,
+    cCdmaClusterCtrlAddress InetAddress,
+    cCdmaClusterCtrlStatus INTEGER
+    }
+
+cCdmaClusterCtrlAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+--    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        unknown(0),
+--        ipv4(1),
+--        ipv6(2),
+--        ipv4z(3),
+--        ipv6z(4),
+--        dns(16)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This is the IP address type of a particular 
+         controller and is used as index (combine with
+         cCdmaClusterCtrlAddress) to identify a unique
+         cluster controller entry."
+    ::= { cCdmaClusterCtrlEntry 1 }
+
+cCdmaClusterCtrlAddress OBJECT-TYPE
+    SYNTAX InetAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This is the IP address of a particular controller
+         and is used as index (combine with cCdmaCluster-
+         CtrlAddressType) to identify a unique cluster 
+         controller entry."
+    ::= { cCdmaClusterCtrlEntry 2 }
+
+cCdmaClusterCtrlStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        notConfigured(1),
+        configured(2),
+        alive(3)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The operational status of the cluster controller
+         maintained by the member."
+    ::= { cCdmaClusterCtrlEntry 3 }
+
+cCdmaClusterTotalSessions OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of session records in PDSN cluster 
+         controller."
+    ::= { cCdmaClusterControllerInfo 1 }
+
+cCdmaClusterSessHighThreshold OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A threshold marking the high number of allowed 
+         sessions withing a PDSN cluster controller.
+         Notification will be generated when this threshold
+         is reached during call setup."
+    ::= { cCdmaClusterControllerInfo 2 }
+
+cCdmaClusterSessLowThreshold OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A threshold marking the low number of allowed
+         sessions withing a PDSN cluster controller.
+         Notification will be generated when this threshold
+         is reached during call release."
+    ::= { cCdmaClusterControllerInfo 3 }
+
+cCdmaClusterTotalMembers OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of member records in PDSN cluster 
+         controller."
+    ::= { cCdmaClusterControllerInfo 4 }
+
+cCdmaClusterMemberTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CCdmaClusterMemberEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A list of cluster members maintained by a PDSN
+         cluster controller. An entry is created when a 
+         cluster member is added through provisioning 
+         command or auto-discovered. An entry is deleted when
+         a cluster member is removed through provisioning 
+         command or found dead by auto-discovering."
+    ::= { cCdmaClusterControllerInfo 5 }
+
+cCdmaClusterMemberEntry OBJECT-TYPE
+    SYNTAX CCdmaClusterMemberEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A conceptual row in cCdmaClusterMemberTable table,
+         which represents a PDSN cluster member of particular
+         InetAddress type and address."
+    INDEX { cCdmaClusterMemberAddressType, cCdmaClusterMemberAddress }
+    ::= { cCdmaClusterMemberTable 1 }
+
+CCdmaClusterMemberEntry ::= SEQUENCE {
+    cCdmaClusterMemberAddressType InetAddressType,
+    cCdmaClusterMemberAddress InetAddress,
+    cCdmaClusterMemberStatus INTEGER,
+    cCdmaClusterMemberLoad Gauge
+    }
+
+cCdmaClusterMemberAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+--    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        unknown(0),
+--        ipv4(1),
+--        ipv6(2),
+--        ipv4z(3),
+--        ipv6z(4),
+--        dns(16)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This is IP address type of this PDSN cluster
+         member, which is used as index (combine with
+         cCdmaClusterMemberAddress) to identify a unique
+         cluster member entry."
+    ::= { cCdmaClusterMemberEntry 1 }
+
+cCdmaClusterMemberAddress OBJECT-TYPE
+    SYNTAX InetAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This is IP address of this PDSN cluster member,
+         which is used as index (combine with
+         cCdmaClusterMemberAddressType) to identify a unique
+         cluster member entry."
+    ::= { cCdmaClusterMemberEntry 2 }
+
+cCdmaClusterMemberStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        unknown(1),
+        ready(2),
+        adminProhibit(3)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The operational status of this PDSN:
+           - 'unknown' indicates cluster controller doesn't
+             know this member's status.
+           - 'ready' indicates this member is ready to serve 
+             call setup request.
+           - 'adminProhibit' indicates this member will not
+             new call setup request, but will maintain 
+             existing calls."
+    ::= { cCdmaClusterMemberEntry 3 }
+
+cCdmaClusterMemberLoad OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    1%
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "PDSN cluster member load as an aggregate percentage of
+         the maximum load that can be serviced."
+    ::= { cCdmaClusterMemberEntry 4 }
+
+cCdmaNotifSeverityLevel OBJECT-TYPE
+    SYNTAX CCdmaServiceAffectedLevel
+--    Rsyntax INTEGER {
+--        warning(1),
+--        minor(2),
+--        major(3),
+--        critical(4)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This is the configured service affected level. Agent
+         generates notifications only if such notifications'
+         service affected level is higher than this value."
+    DEFVAL { major }
+    ::= { cCdmaNotifConfig 1 }
+
+cCdmaServiceAffectedLevel OBJECT-TYPE
+    SYNTAX CCdmaServiceAffectedLevel
+--    Rsyntax INTEGER {
+--        warning(1),
+--        minor(2),
+--        major(3),
+--        critical(4)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This is the severity level of affected service by 
+         this event/condition that causes this notification."
+    ::= { cCdmaNotifObjects 1 }
+
+cCdmaAffectedAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+--    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        unknown(0),
+--        ipv4(1),
+--        ipv6(2),
+--        ipv4z(3),
+--        ipv6z(4),
+--        dns(16)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This is the IP address type of affeted device that 
+         generates this notification."
+    ::= { cCdmaNotifObjects 2 }
+
+cCdmaAffectedAddress OBJECT-TYPE
+    SYNTAX InetAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This is the IP address of affeted device that 
+         generates this notification."
+    ::= { cCdmaNotifObjects 3 }
+
+cCdmaAffectedMemberStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        ready(1),
+        adminProhibit(2)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The operational status of affected member PDSN."
+    ::= { cCdmaNotifObjects 4 }
+
+cCdmaAffectedCtrlStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        configured(1),
+        alive(2)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The operational status of the affected cluster
+         controller."
+    ::= { cCdmaNotifObjects 5 }
+
+cCdmaSessionMaxAllowedNotif TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cCdmaPdsnMIBNotifPrefix
+    VARIABLES {
+        cCdmaSessionMaxAllowed }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification indicates PDSN has reached the
+         maximum number of sessions the system can handle.
+         In this state new session request will be rejected.
+        
+         Service affected level: critical"
+    ::= 1
+
+cCdmaPcfMaxAllowedNotif TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cCdmaPdsnMIBNotifPrefix
+    VARIABLES {
+        cCdmaPcfMaxAllowed }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification indicates PDSN has reached the 
+         maximum number of allowed PCF. In this state
+         request from new PCF will be rejected.
+        
+         Service affected level: critical"
+    ::= 2
+
+cCdmaSessionFormatErrorNotif TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cCdmaPdsnMIBNotifPrefix
+    VARIABLES {
+        cCdmaFailSessionMsid, cCdmaFailSessionA11HaIp, 
+        cCdmaFailSessionA11FaIp, cCdmaFailSessionConnId }
+--  Status
+--    obsolete
+    DESCRIPTION
+        "This notification indicates PDSN received 
+           invalid
+         arguments from PCF leading to session termination.
+         The agent should not generate more than 1 trap 
+           of this
+         type per second to minimize the level of 
+           management
+         traffic on the network"
+    ::= 3
+
+cCdmaSessionRegReqFailedNotif TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cCdmaPdsnMIBNotifPrefix
+    VARIABLES {
+        cCdmaFailSessionMsid, cCdmaFailSessionA11HaIp, 
+        cCdmaFailSessionA11FaIp, cCdmaFailSessionConnId, 
+        cCdmaFailHistFailType }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification indicates a Registration 
+         Request received has failed which may be due to
+         one of the following reasons:
+             insufficient resource, 
+             Administrative prohibition,
+             MN authentication failure,
+             registration id mismatch,
+             bad request,
+             unknown HA address 
+             or T  bit not set or unsupported VID.
+        
+         The agent should not generate more than 1 trap 
+         of same type per second to minimize the level of
+         management traffic on the network.
+        
+         Service affected level: minor"
+    ::= 4
+
+cCdmaPdsnStatusChange TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cCdmaPdsnMIBNotifPrefix
+    VARIABLES {
+        cCdmaServiceAffectedLevel, cCdmaSystemStatus }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification indicates status change of PDSN."
+    ::= 5
+
+cCdmaSessionHighReached TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cCdmaPdsnMIBNotifPrefix
+    VARIABLES {
+        cCdmaServiceAffectedLevel, cCdmaSessionHighThreshold }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification indicates a session high 
+         threshold has been has been reached."
+    ::= 6
+
+cCdmaSessionLowReached TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cCdmaPdsnMIBNotifPrefix
+    VARIABLES {
+        cCdmaServiceAffectedLevel, cCdmaSessionHighThreshold }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification indicates a session low 
+         threshold has been has been reached."
+    ::= 7
+
+cCdmaClusterSessionHighReached TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cCdmaPdsnMIBNotifPrefix
+    VARIABLES {
+        cCdmaServiceAffectedLevel, cCdmaClusterSessHighThreshold }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification indicates a cluster session 
+         high threshold has been reached by PDSN cluster
+         controller."
+    ::= 8
+
+cCdmaClusterSessionLowReached TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cCdmaPdsnMIBNotifPrefix
+    VARIABLES {
+        cCdmaServiceAffectedLevel, cCdmaClusterSessLowThreshold }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification indicates a cluster session 
+         low threshold has been reached by PDSN cluster
+         controller.
+        
+         Service affected level: Major/Warning"
+    ::= 9
+
+cCdmaClusterMemberStatusChange TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cCdmaPdsnMIBNotifPrefix
+    VARIABLES {
+        cCdmaServiceAffectedLevel, cCdmaAffectedAddressType, 
+        cCdmaAffectedAddress, cCdmaAffectedMemberStatus }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "Cluster controller detects member PDSN status
+         change"
+    ::= 10
+
+cCdmaClusterCtrlStatusChange TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE cCdmaPdsnMIBNotifPrefix
+    VARIABLES {
+        cCdmaServiceAffectedLevel, cCdmaAffectedAddressType, 
+        cCdmaAffectedAddress, cCdmaAffectedCtrlStatus }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "Cluster member PDSN detects controller PDSN status
+         change"
+    ::= 11
+
+cCdmaSystemPdsnGroup OBJECT IDENTIFIER ::= { cCdmaPdsnMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    obsolete
+--  Descr
+--    A collection of objects needed for PDSN network management.
+--  objects
+--    cCdmaSessionTotal, cCdmaSessionMaxAllowed, cCdmaPcfTotal, 
+--    cCdmaPcfMaxAllowed, cCdmaSimpleIpFlowTotal, 
+--    cCdmaMobileIpFlowTotal, cCdmaProxyMobileIpFlowTotal, 
+--    cCdmaSessionFailTotal, cCdmaServingPdsnHostname, 
+--    cCdmaSessionPdsnAuthenTimer, cCdmaSessionPdsnMaxFailHistory, 
+--    cCdmaSessionMaxNotifEnabled, cCdmaPcfMaxAllowedNotifEnabled, 
+--    cCdmaFormatErrorNotifEnabled, cCdmaPcfSessionTotal, 
+--    cCdmaPcfSessionMaxTotal, cCdmaPcfErrorTotal, 
+--    cCdmaSessionMsidType, cCdmaSessionConnId, cCdmaSessionEsn, 
+--    cCdmaSessionPdsnIp, cCdmaSessionFaIp, cCdmaSessionA11HaIp, 
+--    cCdmaSessionA11FaIp, cCdmaSessionKey, cCdmaSessionMoMtInd, 
+--    cCdmaActiveConnTime, cCdmaSessionPppCompressEnabled, 
+--    cCdmaSessionVJCompressEnabled, cCdmaSessionServiceOption, 
+--    cCdmaSessionConnStartTime, cCdmaSessionFlowCount, 
+--    cCdmaSessionNai, cCdmaSessionHaIpAddress, 
+--    cCdmaSessionFlowTechnology, cCdmaSessionAddressingScheme, 
+--    cCdmaSessionTunnelProt, cCdmaFailSessionMsid, 
+--    cCdmaFailSessionMsidType, cCdmaFailSessionEsn, 
+--    cCdmaFailSessionA11HaIp, cCdmaFailSessionA11FaIp, 
+--    cCdmaFailSessionConnId, cCdmaFailSessionKey, 
+--    cCdmaFailHistFailTime, cCdmaFailHistFailType
+
+cCdmaSystemPdsnGroupRev1 OBJECT IDENTIFIER ::= { cCdmaPdsnMIBGroups 3 }
+-- OBJECT-GROUP
+--  Status
+--    obsolete
+--  Descr
+--    A collection of objects needed for PDSN network management.
+--  objects
+--    cCdmaSessionTotal, cCdmaSessionMaxAllowed, cCdmaPcfTotal, 
+--    cCdmaPcfMaxAllowed, cCdmaSimpleIpFlowTotal, 
+--    cCdmaMobileIpFlowTotal, cCdmaProxyMobileIpFlowTotal, 
+--    cCdmaSessionFailTotal, cCdmaServingPdsnHostname, 
+--    cCdmaSessionPdsnAuthenTimer, cCdmaSessionPdsnMaxFailHistory, 
+--    cCdmaSessionMaxNotifEnabled, cCdmaPcfMaxAllowedNotifEnabled, 
+--    cCdmaRegReqFailedNotifEnabled, cCdmaPcfSessionTotal, 
+--    cCdmaPcfErrorTotal, cCdmaSessionMsidType, cCdmaSessionEsn, 
+--    cCdmaSessionPdsnIp, cCdmaSessionFaIp, cCdmaSessionA11HaIp, 
+--    cCdmaSessionA11FaIp, cCdmaSessionKey, cCdmaSessionConnId, 
+--    cCdmaSessionPppCompressEnabled, cCdmaSessionVJCompressEnabled, 
+--    cCdmaSessionServiceOption, cCdmaSessionSentOctets, 
+--    cCdmaSessionRcvdOctets, cCdmaSessionSentPkts, 
+--    cCdmaSessionRcvdPkts, cCdmaSessionDiscardedOutPkts, 
+--    cCdmaSessionDiscardedInPkts, cCdmaSessionConnStartTime, 
+--    cCdmaActiveConnTime, cCdmaSessionFlowCount, 
+--    cCdmaSessionStatus, cCdmaSessionRegLifeTime, 
+--    cCdmaSessionRegTimeToExpire, cCdmaSessionGREFromIPPkts, 
+--    cCdmaSessionGREToIPPkts, cCdmaSessionNai, 
+--    cCdmaSessionHaIpAddress, cCdmaSessionFlowTechnology, 
+--    cCdmaSessionAddressingScheme, cCdmaSessionTunnelProt, 
+--    cCdmaFailSessionMsid, cCdmaFailSessionMsidType, 
+--    cCdmaFailSessionEsn, cCdmaFailSessionA11HaIp, 
+--    cCdmaFailSessionA11FaIp, cCdmaFailSessionConnId, 
+--    cCdmaFailSessionKey, cCdmaFailHistFailTime, 
+--    cCdmaFailHistFailType, cCdmaRPRegValidRequests, 
+--    cCdmaRPRegAcceptedReplies, cCdmaRPRegLifeTimeZeroRequests, 
+--    cCdmaRPDeRegAcceptedReplies, cCdmaRPRegReasonUnSpecFailures, 
+--    cCdmaRPRegAdminProhibFailures, cCdmaRPRegInsuffResFailures, 
+--    cCdmaRPRegMNAuthenFailures, cCdmaRPRegIdentMismatchFailures, 
+--    cCdmaRPRegBadRequestFailures, cCdmaRPRegUnknownHAAddrFailures, 
+--    cCdmaRPRegNoRevTunnelFailures, cCdmaRPRegTBitNotSetFailures, 
+--    cCdmaRPRegBadCVSEFailures, cCdmaRPUpdValidRequests, 
+--    cCdmaRPUpdAcceptedReplies, cCdmaRPUpdReasonUnSpecFailures, 
+--    cCdmaRPUpdAdminProhibFailures, cCdmaRPUpdMNAuthenFailures, 
+--    cCdmaRPUpdIdentMismatchFailures, cCdmaRPUpdBadRequestFailures
+
+cCdmaSystemPdsnGroupRev2 OBJECT IDENTIFIER ::= { cCdmaPdsnMIBGroups 5 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--    A collection of objects needed for PDSN R1.1 network 
+--     management.
+--  objects
+--    cCdmaSessionTotal, cCdmaSessionMaxAllowed, cCdmaPcfTotal, 
+--    cCdmaPcfMaxAllowed, cCdmaSimpleIpFlowTotal, 
+--    cCdmaMobileIpFlowTotal, cCdmaProxyMobileIpFlowTotal, 
+--    cCdmaSessionFailTotal, cCdmaServingPdsnHostname, 
+--    cCdmaSessionPdsnAuthenTimer, cCdmaSessionPdsnMaxFailHistory, 
+--    cCdmaSessionMaxNotifEnabled, cCdmaPcfMaxAllowedNotifEnabled, 
+--    cCdmaRegReqFailedNotifEnabled, cCdmaSystemVersion, 
+--    cCdmaPcfSessionTotal, cCdmaPcfSessionMaxTotal, 
+--    cCdmaPcfErrorTotal, cCdmaFailSessionMsid, 
+--    cCdmaFailSessionMsidType, cCdmaFailSessionA11HaIp, 
+--    cCdmaFailSessionA11FaIp, cCdmaFailSessionConnId, 
+--    cCdmaFailSessionKey, cCdmaFailHistFailTime, 
+--    cCdmaFailHistFailType, cCdmaRpRegReceivedReqs, 
+--    cCdmaRpRegAcceptedReqs, cCdmaRpRegDeniedReqs, 
+--    cCdmaRpRegDiscardedReqs, cCdmaRpInitRegAcceptedReqs, 
+--    cCdmaRpInitRegDeniedReqs, cCdmaRpReRegAcceptedReqs, 
+--    cCdmaRpReRegDeniedReqs, cCdmaRpDeRegAcceptedReqs, 
+--    cCdmaRpDeRegDeniedReqs, cCdmaRpRegReasonlUnSpecFailures, 
+--    cCdmaRpRegAdminProhibFailures, cCdmaRpRegInsuffResFailures, 
+--    cCdmaRpRegMNAuthFailures, cCdmaRpRegIdMismatchFailures, 
+--    cCdmaRpRegBadReqFailures, cCdmaRpRegUnknownPdsnFailures, 
+--    cCdmaRpRegNoRevTunnelFailures, cCdmaRpRegTBitNotSetFailures, 
+--    cCdmaRpRegBadCVSEFailures, cCdmaRpUpdTransmittedReqs, 
+--    cCdmaRpUpdAcceptedReqs, cCdmaRpUpdDeniedReqs, 
+--    cCdmaRpUpdNotAckedReqs, cCdmaRpUpdInitTransmittedReqs, 
+--    cCdmaRpUpdReTransmittedReqs, cCdmaRpUpdReceivedAcks, 
+--    cCdmaRpUpdDiscardedAcks, cCdmaRpUpdRpLifeExpReqs, 
+--    cCdmaRpUpdPPPtermReqs, cCdmaRpUpdOtherReasonReqs, 
+--    cCdmaRpUpdReasonUnSpecFailures, cCdmaRpUpdAdminProhibFailures, 
+--    cCdmaRpUpdMNAuthenFailures, cCdmaRpUpdIdentMismatchFailures, 
+--    cCdmaRpUpdBadReqFailures, cCdmaPppCurrentConnections, 
+--    cCdmaPppConnectionInitiateReqs, cCdmaPppConnectionSuccesses, 
+--    cCdmaPppConnectionFailures, cCdmaPppLcpFailures, 
+--    cCdmaPppAuthFailures, cCdmaPppIpcpFailures, 
+--    cCdmaPppEnterLcpNums, cCdmaPppEnterAuthNums, 
+--    cCdmaPppEnterIpcpNums, cCdmaPppRenegTotalReqs, 
+--    cCdmaPppRenegByPdsnReqs, cCdmaPppRenegByMobileReqs, 
+--    cCdmaPppRenegLcpIpcpReqs, cCdmaPppRenegAddrMismatchReqs, 
+--    cCdmaPppRenegOtherReasonReqs, cCdmaPppAuthChapAttempts, 
+--    cCdmaPppAuthChapSuccesses, cCdmaPppAuthChapFailures, 
+--    cCdmaPppAuthPapAttempts, cCdmaPppAuthPapSuccesses, 
+--    cCdmaPppAuthPapFailures, cCdmaPppAuthMschapAttempts, 
+--    cCdmaPppAuthMschapSuccesses, cCdmaPppAuthMschapFailures, 
+--    cCdmaPppAuthEapAttempts, cCdmaPppAuthEapSuccesses, 
+--    cCdmaPppAuthEapFailures, cCdmaPppTotalReleases, 
+--    cCdmaPppPdsnReleases, cCdmaPppMobileReleases, 
+--    cCdmaPppAddrFilterReleases, cCdmaPppAdminReleases, 
+--    cCdmaPppLcpTermReleases, cCdmaPppIdleTimeoutReleases, 
+--    cCdmaPppL2tpTunnelReleases, cCdmaPppInsufResReleases, 
+--    cCdmaPppSessTimeoutReleases, cCdmaPppSrvIntReleases, 
+--    cCdmaPppSrvUnavailReleases, cCdmaPppOtherReasonReleases, 
+--    cCdmaPppCompressNegoCons, cCdmaPppCompressMsftCons, 
+--    cCdmaPppCompressAscendCons, cCdmaPppCompressStackCons, 
+--    cCdmaPppCompressDeflateCons, cCdmaPppCompressOtherCons, 
+--    cCdmaPppNegoMrruCons, cCdmaPppNegoIpxCons, cCdmaPppNegoIpCons, 
+--    cCdmaPppNegoVjCompCons, cCdmaPppNegoBapCons, 
+--    cCdmaPppConFormedBundles, cCdmaTransmittedSipKiloOctets, 
+--    cCdmaReceivedSipKiloOctets, cCdmaTransmittedSipPkts, 
+--    cCdmaReceivedSipPkts, cCdmaTransmittedMipKiloOctets, 
+--    cCdmaReceivedMipKiloOctets, cCdmaTransmittedMipPkts, 
+--    cCdmaReceivedMipPkts, cCdmaTransmittedPmipKiloOctets, 
+--    cCdmaReceivedPmipKiloOctets, cCdmaTransmittedPmipPkts, 
+--    cCdmaReceivedPmipPkts, cCdmaFlowSimpleIpSuccesses, 
+--    cCdmaFlowMobilIpSuccesses, cCdmaFlowProxyIpSuccesses, 
+--    cCdmaFlowVpdnSuccesses
+
+cCdmaSystemPdsnGroupRev3 OBJECT IDENTIFIER ::= { cCdmaPdsnMIBGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects needed for PDSN R1.2 network
+--     management.
+--  objects
+--    cCdmaSessionTotal, cCdmaSessionMaxAllowed, cCdmaPcfTotal, 
+--    cCdmaPcfMaxAllowed, cCdmaSimpleIpFlowTotal, 
+--    cCdmaMobileIpFlowTotal, cCdmaProxyMobileIpFlowTotal, 
+--    cCdmaSessionFailTotal, cCdmaServingPdsnHostname, 
+--    cCdmaSessionPdsnAuthenTimer, cCdmaSessionPdsnMaxFailHistory, 
+--    cCdmaSessionMaxNotifEnabled, cCdmaPcfMaxAllowedNotifEnabled, 
+--    cCdmaRegReqFailedNotifEnabled, cCdmaSystemVersion, 
+--    cCdmaSystemStatus, cCdmaPcfSessionTotal, 
+--    cCdmaPcfSessionMaxTotal, cCdmaPcfErrorTotal, 
+--    cCdmaFailSessionMsid, cCdmaFailSessionMsidType, 
+--    cCdmaFailSessionEsn, cCdmaFailSessionA11HaIp, 
+--    cCdmaFailSessionA11FaIp, cCdmaFailSessionConnId, 
+--    cCdmaFailSessionKey, cCdmaFailHistFailTime, 
+--    cCdmaFailHistFailType, cCdmaRpRegReceivedReqs, 
+--    cCdmaRpRegAcceptedReqs, cCdmaRpRegDeniedReqs, 
+--    cCdmaRpRegDiscardedReqs, cCdmaRpInitRegAcceptedReqs, 
+--    cCdmaRpInitRegDeniedReqs, cCdmaRpReRegAcceptedReqs, 
+--    cCdmaRpReRegDeniedReqs, cCdmaRpDeRegAcceptedReqs, 
+--    cCdmaRpDeRegDeniedReqs, cCdmaRpRegReasonlUnSpecFailures, 
+--    cCdmaRpRegAdminProhibFailures, cCdmaRpRegInsuffResFailures, 
+--    cCdmaRpRegMNAuthFailures, cCdmaRpRegIdMismatchFailures, 
+--    cCdmaRpRegBadReqFailures, cCdmaRpRegUnknownPdsnFailures, 
+--    cCdmaRpRegNoRevTunnelFailures, cCdmaRpRegTBitNotSetFailures, 
+--    cCdmaRpRegBadCVSEFailures, cCdmaRpUpdTransmittedReqs, 
+--    cCdmaRpUpdAcceptedReqs, cCdmaRpUpdDeniedReqs, 
+--    cCdmaRpUpdNotAckedReqs, cCdmaRpUpdInitTransmittedReqs, 
+--    cCdmaRpUpdReTransmittedReqs, cCdmaRpUpdReceivedAcks, 
+--    cCdmaRpUpdDiscardedAcks, cCdmaRpUpdRpLifeExpReqs, 
+--    cCdmaRpUpdPPPtermReqs, cCdmaRpUpdOtherReasonReqs, 
+--    cCdmaRpUpdReasonUnSpecFailures, cCdmaRpUpdAdminProhibFailures, 
+--    cCdmaRpUpdMNAuthenFailures, cCdmaRpUpdIdentMismatchFailures, 
+--    cCdmaRpUpdBadReqFailures, cCdmaPppCurrentConnections, 
+--    cCdmaPppConnectionInitiateReqs, cCdmaPppConnectionSuccesses, 
+--    cCdmaPppConnectionFailures, cCdmaPppLcpFailures, 
+--    cCdmaPppAuthFailures, cCdmaPppIpcpFailures, 
+--    cCdmaPppEnterLcpNums, cCdmaPppEnterAuthNums, 
+--    cCdmaPppEnterIpcpNums, cCdmaPppRenegTotalReqs, 
+--    cCdmaPppRenegByPdsnReqs, cCdmaPppRenegByMobileReqs, 
+--    cCdmaPppRenegLcpIpcpReqs, cCdmaPppRenegAddrMismatchReqs, 
+--    cCdmaPppRenegOtherReasonReqs, cCdmaPppAuthChapAttempts, 
+--    cCdmaPppAuthChapSuccesses, cCdmaPppAuthChapFailures, 
+--    cCdmaPppAuthPapAttempts, cCdmaPppAuthPapSuccesses, 
+--    cCdmaPppAuthPapFailures, cCdmaPppAuthMschapAttempts, 
+--    cCdmaPppAuthMschapSuccesses, cCdmaPppAuthMschapFailures, 
+--    cCdmaPppAuthEapAttempts, cCdmaPppAuthEapSuccesses, 
+--    cCdmaPppAuthEapFailures, cCdmaPppAuthMsidAttempts, 
+--    cCdmaPppAuthMsidSuccesses, cCdmaPppAuthMsidFailures, 
+--    cCdmaPppTotalReleases, cCdmaPppPdsnReleases, 
+--    cCdmaPppMobileReleases, cCdmaPppAddrFilterReleases, 
+--    cCdmaPppAdminReleases, cCdmaPppLcpTermReleases, 
+--    cCdmaPppIdleTimeoutReleases, cCdmaPppL2tpTunnelReleases, 
+--    cCdmaPppInsufResReleases, cCdmaPppSessTimeoutReleases, 
+--    cCdmaPppSrvIntReleases, cCdmaPppSrvUnavailReleases, 
+--    cCdmaPppOtherReasonReleases, cCdmaPppCompressNegoCons, 
+--    cCdmaPppCompressMsftCons, cCdmaPppCompressAscendCons, 
+--    cCdmaPppCompressStackCons, cCdmaPppCompressDeflateCons, 
+--    cCdmaPppCompressOtherCons, cCdmaPppNegoMrruCons, 
+--    cCdmaPppNegoIpxCons, cCdmaPppNegoIpCons, 
+--    cCdmaPppNegoVjCompCons, cCdmaPppNegoBapCons, 
+--    cCdmaPppConFormedBundles, cCdmaTransmittedSipKiloOctets, 
+--    cCdmaReceivedSipKiloOctets, cCdmaTransmittedSipPkts, 
+--    cCdmaReceivedSipPkts, cCdmaTransmittedMipKiloOctets, 
+--    cCdmaReceivedMipKiloOctets, cCdmaTransmittedMipPkts, 
+--    cCdmaReceivedMipPkts, cCdmaTransmittedPmipKiloOctets, 
+--    cCdmaReceivedPmipKiloOctets, cCdmaTransmittedPmipPkts, 
+--    cCdmaReceivedPmipPkts, cCdmaFlowSimpleIpSuccesses, 
+--    cCdmaFlowMobilIpSuccesses, cCdmaFlowProxyIpSuccesses, 
+--    cCdmaFlowVpdnSuccesses, cCdmaFlowSimpleIpFailures, 
+--    cCdmaFlowMobileIpFailures, cCdmaFlowProxyIpFailures, 
+--    cCdmaFlowVpdnFailures, cCdmaFlowUnknownTypeFailures, 
+--    cCdmaServiceTotalOptions, cCdmaServiceOptionSucesses, 
+--    cCdmaServiceOptionFailures, cCdmaInterPcfHandoffs, 
+--    cCdmaInterPdsnHandoffs, cCdmaIdChangeHandoffs, 
+--    cCdmaStatusIS2OOSes, cCdmaStatusOOS2ISes, 
+--    cCdmaAddressStaticSIPs, cCdmaAddressDynamicSIPs, 
+--    cCdmaAddressStaticMIPs, cCdmaAddressDynamicMIPs, 
+--    cCdmaAddressStaticPMIPs, cCdmaAddressDynamicPMIPs, 
+--    cCdmaAddressStaticVPDNs, cCdmaAddressDynamicVPDNs, 
+--    cCdmaSessionHighThreshold, cCdmaSessionLowThreshold, 
+--    cCdmaClusterType, cCdmaClusterRole, 
+--    cCdmaClusterTotalControllers, cCdmaClusterCtrlStatus, 
+--    cCdmaClusterSessHighThreshold, cCdmaClusterSessLowThreshold, 
+--    cCdmaClusterTotalSessions, cCdmaClusterTotalMembers, 
+--    cCdmaClusterMemberStatus, cCdmaClusterMemberLoad, 
+--    cCdmaNotifSeverityLevel, cCdmaServiceAffectedLevel, 
+--    cCdmaAffectedAddress, cCdmaAffectedAddressType, 
+--    cCdmaAffectedMemberStatus, cCdmaAffectedCtrlStatus
+
+cCdmaNotifPdsnGroup OBJECT IDENTIFIER ::= { cCdmaPdsnMIBGroups 2 }
+-- NOTIFICATION-GROUP
+--  Status
+--    obsolete
+--  Descr
+--    The notifications related to PDSN network 
+--     management.
+--  notifications
+--    cCdmaSessionMaxAllowedNotif, cCdmaPcfMaxAllowedNotif, 
+--    cCdmaSessionFormatErrorNotif
+
+cCdmaNotifPdsnGroupRev1 OBJECT IDENTIFIER ::= { cCdmaPdsnMIBGroups 4 }
+-- NOTIFICATION-GROUP
+--  Status
+--    deprecated
+--  Descr
+--    The notifications related to PDSN network management.
+--  notifications
+--    cCdmaSessionMaxAllowedNotif, cCdmaPcfMaxAllowedNotif, 
+--    cCdmaSessionRegReqFailedNotif
+
+cCdmaNotifPdsnGroupRev2 OBJECT IDENTIFIER ::= { cCdmaPdsnMIBGroups 7 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The notifications related to PDSN R1.2 network
+--     management.
+--  notifications
+--    cCdmaSessionMaxAllowedNotif, cCdmaPcfMaxAllowedNotif, 
+--    cCdmaSessionRegReqFailedNotif, cCdmaPdsnStatusChange, 
+--    cCdmaSessionHighReached, cCdmaSessionLowReached, 
+--    cCdmaClusterSessionHighReached, cCdmaClusterSessionLowReached, 
+--    cCdmaClusterMemberStatusChange, cCdmaClusterCtrlStatusChange
+
+cCdmaPdsnMIBCompliance OBJECT IDENTIFIER ::= { cCdmaPdsnMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    obsolete
+--  Descr
+--    The compliance statement for entities which implement
+--    the CDMA PDSN Management MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cCdmaSystemPdsnGroup
+--   MandGroup
+--    cCdmaNotifPdsnGroup
+--   ObjVar
+--    cCdmaPcfMaxAllowed
+--   ObjVar
+--    cCdmaSessionPdsnAuthenTimer
+--   ObjVar
+--    cCdmaSessionPdsnMaxFailHistory
+--   ObjVar
+--    cCdmaSessionMaxNotifEnabled
+--   ObjVar
+--    cCdmaPcfMaxAllowedNotifEnabled
+
+cCdmaPdsnMIBComplianceRev1 OBJECT IDENTIFIER ::= { cCdmaPdsnMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    obsolete
+--  Descr
+--    The compliance statement for entities which implement
+--    the CDMA PDSN Management MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cCdmaSystemPdsnGroupRev1
+--   MandGroup
+--    cCdmaNotifPdsnGroupRev1
+--   ObjVar
+--    cCdmaPcfMaxAllowed
+--   ObjVar
+--    cCdmaSessionPdsnAuthenTimer
+--   ObjVar
+--    cCdmaSessionPdsnMaxFailHistory
+--   ObjVar
+--    cCdmaSessionMaxNotifEnabled
+--   ObjVar
+--    cCdmaPcfMaxAllowedNotifEnabled
+
+cCdmaPdsnMIBComplianceRev2 OBJECT IDENTIFIER ::= { cCdmaPdsnMIBCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities which implement
+--    the CDMA PDSN Management MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cCdmaSystemPdsnGroupRev2
+--   MandGroup
+--    cCdmaNotifPdsnGroupRev1
+--   ObjVar
+--    cCdmaPcfMaxAllowed
+--   ObjVar
+--    cCdmaSessionPdsnAuthenTimer
+--   ObjVar
+--    cCdmaSessionPdsnMaxFailHistory
+--   ObjVar
+--    cCdmaSessionMaxNotifEnabled
+--   ObjVar
+--    cCdmaPcfMaxAllowedNotifEnabled
+
+cCdmaPdsnMIBComplianceRev3 OBJECT IDENTIFIER ::= { cCdmaPdsnMIBCompliances 4 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for entities which implement
+--    the CDMA PDSN Management MIB for R1.2.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cCdmaSystemPdsnGroupRev3
+--   MandGroup
+--    cCdmaNotifPdsnGroupRev2
+--   ObjVar
+--    cCdmaPcfMaxAllowed
+--   ObjVar
+--    cCdmaSessionPdsnMaxFailHistory
+--   ObjVar
+--    cCdmaSessionMaxNotifEnabled
+--   ObjVar
+--    cCdmaPcfMaxAllowedNotifEnabled
+--   ObjVar
+--    cCdmaSessionHighThreshold
+--   ObjVar
+--    cCdmaSessionLowThreshold
+--   ObjVar
+--    cCdmaNotifSeverityLevel
+
+
+END
+
