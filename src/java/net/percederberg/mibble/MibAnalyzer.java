@@ -426,9 +426,8 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitTypeAssignment(Production node)
         throws ParseException {
 
-        String         name;
-        MibType        type;
-        MibTypeSymbol  symbol;
+        String   name;
+        MibType  type;
 
         // Check type name
         name = getStringValue(getChildAt(node, 0), 0);
@@ -447,7 +446,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
         // Create type symbol
         type = (MibType) getValue(getChildAt(node, 2), 0);
-        symbol = new MibTypeSymbol(getLocation(node), mib, name, type);
+        new MibTypeSymbol(getLocation(node), mib, name, type);
 
         return null;
     }
@@ -1281,10 +1280,9 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitValueAssignment(Production node)
         throws ParseException {
 
-        MibValueSymbol  symbol;
-        String          name;
-        MibType         type;
-        MibValue        value;
+        String    name;
+        MibType   type;
+        MibValue  value;
 
         // Check value name
         name = getStringValue(getChildAt(node, 0), 0);
@@ -1304,7 +1302,8 @@ class MibAnalyzer extends Asn1Analyzer {
         // Create value symbol
         type = (MibType) getValue(getChildAt(node, 1), 0);
         value = (MibValue) getValue(getChildAt(node, 3), 0);
-        symbol = new MibValueSymbol(getLocation(node), mib, name, type, value);
+        new MibValueSymbol(getLocation(node), mib, name, type, value);
+
         return null;
     }
 
