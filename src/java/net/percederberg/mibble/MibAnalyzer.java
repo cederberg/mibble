@@ -2361,13 +2361,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
         child = getChildAt(node, 1);
         name = getStringValue(child, 0);
-        if (name.equals("not-implemented")) {
-            node.addValue(SnmpAccess.NOT_IMPLEMENTED);
-        } else if (name.equals("not-accessible")) {
-            node.addValue(SnmpAccess.NOT_ACCESSIBLE);
-        } else if (name.equals("accessible-for-notify")) {
-            node.addValue(SnmpAccess.ACCESSIBLE_FOR_NOTIFY);
-        } else if (name.equals("read-only")) {
+        if (name.equals("read-only")) {
             node.addValue(SnmpAccess.READ_ONLY);
         } else if (name.equals("read-write")) {
             node.addValue(SnmpAccess.READ_WRITE);
@@ -2375,6 +2369,12 @@ class MibAnalyzer extends Asn1Analyzer {
             node.addValue(SnmpAccess.READ_CREATE);
         } else if (name.equals("write-only")) {
             node.addValue(SnmpAccess.WRITE_ONLY);
+        } else if (name.equals("not-implemented")) {
+            node.addValue(SnmpAccess.NOT_IMPLEMENTED);
+        } else if (name.equals("not-accessible")) {
+            node.addValue(SnmpAccess.NOT_ACCESSIBLE);
+        } else if (name.equals("accessible-for-notify")) {
+            node.addValue(SnmpAccess.ACCESSIBLE_FOR_NOTIFY);
         } else {
             node.addValue(SnmpAccess.READ_WRITE);
             throw new ParseException(
