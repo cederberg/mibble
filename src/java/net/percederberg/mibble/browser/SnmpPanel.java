@@ -71,7 +71,12 @@ public class SnmpPanel extends JPanel {
     /**
      * The blocked flag.
      */
-    public boolean blocked = false;
+    private boolean blocked = false;
+
+    /**
+     * The currently ongoing SNMP operation.
+     */
+    private Operation operation = null;
 
     /**
      * The SNMP field panel.
@@ -230,9 +235,19 @@ public class SnmpPanel extends JPanel {
     private JButton getNextButton = new JButton("Get Next");
 
     /**
+     * The walk button.
+     */
+    private JButton walkButton = new JButton("Walk");
+
+    /**
      * The set button.
      */
     private JButton setButton = new JButton("Set");
+
+    /**
+     * The stop button.
+     */
+    private JButton stopButton = new JButton("Stop");
 
     /**
      * The clear button.
@@ -652,6 +667,20 @@ public class SnmpPanel extends JPanel {
             }
         });
         panel.add(setButton);
+        walkButton.setToolTipText("Walk the OID tree with get next");
+        walkButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                performWalk();
+            }
+        });
+        panel.add(walkButton);
+        stopButton.setToolTipText("Stops the SNMP operation");
+        stopButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                performStop();
+            }
+        });
+        panel.add(stopButton);
         clearButton.setToolTipText("Clear SNMP result area");
         clearButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -761,7 +790,9 @@ public class SnmpPanel extends JPanel {
         valueField.setEnabled(allowSet);
         getButton.setEnabled(allowGet);
         getNextButton.setEnabled(allowGetNext);
+        walkButton.setEnabled(allowGetNext);
         setButton.setEnabled(allowSet);
+        stopButton.setEnabled(operation != null);
     }
 
     /**
@@ -800,6 +831,11 @@ public class SnmpPanel extends JPanel {
      * @param text           the status text (or null)
      */
     protected void setOperationStatus(String text) {
+        synchronized (this) {
+            if (text == null) {
+                operation = null;
+            }
+        }
         frame.setBlocked(text != null);
         frame.setStatus(text);
     }
@@ -827,6 +863,16 @@ public class SnmpPanel extends JPanel {
     }
 
     /**
+     * Performs a walk operation.
+     */
+    protected void performWalk() {
+        operation = createOperation(true);
+        if (operation != null) {
+            operation.startWalk();
+        }
+    }
+
+    /**
      * Performs a set operation.
      */
     protected void performSet() {
@@ -834,6 +880,17 @@ public class SnmpPanel extends JPanel {
 
         if (operation != null) {
             operation.startSet();
+        }
+    }
+
+    /**
+     * Stops the current operation.
+     */
+    protected void performStop() {
+        synchronized (this) {
+            if (operation != null) {
+                operation.stop();
+            }
         }
     }
 
@@ -980,6 +1037,11 @@ public class SnmpPanel extends JPanel {
         private String operation;
 
         /**
+         * The thread stopped flag.
+         */
+        private boolean stopped = false;
+
+        /**
          * Creates a new background SNMP operation.
          *
          * @param manager        the SNMP manager to use
@@ -1007,6 +1069,14 @@ public class SnmpPanel extends JPanel {
         }
 
         /**
+         * Starts a WALK operation in a background thread.
+         */
+        public void startWalk() {
+            this.operation = "WALK";
+            start();
+        }
+
+        /**
          * Starts a SET operation in a background thread.
          */
         public void startSet() {
@@ -1024,6 +1094,13 @@ public class SnmpPanel extends JPanel {
         }
 
         /**
+         * Stops the background thread.
+         */
+        public void stop() {
+            stopped = true;
+        }
+
+        /**
          * Runs the operation. This method should only be called by
          * the thread created through a call to start().
          */
@@ -1034,18 +1111,22 @@ public class SnmpPanel extends JPanel {
             message = "Performing " + operation + " on " +
                       request.getOid() + "...";
             setOperationStatus(message);
-            appendResults(operation + ": ");
             try {
-                if (operation.equals("GET")) {
-                    response = manager.get(request.getOid());
-                } else if (operation.equals("GET NEXT")) {
-                    response = manager.getNext(request.getOid());
-                } else if (operation.equals("SET")) {
-                    response = manager.set(request);
+                if (operation.equals("WALK")) {
+                    walk();
+                } else {
+                    appendResults(operation + ": ");
+                    if (operation.equals("GET")) {
+                        response = manager.get(request.getOid());
+                    } else if (operation.equals("GET NEXT")) {
+                        response = manager.getNext(request.getOid());
+                    } else if (operation.equals("SET")) {
+                        response = manager.set(request);
+                    }
+                    appendResults(response.getOidsAndValues());
+                    updateOid(response.getOid(0));
+                    updateValue(response.getValue(0));
                 }
-                appendResults(response.getOidsAndValues());
-                updateOid(response.getOid(0));
-                updateValue(response.getValue(0));
             } catch (SnmpException e) {
                 appendResults("Error: ");
                 appendResults(e.getMessage());
@@ -1053,6 +1134,36 @@ public class SnmpPanel extends JPanel {
             }
             manager.destroy();
             setOperationStatus(null);
+        }
+
+        /**
+         * Walks an OID tree one step at a time.
+         *
+         * @throws SnmpException if an error occurred during the walk
+         */
+        private void walk() throws SnmpException {
+            SnmpResponse  response = null;
+            String        oid = request.getOid();
+
+            do {
+                response = manager.getNext(oid);
+                oid = response.getOid(0);
+                if (oid.startsWith(request.getOid())) {
+                    appendResults("GET NEXT: ");
+                    appendResults(response.getOidsAndValues());
+                    updateOid(response.getOid(0));
+                    updateValue(response.getValue(0));
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException ignore) {
+                        // Do nothing if interrupted
+                    }
+                } else {
+                    appendResults("DONE: no more values for " +
+                                  request.getOid() + "\n");
+                    stopped = true;
+                }
+            } while (!stopped);
         }
     }
 }

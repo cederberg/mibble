@@ -400,8 +400,8 @@ public class BrowserFrame extends JFrame {
         node = MibTreeBuilder.getInstance().getNode(symbol);
         path = new TreePath(node.getPath());
         mibTree.expandPath(path);
-        mibTree.setSelectionPath(path);
         mibTree.scrollPathToVisible(path);
+        mibTree.setSelectionPath(path);
     }
 
     /**
