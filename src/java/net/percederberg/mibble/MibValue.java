@@ -34,13 +34,13 @@
 package net.percederberg.mibble;
 
 /**
- * A MIB value. 
+ * The base MIB value class. 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public interface MibValue {
+public abstract class MibValue {
 
     /**
      * Initializes the MIB value. This will remove all levels of
@@ -56,12 +56,13 @@ public interface MibValue {
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    MibValue initialize(MibLoaderLog log) throws MibException; 
+    public abstract MibValue initialize(MibLoaderLog log) 
+        throws MibException; 
 
     /**
      * Returns a Java object representation of this value.
      * 
      * @return a Java object representation of this value
      */
-    Object toObject();
+    public abstract Object toObject();
 }

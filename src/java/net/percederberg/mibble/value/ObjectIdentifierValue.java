@@ -45,10 +45,10 @@ import net.percederberg.mibble.MibValueSymbol;
  * identifier values in a tree hierarchy.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class ObjectIdentifierValue implements MibValue {
+public class ObjectIdentifierValue extends MibValue {
 
     /**
      * The component parent.

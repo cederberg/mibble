@@ -45,10 +45,10 @@ import net.percederberg.mibble.MibValueSymbol;
  * A reference to a value symbol.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class ValueReference implements MibValue {
+public class ValueReference extends MibValue {
 
     /**
      * The reference location.

@@ -40,10 +40,10 @@ import net.percederberg.mibble.MibValue;
  * A null MIB value.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class NullValue implements MibValue {
+public class NullValue extends MibValue {
 
     /**
      * The one a only null value instance.

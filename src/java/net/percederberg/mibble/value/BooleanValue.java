@@ -40,10 +40,10 @@ import net.percederberg.mibble.MibValue;
  * A boolean MIB value.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class BooleanValue implements MibValue {
+public class BooleanValue extends MibValue {
 
     /**
      * The boolean true value.

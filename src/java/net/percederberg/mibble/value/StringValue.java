@@ -40,10 +40,10 @@ import net.percederberg.mibble.MibValue;
  * A string MIB value.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
-public class StringValue implements MibValue {
+public class StringValue extends MibValue {
 
     /**
      * The string value.
