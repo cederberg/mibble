@@ -34,9 +34,11 @@
 package net.percederberg.mibble;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import net.percederberg.grammatica.parser.ParseException;
 import net.percederberg.grammatica.parser.ParserLogException;
@@ -46,7 +48,7 @@ import net.percederberg.grammatica.parser.ParserLogException;
  * from loading a MIB file and all imports not previously loaded.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
 public class MibLoaderLog {
@@ -200,8 +202,21 @@ public class MibLoaderLog {
     }
     
     /**
-     * Prints all log entries to the specified output stream. A 
-     * simple log printer will be created for handling the printout.
+     * Returns an iterator with all the log entries. The iterator 
+     * will only return LogEntry instances.
+     * 
+     * @return an iterator with all the log entries
+     * 
+     * @see LogEntry
+     * 
+     * @since 2.2
+     */
+    public Iterator entries() {
+        return entries.iterator();
+    }
+
+    /**
+     * Prints all log entries to the specified output stream.
      * 
      * @param output         the output stream to use
      */
@@ -210,23 +225,271 @@ public class MibLoaderLog {
     }
 
     /**
-     * Prints all log entries to the specified output stream. A 
-     * simple log printer will be created for handling the printout.
+     * Prints all log entries to the specified output stream.
      * 
      * @param output         the output stream to use
      */
     public void printTo(PrintWriter output) {
-        printTo(new SimpleLogPrinter(output, 70));
+        printTo(output, 70);
     }
 
     /**
-     * Prints all log entries to the specified log printer.
+     * Prints all log entries to the specified output stream.
      * 
-     * @param printer        the log printer to use
+     * @param output         the output stream to use
+     * @param margin         the print margin 
+     * 
+     * @since 2.2 
      */
-    public void printTo(LogPrinter printer) {
+    public void printTo(PrintWriter output, int margin) {
+        StringBuffer  buffer = new StringBuffer();
+        LogEntry      entry;
+        String        str;
+
         for (int i = 0; i < entries.size(); i++) {
-            printer.print((LogEntry) entries.get(i));
+            entry = (LogEntry) entries.get(i);
+            buffer.setLength(0);
+            switch (entry.getType()) {
+            case LogEntry.ERROR:
+                buffer.append("Error: ");
+                break;
+            case LogEntry.WARNING:
+                buffer.append("Warning: ");
+                break;
+            default:
+                buffer.append("Internal Error: ");
+                break;
+            }
+            buffer.append("in ");
+            buffer.append(relativeFilename(entry.getFile()));
+            if (entry.getLineNumber() > 0) {
+                buffer.append(": line ");
+                buffer.append(entry.getLineNumber());
+            }
+            buffer.append(":\n");
+            str = linebreakString(entry.getMessage(), "    ", margin);
+            buffer.append(str);
+            str = entry.readLine();
+            if (str != null) {
+                buffer.append("\n\n");
+                buffer.append(str);
+                buffer.append("\n");
+                for (int j = 1; j < entry.getColumnNumber(); j++) {
+                    if (str.charAt(j - 1) == '\t') {
+                        buffer.append("\t");
+                    } else {
+                        buffer.append(" ");
+                    }
+                }
+                buffer.append("^");
+            }
+            output.println(buffer.toString());
+        }
+        output.flush();
+    }
+
+    /**
+     * Creates a relative file name from a file. This method will 
+     * return the absolute file name if the file unless the current
+     * directory is a parent to the file. 
+     * 
+     * @param file           the file to calculate relative name for
+     * 
+     * @return the relative name if found, or
+     *         the absolute name otherwise
+     */
+    private String relativeFilename(File file) {
+        String  currentPath;
+        String  filePath;
+        
+        try {
+            currentPath = new File(".").getCanonicalPath();
+            filePath = file.getCanonicalPath();
+            if (filePath.startsWith(currentPath)) {
+                filePath = filePath.substring(currentPath.length());
+                if (filePath.charAt(0) == '/' 
+                 || filePath.charAt(0) == '\\') {
+                
+                    return filePath.substring(1);
+                } else {
+                    return filePath;
+                }
+            }
+        } catch (IOException e) {
+            // Do nothing
+        }
+        return file.toString();
+    }
+
+    /**
+     * Breaks a string into multiple lines. This method will also add
+     * a prefix to each line in the resulting string. The prefix 
+     * length will be taken into account when breaking the line. Line
+     * breaks will only be inserted as replacements for space 
+     * characters.
+     * 
+     * @param str            the string to line break
+     * @param prefix         the prefix to add to each line
+     * @param length         the maximum line length
+     * 
+     * @return the new formatted string
+     */
+    private String linebreakString(String str, String prefix, int length) {    
+        StringBuffer  buffer = new StringBuffer();
+        int           pos;
+
+        while (str.length() + prefix.length() > length) {
+            pos = str.lastIndexOf(' ', length - prefix.length());
+            if (pos < 0) {
+                pos = str.indexOf(' ');
+                if (pos < 0) {
+                    break;
+                }
+            }
+            buffer.append(prefix);
+            buffer.append(str.substring(0, pos));
+            str = str.substring(pos + 1);
+            buffer.append("\n");
+        }
+        buffer.append(prefix);
+        buffer.append(str);
+        return buffer.toString();
+    }
+
+
+
+    /**
+     * A log entry. This class holds all the details in an error or a 
+     * warning log entry.
+     *
+     * @author   Per Cederberg, <per at percederberg dot net>
+     * @version  2.2
+     * @since    2.2
+     */
+    public class LogEntry {
+    
+        /**
+         * The internal error log entry type constant.
+         */
+        public static final int INTERNAL_ERROR = 1;
+        
+        /**
+         * The error log entry type constant.
+         */
+        public static final int ERROR = 2;
+        
+        /**
+         * The warning log entry type constant.
+         */
+        public static final int WARNING = 3; 
+    
+        /**
+         * The log entry type.
+         */
+        private int type;
+    
+        /**
+         * The log entry file reference.
+         */
+        private FileLocation location;
+    
+        /**
+         * The log entry message.
+         */
+        private String message;
+        
+        /**
+         * Creates a new log entry.
+         * 
+         * @param type           the log entry type
+         * @param location       the log entry file reference
+         * @param message        the log entry message
+         */
+        public LogEntry(int type, FileLocation location, String message) {
+            this.type = type;
+            this.location = location;
+            this.message = message;
+        }
+        
+        /**
+         * Checks if this is an error log entry. 
+         * 
+         * @return true if this is an error log entry, or
+         *         false otherwise
+         */
+        public boolean isError() {
+            return type == INTERNAL_ERROR || type == ERROR;
+        }
+        
+        /**
+         * Checks if this is a warning log entry. 
+         * 
+         * @return true if this is a warning log entry, or
+         *         false otherwise
+         */
+        public boolean isWarning() {
+            return type == WARNING;
+        }
+        
+        /**
+         * Returns the log entry type. 
+         * 
+         * @return the log entry type
+         * 
+         * @see #INTERNAL_ERROR
+         * @see #ERROR
+         * @see #WARNING
+         */
+        public int getType() {
+            return type;
+        }
+    
+        /**
+         * Returns the file this entry applies to.
+         * 
+         * @return the file affected
+         */
+        public File getFile() {
+            return location.getFile();
+        }
+        
+        /**
+         * Returns the line number.
+         * 
+         * @return the line number
+         */
+        public int getLineNumber() {
+            return location.getLineNumber();
+        }
+        
+        /**
+         * Returns the column number.
+         * 
+         * @return the column number
+         */
+        public int getColumnNumber() {
+            return location.getColumnNumber();
+        }
+    
+        /**
+         * Returns the log entry message.
+         * 
+         * @return the log entry message
+         */
+        public String getMessage() {
+            return message;
+        }
+        
+        /**
+         * Reads the line from the referenced file. If the file couldn't 
+         * be opened or read correctly, null will be returned. The line 
+         * will NOT contain the terminating '\n' character.
+         * 
+         * @return the line read, or
+         *         null if not found
+         */
+        public String readLine() {
+            return location.readLine();
         }
     }
 }
