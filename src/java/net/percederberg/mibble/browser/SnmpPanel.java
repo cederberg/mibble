@@ -69,6 +69,12 @@ public class SnmpPanel extends JPanel {
     private int version = 1;
 
     /**
+     * The feedback flag. When this is set, the frame tree will be
+     * updated with the results of the SNMP operations.
+     */
+    private boolean feedback = true;
+
+    /**
      * The blocked flag.
      */
     private boolean blocked = false;
@@ -235,9 +241,9 @@ public class SnmpPanel extends JPanel {
     private JButton getNextButton = new JButton("Get Next");
 
     /**
-     * The walk button.
+     * The get branch button.
      */
-    private JButton walkButton = new JButton("Walk");
+    private JButton getBranchButton = new JButton("Get Branch");
 
     /**
      * The set button.
@@ -660,6 +666,14 @@ public class SnmpPanel extends JPanel {
             }
         });
         panel.add(getNextButton);
+        getBranchButton.setToolTipText("Walk an OID branch and " +
+                                       "retrieve all values");
+        getBranchButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                performGetBranch();
+            }
+        });
+        panel.add(getBranchButton);
         setButton.setToolTipText("Perform SNMP set operation");
         setButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -667,13 +681,6 @@ public class SnmpPanel extends JPanel {
             }
         });
         panel.add(setButton);
-        walkButton.setToolTipText("Walk the OID tree with get next");
-        walkButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                performWalk();
-            }
-        });
-        panel.add(walkButton);
         stopButton.setToolTipText("Stops the SNMP operation");
         stopButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -705,6 +712,17 @@ public class SnmpPanel extends JPanel {
             initializeSnmpV3FieldPanel();
         }
         validate();
+    }
+
+    /**
+     * Sets the SNMP operation feedback flag. When this flag is set,
+     * the result of the SNMP operation will update the MIB tree
+     * selection.
+     *
+     * @param feedback       the feedback flag
+     */
+    public void setFeedback(boolean feedback) {
+        this.feedback = feedback;
     }
 
     /**
@@ -767,7 +785,6 @@ public class SnmpPanel extends JPanel {
         SnmpObjectType  type = null;
         boolean         allowOperation;
         boolean         allowGet;
-        boolean         allowGetNext;
         boolean         allowSet;
 
         if (node != null) {
@@ -777,10 +794,7 @@ public class SnmpPanel extends JPanel {
                       && hostField.getText().length() > 0
                       && portField.getText().length() > 0;
         allowGet = allowOperation
-                && type != null
-                && type.getAccess().canRead();
-        allowGetNext = allowOperation
-                    && oidField.getText().length() > 0;
+                && oidField.getText().length() > 0;
         allowSet = allowOperation
                 && type != null
                 && type.getAccess().canWrite();
@@ -789,8 +803,8 @@ public class SnmpPanel extends JPanel {
         valueLabel.setEnabled(allowSet);
         valueField.setEnabled(allowSet);
         getButton.setEnabled(allowGet);
-        getNextButton.setEnabled(allowGetNext);
-        walkButton.setEnabled(allowGetNext);
+        getNextButton.setEnabled(allowGet);
+        getBranchButton.setEnabled(allowGet);
         setButton.setEnabled(allowSet);
         stopButton.setEnabled(operation != null);
     }
@@ -863,12 +877,12 @@ public class SnmpPanel extends JPanel {
     }
 
     /**
-     * Performs a walk operation.
+     * Performs a get branch operation.
      */
-    protected void performWalk() {
+    protected void performGetBranch() {
         operation = createOperation(true);
         if (operation != null) {
-            operation.startWalk();
+            operation.startGetBranch();
         }
     }
 
@@ -898,7 +912,9 @@ public class SnmpPanel extends JPanel {
      * Clears the result area.
      */
     protected void clearResults() {
-        resultsArea.setText("");
+        synchronized (this) {
+            resultsArea.setText("");
+        }
     }
 
     /**
@@ -907,8 +923,10 @@ public class SnmpPanel extends JPanel {
      * @param text           the text to append
      */
     protected void appendResults(String text) {
-        resultsArea.append(text);
-        resultsArea.setCaretPosition(resultsArea.getText().length());
+        synchronized (this) {
+            resultsArea.append(text);
+            resultsArea.setCaretPosition(resultsArea.getText().length());
+        }
     }
 
     /**
@@ -1010,7 +1028,7 @@ public class SnmpPanel extends JPanel {
             request = new SnmpRequest(oid, objectType.getSyntax(), value);
         }
 
-        return new Operation(manager, request);
+        return new Operation(manager, request, feedback);
     }
 
 
@@ -1037,6 +1055,11 @@ public class SnmpPanel extends JPanel {
         private String operation;
 
         /**
+         * The result feedback flag.
+         */
+        private boolean feedback;
+
+        /**
          * The thread stopped flag.
          */
         private boolean stopped = false;
@@ -1046,10 +1069,15 @@ public class SnmpPanel extends JPanel {
          *
          * @param manager        the SNMP manager to use
          * @param request        the request OID, type and value
+         * @param feedback       the feedback flag
          */
-        public Operation(SnmpManager manager, SnmpRequest request) {
+        public Operation(SnmpManager manager,
+                         SnmpRequest request,
+                         boolean feedback) {
+
             this.manager = manager;
             this.request = request;
+            this.feedback = feedback;
         }
 
         /**
@@ -1069,10 +1097,10 @@ public class SnmpPanel extends JPanel {
         }
 
         /**
-         * Starts a WALK operation in a background thread.
+         * Starts a GET BRANCH operation in a background thread.
          */
-        public void startWalk() {
-            this.operation = "WALK";
+        public void startGetBranch() {
+            this.operation = "GET BRANCH";
             start();
         }
 
@@ -1112,8 +1140,8 @@ public class SnmpPanel extends JPanel {
                       request.getOid() + "...";
             setOperationStatus(message);
             try {
-                if (operation.equals("WALK")) {
-                    walk();
+                if (operation.equals("GET BRANCH")) {
+                    runGetBranch();
                 } else {
                     appendResults(operation + ": ");
                     if (operation.equals("GET")) {
@@ -1124,8 +1152,10 @@ public class SnmpPanel extends JPanel {
                         response = manager.set(request);
                     }
                     appendResults(response.getOidsAndValues());
-                    updateOid(response.getOid(0));
-                    updateValue(response.getValue(0));
+                    if (feedback) {
+                        updateOid(response.getOid(0));
+                        updateValue(response.getValue(0));
+                    }
                 }
             } catch (SnmpException e) {
                 appendResults("Error: ");
@@ -1137,11 +1167,12 @@ public class SnmpPanel extends JPanel {
         }
 
         /**
-         * Walks an OID tree one step at a time.
+         * Runs the get branch operation.
          *
-         * @throws SnmpException if an error occurred during the walk
+         * @throws SnmpException if an error occurred during the
+         *             operation
          */
-        private void walk() throws SnmpException {
+        private void runGetBranch() throws SnmpException {
             SnmpResponse  response = null;
             String        oid = request.getOid();
 
@@ -1151,12 +1182,14 @@ public class SnmpPanel extends JPanel {
                 if (oid.startsWith(request.getOid())) {
                     appendResults("GET NEXT: ");
                     appendResults(response.getOidsAndValues());
-                    updateOid(response.getOid(0));
-                    updateValue(response.getValue(0));
-                    try {
-                        Thread.sleep(250);
-                    } catch (InterruptedException ignore) {
-                        // Do nothing if interrupted
+                    if (feedback) {
+                        updateOid(response.getOid(0));
+                        updateValue(response.getValue(0));
+                        try {
+                            Thread.sleep(250);
+                        } catch (InterruptedException ignore) {
+                            // Do nothing if interrupted
+                        }
                     }
                 } else {
                     appendResults("DONE: no more values for " +

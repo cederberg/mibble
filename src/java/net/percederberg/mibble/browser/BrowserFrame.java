@@ -185,8 +185,9 @@ public class BrowserFrame extends JFrame {
      * Initializes the frame menu.
      */
     private void initializeMenu() {
-        JMenu      menu;
-        JMenuItem  item;
+        JMenu              menu;
+        JMenuItem          item;
+        JCheckBoxMenuItem  checkBox;
 
         // Create file menu
         menu = new JMenu("File");
@@ -237,6 +238,17 @@ public class BrowserFrame extends JFrame {
             }
         });
         menu.add(snmpV3Item);
+        menu.addSeparator();
+        checkBox = new JCheckBoxMenuItem("Show result in tree");
+        checkBox.setSelected(true);
+        checkBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                JCheckBoxMenuItem  src = (JCheckBoxMenuItem) e.getSource();
+
+                setSnmpFeedback(src.isSelected());
+            }
+        });
+        menu.add(checkBox);
         menuBar.add(menu);
 
         // Create help menu
@@ -363,7 +375,16 @@ public class BrowserFrame extends JFrame {
         }
         snmpPanel.setVersion(version);
     }
-    
+
+    /**
+     * Sets the SNMP feedback flag.
+     *
+     * @param feedback       the feedback flag
+     */
+    public void setSnmpFeedback(boolean feedback) {
+        snmpPanel.setFeedback(feedback);
+    }
+
     /**
      * Returns the currently selected MIB node.
      *
