@@ -46,10 +46,10 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.5
  * @since    2.0
  */
-public class SnmpObjectType extends MibType {
+public class SnmpObjectType extends SnmpType {
 
     /**
      * The type syntax.
@@ -117,7 +117,7 @@ public class SnmpObjectType extends MibType {
                           ArrayList index,
                           MibValue defaultValue) {
 
-        super("OBJECT-TYPE", false);
+        super("OBJECT-TYPE");
         this.syntax = syntax;
         this.units = units;
         this.access = access;
@@ -150,7 +150,7 @@ public class SnmpObjectType extends MibType {
                           MibValue augments,
                           MibValue defaultValue) {
 
-        super("OBJECT-TYPE", false);
+        super("OBJECT-TYPE");
         this.syntax = syntax;
         this.units = units;
         this.access = access;

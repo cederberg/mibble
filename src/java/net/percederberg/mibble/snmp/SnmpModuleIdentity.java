@@ -38,10 +38,10 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.5
  * @since    2.0
  */
-public class SnmpModuleIdentity extends MibType {
+public class SnmpModuleIdentity extends SnmpType {
 
     /**
      * The last updated date.
@@ -83,7 +83,7 @@ public class SnmpModuleIdentity extends MibType {
                               String description,
                               ArrayList revisions) {
 
-        super("MODULE-IDENTITY", false);
+        super("MODULE-IDENTITY");
         this.lastUpdated = lastUpdated;
         this.organization = organization;
         this.contactInfo = contactInfo;

@@ -40,10 +40,10 @@ import net.percederberg.mibble.value.NumberValue;
  * @see <a href="http://www.ietf.org/rfc/rfc1215.txt">RFC 1215 (RFC-1215)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.5
  * @since    2.0
  */
-public class SnmpTrapType extends MibType {
+public class SnmpTrapType extends SnmpType {
 
     /**
      * The enterprise value.
@@ -78,7 +78,7 @@ public class SnmpTrapType extends MibType {
                         String description,
                         String reference) {
 
-        super("TRAP-TYPE", false);
+        super("TRAP-TYPE");
         this.enterprise = enterprise;
         this.variables = variables;
         this.description = description;

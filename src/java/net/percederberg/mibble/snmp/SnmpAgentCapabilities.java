@@ -38,10 +38,10 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * @see <a href="http://www.ietf.org/rfc/rfc2580.txt">RFC 2580 (SNMPv2-CONF)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.5
  * @since    2.0
  */
-public class SnmpAgentCapabilities extends MibType {
+public class SnmpAgentCapabilities extends SnmpType {
 
     /**
      * The product release.
@@ -83,7 +83,7 @@ public class SnmpAgentCapabilities extends MibType {
                                  String reference,
                                  ArrayList modules) {
 
-        super("AGENT-CAPABILITIES", false);
+        super("AGENT-CAPABILITIES");
         this.productRelease = productRelease;
         this.status = status;
         this.description = description;

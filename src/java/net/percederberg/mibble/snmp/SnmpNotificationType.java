@@ -40,10 +40,10 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.5
  * @since    2.0
  */
-public class SnmpNotificationType extends MibType {
+public class SnmpNotificationType extends SnmpType {
 
     /**
      * The value objects.
@@ -78,7 +78,7 @@ public class SnmpNotificationType extends MibType {
                                 String description,
                                 String reference) {
 
-        super("NOTIFICATION-TYPE", false);
+        super("NOTIFICATION-TYPE");
         this.objects = objects;
         this.status = status;
         this.description = description;

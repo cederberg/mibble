@@ -38,10 +38,10 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * @see <a href="http://www.ietf.org/rfc/rfc2580.txt">RFC 2580 (SNMPv2-CONF)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.5
  * @since    2.0
  */
-public class SnmpObjectGroup extends MibType {
+public class SnmpObjectGroup extends SnmpType {
 
     /**
      * The value objects.
@@ -76,7 +76,7 @@ public class SnmpObjectGroup extends MibType {
                            String description,
                            String reference) {
 
-        super("OBJECT-GROUP", false);
+        super("OBJECT-GROUP");
         this.objects = objects;
         this.status = status;
         this.description = description;

@@ -38,10 +38,10 @@ import net.percederberg.mibble.type.Constraint;
  * @see <a href="http://www.ietf.org/rfc/rfc2579.txt">RFC 2579 (SNMPv2-TC)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.4
+ * @version  2.5
  * @since    2.0
  */
-public class SnmpTextualConvention extends MibType implements MibContext {
+public class SnmpTextualConvention extends SnmpType implements MibContext {
 
     /**
      * The display hint.
@@ -83,7 +83,7 @@ public class SnmpTextualConvention extends MibType implements MibContext {
                                  String reference,
                                  MibType syntax) {
 
-        super("TEXTUAL-CONVENTION", false);
+        super("TEXTUAL-CONVENTION");
         this.displayHint = displayHint;
         this.status = status;
         this.description = description;
