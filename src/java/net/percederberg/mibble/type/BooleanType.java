@@ -50,16 +50,16 @@ import net.percederberg.mibble.value.BooleanValue;
 public class BooleanType extends MibType {
 
     /**
-     * Creates a new boolean MIB type. 
+     * Creates a new boolean MIB type.
      */
     public BooleanType() {
         this(true);
     }
-    
+
     /**
      * Creates a new boolean MIB type.
-     * 
-     * @param primitive      the primitive type flag 
+     *
+     * @param primitive      the primitive type flag
      */
     private BooleanType(boolean primitive) {
         super("BOOLEAN", primitive);
@@ -68,19 +68,19 @@ public class BooleanType extends MibType {
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
-     * this object as a side-effect, and will return the basic 
+     * this object as a side-effect, and will return the basic
      * type.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB type
-     * 
+     *
      * @since 2.2
      */
     public MibType initialize(MibSymbol symbol, MibLoaderLog log) {
@@ -89,30 +89,30 @@ public class BooleanType extends MibType {
 
     /**
      * Creates a type reference to this type. The type reference is
-     * normally an identical type, but with the primitive flag set to 
+     * normally an identical type, but with the primitive flag set to
      * false. Only certain types support being referenced, and the
-     * default implementation of this method throws an exception.<p> 
-     * 
+     * default implementation of this method throws an exception.<p>
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @return the MIB type reference
-     * 
+     *
      * @since 2.2
      */
     public MibType createReference() {
         BooleanType  type = new BooleanType(false);
-        
+
         type.setTag(true, getTag());
         return type;
     }
 
     /**
      * Checks if the specified value is compatible with this type. A
-     * value is compatible if and only if it is a boolean value. 
-     * 
+     * value is compatible if and only if it is a boolean value.
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */

@@ -42,7 +42,7 @@ import net.percederberg.mibble.value.StringValue;
 
 /**
  * A MIB type value constraint. This class represents a single value
- * in a set of value constraints. 
+ * in a set of value constraints.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.0
@@ -54,10 +54,10 @@ public class ValueConstraint implements Constraint {
      * The constraint value.
      */
     private MibValue value;
-    
+
     /**
      * Creates a new value constraint.
-     * 
+     *
      * @param value          the constraint value
      */
     public ValueConstraint(MibValue value) {
@@ -66,26 +66,26 @@ public class ValueConstraint implements Constraint {
 
     /**
      * Initializes the constraint. This will remove all levels of
-     * indirection present, such as references to types or values. No 
-     * constraint information is lost by this operation. This method 
+     * indirection present, such as references to types or values. No
+     * constraint information is lost by this operation. This method
      * may modify this object as a side-effect, and will be called by
      * the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public void initialize(MibLoaderLog log) throws MibException { 
+    public void initialize(MibLoaderLog log) throws MibException {
         value = value.initialize(log);
     }
-    
+
     /**
-     * Checks if the specified type is compatible with this 
+     * Checks if the specified type is compatible with this
      * constraint.
-     * 
+     *
      * @param type            the type to check
-     * 
+     *
      * @return true if the type is compatible, or
      *         false otherwise
      */
@@ -94,11 +94,11 @@ public class ValueConstraint implements Constraint {
     }
 
     /**
-     * Checks if the specified value is compatible with this 
+     * Checks if the specified value is compatible with this
      * constraint.
-     * 
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */
@@ -108,11 +108,11 @@ public class ValueConstraint implements Constraint {
 
         if (this.value instanceof NumberValue
          && value instanceof NumberValue) {
-            
+
             return str1.equals(str2);
         } else if (this.value instanceof StringValue
                 && value instanceof StringValue) {
-            
+
             return str1.equals(str2);
         } else {
             return false;
@@ -121,7 +121,7 @@ public class ValueConstraint implements Constraint {
 
     /**
      * Returns the constraint value.
-     * 
+     *
      * @return the constraint value
      */
     public MibValue getValue() {
@@ -130,7 +130,7 @@ public class ValueConstraint implements Constraint {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {

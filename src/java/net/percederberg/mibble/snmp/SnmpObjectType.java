@@ -50,9 +50,9 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * The SNMP object type macro type. This macro type was present in
- * SNMPv1, but was somewhat extended in SNMPv2. It is defined in the 
- * RFC:s 1155, 1212 and 2578. 
- * 
+ * SNMPv1, but was somewhat extended in SNMPv2. It is defined in the
+ * RFC:s 1155, 1212 and 2578.
+ *
  * @see <a href="http://www.ietf.org/rfc/rfc1155.txt">RFC 1155 (RFC1155-SMI)</a>
  * @see <a href="http://www.ietf.org/rfc/rfc1212.txt">RFC 1212 (RFC-1212)</a>
  * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
@@ -75,9 +75,9 @@ public class SnmpObjectType extends MibType {
 
     /**
      * The access mode.
-     */    
+     */
     private SnmpAccess access;
-    
+
     /**
      * The type status.
      */
@@ -87,17 +87,17 @@ public class SnmpObjectType extends MibType {
      * The type description.
      */
     private String description;
-    
+
     /**
      * The type reference.
      */
     private String reference;
-    
+
     /**
      * The list of index values or types.
      */
     private ArrayList index;
-    
+
     /**
      * The index augments value.
      */
@@ -109,8 +109,8 @@ public class SnmpObjectType extends MibType {
     private MibValue defaultValue;
 
     /**
-     * Creates a new SNMP object type. 
-     * 
+     * Creates a new SNMP object type.
+     *
      * @param syntax         the object type syntax
      * @param units          the units description, or null
      * @param access         the access mode
@@ -120,9 +120,9 @@ public class SnmpObjectType extends MibType {
      * @param index          the list of index values or types
      * @param defaultValue   the default value, or null
      */
-    public SnmpObjectType(MibType syntax, 
-                          String units, 
-                          SnmpAccess access, 
+    public SnmpObjectType(MibType syntax,
+                          String units,
+                          SnmpAccess access,
                           SnmpStatus status,
                           String description,
                           String reference,
@@ -142,8 +142,8 @@ public class SnmpObjectType extends MibType {
     }
 
     /**
-     * Creates a new SNMP object type. 
-     * 
+     * Creates a new SNMP object type.
+     *
      * @param syntax         the object type syntax
      * @param units          the units description, or null
      * @param access         the access mode
@@ -153,9 +153,9 @@ public class SnmpObjectType extends MibType {
      * @param augments       the index augments value
      * @param defaultValue   the default value, or null
      */
-    public SnmpObjectType(MibType syntax, 
-                          String units, 
-                          SnmpAccess access, 
+    public SnmpObjectType(MibType syntax,
+                          String units,
+                          SnmpAccess access,
                           SnmpStatus status,
                           String description,
                           String reference,
@@ -176,32 +176,32 @@ public class SnmpObjectType extends MibType {
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
-     * this object as a side-effect, and will return the basic 
+     * this object as a side-effect, and will return the basic
      * type.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB type
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
-     * 
+     *
      * @since 2.2
      */
-    public MibType initialize(MibSymbol symbol, MibLoaderLog log) 
+    public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
         ArrayList  list = new ArrayList();
         Object     obj;
 
         if (!(symbol instanceof MibValueSymbol)) {
-            throw new MibException(symbol.getLocation(), 
+            throw new MibException(symbol.getLocation(),
                                    "only values can have the " +
                                    getName() + " type");
         }
@@ -226,21 +226,21 @@ public class SnmpObjectType extends MibType {
     }
 
     /**
-     * Validates a MIB type. This will check any sequences and make 
-     * sure their elements are present in the MIB file. If they are 
+     * Validates a MIB type. This will check any sequences and make
+     * sure their elements are present in the MIB file. If they are
      * not, new symbols will be added to the MIB.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
      * @param type           the MIB type to check
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             validation
-     * 
+     *
      * @since 2.2
      */
-    private void checkType(MibValueSymbol symbol, 
-                           MibLoaderLog log, 
+    private void checkType(MibValueSymbol symbol,
+                           MibLoaderLog log,
                            MibType type)
         throws MibException {
 
@@ -257,28 +257,28 @@ public class SnmpObjectType extends MibType {
             }
         }
     }
-    
+
     /**
-     * Validates an element type. This will check that the element 
+     * Validates an element type. This will check that the element
      * is present in the MIB file. If it is not, a new symbol will be
      * added to the MIB.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
      * @param element        the MIB element type to check
      * @param pos            the MIB element position
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             validation
-     * 
+     *
      * @since 2.2
      */
     private void checkElement(MibValueSymbol symbol,
                               MibLoaderLog log,
                               ElementType element,
-                              int pos) 
+                              int pos)
         throws MibException {
-                                       
+
         Mib                    mib = symbol.getMib();
         MibSymbol              elementSymbol;
         String                 name;
@@ -292,23 +292,23 @@ public class SnmpObjectType extends MibType {
             } else {
                 name = String.valueOf(pos);
             }
-            log.addWarning(symbol.getLocation(), 
+            log.addWarning(symbol.getLocation(),
                            "sequence element " + name + " is undefined " +
                            "in MIB, a default symbol will be created");
             name = element.getName();
             if (name == null) {
                 name = symbol.getName() + "." + pos;
             }
-            type = new SnmpObjectType(element.getType(), 
-                                      null, 
-                                      SnmpAccess.READ_ONLY, 
+            type = new SnmpObjectType(element.getType(),
+                                      null,
+                                      SnmpAccess.READ_ONLY,
                                       SnmpStatus.CURRENT,
                                       "AUTOMATICALLY CREATED SYMBOL",
                                       null,
                                       new ArrayList(),
                                       null);
             value = (ObjectIdentifierValue) symbol.getValue();
-            value = new ObjectIdentifierValue(value, 
+            value = new ObjectIdentifierValue(value,
                                               element.getName(),
                                               pos);
             elementSymbol = new MibValueSymbol(symbol.getLocation(),
@@ -324,7 +324,7 @@ public class SnmpObjectType extends MibType {
                 name = String.valueOf(pos);
             }
             throw new MibException(symbol.getLocation(),
-                                   "sequence element " + name + 
+                                   "sequence element " + name +
                                    " does not refer to a value, but " +
                                    "to a type");
         }
@@ -333,10 +333,10 @@ public class SnmpObjectType extends MibType {
     /**
      * Checks if the specified value is compatible with this type. A
      * value is compatible if and only if it is an object identifier
-     * value. 
-     * 
+     * value.
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */
@@ -346,35 +346,35 @@ public class SnmpObjectType extends MibType {
 
     /**
      * Returns the type syntax.
-     * 
+     *
      * @return the type syntax
      */
     public MibType getSyntax() {
         return syntax;
     }
-    
+
     /**
      * Returns the units description.
-     * 
+     *
      * @return the units description, or
      *         null if no units has been set
      */
     public String getUnits() {
         return units;
     }
-    
+
     /**
      * Returns the access mode.
-     * 
+     *
      * @return the access mode
      */
     public SnmpAccess getAccess() {
         return access;
     }
-    
+
     /**
      * Returns the type status.
-     * 
+     *
      * @return the type status
      */
     public SnmpStatus getStatus() {
@@ -383,7 +383,7 @@ public class SnmpObjectType extends MibType {
 
     /**
      * Returns the type description.
-     * 
+     *
      * @return the type description, or
      *         null if no description has been set
      */
@@ -393,7 +393,7 @@ public class SnmpObjectType extends MibType {
 
     /**
      * Returns the type reference.
-     * 
+     *
      * @return the type reference, or
      *         null if no reference has been set
      */
@@ -404,29 +404,29 @@ public class SnmpObjectType extends MibType {
     /**
      * Returns the list of index values or types. The returned list
      * will consist of MibValue and MibType instances.
-     * 
+     *
      * @return the list of index values or types
-     * 
+     *
      * @see net.percederberg.mibble.MibValue
      * @see net.percederberg.mibble.MibType
      */
     public ArrayList getIndex() {
         return index;
     }
-    
+
     /**
      * Returns the augmented index value.
-     * 
+     *
      * @return the augmented index value, or
      *         null if no augments index is used
      */
     public MibValue getAugments() {
         return augments;
     }
-    
+
     /**
      * Returns the default value.
-     * 
+     *
      * @return the default value, or
      *         null if no default value has been set
      */
@@ -436,7 +436,7 @@ public class SnmpObjectType extends MibType {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {

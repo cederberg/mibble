@@ -45,8 +45,8 @@ import net.percederberg.mibble.type.Constraint;
 
 /**
  * The SNMP textual convention macro type. This macro type was added
- * to SNMPv2 and is defined in RFC 2579. 
- * 
+ * to SNMPv2 and is defined in RFC 2579.
+ *
  * @see <a href="http://www.ietf.org/rfc/rfc2579.txt">RFC 2579 (SNMPv2-TC)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -64,12 +64,12 @@ public class SnmpTextualConvention extends MibType implements MibContext {
      * The type status.
      */
     private SnmpStatus status;
-    
+
     /**
      * The type description.
      */
     private String description;
-    
+
     /**
      * The type reference.
      */
@@ -77,17 +77,17 @@ public class SnmpTextualConvention extends MibType implements MibContext {
 
     /**
      * The type syntax.
-     */    
+     */
     private MibType syntax;
 
     /**
      * Creates a new SNMP textual convention.
-     * 
+     *
      * @param displayHint    the display hint, or null
      * @param status         the type status
      * @param description    the type description
      * @param reference      the type reference, or null
-     * @param syntax         the type syntax 
+     * @param syntax         the type syntax
      */
     public SnmpTextualConvention(String displayHint,
                                  SnmpStatus status,
@@ -105,22 +105,22 @@ public class SnmpTextualConvention extends MibType implements MibContext {
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
-     * this object as a side-effect, and will return the basic 
+     * this object as a side-effect, and will return the basic
      * type.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB type
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
-     * 
+     *
      * @since 2.2
      */
     public MibType initialize(MibSymbol symbol, MibLoaderLog log)
@@ -132,71 +132,71 @@ public class SnmpTextualConvention extends MibType implements MibContext {
 
     /**
      * Creates a type reference to this type. The type reference is
-     * normally an identical type, but with the primitive flag set to 
+     * normally an identical type, but with the primitive flag set to
      * false. Only certain types support being referenced, and the
-     * default implementation of this method throws an exception.<p> 
-     * 
+     * default implementation of this method throws an exception.<p>
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @return the MIB type reference
-     * 
-     * @throws UnsupportedOperationException if a type reference 
+     *
+     * @throws UnsupportedOperationException if a type reference
      *             couldn't be created
-     * 
+     *
      * @since 2.2
      */
-    public MibType createReference() 
+    public MibType createReference()
         throws UnsupportedOperationException {
 
         return syntax.createReference();
     }
 
     /**
-     * Creates a constrained type reference to this type. The type 
-     * reference is normally an identical type, but with the 
-     * primitive flag set to false. Only certain types support being 
-     * referenced, and the default implementation of this method 
-     * throws an exception.<p> 
-     * 
+     * Creates a constrained type reference to this type. The type
+     * reference is normally an identical type, but with the
+     * primitive flag set to false. Only certain types support being
+     * referenced, and the default implementation of this method
+     * throws an exception.<p>
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
      *
      * @param constraint     the type constraint
-     *  
+     *
      * @return the MIB type reference
-     * 
-     * @throws UnsupportedOperationException if a type reference 
+     *
+     * @throws UnsupportedOperationException if a type reference
      *             couldn't be created with constraints
-     * 
+     *
      * @since 2.2
      */
-    public MibType createReference(Constraint constraint) 
+    public MibType createReference(Constraint constraint)
         throws UnsupportedOperationException {
 
         return syntax.createReference(constraint);
     }
 
     /**
-     * Creates a constrained type reference to this type. The type 
-     * reference is normally an identical type, but with the 
-     * primitive flag set to false. Only certain types support being 
-     * referenced, and the default implementation of this method 
-     * throws an exception.<p> 
-     * 
+     * Creates a constrained type reference to this type. The type
+     * reference is normally an identical type, but with the
+     * primitive flag set to false. Only certain types support being
+     * referenced, and the default implementation of this method
+     * throws an exception.<p>
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
      *
      * @param values         the type value symbols
-     *  
+     *
      * @return the MIB type reference
-     * 
-     * @throws UnsupportedOperationException if a type reference 
+     *
+     * @throws UnsupportedOperationException if a type reference
      *             couldn't be created with value constraints
-     * 
+     *
      * @since 2.2
      */
-    public MibType createReference(ArrayList values) 
+    public MibType createReference(ArrayList values)
         throws UnsupportedOperationException {
 
         return syntax.createReference(values);
@@ -204,11 +204,11 @@ public class SnmpTextualConvention extends MibType implements MibContext {
 
     /**
      * Checks if the specified value is compatible with this type. No
-     * value is compatible with this type, so this method always 
-     * returns false. 
-     * 
+     * value is compatible with this type, so this method always
+     * returns false.
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */
@@ -218,7 +218,7 @@ public class SnmpTextualConvention extends MibType implements MibContext {
 
     /**
      * Returns the display hint.
-     * 
+     *
      * @return the display hint, or
      *         null if no display hint has been set
      */
@@ -228,7 +228,7 @@ public class SnmpTextualConvention extends MibType implements MibContext {
 
     /**
      * Returns the type status.
-     * 
+     *
      * @return the type status
      */
     public SnmpStatus getStatus() {
@@ -237,7 +237,7 @@ public class SnmpTextualConvention extends MibType implements MibContext {
 
     /**
      * Returns the type description.
-     * 
+     *
      * @return the type description
      */
     public String getDescription() {
@@ -246,7 +246,7 @@ public class SnmpTextualConvention extends MibType implements MibContext {
 
     /**
      * Returns the type reference.
-     * 
+     *
      * @return the type reference, or
      *         null if no reference has been set
      */
@@ -256,7 +256,7 @@ public class SnmpTextualConvention extends MibType implements MibContext {
 
     /**
      * Returns the type syntax.
-     * 
+     *
      * @return the type syntax
      */
     public MibType getSyntax() {
@@ -264,14 +264,14 @@ public class SnmpTextualConvention extends MibType implements MibContext {
     }
 
     /**
-     * Returns a named MIB symbol. This method checks the syntax type 
-     * for a MibContext implementation.<p> 
-     * 
+     * Returns a named MIB symbol. This method checks the syntax type
+     * for a MibContext implementation.<p>
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param name           the symbol name
-     * 
+     *
      * @return the MIB symbol, or null if not found
      */
     public MibSymbol getSymbol(String name) {
@@ -284,12 +284,12 @@ public class SnmpTextualConvention extends MibType implements MibContext {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append(super.toString());
         buffer.append(" (");
         if (displayHint != null) {

@@ -78,9 +78,9 @@ class DefaultContext implements MibContext {
 
     /**
      * Returns a named MIB symbol.
-     * 
+     *
      * @param name           the symbol name
-     * 
+     *
      * @return the MIB symbol, or null if not found
      */
     public MibSymbol getSymbol(String name) {
@@ -89,7 +89,7 @@ class DefaultContext implements MibContext {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {

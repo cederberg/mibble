@@ -41,7 +41,7 @@ import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.MibValueSymbol;
 
 /**
- * An object identifier value. This class stores the component 
+ * An object identifier value. This class stores the component
  * identifier values in a tree hierarchy.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -64,20 +64,20 @@ public class ObjectIdentifierValue extends MibValue {
      * The object identifier component name.
      */
     private String name;
-    
+
     /**
      * The object identifier component value.
      */
     private int value;
-    
+
     /**
      * The MIB value symbol referenced by this object identifier.
      */
     private MibValueSymbol symbol = null;
-    
+
     /**
      * Creates a new root object identifier value.
-     * 
+     *
      * @param name           the component name, or null
      * @param value          the component value
      */
@@ -91,12 +91,12 @@ public class ObjectIdentifierValue extends MibValue {
     /**
      * Creates a new object identifier value.
      *
-     * @param parent         the component parent 
+     * @param parent         the component parent
      * @param name           the component name, or null
      * @param value          the component value
      */
-    public ObjectIdentifierValue(ObjectIdentifierValue parent, 
-                                 String name, 
+    public ObjectIdentifierValue(ObjectIdentifierValue parent,
+                                 String name,
                                  int value) {
 
         super("OBJECT IDENTIFIER");
@@ -109,12 +109,12 @@ public class ObjectIdentifierValue extends MibValue {
     /**
      * Creates a new object identifier value.
      *
-     * @param parent         the component parent 
+     * @param parent         the component parent
      * @param name           the component name, or null
      * @param value          the component value
      */
-    public ObjectIdentifierValue(ValueReference parent, 
-                                 String name, 
+    public ObjectIdentifierValue(ValueReference parent,
+                                 String name,
                                  int value) {
 
         super("OBJECT IDENTIFIER");
@@ -125,22 +125,22 @@ public class ObjectIdentifierValue extends MibValue {
 
     /**
      * Initializes the MIB value. This will remove all levels of
-     * indirection present, such as references to other values. No 
-     * value information is lost by this operation. This method may 
-     * modify this object as a side-effect, and will return the basic 
+     * indirection present, such as references to other values. No
+     * value information is lost by this operation. This method may
+     * modify this object as a side-effect, and will return the basic
      * value.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB value
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public MibValue initialize(MibLoaderLog log) throws MibException { 
+    public MibValue initialize(MibLoaderLog log) throws MibException {
         ValueReference  ref = null;
 
         if (parent == null) {
@@ -162,16 +162,16 @@ public class ObjectIdentifierValue extends MibValue {
     }
 
     /**
-     * Creates a value reference to this value. The value reference 
-     * is normally an identical value. Only certain values support 
-     * being referenced, and the default implementation of this 
-     * method throws an exception.<p> 
-     * 
+     * Creates a value reference to this value. The value reference
+     * is normally an identical value. Only certain values support
+     * being referenced, and the default implementation of this
+     * method throws an exception.<p>
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @return the MIB value reference
-     * 
+     *
      * @since 2.2
      */
     public MibValue createReference() {
@@ -181,9 +181,9 @@ public class ObjectIdentifierValue extends MibValue {
     /**
      * Checks if this object equals another object. This method will
      * compare the string representations for equality.
-     * 
+     *
      * @param obj            the object to compare with
-     * 
+     *
      * @return true if the objects are equal, or
      *         false otherwise
      */
@@ -193,7 +193,7 @@ public class ObjectIdentifierValue extends MibValue {
 
     /**
      * Returns a hash code for this object.
-     * 
+     *
      * @return a hash code for this object
      */
     public int hashCode() {
@@ -202,7 +202,7 @@ public class ObjectIdentifierValue extends MibValue {
 
     /**
      * Returns the parent object identifier value.
-     * 
+     *
      * @return the parent object identifier value, or
      *         null if no parent exists
      */
@@ -213,20 +213,20 @@ public class ObjectIdentifierValue extends MibValue {
             return null;
         }
     }
-    
+
     /**
      * Returns this object identifier component name.
-     * 
+     *
      * @return the object identifier component name, or
      *         null if the component has no name
      */
     public String getName() {
         return name;
     }
-    
+
     /**
      * Returns this object identifier component value.
-     * 
+     *
      * @return the object identifier component value
      */
     public int getValue() {
@@ -235,18 +235,18 @@ public class ObjectIdentifierValue extends MibValue {
 
     /**
      * Returns the symbol connected to this object identifier.
-     * 
+     *
      * @return the symbol connected to this object identifier, or
      *         null if no value symbol is connected
      */
     public MibValueSymbol getSymbol() {
         return symbol;
     }
-    
+
     /**
-     * Sets the symbol connected to this object identifier. This 
+     * Sets the symbol connected to this object identifier. This
      * method is called during the value symbol initialization.
-     * 
+     *
      * @param symbol         the value symbol
      */
     public void setSymbol(MibValueSymbol symbol) {
@@ -258,18 +258,18 @@ public class ObjectIdentifierValue extends MibValue {
 
     /**
      * Returns the number of child object identifier values.
-     * 
+     *
      * @return the number of child object identifier values
      */
     public int getChildCount() {
         return children.size();
     }
-    
+
     /**
      * Returns a child object identifier value.
-     * 
+     *
      * @param index          the child position, 0 <= index < count
-     * 
+     *
      * @return the child object identifier value, or
      *         null if not found
      */
@@ -294,7 +294,7 @@ public class ObjectIdentifierValue extends MibValue {
 
     /**
      * Adds a child component.
-     * 
+     *
      * @param child          the child component
      */
     private void addChild(ObjectIdentifierValue child) {
@@ -302,47 +302,47 @@ public class ObjectIdentifierValue extends MibValue {
             children.add(child);
         }
     }
-    
+
     /**
      * Returns a string representation of this value. The string will
-     * contain the full numeric object identifier value with each 
+     * contain the full numeric object identifier value with each
      * component separated with a dot ('.').
-     * 
+     *
      * @return a string representation of this value
      */
     public Object toObject() {
         return toString();
     }
-    
+
     /**
      * Returns a string representation of this value. The string will
-     * contain the full numeric object identifier value with each 
+     * contain the full numeric object identifier value with each
      * component separated with a dot ('.').
-     * 
+     *
      * @return a string representation of this value
      */
     public String toString() {
         if (parent == null) {
             return String.valueOf(value);
         } else {
-            return parent.toString() + "." + String.valueOf(value); 
+            return parent.toString() + "." + String.valueOf(value);
         }
     }
-    
+
     /**
-     * Returns a detailed string representation of this value. The 
-     * string will contain the full numeric object identifier value 
+     * Returns a detailed string representation of this value. The
+     * string will contain the full numeric object identifier value
      * with optional names for each component.
-     * 
+     *
      * @return a detailed string representation of this value
      */
     public String toDetailString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         if (parent instanceof ObjectIdentifierValue) {
             buffer.append(((ObjectIdentifierValue) parent).toDetailString());
             buffer.append(".");
-        } 
+        }
         if (name == null) {
             buffer.append(value);
         } else {

@@ -44,10 +44,10 @@ import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
- * The SNMP notification type macro. This macro type was added to 
+ * The SNMP notification type macro. This macro type was added to
  * SNMPv2 and is defined in RFC 2578. The notification type macro is
  * used instead of the trap type macro in SNMPv2 and later.
- * 
+ *
  * @see SnmpTrapType
  * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
  *
@@ -66,12 +66,12 @@ public class SnmpNotificationType extends MibType {
      * The notification type status.
      */
     private SnmpStatus status;
-    
+
     /**
      * The notification type description.
      */
     private String description;
-    
+
     /**
      * The notification type reference.
      */
@@ -79,11 +79,11 @@ public class SnmpNotificationType extends MibType {
 
     /**
      * Creates a new SNMP notification type.
-     * 
+     *
      * @param objects        the value objects
      * @param status         the notification type status
      * @param description    the notification type description
-     * @param reference      the notification type reference, or null 
+     * @param reference      the notification type reference, or null
      */
     public SnmpNotificationType(ArrayList objects,
                                 SnmpStatus status,
@@ -99,32 +99,32 @@ public class SnmpNotificationType extends MibType {
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
-     * this object as a side-effect, and will return the basic 
+     * this object as a side-effect, and will return the basic
      * type.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB type
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
-     * 
+     *
      * @since 2.2
      */
-    public MibType initialize(MibSymbol symbol, MibLoaderLog log) 
+    public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
         ArrayList  list = new ArrayList();
         MibValue   value;
 
         if (!(symbol instanceof MibValueSymbol)) {
-            throw new MibException(symbol.getLocation(), 
+            throw new MibException(symbol.getLocation(),
                                    "only values can have the " +
                                    getName() + " type");
         }
@@ -139,10 +139,10 @@ public class SnmpNotificationType extends MibType {
     /**
      * Checks if the specified value is compatible with this type. A
      * value is compatible if and only if it is an object identifier
-     * value. 
-     * 
+     * value.
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */
@@ -151,9 +151,9 @@ public class SnmpNotificationType extends MibType {
     }
 
     /**
-     * Returns the value objects. The returned list will consist of 
+     * Returns the value objects. The returned list will consist of
      * MibValue instances.
-     * 
+     *
      * @return the value objects
      *
      * @see net.percederberg.mibble.MibValue
@@ -164,7 +164,7 @@ public class SnmpNotificationType extends MibType {
 
     /**
      * Returns the notification type status.
-     * 
+     *
      * @return the notification type status
      */
     public SnmpStatus getStatus() {
@@ -173,7 +173,7 @@ public class SnmpNotificationType extends MibType {
 
     /**
      * Returns the notification type description.
-     * 
+     *
      * @return the notification type description
      */
     public String getDescription() {
@@ -182,7 +182,7 @@ public class SnmpNotificationType extends MibType {
 
     /**
      * Returns the notification type reference.
-     * 
+     *
      * @return the notification type reference, or
      *         null if no reference has been set
      */
@@ -192,7 +192,7 @@ public class SnmpNotificationType extends MibType {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {

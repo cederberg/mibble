@@ -36,8 +36,8 @@ package net.percederberg.mibble;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
- * A MIB value symbol. This class holds information relevant to a MIB 
- * value assignment, i.e. a type and a value. Normally the value is 
+ * A MIB value symbol. This class holds information relevant to a MIB
+ * value assignment, i.e. a type and a value. Normally the value is
  * an object identifier.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -58,22 +58,22 @@ public class MibValueSymbol extends MibSymbol {
 
     /**
      * Creates a new value symbol.<p>
-     * 
-     * <strong>NOTE:</strong> This is an internal constructor that 
+     *
+     * <strong>NOTE:</strong> This is an internal constructor that
      * should only be called by the MIB loader.
-     * 
+     *
      * @param location       the symbol location
      * @param mib            the symbol MIB file
      * @param name           the symbol name
      * @param type           the symbol type
      * @param value          the symbol value
-     * 
+     *
      * @since 2.2
      */
     public MibValueSymbol(FileLocation location,
-                          Mib mib, 
-                          String name, 
-                          MibType type, 
+                          Mib mib,
+                          String name,
+                          MibType type,
                           MibValue value) {
 
         super(location, mib, name);
@@ -83,15 +83,15 @@ public class MibValueSymbol extends MibSymbol {
 
     /**
      * Initializes the MIB symbol. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
      * this object as a side-effect.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
@@ -103,7 +103,7 @@ public class MibValueSymbol extends MibSymbol {
             value = value.initialize(log);
         }
         if (type != null && value != null && !type.isCompatible(value)) {
-            throw new MibException(getLocation(), 
+            throw new MibException(getLocation(),
                                    "value is not compatible with type");
         }
         if (value instanceof ObjectIdentifierValue) {
@@ -113,16 +113,16 @@ public class MibValueSymbol extends MibSymbol {
 
     /**
      * Returns the symbol type.
-     * 
+     *
      * @return the symbol type
      */
     public MibType getType() {
         return type;
     }
-    
+
     /**
      * Returns the symbol value.
-     * 
+     *
      * @return the symbol value
      */
     public MibValue getValue() {
@@ -131,12 +131,12 @@ public class MibValueSymbol extends MibSymbol {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append("VALUE ");
         buffer.append(getName());
         buffer.append(" ");

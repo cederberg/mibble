@@ -48,8 +48,8 @@ package net.percederberg.mibble.snmp;
 public class SnmpAccess {
 
     /**
-     * The not implemented SNMP access mode. This mode is only used 
-     * in SNMPv2 (and later) variation declarations inside an agent 
+     * The not implemented SNMP access mode. This mode is only used
+     * in SNMPv2 (and later) variation declarations inside an agent
      * capabilities declaration.
      */
     public static final SnmpAccess NOT_IMPLEMENTED =
@@ -62,7 +62,7 @@ public class SnmpAccess {
         new SnmpAccess("not-accessible");
 
     /**
-     * The accesible for notify SNMP access mode. This mode is only 
+     * The accesible for notify SNMP access mode. This mode is only
      * used in SNMPv2 and later.
      */
     public static final SnmpAccess ACCESSIBLE_FOR_NOTIFY =
@@ -81,14 +81,14 @@ public class SnmpAccess {
         new SnmpAccess("read-write");
 
     /**
-     * The read-create SNMP access mode. This mode is only used in 
+     * The read-create SNMP access mode. This mode is only used in
      * SNMPv2 and later.
      */
     public static final SnmpAccess READ_CREATE =
         new SnmpAccess("read-create");
 
     /**
-     * The write-only SNMP access mode. This mode is only used in 
+     * The write-only SNMP access mode. This mode is only used in
      * SNMPv1.
      */
     public static final SnmpAccess WRITE_ONLY =
@@ -101,7 +101,7 @@ public class SnmpAccess {
 
     /**
      * Creates a new SNMP access mode.
-     * 
+     *
      * @param description    the access mode description
      */
     private SnmpAccess(String description) {
@@ -110,9 +110,9 @@ public class SnmpAccess {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
-     */    
+     */
     public String toString() {
         return description;
     }

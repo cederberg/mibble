@@ -53,15 +53,15 @@ public class BitSetValue extends MibValue {
      * The bit set value.
      */
     private BitSet value;
-    
+
     /**
      * The additional value references.
      */
     private ArrayList references;
 
     /**
-     * Creates a new bit set MIB value. 
-     * 
+     * Creates a new bit set MIB value.
+     *
      * @param value          the bit set value
      */
     public BitSetValue(BitSet value) {
@@ -69,8 +69,8 @@ public class BitSetValue extends MibValue {
     }
 
     /**
-     * Creates a new bit set MIB value. 
-     * 
+     * Creates a new bit set MIB value.
+     *
      * @param value          the bit set value
      * @param references     the additional referenced bit values
      */
@@ -82,22 +82,22 @@ public class BitSetValue extends MibValue {
 
     /**
      * Initializes the MIB value. This will remove all levels of
-     * indirection present, such as references to other values. No 
-     * value information is lost by this operation. This method may 
-     * modify this object as a side-effect, and will return the basic 
+     * indirection present, such as references to other values. No
+     * value information is lost by this operation. This method may
+     * modify this object as a side-effect, and will return the basic
      * value.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB value
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public MibValue initialize(MibLoaderLog log) throws MibException { 
+    public MibValue initialize(MibLoaderLog log) throws MibException {
         if (references != null) {
             for (int i = 0; i < references.size(); i++) {
                 initialize(log, (ValueReference) references.get(i));
@@ -108,16 +108,16 @@ public class BitSetValue extends MibValue {
     }
 
     /**
-     * Creates a value reference to this value. The value reference 
-     * is normally an identical value. Only certain values support 
-     * being referenced, and the default implementation of this 
-     * method throws an exception.<p> 
-     * 
+     * Creates a value reference to this value. The value reference
+     * is normally an identical value. Only certain values support
+     * being referenced, and the default implementation of this
+     * method throws an exception.<p>
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @return the MIB value reference
-     * 
+     *
      * @since 2.2
      */
     public MibValue createReference() {
@@ -125,21 +125,21 @@ public class BitSetValue extends MibValue {
     }
 
     /**
-     * Initializes a the MIB value from a value reference. This will 
-     * resolve the reference, and set the bit corresponding to the 
+     * Initializes a the MIB value from a value reference. This will
+     * resolve the reference, and set the bit corresponding to the
      * value.
-     * 
+     *
      * @param log            the MIB loader log
      * @param ref            the value reference to resolve
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    private void initialize(MibLoaderLog log, ValueReference ref) 
+    private void initialize(MibLoaderLog log, ValueReference ref)
         throws MibException {
 
         MibValue  value = ref.initialize(log);
-    
+
         if (value instanceof NumberValue) {
             this.value.set(((Number) value.toObject()).intValue());
         } else {
@@ -149,9 +149,9 @@ public class BitSetValue extends MibValue {
     }
 
     /**
-     * Returns all the bits in this bit set as individual number 
+     * Returns all the bits in this bit set as individual number
      * values.
-     * 
+     *
      * @return the number values for all bits in this bit set
      */
     public ArrayList getBits() {
@@ -167,7 +167,7 @@ public class BitSetValue extends MibValue {
 
     /**
      * Returns a Java BitSet representation of this value.
-     * 
+     *
      * @return a Java BitSet representation of this value
      */
     public Object toObject() {
@@ -176,7 +176,7 @@ public class BitSetValue extends MibValue {
 
     /**
      * Returns a string representation of this value.
-     * 
+     *
      * @return a string representation of this value
      */
     public String toString() {

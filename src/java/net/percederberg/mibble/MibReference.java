@@ -36,7 +36,7 @@ package net.percederberg.mibble;
 import java.util.ArrayList;
 
 /**
- * A MIB file reference. This class references a MIB file that has 
+ * A MIB file reference. This class references a MIB file that has
  * not yet been loaded.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -64,7 +64,7 @@ class MibReference implements MibContext {
      * The referenced MIB name.
      */
     private String name;
-    
+
     /**
      * The referenced MIB symbol names.
      */
@@ -72,15 +72,15 @@ class MibReference implements MibContext {
 
     /**
      * Creates a new MIB reference.
-     * 
+     *
      * @param loader         the MIB loader to use
      * @param location       the reference location
      * @param name           the referenced MIB name
      * @param symbols        the referenced MIB symbol names, or
      *                       null to allow references to any symbol
      */
-    public MibReference(MibLoader loader, 
-                        FileLocation location, 
+    public MibReference(MibLoader loader,
+                        FileLocation location,
                         String name,
                         ArrayList symbols) {
 
@@ -91,16 +91,16 @@ class MibReference implements MibContext {
     }
 
     /**
-     * Initializes the MIB reference. This will resolve all 
-     * referenced symbols in the MIB.  This method will be called by 
+     * Initializes the MIB reference. This will resolve all
+     * referenced symbols in the MIB.  This method will be called by
      * the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public void initialize(MibLoaderLog log) throws MibException { 
+    public void initialize(MibLoaderLog log) throws MibException {
         String  message;
 
         mib = loader.getMib(name);
@@ -111,7 +111,7 @@ class MibReference implements MibContext {
         if (symbols != null) {
             for (int i = 0; i < symbols.size(); i++) {
                 if (mib.getSymbol(symbols.get(i).toString()) == null) {
-                    message = "couldn't find imported symbol '" + 
+                    message = "couldn't find imported symbol '" +
                               symbols.get(i) + "' in MIB '" + name + "'";
                     throw new MibException(location, message);
                 }
@@ -121,7 +121,7 @@ class MibReference implements MibContext {
 
     /**
      * Returns the MIB name.
-     * 
+     *
      * @return the MIB name
      */
     public String getName() {
@@ -129,12 +129,12 @@ class MibReference implements MibContext {
     }
 
     /**
-     * Returns a named MIB symbol. This method will only return 
+     * Returns a named MIB symbol. This method will only return
      * symbols from the list of referenced symbols, or any symbol in
-     * the MIB if no reference list is set. 
-     * 
+     * the MIB if no reference list is set.
+     *
      * @param name           the symbol name
-     * 
+     *
      * @return the MIB symbol, or null if not found
      */
     public MibSymbol getSymbol(String name) {
@@ -146,10 +146,10 @@ class MibReference implements MibContext {
             return mib.getSymbol(name);
         }
     }
-    
+
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {

@@ -40,9 +40,9 @@ import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibValue;
 
 /**
- * An SNMP module support value. This declaration is used inside the 
+ * An SNMP module support value. This declaration is used inside the
  * agent capabilities type.
- * 
+ *
  * @see SnmpAgentCapabilities
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -55,42 +55,42 @@ public class SnmpModuleSupport {
      * The module name.
      */
     private String module;
-    
+
     /**
      * The list of included group values.
      */
     private ArrayList groups;
-    
+
     /**
      * The list of variations.
      */
     private ArrayList variations;
-    
+
     /**
      * Creates a new module support declaration.
-     * 
+     *
      * @param module         the module name, or null
      * @param groups         the list of included group values
      * @param variations     the list of variations
      */
-    public SnmpModuleSupport(String module, 
-                             ArrayList groups, 
-                             ArrayList variations) {    
+    public SnmpModuleSupport(String module,
+                             ArrayList groups,
+                             ArrayList variations) {
 
         this.module = module;
         this.groups = groups;
         this.variations = variations;
     }
-    
+
     /**
      * Initializes the object. This will remove all levels of
-     * indirection present, such as references to other types, and 
-     * returns the basic type. No type information is lost by this 
-     * operation. This method may modify this object as a 
+     * indirection present, such as references to other types, and
+     * returns the basic type. No type information is lost by this
+     * operation. This method may modify this object as a
      * side-effect, and will be called by the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
@@ -109,32 +109,32 @@ public class SnmpModuleSupport {
 
     /**
      * Returns the module name.
-     * 
+     *
      * @return the module name, or
      *         null if not set
      */
     public String getModule() {
         return module;
     }
-    
+
     /**
      * Returns the list of included group values. The returned list
      * will consist of MibValue instances.
-     * 
+     *
      * @return the list of included group values
-     * 
+     *
      * @see net.percederberg.mibble.MibValue
      */
     public ArrayList getGroups() {
         return groups;
     }
-    
+
     /**
      * Returns the list of variations. The returned list will consist
      * of SnmpVariation instances.
-     * 
+     *
      * @return the list of variations
-     * 
+     *
      * @see SnmpVariation
      */
     public ArrayList getVariations() {
@@ -143,12 +143,12 @@ public class SnmpModuleSupport {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         if (module != null) {
             buffer.append(module);
         }

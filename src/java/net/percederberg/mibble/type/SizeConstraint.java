@@ -53,10 +53,10 @@ public class SizeConstraint implements Constraint {
      * The constrained size values.
      */
     private Constraint values;
-    
+
     /**
      * Creates a new size constraint.
-     * 
+     *
      * @param values         the constrained size values
      */
     public SizeConstraint(Constraint values) {
@@ -65,26 +65,26 @@ public class SizeConstraint implements Constraint {
 
     /**
      * Initializes the constraint. This will remove all levels of
-     * indirection present, such as references to types or values. No 
-     * constraint information is lost by this operation. This method 
+     * indirection present, such as references to types or values. No
+     * constraint information is lost by this operation. This method
      * may modify this object as a side-effect, and will be called by
      * the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public void initialize(MibLoaderLog log) throws MibException { 
+    public void initialize(MibLoaderLog log) throws MibException {
         values.initialize(log);
     }
 
     /**
-     * Checks if the specified type is compatible with this 
+     * Checks if the specified type is compatible with this
      * constraint.
-     * 
+     *
      * @param type            the type to check
-     * 
+     *
      * @return true if the type is compatible, or
      *         false otherwise
      */
@@ -93,27 +93,27 @@ public class SizeConstraint implements Constraint {
     }
 
     /**
-     * Checks if the specified value is compatible with this 
+     * Checks if the specified value is compatible with this
      * constraint. This method will always return false, as no values
      * can be compatible with a size constraint.
-     * 
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */
     public boolean isCompatible(MibValue value) {
         return false;
     }
-    
+
     /**
-     * Returns a list of the value constraints on the size. 
-     * 
+     * Returns a list of the value constraints on the size.
+     *
      * @return a list of the value constraints
      */
     public ArrayList getValues() {
         ArrayList  list;
-        
+
         if (values instanceof CompoundConstraint) {
             return ((CompoundConstraint) values).getConstraintList();
         } else {
@@ -125,16 +125,16 @@ public class SizeConstraint implements Constraint {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append("SIZE (");
         buffer.append(values);
         buffer.append(")");
-        
+
         return buffer.toString();
     }
 }

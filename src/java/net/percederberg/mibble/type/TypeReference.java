@@ -47,10 +47,10 @@ import net.percederberg.mibble.MibValue;
 
 /**
  * A reference to a type symbol.<p>
- * 
- * <strong>NOTE:</strong> This class is used internally during the 
- * MIB parsing only. After loading a MIB file successfully, all type 
- * references will have been resolved to other MIB types. Do 
+ *
+ * <strong>NOTE:</strong> This class is used internally during the
+ * MIB parsing only. After loading a MIB file successfully, all type
+ * references will have been resolved to other MIB types. Do
  * <strong>NOT</strong> use or reference this class.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -83,7 +83,7 @@ public class TypeReference extends MibType implements MibContext {
      * The additional type constraints.
      */
     private Constraint constraint = null;
-    
+
     /**
      * The additional defined symbols.
      */
@@ -93,7 +93,7 @@ public class TypeReference extends MibType implements MibContext {
      * The MIB type tag to set on the referenced type.
      */
     private MibTypeTag tag = null;
-    
+
     /**
      * The implicit type tag flag.
      */
@@ -101,13 +101,13 @@ public class TypeReference extends MibType implements MibContext {
 
     /**
      * Creates a new type reference.
-     * 
+     *
      * @param location       the reference location
-     * @param context        the reference context 
+     * @param context        the reference context
      * @param name           the reference name
      */
-    public TypeReference(FileLocation location, 
-                         MibContext context, 
+    public TypeReference(FileLocation location,
+                         MibContext context,
                          String name) {
 
         super("ReferenceToType(" + name + ")", false);
@@ -118,14 +118,14 @@ public class TypeReference extends MibType implements MibContext {
 
     /**
      * Creates a new type reference.
-     * 
+     *
      * @param location       the reference location
-     * @param context        the reference context 
+     * @param context        the reference context
      * @param name           the reference name
-     * @param constraint     the additional type constraint 
+     * @param constraint     the additional type constraint
      */
-    public TypeReference(FileLocation location, 
-                         MibContext context, 
+    public TypeReference(FileLocation location,
+                         MibContext context,
                          String name,
                          Constraint constraint) {
 
@@ -135,14 +135,14 @@ public class TypeReference extends MibType implements MibContext {
 
     /**
      * Creates a new type reference.
-     * 
+     *
      * @param location       the reference location
-     * @param context        the reference context 
+     * @param context        the reference context
      * @param name           the reference name
      * @param values         the additional defined symbols
      */
-    public TypeReference(FileLocation location, 
-                         MibContext context, 
+    public TypeReference(FileLocation location,
+                         MibContext context,
                          String name,
                          ArrayList values) {
 
@@ -152,25 +152,25 @@ public class TypeReference extends MibType implements MibContext {
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
-     * this object as a side-effect, and will return the basic 
+     * this object as a side-effect, and will return the basic
      * type.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB type
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
-     * 
+     *
      * @since 2.2
      */
-    public MibType initialize(MibSymbol symbol, MibLoaderLog log) 
+    public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
         MibSymbol  ref;
@@ -190,23 +190,23 @@ public class TypeReference extends MibType implements MibContext {
     }
 
     /**
-     * Initializes the specified MIB type. This will remove all 
-     * levels of indirection present, such as references to other 
-     * types, and returns the basic type. This method  will add any 
+     * Initializes the specified MIB type. This will remove all
+     * levels of indirection present, such as references to other
+     * types, and returns the basic type. This method  will add any
      * constraints or defined values if possible.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
      * @param ref            the referenced MIB type symbol
-     * 
+     *
      * @return the basic MIB type
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    private MibType initialize(MibSymbol symbol, 
-                               MibLoaderLog log, 
-                               MibTypeSymbol ref) 
+    private MibType initialize(MibSymbol symbol,
+                               MibLoaderLog log,
+                               MibTypeSymbol ref)
         throws MibException {
 
         MibType  type = ref.getType();
@@ -234,7 +234,7 @@ public class TypeReference extends MibType implements MibContext {
      * may be part in a chain of type tags, in which case the chain
      * is preserved. The last tag in the chain will be added first,
      * in order to be able to override (or preserve) a previous tag.
-     * 
+     *
      * @param type           the MIB type
      * @param tag            the MIB type tag
      */
@@ -251,7 +251,7 @@ public class TypeReference extends MibType implements MibContext {
 
     /**
      * Returns the file containing the reference.
-     * 
+     *
      * @return the file containing the reference
      */
     public FileLocation getLocation() {
@@ -259,11 +259,11 @@ public class TypeReference extends MibType implements MibContext {
     }
 
     /**
-     * Checks if the specified value is compatible with this type. 
+     * Checks if the specified value is compatible with this type.
      * This metod will always return false for referenced types.
-     * 
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */
@@ -273,10 +273,10 @@ public class TypeReference extends MibType implements MibContext {
 
     /**
      * Returns a named MIB symbol. This method checks the referenced
-     * type for a MibContext implementation. 
-     * 
+     * type for a MibContext implementation.
+     *
      * @param name           the symbol name
-     * 
+     *
      * @return the MIB symbol, or null if not found
      */
     public MibSymbol getSymbol(String name) {
@@ -293,13 +293,13 @@ public class TypeReference extends MibType implements MibContext {
      *
      * @param implicit       the implicit inheritance flag
      * @param tag            the new type tag
-     * 
+     *
      * @since 2.2
      */
     public void setTag(boolean implicit, MibTypeTag tag) {
         if (this.tag == null) {
             this.tag = tag;
-            this.implicitTag = implicit; 
+            this.implicitTag = implicit;
         } else if (implicit) {
             tag.setNext(this.tag.getNext());
             this.tag = tag;

@@ -43,8 +43,8 @@ import net.percederberg.mibble.MibValue;
 /**
  * An SNMP module variation value. This declaration is used inside a
  * module support declaration.
- * 
- * @see SnmpModuleSupport 
+ *
+ * @see SnmpModuleSupport
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -69,19 +69,19 @@ public class SnmpVariation {
 
     /**
      * The access mode.
-     */    
+     */
     private SnmpAccess access;
 
     /**
      * The cell values required for creation.
      */
     private ArrayList requiredCells;
-    
+
     /**
      * The default value.
      */
     private MibValue defaultValue;
-    
+
     /**
      * The variation description.
      */
@@ -89,9 +89,9 @@ public class SnmpVariation {
 
     /**
      * Creates a new SNMP module variation.
-     * 
+     *
      * @param value          the variation value
-     * @param syntax         the value syntax, or null 
+     * @param syntax         the value syntax, or null
      * @param writeSyntax    the value write syntax, or null
      * @param access         the access mode, or null
      * @param requiredCells  the cell values required for creation
@@ -117,13 +117,13 @@ public class SnmpVariation {
 
     /**
      * Initializes the object. This will remove all levels of
-     * indirection present, such as references to other types, and 
-     * returns the basic type. No type information is lost by this 
-     * operation. This method may modify this object as a 
+     * indirection present, such as references to other types, and
+     * returns the basic type. No type information is lost by this
+     * operation. This method may modify this object as a
      * side-effect, and will be called by the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
@@ -148,7 +148,7 @@ public class SnmpVariation {
 
     /**
      * Returns the value.
-     * 
+     *
      * @return the value
      */
     public MibValue getValue() {
@@ -157,8 +157,8 @@ public class SnmpVariation {
 
     /**
      * Returns the value syntax.
-     * 
-     * @return the value syntax, or 
+     *
+     * @return the value syntax, or
      *         null if not set
      */
     public MibType getSyntax() {
@@ -167,8 +167,8 @@ public class SnmpVariation {
 
     /**
      * Returns the value write syntax.
-     * 
-     * @return the value write syntax, or 
+     *
+     * @return the value write syntax, or
      *         null if not set
      */
     public MibType getWriteSyntax() {
@@ -177,7 +177,7 @@ public class SnmpVariation {
 
     /**
      * Returns the access mode.
-     * 
+     *
      * @return the access mode, or
      *         null if not set
      */
@@ -188,9 +188,9 @@ public class SnmpVariation {
     /**
      * Returns cell values required for creation. The returned list
      * will consist of MibValue instances.
-     * 
+     *
      * @return cell values required for creation
-     * 
+     *
      * @see net.percederberg.mibble.MibValue
      */
     public ArrayList getRequiredCells() {
@@ -199,7 +199,7 @@ public class SnmpVariation {
 
     /**
      * Returns the default value.
-     * 
+     *
      * @return the default value, or
      *         null if no default value has been set
      */
@@ -209,7 +209,7 @@ public class SnmpVariation {
 
     /**
      * Returns the variation description.
-     * 
+     *
      * @return the variation description
      */
     public String getDescription() {
@@ -218,12 +218,12 @@ public class SnmpVariation {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append(value);
         if (syntax != null) {
             buffer.append("\n      Syntax: ");

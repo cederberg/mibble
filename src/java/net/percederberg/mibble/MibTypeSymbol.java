@@ -34,7 +34,7 @@
 package net.percederberg.mibble;
 
 /**
- * A MIB type symbol. This class holds information relevant to a MIB 
+ * A MIB type symbol. This class holds information relevant to a MIB
  * type assignment, i.e. a defined type name.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -50,17 +50,17 @@ public class MibTypeSymbol extends MibSymbol {
 
     /**
      * Creates a new type symbol
-     * 
+     *
      * @param location       the symbol location
      * @param mib            the symbol MIB file
      * @param name           the symbol name
      * @param type           the symbol type
-     * 
+     *
      * @since 2.2
      */
     MibTypeSymbol(FileLocation location,
-                  Mib mib, 
-                  String name, 
+                  Mib mib,
+                  String name,
                   MibType type) {
 
         super(location, mib, name);
@@ -69,15 +69,15 @@ public class MibTypeSymbol extends MibSymbol {
 
     /**
      * Initializes the MIB symbol. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
      * this object as a side-effect.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
@@ -89,21 +89,21 @@ public class MibTypeSymbol extends MibSymbol {
 
     /**
      * Returns the symbol type.
-     * 
+     *
      * @return the symbol type
      */
     public MibType getType() {
         return type;
     }
-    
+
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append("TYPE ");
         buffer.append(getName());
         buffer.append(" ::= ");

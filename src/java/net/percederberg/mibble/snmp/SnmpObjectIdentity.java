@@ -42,9 +42,9 @@ import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
- * The SNMP object identity macro type. This macro type was added to 
- * SNMPv2 and is defined in RFC 2578. 
- * 
+ * The SNMP object identity macro type. This macro type was added to
+ * SNMPv2 and is defined in RFC 2578.
+ *
  * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -57,12 +57,12 @@ public class SnmpObjectIdentity extends MibType {
      * The object identity status.
      */
     private SnmpStatus status;
-    
+
     /**
      * The object identity description.
      */
     private String description;
-    
+
     /**
      * The object identity reference.
      */
@@ -70,10 +70,10 @@ public class SnmpObjectIdentity extends MibType {
 
     /**
      * Creates a new SNMP object identity.
-     * 
+     *
      * @param status         the object identity status
      * @param description    the object identity description
-     * @param reference      the object identity reference, or null 
+     * @param reference      the object identity reference, or null
      */
     public SnmpObjectIdentity(SnmpStatus status,
                               String description,
@@ -87,29 +87,29 @@ public class SnmpObjectIdentity extends MibType {
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
-     * this object as a side-effect, and will return the basic 
+     * this object as a side-effect, and will return the basic
      * type.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB type
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
-     * 
+     *
      * @since 2.2
      */
-    public MibType initialize(MibSymbol symbol, MibLoaderLog log) 
+    public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
         if (!(symbol instanceof MibValueSymbol)) {
-            throw new MibException(symbol.getLocation(), 
+            throw new MibException(symbol.getLocation(),
                                    "only values can have the " +
                                    getName() + " type");
         }
@@ -119,10 +119,10 @@ public class SnmpObjectIdentity extends MibType {
     /**
      * Checks if the specified value is compatible with this type. A
      * value is compatible if and only if it is an object identifier
-     * value. 
-     * 
+     * value.
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */
@@ -132,7 +132,7 @@ public class SnmpObjectIdentity extends MibType {
 
     /**
      * Returns the object identity status.
-     * 
+     *
      * @return the object identity status
      */
     public SnmpStatus getStatus() {
@@ -141,7 +141,7 @@ public class SnmpObjectIdentity extends MibType {
 
     /**
      * Returns the object identity description.
-     * 
+     *
      * @return the object identity description
      */
     public String getDescription() {
@@ -150,7 +150,7 @@ public class SnmpObjectIdentity extends MibType {
 
     /**
      * Returns the object identity reference.
-     * 
+     *
      * @return the object identity reference, or
      *         null if no reference has been set
      */
@@ -160,12 +160,12 @@ public class SnmpObjectIdentity extends MibType {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append(super.toString());
         buffer.append(" (");
         buffer.append("\n  Status: ");

@@ -44,9 +44,9 @@ public interface MibContext {
 
     /**
      * Returns a named MIB symbol.
-     * 
+     *
      * @param name           the symbol name
-     * 
+     *
      * @return the MIB symbol, or null if not found
      */
     MibSymbol getSymbol(String name);

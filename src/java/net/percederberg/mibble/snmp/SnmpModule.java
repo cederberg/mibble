@@ -40,9 +40,9 @@ import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibValue;
 
 /**
- * An SNMP module compliance value. This declaration is used inside 
+ * An SNMP module compliance value. This declaration is used inside
  * the module compliance macro type.
- * 
+ *
  * @see SnmpModuleCompliance
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -55,46 +55,46 @@ public class SnmpModule {
      * The module name.
      */
     private String module;
-    
+
     /**
      * The list of mandatory group values.
      */
     private ArrayList groups;
-    
+
     /**
      * The list of compliances.
      */
     private ArrayList compliances;
-    
+
     /**
      * Creates a new module compliance declaration.
-     * 
+     *
      * @param module         the module name, or null
      * @param groups         the list of mandatory group values
      * @param compliances    the list of compliances
      */
-    public SnmpModule(String module, 
-                      ArrayList groups, 
-                      ArrayList compliances) {    
+    public SnmpModule(String module,
+                      ArrayList groups,
+                      ArrayList compliances) {
 
         this.module = module;
         this.groups = groups;
         this.compliances = compliances;
     }
-    
+
     /**
      * Initializes the object. This will remove all levels of
-     * indirection present, such as references to other types, and 
-     * returns the basic type. No type information is lost by this 
-     * operation. This method may modify this object as a 
+     * indirection present, such as references to other types, and
+     * returns the basic type. No type information is lost by this
+     * operation. This method may modify this object as a
      * side-effect, and will be called by the MIB loader.
      *
      * @param log            the MIB loader log
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    void initialize(MibLoaderLog log) 
+    void initialize(MibLoaderLog log)
         throws MibException {
 
         ArrayList  list = new ArrayList();
@@ -111,32 +111,32 @@ public class SnmpModule {
 
     /**
      * Returns the module name.
-     * 
+     *
      * @return the module name, or
      *         null if not set
      */
     public String getModule() {
         return module;
     }
-    
+
     /**
      * Returns the list of mandatory group values. The returned list
      * will consist of MibValue instances.
-     * 
+     *
      * @return the list of mandatory group values
-     * 
+     *
      * @see net.percederberg.mibble.MibValue
      */
     public ArrayList getGroups() {
         return groups;
     }
-    
+
     /**
-     * Returns the list of compliances. The returned list will 
+     * Returns the list of compliances. The returned list will
      * consist of SnmpCompliance instances.
-     * 
+     *
      * @return the list of compliances
-     * 
+     *
      * @see SnmpCompliance
      */
     public ArrayList getCompliances() {
@@ -145,12 +145,12 @@ public class SnmpModule {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         if (module != null) {
             buffer.append(module);
         }

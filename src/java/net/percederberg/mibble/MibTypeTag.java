@@ -34,13 +34,13 @@
 package net.percederberg.mibble;
 
 /**
- * A MIB type tag. The type tag consists of a category and value. 
+ * A MIB type tag. The type tag consists of a category and value.
  * Together these two numbers normally identifies a type uniquely, as
- * all primitive and most (if not all) SNMP types (such as IpAddress 
- * and similar) have type tags assigned to them. Type tags may also 
+ * all primitive and most (if not all) SNMP types (such as IpAddress
+ * and similar) have type tags assigned to them. Type tags may also
  * be chained together in a list, in order to not loose information.
  * Whether to replace or to chain a type tag is determined by the
- * EXPLICIT or IMPLICIT keywords in the MIB file. 
+ * EXPLICIT or IMPLICIT keywords in the MIB file.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -50,85 +50,85 @@ public class MibTypeTag {
 
     /**
      * The universal type tag category. This is the type tag category
-     * used for the ASN.1 primitive types. 
+     * used for the ASN.1 primitive types.
      */
     public static final int UNIVERSAL_CATEGORY = 0;
-    
+
     /**
-     * The application type tag category. 
+     * The application type tag category.
      */
     public static final int APPLICATION_CATEGORY = 1;
-    
+
     /**
-     * The context specific type tag category. This is the default 
+     * The context specific type tag category. This is the default
      * type tag category if no other category was specified.
      */
     public static final int CONTEXT_SPECIFIC_CATEGORY = 2;
-    
+
     /**
-     * The private type tag category. 
+     * The private type tag category.
      */
     public static final int PRIVATE_CATEGORY = 3;
 
     /**
-     * The universal boolean type tag. 
+     * The universal boolean type tag.
      */
-    public static final MibTypeTag BOOLEAN = 
+    public static final MibTypeTag BOOLEAN =
         new MibTypeTag(UNIVERSAL_CATEGORY, 1);
 
     /**
-     * The universal integer type tag. 
+     * The universal integer type tag.
      */
-    public static final MibTypeTag INTEGER = 
+    public static final MibTypeTag INTEGER =
         new MibTypeTag(UNIVERSAL_CATEGORY, 2);
 
     /**
-     * The universal bit string type tag. 
+     * The universal bit string type tag.
      */
-    public static final MibTypeTag BIT_STRING = 
+    public static final MibTypeTag BIT_STRING =
         new MibTypeTag(UNIVERSAL_CATEGORY, 3);
 
     /**
-     * The universal octet string type tag. 
+     * The universal octet string type tag.
      */
-    public static final MibTypeTag OCTET_STRING = 
+    public static final MibTypeTag OCTET_STRING =
         new MibTypeTag(UNIVERSAL_CATEGORY, 4);
 
     /**
-     * The universal null type tag. 
+     * The universal null type tag.
      */
-    public static final MibTypeTag NULL = 
+    public static final MibTypeTag NULL =
         new MibTypeTag(UNIVERSAL_CATEGORY, 5);
 
     /**
-     * The universal object identifier type tag. 
+     * The universal object identifier type tag.
      */
-    public static final MibTypeTag OBJECT_IDENTIFIER = 
-        new MibTypeTag(UNIVERSAL_CATEGORY, 6);    
+    public static final MibTypeTag OBJECT_IDENTIFIER =
+        new MibTypeTag(UNIVERSAL_CATEGORY, 6);
 
     /**
-     * The universal real type tag. 
+     * The universal real type tag.
      */
-    public static final MibTypeTag REAL = 
-        new MibTypeTag(UNIVERSAL_CATEGORY, 9);    
+    public static final MibTypeTag REAL =
+        new MibTypeTag(UNIVERSAL_CATEGORY, 9);
 
     /**
-     * The universal sequence and sequence of type tag. 
+     * The universal sequence and sequence of type tag.
      */
-    public static final MibTypeTag SEQUENCE = 
-        new MibTypeTag(UNIVERSAL_CATEGORY, 16);    
+    public static final MibTypeTag SEQUENCE =
+        new MibTypeTag(UNIVERSAL_CATEGORY, 16);
 
     /**
-     * The universal sequence and sequence of type tag. 
+     * The universal sequence and sequence of type tag.
      */
-    public static final MibTypeTag SET = 
-        new MibTypeTag(UNIVERSAL_CATEGORY, 17);    
+    public static final MibTypeTag SET =
+        new MibTypeTag(UNIVERSAL_CATEGORY, 17);
 
     /**
      * The tag category.
      */
     private int category;
-    
+
     /**
      * The tag value.
      */
@@ -141,7 +141,7 @@ public class MibTypeTag {
 
     /**
      * Creates a new MIB type tag.
-     * 
+     *
      * @param category       the type tag category
      * @param value          the type tag value
      */
@@ -154,15 +154,15 @@ public class MibTypeTag {
      * Checks if this type tag equals another object. This method
      * will only return true if the other object is a type tag with
      * the same category and value numbers.
-     * 
+     *
      * @param obj            the object to compare to
-     * 
+     *
      * @return true if the objects are equal, or
      *         false otherwise
      */
     public boolean equals(Object obj) {
         MibTypeTag  tag;
-        
+
         if (obj instanceof MibTypeTag) {
             tag = (MibTypeTag) obj;
             return equals(tag.category, tag.value);
@@ -170,14 +170,14 @@ public class MibTypeTag {
             return false;
         }
     }
-    
+
     /**
-     * Checks if this type tag has the specified category and 
+     * Checks if this type tag has the specified category and
      * value numbers.
-     * 
+     *
      * @param category       the category number
      * @param value          the value number
-     * 
+     *
      * @return true if the category and value numbers match, or
      *         false otherwise
      */
@@ -187,10 +187,10 @@ public class MibTypeTag {
 
     /**
      * Returns the type tag category. The category value corresponds
-     * to one of the defined category constants. 
-     * 
+     * to one of the defined category constants.
+     *
      * @return the type tag category
-     * 
+     *
      * @see #UNIVERSAL_CATEGORY
      * @see #APPLICATION_CATEGORY
      * @see #CONTEXT_SPECIFIC_CATEGORY
@@ -201,9 +201,9 @@ public class MibTypeTag {
     }
 
     /**
-     * Returns the type tag value. The tag category and value 
+     * Returns the type tag value. The tag category and value
      * normally identifies a type uniquely.
-     * 
+     *
      * @return the type tag value
      */
     public int getValue() {
@@ -212,34 +212,34 @@ public class MibTypeTag {
 
     /**
      * Returns the next type tag in the tag chain.
-     * 
+     *
      * @return the next type tag in the tag chain, or
      *         null if there is no next tag
      */
     public MibTypeTag getNext() {
         return next;
     }
-    
+
     /**
-     * Sets the next type tag in the tag chain.<p> 
-     * 
+     * Sets the next type tag in the tag chain.<p>
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param next           the next type tag
      */
     public void setNext(MibTypeTag next) {
         this.next = next;
     }
-    
+
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append("[");
         if (category == UNIVERSAL_CATEGORY) {
             buffer.append("UNIVERSAL ");

@@ -41,8 +41,8 @@ import net.percederberg.mibble.MibValue;
 /**
  * An SNMP module compliance value. This declaration is used inside a
  * module declaration for both the GROUP and OBJECT compliance parts.
- * 
- * @see SnmpModule 
+ *
+ * @see SnmpModule
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.2
@@ -67,7 +67,7 @@ public class SnmpCompliance {
 
     /**
      * The access mode.
-     */    
+     */
     private SnmpAccess access;
 
     /**
@@ -77,9 +77,9 @@ public class SnmpCompliance {
 
     /**
      * Creates a new SNMP module compliance declaration.
-     * 
+     *
      * @param value          the compliance value
-     * @param syntax         the value syntax, or null 
+     * @param syntax         the value syntax, or null
      * @param writeSyntax    the value write syntax, or null
      * @param access         the access mode, or null
      * @param description    the compliance description
@@ -99,17 +99,17 @@ public class SnmpCompliance {
 
     /**
      * Initializes this object. This will remove all levels of
-     * indirection present, such as references to other types, and 
-     * returns the basic type. No type information is lost by this 
-     * operation. This method may modify this object as a 
+     * indirection present, such as references to other types, and
+     * returns the basic type. No type information is lost by this
+     * operation. This method may modify this object as a
      * side-effect, and will be called by the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    void initialize(MibLoaderLog log) 
+    void initialize(MibLoaderLog log)
         throws MibException {
 
         value = value.initialize(log);
@@ -123,7 +123,7 @@ public class SnmpCompliance {
 
     /**
      * Returns the value.
-     * 
+     *
      * @return the value
      */
     public MibValue getValue() {
@@ -132,8 +132,8 @@ public class SnmpCompliance {
 
     /**
      * Returns the value syntax.
-     * 
-     * @return the value syntax, or 
+     *
+     * @return the value syntax, or
      *         null if not set
      */
     public MibType getSyntax() {
@@ -142,8 +142,8 @@ public class SnmpCompliance {
 
     /**
      * Returns the value write syntax.
-     * 
-     * @return the value write syntax, or 
+     *
+     * @return the value write syntax, or
      *         null if not set
      */
     public MibType getWriteSyntax() {
@@ -152,7 +152,7 @@ public class SnmpCompliance {
 
     /**
      * Returns the access mode.
-     * 
+     *
      * @return the access mode, or
      *         null if not set
      */
@@ -162,7 +162,7 @@ public class SnmpCompliance {
 
     /**
      * Returns the compliance description.
-     * 
+     *
      * @return the compliance description
      */
     public String getDescription() {
@@ -171,12 +171,12 @@ public class SnmpCompliance {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append(value);
         if (syntax != null) {
             buffer.append("\n      Syntax: ");

@@ -35,8 +35,8 @@ package net.percederberg.mibble;
 
 /**
  * A compound MIB context. This class attempts to resolve all symbols
- * with either one of two MIB contexts, one of which will have 
- * priority. 
+ * with either one of two MIB contexts, one of which will have
+ * priority.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.0
@@ -48,15 +48,15 @@ class CompoundContext implements MibContext {
      * The first MIB context.
      */
     private MibContext first;
-    
+
     /**
      * The second MIB context.
      */
     private MibContext second;
-    
+
     /**
      * Creates a new compound MIB context.
-     * 
+     *
      * @param first          the primary MIB context
      * @param second         the secondary MIB context
      */
@@ -67,24 +67,24 @@ class CompoundContext implements MibContext {
 
     /**
      * Returns a named MIB symbol.
-     * 
+     *
      * @param name           the symbol name
-     * 
+     *
      * @return the MIB symbol, or null if not found
      */
     public MibSymbol getSymbol(String name) {
         MibSymbol  symbol;
-        
+
         symbol = first.getSymbol(name);
         if (symbol == null) {
             symbol = second.getSymbol(name);
         }
         return symbol;
     }
-    
+
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {

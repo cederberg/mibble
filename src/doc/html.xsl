@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
- 
+
 <!-- ### ENTITY DECLARATIONS ### -->
 <!DOCTYPE stylesheet [
 <!ENTITY newline "<xsl:text>
@@ -124,7 +124,7 @@
   <xsl:template match="code">
     <code><xsl:apply-templates /></code>
   </xsl:template>
-  
+
   <xsl:template match="ref">
     <xsl:choose>
       <xsl:when test="@url != ''">

@@ -39,8 +39,8 @@ import java.io.FileReader;
 import java.io.IOException;
 
 /**
- * A file location. This class contains a reference to an exact 
- * location inside a text file. 
+ * A file location. This class contains a reference to an exact
+ * location inside a text file.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.0
@@ -52,21 +52,21 @@ public class FileLocation {
      * The file name.
      */
     private File file;
-    
+
     /**
      * The line number.
      */
     private int line;
-    
+
     /**
      * The column number.
      */
     private int column;
-    
+
     /**
-     * Creates a new file location without an exact line or column 
+     * Creates a new file location without an exact line or column
      * reference.
-     * 
+     *
      * @param file           the file name
      */
     public FileLocation(File file) {
@@ -75,7 +75,7 @@ public class FileLocation {
 
     /**
      * Creates a new file location.
-     * 
+     *
      * @param file           the file name
      * @param line           the line number
      * @param column         the column number
@@ -88,25 +88,25 @@ public class FileLocation {
 
     /**
      * Returns the file name.
-     * 
+     *
      * @return the file name
      */
     public File getFile() {
         return file;
     }
-    
+
     /**
      * Returns the line number.
-     * 
+     *
      * @return the line number
      */
     public int getLineNumber() {
         return line;
     }
-    
+
     /**
      * Returns the column number.
-     * 
+     *
      * @return the column number
      */
     public int getColumnNumber() {
@@ -114,10 +114,10 @@ public class FileLocation {
     }
 
     /**
-     * Reads the specified line from the file. If the file couldn't 
-     * be opened or read correctly, null will be returned. The line 
+     * Reads the specified line from the file. If the file couldn't
+     * be opened or read correctly, null will be returned. The line
      * will NOT contain the terminating '\n' character.
-     * 
+     *
      * @return the line read, or
      *         null if not found
      */
@@ -131,7 +131,7 @@ public class FileLocation {
         try {
             input = new BufferedReader(new FileReader(file));
             for (int i = 0; i < line; i++) {
-                str = input.readLine(); 
+                str = input.readLine();
             }
             input.close();
         } catch (IOException e) {

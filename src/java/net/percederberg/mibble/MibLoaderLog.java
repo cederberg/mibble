@@ -62,30 +62,30 @@ public class MibLoaderLog {
      * The log error count.
      */
     private int errors = 0;
-    
+
     /**
      * The log warning count.
      */
     private int warnings = 0;
 
     /**
-     * Creates a new loader log without entries. 
+     * Creates a new loader log without entries.
      */
     public MibLoaderLog() {
     }
 
     /**
      * Returns the number of errors in the log.
-     * 
+     *
      * @return the number of errors in the log
      */
     public int errorCount() {
         return errors;
     }
-    
+
     /**
      * Returns the number of warnings in the log.
-     * 
+     *
      * @return the number of warnings in the log
      */
     public int warningCount() {
@@ -94,7 +94,7 @@ public class MibLoaderLog {
 
     /**
      * Adds a log entry to this log.
-     * 
+     *
      * @param entry          the log entry to add
      */
     public void add(LogEntry entry) {
@@ -109,9 +109,9 @@ public class MibLoaderLog {
 
     /**
      * Adds an internal error message to the log. Internal errors are
-     * only issued when possible bugs are encountered. They are 
+     * only issued when possible bugs are encountered. They are
      * counted as errors.
-     * 
+     *
      * @param location       the file location
      * @param message        the error message
      */
@@ -121,9 +121,9 @@ public class MibLoaderLog {
 
     /**
      * Adds an internal error message to the log. Internal errors are
-     * only issued when possible bugs are encountered. They are 
+     * only issued when possible bugs are encountered. They are
      * counted as errors.
-     * 
+     *
      * @param file           the file affected
      * @param message        the error message
      */
@@ -133,7 +133,7 @@ public class MibLoaderLog {
 
     /**
      * Adds an error message to the log.
-     * 
+     *
      * @param location       the file location
      * @param message        the error message
      */
@@ -143,7 +143,7 @@ public class MibLoaderLog {
 
     /**
      * Adds an error message to the log.
-     * 
+     *
      * @param file           the file affected
      * @param line           the line number
      * @param column         the column number
@@ -155,7 +155,7 @@ public class MibLoaderLog {
 
     /**
      * Adds a warning message to the log.
-     * 
+     *
      * @param location       the file location
      * @param message        the warning message
      */
@@ -165,7 +165,7 @@ public class MibLoaderLog {
 
     /**
      * Adds a warning message to the log.
-     * 
+     *
      * @param file           the file affected
      * @param line           the line number
      * @param column         the column number
@@ -177,7 +177,7 @@ public class MibLoaderLog {
 
     /**
      * Adds all log entries from another log.
-     * 
+     *
      * @param log            the MIB loader log
      */
     public void addAll(MibLoaderLog log) {
@@ -188,7 +188,7 @@ public class MibLoaderLog {
 
     /**
      * Adds all errors from a parser log exception.
-     * 
+     *
      * @param file           the file affected
      * @param log            the parser log exception
      */
@@ -200,15 +200,15 @@ public class MibLoaderLog {
             addError(file, e.getLine(), e.getColumn(), e.getErrorMessage());
         }
     }
-    
+
     /**
-     * Returns an iterator with all the log entries. The iterator 
+     * Returns an iterator with all the log entries. The iterator
      * will only return LogEntry instances.
-     * 
+     *
      * @return an iterator with all the log entries
-     * 
+     *
      * @see LogEntry
-     * 
+     *
      * @since 2.2
      */
     public Iterator entries() {
@@ -217,7 +217,7 @@ public class MibLoaderLog {
 
     /**
      * Prints all log entries to the specified output stream.
-     * 
+     *
      * @param output         the output stream to use
      */
     public void printTo(PrintStream output) {
@@ -226,7 +226,7 @@ public class MibLoaderLog {
 
     /**
      * Prints all log entries to the specified output stream.
-     * 
+     *
      * @param output         the output stream to use
      */
     public void printTo(PrintWriter output) {
@@ -235,11 +235,11 @@ public class MibLoaderLog {
 
     /**
      * Prints all log entries to the specified output stream.
-     * 
+     *
      * @param output         the output stream to use
-     * @param margin         the print margin 
-     * 
-     * @since 2.2 
+     * @param margin         the print margin
+     *
+     * @since 2.2
      */
     public void printTo(PrintWriter output, int margin) {
         StringBuffer  buffer = new StringBuffer();
@@ -289,19 +289,19 @@ public class MibLoaderLog {
     }
 
     /**
-     * Creates a relative file name from a file. This method will 
+     * Creates a relative file name from a file. This method will
      * return the absolute file name if the file unless the current
-     * directory is a parent to the file. 
-     * 
+     * directory is a parent to the file.
+     *
      * @param file           the file to calculate relative name for
-     * 
+     *
      * @return the relative name if found, or
      *         the absolute name otherwise
      */
     private String relativeFilename(File file) {
         String  currentPath;
         String  filePath;
-        
+
         if (file == null) {
             return "<unknown file>";
         }
@@ -310,9 +310,9 @@ public class MibLoaderLog {
             filePath = file.getCanonicalPath();
             if (filePath.startsWith(currentPath)) {
                 filePath = filePath.substring(currentPath.length());
-                if (filePath.charAt(0) == '/' 
+                if (filePath.charAt(0) == '/'
                  || filePath.charAt(0) == '\\') {
-                
+
                     return filePath.substring(1);
                 } else {
                     return filePath;
@@ -326,18 +326,18 @@ public class MibLoaderLog {
 
     /**
      * Breaks a string into multiple lines. This method will also add
-     * a prefix to each line in the resulting string. The prefix 
+     * a prefix to each line in the resulting string. The prefix
      * length will be taken into account when breaking the line. Line
-     * breaks will only be inserted as replacements for space 
+     * breaks will only be inserted as replacements for space
      * characters.
-     * 
+     *
      * @param str            the string to line break
      * @param prefix         the prefix to add to each line
      * @param length         the maximum line length
-     * 
+     *
      * @return the new formatted string
      */
-    private String linebreakString(String str, String prefix, int length) {    
+    private String linebreakString(String str, String prefix, int length) {
         StringBuffer  buffer = new StringBuffer();
         int           pos;
 
@@ -362,7 +362,7 @@ public class MibLoaderLog {
 
 
     /**
-     * A log entry. This class holds all the details in an error or a 
+     * A log entry. This class holds all the details in an error or a
      * warning log entry.
      *
      * @author   Per Cederberg, <per at percederberg dot net>
@@ -370,40 +370,40 @@ public class MibLoaderLog {
      * @since    2.2
      */
     public class LogEntry {
-    
+
         /**
          * The internal error log entry type constant.
          */
         public static final int INTERNAL_ERROR = 1;
-        
+
         /**
          * The error log entry type constant.
          */
         public static final int ERROR = 2;
-        
+
         /**
          * The warning log entry type constant.
          */
-        public static final int WARNING = 3; 
-    
+        public static final int WARNING = 3;
+
         /**
          * The log entry type.
          */
         private int type;
-    
+
         /**
          * The log entry file reference.
          */
         private FileLocation location;
-    
+
         /**
          * The log entry message.
          */
         private String message;
-        
+
         /**
          * Creates a new log entry.
-         * 
+         *
          * @param type           the log entry type
          * @param location       the log entry file reference
          * @param message        the log entry message
@@ -413,32 +413,32 @@ public class MibLoaderLog {
             this.location = location;
             this.message = message;
         }
-        
+
         /**
-         * Checks if this is an error log entry. 
-         * 
+         * Checks if this is an error log entry.
+         *
          * @return true if this is an error log entry, or
          *         false otherwise
          */
         public boolean isError() {
             return type == INTERNAL_ERROR || type == ERROR;
         }
-        
+
         /**
-         * Checks if this is a warning log entry. 
-         * 
+         * Checks if this is a warning log entry.
+         *
          * @return true if this is a warning log entry, or
          *         false otherwise
          */
         public boolean isWarning() {
             return type == WARNING;
         }
-        
+
         /**
-         * Returns the log entry type. 
-         * 
+         * Returns the log entry type.
+         *
          * @return the log entry type
-         * 
+         *
          * @see #INTERNAL_ERROR
          * @see #ERROR
          * @see #WARNING
@@ -446,48 +446,48 @@ public class MibLoaderLog {
         public int getType() {
             return type;
         }
-    
+
         /**
          * Returns the file this entry applies to.
-         * 
+         *
          * @return the file affected
          */
         public File getFile() {
             return location.getFile();
         }
-        
+
         /**
          * Returns the line number.
-         * 
+         *
          * @return the line number
          */
         public int getLineNumber() {
             return location.getLineNumber();
         }
-        
+
         /**
          * Returns the column number.
-         * 
+         *
          * @return the column number
          */
         public int getColumnNumber() {
             return location.getColumnNumber();
         }
-    
+
         /**
          * Returns the log entry message.
-         * 
+         *
          * @return the log entry message
          */
         public String getMessage() {
             return message;
         }
-        
+
         /**
-         * Reads the line from the referenced file. If the file couldn't 
-         * be opened or read correctly, null will be returned. The line 
+         * Reads the line from the referenced file. If the file couldn't
+         * be opened or read correctly, null will be returned. The line
          * will NOT contain the terminating '\n' character.
-         * 
+         *
          * @return the line read, or
          *         null if not found
          */

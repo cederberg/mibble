@@ -44,9 +44,9 @@ import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
- * The SNMP object group macro type. This macro type was added to 
- * SNMPv2 and is defined in RFC 2580. 
- * 
+ * The SNMP object group macro type. This macro type was added to
+ * SNMPv2 and is defined in RFC 2580.
+ *
  * @see <a href="http://www.ietf.org/rfc/rfc2580.txt">RFC 2580 (SNMPv2-CONF)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -64,12 +64,12 @@ public class SnmpObjectGroup extends MibType {
      * The object group status.
      */
     private SnmpStatus status;
-    
+
     /**
      * The object group description.
      */
     private String description;
-    
+
     /**
      * The object group reference.
      */
@@ -77,11 +77,11 @@ public class SnmpObjectGroup extends MibType {
 
     /**
      * Creates a new SNMP object group.
-     * 
+     *
      * @param objects        the value objects
      * @param status         the object group status
      * @param description    the object group description
-     * @param reference      the object group reference, or null 
+     * @param reference      the object group reference, or null
      */
     public SnmpObjectGroup(ArrayList objects,
                            SnmpStatus status,
@@ -97,32 +97,32 @@ public class SnmpObjectGroup extends MibType {
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
-     * this object as a side-effect, and will return the basic 
+     * this object as a side-effect, and will return the basic
      * type.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB type
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
-     * 
+     *
      * @since 2.2
      */
-    public MibType initialize(MibSymbol symbol, MibLoaderLog log) 
+    public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
         ArrayList  list = new ArrayList();
         MibValue   value;
 
         if (!(symbol instanceof MibValueSymbol)) {
-            throw new MibException(symbol.getLocation(), 
+            throw new MibException(symbol.getLocation(),
                                    "only values can have the " +
                                    getName() + " type");
         }
@@ -137,10 +137,10 @@ public class SnmpObjectGroup extends MibType {
     /**
      * Checks if the specified value is compatible with this type. A
      * value is compatible if and only if it is an object identifier
-     * value. 
-     * 
+     * value.
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */
@@ -149,11 +149,11 @@ public class SnmpObjectGroup extends MibType {
     }
 
     /**
-     * Returns the value objects. The returned list will consist of 
+     * Returns the value objects. The returned list will consist of
      * MibValue instances.
-     * 
+     *
      * @return the value objects
-     * 
+     *
      * @see net.percederberg.mibble.MibValue
      */
     public ArrayList getObjects() {
@@ -162,7 +162,7 @@ public class SnmpObjectGroup extends MibType {
 
     /**
      * Returns the object group status.
-     * 
+     *
      * @return the object group status
      */
     public SnmpStatus getStatus() {
@@ -171,7 +171,7 @@ public class SnmpObjectGroup extends MibType {
 
     /**
      * Returns the object group description.
-     * 
+     *
      * @return the object group description
      */
     public String getDescription() {
@@ -180,7 +180,7 @@ public class SnmpObjectGroup extends MibType {
 
     /**
      * Returns the object group reference.
-     * 
+     *
      * @return the object group reference, or
      *         null if no reference has been set
      */
@@ -190,12 +190,12 @@ public class SnmpObjectGroup extends MibType {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append(super.toString());
         buffer.append(" (");
         buffer.append("\n  Objects: ");

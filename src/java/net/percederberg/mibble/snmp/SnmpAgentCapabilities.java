@@ -45,8 +45,8 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * The SNMP agent capabilities macro type. This macro type was added
- * to SNMPv2 and is defined in RFC 2580. 
- * 
+ * to SNMPv2 and is defined in RFC 2580.
+ *
  * @see <a href="http://www.ietf.org/rfc/rfc2580.txt">RFC 2580 (SNMPv2-CONF)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -59,7 +59,7 @@ public class SnmpAgentCapabilities extends MibType {
      * The product release.
      */
     private String productRelease;
-    
+
     /**
      * The type status.
      */
@@ -69,7 +69,7 @@ public class SnmpAgentCapabilities extends MibType {
      * The type description.
      */
     private String description;
-    
+
     /**
      * The type reference.
      */
@@ -78,11 +78,11 @@ public class SnmpAgentCapabilities extends MibType {
     /**
      * The list of supported modules.
      */
-    private ArrayList modules;    
-    
+    private ArrayList modules;
+
     /**
      * Creates a new agent capabilities.
-     *  
+     *
      * @param productRelease the product release
      * @param status         the type status
      * @param description    the type description
@@ -105,29 +105,29 @@ public class SnmpAgentCapabilities extends MibType {
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
-     * this object as a side-effect, and will return the basic 
+     * this object as a side-effect, and will return the basic
      * type.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB type
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
-     * 
+     *
      * @since 2.2
      */
-    public MibType initialize(MibSymbol symbol, MibLoaderLog log) 
+    public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
         if (!(symbol instanceof MibValueSymbol)) {
-            throw new MibException(symbol.getLocation(), 
+            throw new MibException(symbol.getLocation(),
                                    "only values can have the " +
                                    getName() + " type");
         }
@@ -140,10 +140,10 @@ public class SnmpAgentCapabilities extends MibType {
     /**
      * Checks if the specified value is compatible with this type. A
      * value is compatible if and only if it is an object identifier
-     * value. 
-     * 
+     * value.
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */
@@ -153,7 +153,7 @@ public class SnmpAgentCapabilities extends MibType {
 
     /**
      * Returns the product release.
-     * 
+     *
      * @return the product release
      */
     public String getProductRelease() {
@@ -162,7 +162,7 @@ public class SnmpAgentCapabilities extends MibType {
 
     /**
      * Returns the type status.
-     * 
+     *
      * @return the type status
      */
     public SnmpStatus getStatus() {
@@ -171,7 +171,7 @@ public class SnmpAgentCapabilities extends MibType {
 
     /**
      * Returns the type description.
-     * 
+     *
      * @return the type description
      */
     public String getDescription() {
@@ -180,7 +180,7 @@ public class SnmpAgentCapabilities extends MibType {
 
     /**
      * Returns the type reference.
-     * 
+     *
      * @return the type reference, or
      *         null if no reference has been set
      */
@@ -190,10 +190,10 @@ public class SnmpAgentCapabilities extends MibType {
 
     /**
      * Returns the list of the supported modules. The returned list
-     * will consist of SnmpModuleSupport instances.  
-     * 
+     * will consist of SnmpModuleSupport instances.
+     *
      * @return the list of the supported modules
-     * 
+     *
      * @see SnmpModuleSupport
      */
     public ArrayList getModules() {
@@ -202,12 +202,12 @@ public class SnmpAgentCapabilities extends MibType {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append(super.toString());
         buffer.append(" (");
         buffer.append("\n  Product Release: ");

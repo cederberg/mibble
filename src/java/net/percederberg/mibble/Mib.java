@@ -48,15 +48,15 @@ import net.percederberg.mibble.value.NumberValue;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
- * An SNMP MIB container. This class contains all the information 
+ * An SNMP MIB container. This class contains all the information
  * from a MIB file, including all defined types and values. MIB files
  * are loaded through a {@link MibLoader MIB loader}.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.0
  * @since    2.0
- * 
- * @see <a href="http://www.ietf.org/rfc/rfc3411.txt">RFC 3411 - An 
+ *
+ * @see <a href="http://www.ietf.org/rfc/rfc3411.txt">RFC 3411 - An
  *      Architecture for Describing SNMP Management Frameworks</a>
  */
 public class Mib implements MibContext {
@@ -93,60 +93,60 @@ public class Mib implements MibContext {
     private ArrayList symbolList = new ArrayList();
 
     /**
-     * The MIB symbol name map. This maps the symbol names to their 
+     * The MIB symbol name map. This maps the symbol names to their
      * respective MIB symbol objects.
      */
     private HashMap symbolNameMap = new HashMap();
 
     /**
      * The MIB symbol value map. This maps the symbol values to their
-     * respective MIB symbol objects. Only the value symbols with 
-     * either a number or an object identifier value is present in 
-     * this map. 
+     * respective MIB symbol objects. Only the value symbols with
+     * either a number or an object identifier value is present in
+     * this map.
      */
     private HashMap symbolValueMap = new HashMap();
 
     /**
      * Creates a new MIB container. This will read the MIB file and
      * create initial MIB symbols. Note that this only corresponds to
-     * the first analysis pass (of two), leaving symbols in the MIB 
-     * possibly containing unresolved references. A separate call to 
+     * the first analysis pass (of two), leaving symbols in the MIB
+     * possibly containing unresolved references. A separate call to
      * initialize() must be made once all referenced MIB files have
      * been loaded.
-     * 
+     *
      * @param file           the MIB file to load
      * @param loader         the MIB loader to use for imports
      * @param log            the MIB log to use for errors
-     * 
-     * @throws FileNotFoundException if the MIB file couldn't be 
+     *
+     * @throws FileNotFoundException if the MIB file couldn't be
      *             found
-     * @throws MibLoaderException if the MIB file couldn't be parsed 
+     * @throws MibLoaderException if the MIB file couldn't be parsed
      *             or analyzed correctly
-     * 
+     *
      * @see #initialize()
      */
-    Mib(File file, MibLoader loader, MibLoaderLog log) 
+    Mib(File file, MibLoader loader, MibLoaderLog log)
         throws FileNotFoundException, MibLoaderException {
 
         this(new FileReader(file), file, loader, log);
     }
-    
+
     /**
      * Creates a new MIB container. This will read the MIB file and
      * create initial MIB symbols. Note that this only corresponds to
-     * the first analysis pass (of two), leaving symbols in the MIB 
-     * possibly containing unresolved references. A separate call to 
+     * the first analysis pass (of two), leaving symbols in the MIB
+     * possibly containing unresolved references. A separate call to
      * initialize() must be made once all referenced MIB files have
      * been loaded.
      *
-     * @param input          the input stream to read 
+     * @param input          the input stream to read
      * @param file           the MIB file name
      * @param loader         the MIB loader to use for imports
      * @param log            the MIB log to use for errors
-     * 
-     * @throws MibLoaderException if the MIB file couldn't be parsed 
+     *
+     * @throws MibLoaderException if the MIB file couldn't be parsed
      *             or analyzed correctly
-     * 
+     *
      * @see #initialize()
      */
     Mib(Reader input, File file, MibLoader loader, MibLoaderLog log)
@@ -162,18 +162,18 @@ public class Mib implements MibContext {
     }
 
     /**
-     * Parses the MIB file. This will read the MIB file and create 
-     * the MIB symbols, types and values. Note that this only 
-     * corresponds to the first analysis pass (of three), leaving 
-     * possible unresolved references in types and values. Separate 
-     * calls to initialize() and validate() must be made once all 
+     * Parses the MIB file. This will read the MIB file and create
+     * the MIB symbols, types and values. Note that this only
+     * corresponds to the first analysis pass (of three), leaving
+     * possible unresolved references in types and values. Separate
+     * calls to initialize() and validate() must be made once all
      * referenced MIB files have been loaded.
-     * 
+     *
      * @param input          the input stream to read
-     *  
-     * @throws MibLoaderException if the MIB file couldn't be parsed 
+     *
+     * @throws MibLoaderException if the MIB file couldn't be parsed
      *             or analyzed correctly
-     * 
+     *
      * @see #initialize()
      * @see #validate()
      */
@@ -186,7 +186,7 @@ public class Mib implements MibContext {
             parser = new Asn1Parser(input, new MibAnalyzer(this));
             parser.parse();
         } catch (ParserCreationException e) {
-            msg = "parser creation error in ASN.1 parser: " + 
+            msg = "parser creation error in ASN.1 parser: " +
                   e.getMessage();
             log.addInternalError(file, msg);
             throw new MibLoaderException(log);
@@ -198,13 +198,13 @@ public class Mib implements MibContext {
 
     /**
      * Initializes the MIB file. This will resolve all imported MIB
-     * file references. Note that this method shouldn't be called 
-     * until all referenced MIB files (and their respective 
+     * file references. Note that this method shouldn't be called
+     * until all referenced MIB files (and their respective
      * references) have been loaded.
-     * 
-     * @throws MibLoaderException if the MIB file couldn't be 
+     *
+     * @throws MibLoaderException if the MIB file couldn't be
      *             analyzed correctly
-     * 
+     *
      * @see #validate()
      */
     void initialize() throws MibLoaderException {
@@ -231,10 +231,10 @@ public class Mib implements MibContext {
      * Validates the MIB file. This will resolve all type and value
      * references in the MIB symbols, while also validating them for
      * consistency. Note that this method shouldn't be called until
-     * all referenced MIB files (and their respective references) 
+     * all referenced MIB files (and their respective references)
      * have been initialized.
-     * 
-     * @throws MibLoaderException if the MIB file couldn't be 
+     *
+     * @throws MibLoaderException if the MIB file couldn't be
      *             analyzed correctly
      *
      * @see #initialize()
@@ -272,9 +272,9 @@ public class Mib implements MibContext {
      * Compares this MIB to another object. This method will return
      * true if the object is a string containing the MIB name, a file
      * containing the MIB file, or a Mib having the same name.
-     * 
+     *
      * @param obj            the object to compare with
-     * 
+     *
      * @return true if the objects are equal, or
      *         false otherwise
      */
@@ -291,9 +291,9 @@ public class Mib implements MibContext {
     }
 
     /**
-     * Returns the MIB name. This is sometimes also referred to as 
+     * Returns the MIB name. This is sometimes also referred to as
      * the MIB module name.
-     * 
+     *
      * @return the MIB name
      */
     public String getName() {
@@ -303,8 +303,8 @@ public class Mib implements MibContext {
     /**
      * Changes the MIB name. This method should only be called by
      * the MIB analysis classes.
-     * 
-     * @param name           the MIB name 
+     *
+     * @param name           the MIB name
      */
     void setName(String name) {
         this.name = name;
@@ -315,7 +315,7 @@ public class Mib implements MibContext {
 
     /**
      * Returns the MIB file.
-     * 
+     *
      * @return the MIB file
      */
     public File getFile() {
@@ -324,7 +324,7 @@ public class Mib implements MibContext {
 
     /**
      * Returns the MIB loader used when loading this MIB.
-     * 
+     *
      * @return the loader used
      */
     public MibLoader getLoader() {
@@ -333,18 +333,18 @@ public class Mib implements MibContext {
 
     /**
      * Returns the loader log used when loading this MIB.
-     * 
+     *
      * @return the loader log used
      */
     public MibLoaderLog getLog() {
         return log;
     }
-    
+
     /**
      * Returns an imported MIB reference.
-     * 
+     *
      * @param name           the MIB name
-     * 
+     *
      * @return the MIB reference, or null if not found
      */
     MibReference getImport(String name) {
@@ -358,10 +358,10 @@ public class Mib implements MibContext {
         }
         return null;
     }
-    
+
     /**
      * Adds a reference to an imported MIB file.
-     * 
+     *
      * @param ref            the reference to add
      */
     void addImport(MibReference ref) {
@@ -370,7 +370,7 @@ public class Mib implements MibContext {
 
     /**
      * Returns all symbols in this MIB.
-     * 
+     *
      * @return a collection of the MIB symbols
      */
     public Collection getAllSymbols() {
@@ -379,20 +379,20 @@ public class Mib implements MibContext {
 
     /**
      * Returns a symbol from this MIB.
-     * 
+     *
      * @param name           the symbol name
-     * 
+     *
      * @return the MIB symbol, or null if not found
      */
     public MibSymbol getSymbol(String name) {
         return (MibSymbol) symbolNameMap.get(name);
     }
-    
+
     /**
      * Returns a value symbol from this MIB.
-     * 
+     *
      * @param value          the symbol value
-     * 
+     *
      * @return the MIB value symbol, or null if not found
      */
     public MibValueSymbol getSymbolByValue(String value) {
@@ -401,9 +401,9 @@ public class Mib implements MibContext {
 
     /**
      * Returns a value symbol from this MIB.
-     * 
+     *
      * @param value          the symbol value
-     * 
+     *
      * @return the MIB value symbol, or null if not found
      */
     public MibValueSymbol getSymbolByValue(MibValue value) {
@@ -412,17 +412,17 @@ public class Mib implements MibContext {
 
     /**
      * Adds a symbol to this MIB.
-     * 
+     *
      * @param symbol         the symbol to add
      */
     void addSymbol(MibSymbol symbol) {
         symbolList.add(symbol);
         symbolNameMap.put(symbol.getName(), symbol);
     }
-    
+
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {

@@ -41,7 +41,7 @@ import net.percederberg.mibble.MibTypeTag;
 import net.percederberg.mibble.MibValue;
 
 /**
- * An sequence of a MIB type. In some other languages this is known 
+ * An sequence of a MIB type. In some other languages this is known
  * as an array.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -54,7 +54,7 @@ public class SequenceOfType extends MibType {
      * The base type.
      */
     private MibType base;
-    
+
     /**
      * The additional type constraint.
      */
@@ -62,32 +62,32 @@ public class SequenceOfType extends MibType {
 
     /**
      * Creates a new sequence of a MIB type.
-     * 
-     * @param base           the sequence element type 
+     *
+     * @param base           the sequence element type
      */
     public SequenceOfType(MibType base) {
         this(true, base, null);
     }
-    
+
     /**
      * Creates a new sequence of a MIB type.
-     * 
+     *
      * @param base           the sequence element type
-     * @param constraint     the sequence constraint 
+     * @param constraint     the sequence constraint
      */
     public SequenceOfType(MibType base, Constraint constraint) {
         this(true, base, constraint);
     }
-    
+
     /**
      * Creates a new sequence of a MIB type.
-     * 
+     *
      * @param primitive      the primitive type flag
      * @param base           the sequence element type
-     * @param constraint     the sequence constraint 
+     * @param constraint     the sequence constraint
      */
-    private SequenceOfType(boolean primitive, 
-                           MibType base, 
+    private SequenceOfType(boolean primitive,
+                           MibType base,
                            Constraint constraint) {
 
         super("SEQUENCE", primitive);
@@ -98,25 +98,25 @@ public class SequenceOfType extends MibType {
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
-     * this object as a side-effect, and will return the basic 
+     * this object as a side-effect, and will return the basic
      * type.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB type
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
-     * 
+     *
      * @since 2.2
      */
-    public MibType initialize(MibSymbol symbol, MibLoaderLog log) 
+    public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
         base = base.initialize(symbol, log);
@@ -128,50 +128,50 @@ public class SequenceOfType extends MibType {
 
     /**
      * Creates a type reference to this type. The type reference is
-     * normally an identical type, but with the primitive flag set to 
+     * normally an identical type, but with the primitive flag set to
      * false. Only certain types support being referenced, and the
-     * default implementation of this method throws an exception.<p> 
-     * 
+     * default implementation of this method throws an exception.<p>
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @return the MIB type reference
-     * 
+     *
      * @since 2.2
      */
     public MibType createReference() {
         SequenceOfType  type = new SequenceOfType(false, base, constraint);
-        
+
         type.setTag(true, getTag());
         return type;
     }
 
     /**
-     * Creates a constrained type reference to this type. The type 
-     * reference is normally an identical type, but with the 
-     * primitive flag set to false. Only certain types support being 
-     * referenced, and the default implementation of this method 
-     * throws an exception.<p> 
-     * 
+     * Creates a constrained type reference to this type. The type
+     * reference is normally an identical type, but with the
+     * primitive flag set to false. Only certain types support being
+     * referenced, and the default implementation of this method
+     * throws an exception.<p>
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
      *
      * @param constraint     the type constraint
-     *  
+     *
      * @return the MIB type reference
-     * 
+     *
      * @since 2.2
      */
     public MibType createReference(Constraint constraint) {
         SequenceOfType  type = new SequenceOfType(false, base, constraint);
-        
+
         type.setTag(true, getTag());
         return type;
     }
 
     /**
      * Checks if this type has any constraint.
-     * 
+     *
      * @return true if this type has any constraint, or
      *         false otherwise
      *
@@ -183,11 +183,11 @@ public class SequenceOfType extends MibType {
 
     /**
      * Checks if the specified value is compatible with this type. No
-     * values are considered compatible with this type, and this 
-     * method will therefore always return false. 
-     * 
+     * values are considered compatible with this type, and this
+     * method will therefore always return false.
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */
@@ -201,7 +201,7 @@ public class SequenceOfType extends MibType {
      *
      * @return the type constraint, or
      *         null if no constraint has been set
-     * 
+     *
      * @since 2.2
      */
     public Constraint getConstraint() {
@@ -209,11 +209,11 @@ public class SequenceOfType extends MibType {
     }
 
     /**
-     * Returns the sequence element type. This is the type of each 
+     * Returns the sequence element type. This is the type of each
      * individual element in the sequence.
-     * 
+     *
      * @return the sequence element type
-     * 
+     *
      * @since 2.2
      */
     public MibType getElementType() {
@@ -222,12 +222,12 @@ public class SequenceOfType extends MibType {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append(super.toString());
         buffer.append(" ");
         if (constraint != null) {

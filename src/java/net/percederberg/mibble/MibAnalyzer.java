@@ -88,11 +88,11 @@ import net.percederberg.mibble.value.ValueReference;
 
 /**
  * A MIB file analyzer. This class analyzes the MIB file parse tree,
- * and creates appropriate symbols that are added to the MIB file. 
- * This analyzer handles imports by adding them to the MIB loader 
- * queue. As the imported MIB symbols aren't available during the 
+ * and creates appropriate symbols that are added to the MIB file.
+ * This analyzer handles imports by adding them to the MIB loader
+ * queue. As the imported MIB symbols aren't available during the
  * analysis, type and value references will be created whenever an
- * identifier is encountered. 
+ * identifier is encountered.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.3
@@ -111,20 +111,20 @@ class MibAnalyzer extends Asn1Analyzer {
     private MibLoaderLog log;
 
     /**
-     * The base MIB symbol context. This context will be extended 
+     * The base MIB symbol context. This context will be extended
      * when parsing the import list.
      */
     private MibContext baseContext;
 
     /**
-     * The MIB context stack. This stack is modified during the 
+     * The MIB context stack. This stack is modified during the
      * parsing to add type or import contexts as necessary. The top
      * context on the stack is returned by the getContext() method.
-     * 
+     *
      * @see #getContext()
      */
     private ArrayList contextStack = new ArrayList();
-                                                                                
+
     /**
      * The implicit tags flag.
      */
@@ -132,7 +132,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Creates a new MIB file analyzer.
-     * 
+     *
      * @param mib            the MIB file being analyzed
      */
     public MibAnalyzer(Mib mib) {
@@ -155,7 +155,7 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitBinaryString(Token node) {
         String  str = node.getImage();
         Number  value;
-                                                                                
+
         str = str.substring(1, str.length() - 2);
         if (str.length() == 0) {
             value = new Integer(0);
@@ -182,7 +182,7 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitHexadecimalString(Token node) {
         String  str = node.getImage();
         Number  value;
-                                                                                
+
         str = str.substring(1, str.length() - 2);
         if (str.length() == 0) {
             value = new Integer(0);
@@ -209,7 +209,7 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitQuotedString(Token node) {
         String  str = node.getImage();
         int     pos;
-                                                                                
+
         str = str.substring(1, str.length() - 1);
         do {
             pos = str.indexOf("\"\"");
@@ -244,7 +244,7 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitNumberString(Token node) {
         String  str = node.getImage();
         Number  value;
-                                                                                
+
         if (str.length() < 10) {
             value = new Integer(str);
         } else if (str.length() < 19) {
@@ -268,7 +268,7 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitModuleDefinition(Production node)
         throws ParseException {
-                                                                                
+
         mib.setName(getStringValue(getChildAt(node, 0), 0));
         return null;
     }
@@ -284,18 +284,18 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitModuleIdentifier(Production node)
         throws ParseException {
-                                                                                
+
         node.addValue(getStringValue(getChildAt(node, 0), 0));
         return node;
     }
 
     /**
      * Adds the module identifier string as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitModuleReference(Production node)
@@ -307,11 +307,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Sets the implicit tags flag.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return null to remove the node from the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitTagDefault(Production node)
@@ -331,17 +331,17 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds all imported MIB files to the MIB context. Also removes
-     * this node from the parse tree. 
-     * 
+     * this node from the parse tree.
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitImportList(Production node) {
         ArrayList     references = getChildValues(node);
         MibReference  ref;
         MibContext    current = mib.getLoader().getDefaultContext();
-        
+
         for (int i = references.size() - 1; i >= 0; i--) {
             ref = (MibReference) references.get(i);
             current = new CompoundContext(ref, current);
@@ -355,11 +355,11 @@ class MibAnalyzer extends Asn1Analyzer {
     /**
      * Schedules the imported MIB file for loading. Also adds a MIB
      * reference as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSymbolsFromModule(Production node)
@@ -395,16 +395,16 @@ class MibAnalyzer extends Asn1Analyzer {
         }
 
         // Add reference to MIB and node
-        mib.addImport(ref); 
+        mib.addImport(ref);
         node.addValue(ref);
         return node;
     }
 
     /**
      * Adds all symbol identifiers as node values.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSymbolList(Production node) {
@@ -427,7 +427,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Creates a type symbol and adds it to the MIB. Also removes
-     * this node from the parse tree. 
+     * this node from the parse tree.
      *
      * @param node           the node being exited
      *
@@ -437,11 +437,11 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitTypeAssignment(Production node)
         throws ParseException {
- 
+
         String         name;
         MibType        type;
         MibTypeSymbol  symbol;
- 
+
         // Check type name
         name = getStringValue(getChildAt(node, 0), 0);
         if (mib.getSymbol(name) != null) {
@@ -478,11 +478,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a type reference as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDefinedType(Production node)
@@ -615,9 +615,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a string type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitStringType(Production node) {
@@ -636,9 +636,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a bit set type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitBitStringType(Production node) {
@@ -663,9 +663,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a bit set type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitBitsType(Production node) {
@@ -674,25 +674,25 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a MIB sequence type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSequenceType(Production node) {
         ArrayList  elements = getChildValues(node);
-        
+
         node.addValue(new SequenceType(elements));
         return node;
     }
 
     /**
      * Adds a sequence of MIB type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSequenceOfType(Production node)
@@ -715,14 +715,14 @@ class MibAnalyzer extends Asn1Analyzer {
     /**
      * Adds a null type as a node value. This method also prints an
      * error about this construct being unsupported.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSetType(Production node) {
         // TODO: implement set type support
-        log.addError(getLocation(node), 
+        log.addError(getLocation(node),
                      "SET type currently unsupported");
         node.addValue(new NullType());
         return node;
@@ -731,14 +731,14 @@ class MibAnalyzer extends Asn1Analyzer {
     /**
      * Adds a null type as a node value. This method also prints an
      * error about this construct being unsupported.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSetOfType(Production node) {
         // TODO: implement set of type support
-        log.addError(getLocation(node), 
+        log.addError(getLocation(node),
                      "SET OF type currently unsupported");
         node.addValue(new NullType());
         return node;
@@ -746,9 +746,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a MIB choice type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitChoiceType(Production node) {
@@ -759,14 +759,14 @@ class MibAnalyzer extends Asn1Analyzer {
     /**
      * Adds a null type as a node value. This method also prints an
      * error about this construct being unsupported.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitEnumeratedType(Production node) {
         // TODO: implement enumerated type support
-        log.addError(getLocation(node), 
+        log.addError(getLocation(node),
                      "ENUMERATED type currently unsupported");
         node.addValue(new NullType());
         return node;
@@ -775,14 +775,14 @@ class MibAnalyzer extends Asn1Analyzer {
     /**
      * Adds a null type as a node value. This method also prints an
      * error about this construct being unsupported.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSelectionType(Production node) {
         // TODO: implement selection type support
-        log.addError(getLocation(node), 
+        log.addError(getLocation(node),
                      "selection type currently unsupported");
         node.addValue(new NullType());
         return node;
@@ -790,11 +790,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the tagged type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitTaggedType(Production node)
@@ -820,9 +820,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
      */
@@ -830,7 +830,7 @@ class MibAnalyzer extends Asn1Analyzer {
         ArrayList  values = getChildValues(node);
         int        category = MibTypeTag.CONTEXT_SPECIFIC_CATEGORY;
         int        value;
-        
+
         if (values.size() == 1) {
             value = ((Number) values.get(0)).intValue();
         } else {
@@ -843,17 +843,17 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the type tag category value as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitClass(Production node) throws ParseException {
         Node  child = getChildAt(node, 0);
         int   category;
-        
+
         if (child.getId() == Asn1Constants.UNIVERSAL) {
             category = MibTypeTag.UNIVERSAL_CATEGORY;
         } else if (child.getId() == Asn1Constants.APPLICATION) {
@@ -869,18 +869,18 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the implicit boolean flag as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitExplicitOrImplicitTag(Production node)
         throws ParseException {
 
         Node  child = getChildAt(node, 0);
-        
+
         if (child.getId() == Asn1Constants.EXPLICIT) {
             node.addValue(Boolean.FALSE);
         } else {
@@ -892,14 +892,14 @@ class MibAnalyzer extends Asn1Analyzer {
     /**
      * Adds a null type as a node value. This method also prints an
      * error about this construct being unsupported.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitAnyType(Production node) {
         // TODO: implement any type support
-        log.addError(getLocation(node), 
+        log.addError(getLocation(node),
                      "ANY type currently unsupported");
         node.addValue(new NullType());
         return node;
@@ -907,9 +907,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds all element types as a node values.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitElementTypeList(Production node) {
@@ -919,11 +919,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an element type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitElementType(Production node)
@@ -932,7 +932,7 @@ class MibAnalyzer extends Asn1Analyzer {
         String   name = null;
         MibType  type;
         Node     child;
-        
+
         child = getChildAt(node, 0);
         if (child.getId() == Asn1Constants.IDENTIFIER_STRING) {
             name = getStringValue(child, 0);
@@ -952,21 +952,21 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Prints an error about this construct being unsupported.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitOptionalOrDefaultElement(Production node) {
         // TODO: implement this method?
-        log.addError(getLocation(node), 
+        log.addError(getLocation(node),
                      "optional and default elements are currently " +
                      "unsupported");
         return null;
     }
 
     /**
-     * Adds an array list with symbols or a constraint as the node 
+     * Adds an array list with symbols or a constraint as the node
      * value.
      *
      * @param node           the node being exited
@@ -980,9 +980,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an array list with symbols as the node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitNamedNumberList(Production node) {
@@ -992,11 +992,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a value symbol as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNamedNumber(Production node)
@@ -1005,13 +1005,13 @@ class MibAnalyzer extends Asn1Analyzer {
         MibValueSymbol  symbol;
         String          name;
         MibValue        value;
-        
+
         name = getStringValue(getChildAt(node, 0), 0);
         value = (MibValue) getValue(getChildAt(node, 2), 0);
         symbol = new MibValueSymbol(getLocation(node),
-                                    null, 
-                                    name, 
-                                    null, 
+                                    null,
+                                    name,
+                                    null,
                                     value);
         node.addValue(symbol);
         return node;
@@ -1054,9 +1054,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a MIB type constraint as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitConstraintList(Production node) {
@@ -1079,9 +1079,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a MIB type constraint as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitConstraint(Production node) {
@@ -1091,9 +1091,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a MIB type constraint as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitValueConstraintList(Production node) {
@@ -1101,13 +1101,13 @@ class MibAnalyzer extends Asn1Analyzer {
     }
 
     /**
-     * Adds a MIB type value or value range constraint as a node 
+     * Adds a MIB type value or value range constraint as a node
      * value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitValueConstraint(Production node)
@@ -1119,7 +1119,7 @@ class MibAnalyzer extends Asn1Analyzer {
         Boolean    strictLower = null;
         Boolean    strictUpper = null;
         Object     obj;
-        
+
         if (list.size() == 0) {
             throw new ParseException(
                 ParseException.ANALYSIS_ERROR,
@@ -1142,7 +1142,7 @@ class MibAnalyzer extends Asn1Analyzer {
                     upper = (MibValue) obj;
                 }
             }
-            obj = new ValueRangeConstraint(lower, 
+            obj = new ValueRangeConstraint(lower,
                                            strictLower.booleanValue(),
                                            upper,
                                            strictUpper.booleanValue());
@@ -1154,11 +1154,11 @@ class MibAnalyzer extends Asn1Analyzer {
     /**
      * Adds the upper end point and strict inequality flags as node
      * values.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitValueRange(Production node)
@@ -1191,10 +1191,10 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a MIB value or null as a node value. The null value is
-     * used to represent a minimum value. 
-     * 
+     * used to represent a minimum value.
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitLowerEndPoint(Production node) {
@@ -1204,10 +1204,10 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a MIB value or null as a node value. The null value is
-     * used to represent a maximum value. 
-     * 
+     * used to represent a maximum value.
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitUpperEndPoint(Production node) {
@@ -1217,16 +1217,16 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a MIB type size constraint as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSizeConstraint(Production node)
         throws ParseException {
-    
+
         Constraint  c;
 
         c = (Constraint) getValue(getChildAt(node, 1), 0);
@@ -1235,11 +1235,11 @@ class MibAnalyzer extends Asn1Analyzer {
     }
 
     /**
-     * Removes this node from the parse tree, and prints an error 
+     * Removes this node from the parse tree, and prints an error
      * about this construct being unsupported.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitAlphabetConstraint(Production node) {
@@ -1250,11 +1250,11 @@ class MibAnalyzer extends Asn1Analyzer {
     }
 
     /**
-     * Removes this node from the parse tree, and prints an error 
+     * Removes this node from the parse tree, and prints an error
      * about this construct being unsupported.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitContainedTypeConstraint(Production node) {
@@ -1265,11 +1265,11 @@ class MibAnalyzer extends Asn1Analyzer {
     }
 
     /**
-     * Removes this node from the parse tree, and prints an error 
+     * Removes this node from the parse tree, and prints an error
      * about this construct being unsupported.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitInnerTypeConstraint(Production node) {
@@ -1282,7 +1282,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Creates a value symbol and adds it to the MIB. Also removes
-     * this node from the parse tree. 
+     * this node from the parse tree.
      *
      * @param node           the node being exited
      *
@@ -1292,12 +1292,12 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitValueAssignment(Production node)
         throws ParseException {
- 
+
         MibValueSymbol  symbol;
         String          name;
         MibType         type;
         MibValue        value;
- 
+
         // Check value name
         name = getStringValue(getChildAt(node, 0), 0);
         if (mib.getSymbol(name) != null) {
@@ -1334,11 +1334,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a value reference as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDefinedValue(Production node)
@@ -1406,9 +1406,9 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitBooleanValue(Production node)
         throws ParseException {
-                                                                                
+
         Node  child = getChildAt(node, 0);
-                                                                                
+
         if (child.getId() == Asn1Constants.TRUE) {
             node.addValue(BooleanValue.TRUE);
         } else {
@@ -1451,9 +1451,9 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitNumberValue(Production node)
         throws ParseException {
-                                                                                
+
         Number  number;
-                                                                                
+
         if (getChildAt(node, 0).getId() == Asn1Constants.MINUS) {
             number = (Number) getValue(getChildAt(node, 1), 0);
             if (number instanceof Integer) {
@@ -1481,9 +1481,9 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitBinaryValue(Production node)
         throws ParseException {
-                                                                                
+
         Number  number;
-                                                                                
+
         number = (Number) getValue(getChildAt(node, 0), 0);
         node.addValue(new NumberValue(number));
         return node;
@@ -1500,9 +1500,9 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitHexadecimalValue(Production node)
         throws ParseException {
-                                                                                
+
         Number  number;
-                                                                                
+
         number = (Number) getValue(getChildAt(node, 0), 0);
         node.addValue(new NumberValue(number));
         return node;
@@ -1519,9 +1519,9 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitStringValue(Production node)
         throws ParseException {
-                                                                                
+
         String  str;
-                                                                                
+
         str = getStringValue(getChildAt(node, 0), 0);
         node.addValue(new StringValue(str));
         return node;
@@ -1538,7 +1538,7 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitBitOrObjectIdentifierValue(Production node)
         throws ParseException {
-                                                                                
+
         if (isBitValue(node)) {
             return exitBitValue(node);
         } else {
@@ -1560,7 +1560,7 @@ class MibAnalyzer extends Asn1Analyzer {
         BitSet        bits = new BitSet();
         ArrayList     values = new ArrayList();
         NamedNumber   number;
-                                                                                
+
         for (int i = 0; i < components.size(); i++) {
             number = (NamedNumber) components.get(i);
             if (number.hasNumber()) {
@@ -1575,11 +1575,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a MIB object identifier value as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitObjectIdentifierValue(Production node)
@@ -1627,7 +1627,7 @@ class MibAnalyzer extends Asn1Analyzer {
                 parent = number.getReference();
             }
         }
-                                                                                
+
         // Set node value
         node.addValue(parent);
         return node;
@@ -1669,17 +1669,17 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitNameOrNumber(Production node)
         throws ParseException {
-                                                                                
+
         NamedNumber     value;
         Object          obj;
         ValueReference  ref;
-                                                                                
+
         obj = getValue(getChildAt(node, 0), 0);
         if (obj instanceof Number) {
             value = new NamedNumber((Number) obj);
         } else if (obj instanceof String) {
-            ref = new ValueReference(getLocation(node), 
-                                     getContext(), 
+            ref = new ValueReference(getLocation(node),
+                                     getContext(),
                                      (String) obj);
             value = new NamedNumber((String) obj, ref);
         } else {
@@ -1700,11 +1700,11 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitNameAndNumber(Production node)
         throws ParseException {
-                                                                                
+
         NamedNumber  value;
         String       name;
         Object       obj;
-                                                                                
+
         name = getStringValue(getChildAt(node, 0), 0);
         obj = getValue(getChildAt(node, 2), 0);
         if (obj instanceof Number) {
@@ -1718,9 +1718,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP type as the node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitDefinedMacroType(Production node) {
@@ -1730,11 +1730,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP module identity as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpModuleIdentityMacroType(Production node)
@@ -1753,21 +1753,21 @@ class MibAnalyzer extends Asn1Analyzer {
         for (int i = 5; i < node.getChildCount(); i++) {
             revisions.add(getValue(getChildAt(node, i), 0));
         }
-        node.addValue(new SnmpModuleIdentity(update, 
-                                             org, 
-                                             contact, 
-                                             desc, 
+        node.addValue(new SnmpModuleIdentity(update,
+                                             org,
+                                             contact,
+                                             desc,
                                              revisions));
         return node;
     }
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpObjectIdentityMacroType(Production node)
@@ -1776,7 +1776,7 @@ class MibAnalyzer extends Asn1Analyzer {
         SnmpStatus  status;
         String      desc;
         String      ref;
-        
+
         status = (SnmpStatus) getValue(getChildAt(node, 1), 0);
         desc = getStringValue(getChildAt(node, 2), 0);
         if (node.getChildCount() <= 3) {
@@ -1790,10 +1790,10 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the syntax type to the MIB context stack if possible.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpObjectTypeMacroType(Production node, Node child)
@@ -1811,20 +1811,20 @@ class MibAnalyzer extends Asn1Analyzer {
     }
 
     /**
-     * Adds an SNMP object type as a node value. This method also 
+     * Adds an SNMP object type as a node value. This method also
      * removes any syntax type from the MIB context stack if needed.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpObjectTypeMacroType(Production node)
         throws ParseException {
 
         SnmpObjectType  type;
-        MibType         syntax = null;  
+        MibType         syntax = null;
         String          units = null;
         SnmpAccess      access = null;
         SnmpStatus      status = null;
@@ -1833,7 +1833,7 @@ class MibAnalyzer extends Asn1Analyzer {
         Object          index = null;
         MibValue        defVal = null;
         Node            child;
-        
+
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -1891,11 +1891,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP notification type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpNotificationTypeMacroType(Production node)
@@ -1906,7 +1906,7 @@ class MibAnalyzer extends Asn1Analyzer {
         String      desc = null;
         String      ref = null;
         Node        child;
-        
+
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -1924,20 +1924,20 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             }
         }
-        node.addValue(new SnmpNotificationType(objects, 
-                                               status, 
-                                               desc, 
+        node.addValue(new SnmpNotificationType(objects,
+                                               status,
+                                               desc,
                                                ref));
         return node;
     }
 
     /**
      * Adds an SNMP trap type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpTrapTypeMacroType(Production node)
@@ -1948,7 +1948,7 @@ class MibAnalyzer extends Asn1Analyzer {
         String     desc = null;
         String     ref = null;
         Node       child;
-        
+
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -1972,11 +1972,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP textual convention as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpTextualConventionMacroType(Production node)
@@ -1988,7 +1988,7 @@ class MibAnalyzer extends Asn1Analyzer {
         String      ref = null;
         MibType     syntax = null;
         Node        child;
-        
+
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -2009,9 +2009,9 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             }
         }
-        node.addValue(new SnmpTextualConvention(display, 
-                                                status, 
-                                                desc, 
+        node.addValue(new SnmpTextualConvention(display,
+                                                status,
+                                                desc,
                                                 ref,
                                                 syntax));
         return node;
@@ -2019,11 +2019,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP object group as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpObjectGroupMacroType(Production node)
@@ -2033,7 +2033,7 @@ class MibAnalyzer extends Asn1Analyzer {
         SnmpStatus  status;
         String      desc;
         String      ref;
-        
+
         objects = (ArrayList) getValue(getChildAt(node, 1), 0);
         status = (SnmpStatus) getValue(getChildAt(node, 2), 0);
         desc = getStringValue(getChildAt(node, 3), 0);
@@ -2048,11 +2048,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP notification group as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpNotificationGroupMacroType(Production node)
@@ -2071,20 +2071,20 @@ class MibAnalyzer extends Asn1Analyzer {
         } else {
             ref = getStringValue(getChildAt(node, 4), 0);
         }
-        node.addValue(new SnmpNotificationGroup(notifications, 
-                                                status, 
-                                                desc, 
+        node.addValue(new SnmpNotificationGroup(notifications,
+                                                status,
+                                                desc,
                                                 ref));
         return node;
     }
 
     /**
      * Adds an SNMP module compliance type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpModuleComplianceMacroType(Production node)
@@ -2095,7 +2095,7 @@ class MibAnalyzer extends Asn1Analyzer {
         String      ref = null;
         ArrayList   modules = new ArrayList();
         Node        child;
-        
+
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -2113,8 +2113,8 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             }
         }
-        node.addValue(new SnmpModuleCompliance(status, 
-                                               desc, 
+        node.addValue(new SnmpModuleCompliance(status,
+                                               desc,
                                                ref,
                                                modules));
         return node;
@@ -2122,11 +2122,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP agent capabilities as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpAgentCapabilitiesMacroType(Production node)
@@ -2138,7 +2138,7 @@ class MibAnalyzer extends Asn1Analyzer {
         String      ref = null;
         ArrayList   modules = new ArrayList();
         Node        child;
-        
+
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -2160,8 +2160,8 @@ class MibAnalyzer extends Asn1Analyzer {
             }
         }
         node.addValue(new SnmpAgentCapabilities(prod,
-                                                status, 
-                                                desc, 
+                                                status,
+                                                desc,
                                                 ref,
                                                 modules));
         return node;
@@ -2169,9 +2169,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the last update string as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpUpdatePart(Production node) {
@@ -2181,9 +2181,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the organization name as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpOrganizationPart(Production node) {
@@ -2193,9 +2193,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the organization contact info as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpContactPart(Production node) {
@@ -2205,9 +2205,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the description string as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpDescrPart(Production node) {
@@ -2217,11 +2217,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP revision as the node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpRevisionPart(Production node)
@@ -2229,20 +2229,20 @@ class MibAnalyzer extends Asn1Analyzer {
 
         MibValue  value;
         String    desc;
-        
+
         value = (MibValue) getValue(getChildAt(node, 1), 0);
         desc = getStringValue(getChildAt(node, 3), 0);
-        node.addValue(new SnmpRevision(value, desc)); 
+        node.addValue(new SnmpRevision(value, desc));
         return node;
     }
 
     /**
      * Adds an SNMP status as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpStatusPart(Production node)
@@ -2250,7 +2250,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
         Node    child;
         String  name;
-        
+
         child = getChildAt(node, 1);
         name = getStringValue(child, 0);
         if (name.equals("mandatory")) {
@@ -2276,9 +2276,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the reference string as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpReferPart(Production node) {
@@ -2288,9 +2288,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a MIB type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpSyntaxPart(Production node) {
@@ -2300,9 +2300,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the units string as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpUnitsPart(Production node) {
@@ -2312,11 +2312,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the SNMP access as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpAccessPart(Production node)
@@ -2324,7 +2324,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
         Node    child;
         String  name;
-        
+
         child = getChildAt(node, 1);
         name = getStringValue(child, 0);
         if (name.equals("not-implemented")) {
@@ -2354,11 +2354,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds either a list of value or a single value as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpIndexPart(Production node)
@@ -2374,9 +2374,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the index MIB values as node values.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitIndexValueList(Production node) {
@@ -2386,9 +2386,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the index MIB value as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitIndexValue(Production node) {
@@ -2398,9 +2398,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the index MIB type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitIndexType(Production node) {
@@ -2410,9 +2410,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the default MIB value as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpDefValPart(Production node) {
@@ -2422,9 +2422,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a list of MIB values as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpObjectsPart(Production node) {
@@ -2434,9 +2434,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the MIB values as node values.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitValueList(Production node) {
@@ -2446,9 +2446,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the enterprise MIB value as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpEnterprisePart(Production node) {
@@ -2458,9 +2458,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the variable MIB values as node values.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpVarPart(Production node) {
@@ -2470,9 +2470,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the display hint as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpDisplayPart(Production node) {
@@ -2482,9 +2482,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the MIB values as node values.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpNotificationsPart(Production node) {
@@ -2494,11 +2494,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP module as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpModulePart(Production node)
@@ -2508,7 +2508,7 @@ class MibAnalyzer extends Asn1Analyzer {
         ArrayList  groups = new ArrayList();
         ArrayList  modules = new ArrayList();
         Node       child;
-        
+
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -2524,20 +2524,20 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             }
         }
-        node.addValue(new SnmpModule(module, groups, modules)); 
+        node.addValue(new SnmpModule(module, groups, modules));
         return node;
     }
 
     /**
-     * Adds the module name as a node value. This method also sets 
+     * Adds the module name as a node value. This method also sets
      * current MIB context to the referenced module. The imports are
-     * implicit, meaning that symbol names do not have to be listed 
+     * implicit, meaning that symbol names do not have to be listed
      * in order to be imported.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpModuleImport(Production node)
@@ -2573,9 +2573,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the list of group values as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpMandatoryPart(Production node) {
@@ -2585,9 +2585,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP compliance object as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpCompliancePart(Production node) {
@@ -2597,11 +2597,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP compliance object as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitComplianceGroup(Production node)
@@ -2618,11 +2618,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP compliance object as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitComplianceObject(Production node)
@@ -2630,11 +2630,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
         MibValue    value = null;
         MibType     syntax = null;
-        MibType     write = null;  
+        MibType     write = null;
         SnmpAccess  access = null;
         String      desc = null;
         Node        child;
-        
+
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -2655,7 +2655,7 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             }
         }
-        node.addValue(new SnmpCompliance(value, 
+        node.addValue(new SnmpCompliance(value,
                                          syntax,
                                          write,
                                          access,
@@ -2665,9 +2665,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the MIB type as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpWriteSyntaxPart(Production node) {
@@ -2677,9 +2677,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds the product release string as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpProductReleasePart(Production node) {
@@ -2689,11 +2689,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP module support as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpModuleSupportPart(Production node)
@@ -2703,7 +2703,7 @@ class MibAnalyzer extends Asn1Analyzer {
         ArrayList  groups = null;
         ArrayList  vars = new ArrayList();
         Node       child;
-        
+
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -2719,18 +2719,18 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             }
         }
-        node.addValue(new SnmpModuleSupport(module, groups, vars)); 
+        node.addValue(new SnmpModuleSupport(module, groups, vars));
         return node;
     }
 
     /**
      * Modifies the MIB context stack to make sure all values except
-     * the first one are interpreted in the context of the current 
+     * the first one are interpreted in the context of the current
      * MIB.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpVariationPart(Production node, Node child)
@@ -2752,11 +2752,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds an SNMP variation as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpVariationPart(Production node)
@@ -2764,13 +2764,13 @@ class MibAnalyzer extends Asn1Analyzer {
 
         MibValue    value = null;
         MibType     syntax = null;
-        MibType     write = null;  
+        MibType     write = null;
         SnmpAccess  access = null;
         ArrayList   reqs = new ArrayList();
         MibValue    defVal = null;
         String      desc = null;
         Node        child;
-        
+
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -2801,7 +2801,7 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             }
         }
-        node.addValue(new SnmpVariation(value, 
+        node.addValue(new SnmpVariation(value,
                                         syntax,
                                         write,
                                         access,
@@ -2813,9 +2813,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Adds a list of the MIB values as a node value.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree
      */
     protected Node exitSnmpCreationPart(Production node) {
@@ -2827,9 +2827,9 @@ class MibAnalyzer extends Asn1Analyzer {
      * Checks if a node corresponds to a bit value. This method is
      * used to distinguish between bit values and object identifier
      * values during the analysis.
-     * 
+     *
      * @param node           the parse tree node to check
-     * 
+     *
      * @return true if the node contains a bit value, or
      *         false otherwise
      */
@@ -2852,9 +2852,9 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Returns the location of a specified node.
-     * 
+     *
      * @param node           the parse tree node
-     * 
+     *
      * @return the file location of the node
      */
     private FileLocation getLocation(Node node) {
@@ -2862,30 +2862,30 @@ class MibAnalyzer extends Asn1Analyzer {
                                 node.getStartLine(),
                                 node.getStartColumn());
     }
-    
+
     /**
      * Returns the top context on the context stack.
-     * 
+     *
      * @return the top context on the context stack
      */
     private MibContext getContext() {
         return (MibContext) contextStack.get(contextStack.size() - 1);
     }
-    
+
     /**
-     * Adds a new context to the top of the context stack. 
-     * 
+     * Adds a new context to the top of the context stack.
+     *
      * @param context        the context to add
      */
     private void pushContext(MibContext context) {
         contextStack.add(context);
     }
-    
+
     /**
-     * Adds an extension to the current context to the top of the 
-     * context stack. A new compound context will be created by 
-     * appending the top context to the specified one. 
-     * 
+     * Adds an extension to the current context to the top of the
+     * context stack. A new compound context will be created by
+     * appending the top context to the specified one.
+     *
      * @param context        the context extension to add
      */
     private void pushContextExtension(MibContext context) {

@@ -44,10 +44,10 @@ import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.value.NumberValue;
 
 /**
- * The SNMP trap type macro. This macro type is only present in 
- * SNMPv1 and is defined in RFC 1215. In SNMPv2 and later, the 
- * notification type macro should be used instead. 
- * 
+ * The SNMP trap type macro. This macro type is only present in
+ * SNMPv1 and is defined in RFC 1215. In SNMPv2 and later, the
+ * notification type macro should be used instead.
+ *
  * @see SnmpNotificationType
  * @see <a href="http://www.ietf.org/rfc/rfc1215.txt">RFC 1215 (RFC-1215)</a>
  *
@@ -71,21 +71,21 @@ public class SnmpTrapType extends MibType {
      * The type description.
      */
     private String description;
-    
+
     /**
      * The type reference.
      */
     private String reference;
-    
+
     /**
      * Creates a new SNMP trap type.
-     * 
+     *
      * @param enterprise     the enterprise value
      * @param variables      the list of MIB values
      * @param description    the type description, or null
      * @param reference      the type reference, or null
      */
-    public SnmpTrapType(MibValue enterprise, 
+    public SnmpTrapType(MibValue enterprise,
                         ArrayList variables,
                         String description,
                         String reference) {
@@ -99,31 +99,31 @@ public class SnmpTrapType extends MibType {
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
-     * this object as a side-effect, and will return the basic 
+     * this object as a side-effect, and will return the basic
      * type.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB type
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
-     * 
+     *
      * @since 2.2
      */
-    public MibType initialize(MibSymbol symbol, MibLoaderLog log) 
+    public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
         ArrayList  list = new ArrayList();
 
         if (!(symbol instanceof MibValueSymbol)) {
-            throw new MibException(symbol.getLocation(), 
+            throw new MibException(symbol.getLocation(),
                                    "only values can have the " +
                                    getName() + " type");
         }
@@ -137,11 +137,11 @@ public class SnmpTrapType extends MibType {
 
     /**
      * Checks if the specified value is compatible with this type. A
-     * value is compatible if and only if it is an integer number 
-     * value. 
-     * 
+     * value is compatible if and only if it is an integer number
+     * value.
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */
@@ -152,18 +152,18 @@ public class SnmpTrapType extends MibType {
 
     /**
      * Returns the enterprise value.
-     * 
+     *
      * @return the enterprise value
      */
     public MibValue getEnterprise() {
         return enterprise;
     }
-    
+
     /**
-     * Returns the list of MIB values. 
-     * 
+     * Returns the list of MIB values.
+     *
      * @return the list of MIB values
-     * 
+     *
      * @see net.percederberg.mibble.MibValue
      */
     public ArrayList getVariables() {
@@ -172,8 +172,8 @@ public class SnmpTrapType extends MibType {
 
     /**
      * Returns the type description.
-     * 
-     * @return the type description, or 
+     *
+     * @return the type description, or
      *         null if no description has been set
      */
     public String getDescription() {
@@ -182,7 +182,7 @@ public class SnmpTrapType extends MibType {
 
     /**
      * Returns the type reference.
-     * 
+     *
      * @return the type reference, or
      *         null if no reference has been set
      */
@@ -192,12 +192,12 @@ public class SnmpTrapType extends MibType {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {
         StringBuffer  buffer = new StringBuffer();
-        
+
         buffer.append(super.toString());
         buffer.append(" (");
         buffer.append("\n  Enterprise: ");

@@ -43,10 +43,10 @@ import net.percederberg.mibble.MibValueSymbol;
 
 /**
  * A reference to a value symbol.<p>
- * 
- * <strong>NOTE:</strong> This class is used internally during the 
- * MIB parsing only. After loading a MIB file successfully, all value 
- * references will have been resolved to other MIB values. Do 
+ *
+ * <strong>NOTE:</strong> This class is used internally during the
+ * MIB parsing only. After loading a MIB file successfully, all value
+ * references will have been resolved to other MIB values. Do
  * <strong>NOT</strong> use or reference this class.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -74,10 +74,10 @@ public class ValueReference extends MibValue {
      * Creates a new value reference.
      *
      * @param location       the reference location
-     * @param context        the reference context 
+     * @param context        the reference context
      * @param name           the reference name
      */
-    public ValueReference(FileLocation location, 
+    public ValueReference(FileLocation location,
                           MibContext context,
                           String name) {
 
@@ -89,22 +89,22 @@ public class ValueReference extends MibValue {
 
     /**
      * Initializes the MIB value. This will remove all levels of
-     * indirection present, such as references to other values. No 
-     * value information is lost by this operation. This method may 
-     * modify this object as a side-effect, and will return the basic 
+     * indirection present, such as references to other values. No
+     * value information is lost by this operation. This method may
+     * modify this object as a side-effect, and will return the basic
      * value.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB value
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public MibValue initialize(MibLoaderLog log) throws MibException { 
+    public MibValue initialize(MibLoaderLog log) throws MibException {
         MibSymbol  symbol;
         MibValue   value;
         String     message;
@@ -118,7 +118,7 @@ public class ValueReference extends MibValue {
                 throw new MibException(location, e.getMessage());
             }
             if (!(value instanceof ObjectIdentifierValue)) {
-                value.setReferenceSymbol((MibValueSymbol) symbol); 
+                value.setReferenceSymbol((MibValueSymbol) symbol);
             }
             return value;
         } else if (symbol == null) {
@@ -132,7 +132,7 @@ public class ValueReference extends MibValue {
 
     /**
      * Returns the reference location.
-     * 
+     *
      * @return the reference location
      */
     public FileLocation getLocation() {
@@ -140,18 +140,18 @@ public class ValueReference extends MibValue {
     }
 
     /**
-     * Returns a Java object representation of this value. This 
+     * Returns a Java object representation of this value. This
      * method will always return null.
-     * 
+     *
      * @return a Java object representation of this value
      */
     public Object toObject() {
         return null;
     }
-    
+
     /**
      * Returns a string representation of this value.
-     * 
+     *
      * @return a string representation of this value
      */
     public String toString() {

@@ -38,9 +38,9 @@ import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibValue;
 
 /**
- * An SNMP module identity revision value.  This declaration is used 
+ * An SNMP module identity revision value.  This declaration is used
  * inside a module identity macro type.
- * 
+ *
  * @see SnmpModuleIdentity
  *
  * @author   Per Cederberg, <per at percederberg dot net>
@@ -53,7 +53,7 @@ public class SnmpRevision {
      * The revision number.
      */
     private MibValue value;
-    
+
     /**
      * The revision description.
      */
@@ -61,7 +61,7 @@ public class SnmpRevision {
 
     /**
      * Creates a new SNMP module identity revision.
-     * 
+     *
      * @param value          the revision number
      * @param description    the revision description
      */
@@ -69,43 +69,43 @@ public class SnmpRevision {
         this.value = value;
         this.description = description;
     }
-    
+
     /**
-     * Initializes the MIB revision number. This will remove all 
-     * levels of indirection present. No information is lost by this 
-     * operation. This method may modify this object as a 
+     * Initializes the MIB revision number. This will remove all
+     * levels of indirection present. No information is lost by this
+     * operation. This method may modify this object as a
      * side-effect, and will be called by the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
     void initialize(MibLoaderLog log) throws MibException {
         value = value.initialize(log);
     }
-    
+
     /**
      * Returns the revision number.
-     * 
+     *
      * @return the revision number
      */
     public MibValue getValue() {
         return value;
     }
-    
+
     /**
      * Returns the revision description.
-     * 
+     *
      * @return the revision description
      */
     public String getDescription() {
         return description;
     }
-    
+
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {

@@ -40,7 +40,7 @@ import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
 
 /**
- * A compound element MIB type. This typs is used inside various 
+ * A compound element MIB type. This typs is used inside various
  * compound types, storing a reference to the type and an optional
  * name.
  *
@@ -54,7 +54,7 @@ public class ElementType extends MibType {
      * The optional element name.
      */
     private String name;
-    
+
     /**
      * The element type.
      */
@@ -62,37 +62,37 @@ public class ElementType extends MibType {
 
     /**
      * Creates a new element type.
-     * 
+     *
      * @param name           the optional element name
      * @param type           the element type
      */
     public ElementType(String name, MibType type) {
         super("", false);
         this.name = name;
-        this.type = type; 
+        this.type = type;
     }
-    
+
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to types or values. No 
+     * indirection present, such as references to types or values. No
      * information is lost by this operation. This method may modify
-     * this object as a side-effect, and will return the basic 
+     * this object as a side-effect, and will return the basic
      * type.<p>
-     * 
+     *
      * <strong>NOTE:</strong> This is an internal method that should
      * only be called by the MIB loader.
-     * 
+     *
      * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
-     * 
+     *
      * @return the basic MIB type
-     * 
+     *
      * @throws MibException if an error was encountered during the
      *             initialization
-     * 
+     *
      * @since 2.2
      */
-    public MibType initialize(MibSymbol symbol, MibLoaderLog log) 
+    public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
         type = type.initialize(symbol, log);
@@ -100,12 +100,12 @@ public class ElementType extends MibType {
     }
 
     /**
-     * Checks if the specified value is compatible with this type. 
-     * The value is considered compatible with this type, if it is 
-     * compatible with the underlying type. 
-     * 
+     * Checks if the specified value is compatible with this type.
+     * The value is considered compatible with this type, if it is
+     * compatible with the underlying type.
+     *
      * @param value          the value to check
-     * 
+     *
      * @return true if the value is compatible, or
      *         false otherwise
      */
@@ -115,21 +115,21 @@ public class ElementType extends MibType {
 
     /**
      * Returns the optional element name.
-     * 
-     * @return the element name, or 
+     *
+     * @return the element name, or
      *         null if no name has been set
-     * 
+     *
      * @since 2.2
      */
     public String getName() {
         return name;
     }
-    
+
     /**
-     * Returns the referenced MIB type. 
-     * 
+     * Returns the referenced MIB type.
+     *
      * @return the referenced MIB type
-     * 
+     *
      * @since 2.2
      */
     public MibType getType() {
@@ -138,7 +138,7 @@ public class ElementType extends MibType {
 
     /**
      * Returns a string representation of this object.
-     * 
+     *
      * @return a string representation of this object
      */
     public String toString() {

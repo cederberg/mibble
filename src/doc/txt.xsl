@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
- 
+
 <!-- ### ENTITY DECLARATIONS ### -->
 <!DOCTYPE stylesheet [
 <!ENTITY newline "<xsl:text>
@@ -8,7 +8,7 @@
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 version="1.0">
-  
+
   <!-- ### INPUT PARAMETERS ### -->
   <xsl:param name="date" select="'UNDEFINED'" />
   <xsl:param name="version" select="'UNDEFINED'" />
@@ -53,8 +53,8 @@ Mibble </xsl:text>
     <xsl:text>). See http://www.nongnu.org/mibble for
 more information.
 
-Copyright (c) 2004 Per Cederberg. Permission is granted to copy this 
-document verbatim in any medium, provided that this copyright notice 
+Copyright (c) 2004 Per Cederberg. Permission is granted to copy this
+document verbatim in any medium, provided that this copyright notice
 is left intact.</xsl:text>
     &newline;
   </xsl:template>
@@ -84,7 +84,7 @@ is left intact.</xsl:text>
     </xsl:call-template>
     &newline;&newline;
   </xsl:template>
- 
+
   <xsl:template match="list">
     <xsl:apply-templates />
   </xsl:template>
@@ -172,7 +172,7 @@ is left intact.</xsl:text>
     <xsl:param name="str" />
     <xsl:param name="lineStart" />
     <xsl:param name="lineLength" />
-    <xsl:variable name="maxStrLength" 
+    <xsl:variable name="maxStrLength"
                   select="$lineLength - string-length($lineStart)" />
     <xsl:choose>
       <xsl:when test="string-length($str) &lt;= $maxStrLength">
