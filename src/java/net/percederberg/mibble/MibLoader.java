@@ -64,7 +64,7 @@ import net.percederberg.mibble.asn1.Asn1Parser;
  * concurrently in multiple threads.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.6
  * @since    2.0
  */
 public class MibLoader {
@@ -851,7 +851,7 @@ public class MibLoader {
 
             // Parse input stream
             try {
-                analyzer = new MibAnalyzer(null, loader, log);
+                analyzer = new MibAnalyzer(file, loader, log);
                 parser = new Asn1Parser(input, analyzer);
                 parser.parse();
                 return analyzer.getMibs();
