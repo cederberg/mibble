@@ -70,33 +70,42 @@ public abstract class MibType {
      * @param name           the type name
      * @param primitive      the primitive type flag
      */
-    public MibType(String name, boolean primitive) {
+    protected MibType(String name, boolean primitive) {
         this.name = name;
         this.primitive = primitive;
     }
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to other types, and 
-     * returns the basic type. No type information is lost by this 
-     * operation. This method may modify this object as a 
-     * side-effect, and will be called by the MIB loader.
+     * indirection present, such as references to types or values. No 
+     * information is lost by this operation. This method may modify
+     * this object as a side-effect, and will return the basic 
+     * type.<p>
      * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     * 
+     * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
      * 
      * @return the basic MIB type
      * 
      * @throws MibException if an error was encountered during the
      *             initialization
+     * 
+     * @since 2.2
      */
-    public abstract MibType initialize(MibLoaderLog log) 
+    public abstract MibType initialize(MibSymbol symbol, MibLoaderLog log) 
         throws MibException;
 
     /**
      * Creates a type reference to this type. The type reference is
      * normally an identical type, but with the primitive flag set to 
      * false. Only certain types support being referenced, and the
-     * default implementation of this method throws an exception. 
+     * default implementation of this method throws an exception.<p> 
+     * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
      * 
      * @return the MIB type reference
      * 
@@ -117,8 +126,11 @@ public abstract class MibType {
      * reference is normally an identical type, but with the 
      * primitive flag set to false. Only certain types support being 
      * referenced, and the default implementation of this method 
-     * throws an exception. 
+     * throws an exception.<p> 
      *
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     * 
      * @param constraint     the type constraint
      *  
      * @return the MIB type reference
@@ -140,8 +152,11 @@ public abstract class MibType {
      * reference is normally an identical type, but with the 
      * primitive flag set to false. Only certain types support being 
      * referenced, and the default implementation of this method 
-     * throws an exception. 
+     * throws an exception.<p>
      *
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     * 
      * @param values         the type value symbols
      *  
      * @return the MIB type reference
@@ -187,6 +202,18 @@ public abstract class MibType {
     }
 
     /**
+     * Returns the type name.
+     * 
+     * @return the type name, or
+     *         an empty string if not applicable
+     * 
+     * @since 2.2
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
      * Returns the type tag.
      * 
      * @return the type tag, or
@@ -204,8 +231,11 @@ public abstract class MibType {
      * implicit inheritance, the first tag in the old tag chain is 
      * replaced with the new tag. For explicit inheritance, the new
      * tag is added first in the tag chain without removing any old 
-     * tag.
+     * tag.<p>
      *
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     * 
      * @param implicit       the implicit inheritance flag
      * @param tag            the new type tag
      * 

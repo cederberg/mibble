@@ -43,7 +43,7 @@ import net.percederberg.mibble.MibValue;
  * inside a module declaration. 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
 public class SnmpCompliance {
@@ -107,13 +107,15 @@ public class SnmpCompliance {
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public void initialize(MibLoaderLog log) throws MibException {
+    void initialize(MibLoaderLog log) 
+        throws MibException {
+
         value = value.initialize(log);
         if (syntax != null) {
-            syntax = syntax.initialize(log);
+            syntax = syntax.initialize(null, log);
         }
         if (writeSyntax != null) {
-            writeSyntax = writeSyntax.initialize(log);
+            writeSyntax = writeSyntax.initialize(null, log);
         }
     }
 

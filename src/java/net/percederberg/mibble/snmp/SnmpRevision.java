@@ -41,7 +41,7 @@ import net.percederberg.mibble.MibValue;
  * An SNMP module identity revision.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
 public class SnmpRevision {
@@ -78,7 +78,7 @@ public class SnmpRevision {
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public void initialize(MibLoaderLog log) throws MibException {
+    void initialize(MibLoaderLog log) throws MibException {
         value = value.initialize(log);
     }
     

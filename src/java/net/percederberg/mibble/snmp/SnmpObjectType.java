@@ -37,8 +37,10 @@ import java.util.ArrayList;
 
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
+import net.percederberg.mibble.MibSymbol;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
+import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
@@ -163,29 +165,43 @@ public class SnmpObjectType extends MibType {
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to other types, and 
-     * returns the basic type. No type information is lost by this 
-     * operation. This method may modify this object as a 
-     * side-effect, and will be called by the MIB loader.
+     * indirection present, such as references to types or values. No 
+     * information is lost by this operation. This method may modify
+     * this object as a side-effect, and will return the basic 
+     * type.<p>
      * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     * 
+     * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
      * 
      * @return the basic MIB type
      * 
      * @throws MibException if an error was encountered during the
      *             initialization
+     * 
+     * @since 2.2
      */
-    public MibType initialize(MibLoaderLog log) throws MibException {
+    public MibType initialize(MibSymbol symbol, MibLoaderLog log) 
+        throws MibException {
+
         ArrayList  list = new ArrayList();
         Object     obj;
 
-        syntax = syntax.initialize(log);
+        if (!(symbol instanceof MibValueSymbol)) {
+            throw new MibException(symbol.getLocation(), 
+                                   "only values can have the " +
+                                   getName() + " type");
+        }
+        syntax = syntax.initialize(symbol, log);
+        // TODO: add undefined sequence elements to MIB...
         for (int i = 0; i < index.size(); i++) {
             obj = index.get(i);
             if (obj instanceof MibValue) {
                 list.add(((MibValue) obj).initialize(log));
             } else {
-                list.add(((MibType) obj).initialize(log));
+                list.add(((MibType) obj).initialize(symbol, log));
             }
         }
         this.index = list;

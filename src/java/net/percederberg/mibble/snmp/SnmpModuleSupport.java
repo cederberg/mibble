@@ -44,7 +44,7 @@ import net.percederberg.mibble.MibValue;
  * inside the agent capabilities type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
 public class SnmpModuleSupport {
@@ -92,7 +92,7 @@ public class SnmpModuleSupport {
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public void initialize(MibLoaderLog log) throws MibException {
+    void initialize(MibLoaderLog log) throws MibException {
         ArrayList  list = new ArrayList();
         int        i;
 

@@ -44,7 +44,7 @@ import net.percederberg.mibble.MibValue;
  * inside the module compliance type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
 public class SnmpModule {
@@ -86,13 +86,15 @@ public class SnmpModule {
      * returns the basic type. No type information is lost by this 
      * operation. This method may modify this object as a 
      * side-effect, and will be called by the MIB loader.
-     * 
+     *
      * @param log            the MIB loader log
      * 
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public void initialize(MibLoaderLog log) throws MibException {
+    void initialize(MibLoaderLog log) 
+        throws MibException {
+
         ArrayList  list = new ArrayList();
         int        i;
 

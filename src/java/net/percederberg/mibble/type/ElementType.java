@@ -35,6 +35,7 @@ package net.percederberg.mibble.type;
 
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
+import net.percederberg.mibble.MibSymbol;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
 
@@ -73,20 +74,28 @@ public class ElementType extends MibType {
     
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to other types, and 
-     * returns the basic type. No type information is lost by this 
-     * operation. This method may modify this object as a 
-     * side-effect, and will be called by the MIB loader.
+     * indirection present, such as references to types or values. No 
+     * information is lost by this operation. This method may modify
+     * this object as a side-effect, and will return the basic 
+     * type.<p>
      * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     * 
+     * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
      * 
      * @return the basic MIB type
      * 
      * @throws MibException if an error was encountered during the
      *             initialization
+     * 
+     * @since 2.2
      */
-    public MibType initialize(MibLoaderLog log) throws MibException {
-        type = type.initialize(log);
+    public MibType initialize(MibSymbol symbol, MibLoaderLog log) 
+        throws MibException {
+
+        type = type.initialize(symbol, log);
         return this;
     }
 

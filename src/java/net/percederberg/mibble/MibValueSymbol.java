@@ -94,7 +94,7 @@ public class MibValueSymbol extends MibSymbol {
      */
     public void initialize(MibLoaderLog log) throws MibException {
         if (type != null) {
-            type = type.initialize(log);
+            type = type.initialize(this, log);
         }
         if (value != null) {
             value = value.initialize(log);

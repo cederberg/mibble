@@ -152,27 +152,35 @@ public class TypeReference extends MibType implements MibContext {
 
     /**
      * Initializes the MIB type. This will remove all levels of
-     * indirection present, such as references to other types, and 
-     * returns the basic type. No type information is lost by this 
-     * operation. This method may modify this object as a 
-     * side-effect, and will be called by the MIB loader.
+     * indirection present, such as references to types or values. No 
+     * information is lost by this operation. This method may modify
+     * this object as a side-effect, and will return the basic 
+     * type.<p>
      * 
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     * 
+     * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
      * 
      * @return the basic MIB type
      * 
      * @throws MibException if an error was encountered during the
      *             initialization
+     * 
+     * @since 2.2
      */
-    public MibType initialize(MibLoaderLog log) throws MibException {
-        MibSymbol  symbol;
+    public MibType initialize(MibSymbol symbol, MibLoaderLog log) 
+        throws MibException {
+
+        MibSymbol  ref;
         String     message;
 
-        symbol = context.getSymbol(name);
-        if (symbol instanceof MibTypeSymbol) {
-            type = initialize(log, ((MibTypeSymbol) symbol).getType());
+        ref = context.getSymbol(name);
+        if (ref instanceof MibTypeSymbol) {
+            type = initialize(symbol, log, ((MibTypeSymbol) ref).getType());
             return type;
-        } else if (symbol == null) {
+        } else if (ref == null) {
             message = "undefined symbol '" + name + "'";
             throw new MibException(location, message);
         } else {
@@ -187,6 +195,7 @@ public class TypeReference extends MibType implements MibContext {
      * types, and returns the basic type. This method  will add any 
      * constraints or defined values if possible.
      * 
+     * @param symbol         the MIB symbol containing this type
      * @param log            the MIB loader log
      * @param type           the MIB type
      * 
@@ -195,25 +204,23 @@ public class TypeReference extends MibType implements MibContext {
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    private MibType initialize(MibLoaderLog log, MibType type) 
+    private MibType initialize(MibSymbol symbol, 
+                               MibLoaderLog log, 
+                               MibType type) 
         throws MibException {
 
-        type = type.initialize(log);
+        type = type.initialize(symbol, log);
         try {
             if (constraint != null) {
                 type = type.createReference(constraint);
-                type = type.initialize(log);
             } else if (values != null) {
                 type = type.createReference(values);
-                type = type.initialize(log);
             } else {
                 type = type.createReference();
             }
+            type = type.initialize(symbol, log);
         } catch (UnsupportedOperationException e) {
             throw new MibException(location, e.getMessage());
-        }
-        if (tag != null) {
-            
         }
         initializeTypeTag(type, tag);
         return type;

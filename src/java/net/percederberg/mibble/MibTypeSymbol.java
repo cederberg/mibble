@@ -83,7 +83,7 @@ public class MibTypeSymbol extends MibSymbol {
      */
     public void initialize(MibLoaderLog log) throws MibException {
         if (type != null) {
-            type = type.initialize(log);
+            type = type.initialize(this, log);
         }
     }
 

@@ -45,7 +45,7 @@ import net.percederberg.mibble.MibValue;
  * inside a module support declaration. 
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.0
+ * @version  2.2
  * @since    2.0
  */
 public class SnmpVariation {
@@ -125,15 +125,15 @@ public class SnmpVariation {
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public void initialize(MibLoaderLog log) throws MibException {
+    void initialize(MibLoaderLog log) throws MibException {
         ArrayList  list = new ArrayList();
 
         value = value.initialize(log);
         if (syntax != null) {
-            syntax = syntax.initialize(log);
+            syntax = syntax.initialize(null, log);
         }
         if (writeSyntax != null) {
-            writeSyntax = writeSyntax.initialize(log);
+            writeSyntax = writeSyntax.initialize(null, log);
         }
         for (int i = 0; i < requiredCells.size(); i++) {
             list.add(((MibValue) requiredCells.get(i)).initialize(log));
