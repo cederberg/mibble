@@ -256,7 +256,7 @@ public class Mib implements MibContext {
                 if (value.getValue() instanceof NumberValue
                  || value.getValue() instanceof ObjectIdentifierValue) {
 
-                    symbolValueMap.put(value.getValue(), value);
+                    symbolValueMap.put(value.getValue().toString(), symbol);
                 }
             }
         }
@@ -402,7 +402,7 @@ public class Mib implements MibContext {
      * @return the MIB value symbol, or null if not found
      */
     public MibValueSymbol getSymbolByValue(MibValue value) {
-        return (MibValueSymbol) symbolValueMap.get(value);
+        return (MibValueSymbol) symbolValueMap.get(value.toString());
     }
 
     /**
