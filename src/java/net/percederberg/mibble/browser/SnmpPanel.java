@@ -113,11 +113,6 @@ public class SnmpPanel extends JPanel {
     private JButton setButton = new JButton("Set");
 
     /**
-     * The walk button.
-     */
-    private JButton walkButton = new JButton("Walk");
-
-    /**
      * The clear button.
      */
     private JButton clearButton = new JButton("Clear");
@@ -292,35 +287,28 @@ public class SnmpPanel extends JPanel {
         getButton.setToolTipText("Perform SNMP get operation");
         getButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                performSnmpGet();
+                performGet();
             }
         });
         panel.add(getButton);
         getNextButton.setToolTipText("Perform SNMP get next operation");
         getNextButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                performSnmpGetNext();
+                performGetNext();
             }
         });
         panel.add(getNextButton);
         setButton.setToolTipText("Perform SNMP set operation");
         setButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                performSnmpSet();
+                performSet();
             }
         });
         panel.add(setButton);
-        walkButton.setToolTipText("Walk the OID:s");
-        walkButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                performSnmpWalk();
-            }
-        });
-        panel.add(walkButton);
         clearButton.setToolTipText("Clear SNMP result area");
         clearButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                clearSnmpResults();
+                clearResults();
             }
         });
         panel.add(clearButton);
@@ -350,9 +338,21 @@ public class SnmpPanel extends JPanel {
     }
 
     /**
+     * Sets the operation status text. If the status text is null,
+     * the operation is assumed to have finished. This method also
+     * affects all input controls, making them disabled during an
+     * operation.
+     *
+     * @param text           the status text (or null)
+     */
+    public void setOperationStatus(String text) {
+        frame.setEnabled(text == null);
+        frame.setStatus(text);
+    }
+
+    /**
      * Enables or disables the buttons. This method can be used while
-     * selecting MIB elements that allow or disallows SNMP
-     * operations.
+     * selecting MIB elements that allow or disallows operations.
      */
     protected void updateButtonStatus() {
         boolean  allowGet;
@@ -366,86 +366,73 @@ public class SnmpPanel extends JPanel {
         getButton.setEnabled(allowGet);
         getNextButton.setEnabled(allowGet);
         setButton.setEnabled(allowSet);
-        walkButton.setEnabled(allowGet);
     }
 
     /**
-     * Performs an SNMP get operation.
+     * Performs a get operation.
      */
-    protected void performSnmpGet() {
-        SnmpOperation  operation = createSnmpOperation(true);
-        String         oid = oidField.getText();
+    protected void performGet() {
+        Operation  operation = createOperation(true);
 
         if (operation != null) {
-            resultsArea.append("Get: ");
-            resultsArea.append(operation.sendGetRequest(oid));
-            resultsArea.append("\n");
+            operation.startGet();
         }
     }
 
     /**
-     * Performs an SNMP get next operation.
+     * Performs a get next operation.
      */
-    protected void performSnmpGetNext() {
-        SnmpOperation  operation = createSnmpOperation(true);
-        String         oid = oidField.getText();
+    protected void performGetNext() {
+        Operation  operation = createOperation(true);
 
         if (operation != null) {
-            resultsArea.append("Get Next: ");
-            resultsArea.append(operation.sendGetNextRequest(oid));
-            resultsArea.append("\n");
+            operation.startGetNext();
         }
     }
 
     /**
-     * Performs an SNMP set operation.
+     * Performs a set operation.
      */
-    protected void performSnmpSet() {
-        SnmpOperation  operation = createSnmpOperation(false);
-        String         oid = oidField.getText();
-        String         value = valueField.getText();
+    protected void performSet() {
+        Operation  operation = createOperation(false);
 
         if (operation != null) {
-            resultsArea.append("Set: ");
-            resultsArea.append(operation.sendSetRequest(oid, value));
-            resultsArea.append("\n");
+            operation.startSet(valueField.getText());
         }
     }
 
     /**
-     * Performs an SNMP walk operation.
+     * Clears the result area.
      */
-    protected void performSnmpWalk() {
-        SnmpOperation  operation = createSnmpOperation(true);
-        String         oid = oidField.getText();
-
-        if (operation != null) {
-            resultsArea.append("Walk:\n");
-            resultsArea.append(operation.snmpWalk(oid, resultsArea));
-        }
-    }
-
-    /**
-     * Clears the SNMP result area.
-     */
-    protected void clearSnmpResults() {
+    protected void clearResults() {
         resultsArea.setText("");
     }
 
     /**
-     * Creates a new SNMP operation object. The values in the host,
-     * port and community fields will be used.
+     * Appends a text to the results area.
+     *
+     * @param text           the text to append
+     */
+    protected void appendResults(String text) {
+        resultsArea.append(text);
+    }
+
+    /**
+     * Creates a new operation object. The values in the panel fields
+     * will be used.
      *
      * @param read           the read flag (set to use read community)
      *
-     * @return the SNMP operation object, or
+     * @return the operation object, or
      *         null if none could be created
      */
-    private SnmpOperation createSnmpOperation(boolean read) {
-        String  ip = ipField.getText();
-        int     port;
-        String  community;
-        String  message;
+    private Operation createOperation(boolean read) {
+        String       host = ipField.getText();
+        int          port;
+        String       community;
+        String       oid = oidField.getText();
+        SnmpManager  manager;
+        String       message;
 
         // Validate port number
         try {
@@ -471,9 +458,9 @@ public class SnmpPanel extends JPanel {
             community = new String(writeCommunityField.getPassword());
         }
 
-        // Create SNMP operation
+        // Create SNMP manager
         try {
-            return new SnmpOperation(ip, port, community);
+            manager = new SnmpManager(host, port, community);
         } catch (IOException e) {
             message = "SNMP communication error: " + e.getMessage();
             JOptionPane.showMessageDialog(frame,
@@ -481,6 +468,108 @@ public class SnmpPanel extends JPanel {
                                           "SNMP Communication Error",
                                           JOptionPane.ERROR_MESSAGE);
             return null;
+        }
+
+        // Return operation
+        return new Operation(manager, oid);
+    }
+
+
+    /**
+     * A background SNMP operation. This class is needed in order to
+     * implement the runnable interface to be able to run SNMP
+     * operations in a background thread.
+     */
+    private class Operation implements Runnable {
+
+        /**
+         * The SNMP manager to use.
+         */
+        private SnmpManager manager;
+
+        /**
+         * The object identifier.
+         */
+        private String oid;
+
+        /**
+         * The optional value to set.
+         */
+        private String value;
+
+        /**
+         * The operation to perform.
+         */
+        private String operation;
+
+        /**
+         * Creates a new background SNMP operation.
+         *
+         * @param manager        the SNMP manager to use
+         * @param oid            the object identifier to use
+         */
+        public Operation(SnmpManager manager, String oid) {
+            this.manager = manager;
+            this.oid = oid;
+        }
+
+        /**
+         * Starts a GET operation in a background thread.
+         */
+        public void startGet() {
+            this.operation = "GET";
+            start();
+        }
+
+        /**
+         * Starts a GET NEXT operation in a background thread.
+         */
+        public void startGetNext() {
+            this.operation = "GET NEXT";
+            start();
+        }
+
+        /**
+         * Starts a SET operation in a background thread.
+         *
+         * @param value          the value to set
+         */
+        public void startSet(String value) {
+            this.value = value;
+            this.operation = "SET";
+            start();
+        }
+
+        /**
+         * Starts the background thread.
+         */
+        private void start() {
+            Thread  thread = new Thread(this);
+
+            thread.start();
+        }
+
+        /**
+         * Runs the operation. This method should only be called by
+         * the thread created through a call to start().
+         */
+        public void run() {
+            setOperationStatus("Performing SNMP " + operation +
+                               " operation...");
+            if (operation.equals("GET")) {
+                appendResults("Get: ");
+                appendResults(manager.sendGetRequest(oid));
+                appendResults("\n");
+            } else if (operation.equals("GET NEXT")) {
+                appendResults("Get Next: ");
+                appendResults(manager.sendGetNextRequest(oid));
+                appendResults("\n");
+            } else if (operation.equals("SET")) {
+                appendResults("Set: ");
+                appendResults(manager.sendSetRequest(oid, value));
+                appendResults("\n");
+            }
+            setOperationStatus(null);
         }
     }
 }

@@ -253,8 +253,7 @@ public class BrowserFrame extends JFrame {
         ByteArrayOutputStream  output;
         String                 message = null;
 
-        statusLabel.setText("Loading " + src + "...");
-        statusLabel.updateUI();
+        setStatus("Loading " + src + "...");
         try {
             browser.loadMib(src);
         } catch (FileNotFoundException e) {
@@ -273,7 +272,7 @@ public class BrowserFrame extends JFrame {
                                           "MIB Loading Error",
                                           JOptionPane.ERROR_MESSAGE);
         }
-        statusLabel.setText("Ready");
+        setStatus(null);
     }
 
     /**
@@ -302,6 +301,19 @@ public class BrowserFrame extends JFrame {
 
         ((DefaultTreeModel) tree.getModel()).reload();
         tree.repaint();
+    }
+
+    /**
+     * Sets the status label text.
+     *
+     * @param text           the status label text (or null)
+     */
+    public void setStatus(String text) {
+        if (text != null) {
+            statusLabel.setText(text);
+        } else {
+            statusLabel.setText("Ready");
+        }
     }
 
     /**

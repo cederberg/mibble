@@ -1,5 +1,5 @@
 /*
- * SnmpOperation.java
+ * SnmpManager.java
  *
  * This work is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -22,7 +22,6 @@
 package net.percederberg.mibble.browser;
 
 import java.io.IOException;
-import javax.swing.JTextArea;
 
 import uk.co.westhawk.snmp.pdu.BlockPdu;
 import uk.co.westhawk.snmp.pdu.OneSetPdu;
@@ -32,15 +31,14 @@ import uk.co.westhawk.snmp.stack.AsnObjectId;
 import uk.co.westhawk.snmp.stack.AsnOctets;
 import uk.co.westhawk.snmp.stack.Pdu;
 import uk.co.westhawk.snmp.stack.PduException;
-import uk.co.westhawk.snmp.stack.SnmpConstants;
 import uk.co.westhawk.snmp.stack.SnmpContextBasisFace;
 import uk.co.westhawk.snmp.stack.SnmpContextPool;
 import uk.co.westhawk.snmp.stack.varbind;
 
 /**
- * This class exposes the different snmp operations which the user
- * may want to perform. It is a wrapper class over the Westhawk SNMP
- * stack.
+ * An SNMP manager. This class exposes the different snmp operations
+ * which the user may want to perform. It is a wrapper class over the
+ * Westhawk SNMP stack.
  *
  * @see uk.co.westhawk.snmp.pdu.BlockPdu
  * @see uk.co.westhawk.snmp.stack.SnmpContextPool
@@ -50,7 +48,7 @@ import uk.co.westhawk.snmp.stack.varbind;
  * @version  2.5
  * @since    2.3
  */
-public class SnmpOperation {
+public class SnmpManager {
 
     /**
      * The SNMP context pool.
@@ -58,24 +56,7 @@ public class SnmpOperation {
     private SnmpContextPool context;
 
     /**
-     * Creates a new SNMP operation.
-     *
-     * @param host           the host name or IP address
-     * @param port           the agent port
-     * @param comm           the community name (read/write depends
-     *                       on type of operation)
-     *
-     * @throws IOException if an SNMP context pool couldn't be
-     *             created from the specified values
-     */
-    public SnmpOperation(String host, int port, String comm)
-        throws IOException {
-
-        createContext(host, port, comm);
-    }
-
-    /**
-     * Creates the new SNMP context.
+     * Creates a new SNMP manager.
      *
      * @param host           the host name or IP address
      * @param port           the agent port
@@ -84,7 +65,7 @@ public class SnmpOperation {
      * @throws IOException if an SNMP context pool couldn't be
      *             created from the specified values
      */
-    private void createContext(String host, int port, String community)
+    public SnmpManager(String host, int port, String community)
         throws IOException {
 
         String  socket;
@@ -212,58 +193,6 @@ public class SnmpOperation {
             return exc.getMessage();
         }
         return "";
-    }
-
-    /**
-     * Walk the MIB.
-     *
-     * @param oid            oid to start walking the mib
-     * @param resultArea     text area to populate with the result of
-     *                       walk operation
-     *
-     * @return a string description of the results
-     */
-    public String snmpWalk(String oid, JTextArea resultArea) {
-        BlockPdu  pdu = new BlockPdu(context);
-
-        pdu = new BlockPdu(context);
-        pdu.setPduType(BlockPdu.GETNEXT);
-        pdu.addOid(oid);
-        while (true) {
-            try {
-                if ((pdu != null)) {
-                    // Request sent and call blocks till response is received...
-                    varbind var = pdu.getResponseVariableBinding();
-                    if (var != null) {
-                        AsnObjectId oidNext = var.getOid();
-                        AsnObject res = var.getValue();
-                        if (res.getRespType() !=
-                            SnmpConstants.SNMP_VAR_ENDOFMIBVIEW) {
-
-                            if (res != null && oidNext != null) {
-                                if ((oidNext.toString().indexOf(oid)) == -1) {
-                                    return "END OF WALK";
-                                }
-                                // print or display the answer
-                                resultArea.append(oidNext.toString());
-                                resultArea.append(" --> ");
-                                resultArea.append(res.toString());
-                                resultArea.append("\n");
-
-                                pdu = new BlockPdu(context);
-                                pdu.setPduType(BlockPdu.GETNEXT);
-                                pdu.addOid(oidNext.toString());
-                            }
-                        }
-                    }
-                }
-            } catch (PduException exc1) {
-                // comes here when timeout occurs.
-                return exc1.getMessage();
-            } catch (IOException exc) {
-                return exc.getMessage();
-            }
-        }
     }
 
     /**
