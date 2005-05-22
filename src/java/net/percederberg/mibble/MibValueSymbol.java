@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -32,7 +32,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * an object identifier.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.6
  * @since    2.0
  */
 public class MibValueSymbol extends MibSymbol {
@@ -244,6 +244,79 @@ public class MibValueSymbol extends MibSymbol {
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the number of child symbols in the OID tree. This is a
+     * convenience method for value symbols that have object
+     * identifier values. 
+     *
+     * @return the number of child symbols in the OID tree, or
+     *         zero (0) if not applicable
+     *
+     * @see net.percederberg.mibble.value.ObjectIdentifierValue
+     *
+     * @since 2.6
+     */
+    public int getChildCount() {
+        if (value instanceof ObjectIdentifierValue) {
+            return ((ObjectIdentifierValue) value).getChildCount();
+        }
+        return 0;
+    }
+
+    /**
+     * Returns a specific child symbol in the OID tree. This is a
+     * convenience method for value symbols that have object
+     * identifier values. 
+     *
+     * @param index          the child position, 0 <= index < count
+     *
+     * @return the child symbol in the OID tree, or
+     *         null if not found or not applicable
+     *
+     * @see net.percederberg.mibble.value.ObjectIdentifierValue
+     *
+     * @since 2.6
+     */
+    public MibValueSymbol getChild(int index) {
+        ObjectIdentifierValue  oid;
+
+        if (value instanceof ObjectIdentifierValue) {
+            oid = ((ObjectIdentifierValue) value).getChild(index);
+            if (oid != null) {
+                return oid.getSymbol();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns all child symbols in the OID tree. This is a
+     * convenience method for value symbols that have object
+     * identifier values. 
+     *
+     * @return the array of child symbols in the OID tree, or
+     *         an empty array if not applicable
+     *
+     * @see net.percederberg.mibble.value.ObjectIdentifierValue
+     *
+     * @since 2.6
+     */
+    public MibValueSymbol[] getChildren() {
+        ObjectIdentifierValue  oid;
+        MibValueSymbol         children[];
+
+        if (value instanceof ObjectIdentifierValue) {
+            oid = (ObjectIdentifierValue) value;
+            children = new MibValueSymbol[oid.getChildCount()];
+            for (int i = 0; i < oid.getChildCount(); i++) {
+                children[i] = oid.getChild(i).getSymbol();
+            }
+        } else {
+            children = new MibValueSymbol[0];
+        }
+        return children;
     }
 
     /**
