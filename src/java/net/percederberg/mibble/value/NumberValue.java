@@ -16,10 +16,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
+
+import java.math.BigDecimal;
 
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibValue;
@@ -28,7 +30,7 @@ import net.percederberg.mibble.MibValue;
  * A numeric MIB value.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.6
  * @since    2.0
  */
 public class NumberValue extends MibValue {
@@ -84,6 +86,36 @@ public class NumberValue extends MibValue {
     }
 
     /**
+     * Compares this object with the specified object for order. This
+     * method will attempt to compare by numerical value, but will
+     * use a string comparison as the default comparison operation.
+     *
+     * @param obj            the object to compare to
+     *
+     * @return less than zero if this object is less than the specified,
+     *         zero if the objects are equal, or
+     *         greater than zero otherwise
+     *
+     * @since 2.6
+     */
+    public int compareTo(Object obj) {
+        BigDecimal  value1;
+        BigDecimal  value2;
+
+        if (obj instanceof NumberValue) {
+            value1 = new BigDecimal(value.toString());
+            value2 = new BigDecimal(((NumberValue) obj).value.toString());
+            return value1.compareTo(value2);
+        } else if (obj instanceof Number) {
+            value1 = new BigDecimal(value.toString());
+            value2 = new BigDecimal(((Number) obj).toString());
+            return value1.compareTo(value2);
+        } else {
+            return toString().compareTo(obj.toString());
+        }
+    }
+
+    /**
      * Checks if this object equals another object. This method will
      * compare the string representations for equality.
      *
@@ -102,7 +134,7 @@ public class NumberValue extends MibValue {
      * @return a hash code for this object
      */
     public int hashCode() {
-        return value.hashCode();
+        return toString().hashCode();
     }
 
     /**

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
@@ -34,7 +34,7 @@ import net.percederberg.mibble.MibValueSymbol;
  * identifier values in a tree hierarchy.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.6
  * @since    2.0
  */
 public class ObjectIdentifierValue extends MibValue {
@@ -196,6 +196,23 @@ public class ObjectIdentifierValue extends MibValue {
      */
     public MibValue createReference() {
         return this;
+    }
+
+    /**
+     * Compares this object with the specified object for order. This
+     * method will only compare the string representations with each
+     * other.
+     *
+     * @param obj            the object to compare to
+     *
+     * @return less than zero if this object is less than the specified,
+     *         zero if the objects are equal, or
+     *         greater than zero otherwise
+     *
+     * @since 2.6
+     */
+    public int compareTo(Object obj) {
+        return toString().compareTo(obj.toString());
     }
 
     /**

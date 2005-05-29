@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
@@ -38,7 +38,7 @@ import net.percederberg.mibble.MibValueSymbol;
  * <strong>NOT</strong> use or reference this class.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.4
+ * @version  2.6
  * @since    2.0
  */
 public class ValueReference extends MibValue {
@@ -133,6 +133,49 @@ public class ValueReference extends MibValue {
      */
     public FileLocation getLocation() {
         return location;
+    }
+
+    /**
+     * Compares this object with the specified object for order. This
+     * method will only compare the string representations with each
+     * other.
+     *
+     * @param obj            the object to compare to
+     *
+     * @return less than zero if this object is less than the specified,
+     *         zero if the objects are equal, or
+     *         greater than zero otherwise
+     *
+     * @since 2.6
+     */
+    public int compareTo(Object obj) {
+        return toString().compareTo(obj.toString());
+    }
+
+    /**
+     * Checks if this object equals another object. This method will
+     * compare the string representations for equality.
+     *
+     * @param obj            the object to compare with
+     *
+     * @return true if the objects are equal, or
+     *         false otherwise
+     *
+     * @since 2.6
+     */
+    public boolean equals(Object obj) {
+        return toString().equals(obj.toString());
+    }
+
+    /**
+     * Returns a hash code for this object.
+     *
+     * @return a hash code for this object
+     *
+     * @since 2.6
+     */
+    public int hashCode() {
+        return toString().hashCode();
     }
 
     /**
