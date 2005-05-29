@@ -22,6 +22,7 @@
 package net.percederberg.mibble.value;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibValue;
@@ -99,19 +100,40 @@ public class NumberValue extends MibValue {
      * @since 2.6
      */
     public int compareTo(Object obj) {
-        BigDecimal  value1;
-        BigDecimal  value2;
-
         if (obj instanceof NumberValue) {
-            value1 = new BigDecimal(value.toString());
-            value2 = new BigDecimal(((NumberValue) obj).value.toString());
-            return value1.compareTo(value2);
+            return compareToNumber(((NumberValue) obj).value);
         } else if (obj instanceof Number) {
-            value1 = new BigDecimal(value.toString());
-            value2 = new BigDecimal(((Number) obj).toString());
-            return value1.compareTo(value2);
+            return compareToNumber((Number) obj);
         } else {
             return toString().compareTo(obj.toString());
+        }
+    }
+
+    /**
+     * Compares this object with the specified number for order.
+     *
+     * @param num            the number to compare to
+     *
+     * @return less than zero if this number is less than the specified,
+     *         zero if the numbers are equal, or
+     *         greater than zero otherwise
+     */
+    private int compareToNumber(Number num) {
+        BigDecimal  num1;
+        BigDecimal  num2;
+
+        if (value instanceof Integer && num instanceof Integer) {
+            return ((Integer) value).compareTo(num);
+        } else if (value instanceof Long && num instanceof Long) {
+            return ((Long) value).compareTo(num);
+        } else if (value instanceof BigInteger
+                && num instanceof BigInteger) {
+
+            return ((BigInteger) value).compareTo(num);
+        } else {
+            num1 = new BigDecimal(value.toString());
+            num2 = new BigDecimal(num.toString());
+            return num1.compareTo(num2);
         }
     }
 
