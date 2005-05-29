@@ -16,14 +16,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 
 import net.percederberg.mibble.MibContext;
 import net.percederberg.mibble.MibException;
@@ -54,7 +54,7 @@ public class BitSetType extends MibType implements MibContext {
     /**
      * The additional defined symbols.
      */
-    private HashMap symbols = new HashMap();
+    private LinkedHashMap symbols = new LinkedHashMap();
 
     /**
      * Creates a new bit set MIB type.
@@ -91,7 +91,7 @@ public class BitSetType extends MibType implements MibContext {
      */
     private BitSetType(boolean primitive,
                        Constraint constraint,
-                       HashMap symbols) {
+                       LinkedHashMap symbols) {
 
         super("BITS", primitive);
         if (constraint != null) {
