@@ -90,14 +90,24 @@ public class MibValueSymbol extends MibSymbol {
         ObjectIdentifierValue  oid;
 
         if (type != null) {
-            type = type.initialize(this, log);
+            try {
+                type = type.initialize(this, log);
+            } catch (MibException e) {
+                log.addError(e.getLocation(), e.getMessage());
+                type = null;
+            }
         }
         if (value != null) {
-            value = value.initialize(log);
+            try {
+                value = value.initialize(log);
+            } catch (MibException e) {
+                log.addError(e.getLocation(), e.getMessage());
+                value = null;
+            }
         }
         if (type != null && value != null && !type.isCompatible(value)) {
-            throw new MibException(getLocation(),
-                                   "value is not compatible with type");
+            log.addError(getLocation(),
+                         "value is not compatible with type");
         }
         if (value instanceof ObjectIdentifierValue) {
             oid = (ObjectIdentifierValue) value;

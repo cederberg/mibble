@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -26,7 +26,7 @@ package net.percederberg.mibble;
  * type assignment, i.e. a defined type name.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.6
  * @since    2.0
  */
 public class MibTypeSymbol extends MibSymbol {
@@ -71,7 +71,12 @@ public class MibTypeSymbol extends MibSymbol {
      */
     public void initialize(MibLoaderLog log) throws MibException {
         if (type != null) {
-            type = type.initialize(this, log);
+            try {
+                type = type.initialize(this, log);
+            } catch (MibException e) {
+                log.addError(e.getLocation(), e.getMessage());
+                type = null;
+            }
         }
     }
 

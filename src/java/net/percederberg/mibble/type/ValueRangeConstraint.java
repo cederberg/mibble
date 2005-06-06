@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -131,8 +131,8 @@ public class ValueRangeConstraint implements Constraint {
      *         false otherwise
      */
     public boolean isCompatible(MibType type) {
-        return (lower == null || type.isCompatible(lower))
-            && (upper == null || type.isCompatible(upper));
+        return (type == null || lower == null || type.isCompatible(lower))
+            && (type == null || upper == null || type.isCompatible(upper));
     }
 
     /**

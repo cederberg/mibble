@@ -42,7 +42,7 @@ import net.percederberg.mibble.MibValue;
  * <strong>NOT</strong> use or reference this class.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.4
+ * @version  2.6
  * @since    2.0
  */
 public class TypeReference extends MibType implements MibContext {
@@ -207,7 +207,12 @@ public class TypeReference extends MibType implements MibContext {
 
         MibType  type = ref.getType();
 
-        type = type.initialize(symbol, log);
+        if (type != null) {
+            type = type.initialize(symbol, log);
+        }
+        if (type == null) {
+            return null; 
+        }
         try {
             if (constraint != null) {
                 type = type.createReference(constraint);

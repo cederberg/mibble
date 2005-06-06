@@ -107,7 +107,13 @@ public class ValueReference extends MibValue {
             }
         }
         if (ref instanceof MibValueSymbol) {
-            value = ((MibValueSymbol) ref).getValue().initialize(log);
+            value = ((MibValueSymbol) ref).getValue();
+            if (value != null) {
+                value = value.initialize(log);
+            }
+            if (value == null) {
+                return null;
+            }
             try {
                 value = value.createReference();
             } catch (UnsupportedOperationException e) {
