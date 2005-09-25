@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -142,16 +142,58 @@ public class MibblePrinter {
      * @param mibs           the list of MIBs
      */
     private static void printMibs(ArrayList mibs) {
-        Iterator  iter;
-
         for (int i = 0; i < mibs.size(); i++) {
-            iter = ((Mib) mibs.get(i)).getAllSymbols().iterator();
-            while (iter.hasNext()) {
-                System.out.println(iter.next());
+            printMib((Mib) mibs.get(i));
+        }
+    }
+
+    /**
+     * Prints the contents of a single MIB.
+     *
+     * @param mib            the MIB to print
+     */
+    private static void printMib(Mib mib) {
+        Iterator   iter;
+        MibSymbol  symbol;
+
+        // TODO: printLines("-- ", mib.getHeaderComment());
+        iter = mib.getAllSymbols().iterator();
+        while (iter.hasNext()) {
+            symbol = (MibSymbol) iter.next();
+            // TODO: printLines("-- ", symbol.getComment());
+            System.out.println(symbol.toString());
+            System.out.println();
+        }
+        // TODO: printLines("-- ", mib.getFooterComment());
+        System.out.println();
+        System.out.println();
+    }
+
+    /**
+     * Prints a string with each line prefixed by another string.
+     * Only non-blank lines will be prefixed.
+     *
+     * @param prefix         the line prefix
+     * @param str            the string to print
+     */
+    private static void printLines(String prefix, String str) {
+        int  pos;
+
+        if (str == null) {
+            return;
+        }
+        while ((pos = str.indexOf('\n')) >=0) {
+            if (pos == 0) {
                 System.out.println();
+            } else {
+                System.out.print(prefix);
+                System.out.println(str.substring(0, pos));
             }
-            System.out.println();
-            System.out.println();
+            str = str.substring(pos + 1);
+        }
+        if (str.length() > 0) {
+            System.out.print(prefix);
+            System.out.println(str);
         }
     }
 

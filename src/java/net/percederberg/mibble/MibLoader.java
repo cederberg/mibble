@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -853,6 +853,7 @@ public class MibLoader {
             try {
                 analyzer = new MibAnalyzer(file, loader, log);
                 parser = new Asn1Parser(input, analyzer);
+                parser.getTokenizer().setUseTokenList(true);
                 parser.parse();
                 return analyzer.getMibs();
             } catch (ParserCreationException e) {

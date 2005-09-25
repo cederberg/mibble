@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -37,7 +37,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * {@link MibLoader MIB loader}.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.6
  * @since    2.0
  *
  * @see <a href="http://www.ietf.org/rfc/rfc3411.txt">RFC 3411 - An
@@ -64,6 +64,16 @@ public class Mib implements MibContext {
      * The MIB name.
      */
     private String name = null;
+
+    /**
+     * The MIB file header comment.
+     */
+    private String headerComment = null;
+
+    /**
+     * The MIB file footer comment.
+     */
+    private String footerComment = null;
 
     /**
      * The references to imported MIB files.
@@ -252,6 +262,52 @@ public class Mib implements MibContext {
      */
     public MibLoaderLog getLog() {
         return log;
+    }
+
+    /**
+     * Returns the MIB file header comment.
+     *
+     * @return the MIB file header comment, or
+     *         null if no comment was present
+     *
+     * @since 2.6
+     */
+    public String getHeaderComment() {
+        return headerComment;
+    }
+
+    /**
+     * Sets the MIB file header comment.
+     *
+     * @param comment        the MIB header comment
+     *
+     * @since 2.6
+     */
+    void setHeaderComment(String comment) {
+        this.headerComment = comment;
+    }
+
+    /**
+     * Returns the MIB file footer comment.
+     *
+     * @return the MIB file footer comment, or
+     *         null if no comment was present
+     *
+     * @since 2.6
+     */
+    public String getFooterComment() {
+        return footerComment;
+    }
+
+    /**
+     * Sets the MIB file footer comment.
+     *
+     * @param comment        the MIB footer comment
+     *
+     * @since 2.6
+     */
+    void setFooterComment(String comment) {
+        this.footerComment = comment;
     }
 
     /**

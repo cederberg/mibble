@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -27,7 +27,7 @@ package net.percederberg.mibble;
  * unique within the MIB file. All symbols also have a data type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.6
  * @since    2.0
  */
 public abstract class MibSymbol {
@@ -46,6 +46,11 @@ public abstract class MibSymbol {
      * The symbol name.
      */
     private String name;
+
+    /**
+     * The symbol comment.
+     */
+    private String comment;
 
     /**
      * Creates a new symbol with the specified name. The symbol will
@@ -110,5 +115,28 @@ public abstract class MibSymbol {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Returns the symbol comment.
+     *
+     * @return the symbol comment, or
+     *         null if no comment was set
+     *
+     * @since 2.6
+     */
+    public String getComment() {
+        return comment;
+    }
+
+    /**
+     * Sets the symbol comment.
+     *
+     * @param comment        the symbol comment
+     *
+     * @since 2.6
+     */
+    void setComment(String comment) {
+        this.comment = comment;
     }
 }

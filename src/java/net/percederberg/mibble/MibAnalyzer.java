@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -270,6 +270,16 @@ class MibAnalyzer extends Asn1Analyzer {
     }
 
     /**
+     * Stores any MIB tail comments if available.
+     */
+    protected Node exitStart(Production node) {
+        if (currentMib != null) {
+            currentMib.setFooterComment(getCommentsAfter(node));
+        }
+        return null;
+    }
+
+    /**
      * Creates the current MIB module container and the base context.
      *
      * @param node           the node being entered
@@ -295,10 +305,9 @@ class MibAnalyzer extends Asn1Analyzer {
         throws ParseException {
 
         currentMib.setName(getStringValue(getChildAt(node, 0), 0));
+        currentMib.setHeaderComment(getCommentsBefore(node));
         mibs.add(currentMib);
-        currentMib = null;
-        baseContext = null;
-        return null;
+        return node;
     }
 
     /**
@@ -466,8 +475,9 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitTypeAssignment(Production node)
         throws ParseException {
 
-        String   name;
-        MibType  type;
+        String         name;
+        MibType        type;
+        MibTypeSymbol  symbol;
 
         // Check type name
         name = getStringValue(getChildAt(node, 0), 0);
@@ -486,7 +496,11 @@ class MibAnalyzer extends Asn1Analyzer {
 
         // Create type symbol
         type = (MibType) getValue(getChildAt(node, 2), 0);
-        new MibTypeSymbol(getLocation(node), currentMib, name, type);
+        symbol = new MibTypeSymbol(getLocation(node),
+                                   currentMib,
+                                   name,
+                                   type);
+        symbol.setComment(getCommentsBefore(node));
 
         return null;
     }
@@ -1321,9 +1335,10 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitValueAssignment(Production node)
         throws ParseException {
 
-        String    name;
-        MibType   type;
-        MibValue  value;
+        String          name;
+        MibType         type;
+        MibValue        value;
+        MibValueSymbol  symbol;
 
         // Check value name
         name = getStringValue(getChildAt(node, 0), 0);
@@ -1343,7 +1358,12 @@ class MibAnalyzer extends Asn1Analyzer {
         // Create value symbol
         type = (MibType) getValue(getChildAt(node, 1), 0);
         value = (MibValue) getValue(getChildAt(node, 3), 0);
-        new MibValueSymbol(getLocation(node), currentMib, name, type, value);
+        symbol = new MibValueSymbol(getLocation(node),
+                                    currentMib,
+                                    name,
+                                    type,
+                                    value);
+        symbol.setComment(getCommentsBefore(node));
 
         return null;
     }
@@ -2893,6 +2913,128 @@ class MibAnalyzer extends Asn1Analyzer {
         return new FileLocation(file,
                                 node.getStartLine(),
                                 node.getStartColumn());
+    }
+
+    /**
+     * Returns all the comments before the specified production. If
+     * there are multiple comment lines possibly separated by
+     * whitespace, they will be concatenated into one string.
+     *
+     * @param node           the production node
+     *
+     * @return the comment string, or
+     *         null if no comments were found
+     */
+    private String getCommentsBefore(Production node) {
+        Node  child = node.getChildAt(0);
+
+        if (child instanceof Production) {
+            return getCommentsBefore((Production) child);
+        } else if (child instanceof Token) {
+            return getCommentsBefore((Token) child);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns all the comments before the specified token. If
+     * there are multiple comment lines possibly separated by
+     * whitespace, they will be concatenated into one string.
+     *
+     * @param token          the token node
+     *
+     * @return the comment string, or
+     *         null if no comments were found
+     */
+    private String getCommentsBefore(Token token) {
+        String  comment = "";
+
+        token = token.getPreviousToken();
+        while (token != null) {
+            if (token.getId() == Asn1Constants.WHITESPACE) {
+                comment = getLineBreaks(token.getImage()) + comment;
+            } else if (token.getId() == Asn1Constants.COMMENT) {
+                comment = token.getImage().substring(2).trim() + comment;
+            } else {
+                break;
+            }
+            token = token.getPreviousToken();
+        }
+        comment = comment.trim();
+        return comment.length() <= 0 ? null : comment;
+    }
+
+    /**
+     * Returns all the comments after the specified production. If
+     * there are multiple comment lines possibly separated by
+     * whitespace, they will be concatenated into one string.
+     *
+     * @param node           the production node
+     *
+     * @return the comment string, or
+     *         null if no comments were found
+     */
+    private String getCommentsAfter(Production node) {
+        Node  child = node.getChildAt(node.getChildCount() - 1);
+
+        if (child instanceof Production) {
+            return getCommentsAfter((Production) child);
+        } else if (child instanceof Token) {
+            return getCommentsAfter((Token) child);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns all the comments after the specified token. If
+     * there are multiple comment lines possibly separated by
+     * whitespace, they will be concatenated into one string.
+     *
+     * @param token          the token node
+     *
+     * @return the comment string, or
+     *         null if no comments were found
+     */
+    private String getCommentsAfter(Token token) {
+        String  comment = "";
+
+        token = token.getNextToken();
+        while (token != null) {
+            if (token.getId() == Asn1Constants.WHITESPACE) {
+                comment += getLineBreaks(token.getImage());
+            } else if (token.getId() == Asn1Constants.COMMENT) {
+                comment += token.getImage().substring(2).trim();
+            } else {
+                break;
+            }
+            token = token.getNextToken();
+        }
+        comment = comment.trim();
+        return comment.length() <= 0 ? null : comment;
+    }
+
+    /**
+     * Returns a string containing the line breaks of an input
+     * string.
+     *
+     * @param str            the input string
+     *
+     * @return a string containing zero or more line breaks
+     */
+    private String getLineBreaks(String str) {
+        StringBuffer  res = new StringBuffer();
+
+        if (str == null) {
+            return null;
+        }
+        for (int i = 0; i < str.length(); i++) {
+            if (str.charAt(i) == '\n') {
+                res.append('\n');
+            }
+        }
+        return res.toString();
     }
 
     /**
