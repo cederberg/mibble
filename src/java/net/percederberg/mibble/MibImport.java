@@ -22,6 +22,7 @@
 package net.percederberg.mibble;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * A MIB import list. This class contains a referenc to another MIB
@@ -107,12 +108,40 @@ public class MibImport implements MibContext {
     }
 
     /**
+     * Checks if this import has a symbol list.
+     *
+     * @return true if this import contains a symbol list, or
+     *         false otherwise
+     */
+    boolean hasSymbols() {
+        return symbols != null;
+    }
+
+    /**
      * Returns the imported MIB name.
      *
      * @return the imported MIB name
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Returns the imported MIB.
+     *
+     * @return the imported MIB
+     */
+    public Mib getMib() {
+        return mib;
+    }
+
+    /**
+     * Returns all symbol names in this MIB import declaration.
+     *
+     * @return a collection of the imported MIB symbol names
+     */
+    public Collection getAllSymbolNames() {
+        return symbols;
     }
 
     /**

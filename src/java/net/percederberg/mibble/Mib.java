@@ -311,6 +311,28 @@ public class Mib implements MibContext {
     }
 
     /**
+     * Returns all MIB import references.
+     *
+     * @return a collection of all imports
+     *
+     * @see MibImport
+     *
+     * @since 2.6
+     */
+    public Collection getAllImports() {
+        ArrayList  res = new ArrayList();
+        MibImport  imp;
+
+        for (int i = 0; i < imports.size(); i++) {
+            imp = (MibImport) imports.get(i);
+            if (imp.hasSymbols()) {
+                res.add(imp);
+            }
+        }
+        return res;
+    }
+
+    /**
      * Returns a MIB import reference.
      *
      * @param name           the imported MIB name
@@ -343,6 +365,8 @@ public class Mib implements MibContext {
      * Returns all symbols in this MIB.
      *
      * @return a collection of the MIB symbols
+     *
+     * @see MibSymbol
      */
     public Collection getAllSymbols() {
         return symbolList;
