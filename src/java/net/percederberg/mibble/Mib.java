@@ -132,14 +132,14 @@ public class Mib implements MibContext {
      * @see #validate()
      */
     void initialize() throws MibLoaderException {
-        MibReference  ref;
-        int           errors = log.errorCount();
+        MibImport  imp;
+        int        errors = log.errorCount();
 
         // Resolve imported MIB files
         for (int i = 0; i < imports.size(); i++) {
-            ref = (MibReference) imports.get(i);
+            imp = (MibImport) imports.get(i);
             try {
-                ref.initialize(log);
+                imp.initialize(log);
             } catch (MibException e) {
                 log.addError(e.getLocation(), e.getMessage());
             }
@@ -311,19 +311,20 @@ public class Mib implements MibContext {
     }
 
     /**
-     * Returns an imported MIB reference.
+     * Returns a MIB import reference.
      *
-     * @param name           the MIB name
+     * @param name           the imported MIB name
      *
-     * @return the MIB reference, or null if not found
+     * @return the MIB import reference, or
+     *         null if not found
      */
-    MibReference getImport(String name) {
-        MibReference  ref;
+    MibImport getImport(String name) {
+        MibImport  imp;
 
         for (int i = 0; i < imports.size(); i++) {
-            ref = (MibReference) imports.get(i);
-            if (ref.getName().equals(name)) {
-                return ref;
+            imp = (MibImport) imports.get(i);
+            if (imp.getName().equals(name)) {
+                return imp;
             }
         }
         return null;
@@ -334,7 +335,7 @@ public class Mib implements MibContext {
      *
      * @param ref            the reference to add
      */
-    void addImport(MibReference ref) {
+    void addImport(MibImport ref) {
         imports.add(ref);
     }
 

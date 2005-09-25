@@ -375,13 +375,13 @@ class MibAnalyzer extends Asn1Analyzer {
      * @return the node to add to the parse tree
      */
     protected Node exitImportList(Production node) {
-        ArrayList     references = getChildValues(node);
-        MibReference  ref;
-        MibContext    current = loader.getDefaultContext();
+        ArrayList   imports = getChildValues(node);
+        MibImport   imp;
+        MibContext  current = loader.getDefaultContext();
 
-        for (int i = references.size() - 1; i >= 0; i--) {
-            ref = (MibReference) references.get(i);
-            current = new CompoundContext(ref, current);
+        for (int i = imports.size() - 1; i >= 0; i--) {
+            imp = (MibImport) imports.get(i);
+            current = new CompoundContext(imp, current);
         }
         baseContext = new CompoundContext(currentMib, current);
         popContext();
@@ -402,10 +402,10 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitSymbolsFromModule(Production node)
         throws ParseException {
 
-        MibReference  ref;
-        String        module;
-        ArrayList     symbols;
-        Node          child;
+        MibImport  imp;
+        String     module;
+        ArrayList  symbols;
+        Node       child;
 
         // Create MIB reference
         child = getChildAt(node, 0);
@@ -415,10 +415,7 @@ class MibAnalyzer extends Asn1Analyzer {
         }
         child = getChildAt(node, 2);
         module = getStringValue(child, 0);
-        ref = new MibReference(loader,
-                               getLocation(child),
-                               module,
-                               symbols);
+        imp = new MibImport(loader, getLocation(child), module, symbols);
 
         // Schedule MIB loading
         try {
@@ -432,8 +429,8 @@ class MibAnalyzer extends Asn1Analyzer {
         }
 
         // Add reference to MIB and node
-        currentMib.addImport(ref);
-        node.addValue(ref);
+        currentMib.addImport(imp);
+        node.addValue(imp);
         return node;
     }
 
@@ -2598,8 +2595,8 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitSnmpModuleImport(Production node)
         throws ParseException {
 
-        MibReference  ref;
-        String        module;
+        MibImport  imp;
+        String     module;
 
         // Load referenced module
         module = getStringValue(getChildAt(node, 0), 0);
@@ -2614,9 +2611,9 @@ class MibAnalyzer extends Asn1Analyzer {
         }
 
         // Create module reference and context
-        ref = new MibReference(loader, getLocation(node), module, null);
-        currentMib.addImport(ref);
-        pushContextExtension(ref);
+        imp = new MibImport(loader, getLocation(node), module, null);
+        currentMib.addImport(imp);
+        pushContextExtension(imp);
 
         // Return results
         node.addValue(module);

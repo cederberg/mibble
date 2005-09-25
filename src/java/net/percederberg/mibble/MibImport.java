@@ -1,5 +1,5 @@
 /*
- * MibReference.java
+ * MibImport.java
  *
  * This work is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -24,14 +24,14 @@ package net.percederberg.mibble;
 import java.util.ArrayList;
 
 /**
- * A MIB file reference. This class references a MIB file that has
- * not yet been loaded.
+ * A MIB import list. This class contains a referenc to another MIB
+ * and a number of symbols in it.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.4
- * @since    2.0
+ * @version  2.6
+ * @since    2.6
  */
-class MibReference implements MibContext {
+public class MibImport implements MibContext {
 
     /**
      * The MIB loader being used.
@@ -44,33 +44,33 @@ class MibReference implements MibContext {
     private Mib mib = null;
 
     /**
-     * The reference location.
+     * The import location.
      */
     private FileLocation location;
 
     /**
-     * The referenced MIB name.
+     * The imported MIB name.
      */
     private String name;
 
     /**
-     * The referenced MIB symbol names.
+     * The imported MIB symbol names.
      */
     private ArrayList symbols;
 
     /**
-     * Creates a new MIB reference.
+     * Creates a new MIB import.
      *
      * @param loader         the MIB loader to use
-     * @param location       the reference location
-     * @param name           the referenced MIB name
-     * @param symbols        the referenced MIB symbol names, or
-     *                       null to allow references to any symbol
+     * @param location       the import location
+     * @param name           the imported MIB name
+     * @param symbols        the imported MIB symbol names, or
+     *                       null for all symbols
      */
-    public MibReference(MibLoader loader,
-                        FileLocation location,
-                        String name,
-                        ArrayList symbols) {
+    MibImport(MibLoader loader,
+              FileLocation location,
+              String name,
+              ArrayList symbols) {
 
         this.loader = loader;
         this.location = location;
@@ -79,9 +79,8 @@ class MibReference implements MibContext {
     }
 
     /**
-     * Initializes the MIB reference. This will resolve all
-     * referenced symbols in the MIB.  This method will be called by
-     * the MIB loader.
+     * Initializes the MIB import. This will resolve all referenced
+     * symbols.  This method will be called by the MIB loader.
      *
      * @param log            the MIB loader log
      *
@@ -108,9 +107,9 @@ class MibReference implements MibContext {
     }
 
     /**
-     * Returns the MIB name.
+     * Returns the imported MIB name.
      *
-     * @return the MIB name
+     * @return the imported MIB name
      */
     public String getName() {
         return name;
@@ -131,8 +130,6 @@ class MibReference implements MibContext {
      * @param expanded       the expanded scope flag
      *
      * @return the MIB symbol, or null if not found
-     *
-     * @since 2.4
      */
     public MibSymbol findSymbol(String name, boolean expanded) {
         if (mib == null) {
