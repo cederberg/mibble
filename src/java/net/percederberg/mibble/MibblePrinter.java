@@ -38,7 +38,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * output.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.6
  * @since    2.0
  */
 public class MibblePrinter {
@@ -50,10 +50,14 @@ public class MibblePrinter {
         "Prints the contents of an SNMP MIB file. This program comes with\n" +
         "ABSOLUTELY NO WARRANTY; for details see the LICENSE.txt file.\n" +
         "\n" +
-        "Syntax: MibblePrinter [--oid-tree] <file(s) or URL(s)>\n" +
+        "Syntax: MibblePrinter [--mib|--oid|--debug] <file(s) or URL(s)>\n" +
         "\n" +
-        "    --oid-tree      Prints the complete OID tree, including all\n" +
-        "                    nodes in imported MIB files";
+        "    --mib     Prints a formatted and indented version of the MIB.\n" +
+        "              This is the default printing mode.\n" +
+        "    --oid     Prints the complete OID tree, including all nodes\n" +
+        "              in imported MIB files\n" +
+        "    --debug   Prints the MIB contents in debug format, which will\n" +
+        "              display all values completely resolved.";
 
     /**
      * The internal error message.
@@ -65,6 +69,21 @@ public class MibblePrinter {
         "    well as the text below:\n";
 
     /**
+     * The MIB pretty printing mode.
+     */
+    private static final int MIB_PRINT_MODE = 0;
+
+    /**
+     * The MIB oid tree printing mode.
+     */
+    private static final int OID_PRINT_MODE = 1;
+
+    /**
+     * The MIB debug printing mode.
+     */
+    private static final int DEBUG_PRINT_MODE = 2;
+
+    /**
      * The application main entry point.
      *
      * @param args           the command-line parameters
@@ -72,7 +91,7 @@ public class MibblePrinter {
     public static void main(String[] args) {
         MibLoader  loader = new MibLoader();
         ArrayList  loadedMibs = new ArrayList();
-        boolean    printOidTree = false;
+        int        printMode = MIB_PRINT_MODE;
         Mib        mib = null;
         int        pos = 0;
         File       file;
@@ -86,8 +105,14 @@ public class MibblePrinter {
             printHelp("No MIB file or URL specified");
             System.exit(1);
         }
-        if (args[0].equals("--oid-tree")) {
-            printOidTree = true;
+        if (args[0].equals("--mib")) {
+            printMode = MIB_PRINT_MODE;
+            pos++;
+        } else if (args[0].equals("--oid")) {
+            printMode = OID_PRINT_MODE;
+            pos++;
+        } else if (args[0].equals("--debug")) {
+            printMode = DEBUG_PRINT_MODE;
             pos++;
         } else if (args[0].startsWith("--")) {
             printHelp("No option '" + args[0] + "' exist");
@@ -128,11 +153,11 @@ public class MibblePrinter {
             System.exit(1);
         }
 
-        // Print MIB files
-        if (printOidTree) {
+        // Print loaded MIBs
+        if (printMode == OID_PRINT_MODE) {
             printOidTree((Mib) loadedMibs.get(0));
         } else {
-            printMibs(loadedMibs);
+            printMibs(loadedMibs, printMode);
         }
     }
 
@@ -140,61 +165,46 @@ public class MibblePrinter {
      * Prints the contents of a list of MIBs.
      *
      * @param mibs           the list of MIBs
+     * @param printMode      the print mode to use
      */
-    private static void printMibs(ArrayList mibs) {
+    private static void printMibs(ArrayList mibs, int printMode) {
         for (int i = 0; i < mibs.size(); i++) {
-            printMib((Mib) mibs.get(i));
+            if (printMode == MIB_PRINT_MODE) {
+                printMib((Mib) mibs.get(i));
+            } else {
+                printDebug((Mib) mibs.get(i));
+            }
         }
     }
 
     /**
-     * Prints the contents of a single MIB.
+     * Prints the contents of a single MIB in pretty printing mode.
      *
      * @param mib            the MIB to print
      */
     private static void printMib(Mib mib) {
-        Iterator   iter;
-        MibSymbol  symbol;
+        MibWriter  os = new MibWriter(System.out);
 
-        // TODO: printLines("-- ", mib.getHeaderComment());
-        iter = mib.getAllSymbols().iterator();
-        while (iter.hasNext()) {
-            symbol = (MibSymbol) iter.next();
-            // TODO: printLines("-- ", symbol.getComment());
-            System.out.println(symbol.toString());
-            System.out.println();
-        }
-        // TODO: printLines("-- ", mib.getFooterComment());
+        os.print(mib);
         System.out.println();
         System.out.println();
     }
 
     /**
-     * Prints a string with each line prefixed by another string.
-     * Only non-blank lines will be prefixed.
+     * Prints the contents of a single MIB in debug mode.
      *
-     * @param prefix         the line prefix
-     * @param str            the string to print
+     * @param mib            the MIB to print
      */
-    private static void printLines(String prefix, String str) {
-        int  pos;
+    private static void printDebug(Mib mib) {
+        Iterator  iter;
 
-        if (str == null) {
-            return;
+        iter = mib.getAllSymbols().iterator();
+        while (iter.hasNext()) {
+            System.out.println(iter.next());
+            System.out.println();
         }
-        while ((pos = str.indexOf('\n')) >=0) {
-            if (pos == 0) {
-                System.out.println();
-            } else {
-                System.out.print(prefix);
-                System.out.println(str.substring(0, pos));
-            }
-            str = str.substring(pos + 1);
-        }
-        if (str.length() > 0) {
-            System.out.print(prefix);
-            System.out.println(str);
-        }
+        System.out.println();
+        System.out.println();
     }
 
     /**
