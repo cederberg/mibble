@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -32,7 +32,7 @@ import net.percederberg.mibble.MibValue;
  * @see SnmpModuleIdentity
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.6
  * @since    2.0
  */
 public class SnmpRevision {
@@ -83,11 +83,30 @@ public class SnmpRevision {
     }
 
     /**
-     * Returns the revision description.
+     * Returns the revision description. Any unneeded indentation
+     * will be removed from the description, and it also replaces
+     * all tab characters with 8 spaces.
      *
      * @return the revision description
+     *
+     * @see #getUnformattedDescription()
      */
     public String getDescription() {
+        return SnmpType.removeIndent(description);
+    }
+
+    /**
+     * Returns the unformatted revision description. This method
+     * returns the original MIB file description, without removing
+     * unneeded indentation or similar.
+     *
+     * @return the revision description
+     *
+     * @see #getDescription()
+     *
+     * @since 2.6
+     */
+    public String getUnformattedDescription() {
         return description;
     }
 
