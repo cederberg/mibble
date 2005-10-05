@@ -571,4 +571,36 @@ public class ObjectIdentifierValue extends MibValue {
         }
         return buffer.toString();
     }
+
+    /**
+     * Returns an ASN.1 representation of this value. The string will
+     * contain references to any parent OID value that can be found.
+     *
+     * @return an ASN.1 representation of this value
+     * 
+     * @since 2.6
+     */
+    public String toAsn1String() {
+        StringBuffer           buffer = new StringBuffer();
+        ObjectIdentifierValue  ref;
+
+        if (parent instanceof ObjectIdentifierValue) {
+            ref = (ObjectIdentifierValue) parent;
+            if (ref.getSymbol() == null) {
+                buffer.append(ref.toAsn1String());
+            } else {
+                buffer.append(ref.getSymbol().getName());
+            }
+            buffer.append(" ");
+        }
+        if (name == null || getSymbol() != null) {
+            buffer.append(value);
+        } else {
+            buffer.append(name);
+            buffer.append("(");
+            buffer.append(value);
+            buffer.append(")");
+        }
+        return buffer.toString();
+    }
 }
