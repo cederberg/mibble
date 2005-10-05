@@ -40,30 +40,17 @@ public abstract class SnmpType extends MibType {
     private String description;
 
     /**
-     * Creates a new SNMP macro type instance. This constructor can
-     * only be called by subclasses.
+     * Returns a string with any unneeded indentation removed. This
+     * method will decide the indentation level from the number of
+     * spaces on the second line. It also replaces all tab characters
+     * with 8 spaces.
      *
-     * @param name           the type name
-     * @param description    the type description
+     * @param str            the string to process
+     *
+     * @return the processed string
      */
-    protected SnmpType(String name, String description) {
-        super(name, false);
-        this.description = description;
-    }
-
-    /**
-     * Returns the type description. Any unneeded indentation will be
-     * removed from the description, and it also replaces all tab
-     * characters with 8 spaces.
-     *
-     * @return the type description, or
-     *         null if no description has been set
-     *
-     * @see #getUnformattedDescription()
-     */
-    public String getDescription() {
+    protected static String removeIndent(String str) {
         StringBuffer  buffer = new StringBuffer();
-        String        str = description;
         int           indent = -1;
         int           pos;
 
@@ -102,6 +89,98 @@ public abstract class SnmpType extends MibType {
             }
         }
         return buffer.toString();
+    }
+
+    /**
+     * Removes the specified number of leading spaces from a string.
+     * All tab characters in the string will be converted to spaces
+     * before processing. If the string contains fewer than the
+     * specified number of leading spaces, all will be removed. If
+     * the indentation count is less than zero (0), all leading
+     * spaces in the input string will be removed.
+     *
+     * @param str            the input string
+     * @param indent         the indentation space count
+     *
+     * @return the unindented string
+     */
+    private static String removeIndent(String str, int indent) {
+        int  pos = 0;
+
+        str = replaceTabs(str);
+        if (indent < 0) {
+            return str.trim();
+        }
+        for (pos = 0; pos < str.length() && pos < indent; pos++) {
+            if (str.charAt(pos) != ' ') {
+                break;
+            }
+        }
+        return str.substring(pos);
+    }
+
+    /**
+     * Replaces any tab characters with 8 space characters.
+     *
+     * @param str            the input string
+     *
+     * @return the new string without tab characters
+     */
+    private static String replaceTabs(String str) {
+        StringBuffer  buffer;
+
+        if (str.indexOf('\t') < 0) {
+            return str;
+        } else {
+            buffer = new StringBuffer();
+            for (int i = 0; i < str.length(); i++) {
+                if (str.charAt(i) == '\t') {
+                    buffer.append("        ");
+                } else {
+                    buffer.append(str.charAt(i));
+                }
+            }
+            return buffer.toString();
+        }
+    }
+
+    /**
+     * Checks if a character is a space character.
+     *
+     * @param ch             the character to check
+     *
+     * @return true if the character is a space character, or
+     *         false otherwise
+     */
+    private static boolean isSpace(char ch) {
+        return ch == ' '
+            || ch == '\t';
+    }
+
+    /**
+     * Creates a new SNMP macro type instance. This constructor can
+     * only be called by subclasses.
+     *
+     * @param name           the type name
+     * @param description    the type description
+     */
+    protected SnmpType(String name, String description) {
+        super(name, false);
+        this.description = description;
+    }
+
+    /**
+     * Returns the type description. Any unneeded indentation will be
+     * removed from the description, and it also replaces all tab
+     * characters with 8 spaces.
+     *
+     * @return the type description, or
+     *         null if no description has been set
+     *
+     * @see #getUnformattedDescription()
+     */
+    public String getDescription() {
+        return removeIndent(description);
     }
 
     /**
@@ -157,71 +236,5 @@ public abstract class SnmpType extends MibType {
             }
             return buffer.toString();
         }
-    }
-
-    /**
-     * Removes the specified number of leading spaces from a string.
-     * All tab characters in the string will be converted to spaces
-     * before processing. If the string contains fewer than the
-     * specified number of leading spaces, all will be removed. If
-     * the indentation count is less than zero (0), all leading
-     * spaces in the input string will be removed.
-     *
-     * @param str            the input string
-     * @param indent         the indentation space count
-     *
-     * @return the unindented string
-     */
-    private String removeIndent(String str, int indent) {
-        int  pos = 0;
-
-        str = replaceTabs(str);
-        if (indent < 0) {
-            return str.trim();
-        }
-        for (pos = 0; pos < str.length() && pos < indent; pos++) {
-            if (str.charAt(pos) != ' ') {
-                break;
-            }
-        }
-        return str.substring(pos);
-    }
-
-    /**
-     * Replaces any tab characters with 8 space characters.
-     *
-     * @param str            the input string
-     *
-     * @return the new string without tab characters
-     */
-    private String replaceTabs(String str) {
-        StringBuffer  buffer;
-
-        if (str.indexOf('\t') < 0) {
-            return str;
-        } else {
-            buffer = new StringBuffer();
-            for (int i = 0; i < str.length(); i++) {
-                if (str.charAt(i) == '\t') {
-                    buffer.append("        ");
-                } else {
-                    buffer.append(str.charAt(i));
-                }
-            }
-            return buffer.toString();
-        }
-    }
-
-    /**
-     * Checks if a character is a space character.
-     *
-     * @param ch             the character to check
-     *
-     * @return true if the character is a space character, or
-     *         false otherwise
-     */
-    private boolean isSpace(char ch) {
-        return ch == ' '
-            || ch == '\t';
     }
 }
