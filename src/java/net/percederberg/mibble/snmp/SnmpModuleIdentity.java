@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -38,7 +38,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.6
  * @since    2.0
  */
 public class SnmpModuleIdentity extends SnmpType {
@@ -155,11 +155,30 @@ public class SnmpModuleIdentity extends SnmpType {
     }
 
     /**
-     * Returns the organization contact information.
+     * Returns the organization contact information. Any unneeded
+     * indentation will be removed from the text, and it also
+     * replaces all tab characters with 8 spaces.
      *
      * @return the organization contact information
+     *
+     * @see #getUnformattedContactInfo()
      */
     public String getContactInfo() {
+        return removeIndent(contactInfo);
+    }
+
+    /**
+     * Returns the unformatted organization contact information. This
+     * method returns the original MIB file content, without removing
+     * unneeded indentation or similar.
+     *
+     * @return the unformatted organization contact information.
+     *
+     * @see #getContactInfo()
+     *
+     * @since 2.6
+     */
+    public String getUnformattedContactInfo() {
         return contactInfo;
     }
 
