@@ -365,7 +365,6 @@ class MibAnalyzer extends Asn1Analyzer {
         return null;
     }
 
-
     /**
      * Adds all imported MIB files to the MIB context. Also removes
      * this node from the parse tree.
@@ -455,6 +454,53 @@ class MibAnalyzer extends Asn1Analyzer {
      * @return the node to add to the parse tree
      */
     protected Node exitSymbol(Production node) {
+        node.addValues(getChildValues(node));
+        return node;
+    }
+
+    /**
+     * Creates a macro symbol and adds it to the MIB. Also removes
+     * this node from the parse tree.
+     *
+     * @param node           the node being exited
+     *
+     * @return the node to add to the parse tree
+     *
+     * @throws ParseException if the node analysis discovered errors
+     */
+    protected Node exitMacroDefinition(Production node)
+        throws ParseException {
+        
+        String          name;
+        MibMacroSymbol  symbol;
+
+        // Check macro name
+        name = getStringValue(getChildAt(node, 0), 0);
+        if (currentMib.getSymbol(name) != null) {
+            throw new ParseException(
+                ParseException.ANALYSIS_ERROR,
+                "a symbol '" + name + "' already present in the MIB",
+                node.getStartLine(),
+                node.getStartColumn());
+        }
+
+        // Create macro symbol
+        symbol = new MibMacroSymbol(getLocation(node),
+                                    currentMib,
+                                    name);
+        symbol.setComment(getCommentsBefore(node));
+
+        return null;
+    }
+
+    /**
+     * Adds the macro name as a node value.
+     *
+     * @param node           the node being exited
+     *
+     * @return the node to add to the parse tree
+     */
+    protected Node exitMacroReference(Production node) {
         node.addValues(getChildValues(node));
         return node;
     }
@@ -1777,6 +1823,18 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitDefinedMacroType(Production node) {
         node.addValues(getChildValues(node));
+        return node;
+    }
+
+    /**
+     * Adds the defined macro name as the node value.
+     *
+     * @param node           the node being exited
+     *
+     * @return the node to add to the parse tree
+     */
+    protected Node exitDefinedMacroName(Production node) {
+        node.addValue(((Token) node.getChildAt(0)).getImage());
         return node;
     }
 
