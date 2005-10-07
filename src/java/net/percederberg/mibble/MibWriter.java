@@ -29,11 +29,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import net.percederberg.mibble.snmp.SnmpCompliance;
+import net.percederberg.mibble.snmp.SnmpModule;
+import net.percederberg.mibble.snmp.SnmpModuleCompliance;
 import net.percederberg.mibble.snmp.SnmpModuleIdentity;
+import net.percederberg.mibble.snmp.SnmpNotificationGroup;
+import net.percederberg.mibble.snmp.SnmpNotificationType;
+import net.percederberg.mibble.snmp.SnmpObjectGroup;
 import net.percederberg.mibble.snmp.SnmpObjectIdentity;
 import net.percederberg.mibble.snmp.SnmpObjectType;
 import net.percederberg.mibble.snmp.SnmpRevision;
 import net.percederberg.mibble.snmp.SnmpTextualConvention;
+import net.percederberg.mibble.snmp.SnmpTrapType;
 import net.percederberg.mibble.type.BitSetType;
 import net.percederberg.mibble.type.ElementType;
 import net.percederberg.mibble.type.IntegerType;
@@ -59,11 +66,6 @@ public class MibWriter {
     private PrintWriter os;
 
     /**
-     * The print margin.
-     */
-    private int margin;
-
-    /**
      * Creates a new MIB writer. When using this constructor, please
      * take care to make sure that the output stream expects text
      * output.
@@ -80,25 +82,10 @@ public class MibWriter {
      * @param os             the underlying writer to use
      */
     public MibWriter(Writer os) {
-        this(os, 72);
-    }
-
-    /**
-     * Creates a new MIB writer.
-     *
-     * @param os             the underlying writer to use
-     * @param margin         the print margin
-     */
-    public MibWriter(Writer os, int margin) {
         if (os instanceof PrintWriter) {
             this.os = (PrintWriter) os;
         } else {
             this.os = new PrintWriter(os);
-        }
-        if (margin > 0) {
-            this.margin = margin;
-        } else {
-            this.margin = 72;
         }
     }
 
@@ -177,11 +164,6 @@ public class MibWriter {
             if (pos <= 0) {
                 pos = str.length();
                 os.print("    ");
-/* TODO: remove comment to use fill-to-margin instead
-            } else if (pos + 7 + str.length() < margin) {
-                pos += 2 + str.length();
-                os.print(", ");
-*/
             } else {
                 pos = str.length();
                 os.println(",");
@@ -303,13 +285,18 @@ public class MibWriter {
             printType((SnmpObjectIdentity) type, indent);
         } else if (type instanceof SnmpObjectType) {
             printType((SnmpObjectType) type, indent);
-// TODO: NOTIFICATION-TYPE
-// TODO: TRAP-TYPE ??
+        } else if (type instanceof SnmpNotificationType) {
+            printType((SnmpNotificationType) type, indent);
+        } else if (type instanceof SnmpTrapType) {
+            printType((SnmpTrapType) type, indent);
         } else if (type instanceof SnmpTextualConvention) {
             printType((SnmpTextualConvention) type, indent);
-// TODO: OBJECT-GROUP
-// TODO: NOTIFICATION-GROUP
-// TODO: MODULE-COMPLIANCE
+        } else if (type instanceof SnmpObjectGroup) {
+            printType((SnmpObjectGroup) type, indent);
+        } else if (type instanceof SnmpNotificationGroup) {
+            printType((SnmpNotificationGroup) type, indent);
+        } else if (type instanceof SnmpModuleCompliance) {
+            printType((SnmpModuleCompliance) type, indent);
 // TODO: AGENT-CAPABILITIES
         } else {
             // TODO: print error on unhandled types
@@ -385,6 +372,7 @@ public class MibWriter {
             os.print(getQuote(type.getUnits()));
             os.println();
         }
+        // TODO: handle MIN-ACCESS too
         os.print("    MAX-ACCESS      ");
         os.println(type.getAccess());
         os.print("    STATUS          ");
@@ -401,19 +389,71 @@ public class MibWriter {
         }
         if (type.getIndex() != null && type.getIndex().size() > 0) {
             os.println();
-            os.print("    INDEX           { ");
-            for (int i = 0; i < type.getIndex().size(); i++) {
-                if (i > 0) {
-                    os.print(", ");
-                }
-                printTypeOrValue(type.getIndex().get(i));
-            }
-            os.print(" }");
+            os.print("    INDEX           ");
+            // TODO: handle the IMPLIED keyword properly
+            printReferenceList(type.getIndex(), "                    ");
+        }
+        if (type.getAugments() != null) {
+            os.println();
+            os.print("    AUGMENTS        ");
+            printReference(type.getAugments());
         }
         if (type.getDefaultValue() != null) {
             os.println();
             os.print("    DEFVAL          ");
-            printValue(type.getDefaultValue());
+            // TODO: handle translation to type symbols
+            printReference(type.getDefaultValue());
+        }
+    }
+
+    /**
+     * Prints an SNMP notification type.
+     *
+     * @param type           the type to print
+     * @param indent         the indentation to use on new lines
+     */
+    private void printType(SnmpNotificationType type, String indent) {
+        os.println("NOTIFICATION-TYPE");
+        if (type.getObjects().size() > 0) {
+            os.print("    OBJECTS         ");
+            printReferenceList(type.getObjects(), "                    ");
+            os.println();
+        }
+        os.print("    STATUS          ");
+        os.println(type.getStatus());
+        os.println("    DESCRIPTION");
+        printIndent("            ", getQuote(type.getDescription()));
+        if (type.getReference() != null) {
+            os.println();
+            os.print("    REFERENCE       ");
+            os.print(getQuote(type.getReference()));
+        }
+    }
+
+    /**
+     * Prints an SNMP trap type.
+     *
+     * @param type           the type to print
+     * @param indent         the indentation to use on new lines
+     */
+    private void printType(SnmpTrapType type, String indent) {
+        os.println("TRAP-TYPE");
+        os.print("    ENTERPRISE      ");
+        printReferenceEntry(type.getEnterprise());
+        if (type.getVariables().size() > 0) {
+            os.println();
+            os.print("    VARIABLES       ");
+            printReferenceList(type.getVariables(), "                    ");
+        }
+        if (type.getDescription() != null) {
+            os.println();
+            os.println("    DESCRIPTION");
+            printIndent("            ", getQuote(type.getDescription()));
+        }
+        if (type.getReference() != null) {
+            os.println();
+            os.print("    REFERENCE       ");
+            os.print(getQuote(type.getReference()));
         }
     }
 
@@ -445,13 +485,127 @@ public class MibWriter {
     }
 
     /**
+     * Prints an SNMP object group.
+     *
+     * @param type           the type to print
+     * @param indent         the indentation to use on new lines
+     */
+    private void printType(SnmpObjectGroup type, String indent) {
+        os.println("OBJECT-GROUP");
+        os.print("    OBJECTS         ");
+        printReferenceList(type.getObjects(), "                    ");
+        os.println();
+        os.print("    STATUS          ");
+        os.println(type.getStatus());
+        os.println("    DESCRIPTION");
+        printIndent("            ", getQuote(type.getDescription()));
+        if (type.getReference() != null) {
+            os.println();
+            os.print("    REFERENCE       ");
+            os.print(getQuote(type.getReference()));
+        }
+    }
+
+    /**
+     * Prints an SNMP object group.
+     *
+     * @param type           the type to print
+     * @param indent         the indentation to use on new lines
+     */
+    private void printType(SnmpNotificationGroup type, String indent) {
+        os.println("NOTIFICATION-GROUP");
+        os.print("    NOTIFICATIONS   ");
+        printReferenceList(type.getNotifications(), "                    ");
+        os.println();
+        os.print("    STATUS          ");
+        os.println(type.getStatus());
+        os.println("    DESCRIPTION");
+        printIndent("            ", getQuote(type.getDescription()));
+        if (type.getReference() != null) {
+            os.println();
+            os.print("    REFERENCE       ");
+            os.print(getQuote(type.getReference()));
+        }
+    }
+
+    /**
+     * Prints an SNMP module compliance.
+     *
+     * @param type           the type to print
+     * @param indent         the indentation to use on new lines
+     */
+    private void printType(SnmpModuleCompliance type, String indent) {
+        SnmpModule  module;
+        ArrayList   list;
+
+        os.println("MODULE-COMPLIANCE");
+        os.print("    STATUS          ");
+        os.println(type.getStatus());
+        os.println("    DESCRIPTION");
+        printIndent("            ", getQuote(type.getDescription()));
+        if (type.getReference() != null) {
+            os.println();
+            os.print("    REFERENCE       ");
+            os.print(getQuote(type.getReference()));
+        }
+        for (int i = 0; i < type.getModules().size(); i++) {
+            module = (SnmpModule) type.getModules().get(i);
+            os.println();
+            os.print("    MODULE          ");
+            if (module.getModule() == null) {
+                os.print("-- this module");
+            } else {
+                os.print(module.getModule());
+            }
+            if (module.getGroups().size() > 0) {
+                os.println();
+                os.print("    MANDATORY-GROUPS ");
+                printReferenceList(module.getGroups(),
+                                   "                     ");
+            }
+            list = module.getCompliances();
+            for (int j = 0; j < list.size(); j++) {
+                os.println();
+                printModuleCompliance((SnmpCompliance) list.get(j));
+            }
+        }
+    }
+
+    /**
+     * Prints an SNMP module compliance statement.
+     *
+     * @param comp           the module compliance statement
+     */
+    private void printModuleCompliance(SnmpCompliance comp) {
+        os.print("    OBJECT           ");
+        printReferenceEntry(comp.getValue());
+        os.println();
+        if (comp.getSyntax() != null) {
+            os.print("    SYNTAX           ");
+            printType(comp.getSyntax(), "                     ");
+            os.println();
+        }
+        if (comp.getWriteSyntax() != null) {
+            os.print("    WRITE-SYNTAX     ");
+            printType(comp.getWriteSyntax(), "                     ");
+            os.println();
+        }
+        if (comp.getAccess() != null) {
+            os.print("    MAX-ACCESS       ");
+            os.println(comp.getAccess());
+        }
+        os.println("    DESCRIPTION");
+        printIndent("            ", getQuote(comp.getDescription()));
+    }
+
+    /**
      * Prints an array of MIB type elements.
      *
      * @param elems          the type elements to print
      * @param indent         the indentation to use on new lines
      */
     private void printTypeElements(ElementType[] elems, String indent) {
-        int     column = 35;
+        int     column = 20;
         String  typeIndent = indent;
         int     i;
 
@@ -513,12 +667,50 @@ public class MibWriter {
     }
 
     /**
-     * Prints a type or value object. This method is useful for
-     * printing index values.
+     * Prints a reference to a type or value object.
      *
      * @param obj            the type or value object
      */
-    private void printTypeOrValue(Object obj) {
+    private void printReference(Object obj) {
+        os.print("{ ");
+        printReferenceEntry(obj);
+        os.print(" }");
+    }
+
+    /**
+     * Prints a list of references to type or value objects. This
+     * method is useful for printing SNMP index or object parts.
+     *
+     * @param list           the list of type or value objects
+     * @param indent         the indentation to use
+     */
+    private void printReferenceList(ArrayList list, String indent) {
+        if (list.size() == 1) {
+            printReference(list.get(0));
+        } else {
+            os.print("{");
+            for (int i = 0; i < list.size(); i++) {
+                if (i > 0) {
+                    os.print(",");
+                }
+                os.println();
+                os.print(indent);
+                os.print("    ");
+                printReferenceEntry(list.get(i));
+            }
+            os.println();
+            os.print(indent);
+            os.print("}");
+        }
+    }
+
+    /**
+     * Prints a reference to a type or value object. This method will
+     * not print the encapsulating braces.
+     *
+     * @param obj            the type or value object
+     */
+    private void printReferenceEntry(Object obj) {
         ObjectIdentifierValue  oid;
 
         if (obj instanceof ObjectIdentifierValue) {
