@@ -29,10 +29,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import net.percederberg.mibble.snmp.SnmpAgentCapabilities;
 import net.percederberg.mibble.snmp.SnmpCompliance;
 import net.percederberg.mibble.snmp.SnmpModule;
 import net.percederberg.mibble.snmp.SnmpModuleCompliance;
 import net.percederberg.mibble.snmp.SnmpModuleIdentity;
+import net.percederberg.mibble.snmp.SnmpModuleSupport;
 import net.percederberg.mibble.snmp.SnmpNotificationGroup;
 import net.percederberg.mibble.snmp.SnmpNotificationType;
 import net.percederberg.mibble.snmp.SnmpObjectGroup;
@@ -41,6 +43,7 @@ import net.percederberg.mibble.snmp.SnmpObjectType;
 import net.percederberg.mibble.snmp.SnmpRevision;
 import net.percederberg.mibble.snmp.SnmpTextualConvention;
 import net.percederberg.mibble.snmp.SnmpTrapType;
+import net.percederberg.mibble.snmp.SnmpVariation;
 import net.percederberg.mibble.type.BitSetType;
 import net.percederberg.mibble.type.ElementType;
 import net.percederberg.mibble.type.IntegerType;
@@ -297,7 +300,8 @@ public class MibWriter {
             printType((SnmpNotificationGroup) type, indent);
         } else if (type instanceof SnmpModuleCompliance) {
             printType((SnmpModuleCompliance) type, indent);
-// TODO: AGENT-CAPABILITIES
+        } else if (type instanceof SnmpAgentCapabilities) {
+            printType((SnmpAgentCapabilities) type, indent);
         } else {
             // TODO: print error on unhandled types
             os.print("-- TODO: currently unhandled type");
@@ -322,8 +326,7 @@ public class MibWriter {
         os.println("    CONTACT-INFO");
         printIndent("            ", getQuote(type.getContactInfo()));
         os.println();
-        os.println("    DESCRIPTION");
-        printIndent("            ", getQuote(type.getDescription()));
+        printDescription(type.getDescription());
         list = type.getRevisions();
         for (int i = 0; i < list.size(); i++) {
             rev = (SnmpRevision) list.get(i);
@@ -346,8 +349,7 @@ public class MibWriter {
         os.println("OBJECT-IDENTITY");
         os.print("    STATUS          ");
         os.println(type.getStatus());
-        os.println("    DESCRIPTION");
-        printIndent("            ", getQuote(type.getDescription()));
+        printDescription(type.getDescription());
         if (type.getReference() != null) {
             os.println();
             os.print("    REFERENCE       ");
@@ -372,15 +374,13 @@ public class MibWriter {
             os.print(getQuote(type.getUnits()));
             os.println();
         }
-        // TODO: handle MIN-ACCESS too
         os.print("    MAX-ACCESS      ");
         os.println(type.getAccess());
         os.print("    STATUS          ");
         os.print(type.getStatus());
         if (type.getDescription() != null) {
             os.println();
-            os.println("    DESCRIPTION");
-            printIndent("            ", getQuote(type.getDescription()));
+            printDescription(type.getDescription());
         }
         if (type.getReference() != null) {
             os.println();
@@ -401,7 +401,7 @@ public class MibWriter {
         if (type.getDefaultValue() != null) {
             os.println();
             os.print("    DEFVAL          ");
-            // TODO: handle translation to type symbols
+            // TODO: handle translation to enumeration symbols
             printReference(type.getDefaultValue());
         }
     }
@@ -421,8 +421,7 @@ public class MibWriter {
         }
         os.print("    STATUS          ");
         os.println(type.getStatus());
-        os.println("    DESCRIPTION");
-        printIndent("            ", getQuote(type.getDescription()));
+        printDescription(type.getDescription());
         if (type.getReference() != null) {
             os.println();
             os.print("    REFERENCE       ");
@@ -447,8 +446,7 @@ public class MibWriter {
         }
         if (type.getDescription() != null) {
             os.println();
-            os.println("    DESCRIPTION");
-            printIndent("            ", getQuote(type.getDescription()));
+            printDescription(type.getDescription());
         }
         if (type.getReference() != null) {
             os.println();
@@ -472,8 +470,7 @@ public class MibWriter {
         }
         os.print("    STATUS          ");
         os.println(type.getStatus());
-        os.println("    DESCRIPTION");
-        printIndent("            ", getQuote(type.getDescription()));
+        printDescription(type.getDescription());
         if (type.getReference() != null) {
             os.println();
             os.print("    REFERENCE       ");
@@ -497,8 +494,7 @@ public class MibWriter {
         os.println();
         os.print("    STATUS          ");
         os.println(type.getStatus());
-        os.println("    DESCRIPTION");
-        printIndent("            ", getQuote(type.getDescription()));
+        printDescription(type.getDescription());
         if (type.getReference() != null) {
             os.println();
             os.print("    REFERENCE       ");
@@ -519,8 +515,7 @@ public class MibWriter {
         os.println();
         os.print("    STATUS          ");
         os.println(type.getStatus());
-        os.println("    DESCRIPTION");
-        printIndent("            ", getQuote(type.getDescription()));
+        printDescription(type.getDescription());
         if (type.getReference() != null) {
             os.println();
             os.print("    REFERENCE       ");
@@ -541,8 +536,7 @@ public class MibWriter {
         os.println("MODULE-COMPLIANCE");
         os.print("    STATUS          ");
         os.println(type.getStatus());
-        os.println("    DESCRIPTION");
-        printIndent("            ", getQuote(type.getDescription()));
+        printDescription(type.getDescription());
         if (type.getReference() != null) {
             os.println();
             os.print("    REFERENCE       ");
@@ -566,7 +560,46 @@ public class MibWriter {
             list = module.getCompliances();
             for (int j = 0; j < list.size(); j++) {
                 os.println();
+                os.println();
                 printModuleCompliance((SnmpCompliance) list.get(j));
+            }
+        }
+    }
+
+    /**
+     * Prints an SNMP agent capabilities.
+     *
+     * @param type           the type to print
+     * @param indent         the indentation to use on new lines
+     */
+    private void printType(SnmpAgentCapabilities type, String indent) {
+        SnmpModuleSupport  module;
+        ArrayList          list;
+
+        os.println("AGENT-CAPABILITIES");
+        os.print("    PRODUCT-RELEASE ");
+        os.println(getQuote(type.getProductRelease()));
+        os.print("    STATUS          ");
+        os.println(type.getStatus());
+        printDescription(type.getDescription());
+        if (type.getReference() != null) {
+            os.println();
+            os.print("    REFERENCE       ");
+            os.print(getQuote(type.getReference()));
+        }
+        for (int i = 0; i < type.getModules().size(); i++) {
+            module = (SnmpModuleSupport) type.getModules().get(i);
+            os.println();
+            os.print("    SUPPORTS        ");
+            os.println(module.getModule());
+            os.print("    INCLUDES        ");
+            printReferenceList(module.getGroups(),
+                               "                    ");
+            list = module.getVariations();
+            for (int j = 0; j < list.size(); j++) {
+                os.println();
+                os.println();
+                printVariation((SnmpVariation) list.get(j));
             }
         }
     }
@@ -577,6 +610,7 @@ public class MibWriter {
      * @param comp           the module compliance statement
      */
     private void printModuleCompliance(SnmpCompliance comp) {
+        // TODO: distinguish between GROUP and OBJECT
         os.print("    OBJECT           ");
         printReferenceEntry(comp.getValue());
         os.println();
@@ -591,11 +625,63 @@ public class MibWriter {
             os.println();
         }
         if (comp.getAccess() != null) {
-            os.print("    MAX-ACCESS       ");
+            os.print("    MIN-ACCESS       ");
             os.println(comp.getAccess());
         }
-        os.println("    DESCRIPTION");
-        printIndent("            ", getQuote(comp.getDescription()));
+        printDescription(comp.getDescription());
+    }
+
+    /**
+     * Prints an SNMP variation statement.
+     *
+     * @param var            the variation statement
+     */
+    private void printVariation(SnmpVariation var) {
+        os.print("    VARIATION       ");
+        printReferenceEntry(var.getValue());
+        os.println();
+        if (var.getSyntax() != null) {
+            os.print("    SYNTAX          ");
+            printType(var.getSyntax(), "                    ");
+            os.println();
+        }
+        if (var.getWriteSyntax() != null) {
+            os.print("    WRITE-SYNTAX    ");
+            printType(var.getWriteSyntax(), "                    ");
+            os.println();
+        }
+        if (var.getAccess() != null) {
+            os.print("    ACCESS          ");
+            os.println(var.getAccess());
+        }
+        if (var.getRequiredCells().size() > 0) {
+            os.print("    CREATION-REQUIRES ");
+            printReferenceList(var.getRequiredCells(),
+                               "                     ");
+            os.println();
+        }
+        if (var.getDefaultValue() != null) {
+            os.print("    DEFVAL          ");
+            // TODO: handle translation to enumeration symbols
+            printReference(var.getDefaultValue());
+            os.println();
+        }
+        printDescription(var.getDescription());
+    }
+
+    /**
+     * Prints an SNMP description.
+     *
+     * @param descr          the description to print
+     */
+    private void printDescription(String descr) {
+        if (descr.length() < 50 && descr.indexOf("\n") < 0) {
+            os.print("    DESCRIPTION     ");
+            os.print(getQuote(descr));
+        } else {
+            os.println("    DESCRIPTION");
+            printIndent("            ", getQuote(descr));
+        }
     }
 
     /**
