@@ -39,6 +39,11 @@ import net.percederberg.mibble.MibValue;
 public class SnmpCompliance {
 
     /**
+     * The compliance group flag. 
+     */
+    private boolean group;
+
+    /**
      * The compliance value.
      */
     private MibValue value;
@@ -66,13 +71,15 @@ public class SnmpCompliance {
     /**
      * Creates a new SNMP module compliance declaration.
      *
+     * @param group          the group compliance flag
      * @param value          the compliance value
      * @param syntax         the value syntax, or null
      * @param writeSyntax    the value write syntax, or null
      * @param access         the access mode, or null
      * @param description    the compliance description
      */
-    public SnmpCompliance(MibValue value,
+    public SnmpCompliance(boolean group,
+                          MibValue value,
                           MibType syntax,
                           MibType writeSyntax,
                           SnmpAccess access,
@@ -107,6 +114,30 @@ public class SnmpCompliance {
         if (writeSyntax != null) {
             writeSyntax = writeSyntax.initialize(null, log);
         }
+    }
+
+    /**
+     * Checks if this is a group compliance.
+     *
+     * @return true if this is a group compliance, or
+     *         false otherwise
+     *
+     * @since 2.6
+     */
+    public boolean isGroup() {
+        return group;
+    }
+
+    /**
+     * Checks if this is an object compliance.
+     *
+     * @return true if this is an object compliance, or
+     *         false otherwise
+     *
+     * @since 2.6
+     */
+    public boolean isObject() {
+        return !group;
     }
 
     /**

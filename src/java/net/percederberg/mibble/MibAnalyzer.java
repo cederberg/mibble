@@ -2719,7 +2719,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
         value = (MibValue) getValue(getChildAt(node, 1), 0);
         desc = getStringValue(getChildAt(node, 2), 0);
-        node.addValue(new SnmpCompliance(value, null, null, null, desc));
+        node.addValue(new SnmpCompliance(true, value, null, null, null, desc));
         return node;
     }
 
@@ -2762,7 +2762,8 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             }
         }
-        node.addValue(new SnmpCompliance(value,
+        node.addValue(new SnmpCompliance(false,
+                                         value,
                                          syntax,
                                          write,
                                          access,
