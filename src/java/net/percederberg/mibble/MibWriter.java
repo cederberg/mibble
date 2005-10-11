@@ -45,6 +45,7 @@ import net.percederberg.mibble.snmp.SnmpTextualConvention;
 import net.percederberg.mibble.snmp.SnmpTrapType;
 import net.percederberg.mibble.snmp.SnmpVariation;
 import net.percederberg.mibble.type.BitSetType;
+import net.percederberg.mibble.type.Constraint;
 import net.percederberg.mibble.type.ElementType;
 import net.percederberg.mibble.type.IntegerType;
 import net.percederberg.mibble.type.SequenceOfType;
@@ -55,7 +56,8 @@ import net.percederberg.mibble.value.StringValue;
 
 /**
  * A MIB output stream writer. This class contains a pretty printer
- * for a loaded MIB.
+ * for a loaded MIB. All macros and data are printed in SMIv2 format,
+ * but no translation from SMIv1 to SMIv2 takes place.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.6
@@ -213,15 +215,20 @@ public class MibWriter {
      * @param indent         the indentation to use on new lines
      */
     private void printType(MibType type, String indent) {
+        MibType         refType;
+        Constraint      refCons;
+        Constraint      typeCons;
         SequenceType    seqType;
         SequenceOfType  seqOfType;
-        IntegerType     intType;
-        BitSetType      bitType;
-        StringType      strType;
 
         if (type.getReferenceSymbol() != null) {
-            // TODO: handle constraints?
             os.print(type.getReferenceSymbol().getName());
+            refType = type.getReferenceSymbol().getType();
+            refCons = getConstraint(refType);
+            typeCons = getConstraint(type);
+            if (typeCons != null && typeCons != refCons) {
+                printConstraint(type, indent);
+            }
         } else if (type instanceof SequenceType) {            
             seqType = (SequenceType) type;
             os.println("SEQUENCE {");
@@ -241,45 +248,14 @@ public class MibWriter {
             os.print("OF ");
             printType(seqOfType.getElementType(), indent);
         } else if (type instanceof IntegerType) {
-            intType = (IntegerType) type;
             os.print("INTEGER");
-            if (intType.hasSymbols()) {
-                os.println(" {");
-                os.print(indent + "    ");
-                printEnumeration(intType.getAllSymbols(),
-                                 indent + "    ");
-                os.println();
-                os.print(indent);
-                os.print("}");
-            } else if (intType.hasConstraint()) {
-                os.print(" (");
-                os.print(intType.getConstraint());
-                os.print(")");
-            }
+            printConstraint(type, indent);
         } else if (type instanceof BitSetType) {
-            bitType = (BitSetType) type;
             os.print("BITS");
-            if (bitType.hasSymbols()) {
-                os.println(" {");
-                os.print(indent + "    ");
-                printEnumeration(bitType.getAllSymbols(),
-                                 indent + "    ");
-                os.println();
-                os.print(indent);
-                os.print("}");
-            } else if (bitType.hasConstraint()) {
-                os.print(" (");
-                os.print(bitType.getConstraint());
-                os.print(")");
-            }
+            printConstraint(type, indent);
         } else if (type instanceof StringType) {
-            strType = (StringType) type;
             os.print("OCTET STRING");
-            if (strType.hasConstraint()) {
-                os.print(" (");
-                os.print(strType.getConstraint());
-                os.print(")");
-            }
+            printConstraint(type, indent);
         } else if (type.isPrimitive()) {
             os.print(type.getName());
         } else if (type instanceof SnmpModuleIdentity) {
@@ -303,8 +279,7 @@ public class MibWriter {
         } else if (type instanceof SnmpAgentCapabilities) {
             printType((SnmpAgentCapabilities) type, indent);
         } else {
-            // TODO: print error on unhandled types
-            os.print("-- TODO: currently unhandled type");
+            os.print("-- ERROR: type definition unknown");
         }
     }
 
@@ -364,7 +339,6 @@ public class MibWriter {
      * @param indent         the indentation to use on new lines
      */
     private void printType(SnmpObjectType type, String indent) {
-        // TODO: translate SMIv1 access and status to SMIv2?
         os.println("OBJECT-TYPE");
         os.print("    SYNTAX          ");
         printType(type.getSyntax(), "                    ");
@@ -717,6 +691,58 @@ public class MibWriter {
     }
 
     /**
+     * Prints a type constraint declaration. If the type doesn't have
+     * any constraints, nothing will be printed.
+     *
+     * @param type           the MIB type
+     * @param indent         the indentation to use
+     */
+    private void printConstraint(MibType type, String indent) {
+        IntegerType     intType;
+        BitSetType      bitType;
+        StringType      strType;
+
+        if (type instanceof IntegerType) {
+            intType = (IntegerType) type;
+            if (intType.hasSymbols()) {
+                os.println(" {");
+                os.print(indent + "    ");
+                printEnumeration(intType.getAllSymbols(),
+                                 indent + "    ");
+                os.println();
+                os.print(indent);
+                os.print("}");
+            } else if (intType.hasConstraint()) {
+                os.print(" (");
+                os.print(intType.getConstraint());
+                os.print(")");
+            }
+        } else if (type instanceof BitSetType) {
+            bitType = (BitSetType) type;
+            if (bitType.hasSymbols()) {
+                os.println(" {");
+                os.print(indent + "    ");
+                printEnumeration(bitType.getAllSymbols(),
+                                 indent + "    ");
+                os.println();
+                os.print(indent);
+                os.print("}");
+            } else if (bitType.hasConstraint()) {
+                os.print(" (");
+                os.print(bitType.getConstraint());
+                os.print(")");
+            }
+        } else if (type instanceof StringType) {
+            strType = (StringType) type;
+            if (strType.hasConstraint()) {
+                os.print(" (");
+                os.print(strType.getConstraint());
+                os.print(")");
+            }
+        }
+    }
+
+    /**
      * Prints a MIB type enumeration.
      *
      * @param symbols        the value symbols to print
@@ -833,6 +859,29 @@ public class MibWriter {
         if (str != null && str.length() > 0) {
             os.print(indent);
             os.print(str);
+        }
+    }
+
+    /**
+     * Returns a MIB type constraint. If the type didn't have any
+     * constraint, null will be returned.
+     *
+     * @param type           the MIB type
+     *
+     * @return the MIB type constraint, or
+     *         null if no constraint was set
+     */
+    private Constraint getConstraint(MibType type) {
+        if (type instanceof IntegerType) {
+            return ((IntegerType) type).getConstraint();
+        } else if (type instanceof BitSetType) {
+            return ((BitSetType) type).getConstraint();
+        } else if (type instanceof StringType) {
+            return ((StringType) type).getConstraint();
+        } else if (type instanceof SnmpTextualConvention) {
+            return getConstraint(((SnmpTextualConvention) type).getSyntax());
+        } else {
+            return null;
         }
     }
 
