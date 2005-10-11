@@ -85,6 +85,7 @@ public class SnmpCompliance {
                           SnmpAccess access,
                           String description) {
 
+        this.group = group;
         this.value = value;
         this.syntax = syntax;
         this.writeSyntax = writeSyntax;
