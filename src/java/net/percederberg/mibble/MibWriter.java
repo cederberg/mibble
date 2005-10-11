@@ -375,8 +375,8 @@ public class MibWriter {
         if (type.getDefaultValue() != null) {
             os.println();
             os.print("    DEFVAL          ");
-            // TODO: handle translation to enumeration symbols
-            printReference(type.getDefaultValue());
+            printReference(type.getDefaultValue(),
+                           getSymbols(type.getSyntax()));
         }
     }
 
@@ -529,7 +529,7 @@ public class MibWriter {
                 os.println();
                 os.print("    MANDATORY-GROUPS ");
                 printReferenceList(module.getGroups(),
-                                   "                     ");
+                                   "                    ");
             }
             list = module.getCompliances();
             for (int j = 0; j < list.size(); j++) {
@@ -584,23 +584,28 @@ public class MibWriter {
      * @param comp           the module compliance statement
      */
     private void printModuleCompliance(SnmpCompliance comp) {
-        // TODO: distinguish between GROUP and OBJECT
-        os.print("    OBJECT           ");
-        printReferenceEntry(comp.getValue());
-        os.println();
-        if (comp.getSyntax() != null) {
-            os.print("    SYNTAX           ");
-            printType(comp.getSyntax(), "                     ");
+        if (comp.isGroup()) {
+            os.print("    GROUP           ");
+            printReferenceEntry(comp.getValue());
             os.println();
-        }
-        if (comp.getWriteSyntax() != null) {
-            os.print("    WRITE-SYNTAX     ");
-            printType(comp.getWriteSyntax(), "                     ");
+        } else {
+            os.print("    OBJECT          ");
+            printReferenceEntry(comp.getValue());
             os.println();
-        }
-        if (comp.getAccess() != null) {
-            os.print("    MIN-ACCESS       ");
-            os.println(comp.getAccess());
+            if (comp.getSyntax() != null) {
+                os.print("    SYNTAX          ");
+                printType(comp.getSyntax(), "                    ");
+                os.println();
+            }
+            if (comp.getWriteSyntax() != null) {
+                os.print("    WRITE-SYNTAX    ");
+                printType(comp.getWriteSyntax(), "                    ");
+                os.println();
+            }
+            if (comp.getAccess() != null) {
+                os.print("    MIN-ACCESS      ");
+                os.println(comp.getAccess());
+            }
         }
         printDescription(comp.getDescription());
     }
@@ -636,8 +641,8 @@ public class MibWriter {
         }
         if (var.getDefaultValue() != null) {
             os.print("    DEFVAL          ");
-            // TODO: handle translation to enumeration symbols
-            printReference(var.getDefaultValue());
+            printReference(var.getDefaultValue(),
+                           getSymbols(var.getSyntax()));
             os.println();
         }
         printDescription(var.getDescription());
@@ -790,6 +795,26 @@ public class MibWriter {
     }
 
     /**
+     * Prints a reference to a type or value object. If the object
+     * value is present in the list of enumerated values, the value
+     * name will be printed instead.
+     *
+     * @param obj            the type or value object
+     * @param values         the enumerated value definitions
+     */
+    private void printReference(Object obj, MibValueSymbol[] values) {
+        if (values != null) { 
+            for (int i = 0; i < values.length; i++) {
+                if (values[i].getValue().equals(obj)) {
+                    printReference(values[i].getName());
+                    return;
+                }
+            }
+        }
+        printReference(obj);
+    }
+
+    /**
      * Prints a list of references to type or value objects. This
      * method is useful for printing SNMP index or object parts.
      *
@@ -832,6 +857,8 @@ public class MibWriter {
             } else {
                 os.print(oid.toAsn1String());
             }
+        } else if (obj instanceof StringValue) {
+            os.print(getQuote(obj.toString()));
         } else {
             os.print(obj.toString());
         }
@@ -880,6 +907,27 @@ public class MibWriter {
             return ((StringType) type).getConstraint();
         } else if (type instanceof SnmpTextualConvention) {
             return getConstraint(((SnmpTextualConvention) type).getSyntax());
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns all enumeration values for a MIB type. If the type
+     * didn't have any enumerated values, null will be returned.
+     *
+     * @param type           the MIB type
+     *
+     * @return the MIB enumeration value symbols, or
+     *         null if no symbols were set
+     */
+    private MibValueSymbol[] getSymbols(MibType type) {
+        if (type instanceof IntegerType) {
+            return ((IntegerType) type).getAllSymbols();
+        } else if (type instanceof BitSetType) {
+            return ((BitSetType) type).getAllSymbols();
+        } else if (type instanceof SnmpTextualConvention) {
+            return getSymbols(((SnmpTextualConvention) type).getSyntax());
         } else {
             return null;
         }
