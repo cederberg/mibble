@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.browser;
@@ -60,7 +60,7 @@ import net.percederberg.mibble.MibbleBrowser;
  * The main MIB browser application window (frame).
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.6
  * @since    2.5
  */
 public class BrowserFrame extends JFrame {
@@ -114,12 +114,23 @@ public class BrowserFrame extends JFrame {
     private SnmpPanel snmpPanel = null;
 
     /**
+     * The current MIB file directory.
+     */
+    private File currentDir = new File(".");
+
+    /**
      * Creates a new Mibble browser frame.
      *
      * @param browser        the browser application
      */
     public BrowserFrame(MibbleBrowser browser) {
+        String  dir;
+
         this.browser = browser;
+        dir = System.getProperty("user.dir");
+        if (dir != null) {
+            currentDir = new File(dir);
+        }
         initialize();
     }
 
@@ -291,14 +302,19 @@ public class BrowserFrame extends JFrame {
         JFileChooser  dialog = new JFileChooser();
         Loader        loader;
         File[]        files;
+        int           result;
 
+        dialog.setCurrentDirectory(currentDir);
         dialog.setMultiSelectionEnabled(true);
-        dialog.showOpenDialog(this);
-        files = dialog.getSelectedFiles();
-        if (files.length > 0) {
-            descriptionArea.setText("");
-            loader = new Loader(files);
-            loader.start();
+        result = dialog.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            files = dialog.getSelectedFiles();
+            if (files.length > 0) {
+                currentDir = files[0].getParentFile();
+                descriptionArea.setText("");
+                loader = new Loader(files);
+                loader.start();
+            }
         }
     }
 
