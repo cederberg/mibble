@@ -440,6 +440,34 @@ public class Mib implements MibContext {
     }
 
     /**
+     * Returns the root MIB value symbol. This value symbol is
+     * normally the module identifier (in SMIv2), but may also be
+     * just the base object identifier in the MIB.
+     *
+     * @return the root MIB value symbol
+     *
+     * @since 2.6
+     */
+    public MibValueSymbol getRootSymbol() {
+        MibValueSymbol  root = null;
+        MibValueSymbol  parent;
+
+        for (int i = 0; i < symbolList.size(); i++) {
+            if (symbolList.get(i) instanceof MibValueSymbol) {
+                root = (MibValueSymbol) symbolList.get(i);
+                break;
+            }
+        }
+        while (root != null && (parent = root.getParent()) != null) {
+            if (root.getMib().equals(parent.getMib())) {
+                break;
+            }
+            root = root.getParent();
+        }
+        return root;
+    }
+
+    /**
      * Adds a symbol to this MIB.
      *
      * @param symbol         the symbol to add
