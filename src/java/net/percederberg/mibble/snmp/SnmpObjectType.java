@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -46,7 +46,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.6
  * @since    2.0
  */
 public class SnmpObjectType extends SnmpType {
@@ -100,7 +100,7 @@ public class SnmpObjectType extends SnmpType {
      * @param status         the type status
      * @param description    the type description, or null
      * @param reference      the type reference, or null
-     * @param index          the list of index values or types
+     * @param index          the list of index objects
      * @param defaultValue   the default value, or null
      */
     public SnmpObjectType(MibType syntax,
@@ -178,9 +178,6 @@ public class SnmpObjectType extends SnmpType {
     public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
-        ArrayList  list = new ArrayList();
-        Object     obj;
-
         if (!(symbol instanceof MibValueSymbol)) {
             throw new MibException(symbol.getLocation(),
                                    "only values can have the " +
@@ -189,14 +186,8 @@ public class SnmpObjectType extends SnmpType {
         syntax = syntax.initialize(symbol, log);
         checkType((MibValueSymbol) symbol, log, syntax);
         for (int i = 0; i < index.size(); i++) {
-            obj = index.get(i);
-            if (obj instanceof MibValue) {
-                list.add(((MibValue) obj).initialize(log));
-            } else {
-                list.add(((MibType) obj).initialize(symbol, log));
-            }
+            ((SnmpIndex) index.get(i)).initialize(symbol, log);
         }
-        this.index = list;
         if (augments != null) {
             augments = augments.initialize(log);
         }
@@ -374,13 +365,17 @@ public class SnmpObjectType extends SnmpType {
     }
 
     /**
-     * Returns the list of index values or types. The returned list
-     * will consist of MibValue and MibType instances.
+     * Returns the list of indices. The returned list will consist of
+     * SnmpIndex instances. Note that the semantics of this method
+     * changed in version 2.6, as the returned list previously
+     * contained type and value objects.
      *
-     * @return the list of index values or types
+     * @return the list of SNMP index objects, or
+     *         an empty list if no indices are defined
      *
-     * @see net.percederberg.mibble.MibValue
-     * @see net.percederberg.mibble.MibType
+     * @see SnmpIndex
+     *
+     * @since 2.6
      */
     public ArrayList getIndex() {
         return index;

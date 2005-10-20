@@ -36,6 +36,7 @@ import net.percederberg.mibble.asn1.Asn1Constants;
 import net.percederberg.mibble.snmp.SnmpAccess;
 import net.percederberg.mibble.snmp.SnmpAgentCapabilities;
 import net.percederberg.mibble.snmp.SnmpCompliance;
+import net.percederberg.mibble.snmp.SnmpIndex;
 import net.percederberg.mibble.snmp.SnmpModule;
 import net.percederberg.mibble.snmp.SnmpModuleCompliance;
 import net.percederberg.mibble.snmp.SnmpModuleIdentity;
@@ -2502,7 +2503,20 @@ class MibAnalyzer extends Asn1Analyzer {
      * @return the node to add to the parse tree
      */
     protected Node exitIndexValue(Production node) {
-        node.addValues(getChildValues(node));
+        SnmpIndex  index;
+        Object     obj = getChildValues(node).get(0);
+
+        switch (node.getChildAt(0).getId()) {
+        case Asn1Constants.VALUE:
+            index = new SnmpIndex(false, (MibValue) obj, null);
+            break;
+        case Asn1Constants.IMPLIED:
+            index = new SnmpIndex(true, (MibValue) obj, null);
+            break;
+        default:
+            index = new SnmpIndex(false, null, (MibType) obj);
+        }
+        node.addValue(index);
         return node;
     }
 

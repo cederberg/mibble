@@ -31,6 +31,7 @@ import java.util.Iterator;
 
 import net.percederberg.mibble.snmp.SnmpAgentCapabilities;
 import net.percederberg.mibble.snmp.SnmpCompliance;
+import net.percederberg.mibble.snmp.SnmpIndex;
 import net.percederberg.mibble.snmp.SnmpModule;
 import net.percederberg.mibble.snmp.SnmpModuleCompliance;
 import net.percederberg.mibble.snmp.SnmpModuleIdentity;
@@ -364,7 +365,6 @@ public class MibWriter {
         if (type.getIndex() != null && type.getIndex().size() > 0) {
             os.println();
             os.print("    INDEX           ");
-            // TODO: handle the IMPLIED keyword properly
             printReferenceList(type.getIndex(), "                    ");
         }
         if (type.getAugments() != null) {
@@ -850,7 +850,12 @@ public class MibWriter {
     private void printReferenceEntry(Object obj) {
         ObjectIdentifierValue  oid;
 
-        if (obj instanceof ObjectIdentifierValue) {
+        if (obj instanceof SnmpIndex) {
+            if (((SnmpIndex) obj).isImplied()) {
+                os.print("IMPLIED ");
+            }
+            printReferenceEntry(((SnmpIndex) obj).getTypeOrValue());
+        } else if (obj instanceof ObjectIdentifierValue) {
             oid = (ObjectIdentifierValue) obj;
             if (oid.getSymbol() != null) {
                 os.print(oid.getSymbol().getName());
