@@ -215,6 +215,19 @@ public class Mib implements MibContext {
     }
 
     /**
+     * Returns the hash code value for the object. This method is
+     * reimplemented to fulfil the contract of returning the same
+     * hash code for objects that are considered equal.
+     *
+     * @return the hash code value for the object
+     *
+     * @since 2.6
+     */
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    /**
      * Returns the MIB name. This is sometimes also referred to as
      * the MIB module name.
      *

@@ -809,6 +809,25 @@ public class MibLoader {
         }
 
         /**
+         * Returns the hash code value for the object. This method is
+         * reimplemented to fulfil the contract of returning the same
+         * hash code for objects that are considered equal.
+         *
+         * @return the hash code value for the object
+         *
+         * @since 2.6
+         */
+        public int hashCode() {
+            if (url != null) {
+                return url.hashCode();
+            } else if (file != null) {
+                return file.hashCode();
+            } else {
+                return super.hashCode();
+            }
+        }
+
+        /**
          * Returns the MIB file. If the MIB is loaded from URL this
          * file does not actually exist, but is used for providing a
          * unique reference to the MIB.

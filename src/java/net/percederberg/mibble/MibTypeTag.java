@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -31,7 +31,7 @@ package net.percederberg.mibble;
  * EXPLICIT or IMPLICIT keywords in the MIB file.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.6
  * @since    2.2
  */
 public class MibTypeTag {
@@ -171,6 +171,19 @@ public class MibTypeTag {
      */
     public boolean equals(int category, int value) {
         return this.category == category && this.value == value;
+    }
+
+    /**
+     * Returns the hash code value for the object. This method is
+     * reimplemented to fulfil the contract of returning the same
+     * hash code for objects that are considered equal.
+     *
+     * @return the hash code value for the object
+     *
+     * @since 2.6
+     */
+    public int hashCode() {
+        return (category << 8) + value;
     }
 
     /**
