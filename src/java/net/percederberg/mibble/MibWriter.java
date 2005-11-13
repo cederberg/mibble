@@ -58,7 +58,10 @@ import net.percederberg.mibble.value.StringValue;
 /**
  * A MIB output stream writer. This class contains a pretty printer
  * for a loaded MIB. All macros and data are printed in SMIv2 format,
- * but no translation from SMIv1 to SMIv2 takes place.
+ * and no translation from SMIv1 to SMIv2 takes place. The optional
+ * SMIv1 backward compability flag may be set, which should allow
+ * SMIv1 MIB:s to be printed correctly (but still without any
+ * translation).
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.6
@@ -70,6 +73,11 @@ public class MibWriter {
      * The underlying print writer to use.
      */
     private PrintWriter os;
+
+    /**
+     * The SMIv1 backward compability flag.
+     */
+    private boolean smiVersion1;
 
     /**
      * Creates a new MIB writer. When using this constructor, please
@@ -88,11 +96,22 @@ public class MibWriter {
      * @param os             the underlying writer to use
      */
     public MibWriter(Writer os) {
+        this(os, false);
+    }
+
+    /**
+     * Creates a new MIB writer.
+     *
+     * @param os             the underlying writer to use
+     * @param smiVersion1    the SMIv1 backward compability flag
+     */
+    public MibWriter(Writer os, boolean smiVersion1) {
         if (os instanceof PrintWriter) {
             this.os = (PrintWriter) os;
         } else {
             this.os = new PrintWriter(os);
         }
+        this.smiVersion1 = smiVersion1;
     }
 
     /**
@@ -349,7 +368,11 @@ public class MibWriter {
             os.print(getQuote(type.getUnits()));
             os.println();
         }
-        os.print("    MAX-ACCESS      ");
+        if (smiVersion1) {
+            os.print("    ACCESS          ");
+        } else {
+            os.print("    MAX-ACCESS      ");
+        }
         os.println(type.getAccess());
         os.print("    STATUS          ");
         os.print(type.getStatus());
