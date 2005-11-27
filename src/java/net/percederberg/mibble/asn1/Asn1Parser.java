@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  * 
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.asn1;
@@ -35,7 +35,7 @@ import net.percederberg.grammatica.parser.RecursiveDescentParser;
  * A token stream parser.
  * 
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.6
  */
 public class Asn1Parser extends RecursiveDescentParser {
 
@@ -659,8 +659,13 @@ public class Asn1Parser extends RecursiveDescentParser {
         pattern = new ProductionPattern(Asn1Constants.NUMBER,
                                         "Number");
         alt = new ProductionPatternAlternative();
-        alt.addToken(Asn1Constants.MINUS, 0, 1);
-        alt.addToken(Asn1Constants.NUMBER_STRING, 1, 1);
+        alt.addProduction(Asn1Constants.NUMBER_VALUE, 1, 1);
+        pattern.addAlternative(alt);
+        alt = new ProductionPatternAlternative();
+        alt.addProduction(Asn1Constants.BINARY_VALUE, 1, 1);
+        pattern.addAlternative(alt);
+        alt = new ProductionPatternAlternative();
+        alt.addProduction(Asn1Constants.HEXADECIMAL_VALUE, 1, 1);
         pattern.addAlternative(alt);
         alt = new ProductionPatternAlternative();
         alt.addProduction(Asn1Constants.DEFINED_VALUE, 1, 1);

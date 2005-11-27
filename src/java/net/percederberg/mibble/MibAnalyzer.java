@@ -1112,28 +1112,7 @@ class MibAnalyzer extends Asn1Analyzer {
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNumber(Production node) throws ParseException {
-        MibValue  value;
-        Number    number;
-        Node      child;
-
-        child = getChildAt(node, 0);
-        if (child.getId() == Asn1Constants.MINUS) {
-            number = (Number) getValue(getChildAt(node, 1), 0);
-            if (number instanceof Integer) {
-                number = new Integer(-number.intValue());
-            } else if (number instanceof Long) {
-                number = new Long(-number.longValue());
-            } else {
-                number = ((BigInteger) number).negate();
-            }
-            value = new NumberValue(number);
-        } else if (child.getId() == Asn1Constants.NUMBER_STRING) {
-            number = (Number) getValue(getChildAt(node, 0), 0);
-            value = new NumberValue(number);
-        } else {
-            value = (MibValue) getValue(getChildAt(node, 0), 0);
-        }
-        node.addValue(value);
+        node.addValues(getChildValues(node));
         return node;
     }
 
