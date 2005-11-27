@@ -75,11 +75,6 @@ public class MibWriter {
     private PrintWriter os;
 
     /**
-     * The SMIv1 backward compability flag.
-     */
-    private boolean smiVersion1;
-
-    /**
      * Creates a new MIB writer. When using this constructor, please
      * take care to make sure that the output stream expects text
      * output.
@@ -96,22 +91,11 @@ public class MibWriter {
      * @param os             the underlying writer to use
      */
     public MibWriter(Writer os) {
-        this(os, false);
-    }
-
-    /**
-     * Creates a new MIB writer.
-     *
-     * @param os             the underlying writer to use
-     * @param smiVersion1    the SMIv1 backward compability flag
-     */
-    public MibWriter(Writer os, boolean smiVersion1) {
         if (os instanceof PrintWriter) {
             this.os = (PrintWriter) os;
         } else {
             this.os = new PrintWriter(os);
         }
-        this.smiVersion1 = smiVersion1;
     }
 
     /**
@@ -153,7 +137,7 @@ public class MibWriter {
         }
         iter = mib.getAllSymbols().iterator();
         while (iter.hasNext()) {
-            printSymbol((MibSymbol) iter.next());
+            printSymbol((MibSymbol) iter.next(), mib.getSmiVersion());
         }
         os.println("END");
         printComment(mib.getFooterComment());
@@ -205,17 +189,18 @@ public class MibWriter {
      * Prints a MIB symbol declaration.
      *
      * @param sym            the MIB symbol
+     * @param smiVersion     the SMI version to use
      */
-    private void printSymbol(MibSymbol sym) {
+    private void printSymbol(MibSymbol sym, int smiVersion) {
         printComment(sym.getComment());
         if (sym instanceof MibTypeSymbol) {
             os.print(sym.getName());
             os.print(" ::= ");
-            printType(((MibTypeSymbol) sym).getType(), "");
+            printType(((MibTypeSymbol) sym).getType(), "", smiVersion);
         } else if (sym instanceof MibValueSymbol) {
             os.print(sym.getName());
             os.print(" ");
-            printType(((MibValueSymbol) sym).getType(), "");
+            printType(((MibValueSymbol) sym).getType(), "", smiVersion);
             os.println();
             os.print("    ::= ");
             printValue(((MibValueSymbol) sym).getValue());
@@ -233,8 +218,9 @@ public class MibWriter {
      *
      * @param type           the type to print
      * @param indent         the indentation to use on new lines
+     * @param smiVersion     the SMI version to use
      */
-    private void printType(MibType type, String indent) {
+    private void printType(MibType type, String indent, int smiVersion) {
         MibType         refType;
         Constraint      refCons;
         Constraint      typeCons;
@@ -253,7 +239,9 @@ public class MibWriter {
             seqType = (SequenceType) type;
             os.println("SEQUENCE {");
             os.print(indent + "    ");
-            printTypeElements(seqType.getAllElements(), indent + "    ");
+            printTypeElements(seqType.getAllElements(),
+                              indent + "    ",
+                              smiVersion);
             os.println();
             os.print(indent);
             os.print("}");
@@ -266,7 +254,7 @@ public class MibWriter {
                  os.print(") ");
             }
             os.print("OF ");
-            printType(seqOfType.getElementType(), indent);
+            printType(seqOfType.getElementType(), indent, smiVersion);
         } else if (type instanceof IntegerType) {
             os.print("INTEGER");
             printConstraint(type, indent);
@@ -283,21 +271,21 @@ public class MibWriter {
         } else if (type instanceof SnmpObjectIdentity) {
             printType((SnmpObjectIdentity) type, indent);
         } else if (type instanceof SnmpObjectType) {
-            printType((SnmpObjectType) type, indent);
+            printType((SnmpObjectType) type, indent, smiVersion);
         } else if (type instanceof SnmpNotificationType) {
             printType((SnmpNotificationType) type, indent);
         } else if (type instanceof SnmpTrapType) {
             printType((SnmpTrapType) type, indent);
         } else if (type instanceof SnmpTextualConvention) {
-            printType((SnmpTextualConvention) type, indent);
+            printType((SnmpTextualConvention) type, indent, smiVersion);
         } else if (type instanceof SnmpObjectGroup) {
             printType((SnmpObjectGroup) type, indent);
         } else if (type instanceof SnmpNotificationGroup) {
             printType((SnmpNotificationGroup) type, indent);
         } else if (type instanceof SnmpModuleCompliance) {
-            printType((SnmpModuleCompliance) type, indent);
+            printType((SnmpModuleCompliance) type, indent, smiVersion);
         } else if (type instanceof SnmpAgentCapabilities) {
-            printType((SnmpAgentCapabilities) type, indent);
+            printType((SnmpAgentCapabilities) type, indent, smiVersion);
         } else {
             os.print("-- ERROR: type definition unknown");
         }
@@ -357,18 +345,22 @@ public class MibWriter {
      *
      * @param type           the type to print
      * @param indent         the indentation to use on new lines
+     * @param smiVersion     the SMI version to use
      */
-    private void printType(SnmpObjectType type, String indent) {
+    private void printType(SnmpObjectType type,
+                           String indent,
+                           int smiVersion) {
+
         os.println("OBJECT-TYPE");
         os.print("    SYNTAX          ");
-        printType(type.getSyntax(), "                    ");
+        printType(type.getSyntax(), "                    ", smiVersion);
         os.println();
         if (type.getUnits() != null) {
             os.print("    UNITS           ");
             os.print(getQuote(type.getUnits()));
             os.println();
         }
-        if (smiVersion1) {
+        if (smiVersion == 1) {
             os.print("    ACCESS          ");
         } else {
             os.print("    MAX-ACCESS      ");
@@ -457,8 +449,12 @@ public class MibWriter {
      *
      * @param type           the type to print
      * @param indent         the indentation to use on new lines
+     * @param smiVersion     the SMI version to use
      */
-    private void printType(SnmpTextualConvention type, String indent) {
+    private void printType(SnmpTextualConvention type,
+                           String indent,
+                           int smiVersion) {
+
         os.println("TEXTUAL-CONVENTION");
         if (type.getDisplayHint() != null) {
             os.print("    DISPLAY-HINT    ");
@@ -475,7 +471,7 @@ public class MibWriter {
         }
         os.println();
         os.print("    SYNTAX          ");
-        printType(type.getSyntax(), "                    ");
+        printType(type.getSyntax(), "                    ", smiVersion);
     }
 
     /**
@@ -525,8 +521,12 @@ public class MibWriter {
      *
      * @param type           the type to print
      * @param indent         the indentation to use on new lines
+     * @param smiVersion     the SMI version to use
      */
-    private void printType(SnmpModuleCompliance type, String indent) {
+    private void printType(SnmpModuleCompliance type,
+                           String indent,
+                           int smiVersion) {
+
         SnmpModule  module;
         ArrayList   list;
 
@@ -558,7 +558,8 @@ public class MibWriter {
             for (int j = 0; j < list.size(); j++) {
                 os.println();
                 os.println();
-                printModuleCompliance((SnmpCompliance) list.get(j));
+                printModuleCompliance((SnmpCompliance) list.get(j),
+                                      smiVersion);
             }
         }
     }
@@ -568,8 +569,12 @@ public class MibWriter {
      *
      * @param type           the type to print
      * @param indent         the indentation to use on new lines
+     * @param smiVersion     the SMI version to use
      */
-    private void printType(SnmpAgentCapabilities type, String indent) {
+    private void printType(SnmpAgentCapabilities type,
+                           String indent,
+                           int smiVersion) {
+
         SnmpModuleSupport  module;
         ArrayList          list;
 
@@ -596,7 +601,7 @@ public class MibWriter {
             for (int j = 0; j < list.size(); j++) {
                 os.println();
                 os.println();
-                printVariation((SnmpVariation) list.get(j));
+                printVariation((SnmpVariation) list.get(j), smiVersion);
             }
         }
     }
@@ -605,8 +610,11 @@ public class MibWriter {
      * Prints an SNMP module compliance statement.
      *
      * @param comp           the module compliance statement
+     * @param smiVersion     the SMI version to use
      */
-    private void printModuleCompliance(SnmpCompliance comp) {
+    private void printModuleCompliance(SnmpCompliance comp,
+                                       int smiVersion) {
+
         if (comp.isGroup()) {
             os.print("    GROUP           ");
             printReferenceEntry(comp.getValue());
@@ -617,12 +625,16 @@ public class MibWriter {
             os.println();
             if (comp.getSyntax() != null) {
                 os.print("    SYNTAX          ");
-                printType(comp.getSyntax(), "                    ");
+                printType(comp.getSyntax(),
+                          "                    ",
+                          smiVersion);
                 os.println();
             }
             if (comp.getWriteSyntax() != null) {
                 os.print("    WRITE-SYNTAX    ");
-                printType(comp.getWriteSyntax(), "                    ");
+                printType(comp.getWriteSyntax(),
+                          "                    ",
+                          smiVersion);
                 os.println();
             }
             if (comp.getAccess() != null) {
@@ -637,19 +649,24 @@ public class MibWriter {
      * Prints an SNMP variation statement.
      *
      * @param var            the variation statement
+     * @param smiVersion     the SMI version to use
      */
-    private void printVariation(SnmpVariation var) {
+    private void printVariation(SnmpVariation var, int smiVersion) {
         os.print("    VARIATION       ");
         printReferenceEntry(var.getValue());
         os.println();
         if (var.getSyntax() != null) {
             os.print("    SYNTAX          ");
-            printType(var.getSyntax(), "                    ");
+            printType(var.getSyntax(),
+                      "                    ",
+                      smiVersion);
             os.println();
         }
         if (var.getWriteSyntax() != null) {
             os.print("    WRITE-SYNTAX    ");
-            printType(var.getWriteSyntax(), "                    ");
+            printType(var.getWriteSyntax(),
+                      "                    ",
+                      smiVersion);
             os.println();
         }
         if (var.getAccess() != null) {
@@ -691,8 +708,12 @@ public class MibWriter {
      *
      * @param elems          the type elements to print
      * @param indent         the indentation to use on new lines
+     * @param smiVersion     the SMI version to use
      */
-    private void printTypeElements(ElementType[] elems, String indent) {
+    private void printTypeElements(ElementType[] elems,
+                                   String indent,
+                                   int smiVersion) {
+
         int     column = 20;
         String  typeIndent = indent;
         int     i;
@@ -714,7 +735,7 @@ public class MibWriter {
             for (int j = elems[i].getName().length(); j < column; j++) {
                 os.print(" ");
             }
-            printType(elems[i].getType(), typeIndent);
+            printType(elems[i].getType(), typeIndent, smiVersion);
         }
     }
 

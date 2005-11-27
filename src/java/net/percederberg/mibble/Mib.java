@@ -66,6 +66,11 @@ public class Mib implements MibContext {
     private String name = null;
 
     /**
+     * The SMI version.
+     */
+    private int smiVersion = 1;
+
+    /**
      * The MIB file header comment.
      */
     private String headerComment = null;
@@ -275,6 +280,31 @@ public class Mib implements MibContext {
      */
     public MibLoaderLog getLog() {
         return log;
+    }
+
+    /**
+     * Returns the SMI version used for defining this MIB. This
+     * number can be either 1 (for SMIv1) or 2 (for SMIv2). It is set
+     * based on which macros are used in the MIB file.
+     *
+     * @return the SMI version used for defining the MIB
+     *
+     * @since 2.6
+     */
+    public int getSmiVersion() {
+        return smiVersion;
+    }
+
+    /**
+     * Sets the SMI version used for defining this MIB. This method
+     * should only be called by the MIB analysis classes.
+     *
+     * @param version        the new SMI version
+     *
+     * @since 2.6
+     */
+    void setSmiVersion(int version) {
+        this.smiVersion = version;
     }
 
     /**

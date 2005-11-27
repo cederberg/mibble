@@ -1836,6 +1836,7 @@ class MibAnalyzer extends Asn1Analyzer {
         String     desc;
         ArrayList  revisions = new ArrayList();
 
+        currentMib.setSmiVersion(2);
         update = getStringValue(getChildAt(node, 1), 0);
         org = getStringValue(getChildAt(node, 2), 0);
         contact = getStringValue(getChildAt(node, 3), 0);
@@ -1867,6 +1868,7 @@ class MibAnalyzer extends Asn1Analyzer {
         String      desc;
         String      ref;
 
+        currentMib.setSmiVersion(2);
         status = (SnmpStatus) getValue(getChildAt(node, 1), 0);
         desc = getStringValue(getChildAt(node, 2), 0);
         if (node.getChildCount() <= 3) {
@@ -1997,6 +1999,7 @@ class MibAnalyzer extends Asn1Analyzer {
         String      ref = null;
         Node        child;
 
+        currentMib.setSmiVersion(2);
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -2079,6 +2082,7 @@ class MibAnalyzer extends Asn1Analyzer {
         MibType     syntax = null;
         Node        child;
 
+        currentMib.setSmiVersion(2);
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -2124,6 +2128,7 @@ class MibAnalyzer extends Asn1Analyzer {
         String      desc;
         String      ref;
 
+        currentMib.setSmiVersion(2);
         objects = (ArrayList) getValue(getChildAt(node, 1), 0);
         status = (SnmpStatus) getValue(getChildAt(node, 2), 0);
         desc = getStringValue(getChildAt(node, 3), 0);
@@ -2153,6 +2158,7 @@ class MibAnalyzer extends Asn1Analyzer {
         String      desc;
         String      ref;
 
+        currentMib.setSmiVersion(2);
         notifications = getChildAt(node, 1).getAllValues();
         status = (SnmpStatus) getValue(getChildAt(node, 2), 0);
         desc = getStringValue(getChildAt(node, 3), 0);
@@ -2186,6 +2192,7 @@ class MibAnalyzer extends Asn1Analyzer {
         ArrayList   modules = new ArrayList();
         Node        child;
 
+        currentMib.setSmiVersion(2);
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -2229,6 +2236,7 @@ class MibAnalyzer extends Asn1Analyzer {
         ArrayList   modules = new ArrayList();
         Node        child;
 
+        currentMib.setSmiVersion(2);
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
@@ -2415,6 +2423,10 @@ class MibAnalyzer extends Asn1Analyzer {
         Node    child;
         String  name;
 
+        child = getChildAt(node, 0);
+        if (child.getId() != Asn1Constants.ACCESS) {
+            currentMib.setSmiVersion(2);
+        }
         child = getChildAt(node, 1);
         name = getStringValue(child, 0);
         if (name.equals("read-only")) {
