@@ -75,9 +75,14 @@ public class MibWriter {
     private PrintWriter os;
 
     /**
+     * The text margin. If this value is non-zero, all text will be
+     * reformatted in an attempt to fit within the margin.
+     */
+    private int margin;
+
+    /**
      * Creates a new MIB writer. When using this constructor, please
-     * take care to make sure that the output stream expects text
-     * output.
+     * make sure that the output stream can handle text output.
      *
      * @param os             the underlying output stream to use
      */
@@ -86,16 +91,32 @@ public class MibWriter {
     }
 
     /**
-     * Creates a new MIB writer.
+     * Creates a new MIB writer without any print margin.
      *
      * @param os             the underlying writer to use
      */
     public MibWriter(Writer os) {
+        this(os, 0);
+    }
+
+    /**
+     * Creates a new MIB writer. By specifying a non-zero print
+     * margin, all comments and descriptions in the MIB may be
+     * subject to reformatting if the output lines become too long.
+     * For the best printing results, the source MIB file should be
+     * edited manually instead of attempting to correct the print
+     * margin automatically here.
+     *
+     * @param os             the underlying writer to use
+     * @param margin         the print margin, or zero (0) for none
+     */
+    public MibWriter(Writer os, int margin) {
         if (os instanceof PrintWriter) {
             this.os = (PrintWriter) os;
         } else {
             this.os = new PrintWriter(os);
         }
+        this.margin = margin;
     }
 
     /**
@@ -915,7 +936,9 @@ public class MibWriter {
 
     /**
      * Prints an indented string. This method will indent each non-
-     * blank line in the string with the specified indentation.
+     * blank line in the string with the specified indentation. If a
+     * print margin is set, it will also attempt to reflow the string
+     * to print so that it fits within the margin.
      *
      * @param indent         the indentation string
      * @param str            the string to print
@@ -923,7 +946,10 @@ public class MibWriter {
     private void printIndent(String indent, String str) {
         int  pos;
 
-        while (str != null && (pos = str.indexOf('\n')) >=0) {
+        if (margin > 0) {
+            str = reflow(str, margin - indent.length());
+        }
+        while (str != null && (pos = str.indexOf('\n')) >= 0) {
             if (pos == 0) {
                 os.println();
             } else {
@@ -936,6 +962,59 @@ public class MibWriter {
             os.print(indent);
             os.print(str);
         }
+    }
+
+    /**
+     * Reformats all the linebreaks in a string. This method will
+     * attempt to break too long lines into several lines, reflowing
+     * any following text in the same paragraph with new line breaks.
+     * It should not modify single lines that are shorter than the
+     * maximum line length, unless a previous line was too long.
+     *
+     * @param str            the input string
+     * @param maxLen         the maximum string length
+     *
+     * @return the reformatted string
+     */
+    private String reflow(String str, int maxLen) {
+        StringBuffer  src = new StringBuffer(str);
+        StringBuffer  res = new StringBuffer();
+        int           pos;
+        boolean       fillNext = false;
+        int           temp;
+
+        while (src.length() > 0) {
+            pos = src.indexOf("\n");
+            if (fillNext && pos > 0) {
+                fillNext = false;
+                src.setCharAt(pos, ' ');
+                pos = src.indexOf("\n");
+            }
+            if (pos == 0) {
+                fillNext = false;
+                res.append("\n");
+            } else {
+                if (pos < 0) {
+                    pos = src.length();
+                }
+                while (pos > maxLen) {
+                    temp = src.lastIndexOf(" ", pos - 1);
+                    if (temp < 0) {
+                        break;
+                    }
+                    pos = temp;
+                    fillNext = true;
+                }
+                res.append(src.substring(0, pos));
+                res.append("\n");
+            }
+            if (pos + 1 >= src.length()) {
+                src.setLength(0);
+            } else {
+                src.delete(0, pos + 1);
+            }
+        }
+        return res.toString();
     }
 
     /**
