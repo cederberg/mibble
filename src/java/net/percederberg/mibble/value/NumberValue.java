@@ -147,7 +147,7 @@ public class NumberValue extends MibValue {
      *         false otherwise
      */
     public boolean equals(Object obj) {
-        return toString().equals(obj.toString());
+        return compareTo(obj) == 0;
     }
 
     /**
@@ -156,7 +156,7 @@ public class NumberValue extends MibValue {
      * @return a hash code for this object
      */
     public int hashCode() {
-        return toString().hashCode();
+        return value.hashCode();
     }
 
     /**

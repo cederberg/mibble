@@ -68,8 +68,10 @@ import net.percederberg.mibble.type.StringType;
 import net.percederberg.mibble.type.TypeReference;
 import net.percederberg.mibble.type.ValueConstraint;
 import net.percederberg.mibble.type.ValueRangeConstraint;
+import net.percederberg.mibble.value.BinaryNumberValue;
 import net.percederberg.mibble.value.BitSetValue;
 import net.percederberg.mibble.value.BooleanValue;
+import net.percederberg.mibble.value.HexNumberValue;
 import net.percederberg.mibble.value.NullValue;
 import net.percederberg.mibble.value.NumberValue;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
@@ -1556,7 +1558,7 @@ class MibAnalyzer extends Asn1Analyzer {
         Number  number;
 
         number = (Number) getValue(getChildAt(node, 0), 0);
-        node.addValue(new NumberValue(number));
+        node.addValue(new BinaryNumberValue(number));
         return node;
     }
 
@@ -1575,7 +1577,7 @@ class MibAnalyzer extends Asn1Analyzer {
         Number  number;
 
         number = (Number) getValue(getChildAt(node, 0), 0);
-        node.addValue(new NumberValue(number));
+        node.addValue(new HexNumberValue(number));
         return node;
     }
 
