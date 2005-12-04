@@ -253,10 +253,10 @@ public class MibTreeBuilder {
         DefaultTreeModel model = (DefaultTreeModel) mibTree.getModel();
         MibNode tempNode = null;
         MibNode root = (MibNode) model.getRoot();
-        Enumeration enum = root.preorderEnumeration();
+        Enumeration e = root.preorderEnumeration();
 
-        while (enum.hasMoreElements()) {
-            tempNode = (MibNode) enum.nextElement();
+        while (e.hasMoreElements()) {
+            tempNode = (MibNode) e.nextElement();
             if (tempNode.getValue() == null &&
                 tempNode.getName().equals(mibName)) {
 
