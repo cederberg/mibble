@@ -82,7 +82,7 @@
       </p>
       &newline;&newline;&indent;&indent;
       <p class="footer">
-        <xsl:text disable-output-escaping="yes">Copyright &amp;copy; 2004 Per Cederberg. Permission
+        <xsl:text disable-output-escaping="yes">Copyright &amp;copy; 2002-2005 Per Cederberg. Permission
     is granted to copy this document verbatim in any medium, provided
     that this copyright notice is left intact.</xsl:text>
       </p>

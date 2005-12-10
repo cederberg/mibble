@@ -53,9 +53,9 @@ Mibble </xsl:text>
     <xsl:text>). See http://www.mibble.org/ for more
 information.
 
-Copyright (c) 2004 Per Cederberg. Permission is granted to copy this
-document verbatim in any medium, provided that this copyright notice
-is left intact.</xsl:text>
+Copyright (c) 2002-2005 Per Cederberg. Permission is granted to copy
+this document verbatim in any medium, provided that this copyright
+notice is left intact.</xsl:text>
     &newline;
   </xsl:template>
 
