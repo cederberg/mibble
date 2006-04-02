@@ -259,7 +259,7 @@ public class MibLoaderLog {
             str = linebreakString(entry.getMessage(), "    ", margin);
             buffer.append(str);
             str = entry.readLine();
-            if (str != null) {
+            if (str != null && str.length() >= entry.getColumnNumber()) {
                 buffer.append("\n\n");
                 buffer.append(str);
                 buffer.append("\n");
