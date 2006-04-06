@@ -475,7 +475,7 @@ public class ObjectIdentifierValue extends MibValue {
      * Transfers the contents of one object identifier to another one.
      * The transfer can only be made under certain conditions, for
      * example that no children OID:s conflict. It is also assumed
-     * that the two OID:s have the name numerical value.
+     * that the two OID:s have the same numerical value.
      *
      * @param log            the MIB loader log
      * @param location       the file location on error
