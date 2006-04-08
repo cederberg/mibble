@@ -104,7 +104,9 @@ public class FileLocation {
     /**
      * Reads the specified line from the file. If the file couldn't
      * be opened or read correctly, null will be returned. The line
-     * will NOT contain the terminating '\n' character.
+     * will NOT contain the terminating '\n' character. This method
+     * takes special care to only count the linefeed (LF, 0x0A)
+     * character as a valid newline.
      *
      * @return the line read, or
      *         null if not found
@@ -112,15 +114,20 @@ public class FileLocation {
     public String readLine() {
         BufferedReader  input;
         String          str = null;
+        int             count = 1;
+        int             ch;
 
         if (file == null || line < 0) {
             return null;
         }
         try {
             input = new BufferedReader(new FileReader(file));
-            for (int i = 0; i < line; i++) {
-                str = input.readLine();
+            while ((ch = input.read()) >= 0 && count < line) {
+                if (ch == '\n') {
+                    count++;
+                }
             }
+            str = input.readLine();
             input.close();
         } catch (IOException e) {
             return null;
