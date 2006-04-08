@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -32,7 +32,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * an object identifier.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.7
  * @since    2.0
  */
 public class MibValueSymbol extends MibSymbol {
@@ -115,6 +115,20 @@ public class MibValueSymbol extends MibSymbol {
                 oid.setSymbol(this);
             }
         }
+    }
+
+    /**
+     * Clears and prepares this MIB symbol for garbage collection.
+     * This method will recursively clear any associated types or
+     * values, making sure that no data structures references this
+     * symbol.
+     */
+    void clear() {
+        type = null;
+        if (value != null) {
+            value.clear();
+        }
+        value = null;
     }
 
     /**

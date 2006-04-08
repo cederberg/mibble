@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -28,7 +28,7 @@ package net.percederberg.mibble;
  * be used.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.7
  * @since    2.0
  */
 public abstract class MibValue implements Comparable {
@@ -94,6 +94,18 @@ public abstract class MibValue implements Comparable {
 
         String msg = name + " value cannot be referenced";
         throw new UnsupportedOperationException(msg);
+    }
+
+    /**
+     * Clears and prepares this value for garbage collection. This
+     * method will recursively clear any associated types or values,
+     * making sure that no data structures references this object.<p>
+     *
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     */
+    protected void clear() {
+        reference = null;
     }
 
     /**

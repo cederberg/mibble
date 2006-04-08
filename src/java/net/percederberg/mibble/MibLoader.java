@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -64,7 +64,7 @@ import net.percederberg.mibble.asn1.Asn1Parser;
  * concurrently in multiple threads.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.7
  * @since    2.0
  */
 public class MibLoader {
@@ -506,7 +506,8 @@ public class MibLoader {
                     throw new MibLoaderException(mib.getFile(), message);
                 }
             }
-            mibs.remove(pos);
+            mib = (Mib) mibs.remove(pos);
+            mib.clear();
         }
     }
 

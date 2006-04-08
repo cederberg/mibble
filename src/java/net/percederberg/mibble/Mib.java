@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -37,7 +37,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * {@link MibLoader MIB loader}.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.7
  * @since    2.0
  *
  * @see <a href="http://www.ietf.org/rfc/rfc3411.txt">RFC 3411 - An
@@ -195,6 +195,37 @@ public class Mib implements MibContext {
         if (errors != log.errorCount()) {
             throw new MibLoaderException(log);
         }
+    }
+
+    /**
+     * Clears and prepares this MIB for garbage collection. This method
+     * will recursively clear all associated symbols, making sure that
+     * no data structures references symbols from this MIB. Obviously,
+     * this method shouldn't be called unless all dependant MIBs have
+     * been cleared first.
+     */
+    void clear() {
+        loader = null;
+        log = null;
+        if (imports != null) {
+            imports.clear();
+        }
+        imports = null;
+        if (symbolList != null) {
+            for (int i = 0; i < symbolList.size(); i++) {
+                ((MibSymbol) symbolList.get(i)).clear();
+            }
+            symbolList.clear();
+        }
+        symbolList = null;
+        if (symbolNameMap != null) {
+            symbolNameMap.clear();
+        }
+        symbolNameMap = null;
+        if (symbolValueMap != null) {
+            symbolValueMap.clear();
+        }
+        symbolValueMap = null;
     }
 
     /**

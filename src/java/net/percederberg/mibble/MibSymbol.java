@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -27,7 +27,7 @@ package net.percederberg.mibble;
  * unique within the MIB file. All symbols also have a data type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.7
  * @since    2.0
  */
 public abstract class MibSymbol {
@@ -86,6 +86,14 @@ public abstract class MibSymbol {
      *             initialization
      */
     public abstract void initialize(MibLoaderLog log) throws MibException;
+
+    /**
+     * Clears and prepares this MIB symbol for garbage collection.
+     * This method will recursively clear any associated types or
+     * values, making sure that no data structures references this
+     * symbol.
+     */
+    abstract void clear();
 
     /**
      * Returns the file location.

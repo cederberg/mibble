@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
@@ -34,7 +34,7 @@ import net.percederberg.mibble.MibValueSymbol;
  * identifier values in a tree hierarchy.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.7
  * @since    2.0
  */
 public class ObjectIdentifierValue extends MibValue {
@@ -199,6 +199,34 @@ public class ObjectIdentifierValue extends MibValue {
     }
 
     /**
+     * Clears and prepares this value for garbage collection. This
+     * method will recursively clear any associated types or values,
+     * making sure that no data structures references this object.<p>
+     *
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
+     */
+    protected void clear() {
+        ObjectIdentifierValue  child;
+
+        super.clear();
+        if (getParent() != null) {
+            getParent().children.remove(this);
+        }
+        parent = null;
+        if (children != null) {
+            for (int i = 0; i < children.size(); i++) {
+                child = (ObjectIdentifierValue) children.get(i);
+                child.parent = null;
+                child.clear();
+            }
+            children.clear();
+        }
+        children = null;
+        symbol = null;
+    }
+
+    /**
      * Compares this object with the specified object for order. This
      * method will only compare the string representations with each
      * other.
@@ -281,8 +309,10 @@ public class ObjectIdentifierValue extends MibValue {
     }
 
     /**
-     * Sets the symbol connected to this object identifier. This
-     * method is called during the value symbol initialization.
+     * Sets the symbol connected to this object identifier.<p>
+     *
+     * <strong>NOTE:</strong> This is an internal method that should
+     * only be called by the MIB loader.
      *
      * @param symbol         the value symbol
      */
