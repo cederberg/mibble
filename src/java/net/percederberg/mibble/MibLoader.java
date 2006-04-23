@@ -262,11 +262,12 @@ public class MibLoader {
     /**
      * Returns a previously loaded MIB file. If the MIB file hasn't
      * been loaded, null will be returned. The MIB is identified by
-     * it's file name.
+     * it's file name. Note that if the file contained several MIB
+     * modules, this method will only return the first one.
      *
      * @param file           the MIB file
      *
-     * @return the MIB module if found, or
+     * @return the first MIB module if found, or
      *         null otherwise
      *
      * @since 2.3
