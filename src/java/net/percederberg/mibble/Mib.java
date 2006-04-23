@@ -61,6 +61,13 @@ public class Mib implements MibContext {
     private MibLoaderLog log;
 
     /**
+     * The explicitly loaded flag. This flag is set when a MIB is
+     * loaded by a direct call to the MibLoader, in contrast to when
+     * it is loaded as the result of an import.
+     */
+    private boolean loaded = false;
+
+    /**
      * The MIB name.
      */
     private String name = null;
@@ -261,6 +268,31 @@ public class Mib implements MibContext {
      */
     public int hashCode() {
         return name.hashCode();
+    }
+
+    /**
+     * Checks if this MIB module has been explicitly loaded. A MIB
+     * module is considered explicitly loaded if the file or resource
+     * containing the MIB definition was loaded by a direct call to
+     * the MIB loader. Implictly loaded MIB modules are loaded as a
+     * result of import statements in explicitly loaded MIBs.
+     *
+     * @return true if this MIB module was explicitly loaded, or
+     *         false otherwise
+     *
+     * @since 2.7
+     */
+    public boolean isLoaded() {
+        return loaded;
+    }
+
+    /**
+     * Sets the the explicitly loaded flag.
+     *
+     * @param loaded         the new flag value
+     */
+    void setLoaded(boolean loaded) {
+        this.loaded = loaded;
     }
 
     /**

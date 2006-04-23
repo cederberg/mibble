@@ -329,6 +329,8 @@ public class MibLoader {
                                                 name + "'");
             }
             mib = load(src);
+        } else {
+            mib.setLoaded(true);
         }
         return mib;
     }
@@ -355,6 +357,8 @@ public class MibLoader {
         mib = getMib(file);
         if (mib == null) {
             mib = load(new MibSource(file));
+        } else {
+            mib.setLoaded(true);
         }
         return mib;
     }
@@ -549,6 +553,7 @@ public class MibLoader {
     private MibLoaderLog loadQueue() throws IOException {
         MibLoaderLog  log = new MibLoaderLog();
         ArrayList     processed = new ArrayList();
+        boolean       loaded;
         MibSource     src;
         ArrayList     list;
         Object        obj;
@@ -556,8 +561,10 @@ public class MibLoader {
         // Parse MIB files in queue
         while (queue.size() > 0) {
             try {
+                loaded = false;
                 obj = queue.get(0);
                 if (obj instanceof MibSource) {
+                    loaded = true;
                     src = (MibSource) obj;
                 } else if (!mibs.contains(obj)) {
                     src = locate((String) obj);
@@ -566,6 +573,9 @@ public class MibLoader {
                 }
                 if (src != null && !mibs.contains(src.getFile())) {
                     list = src.parseMib(this, log);
+                    for (int i = 0; i < list.size(); i++) {
+                        ((Mib) list.get(i)).setLoaded(loaded);
+                    }
                     mibs.addAll(list);
                     processed.addAll(list);
                 }

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -26,7 +26,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
 import java.util.Iterator;
 
 import net.percederberg.mibble.value.ObjectIdentifierValue;
@@ -38,7 +37,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * output.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.7
  * @since    2.0
  */
 public class MibblePrinter {
@@ -90,7 +89,6 @@ public class MibblePrinter {
      */
     public static void main(String[] args) {
         MibLoader  loader = new MibLoader();
-        ArrayList  loadedMibs = new ArrayList();
         int        printMode = MIB_PRINT_MODE;
         Mib        mib = null;
         int        pos = 0;
@@ -137,7 +135,6 @@ public class MibblePrinter {
                 if (mib.getLog().warningCount() > 0) {
                     mib.getLog().printTo(System.err);
                 }
-                loadedMibs.add(mib);
             }
         } catch (FileNotFoundException e) {
             printError(args[pos], e);
@@ -155,9 +152,9 @@ public class MibblePrinter {
 
         // Print loaded MIBs
         if (printMode == OID_PRINT_MODE) {
-            printOidTree((Mib) loadedMibs.get(0));
+            printOidTree(loader);
         } else {
-            printMibs(loadedMibs, printMode);
+            printMibs(loader, printMode);
         }
     }
 
@@ -167,12 +164,16 @@ public class MibblePrinter {
      * @param mibs           the list of MIBs
      * @param printMode      the print mode to use
      */
-    private static void printMibs(ArrayList mibs, int printMode) {
-        for (int i = 0; i < mibs.size(); i++) {
-            if (printMode == MIB_PRINT_MODE) {
-                printMib((Mib) mibs.get(i));
-            } else {
-                printDebug((Mib) mibs.get(i));
+    private static void printMibs(MibLoader loader, int printMode) {
+        Mib[]  mibs = loader.getAllMibs();
+
+        for (int i = 0; i < mibs.length; i++) {
+            if (mibs[i].isLoaded()) {
+                if (printMode == MIB_PRINT_MODE) {
+                    printMib(mibs[i]);
+                } else {
+                    printDebug(mibs[i]);
+                }
             }
         }
     }
@@ -208,17 +209,23 @@ public class MibblePrinter {
     }
 
     /**
-     * Prints the complete OID tree. The MIB provided is only used to
-     * find a starting OID value from which to locate the root.
+     * Prints the complete OID tree. All MIB modules loaded with the
+     * specified MIB loader will be printed.
      *
-     * @param mib            the starting MIB
+     * @param loader            the MIB loader
      */
-    private static void printOidTree(Mib mib) {
+    private static void printOidTree(MibLoader loader) {
+        Mib                    mib;
         ObjectIdentifierValue  root = null;
         Iterator               iter;
         MibSymbol              symbol;
         MibValue               value;
 
+        if (loader.getAllMibs().length <= 0) {
+            printError("no MIB modules have been loaded");
+            return;
+        }
+        mib = loader.getAllMibs()[0];
         iter = mib.getAllSymbols().iterator();
         while (root == null && iter.hasNext()) {
             symbol = (MibSymbol) iter.next();
