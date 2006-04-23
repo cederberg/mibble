@@ -22,7 +22,6 @@
 package net.percederberg.mibble;
 
 import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -87,7 +86,7 @@ import net.percederberg.mibble.value.ValueReference;
  * is encountered.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.7
  * @since    2.0
  */
 class MibAnalyzer extends Asn1Analyzer {
@@ -420,15 +419,7 @@ class MibAnalyzer extends Asn1Analyzer {
         imp = new MibImport(loader, getLocation(child), module, symbols);
 
         // Schedule MIB loading
-        try {
-            loader.scheduleLoad(module);
-        } catch (IOException e) {
-            throw new ParseException(
-                ParseException.ANALYSIS_ERROR,
-                "couldn't find imported MIB: " + module,
-                child.getStartLine(),
-                child.getStartColumn());
-        }
+        loader.scheduleLoad(module);
 
         // Add reference to MIB and node
         currentMib.addImport(imp);
@@ -2665,15 +2656,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
         // Load referenced module
         module = getStringValue(getChildAt(node, 0), 0);
-        try {
-            loader.scheduleLoad(module);
-        } catch (IOException e) {
-            throw new ParseException(
-                ParseException.ANALYSIS_ERROR,
-                "couldn't find referenced MIB: " + module,
-                node.getStartLine(),
-                node.getStartColumn());
-        }
+        loader.scheduleLoad(module);
 
         // Create module reference and context
         imp = new MibImport(loader, getLocation(node), module, null);

@@ -92,8 +92,8 @@ public class MibLoader {
     private ArrayList mibs = new ArrayList();
 
     /**
-     * The queue of MIB files to load. This queue contains file
-     * objects.
+     * The queue of MIB files to load. This queue contains either
+     * MIB module names or MibSource objects.
      */
     private ArrayList queue = new ArrayList();
 
@@ -309,7 +309,7 @@ public class MibLoader {
      *
      * @param name           the MIB name (filename without extension)
      *
-     * @return the MIB file loaded
+     * @return the MIB module loaded
      *
      * @throws IOException if the MIB file couldn't be found in the
      *             MIB search path
@@ -336,11 +336,13 @@ public class MibLoader {
      * Loads a MIB file. This method will also load all imported MIB:s
      * if not previously loaded by this loader. If a MIB with the same
      * file name has already been loaded, it will be returned directly
-     * instead of reloading it.
+     * instead of reloading it. Note that if a file contains several
+     * MIB modules, this method will only return the first one
+     * (although all are loaded).
      *
      * @param file           the MIB file
      *
-     * @return the MIB file loaded
+     * @return the first MIB module loaded
      *
      * @throws IOException if the MIB file couldn't be read
      * @throws MibLoaderException if the MIB file couldn't be loaded
@@ -359,11 +361,13 @@ public class MibLoader {
     /**
      * Loads a MIB file from the specified URL. This method will also
      * load all imported MIB:s if not previously loaded by this
-     * loader.
+     * loader. Note that if the URL data contains several MIB modules,
+     * this method will only return the first one (although all are
+     * loaded).
      *
      * @param url            the URL containing the MIB
      *
-     * @return the MIB file loaded
+     * @return the first MIB module loaded
      *
      * @throws IOException if the MIB URL couldn't be read
      * @throws MibLoaderException if the MIB file couldn't be loaded
@@ -378,11 +382,13 @@ public class MibLoader {
     /**
      * Loads a MIB file from the specified input reader. This method
      * will also load all imported MIB:s if not previously loaded by
-     * this loader.
+     * this loader. Note that if the input data contains several MIB
+     * modules, this method will only return the first one (although
+     * all are loaded).
      *
      * @param input          the input stream containing the MIB
      *
-     * @return the MIB file loaded
+     * @return the first MIB module loaded
      *
      * @throws IOException if the input stream couldn't be read
      * @throws MibLoaderException if the MIB file couldn't be loaded
@@ -396,11 +402,13 @@ public class MibLoader {
 
     /**
      * Loads a MIB. This method will also load all imported MIB:s if
-     * not previously loaded by this loader.
+     * not previously loaded by this loader. Note that if the source
+     * contains several MIB modules, this method will only return the
+     * first one (although all are loaded).
      *
      * @param src            the MIB source
      *
-     * @return the MIB loaded
+     * @return the first MIB module loaded
      *
      * @throws IOException if the MIB couldn't be found
      * @throws MibLoaderException if the MIB couldn't be loaded
@@ -514,50 +522,15 @@ public class MibLoader {
     /**
      * Schedules the loading of a MIB file. The file is added to the
      * queue of MIB files to be loaded, unless it is already loaded
-     * or in the queue. The file is searched for in the MIB search
-     * path.
+     * or in the queue. The MIB file search is postponed until the
+     * MIB is to be loaded, avoiding loading if the MIB name was
+     * defined in another MIB file in the queue.
      *
      * @param name           the MIB name (filename without extension)
-     *
-     * @throws IOException if the MIB file couldn't be found in the
-     *             MIB search path
      */
-    void scheduleLoad(String name) throws IOException {
-        MibSource  src;
-
-        if (getMib(name) == null) {
-            src = locate(name);
-            if (src == null) {
-                throw new FileNotFoundException("couldn't locate MIB: '" +
-                                                name + "'");
-            }
-            scheduleLoad(src);
-        }
-    }
-
-    /**
-     * Schedules the loading of a MIB file. The file is added to the
-     * queue of MIB files to be loaded, unless it is already loaded
-     * or in the queue.
-     *
-     * @param file           the MIB file
-     */
-    void scheduleLoad(File file) {
-        if (getMib(file) == null) {
-            scheduleLoad(new MibSource(file));
-        }
-    }
-
-    /**
-     * Schedules the loading of a MIB. The MIB source is added to the
-     * queue of MIB:s to be loaded, unless it is already loaded or in
-     * the queue.
-     *
-     * @param src            the MIB source
-     */
-    private void scheduleLoad(MibSource src) {
-        if (!mibs.contains(src.getFile()) && !queue.contains(src)) {
-            queue.add(src);
+    void scheduleLoad(String name) {
+        if (!mibs.contains(name) && !queue.contains(name)) {
+            queue.add(name);
         }
     }
 
@@ -577,12 +550,20 @@ public class MibLoader {
         ArrayList     processed = new ArrayList();
         MibSource     src;
         ArrayList     list;
+        Object        obj;
 
         // Parse MIB files in queue
         while (queue.size() > 0) {
             try {
-                src = (MibSource) queue.get(0);
-                if (!mibs.contains(src.getFile())) {
+                obj = queue.get(0);
+                if (obj instanceof MibSource) {
+                    src = (MibSource) obj;
+                } else if (!mibs.contains(obj)) {
+                    src = locate((String) obj);
+                } else {
+                    src = null;
+                }
+                if (src != null && !mibs.contains(src.getFile())) {
                     list = src.parseMib(this, log);
                     mibs.addAll(list);
                     processed.addAll(list);
