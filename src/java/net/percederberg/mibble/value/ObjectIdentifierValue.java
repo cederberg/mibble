@@ -75,6 +75,16 @@ public class ObjectIdentifierValue extends MibValue {
     private MibValueSymbol symbol = null;
 
     /**
+     * The cached numeric string representation of this value. This
+     * variable is set when calling the toString() method the first
+     * time and is used to optimize performance by avoiding any
+     * subsequent recursive calls.
+     *
+     * @see #toString()
+     */
+    private String cachedNumericValue = null;
+
+    /**
      * Creates a new root object identifier value.
      *
      * @param name           the component name, or null
@@ -570,11 +580,18 @@ public class ObjectIdentifierValue extends MibValue {
      * @return a string representation of this value
      */
     public String toString() {
-        if (parent == null) {
-            return String.valueOf(value);
-        } else {
-            return parent.toString() + "." + String.valueOf(value);
+        StringBuffer  buffer;
+
+        if (cachedNumericValue == null) {
+            buffer = new StringBuffer();
+            if (parent != null) {
+                buffer.append(parent.toString());
+                buffer.append(".");
+            }
+            buffer.append(value);
+            cachedNumericValue = buffer.toString();
         }
+        return cachedNumericValue;
     }
 
     /**
