@@ -24,6 +24,7 @@ package net.percederberg.mibble.value;
 import java.util.ArrayList;
 
 import net.percederberg.mibble.FileLocation;
+import net.percederberg.mibble.Mib;
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibValue;
@@ -217,23 +218,34 @@ public class ObjectIdentifierValue extends MibValue {
      * only be called by the MIB loader.
      */
     protected void clear() {
+        Mib                    mib;
+        ArrayList              copy;
         ObjectIdentifierValue  child;
 
-        super.clear();
-        if (getParent() != null) {
-            getParent().children.remove(this);
-        }
-        parent = null;
+        // Recursively clear all children in same MIB
         if (children != null) {
-            for (int i = 0; i < children.size(); i++) {
-                child = (ObjectIdentifierValue) children.get(i);
-                child.parent = null;
-                child.clear();
+            mib = getMib();
+            copy = (ArrayList) children.clone();
+            for (int i = 0; i < copy.size(); i++) {
+                child = (ObjectIdentifierValue) copy.get(i);
+                if (mib == null || mib == child.getMib()) {
+                    child.clear();
+                }
             }
-            children.clear();
         }
-        children = null;
+
+        // Remove parent reference if all children were cleared 
+        if (getChildCount() <= 0) {
+            if (parent != null) {
+                getParent().children.remove(this);
+                parent = null;
+            }
+            children = null;
+        }
+
+        // Clear other value data
         symbol = null;
+        super.clear();
     }
 
     /**
@@ -334,12 +346,23 @@ public class ObjectIdentifierValue extends MibValue {
     }
 
     /**
+     * Returns the MIB that this object identifer is connected to.
+     * This method simply returns the symbol MIB.
+     *
+     * @return the symbol MIB, or
+     *         null if no symbol has been set
+     */
+    private Mib getMib() {
+        return symbol == null ? null : symbol.getMib();
+    }
+
+    /**
      * Returns the number of child object identifier values.
      *
      * @return the number of child object identifier values
      */
     public int getChildCount() {
-        return children.size();
+        return children == null ? 0 : children.size();
     }
 
     /**
