@@ -468,6 +468,31 @@ public class Mib implements MibContext {
     }
 
     /**
+     * Finds all MIB:s that are dependant on this one. The search
+     * will iterate through all loaded MIB:s and return those that
+     * import this one.
+     *
+     * @return the array of MIB:s importing this one
+     *
+     * @see MibLoader
+     *
+     * @since 2.7
+     */
+    public Mib[] getImportingMibs() {
+        ArrayList  res = new ArrayList();
+        Mib[]      mibs = loader.getAllMibs();
+
+        for (int i = 0; i < mibs.length; i++) {
+            if (mibs[i] != this && mibs[i].getImport(name) != null) {
+                res.add(mibs[i]);
+            }
+        }
+        mibs = new Mib[res.size()];
+        res.toArray(mibs);
+        return mibs;
+    }
+
+    /**
      * Returns all symbols in this MIB.
      *
      * @return a collection of the MIB symbols

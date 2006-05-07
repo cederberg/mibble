@@ -437,9 +437,11 @@ public class MibLoader {
     /**
      * Unloads a MIB. This method will remove the loader reference to
      * a previously loaded MIB if no other MIBs are depending on it.
-     * This method does not free the memory used by the MIB, but only
-     * releases all the loader references (thereby allowing the
-     * garbage collector to recover the memory used by the MIB).
+     * This method attempts to free the memory used by the MIB, as it
+     * clears both the loader and internal MIB references to the data
+     * structures (thereby allowing the garbage collector to recover
+     * the memory used if no other references exist). Other MIB:s
+     * should be unaffected by this operation.
      *
      * @param name           the MIB name
      *
@@ -457,6 +459,7 @@ public class MibLoader {
             mib = (Mib) mibs.get(i);
             if (mib.equals(name)) {
                 unload(mib);
+                return;
             }
         }
     }
@@ -464,9 +467,11 @@ public class MibLoader {
     /**
      * Unloads a MIB. This method will remove the loader reference to
      * a previously loaded MIB if no other MIBs are depending on it.
-     * This method does not free the memory used by the MIB, but only
-     * releases all the loader references (thereby allowing the
-     * garbage collector to recover the memory used by the MIB).
+     * This method attempts to free the memory used by the MIB, as it
+     * clears both the loader and internal MIB references to the data
+     * structures (thereby allowing the garbage collector to recover
+     * the memory used if no other references exist). Other MIB:s
+     * should be unaffected by this operation.
      *
      * @param file           the MIB file
      *
@@ -484,6 +489,7 @@ public class MibLoader {
             mib = (Mib) mibs.get(i);
             if (mib.equals(file)) {
                 unload(mib);
+                return;
             }
         }
     }
@@ -491,9 +497,11 @@ public class MibLoader {
     /**
      * Unloads a MIB. This method will remove the loader reference to
      * a previously loaded MIB if no other MIBs are depending on it.
-     * This method does not free the memory used by the MIB, but only
-     * releases all the loader references (thereby allowing the
-     * garbage collector to recover the memory used by the MIB).
+     * This method attempts to free the memory used by the MIB, as it
+     * clears both the loader and internal MIB references to the data
+     * structures (thereby allowing the garbage collector to recover
+     * the memory used if no other references exist). Other MIB:s
+     * should be unaffected by this operation.
      *
      * @param mib            the MIB
      *
@@ -505,19 +513,17 @@ public class MibLoader {
      * @since 2.3
      */
     public void unload(Mib mib) throws MibLoaderException {
-        Mib     referer;
+        Mib[]   referers;
         String  message;
         int     pos;
 
         pos = mibs.indexOf(mib);
         if (pos >= 0) {
-            for (int i = 0; i < mibs.size(); i++) {
-                referer = (Mib) mibs.get(i);
-                if (referer.getImport(mib.getName()) != null) {
-                    message = "cannot be unloaded due to reference in " +
-                              referer;
-                    throw new MibLoaderException(mib.getFile(), message);
-                }
+            referers = mib.getImportingMibs();
+            if (referers.length > 0) {
+                message = "cannot be unloaded due to reference in " +
+                          referers[0];
+                throw new MibLoaderException(mib.getFile(), message);
             }
             mib = (Mib) mibs.remove(pos);
             mib.clear();
