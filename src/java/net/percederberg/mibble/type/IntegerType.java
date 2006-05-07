@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -39,7 +39,7 @@ import net.percederberg.mibble.value.NumberValue;
  * An integer MIB type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.7
  * @since    2.0
  */
 public class IntegerType extends MibType implements MibContext {
@@ -367,10 +367,26 @@ public class IntegerType extends MibType implements MibContext {
      * @return a string representation of this type
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
+        StringBuffer    buffer = new StringBuffer();
+        Iterator        iter;
+        MibValueSymbol  symbol;
 
         buffer.append(super.toString());
-        if (constraint != null) {
+        if (symbols.size() > 0) {
+            buffer.append(" { ");
+            iter = symbols.values().iterator();
+            while (iter.hasNext()) {
+                symbol = (MibValueSymbol) iter.next();
+                buffer.append(symbol.getName());
+                buffer.append("(");
+                buffer.append(symbol.getValue());
+                buffer.append(")");
+                if (iter.hasNext()) {
+                    buffer.append(", ");
+                }
+            }
+            buffer.append(" }");
+        } else if (constraint != null) {
             buffer.append(" (");
             buffer.append(constraint.toString());
             buffer.append(")");
