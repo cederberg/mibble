@@ -466,7 +466,7 @@ public class ObjectIdentifierValue extends MibValue {
         while (i > 0) {
             value = (ObjectIdentifierValue) children.get(i - 1);
             if (value.getValue() == child.getValue()) {
-                value = merge(log, location, value, child);
+                value = value.merge(log, location, child);
                 children.set(i - 1, value);
                 return value;
             } else if (value.getValue() < child.getValue()) {
@@ -479,17 +479,65 @@ public class ObjectIdentifierValue extends MibValue {
     }
 
     /**
-     * Merges two object identifiers. One of the two objects will be
-     * used as the merge destination, depending on the level of
-     * initialization that both have. The merge can only be made
-     * under certain conditions, for example that no children OID:s
-     * conflict. It is also assumed that the two OID:s have the same
-     * numerical value.
+     * Adds all the children from another object identifier value.
+     * The children are not copied, but actually transfered from the
+     * other value. If this value lacks a name component, it will be
+     * set from other value. This operation thus corresponds to a
+     * merge and thus can only be made under certain conditions. For
+     * example, no child OID:s may have name conflicts. It is assumed
+     * that the other OID has the same numerical value as this one.
      *
      * @param log            the MIB loader log
      * @param location       the file location on error
-     * @param value1         the first OID value
-     * @param value2         the second OID value
+     * @param parent         the OID parent value for the children
+     *
+     * @throws MibException if an irrecoverable conflict between two
+     *             children occurred
+     */
+    private void addChildren(MibLoaderLog log,
+                             FileLocation location,
+                             ObjectIdentifierValue parent)
+        throws MibException {
+
+        ObjectIdentifierValue  child;
+        String                 msg;
+
+        if (name == null) {
+            name = parent.name;
+        } else if (parent.name != null && !parent.name.equals(name)) {
+            msg = "OID component '" + parent.name + "' was previously " +
+                  "defined as '" + name + "'";
+            if (log == null) {
+                throw new MibException(location, msg);
+            } else {
+                log.addWarning(location, msg);
+            }
+        }
+        if (parent.symbol != null) {
+            throw new MibException(location,
+                                   "INTERNAL ERROR: OID merge with " +
+                                   "symbol reference already set");
+        }
+        for (int i = 0; i < parent.children.size(); i++) {
+            child = (ObjectIdentifierValue) parent.children.get(i);
+            child.parent = this;
+            addChild(log, location, child);
+        }
+        parent.children = null;
+    }
+
+    /**
+     * Merges this object identifier value with another one. One of
+     * the two objects will be discarded and the other will be used
+     * as the merge destination and returned. Note that this
+     * operation modifies both this value and the specified value.
+     * The merge can only be made under certain conditions, for
+     * example that no child OID:s have name conflicts. It is also
+     * assumed that the two OID:s have the same numerical value.
+     *
+     * @param log            the MIB loader log
+     * @param location       the file location on error
+     * @param value          the OID value to merge with
      *
      * @return the merged object identifier value
      *
@@ -498,67 +546,16 @@ public class ObjectIdentifierValue extends MibValue {
      */
     private ObjectIdentifierValue merge(MibLoaderLog log,
                                         FileLocation location,
-                                        ObjectIdentifierValue value1,
-                                        ObjectIdentifierValue value2)
+                                        ObjectIdentifierValue value)
         throws MibException {
 
-        if (value1.symbol != null) {
-            return transfer(log, location, value2, value1);
-        } else if (value2.symbol != null || value2.children.size() > 0) {
-            return transfer(log, location, value1, value2);
+        if (symbol != null || (value.symbol == null && children.size() > 0)) {
+            addChildren(log, location, value);
+            return this;
         } else {
-            return transfer(log, location, value2, value1);
+            value.addChildren(log, location, this);
+            return value;
         }
-    }
-    
-    /**
-     * Transfers the contents of one object identifier to another one.
-     * The transfer can only be made under certain conditions, for
-     * example that no children OID:s conflict. It is also assumed
-     * that the two OID:s have the same numerical value.
-     *
-     * @param log            the MIB loader log
-     * @param location       the file location on error
-     * @param src            the source OID value
-     * @param dest           the destination OID value
-     *
-     * @return the destination object identifier value
-     *
-     * @throws MibException if the transfer couldn't be performed due
-     *             to some conflict or invalid state
-     */
-    private ObjectIdentifierValue transfer(MibLoaderLog log,
-                                           FileLocation location,
-                                           ObjectIdentifierValue src,
-                                           ObjectIdentifierValue dest)
-        throws MibException {
-
-        ObjectIdentifierValue  child;
-        String                 msg;
-
-        if (dest.name == null) {
-            dest.name = src.name;
-        } else if (src.name != null && !src.name.equals(dest.name)) {
-            msg = "OID component '" + src.name + "' was previously " +
-                  "defined as '" + dest.name + "'";
-            if (log == null) {
-                throw new MibException(location, msg);
-            } else {
-                log.addWarning(location, msg);
-            }
-        }
-        if (src.symbol != null) {
-            throw new MibException(location,
-                                   "INTERNAL ERROR: OID merge with " +
-                                   "symbol reference already set");
-        }
-        for (int i = 0; i < src.children.size(); i++) {
-            child = (ObjectIdentifierValue) src.children.get(i);
-            child.parent = dest;
-            dest.addChild(log, location, child);
-        }
-        src.children = null;
-        return dest;
     }
 
     /**
