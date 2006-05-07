@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -30,10 +30,15 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * A default MIB context.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.4
+ * @version  2.7
  * @since    2.0
  */
 class DefaultContext implements MibContext {
+
+    /**
+     * The root "iso" symbol name.
+     */
+    public static final String ISO = "iso";
 
     /**
      * The map of default symbols.
@@ -54,14 +59,14 @@ class DefaultContext implements MibContext {
         MibSymbol              symbol;
         ObjectIdentifierValue  oid;
 
-        oid = new ObjectIdentifierValue("iso", 1);
+        oid = new ObjectIdentifierValue(ISO, 1);
         symbol = new MibValueSymbol(new FileLocation(null, -1, -1),
                                     null,
-                                    "iso",
+                                    ISO,
                                     new ObjectIdentifierType(),
                                     oid);
         oid.setSymbol((MibValueSymbol) symbol);
-        symbols.put("iso", symbol);
+        symbols.put(ISO, symbol);
     }
 
     /**

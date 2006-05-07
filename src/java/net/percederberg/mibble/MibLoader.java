@@ -36,6 +36,7 @@ import net.percederberg.grammatica.parser.ParserCreationException;
 import net.percederberg.grammatica.parser.ParserLogException;
 
 import net.percederberg.mibble.asn1.Asn1Parser;
+import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * A MIB loader. This class contains a search path for locating MIB
@@ -235,6 +236,23 @@ public class MibLoader {
      */
     public MibContext getDefaultContext() {
         return context;
+    }
+
+    /**
+     * Returns the root object identifier value (OID). This OID is
+     * the "iso" symbol.
+     *
+     * @return the root object identifier value
+     *
+     * @since 2.7
+     */
+    public ObjectIdentifierValue getRootOid() {
+        MibSymbol symbol;
+        MibValue  value;
+
+        symbol = context.findSymbol(DefaultContext.ISO, false);
+        value = ((MibValueSymbol) symbol).getValue();
+        return (ObjectIdentifierValue) value;
     }
 
     /**
