@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -289,6 +289,7 @@ public abstract class MibType {
      * @see #hasTag(int, int)
      * @see #hasTag(MibTypeTag)
      * @see #getReferenceSymbol()
+     * @see net.percederberg.mibble.snmp.SnmpTextualConvention#findReference(MibType)
      *
      * @since 2.2
      */
@@ -317,6 +318,7 @@ public abstract class MibType {
      * @see #hasTag(int, int)
      * @see #hasTag(MibTypeTag)
      * @see #getReferenceSymbol()
+     * @see net.percederberg.mibble.snmp.SnmpTextualConvention#findReference(MibType)
      *
      * @since 2.2
      */
@@ -409,6 +411,7 @@ public abstract class MibType {
      *         null if this type never referenced another type
      *
      * @see #getTag()
+     * @see net.percederberg.mibble.snmp.SnmpTextualConvention#findReference(MibType)
      *
      * @since 2.2
      */

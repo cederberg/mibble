@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -28,6 +28,7 @@ import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibSymbol;
 import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibTypeSymbol;
 import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.type.Constraint;
 
@@ -38,7 +39,7 @@ import net.percederberg.mibble.type.Constraint;
  * @see <a href="http://www.ietf.org/rfc/rfc2579.txt">RFC 2579 (SNMPv2-TC)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.7
  * @since    2.0
  */
 public class SnmpTextualConvention extends SnmpType implements MibContext {
@@ -62,6 +63,31 @@ public class SnmpTextualConvention extends SnmpType implements MibContext {
      * The type syntax.
      */
     private MibType syntax;
+
+    /**
+     * Finds the first SNMP textual convention reference for a type. If the
+     * type specified is a textual convention, it will be returned directly.
+     *
+     * @param type           the MIB type
+     *
+     * @return the SNMP textual convention reference, or
+     *         null if none was found
+     *
+     * @since 2.7
+     */
+    public static SnmpTextualConvention findReference(MibType type) {
+        MibTypeSymbol  sym;
+
+        if (type instanceof SnmpTextualConvention) {
+            return (SnmpTextualConvention) type;
+        }
+        sym = type.getReferenceSymbol();
+        if (sym == null) {
+            return null;
+        } else {
+            return findReference(sym.getType());
+        }
+    }
 
     /**
      * Creates a new SNMP textual convention.
