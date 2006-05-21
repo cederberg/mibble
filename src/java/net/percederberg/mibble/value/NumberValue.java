@@ -123,13 +123,13 @@ public class NumberValue extends MibValue {
         BigDecimal  num2;
 
         if (value instanceof Integer && num instanceof Integer) {
-            return ((Integer) value).compareTo(num);
+            return ((Integer) value).compareTo((Integer) num);
         } else if (value instanceof Long && num instanceof Long) {
-            return ((Long) value).compareTo(num);
+            return ((Long) value).compareTo((Long) num);
         } else if (value instanceof BigInteger
                 && num instanceof BigInteger) {
 
-            return ((BigInteger) value).compareTo(num);
+            return ((BigInteger) value).compareTo((BigInteger) num);
         } else {
             num1 = new BigDecimal(value.toString());
             num2 = new BigDecimal(num.toString());
