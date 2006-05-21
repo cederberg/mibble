@@ -78,15 +78,14 @@ public class SnmpTextualConvention extends SnmpType implements MibContext {
     public static SnmpTextualConvention findReference(MibType type) {
         MibTypeSymbol  sym;
 
+        if (type instanceof SnmpObjectType) {
+            type = ((SnmpObjectType) type).getSyntax();
+        }
         if (type instanceof SnmpTextualConvention) {
             return (SnmpTextualConvention) type;
         }
         sym = type.getReferenceSymbol();
-        if (sym == null) {
-            return null;
-        } else {
-            return findReference(sym.getType());
-        }
+        return (sym == null) ? null : findReference(sym.getType());
     }
 
     /**
