@@ -692,7 +692,7 @@ public class Asn1Tokenizer extends Tokenizer {
         pattern = new TokenPattern(Asn1Constants.WHITESPACE,
                                    "WHITESPACE",
                                    TokenPattern.REGEXP_TYPE,
-                                   "[ \\t\\n\\r]+");
+                                   "[ \\t\\n\\r\\f\\x0b\\x17\\x18\\x19\\x1a]+");
         pattern.setIgnore();
         addPattern(pattern);
 
