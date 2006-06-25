@@ -590,10 +590,10 @@ public class Mib implements MibContext {
             }
         }
         while (root != null && (parent = root.getParent()) != null) {
-            if (root.getMib().equals(parent.getMib())) {
+            if (!root.getMib().equals(parent.getMib())) {
                 break;
             }
-            root = root.getParent();
+            root = parent;
         }
         return root;
     }
