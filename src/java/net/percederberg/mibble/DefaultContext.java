@@ -30,15 +30,25 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * A default MIB context.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.8
  * @since    2.0
  */
 class DefaultContext implements MibContext {
 
     /**
+     * The root "ccitt" symbol name.
+     */
+    public static final String CCITT = "ccitt";
+
+    /**
      * The root "iso" symbol name.
      */
     public static final String ISO = "iso";
+
+    /**
+     * The root "joint-iso-ccitt" symbol name.
+     */
+    public static final String JOINT_ISO_CCITT = "joint-iso-ccitt";
 
     /**
      * The map of default symbols.
@@ -59,6 +69,17 @@ class DefaultContext implements MibContext {
         MibSymbol              symbol;
         ObjectIdentifierValue  oid;
 
+        // Add the ccitt symbol
+        oid = new ObjectIdentifierValue(CCITT, 0);
+        symbol = new MibValueSymbol(new FileLocation(null, -1, -1),
+                                    null,
+                                    CCITT,
+                                    new ObjectIdentifierType(),
+                                    oid);
+        oid.setSymbol((MibValueSymbol) symbol);
+        symbols.put(CCITT, symbol);
+
+        // Add the iso symbol
         oid = new ObjectIdentifierValue(ISO, 1);
         symbol = new MibValueSymbol(new FileLocation(null, -1, -1),
                                     null,
@@ -67,6 +88,16 @@ class DefaultContext implements MibContext {
                                     oid);
         oid.setSymbol((MibValueSymbol) symbol);
         symbols.put(ISO, symbol);
+
+        // Add the joint-iso-ccitt symbol
+        oid = new ObjectIdentifierValue(JOINT_ISO_CCITT, 2);
+        symbol = new MibValueSymbol(new FileLocation(null, -1, -1),
+                                    null,
+                                    JOINT_ISO_CCITT,
+                                    new ObjectIdentifierType(),
+                                    oid);
+        oid.setSymbol((MibValueSymbol) symbol);
+        symbols.put(JOINT_ISO_CCITT, symbol);
     }
 
     /**
