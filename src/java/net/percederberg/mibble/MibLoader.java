@@ -558,7 +558,7 @@ public class MibLoader {
      * @param name           the MIB name (filename without extension)
      */
     void scheduleLoad(String name) {
-        if (!mibs.contains(name) && !queue.contains(name)) {
+        if (getMib(name) == null && !queue.contains(name)) {
             queue.add(name);
         }
     }
@@ -590,12 +590,12 @@ public class MibLoader {
                 if (obj instanceof MibSource) {
                     loaded = true;
                     src = (MibSource) obj;
-                } else if (!mibs.contains(obj)) {
+                } else if (getMib((String) obj) == null) {
                     src = locate((String) obj);
                 } else {
                     src = null;
                 }
-                if (src != null && !mibs.contains(src.getFile())) {
+                if (src != null && getMib(src.getFile()) == null) {
                     list = src.parseMib(this, log);
                     for (int i = 0; i < list.size(); i++) {
                         ((Mib) list.get(i)).setLoaded(loaded);
