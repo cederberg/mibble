@@ -64,7 +64,7 @@ public class MibbleValidator {
      * @param args           the command-line parameters
      */
     public static void main(String[] args) {
-        MibLoader  loader;
+        MibLoader  loader = new MibLoader();
         Mib        mib;
         File       file;
         URL        url;
@@ -80,6 +80,8 @@ public class MibbleValidator {
         // Parse MIB files
         for (int i = 0; i < args.length; i++) {
             try {
+                loader.reset();
+                loader.removeAllDirs();
                 System.out.print("Reading " + args[i] + "... ");
                 System.out.flush();
                 try {
@@ -87,7 +89,6 @@ public class MibbleValidator {
                 } catch (MalformedURLException e) {
                     url = null;
                 }
-                loader = new MibLoader();
                 if (url == null) {
                     file = new File(args[i]);
                     loader.addDir(file.getParentFile());
