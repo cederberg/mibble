@@ -1668,7 +1668,19 @@ class MibAnalyzer extends Asn1Analyzer {
             number = (NamedNumber) components.get(i);
             if (number.hasNumber()) {
                 value = number.getNumber().intValue();
-                if (parent instanceof ObjectIdentifierValue) {
+                if (parent == null && value == 0) {
+                    parent = new ValueReference(getLocation(node),
+                                                getContext(),
+                                                DefaultContext.CCITT);
+                } else if (parent == null && value == 1) {
+                    parent = new ValueReference(getLocation(node),
+                                                getContext(),
+                                                DefaultContext.ISO);
+                } else if (parent == null && value == 2) {
+                    parent = new ValueReference(getLocation(node),
+                                                getContext(),
+                                                DefaultContext.JOINT_ISO_CCITT);
+                } else if (parent instanceof ObjectIdentifierValue) {
                     try {
                         parent = new ObjectIdentifierValue(
                                         getLocation(node),
