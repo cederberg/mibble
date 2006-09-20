@@ -27,6 +27,8 @@ import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
+import net.percederberg.mibble.MibValueSymbol;
+import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * An SNMP module variation value. This declaration is used inside a
@@ -35,7 +37,7 @@ import net.percederberg.mibble.MibValue;
  * @see SnmpModuleSupport
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.8
  * @since    2.0
  */
 public class SnmpVariation {
@@ -131,6 +133,21 @@ public class SnmpVariation {
         this.requiredCells = list;
         if (defaultValue != null) {
             defaultValue = defaultValue.initialize(log);
+        }
+    }
+
+    /**
+     * Returns the base symbol that this variation applies to.
+     *
+     * @return the base symbol that this variation applies to
+     *
+     * @since 2.8
+     */
+    public MibValueSymbol getBaseSymbol() {
+        if (value instanceof ObjectIdentifierValue) {
+            return ((ObjectIdentifierValue) value).getSymbol();
+        } else {
+            return null;
         }
     }
 

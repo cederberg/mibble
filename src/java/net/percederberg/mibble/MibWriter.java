@@ -64,7 +64,7 @@ import net.percederberg.mibble.value.StringValue;
  * translation).
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.8
  * @since    2.6
  */
 public class MibWriter {
@@ -703,7 +703,7 @@ public class MibWriter {
         if (var.getDefaultValue() != null) {
             os.print("    DEFVAL          ");
             printReference(var.getDefaultValue(),
-                           getSymbols(var.getSyntax()));
+                           getSymbols(var.getBaseSymbol()));
             os.println();
         }
         printDescription(var.getDescription());
@@ -1041,21 +1041,25 @@ public class MibWriter {
     }
 
     /**
-     * Returns all enumeration values for a MIB type. If the type
+     * Returns all enumeration values for a MIB object. If the object
      * didn't have any enumerated values, null will be returned.
      *
-     * @param type           the MIB type
+     * @param obj            the MIB type or type reference
      *
      * @return the MIB enumeration value symbols, or
      *         null if no symbols were set
      */
-    private MibValueSymbol[] getSymbols(MibType type) {
-        if (type instanceof IntegerType) {
-            return ((IntegerType) type).getAllSymbols();
-        } else if (type instanceof BitSetType) {
-            return ((BitSetType) type).getAllSymbols();
-        } else if (type instanceof SnmpTextualConvention) {
-            return getSymbols(((SnmpTextualConvention) type).getSyntax());
+    private MibValueSymbol[] getSymbols(Object obj) {
+        if (obj instanceof IntegerType) {
+            return ((IntegerType) obj).getAllSymbols();
+        } else if (obj instanceof BitSetType) {
+            return ((BitSetType) obj).getAllSymbols();
+        } else if (obj instanceof SnmpTextualConvention) {
+            return getSymbols(((SnmpTextualConvention) obj).getSyntax());
+        } else if (obj instanceof SnmpObjectType) {
+            return getSymbols(((SnmpObjectType) obj).getSyntax());
+        } else if (obj instanceof MibValueSymbol) {
+            return getSymbols(((MibValueSymbol) obj).getType());
         } else {
             return null;
         }
