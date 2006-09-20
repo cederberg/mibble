@@ -2846,10 +2846,12 @@ class MibAnalyzer extends Asn1Analyzer {
     protected void childSnmpVariationPart(Production node, Node child)
         throws ParseException {
 
-        MibType  type;
+        MibType     type;
+        MibContext  context;
 
         if (child.getId() == Asn1Constants.VALUE) {
-            pushContext(baseContext);
+            context = new MibTypeContext(getValue(child, 0));
+            pushContext(new CompoundContext(context, baseContext));
         } else if (child.getId() == Asn1Constants.SNMP_SYNTAX_PART) {
             type = (MibType) getValue(child, 0);
             if (type instanceof MibContext) {
@@ -2858,7 +2860,6 @@ class MibAnalyzer extends Asn1Analyzer {
         }
         node.addChild(child);
     }
-
 
     /**
      * Adds an SNMP variation as a node value.
