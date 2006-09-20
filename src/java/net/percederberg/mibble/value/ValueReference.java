@@ -93,21 +93,13 @@ public class ValueReference extends MibValue {
      *             initialization
      */
     public MibValue initialize(MibLoaderLog log) throws MibException {
-        MibSymbol  ref;
+        MibSymbol  sym;
         MibValue   value;
         String     message;
 
-        ref = context.findSymbol(name, false);
-        if (ref == null) {
-            ref = context.findSymbol(name, true);
-            if (ref != null) {
-                message = "missing import for '" + name + "', using " +
-                          "definition from " + ref.getMib().getName();
-                log.addWarning(location, message);
-            }
-        }
-        if (ref instanceof MibValueSymbol) {
-            value = ((MibValueSymbol) ref).getValue();
+        sym = getSymbol(log);
+        if (sym instanceof MibValueSymbol) {
+            value = ((MibValueSymbol) sym).getValue();
             if (value != null) {
                 value = value.initialize(log);
             }
@@ -120,10 +112,10 @@ public class ValueReference extends MibValue {
                 throw new MibException(location, e.getMessage());
             }
             if (!(value instanceof ObjectIdentifierValue)) {
-                value.setReferenceSymbol((MibValueSymbol) ref);
+                value.setReferenceSymbol((MibValueSymbol) sym);
             }
             return value;
-        } else if (ref == null) {
+        } else if (sym == null) {
             message = "undefined symbol '" + name + "'";
             throw new MibException(location, message);
         } else {
@@ -139,6 +131,38 @@ public class ValueReference extends MibValue {
      */
     public FileLocation getLocation() {
         return location;
+    }
+
+    /**
+     * Returns the referenced symbol.
+     *
+     * @return the referenced symbol
+     */
+    public MibSymbol getSymbol() {
+        return getSymbol(null);
+    }
+
+    /**
+     * Returns the referenced symbol.
+     *
+     * @param log            the optional loader log
+     *
+     * @return the referenced symbol
+     */
+    private MibSymbol getSymbol(MibLoaderLog log) {
+        MibSymbol  sym;
+        String     message;
+
+        sym = context.findSymbol(name, false);
+        if (sym == null) {
+            sym = context.findSymbol(name, true);
+            if (sym != null && log != null) {
+                message = "missing import for '" + name + "', using " +
+                          "definition from " + sym.getMib().getName();
+                log.addWarning(location, message);
+            }
+        }
+        return sym; 
     }
 
     /**
