@@ -16,19 +16,20 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
 
 import net.percederberg.mibble.MibLoaderLog;
+import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
 
 /**
  * A boolean MIB value.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.8
  * @since    2.0
  */
 public class BooleanValue extends MibValue {
@@ -69,10 +70,11 @@ public class BooleanValue extends MibValue {
      * only be called by the MIB loader.
      *
      * @param log            the MIB loader log
+     * @param type           the value type
      *
      * @return the basic MIB value
      */
-    public MibValue initialize(MibLoaderLog log) {
+    public MibValue initialize(MibLoaderLog log, MibType type) {
         return this;
     }
 

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -40,7 +40,7 @@ import net.percederberg.mibble.value.NumberValue;
  * @see <a href="http://www.ietf.org/rfc/rfc1215.txt">RFC 1215 (RFC-1215)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.8
  * @since    2.0
  */
 public class SnmpTrapType extends SnmpType {
@@ -109,9 +109,9 @@ public class SnmpTrapType extends SnmpType {
                                    "only values can have the " +
                                    getName() + " type");
         }
-        enterprise = enterprise.initialize(log);
+        enterprise = enterprise.initialize(log, null);
         for (int i = 0; i < variables.size(); i++) {
-            list.add(((MibValue) variables.get(i)).initialize(log));
+            list.add(((MibValue) variables.get(i)).initialize(log, null));
         }
         variables = list;
         return this;

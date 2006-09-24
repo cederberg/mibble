@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -38,7 +38,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * @see <a href="http://www.ietf.org/rfc/rfc2580.txt">RFC 2580 (SNMPv2-CONF)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.8
  * @since    2.0
  */
 public class SnmpNotificationGroup extends SnmpType {
@@ -108,7 +108,7 @@ public class SnmpNotificationGroup extends SnmpType {
                                    getName() + " type");
         }
         for (int i = 0; i < notifications.size(); i++) {
-            list.add(((MibValue) notifications.get(i)).initialize(log));
+            list.add(((MibValue) notifications.get(i)).initialize(log, null));
         }
         this.notifications = list;
         return this;

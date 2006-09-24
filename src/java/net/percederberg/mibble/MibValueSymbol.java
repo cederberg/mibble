@@ -32,7 +32,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * an object identifier.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.8
  * @since    2.0
  */
 public class MibValueSymbol extends MibSymbol {
@@ -99,7 +99,7 @@ public class MibValueSymbol extends MibSymbol {
         }
         if (value != null) {
             try {
-                value = value.initialize(log);
+                value = value.initialize(log, type);
             } catch (MibException e) {
                 log.addError(e.getLocation(), e.getMessage());
                 value = null;

@@ -27,6 +27,7 @@ import net.percederberg.mibble.FileLocation;
 import net.percederberg.mibble.Mib;
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
+import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.MibValueSymbol;
 
@@ -35,7 +36,7 @@ import net.percederberg.mibble.MibValueSymbol;
  * identifier values in a tree hierarchy.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.8
  * @since    2.0
  */
 public class ObjectIdentifierValue extends MibValue {
@@ -158,13 +159,16 @@ public class ObjectIdentifierValue extends MibValue {
      * only be called by the MIB loader.
      *
      * @param log            the MIB loader log
+     * @param type           the value type
      *
      * @return the basic MIB value
      *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public MibValue initialize(MibLoaderLog log) throws MibException {
+    public MibValue initialize(MibLoaderLog log, MibType type)
+        throws MibException {
+
         ValueReference         ref = null;
         ObjectIdentifierValue  oid;
 
@@ -173,7 +177,7 @@ public class ObjectIdentifierValue extends MibValue {
         } else if (parent instanceof ValueReference) {
             ref = (ValueReference) parent;
         }
-        parent = parent.initialize(log);
+        parent = parent.initialize(log, type);
         if (ref != null) {
             if (parent instanceof ObjectIdentifierValue) {
                 oid = (ObjectIdentifierValue) parent;

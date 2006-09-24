@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -33,7 +33,7 @@ import net.percederberg.mibble.MibValue;
  * @see SnmpModule
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.8
  * @since    2.0
  */
 public class SnmpCompliance {
@@ -108,7 +108,7 @@ public class SnmpCompliance {
     void initialize(MibLoaderLog log)
         throws MibException {
 
-        value = value.initialize(log);
+        value = value.initialize(log, null);
         if (syntax != null) {
             syntax = syntax.initialize(null, log);
         }

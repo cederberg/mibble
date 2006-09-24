@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
@@ -26,6 +26,7 @@ import net.percederberg.mibble.MibContext;
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibSymbol;
+import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.MibValueSymbol;
 
@@ -38,7 +39,7 @@ import net.percederberg.mibble.MibValueSymbol;
  * <strong>NOT</strong> use or reference this class.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.8
  * @since    2.0
  */
 public class ValueReference extends MibValue {
@@ -86,13 +87,16 @@ public class ValueReference extends MibValue {
      * only be called by the MIB loader.
      *
      * @param log            the MIB loader log
+     * @param type           the value type
      *
      * @return the basic MIB value
      *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public MibValue initialize(MibLoaderLog log) throws MibException {
+    public MibValue initialize(MibLoaderLog log, MibType type)
+        throws MibException {
+
         MibSymbol  sym;
         MibValue   value;
         String     message;
@@ -101,7 +105,7 @@ public class ValueReference extends MibValue {
         if (sym instanceof MibValueSymbol) {
             value = ((MibValueSymbol) sym).getValue();
             if (value != null) {
-                value = value.initialize(log);
+                value = value.initialize(log, type);
             }
             if (value == null) {
                 return null;

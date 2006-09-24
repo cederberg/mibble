@@ -26,13 +26,14 @@ import java.util.BitSet;
 
 import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
+import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
 
 /**
  * A bit set MIB value.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.8
  * @since    2.0
  */
 public class BitSetValue extends MibValue {
@@ -79,16 +80,19 @@ public class BitSetValue extends MibValue {
      * only be called by the MIB loader.
      *
      * @param log            the MIB loader log
+     * @param type           the value type
      *
      * @return the basic MIB value
      *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public MibValue initialize(MibLoaderLog log) throws MibException {
+    public MibValue initialize(MibLoaderLog log, MibType type)
+        throws MibException {
+
         if (references != null) {
             for (int i = 0; i < references.size(); i++) {
-                initialize(log, (ValueReference) references.get(i));
+                initialize(log, type, (ValueReference) references.get(i));
             }
             references = null;
         }
@@ -118,15 +122,16 @@ public class BitSetValue extends MibValue {
      * value.
      *
      * @param log            the MIB loader log
+     * @param type           the value type
      * @param ref            the value reference to resolve
      *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    private void initialize(MibLoaderLog log, ValueReference ref)
+    private void initialize(MibLoaderLog log, MibType type, ValueReference ref)
         throws MibException {
 
-        MibValue  value = ref.initialize(log);
+        MibValue  value = ref.initialize(log, type);
 
         if (value instanceof NumberValue) {
             this.value.set(((Number) value.toObject()).intValue());

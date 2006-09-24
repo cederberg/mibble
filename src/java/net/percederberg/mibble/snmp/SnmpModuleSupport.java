@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -34,7 +34,7 @@ import net.percederberg.mibble.MibValue;
  * @see SnmpAgentCapabilities
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.8
  * @since    2.0
  */
 public class SnmpModuleSupport {
@@ -87,7 +87,7 @@ public class SnmpModuleSupport {
         int        i;
 
         for (i = 0; i < groups.size(); i++) {
-            list.add(((MibValue) groups.get(i)).initialize(log));
+            list.add(((MibValue) groups.get(i)).initialize(log, null));
         }
         this.groups = list;
         for (i = 0; i < variations.size(); i++) {

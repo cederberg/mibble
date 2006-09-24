@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -119,8 +119,19 @@ public class SnmpVariation {
      */
     void initialize(MibLoaderLog log) throws MibException {
         ArrayList  list = new ArrayList();
+        MibType    type = null;
 
-        value = value.initialize(log);
+        value = value.initialize(log, null);
+        if (getBaseSymbol() != null) {
+            // TODO: use utility function to retrieve correct base type here
+            type = getBaseSymbol().getType();
+            if (type instanceof SnmpTextualConvention) {
+                type = ((SnmpTextualConvention) type).getSyntax();
+            }
+            if (type instanceof SnmpObjectType) {
+                type = ((SnmpObjectType) type).getSyntax();
+            }
+        }
         if (syntax != null) {
             syntax = syntax.initialize(null, log);
         }
@@ -128,11 +139,11 @@ public class SnmpVariation {
             writeSyntax = writeSyntax.initialize(null, log);
         }
         for (int i = 0; i < requiredCells.size(); i++) {
-            list.add(((MibValue) requiredCells.get(i)).initialize(log));
+            list.add(((MibValue) requiredCells.get(i)).initialize(log, type));
         }
         this.requiredCells = list;
         if (defaultValue != null) {
-            defaultValue = defaultValue.initialize(log);
+            defaultValue = defaultValue.initialize(log, type);
         }
     }
 

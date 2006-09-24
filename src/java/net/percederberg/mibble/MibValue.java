@@ -28,7 +28,7 @@ package net.percederberg.mibble;
  * be used.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.8
  * @since    2.0
  */
 public abstract class MibValue implements Comparable {
@@ -64,13 +64,14 @@ public abstract class MibValue implements Comparable {
      * only be called by the MIB loader.
      *
      * @param log            the MIB loader log
+     * @param type           the value type
      *
      * @return the basic MIB value
      *
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    public abstract MibValue initialize(MibLoaderLog log)
+    public abstract MibValue initialize(MibLoaderLog log, MibType type)
         throws MibException;
 
     /**
