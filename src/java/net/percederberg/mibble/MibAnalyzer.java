@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -86,7 +86,7 @@ import net.percederberg.mibble.value.ValueReference;
  * is encountered.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.8
  * @since    2.0
  */
 class MibAnalyzer extends Asn1Analyzer {
@@ -1064,6 +1064,26 @@ class MibAnalyzer extends Asn1Analyzer {
      * @return the node to add to the parse tree
      */
     protected Node exitNamedNumberList(Production node) {
+        MibValueSymbol  symbol;
+        Node            child;
+        Token           comment;
+        boolean         allowBefore = true;
+
+        for (int i = 0; i < node.getChildCount(); i++) {
+            child = node.getChildAt(i);
+            if (child.getId() == Asn1Constants.NAMED_NUMBER) {
+                symbol = (MibValueSymbol) child.getValue(0);
+                comment = getCommentTokenSameLine(child);
+                if (comment != null) {
+                    allowBefore = false;
+                    symbol.setComment(getCommentsAfter(comment.getPreviousToken()));
+                } else if (allowBefore) {
+                    symbol.setComment(getCommentsBefore(child));
+                } else {
+                    allowBefore = true;
+                }
+            }
+        }
         node.addValue(getChildValues(node));
         return node;
     }
@@ -2975,41 +2995,56 @@ class MibAnalyzer extends Asn1Analyzer {
     }
 
     /**
-     * Returns all the comments before the specified production. If
-     * there are multiple comment lines possibly separated by
-     * whitespace, they will be concatenated into one string.
+     * Returns the first token in a production.
      *
-     * @param node           the production node
+     * @param node           the production or token node
      *
-     * @return the comment string, or
-     *         null if no comments were found
+     * @return the first token in the production
      */
-    private String getCommentsBefore(Production node) {
-        Node  child = node.getChildAt(0);
-
-        if (child instanceof Production) {
-            return getCommentsBefore((Production) child);
-        } else if (child instanceof Token) {
-            return getCommentsBefore((Token) child);
+    private Token getFirstToken(Node node) {
+        if (node instanceof Production) {
+            return getFirstToken(node.getChildAt(0));
+        } else if (node instanceof Token) {
+            return (Token) node;
         } else {
             return null;
         }
     }
 
     /**
-     * Returns all the comments before the specified token. If
+     * Returns the last token in a production.
+     *
+     * @param node           the production or token node
+     *
+     * @return the last token in the production
+     */
+    private Token getLastToken(Node node) {
+        if (node instanceof Production) {
+            return getLastToken(node.getChildAt(node.getChildCount() - 1));
+        } else if (node instanceof Token) {
+            return (Token) node;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns all the comments before the specified node. If
      * there are multiple comment lines possibly separated by
      * whitespace, they will be concatenated into one string.
      *
-     * @param token          the token node
+     * @param node          the production or token node
      *
      * @return the comment string, or
      *         null if no comments were found
      */
-    private String getCommentsBefore(Token token) {
+    private String getCommentsBefore(Node node) {
+        Token   token = getFirstToken(node);
         String  comment = "";
 
-        token = token.getPreviousToken();
+        if (token != null) {
+            token = token.getPreviousToken();
+        }
         while (token != null) {
             if (token.getId() == Asn1Constants.WHITESPACE) {
                 comment = getLineBreaks(token.getImage()) + comment;
@@ -3025,41 +3060,22 @@ class MibAnalyzer extends Asn1Analyzer {
     }
 
     /**
-     * Returns all the comments after the specified production. If
+     * Returns all the comments after the specified node. If
      * there are multiple comment lines possibly separated by
      * whitespace, they will be concatenated into one string.
      *
-     * @param node           the production node
+     * @param node           the production or token node
      *
      * @return the comment string, or
      *         null if no comments were found
      */
-    private String getCommentsAfter(Production node) {
-        Node  child = node.getChildAt(node.getChildCount() - 1);
-
-        if (child instanceof Production) {
-            return getCommentsAfter((Production) child);
-        } else if (child instanceof Token) {
-            return getCommentsAfter((Token) child);
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Returns all the comments after the specified token. If
-     * there are multiple comment lines possibly separated by
-     * whitespace, they will be concatenated into one string.
-     *
-     * @param token          the token node
-     *
-     * @return the comment string, or
-     *         null if no comments were found
-     */
-    private String getCommentsAfter(Token token) {
+    private String getCommentsAfter(Node node) {
+        Token   token = getLastToken(node);
         String  comment = "";
 
-        token = token.getNextToken();
+        if (token != null) {
+            token = token.getNextToken();
+        }
         while (token != null) {
             if (token.getId() == Asn1Constants.WHITESPACE) {
                 comment += getLineBreaks(token.getImage());
@@ -3072,6 +3088,41 @@ class MibAnalyzer extends Asn1Analyzer {
         }
         comment = comment.trim();
         return comment.length() <= 0 ? null : comment;
+    }
+
+    /**
+     * Returns the first comment token on the same line.
+     *
+     * @param node           the production node
+     *
+     * @return the first comment token on the same line
+     */
+    private Token getCommentTokenSameLine(Node node) {
+        Token  last = getLastToken(node);
+        Token  token;
+
+        if (last == null) {
+            return null;
+        }
+        token = last.getNextToken();
+        while (token != null) {
+            switch (token.getId()) {
+            case Asn1Constants.WHITESPACE:
+            case Asn1Constants.COMMA:
+                // Skip to next
+                break;
+            case Asn1Constants.COMMENT:
+                if (last.getEndLine() == token.getStartLine()) {
+                    return token;
+                } else {
+                    return null;
+                }
+            default:
+                return null;
+            }
+            token = token.getNextToken();
+        }
+        return null;
     }
 
     /**

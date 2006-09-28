@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2005-2006 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -136,7 +136,7 @@ public class MibWriter {
         Collection  coll;
         Iterator    iter;
 
-        printComment(mib.getHeaderComment());
+        printComment(mib.getHeaderComment(), "");
         if (mib.getHeaderComment() != null) {
             os.println();
         }
@@ -161,7 +161,7 @@ public class MibWriter {
             printSymbol((MibSymbol) iter.next(), mib.getSmiVersion());
         }
         os.println("END");
-        printComment(mib.getFooterComment());
+        printComment(mib.getFooterComment(), "");
         os.flush();
     }
 
@@ -169,11 +169,12 @@ public class MibWriter {
      * Prints a MIB comment string. This method will prefix each
      * non-blank line in the coment with the ASN.1 comment syntax.
      *
-     * @param str            the string to print
+     * @param comment        the string to print
+     * @param indent         the indentation to use
      */
-    private void printComment(String str) {
-        if (str != null) {
-            printIndent("-- ", str);
+    private void printComment(String comment, String indent) {
+        if (comment != null) {
+            printIndent(indent + "-- ", comment);
             os.println();
         }
     }
@@ -213,7 +214,7 @@ public class MibWriter {
      * @param smiVersion     the SMI version to use
      */
     private void printSymbol(MibSymbol sym, int smiVersion) {
-        printComment(sym.getComment());
+        printComment(sym.getComment(), "");
         if (sym instanceof MibTypeSymbol) {
             os.print(sym.getName());
             os.print(" ::= ");
@@ -776,7 +777,6 @@ public class MibWriter {
             intType = (IntegerType) type;
             if (intType.hasSymbols()) {
                 os.println(" {");
-                os.print(indent + "    ");
                 printEnumeration(intType.getAllSymbols(),
                                  indent + "    ");
                 os.println();
@@ -791,7 +791,6 @@ public class MibWriter {
             bitType = (BitSetType) type;
             if (bitType.hasSymbols()) {
                 os.println(" {");
-                os.print(indent + "    ");
                 printEnumeration(bitType.getAllSymbols(),
                                  indent + "    ");
                 os.println();
@@ -822,8 +821,9 @@ public class MibWriter {
         for (int i = 0; i < symbols.length; i++) {
             if (i > 0) {
                 os.println(",");
-                os.print(indent);
             }
+            printComment(symbols[i].getComment(), indent);
+            os.print(indent);
             os.print(symbols[i].getName());
             os.print("(");
             os.print(symbols[i].getValue());
