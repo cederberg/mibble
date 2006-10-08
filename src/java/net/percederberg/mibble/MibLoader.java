@@ -609,8 +609,8 @@ public class MibLoader {
             queue.remove(0);
         }
 
-        // Initialize all parsed MIB files
-        for (int i = 0; i < processed.size(); i++) {
+        // Initialize all parsed MIB files in reverse order
+        for (int i = processed.size() - 1; i >= 0; i--) {
             try {
                 ((Mib) processed.get(i)).initialize();
             } catch (MibLoaderException e) {
