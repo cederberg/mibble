@@ -46,7 +46,7 @@ public class BinaryNumberValue extends NumberValue {
     /**
      * The minimum number of bits to print.
      */
-    private int minLength = 0;
+    private int minLength = -1;
 
     /**
      * Creates a new binary number value.
@@ -82,6 +82,9 @@ public class BinaryNumberValue extends NumberValue {
             c = ((StringType) type).getConstraint();
         }
         minLength = getByteSize(c) * 8;
+        if (minLength < 0) {
+            minLength = 1;
+        }
         return this;
     }
 
@@ -105,7 +108,7 @@ public class BinaryNumberValue extends NumberValue {
                 return ((Number) value.getValue().toObject()).intValue();
             }
         }
-        return 0;
+        return -1;
     }
 
     /**
@@ -119,6 +122,9 @@ public class BinaryNumberValue extends NumberValue {
 
         buffer.append("'");
         value = toBinaryString();
+        if (value.equals("0")) {
+            value = "";
+        }
         for (int i = value.length(); i < minLength; i++) {
             buffer.append("0");
         }

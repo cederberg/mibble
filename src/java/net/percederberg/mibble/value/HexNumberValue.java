@@ -46,7 +46,7 @@ public class HexNumberValue extends NumberValue {
     /**
      * The minimum number of hexadecimal characters to print.
      */
-    private int minLength = 0;
+    private int minLength = -1;
 
     /**
      * Creates a new hexadecimal number value.
@@ -82,6 +82,9 @@ public class HexNumberValue extends NumberValue {
             c = ((StringType) type).getConstraint();
         }
         minLength = getByteSize(c) * 2;
+        if (minLength < 0) {
+            minLength = 1;
+        }
         return this;
     }
 
@@ -95,7 +98,7 @@ public class HexNumberValue extends NumberValue {
             list = ((CompoundConstraint) c).getConstraintList();
             for (int i = 0; i < list.size(); i++) {
                 size = getByteSize((Constraint) list.get(i));
-                if (size > 0) {
+                if (size >= 0) {
                     return size;
                 }
             }
@@ -105,7 +108,7 @@ public class HexNumberValue extends NumberValue {
                 return ((Number) value.getValue().toObject()).intValue();
             }
         }
-        return 0;
+        return -1;
     }
 
     /**
@@ -119,6 +122,9 @@ public class HexNumberValue extends NumberValue {
 
         buffer.append("'");
         value = toHexString();
+        if (value.equals("0")) {
+            value = "";
+        }
         for (int i = value.length(); i < minLength; i++) {
             buffer.append("0");
         }
