@@ -91,7 +91,11 @@ public class SnmpModuleSupport {
         }
         this.groups = list;
         for (i = 0; i < variations.size(); i++) {
-            ((SnmpVariation) variations.get(i)).initialize(log);
+            try {
+                ((SnmpVariation) variations.get(i)).initialize(log);
+            } catch (MibException e) {
+                log.addError(e.getLocation(), e.getMessage());
+            }
         }
     }
 
