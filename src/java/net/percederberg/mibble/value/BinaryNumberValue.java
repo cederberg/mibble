@@ -33,6 +33,7 @@ import net.percederberg.mibble.type.IntegerType;
 import net.percederberg.mibble.type.SizeConstraint;
 import net.percederberg.mibble.type.StringType;
 import net.percederberg.mibble.type.ValueConstraint;
+import net.percederberg.mibble.type.ValueRangeConstraint;
 
 /**
  * A binary numeric MIB value.
@@ -90,9 +91,9 @@ public class BinaryNumberValue extends NumberValue {
 
     // TODO: this method shold be moved to a utility class or similar
     private int getByteSize(Constraint c) {
-        ArrayList        list;
-        ValueConstraint  value;
-        int              size;
+        ArrayList  list;
+        MibValue   value;
+        int        size;
 
         if (c instanceof CompoundConstraint) {
             list = ((CompoundConstraint) c).getConstraintList();
@@ -103,9 +104,15 @@ public class BinaryNumberValue extends NumberValue {
                 }
             }
         } else if (c instanceof SizeConstraint) {
-            value = (ValueConstraint) ((SizeConstraint) c).getValues().get(0);
-            if (value.getValue().toObject() instanceof Number) {
-                return ((Number) value.getValue().toObject()).intValue();
+            c = (Constraint) ((SizeConstraint) c).getValues().get(0);
+            value = null;
+            if (c instanceof ValueConstraint) {
+                value = ((ValueConstraint) c).getValue();
+            } else if (c instanceof ValueRangeConstraint) {
+                value = ((ValueRangeConstraint) c).getLowerBound();
+            }
+            if (value != null && value.toObject() instanceof Number) {
+                return ((Number) value.toObject()).intValue();
             }
         }
         return -1;
