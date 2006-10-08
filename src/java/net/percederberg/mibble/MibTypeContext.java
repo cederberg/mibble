@@ -22,6 +22,7 @@
 package net.percederberg.mibble;
 
 import net.percederberg.mibble.snmp.SnmpObjectType;
+import net.percederberg.mibble.type.TypeReference;
 import net.percederberg.mibble.value.ValueReference;
 
 /**
@@ -72,16 +73,22 @@ class MibTypeContext implements MibContext {
         if (context instanceof ValueReference) {
             context = ((ValueReference) context).getSymbol();
         }
+        if (context instanceof MibTypeSymbol) {
+            context = ((MibTypeSymbol) context).getType();
+        }
         if (context instanceof MibValueSymbol) {
             context = ((MibValueSymbol) context).getType();
         }
         if (context instanceof SnmpObjectType) {
             context = ((SnmpObjectType) context).getSyntax();
         }
+        if (context instanceof TypeReference) {
+            context = ((TypeReference) context).getSymbol();
+            return findSymbol(name, expanded);
+        }
         if (context instanceof MibContext) {
             ctx = (MibContext) context;
         }
-        // TODO: What if the context is a type reference???
         return (ctx == null) ? null : ctx.findSymbol(name, expanded);
     }
 
