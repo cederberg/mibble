@@ -273,6 +273,10 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Stores any MIB tail comments if available.
+     *
+     * @param node           the node being exited
+     *
+     * @return the node to add to the parse tree
      */
     protected Node exitStart(Production node) {
         if (currentMib != null) {
@@ -1218,6 +1222,12 @@ class MibAnalyzer extends Asn1Analyzer {
                 } else {
                     upper = (MibValue) obj;
                 }
+            }
+            if (strictLower == null) {
+                strictLower = Boolean.FALSE;
+            }
+            if (strictUpper == null) {
+                strictUpper = Boolean.FALSE;
             }
             obj = new ValueRangeConstraint(getLocation(node),
                                            lower,
