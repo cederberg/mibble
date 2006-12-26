@@ -159,9 +159,9 @@ public class MibblePrinter {
     }
 
     /**
-     * Prints the contents of a list of MIBs.
+     * Prints the contents of all MIBs in a MIB loader.
      *
-     * @param mibs           the list of MIBs
+     * @param loader         the MIB loader
      * @param printMode      the print mode to use
      */
     private static void printMibs(MibLoader loader, int printMode) {
