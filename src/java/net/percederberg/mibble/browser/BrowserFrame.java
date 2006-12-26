@@ -502,11 +502,11 @@ public class BrowserFrame extends JFrame {
         private File[] files;
 
         /**
-         * Creates a new background MIB loaded.
+         * Creates a new background MIB loader.
          *
          * @param files          the MIB files to load
          */
-        private Loader(File[] files) {
+        public Loader(File[] files) {
             this.files = files;
         }
 
