@@ -32,6 +32,7 @@ import uk.co.westhawk.snmp.stack.AsnOctets;
 import uk.co.westhawk.snmp.stack.AsnUnsInteger;
 import uk.co.westhawk.snmp.stack.AsnUnsInteger64;
 import uk.co.westhawk.snmp.stack.PduException;
+import uk.co.westhawk.snmp.stack.SnmpConstants;
 import uk.co.westhawk.snmp.stack.SnmpContextBasisFace;
 import uk.co.westhawk.snmp.stack.SnmpContextPool;
 import uk.co.westhawk.snmp.stack.SnmpContextv2cPool;
@@ -384,7 +385,7 @@ public class SnmpManager {
      * @throws SnmpException if the type is unsupported or if the
      *             value didn't match the type
      */
-    public AsnObject createAsnValue(SnmpRequest request)
+    private AsnObject createAsnValue(SnmpRequest request)
         throws SnmpException {
 
         MibType  type = request.getType();
@@ -404,13 +405,16 @@ public class SnmpManager {
             return new AsnOctets(parseInetAddress(value));
         } else if (type.hasTag(MibTypeTag.APPLICATION_CATEGORY, 1)) {
             // Counter
-            return new AsnUnsInteger(parseInteger(value));
+            return new AsnUnsInteger(parseInteger(value),
+                                     SnmpConstants.COUNTER);
         } else if (type.hasTag(MibTypeTag.APPLICATION_CATEGORY, 2)) {
             // Gauge
-            return new AsnUnsInteger(parseInteger(value));
+            return new AsnUnsInteger(parseInteger(value),
+                                     SnmpConstants.GAUGE);
         } else if (type.hasTag(MibTypeTag.APPLICATION_CATEGORY, 3)) {
             // TimeTicks
-            return new AsnUnsInteger(parseInteger(value));
+            return new AsnUnsInteger(parseInteger(value),
+                                     SnmpConstants.TIMETICKS);
         } else if (type.hasTag(MibTypeTag.APPLICATION_CATEGORY, 4)) {
             // Opaque
             return new AsnOctets(value);
