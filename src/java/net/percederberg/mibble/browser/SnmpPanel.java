@@ -1150,6 +1150,9 @@ public class SnmpPanel extends JPanel {
                         response = manager.getNext(request.getOid());
                     } else if (operation.equals("SET")) {
                         response = manager.set(request);
+                    } else {
+                        throw new SnmpException("Unknown operation: " +
+                                                operation);
                     }
                     appendResults(response.getOidsAndValues());
                     if (feedback) {
