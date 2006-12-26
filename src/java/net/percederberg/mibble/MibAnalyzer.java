@@ -2864,9 +2864,8 @@ class MibAnalyzer extends Asn1Analyzer {
     }
 
     /**
-     * Modifies the MIB context stack to make sure all values except
-     * the first one are interpreted in the context of the current
-     * MIB.
+     * Modifies the MIB context stack to make sure all references are
+     * interpreted in the context of the symbol being modified.
      *
      * @param node           the parent node
      * @param child          the child node, or null
@@ -2881,7 +2880,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
         if (child.getId() == Asn1Constants.VALUE) {
             context = new MibTypeContext(getValue(child, 0));
-            pushContext(new CompoundContext(context, baseContext));
+            pushContextExtension(context);
         } else if (child.getId() == Asn1Constants.SNMP_SYNTAX_PART) {
             type = (MibType) getValue(child, 0);
             if (type instanceof MibContext) {
