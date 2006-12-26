@@ -18,7 +18,7 @@
   <xsl:output method="text"
               encoding="ISO-8859-1" />
 
-  <xsl:strip-space elements="doc" />
+  <xsl:strip-space elements="doc head body h1 p list item title text" />
 
 
   <!-- ### DOCUMENT HEADER ### -->
