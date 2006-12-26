@@ -22,18 +22,10 @@
 package net.percederberg.mibble.value;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
-import net.percederberg.mibble.type.CompoundConstraint;
-import net.percederberg.mibble.type.Constraint;
-import net.percederberg.mibble.type.IntegerType;
-import net.percederberg.mibble.type.SizeConstraint;
-import net.percederberg.mibble.type.StringType;
-import net.percederberg.mibble.type.ValueConstraint;
-import net.percederberg.mibble.type.ValueRangeConstraint;
 
 /**
  * A binary numeric MIB value.
@@ -74,48 +66,8 @@ public class BinaryNumberValue extends NumberValue {
      * @return the basic MIB value
      */
     public MibValue initialize(MibLoaderLog log, MibType type) {
-        Constraint  c = null;
-
-        // TODO: this code should be moved to a utility function
-        if (type instanceof IntegerType) {
-            c = ((IntegerType) type).getConstraint();
-        } else if (type instanceof StringType) {
-            c = ((StringType) type).getConstraint();
-        }
-        minLength = getByteSize(c) * 8;
-        if (minLength < 0) {
-            minLength = 1;
-        }
+        minLength = getMinimumLength(type, 8);
         return this;
-    }
-
-    // TODO: this method shold be moved to a utility class or similar
-    private int getByteSize(Constraint c) {
-        ArrayList  list;
-        MibValue   value;
-        int        size;
-
-        if (c instanceof CompoundConstraint) {
-            list = ((CompoundConstraint) c).getConstraintList();
-            for (int i = 0; i < list.size(); i++) {
-                size = getByteSize((Constraint) list.get(i));
-                if (size > 0) {
-                    return size;
-                }
-            }
-        } else if (c instanceof SizeConstraint) {
-            c = (Constraint) ((SizeConstraint) c).getValues().get(0);
-            value = null;
-            if (c instanceof ValueConstraint) {
-                value = ((ValueConstraint) c).getValue();
-            } else if (c instanceof ValueRangeConstraint) {
-                value = ((ValueRangeConstraint) c).getLowerBound();
-            }
-            if (value != null && value.toObject() instanceof Number) {
-                return ((Number) value.toObject()).intValue();
-            }
-        }
-        return -1;
     }
 
     /**

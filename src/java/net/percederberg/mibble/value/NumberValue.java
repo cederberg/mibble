@@ -23,10 +23,18 @@ package net.percederberg.mibble.value;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
+import net.percederberg.mibble.type.CompoundConstraint;
+import net.percederberg.mibble.type.Constraint;
+import net.percederberg.mibble.type.IntegerType;
+import net.percederberg.mibble.type.SizeConstraint;
+import net.percederberg.mibble.type.StringType;
+import net.percederberg.mibble.type.ValueConstraint;
+import net.percederberg.mibble.type.ValueRangeConstraint;
 
 /**
  * A numeric MIB value.
@@ -177,5 +185,66 @@ public class NumberValue extends MibValue {
      */
     public String toString() {
         return value.toString();
+    }
+
+    /**
+     * Returns the minimum number of characters for the ASCII representation
+     * of the number value.
+     *
+     * @param type           the MIB value type
+     * @param byteLength     the length of a printed byte
+     *
+     * @return the minimum number of characters required
+     */
+    protected int getMinimumLength(MibType type, int byteLength) {
+        Constraint  c = null;
+        int         minLength;
+
+        if (type instanceof IntegerType) {
+            c = ((IntegerType) type).getConstraint();
+        } else if (type instanceof StringType) {
+            c = ((StringType) type).getConstraint();
+        }
+        minLength = getByteSize(c) * byteLength;
+        if (minLength < 0) {
+            minLength = 1;
+        }
+        return minLength;
+    }
+
+    /**
+     * Returns the minimum size in bytes required by the specified constraint.
+     *
+     * @param c              the constraint
+     *
+     * @return the minimum number of bytes required, or
+     *         -1 if not possible to determine
+     */
+    private int getByteSize(Constraint c) {
+        ArrayList  list;
+        MibValue   value;
+        int        size;
+
+        if (c instanceof CompoundConstraint) {
+            list = ((CompoundConstraint) c).getConstraintList();
+            for (int i = 0; i < list.size(); i++) {
+                size = getByteSize((Constraint) list.get(i));
+                if (size >= 0) {
+                    return size;
+                }
+            }
+        } else if (c instanceof SizeConstraint) {
+            c = (Constraint) ((SizeConstraint) c).getValues().get(0);
+            value = null;
+            if (c instanceof ValueConstraint) {
+                value = ((ValueConstraint) c).getValue();
+            } else if (c instanceof ValueRangeConstraint) {
+                value = ((ValueRangeConstraint) c).getLowerBound();
+            }
+            if (value != null && value.toObject() instanceof Number) {
+                return ((Number) value.toObject()).intValue();
+            }
+        }
+        return -1;
     }
 }
