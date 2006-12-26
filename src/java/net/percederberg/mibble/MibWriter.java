@@ -52,6 +52,7 @@ import net.percederberg.mibble.type.IntegerType;
 import net.percederberg.mibble.type.SequenceOfType;
 import net.percederberg.mibble.type.SequenceType;
 import net.percederberg.mibble.type.StringType;
+import net.percederberg.mibble.value.BitSetValue;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 import net.percederberg.mibble.value.StringValue;
 
@@ -868,7 +869,9 @@ public class MibWriter {
      * @param values         the enumerated value definitions
      */
     private void printReference(Object obj, MibValueSymbol[] values) {
-        if (values != null) { 
+        if (obj instanceof BitSetValue) {
+            obj = ((BitSetValue) obj).toAsn1String(values);
+        } else if (values != null) { 
             for (int i = 0; i < values.length; i++) {
                 if (values[i].getValue().equals(obj)) {
                     printReference(values[i].getName());

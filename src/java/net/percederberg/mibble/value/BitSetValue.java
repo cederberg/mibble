@@ -28,6 +28,7 @@ import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
+import net.percederberg.mibble.MibValueSymbol;
 
 /**
  * A bit set MIB value.
@@ -231,5 +232,52 @@ public class BitSetValue extends MibValue {
      */
     public String toString() {
         return value.toString();
+    }
+
+    /**
+     * Returns an ASN.1 representation of this value. The string will
+     * contain named references to any values that can be found in the
+     * specified list.
+     *
+     * @param values         the defined symbol values
+     *
+     * @return an ASN.1 representation of this value
+     * 
+     * @since 2.8
+     */
+    public String toAsn1String(MibValueSymbol[] values) {
+        StringBuffer  buffer = new StringBuffer();
+
+        for (int i = 0; i < value.size(); i++) {
+            if (value.get(i)) {
+                if (buffer.length() > 0) {
+                    buffer.append(", ");
+                }
+                buffer.append(toAsn1String(new Integer(i), values));
+            }
+        }
+        if (buffer.length() > 0) {
+            return "{ " + buffer.toString() + " }";
+        } else {
+            return "{}";
+        }
+    }
+
+    /**
+     * Returns an ASN.1 representation of a bit number. The value
+     * name will be returned if found in the specified array.
+     *
+     * @param bit            the bit number
+     * @param values         the defined bit names
+     *
+     * @return the ASN.1 representation of the bit number
+     */
+    private String toAsn1String(Integer bit, MibValueSymbol[] values) {
+        for (int i = 0; i < values.length; i++) {
+            if (values[i].getValue().equals(bit)) {
+                return values[i].getName();
+            }
+        }
+        return bit.toString();
     }
 }
