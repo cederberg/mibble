@@ -1,25 +1,27 @@
--- MIB file created 12-Apr-2002 13:59:54, by
+-- MIB file created 24-Jul-2006 16:14:01, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-LAG-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-LAG-MIB.my"
--- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
     ciscoMgmt
             FROM CISCO-SMI
-    dot3adAggPortIndex
+    dot3adAggPortIndex, dot3adAggIndex
             FROM IEEE8023-LAG-MIB
     ifIndex
             FROM IF-MIB
+    Gauge
+            FROM RFC1155-SMI
     OBJECT-TYPE
             FROM RFC-1212;
 
 ciscoLagMIB OBJECT IDENTIFIER ::= { ciscoMgmt 225 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200201020000Z
+--    200606210000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -33,6 +35,7 @@ ciscoLagMIB OBJECT IDENTIFIER ::= { ciscoMgmt 225 }
 --         Tel: +1 800 553-NETS
 --    
 --      E-mail:  cs-etherchan@cisco.com
+--               cs-lan-switch-snmp@cisco.com
 --  Descr
 --    Cisco Link Aggregation module for managing IEEE Std
 --     802.3ad.
@@ -40,6 +43,21 @@ ciscoLagMIB OBJECT IDENTIFIER ::= { ciscoMgmt 225 }
 --     This MIB provides Link Aggregation information that are
 --     either excluded by IEEE Std 802.3ad (IEEE8023-LAG-MIB)
 --     or specific to Cisco products.
+--  RevDate
+--    200606210000Z
+--  RevDescr
+--    Added clagAggMaxAggregatorsGroup and modified the
+--     description of clagAggPortListPorts.
+--  RevDate
+--    200406110000Z
+--  RevDescr
+--    Added clagAggPortListTable.
+--  RevDate
+--    200212130000Z
+--  RevDescr
+--    Added a new value vlanIpPort(4) in TEXTUAL-CONVENTION
+--     ClagDistributionProtocol.
+--     Added a new object clagAggDistributionMplsProtocol.
 --  RevDate
 --    200201020000Z
 --  RevDescr
@@ -55,6 +73,7 @@ clagMIBObjects  OBJECT IDENTIFIER ::= { ciscoLagMIB 1 }
 clagGlobalConfigObjects OBJECT IDENTIFIER ::= { clagMIBObjects 1 }
 clagAgg         OBJECT IDENTIFIER ::= { clagMIBObjects 2 }
 clagAggPort     OBJECT IDENTIFIER ::= { clagMIBObjects 3 }
+clagAggPortList OBJECT IDENTIFIER ::= { clagMIBObjects 4 }
 clagMIBNotifications OBJECT IDENTIFIER ::= { ciscoLagMIB 2 }
 clagMIBConformance OBJECT IDENTIFIER ::= { ciscoLagMIB 3 }
 clagMIBCompliances OBJECT IDENTIFIER ::= { clagMIBConformance 1 }
@@ -63,21 +82,23 @@ clagMIBGroups   OBJECT IDENTIFIER ::= { clagMIBConformance 2 }
 ClagDistributionProtocol ::= INTEGER {
         ip(1),
         mac(2),
-        port(3)
+        port(3),
+        vlanIpPort(4)
         }
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
 --  Descr
 --    An enumerated type for all the supported load balancing 
---     protocols to distribute traffic across multiple links.  
---     The protocol can be mac, ip and port used on the LACP 
---     interface to distribute outgoing data frames among its 
---     component interfaces.
---    
+--     algorithms used on the LACP interface to distribute 
+--     outgoing data frames among its component interaces, such 
+--     as IP address.  
+--     
 --     ip(1)               IP address
 --     mac(2)              MAC address 
 --     port(3)             port number
+--     vlanIpPort(4)       vlan number, IP address and
+--                     port number
 
 ClagDistributionAddressMode ::= INTEGER {
         source(1),
@@ -98,6 +119,23 @@ ClagDistributionAddressMode ::= INTEGER {
 --     source(1)         Source address.
 --     destination(2)    Destination address.
 --     both(3)           both, Source and Destination.
+
+ClagDistributionMplsProtocol ::= INTEGER {
+        label(1),
+        labelIp(2)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    An enumerated type for all the supported load balancing 
+--     algorithms used on the LACP interface to distribute 
+--     outgoing MPLS (Multi-Protocol Label Switching) data 
+--     frames among its component interfaces, such as 
+--     MPLS label.
+--    
+--     label(1)            MPLS label
+--     labelIp(2)          MPLS label or IP address
 
 ClagAggregationProtocol ::= INTEGER {
         lacp(1),
@@ -146,15 +184,15 @@ clagAggDistributionProtocol OBJECT-TYPE
 --    Rsyntax INTEGER {
 --        ip(1),
 --        mac(2),
---        port(3)
+--        port(3),
+--        vlanIpPort(4)
 --        }
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This object controls the type of protocol (mac, or ip)
-         address or port number used on this LACP interface to
-         distribute outgoing data frames among its component
-         interfaces."
+        "This object controls the load balancing algorithms
+         used on this LACP interface to distribute outgoing data
+         frames among its component interfaces."
     ::= { clagGlobalConfigObjects 1 }
 
 clagAggDistributionAddressMode OBJECT-TYPE
@@ -169,6 +207,32 @@ clagAggDistributionAddressMode OBJECT-TYPE
     DESCRIPTION
         "The load balancing address mode for the device."
     ::= { clagGlobalConfigObjects 2 }
+
+clagAggDistributionMplsProtocol OBJECT-TYPE
+    SYNTAX ClagDistributionMplsProtocol
+--    Rsyntax INTEGER {
+--        label(1),
+--        labelIp(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object controls the load balancing algorithms
+         used on this LACP interface to distribute outgoing MPLS
+         data frames among its component interfaces.
+         
+         This object is only instantiated on platforms which 
+         support aggregation load balancing for MPLS packets."
+    ::= { clagGlobalConfigObjects 3 }
+
+clagAggMaxAggregators OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates the maximum number of aggregators 
+         supported by the device."
+    ::= { clagGlobalConfigObjects 4 }
 
 clagAggProtocolTable OBJECT-TYPE
     SYNTAX SEQUENCE OF ClagAggProtocolEntry
@@ -262,6 +326,55 @@ clagAggPortAdminStatus OBJECT-TYPE
          aggregation port."
     ::= { clagAggPortEntry 1 }
 
+clagAggPortListTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF ClagAggPortListEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table augments the dot3adAggPortListTable and
+         provides the complete list of ports associated with
+         each Aggregator."
+    REFERENCE
+        "IEEE 802.3 Subclause 30.7.1.1.30"
+    ::= { clagAggPortList 1 }
+
+clagAggPortListEntry OBJECT-TYPE
+    SYNTAX ClagAggPortListEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A list of the ports associated with a given Aggregator."
+    INDEX { dot3adAggIndex }
+-- Augments dot3adAggPortListEntry FROM IEEE8023-LAG-MIB
+    ::= { clagAggPortListTable 1 }
+
+ClagAggPortListEntry ::= SEQUENCE {
+    clagAggPortListPorts OCTET STRING
+    }
+
+clagAggPortListPorts OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(2..256))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object contains a list of ports currently associated
+         with this Aggregator in the format of
+         '[number_of_ports][dot1dBasePort1][dot1dBasePort2]...'
+        
+         where
+         [number_of_ports] is of size 2 octet and indicates
+         the number of ports contains in this object. It
+         also indicates the number of dot1dBasePort field
+         following this field. 
+        
+         [dot1dBasePort'n'] is the value of dot1dBasePort of 
+         the 'n' port associated with this Aggregation
+         and has size of 2 octets where n is up to
+         [number_of_ports]."
+    REFERENCE
+        "IEEE 802.3 Subclause 30.7.1.1.30"
+    ::= { clagAggPortListEntry 1 }
+
 clagAggProtocolGroup OBJECT IDENTIFIER ::= { clagMIBGroups 1 }
 -- OBJECT-GROUP
 --  Status
@@ -295,7 +408,105 @@ clagAggDistributionGroup OBJECT IDENTIFIER ::= { clagMIBGroups 3 }
 --  objects
 --    clagAggDistributionProtocol, clagAggDistributionAddressMode
 
+clagAggDistributionMplsGroup OBJECT IDENTIFIER ::= { clagMIBGroups 4 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects that provide the load balancing 
+--     information for an aggregator for MPLS packets.  
+--     These are additional to the IEEE Std 802.3ad MIB.
+--  objects
+--    clagAggDistributionMplsProtocol
+
+clagAggPortListGroup OBJECT IDENTIFIER ::= { clagMIBGroups 5 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of object that provides information about
+--     ports in an aggregation.
+--  objects
+--    clagAggPortListPorts
+
+clagAggMaxAggregatorsGroup OBJECT IDENTIFIER ::= { clagMIBGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of object that provides information about
+--     the maximum number of aggregators supported by the 
+--     device.
+--  objects
+--    clagAggMaxAggregators
+
 clagMIBCompliance OBJECT IDENTIFIER ::= { clagMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities which implement
+--    the Cisco Link Aggregation MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    clagAggProtocolGroup
+--   MandGroup
+--    clagAggPortGroup
+--   ObjVar
+--    clagAggProtocolType
+--   ObjVar
+--    clagAggPortAdminStatus
+--   OptGroup
+--    clagAggDistributionGroup
+
+clagMIBCompliance2 OBJECT IDENTIFIER ::= { clagMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities which implement
+--    the Cisco Link Aggregation MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    clagAggProtocolGroup
+--   MandGroup
+--    clagAggPortGroup
+--   ObjVar
+--    clagAggProtocolType
+--   ObjVar
+--    clagAggPortAdminStatus
+--   OptGroup
+--    clagAggDistributionGroup
+--   OptGroup
+--    clagAggDistributionMplsGroup
+
+clagMIBCompliance3 OBJECT IDENTIFIER ::= { clagMIBCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities which implement
+--    the Cisco Link Aggregation MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    clagAggProtocolGroup
+--   MandGroup
+--    clagAggPortGroup
+--   ObjVar
+--    clagAggProtocolType
+--   ObjVar
+--    clagAggPortAdminStatus
+--   OptGroup
+--    clagAggDistributionGroup
+--   OptGroup
+--    clagAggDistributionMplsGroup
+--   OptGroup
+--    clagAggPortListGroup
+
+clagMIBCompliance4 OBJECT IDENTIFIER ::= { clagMIBCompliances 4 }
 -- MODULE-COMPLIANCE
 --  Status
 --    mandatory
@@ -314,6 +525,12 @@ clagMIBCompliance OBJECT IDENTIFIER ::= { clagMIBCompliances 1 }
 --    clagAggPortAdminStatus
 --   OptGroup
 --    clagAggDistributionGroup
+--   OptGroup
+--    clagAggDistributionMplsGroup
+--   OptGroup
+--    clagAggPortListGroup
+--   OptGroup
+--    clagAggMaxAggregatorsGroup
 
 
 END

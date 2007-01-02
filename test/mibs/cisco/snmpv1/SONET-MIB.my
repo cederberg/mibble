@@ -1,44 +1,77 @@
--- MIB created 5/02/100 19:15:08, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 05-May-2006 13:43:21, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 SONET-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "SONET-MIB.my"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    Integer32
--- transmission
+    transmission
             FROM SNMPv2-SMI-v1
-     transmission
-             FROM RFC1213-MIB
-
-    OBJECT-TYPE
-            FROM RFC-1212
     DisplayString, TruthValue
             FROM SNMPv2-TC-v1
     ifIndex
             FROM IF-MIB
     PerfCurrentCount, PerfIntervalCount
-            FROM PerfHist-TC-MIB;
+            FROM PerfHist-TC-MIB
+    OBJECT-TYPE
+            FROM RFC-1212;
 
 sonetMIB OBJECT IDENTIFIER ::= { transmission 39 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    9810190000Z
+--    200308110000Z
 --  OrgName
 --    IETF AToM MIB Working Group
 --  ContactInfo
---    Kaj Tesink
+--    WG charter:
+--       http://www.ietf.org/html.charters/atommib-charter.html
+--    
+--     Mailing Lists:
+--       General Discussion: atommib@research.telcordia.com
+--       To Subscribe: atommib-request@research.telcordia.com
+--    
+--     Kaj Tesink
 --     Telcordia Technologies
 --     Tel: (732) 758-5254
 --     Fax: (732) 758-2269
 --     E-mail: kaj@research.telcordia.com.
 --  Descr
---    The MIB module to describe
---    SONET/SDH interfaces objects.
+--    The MIB module to describe SONET/SDH interface objects.
+--    
+--     Copyright (C) The Internet Society (2003).  This version
+--     of this MIB module is part of RFC 3592;  see the RFC
+--     itself for full legal notices.
 --  RevDate
---    9810190000Z
+--    200308110000Z
 --  RevDescr
+--    The key changes made to this MIB module
+--    since its publication in RFC 2558
+--    are as follows.
+--    
+--    (1) Corrected typographical error
+--        (bellcore1991(2) in sonetSESthresholdSet)
+--    
+--    (2) Added support for sts192cSTM64(6) and
+--        sts768cSTM256(7) in sonetPathCurrentWidth
+--    
+--    (3) Corrected description of the applicability
+--        of VTs for SDH for improved accuracy
+--    
+--    (4) Added clarification in the SES description that
+--        CV counts should be frozen during SESs
+--    
+--    (5) Corrected typographical errors:
+--        - Line Alarm Indication Signal description of the
+--          Terminology section (20.5 ==> 2.5 seconds)
+--        - In the Terminology section
+--          sonetSESThresholdSet  ==> sonetSESthresholdSet
+--        
+--  RevDate
+--    199810190000Z
+--  RevDescr
+--    The RFC 2558 version of this MIB module.
 --    The key changes made to this MIB module
 --    since its initial publication in RFC 1595
 --    are as follows.
@@ -92,7 +125,7 @@ sonetMIB OBJECT IDENTIFIER ::= { transmission 39 }
 --        interval table.  The purpose of the additional column
 --        is to indicate, for each interval, whether the data
 --        is valid in the sense intended by ANSI T1.231 clause
---        9.1.2.2 [31][35]. The objects in question are:
+--        9.1.2.2 [T1.231a][T1.231b]. The objects in question are:
 --    
 --            sonetSectionIntervalValidData
 --            sonetLineIntervalValidData
@@ -112,9 +145,9 @@ sonetMIB OBJECT IDENTIFIER ::= { transmission 39 }
 --        section have been corrected in order to prevent
 --        MIB compilation errors.
 --  RevDate
---    9401030000Z
+--    199401030000Z
 --  RevDescr
---    The RFC1595 version of this MIB module.
+--    The RFC 1595 version of this MIB module.
 
 sonetObjects    OBJECT IDENTIFIER ::= { sonetMIB 1 }
 sonetObjectsPath OBJECT IDENTIFIER ::= { sonetMIB 2 }
@@ -150,12 +183,12 @@ sonetMediumEntry OBJECT-TYPE
 
 SonetMediumEntry ::= SEQUENCE {
     sonetMediumType INTEGER,
-    sonetMediumTimeElapsed Integer32,
-    sonetMediumValidIntervals Integer32,
+    sonetMediumTimeElapsed INTEGER,
+    sonetMediumValidIntervals INTEGER,
     sonetMediumLineCoding INTEGER,
     sonetMediumLineType INTEGER,
     sonetMediumCircuitIdentifier DisplayString,
-    sonetMediumInvalidIntervals Integer32,
+    sonetMediumInvalidIntervals INTEGER,
     sonetMediumLoopbackConfig OCTET STRING
     }
 
@@ -172,7 +205,7 @@ sonetMediumType OBJECT-TYPE
     ::= { sonetMediumEntry 1 }
 
 sonetMediumTimeElapsed OBJECT-TYPE
-    SYNTAX Integer32(1..900)
+    SYNTAX INTEGER(1..900)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -185,7 +218,7 @@ sonetMediumTimeElapsed OBJECT-TYPE
     ::= { sonetMediumEntry 2 }
 
 sonetMediumValidIntervals OBJECT-TYPE
-    SYNTAX Integer32(0..96)
+    SYNTAX INTEGER(0..96)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -260,7 +293,7 @@ sonetMediumCircuitIdentifier OBJECT-TYPE
     ::= { sonetMediumEntry 6 }
 
 sonetMediumInvalidIntervals OBJECT-TYPE
-    SYNTAX Integer32(0..96)
+    SYNTAX INTEGER(0..96)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -273,7 +306,12 @@ sonetMediumInvalidIntervals OBJECT-TYPE
     ::= { sonetMediumEntry 7 }
 
 sonetMediumLoopbackConfig OBJECT-TYPE
-    SYNTAX OCTET STRING(SIZE(1))
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   sonetNoLoop(0)
+        --   sonetFacilityLoop(1)
+        --   sonetTerminalLoop(2)
+        --   sonetOtherLoop(3)
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -318,19 +356,19 @@ sonetSESthresholdSet OBJECT-TYPE
            None of the following.
         
          bellcore1991(2)
-           Bellcore TR-NWT-000253, 1991 [32], or
-           ANSI T1M1.3/93-005R2, 1993 [22].
+           Bellcore TR-NWT-000253, 1991 [TR253], or
+           ANSI T1M1.3/93-005R2, 1993 [T1M1.3].
            See also Appendix B.
         
          ansi1993(3)
-           ANSI T1.231, 1993 [31], or
-           Bellcore GR-253-CORE, Issue 2, 1995 [34]
+           ANSI T1.231, 1993 [T1.231a], or
+           Bellcore GR-253-CORE, Issue 2, 1995 [GR253]
         
          itu1995(4)
-           ITU Recommendation G.826, 1995 [33]
+           ITU Recommendation G.826, 1995 [G.826]
         
          ansi1997(5)
-           ANSI T1.231, 1997 [35]
+           ANSI T1.231, 1997 [T1.231b]
         
          If a manager changes the value of this
          object then the SES statistics collected
@@ -355,7 +393,7 @@ sonetSectionCurrentEntry OBJECT-TYPE
     ::= { sonetSectionCurrentTable 1 }
 
 SonetSectionCurrentEntry ::= SEQUENCE {
-    sonetSectionCurrentStatus Integer32,
+    sonetSectionCurrentStatus INTEGER,
     sonetSectionCurrentESs PerfCurrentCount,
     sonetSectionCurrentSESs PerfCurrentCount,
     sonetSectionCurrentSEFSs PerfCurrentCount,
@@ -363,7 +401,7 @@ SonetSectionCurrentEntry ::= SEQUENCE {
     }
 
 sonetSectionCurrentStatus OBJECT-TYPE
-    SYNTAX Integer32(1..6)
+    SYNTAX INTEGER(1..6)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -386,7 +424,7 @@ sonetSectionCurrentStatus OBJECT-TYPE
 
 sonetSectionCurrentESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -397,7 +435,7 @@ sonetSectionCurrentESs OBJECT-TYPE
 
 sonetSectionCurrentSESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -409,7 +447,7 @@ sonetSectionCurrentSESs OBJECT-TYPE
 
 sonetSectionCurrentSEFSs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -421,7 +459,7 @@ sonetSectionCurrentSEFSs OBJECT-TYPE
 
 sonetSectionCurrentCVs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -448,7 +486,7 @@ sonetSectionIntervalEntry OBJECT-TYPE
     ::= { sonetSectionIntervalTable 1 }
 
 SonetSectionIntervalEntry ::= SEQUENCE {
-    sonetSectionIntervalNumber Integer32,
+    sonetSectionIntervalNumber INTEGER,
     sonetSectionIntervalESs PerfIntervalCount,
     sonetSectionIntervalSESs PerfIntervalCount,
     sonetSectionIntervalSEFSs PerfIntervalCount,
@@ -457,7 +495,7 @@ SonetSectionIntervalEntry ::= SEQUENCE {
     }
 
 sonetSectionIntervalNumber OBJECT-TYPE
-    SYNTAX Integer32(1..96)
+    SYNTAX INTEGER(1..96)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -473,7 +511,7 @@ sonetSectionIntervalNumber OBJECT-TYPE
 
 sonetSectionIntervalESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -486,7 +524,7 @@ sonetSectionIntervalESs OBJECT-TYPE
 
 sonetSectionIntervalSESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -499,7 +537,7 @@ sonetSectionIntervalSESs OBJECT-TYPE
 
 sonetSectionIntervalSEFSs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -512,7 +550,7 @@ sonetSectionIntervalSEFSs OBJECT-TYPE
 
 sonetSectionIntervalCVs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -553,7 +591,7 @@ sonetLineCurrentEntry OBJECT-TYPE
     ::= { sonetLineCurrentTable 1 }
 
 SonetLineCurrentEntry ::= SEQUENCE {
-    sonetLineCurrentStatus Integer32,
+    sonetLineCurrentStatus INTEGER,
     sonetLineCurrentESs PerfCurrentCount,
     sonetLineCurrentSESs PerfCurrentCount,
     sonetLineCurrentCVs PerfCurrentCount,
@@ -561,7 +599,7 @@ SonetLineCurrentEntry ::= SEQUENCE {
     }
 
 sonetLineCurrentStatus OBJECT-TYPE
-    SYNTAX Integer32(1..6)
+    SYNTAX INTEGER(1..6)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -584,7 +622,7 @@ sonetLineCurrentStatus OBJECT-TYPE
 
 sonetLineCurrentESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -595,19 +633,20 @@ sonetLineCurrentESs OBJECT-TYPE
 
 sonetLineCurrentSESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "The counter associated with the number of
         Severely Errored Seconds
         encountered by a SONET/SDH Line in the current 15
-        minute interval."
+        minute
+        interval."
     ::= { sonetLineCurrentEntry 3 }
 
 sonetLineCurrentCVs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -618,7 +657,7 @@ sonetLineCurrentCVs OBJECT-TYPE
 
 sonetLineCurrentUASs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -647,7 +686,7 @@ sonetLineIntervalEntry OBJECT-TYPE
     ::= { sonetLineIntervalTable 1 }
 
 SonetLineIntervalEntry ::= SEQUENCE {
-    sonetLineIntervalNumber Integer32,
+    sonetLineIntervalNumber INTEGER,
     sonetLineIntervalESs PerfIntervalCount,
     sonetLineIntervalSESs PerfIntervalCount,
     sonetLineIntervalCVs PerfIntervalCount,
@@ -656,7 +695,7 @@ SonetLineIntervalEntry ::= SEQUENCE {
     }
 
 sonetLineIntervalNumber OBJECT-TYPE
-    SYNTAX Integer32(1..96)
+    SYNTAX INTEGER(1..96)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -672,7 +711,7 @@ sonetLineIntervalNumber OBJECT-TYPE
 
 sonetLineIntervalESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -685,7 +724,7 @@ sonetLineIntervalESs OBJECT-TYPE
 
 sonetLineIntervalSESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -698,7 +737,7 @@ sonetLineIntervalSESs OBJECT-TYPE
 
 sonetLineIntervalCVs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -711,7 +750,7 @@ sonetLineIntervalCVs OBJECT-TYPE
 
 sonetLineIntervalUASs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -761,7 +800,7 @@ SonetFarEndLineCurrentEntry ::= SEQUENCE {
 
 sonetFarEndLineCurrentESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -772,7 +811,7 @@ sonetFarEndLineCurrentESs OBJECT-TYPE
 
 sonetFarEndLineCurrentSESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -785,7 +824,7 @@ sonetFarEndLineCurrentSESs OBJECT-TYPE
 
 sonetFarEndLineCurrentCVs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -799,7 +838,7 @@ sonetFarEndLineCurrentCVs OBJECT-TYPE
 
 sonetFarEndLineCurrentUASs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -829,7 +868,7 @@ sonetFarEndLineIntervalEntry OBJECT-TYPE
     ::= { sonetFarEndLineIntervalTable 1 }
 
 SonetFarEndLineIntervalEntry ::= SEQUENCE {
-    sonetFarEndLineIntervalNumber Integer32,
+    sonetFarEndLineIntervalNumber INTEGER,
     sonetFarEndLineIntervalESs PerfIntervalCount,
     sonetFarEndLineIntervalSESs PerfIntervalCount,
     sonetFarEndLineIntervalCVs PerfIntervalCount,
@@ -838,7 +877,7 @@ SonetFarEndLineIntervalEntry ::= SEQUENCE {
     }
 
 sonetFarEndLineIntervalNumber OBJECT-TYPE
-    SYNTAX Integer32(1..96)
+    SYNTAX INTEGER(1..96)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -848,12 +887,13 @@ sonetFarEndLineIntervalNumber OBJECT-TYPE
         completed 15 minute interval,
         and the interval identified
         by N is the interval immediately preceding the
-        one identified by N-1."
+        one identified
+        by N-1."
     ::= { sonetFarEndLineIntervalEntry 1 }
 
 sonetFarEndLineIntervalESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -866,7 +906,7 @@ sonetFarEndLineIntervalESs OBJECT-TYPE
 
 sonetFarEndLineIntervalSESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -879,7 +919,7 @@ sonetFarEndLineIntervalSESs OBJECT-TYPE
 
 sonetFarEndLineIntervalCVs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -894,7 +934,7 @@ sonetFarEndLineIntervalCVs OBJECT-TYPE
 
 sonetFarEndLineIntervalUASs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -938,7 +978,7 @@ sonetPathCurrentEntry OBJECT-TYPE
 
 SonetPathCurrentEntry ::= SEQUENCE {
     sonetPathCurrentWidth INTEGER,
-    sonetPathCurrentStatus Integer32,
+    sonetPathCurrentStatus INTEGER,
     sonetPathCurrentESs PerfCurrentCount,
     sonetPathCurrentSESs PerfCurrentCount,
     sonetPathCurrentCVs PerfCurrentCount,
@@ -951,20 +991,22 @@ sonetPathCurrentWidth OBJECT-TYPE
         sts3cSTM1(2),
         sts12cSTM4(3),
         sts24c(4),
-        sts48cSTM16(5)
+        sts48cSTM16(5),
+        sts192cSTM64(6),
+        sts768cSTM256(7)
         }
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
         "A value that indicates the type of the SONET/SDH
         Path.  For SONET, the assigned types are
-        the STS-Nc SPEs, where N = 1, 3, 12, 24, and 48.
+        the STS-Nc SPEs, where N = 1, 3, 12, 24, 48, 192 and 768.
         STS-1 is equal to 51.84 Mbps.  For SDH, the assigned
-        types are the STM-Nc VCs, where N = 1, 4, and 16."
+        types are the STM-Nc VCs, where N = 1, 4, 16, 64 and 256."
     ::= { sonetPathCurrentEntry 1 }
 
 sonetPathCurrentStatus OBJECT-TYPE
-    SYNTAX Integer32(1..62)
+    SYNTAX INTEGER(1..62)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -990,7 +1032,7 @@ sonetPathCurrentStatus OBJECT-TYPE
 
 sonetPathCurrentESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1001,7 +1043,7 @@ sonetPathCurrentESs OBJECT-TYPE
 
 sonetPathCurrentSESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1014,7 +1056,7 @@ sonetPathCurrentSESs OBJECT-TYPE
 
 sonetPathCurrentCVs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1025,7 +1067,7 @@ sonetPathCurrentCVs OBJECT-TYPE
 
 sonetPathCurrentUASs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1053,7 +1095,7 @@ sonetPathIntervalEntry OBJECT-TYPE
     ::= { sonetPathIntervalTable 1 }
 
 SonetPathIntervalEntry ::= SEQUENCE {
-    sonetPathIntervalNumber Integer32,
+    sonetPathIntervalNumber INTEGER,
     sonetPathIntervalESs PerfIntervalCount,
     sonetPathIntervalSESs PerfIntervalCount,
     sonetPathIntervalCVs PerfIntervalCount,
@@ -1062,7 +1104,7 @@ SonetPathIntervalEntry ::= SEQUENCE {
     }
 
 sonetPathIntervalNumber OBJECT-TYPE
-    SYNTAX Integer32(1..96)
+    SYNTAX INTEGER(1..96)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -1078,7 +1120,7 @@ sonetPathIntervalNumber OBJECT-TYPE
 
 sonetPathIntervalESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1091,7 +1133,7 @@ sonetPathIntervalESs OBJECT-TYPE
 
 sonetPathIntervalSESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1104,7 +1146,7 @@ sonetPathIntervalSESs OBJECT-TYPE
 
 sonetPathIntervalCVs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1116,7 +1158,7 @@ sonetPathIntervalCVs OBJECT-TYPE
 
 sonetPathIntervalUASs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1166,7 +1208,7 @@ SonetFarEndPathCurrentEntry ::= SEQUENCE {
 
 sonetFarEndPathCurrentESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1177,7 +1219,7 @@ sonetFarEndPathCurrentESs OBJECT-TYPE
 
 sonetFarEndPathCurrentSESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1190,7 +1232,7 @@ sonetFarEndPathCurrentSESs OBJECT-TYPE
 
 sonetFarEndPathCurrentCVs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1204,7 +1246,7 @@ sonetFarEndPathCurrentCVs OBJECT-TYPE
 
 sonetFarEndPathCurrentUASs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1234,7 +1276,7 @@ sonetFarEndPathIntervalEntry OBJECT-TYPE
     ::= { sonetFarEndPathIntervalTable 1 }
 
 SonetFarEndPathIntervalEntry ::= SEQUENCE {
-    sonetFarEndPathIntervalNumber Integer32,
+    sonetFarEndPathIntervalNumber INTEGER,
     sonetFarEndPathIntervalESs PerfIntervalCount,
     sonetFarEndPathIntervalSESs PerfIntervalCount,
     sonetFarEndPathIntervalCVs PerfIntervalCount,
@@ -1243,7 +1285,7 @@ SonetFarEndPathIntervalEntry ::= SEQUENCE {
     }
 
 sonetFarEndPathIntervalNumber OBJECT-TYPE
-    SYNTAX Integer32(1..96)
+    SYNTAX INTEGER(1..96)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -1259,7 +1301,7 @@ sonetFarEndPathIntervalNumber OBJECT-TYPE
 
 sonetFarEndPathIntervalESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1272,7 +1314,7 @@ sonetFarEndPathIntervalESs OBJECT-TYPE
 
 sonetFarEndPathIntervalSESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1285,7 +1327,7 @@ sonetFarEndPathIntervalSESs OBJECT-TYPE
 
 sonetFarEndPathIntervalCVs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1300,7 +1342,7 @@ sonetFarEndPathIntervalCVs OBJECT-TYPE
 
 sonetFarEndPathIntervalUASs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1344,7 +1386,7 @@ sonetVTCurrentEntry OBJECT-TYPE
 
 SonetVTCurrentEntry ::= SEQUENCE {
     sonetVTCurrentWidth INTEGER,
-    sonetVTCurrentStatus Integer32,
+    sonetVTCurrentStatus INTEGER,
     sonetVTCurrentESs PerfCurrentCount,
     sonetVTCurrentSESs PerfCurrentCount,
     sonetVTCurrentCVs PerfCurrentCount,
@@ -1368,7 +1410,7 @@ sonetVTCurrentWidth OBJECT-TYPE
     ::= { sonetVTCurrentEntry 1 }
 
 sonetVTCurrentStatus OBJECT-TYPE
-    SYNTAX Integer32(1..126)
+    SYNTAX INTEGER(1..126)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1396,7 +1438,7 @@ sonetVTCurrentStatus OBJECT-TYPE
 
 sonetVTCurrentESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1407,7 +1449,7 @@ sonetVTCurrentESs OBJECT-TYPE
 
 sonetVTCurrentSESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1419,7 +1461,7 @@ sonetVTCurrentSESs OBJECT-TYPE
 
 sonetVTCurrentCVs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1430,7 +1472,7 @@ sonetVTCurrentCVs OBJECT-TYPE
 
 sonetVTCurrentUASs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1458,7 +1500,7 @@ sonetVTIntervalEntry OBJECT-TYPE
     ::= { sonetVTIntervalTable 1 }
 
 SonetVTIntervalEntry ::= SEQUENCE {
-    sonetVTIntervalNumber Integer32,
+    sonetVTIntervalNumber INTEGER,
     sonetVTIntervalESs PerfIntervalCount,
     sonetVTIntervalSESs PerfIntervalCount,
     sonetVTIntervalCVs PerfIntervalCount,
@@ -1467,7 +1509,7 @@ SonetVTIntervalEntry ::= SEQUENCE {
     }
 
 sonetVTIntervalNumber OBJECT-TYPE
-    SYNTAX Integer32(1..96)
+    SYNTAX INTEGER(1..96)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -1483,7 +1525,7 @@ sonetVTIntervalNumber OBJECT-TYPE
 
 sonetVTIntervalESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1495,7 +1537,7 @@ sonetVTIntervalESs OBJECT-TYPE
 
 sonetVTIntervalSESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1508,7 +1550,7 @@ sonetVTIntervalSESs OBJECT-TYPE
 
 sonetVTIntervalCVs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1520,7 +1562,7 @@ sonetVTIntervalCVs OBJECT-TYPE
 
 sonetVTIntervalUASs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1569,7 +1611,7 @@ SonetFarEndVTCurrentEntry ::= SEQUENCE {
 
 sonetFarEndVTCurrentESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1580,7 +1622,7 @@ sonetFarEndVTCurrentESs OBJECT-TYPE
 
 sonetFarEndVTCurrentSESs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1593,7 +1635,7 @@ sonetFarEndVTCurrentSESs OBJECT-TYPE
 
 sonetFarEndVTCurrentCVs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1607,7 +1649,7 @@ sonetFarEndVTCurrentCVs OBJECT-TYPE
 
 sonetFarEndVTCurrentUASs OBJECT-TYPE
     SYNTAX PerfCurrentCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1637,7 +1679,7 @@ sonetFarEndVTIntervalEntry OBJECT-TYPE
     ::= { sonetFarEndVTIntervalTable 1 }
 
 SonetFarEndVTIntervalEntry ::= SEQUENCE {
-    sonetFarEndVTIntervalNumber Integer32,
+    sonetFarEndVTIntervalNumber INTEGER,
     sonetFarEndVTIntervalESs PerfIntervalCount,
     sonetFarEndVTIntervalSESs PerfIntervalCount,
     sonetFarEndVTIntervalCVs PerfIntervalCount,
@@ -1646,7 +1688,7 @@ SonetFarEndVTIntervalEntry ::= SEQUENCE {
     }
 
 sonetFarEndVTIntervalNumber OBJECT-TYPE
-    SYNTAX Integer32(1..96)
+    SYNTAX INTEGER(1..96)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -1662,7 +1704,7 @@ sonetFarEndVTIntervalNumber OBJECT-TYPE
 
 sonetFarEndVTIntervalESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1675,7 +1717,7 @@ sonetFarEndVTIntervalESs OBJECT-TYPE
 
 sonetFarEndVTIntervalSESs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1688,7 +1730,7 @@ sonetFarEndVTIntervalSESs OBJECT-TYPE
 
 sonetFarEndVTIntervalCVs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1703,7 +1745,7 @@ sonetFarEndVTIntervalCVs OBJECT-TYPE
 
 sonetFarEndVTIntervalUASs OBJECT-TYPE
     SYNTAX PerfIntervalCount
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION

@@ -1,51 +1,87 @@
--- MIB created 1/08/101 14:56:50, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 06-Jan-2006 15:51:05, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-WIRELESS-P2MP-LINK-METRICS-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-WIRELESS-P2MP-LINK-METRICS-MIB.my"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    Counter32, Integer32, Gauge32
-            FROM SNMPv2-SMI-v1
-    OBJECT-TYPE
-            FROM RFC-1212
-    TRAP-TYPE
-            FROM RFC-1215
     TimeInterval, MacAddress
             FROM SNMPv2-TC-v1
     ifIndex
             FROM IF-MIB
-    CwrCwErrorFreeSecond, WirelessGauge64, CwrCwErroredSecond, 
+--    CwrCwErrorFreeSecond, WirelessGauge64, CwrCwErroredSecond, 
+    CwrCwErrorFreeSecond, CwrCwErroredSecond, 
     CwrCwSeverelyErroredSecond, CwrCwConsecutiveSevErrSecond, 
     CwrCwDegradedSecond, CwrFixedPointScale, CwrFixedPointPrecision, 
     CwrFixedPointValue, CwrPercentageValue, CwrUpdateTime
             FROM CISCO-WIRELESS-TC-MIB
     ciscoMgmt
             FROM CISCO-SMI
-    Unsigned32
-            FROM CISCO-TC;
+    Counter, Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
+
+WirelessGauge64 ::= Counter
 
 ciscoWirelessLinkMetricsMIB OBJECT IDENTIFIER ::= { ciscoMgmt 181 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200002141910Z
+--    200601041003Z
 --  OrgName
 --    Cisco Systems Inc.
 --  ContactInfo
---     Cisco Systems
+--    Cisco Systems
 --    Customer Service
 --    
 --    Postal: 170 W Tasman Drive
---     San Jose, CA  95134
---     USA
+--       San Jose, CA  95134
+--       USA
 --    
---     Tel: +1 800 553-NETS
---            E-mail: firestorm-sw@cisco.com
+--       Tel: +1 800 553-NETS
+--       E-mail: firestorm-sw@cisco.com
 --  Descr
---    This is the MIB Module for the Cisco Wireless Radio 
---            Point to MultiPoint interface link metrics
---            specification.
+--    This is the MIB Module for the Cisco Wireless Radio
+--    Point to MultiPoint interface link metrics
+--    specification.
+--    
+--    Glossary
+--    
+--    The following terms are used in the MIB definitions below.
+--    
+--    Radio Interface:  The interface that provides wireless communication
+--              features.
+--    Radio Link:       The bi-directional wireless link between two
+--              communicating wireless radios.
+--    Radio PHY:        Represents the transmission characteristics of the
+--              Radio link.
+--    
+--    Link Admin Up:    This is the system time when the link is configured
+--              to be 'administratively up'. The user can configure
+--              the link to be up either by executing a 'no shut'
+--              command via the CLI or by setting the ifAdminStatus
+--              object in the IF-MIB to 'up(1)' via SNMP.
+--    
+--    Cisco Wireless MIB Organization
+--    
+--    The Cisco Wireless Point to Multipoint Radio Link Metrics MIB is
+--    divided into 2 main groups.
+--    
+--    Head End:        These objects are supported on the Head End only.
+--    Subscriber Unit: These objects are supported on the Subscriber
+--             unit only.
+--  RevDate
+--    200601041003Z
+--  RevDescr
+--    Imported Unsigned32 from SNMPv2-SMI.
+--  RevDate
+--    200002141910Z
+--  RevDescr
+--    The initial version of this MIB module.
 
 p2mpLinkMetricsGroup OBJECT IDENTIFIER ::= { ciscoWirelessLinkMetricsMIB 1 }
 p2mpSuLinkMetricsGroup OBJECT IDENTIFIER ::= { ciscoWirelessLinkMetricsMIB 2 }
@@ -61,7 +97,7 @@ p2mpMetricsPrecisionTable OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "This table contains the precision and scale values to 
+        "This table contains the precision and scale values to
         be used when interpreting fixed point values in this
         MIB.  This information is encapsulated in a table to
         accomodate for multiple cards in the same system having
@@ -78,7 +114,7 @@ p2mpMetricsPrecisionEntry OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "This represents one entry in the 
+        "This represents one entry in the
         p2mpMetricsPrecisionTable. This table is indexed by 
         the ifIndex of propDocsWirelessMaclayer."
     INDEX { ifIndex }
@@ -113,17 +149,17 @@ p2mpLinkMetricsScale OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the exponent to apply to the 
-         fixed-point values."
+        "This variable indicates the exponent to apply to the
+        fixed-point values."
     ::= { p2mpMetricsPrecisionEntry 1 }
 
 p2mpLinkMetricsPrecision OBJECT-TYPE
     SYNTAX CwrFixedPointPrecision
---    Rsyntax Integer32(0..9)
+--    Rsyntax INTEGER(0..9)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the number of decimal places 
+        "This variable indicates the number of decimal places
         used for precision when interpreting the fixed-point 
         values."
     ::= { p2mpMetricsPrecisionEntry 2 }
@@ -133,7 +169,7 @@ p2mpSuLinkMetricsThreshTable OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "This table contains threshold values that are the 
+        "This table contains threshold values that are the
         trigger points for controlling the collection of the
         Link Metrics such as Codeword Errored Seconds and 
         others."
@@ -144,7 +180,7 @@ p2mpSuLinkMetricsThreshEntry OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "This represents one entry in the table.  There exists 
+        "This represents one entry in the table.  There exists
         one such entry for every interface in the ifTable which 
         has an ifType of propDocsWirelessDownstream.
         
@@ -154,19 +190,18 @@ p2mpSuLinkMetricsThreshEntry OBJECT-TYPE
     ::= { p2mpSuLinkMetricsThreshTable 1 }
 
 P2mpSuLinkMetricsThreshEntry ::= SEQUENCE {
-    p2mpSuLinkESThresh Unsigned32,
+    p2mpSuLinkESThresh Gauge,
     p2mpSuLinkDSThresh CwrPercentageValue,
     p2mpSuLinkSESThresh CwrPercentageValue,
-    p2mpSuLinkCSESThresh Unsigned32,
-    p2mpSuLink1HrESAlarmThresh Unsigned32,
-    p2mpSuLink1HrSESAlarmThresh Unsigned32,
-    p2mpSuLink1HrCSESAlarmThresh Unsigned32,
-    p2mpSuLink1HrDCSAlarmThresh Unsigned32
+    p2mpSuLinkCSESThresh Gauge,
+    p2mpSuLink1HrESAlarmThresh Gauge,
+    p2mpSuLink1HrSESAlarmThresh Gauge,
+    p2mpSuLink1HrCSESAlarmThresh Gauge,
+    p2mpSuLink1HrDCSAlarmThresh Gauge
     }
 
 p2mpSuLinkESThresh OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -177,36 +212,35 @@ p2mpSuLinkESThresh OBJECT-TYPE
 
 p2mpSuLinkDSThresh OBJECT-TYPE
     SYNTAX CwrPercentageValue
---    Rsyntax Gauge32(0..10000000)
+--    Rsyntax Gauge(0..10000000)
 --  Units
 --    0.00001 percent
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
         "When the percentage of codeword errors detected to the
-              total codewords received in one second is equal to or
-              greater than this value, and less than 
-              p2mpLinkSESThresh, the second is counted as a Codeword 
-              Degraded Second."
+        total codewords received in one second is equal to or
+        greater than this value, and less than 
+        p2mpLinkSESThresh, the second is counted as a Codeword 
+        Degraded Second."
     ::= { p2mpSuLinkMetricsThreshEntry 2 }
 
 p2mpSuLinkSESThresh OBJECT-TYPE
     SYNTAX CwrPercentageValue
---    Rsyntax Gauge32(0..10000000)
+--    Rsyntax Gauge(0..10000000)
 --  Units
 --    0.00001 percent
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "When the percentage of codeword errors detected to 
-                the total codewords received in one second equals or
-                exceeds this value, that second is counted as a 
-                Severely Errored Second."
+        "When the percentage of codeword errors detected to
+        the total codewords received in one second equals or
+        exceeds this value, that second is counted as a 
+        Severely Errored Second."
     ::= { p2mpSuLinkMetricsThreshEntry 3 }
 
 p2mpSuLinkCSESThresh OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -217,12 +251,11 @@ p2mpSuLinkCSESThresh OBJECT-TYPE
     ::= { p2mpSuLinkMetricsThreshEntry 4 }
 
 p2mpSuLink1HrESAlarmThresh OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This object specifies the one hour Codeword Error 
+        "This object specifies the one hour Codeword Error
         Second threshold. When the number of Codeword Error 
         Seconds in a 1 Operational Hour period exceeds this 
         value, the p2mpSuErrSecAlarmTrap trap will be generated.
@@ -231,13 +264,12 @@ p2mpSuLink1HrESAlarmThresh OBJECT-TYPE
     ::= { p2mpSuLinkMetricsThreshEntry 5 }
 
 p2mpSuLink1HrSESAlarmThresh OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This object specifies the one hour Codeword Severely 
-        Errored Seconds threshold. When the number of Codeword 
+        "This object specifies the one hour Codeword Severely
+        Errored Seconds        threshold. When the number of Codeword 
         Severely Errored Seconds in a 1 Operational Hour period
         exceeds this value, the p2mpSuSevErrSecAlarmTrap trap 
         will be generated. Time measurement starts after the 
@@ -245,27 +277,25 @@ p2mpSuLink1HrSESAlarmThresh OBJECT-TYPE
     ::= { p2mpSuLinkMetricsThreshEntry 6 }
 
 p2mpSuLink1HrCSESAlarmThresh OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This object specifies the one hour Codeword 
+        "This object specifies the one hour Codeword
         Consecutively Severely Errored Seconds threshold. When 
         the number of Codeword Severely Errored Seconds in a 1 
         Operational Hour period exceeds this value, the 
         p2mpSuConsecSevErrSecAlarmTrap trap will be generated.  
-        Time measurement starts after the first operational 
+        Time measurement starts        after the first operational 
         second."
     ::= { p2mpSuLinkMetricsThreshEntry 7 }
 
 p2mpSuLink1HrDCSAlarmThresh OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This object specifies the one hour Degraded Codeword 
+        "This object specifies the one hour Degraded Codeword
         Seconds threshold. When the number of Degraded Codeword
         Seconds in a 1 Operational Hour period exceeds this 
         value, the p2mpSuDegradedSecAlarmTrap trap will be 
@@ -305,16 +335,16 @@ p2mpSu1SecMetricsEntry OBJECT-TYPE
     ::= { p2mpSu1SecMetricsTable 1 }
 
 P2mpSu1SecMetricsEntry ::= SEQUENCE {
-    p2mpSu1SecIndex Integer32,
+    p2mpSu1SecIndex INTEGER,
     p2mpSu1SecUpdateTime CwrUpdateTime,
     p2mpSu1SecType INTEGER,
     p2mpSu1SecTotalCodewords WirelessGauge64,
     p2mpSu1SecTotalErrCodewords WirelessGauge64,
-    p2mpSu1SecValidDataPkt Counter32
+    p2mpSu1SecValidDataPkt Counter
     }
 
 p2mpSu1SecIndex OBJECT-TYPE
-    SYNTAX Integer32(1..60)
+    SYNTAX INTEGER(1..60)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -324,19 +354,20 @@ p2mpSu1SecIndex OBJECT-TYPE
 
 p2mpSu1SecUpdateTime OBJECT-TYPE
     SYNTAX CwrUpdateTime
---    Rsyntax Integer32(0..2147483647)
+--    Rsyntax INTEGER(0..2147483647)
 --  Units
 --    seconds
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents time in seconds since system 
+        "This object represents time in seconds since system
         power up at which time this entry was last updated."
     ::= { p2mpSu1SecMetricsEntry 2 }
 
 p2mpSu1SecType OBJECT-TYPE
     SYNTAX INTEGER {
---        unknown(0),
+        --?? enum value of zero may cause problems
+        unknown(0),
         errorFree(1),
         errored(2),
         degraded(3),
@@ -346,39 +377,41 @@ p2mpSu1SecType OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object identifies the nature of the measured 
-               second."
+        "This object identifies the nature of the measured
+        second."
     ::= { p2mpSu1SecMetricsEntry 3 }
 
 p2mpSu1SecTotalCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the total number of codewords
         received by this radio link from the last Link Admin Up
-               time until the current operational second."
+        time until the current operational second."
     ::= { p2mpSu1SecMetricsEntry 4 }
 
 p2mpSu1SecTotalErrCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the total number of errored
-               codewords received by this radio link from the last
-               Link Admin Up time until the current operational 
-               second."
+        codewords received by this radio link from the last
+        Link Admin Up time until the current operational 
+        second."
     ::= { p2mpSu1SecMetricsEntry 5 }
 
 p2mpSu1SecValidDataPkt OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the number of data packets 
+        "This variable indicates the number of data packets
         received without any bit errors from the last Link Admin
         Up time until the current operational second."
     ::= { p2mpSu1SecMetricsEntry 6 }
@@ -413,17 +446,17 @@ p2mpSu1MinMetricsEntry OBJECT-TYPE
     ::= { p2mpSu1MinMetricsTable 1 }
 
 P2mpSu1MinMetricsEntry ::= SEQUENCE {
-    p2mpSu1MinIndex Integer32,
+    p2mpSu1MinIndex INTEGER,
     p2mpSu1MinUpdateTime CwrUpdateTime,
     p2mpSu1MinTotalCodewords WirelessGauge64,
     p2mpSu1MinTotalErrCodewords WirelessGauge64,
-    p2mpSu1MinValidDataPkt Counter32,
+    p2mpSu1MinValidDataPkt Counter,
     p2mpSu1MinErrorFreeSeconds CwrCwErrorFreeSecond,
     p2mpSu1MinErroredSeconds CwrCwErroredSecond,
     p2mpSu1MinDegradedSeconds CwrCwDegradedSecond,
     p2mpSu1MinSevErroredSeconds CwrCwSeverelyErroredSecond,
     p2mpSu1MinConsecSevErrSeconds CwrCwConsecutiveSevErrSecond,
-    p2mpSu1MinSyncLossSeconds Counter32,
+    p2mpSu1MinSyncLossSeconds Counter,
     p2mpSu1MinTxPowerMax CwrFixedPointValue,
     p2mpSu1MinTxPowerMin CwrFixedPointValue,
     p2mpSu1MinTxPowerAvg CwrFixedPointValue,
@@ -436,7 +469,7 @@ P2mpSu1MinMetricsEntry ::= SEQUENCE {
     }
 
 p2mpSu1MinIndex OBJECT-TYPE
-    SYNTAX Integer32(1..60)
+    SYNTAX INTEGER(1..60)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -446,106 +479,108 @@ p2mpSu1MinIndex OBJECT-TYPE
 
 p2mpSu1MinUpdateTime OBJECT-TYPE
     SYNTAX CwrUpdateTime
---    Rsyntax Integer32(0..2147483647)
+--    Rsyntax INTEGER(0..2147483647)
 --  Units
 --    seconds
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents time in seconds since system 
+        "This object represents time in seconds since system
         power up until the time this entry was last updated."
     ::= { p2mpSu1MinMetricsEntry 2 }
 
 p2mpSu1MinTotalCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the cumulative sum of received 
-               codewords from the last Link Admin Up time until the 
-               current operational second."
+        "This object represents the cumulative sum of received
+        codewords from the last Link Admin Up time until the 
+        current operational second."
     ::= { p2mpSu1MinMetricsEntry 3 }
 
 p2mpSu1MinTotalErrCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the cumulative sum of received 
-               errored codewords from the last Link Admin Up time until
-               the current operational second."
+        "This object represents the cumulative sum of received
+        errored codewords from the last Link Admin Up time until
+        the current operational second."
     ::= { p2mpSu1MinMetricsEntry 4 }
 
 p2mpSu1MinValidDataPkt OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the number of data packets 
+        "This variable indicates the number of data packets
         received without any bit errors from the last Link Admin
         Up time until the current operational second."
     ::= { p2mpSu1MinMetricsEntry 5 }
 
 p2mpSu1MinErrorFreeSeconds OBJECT-TYPE
     SYNTAX CwrCwErrorFreeSecond
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the cumulative Codeword Error 
-               Free Seconds (EFS) detected from the last Link Admin Up
-               time until the current operational second."
+        "This object represents the cumulative Codeword Error
+        Free Seconds (EFS) detected from the last Link Admin Up
+        time until the current operational second."
     ::= { p2mpSu1MinMetricsEntry 6 }
 
 p2mpSu1MinErroredSeconds OBJECT-TYPE
     SYNTAX CwrCwErroredSecond
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the cumulative Codeword Errored
-               Seconds (ES) detected from the last Link Admin Up time 
-               until the current operational second."
+        Seconds (ES) detected from the last Link Admin Up time 
+        until the current operational second."
     ::= { p2mpSu1MinMetricsEntry 7 }
 
 p2mpSu1MinDegradedSeconds OBJECT-TYPE
     SYNTAX CwrCwDegradedSecond
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the cumulative Codeword Degraded
-               Seconds (DS) detected from the last Link Admin Up time 
-               until the current operational second."
+        Seconds (DS) detected from the last Link Admin Up time 
+        until the current operational second."
     ::= { p2mpSu1MinMetricsEntry 8 }
 
 p2mpSu1MinSevErroredSeconds OBJECT-TYPE
     SYNTAX CwrCwSeverelyErroredSecond
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the cumulative Codeword Severely
-               Errored Seconds (SES) detected from the last Link Admin 
-               Up time until the current operational second."
+        Errored Seconds (SES) detected from the last Link Admin 
+        Up time until the current operational second."
     ::= { p2mpSu1MinMetricsEntry 9 }
 
 p2mpSu1MinConsecSevErrSeconds OBJECT-TYPE
     SYNTAX CwrCwConsecutiveSevErrSecond
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the cumulative Codeword 
-               Consecutively Severely Errored Seconds (CSES) detected 
-               from the last Link Admin Up time until the current 
-               operational second."
+        "This object represents the cumulative Codeword
+        Consecutively Severely Errored Seconds (CSES) detected 
+        from the last Link Admin Up time until the current 
+        operational second."
     ::= { p2mpSu1MinMetricsEntry 10 }
 
 p2mpSu1MinSyncLossSeconds OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -562,7 +597,7 @@ p2mpSu1MinTxPowerMax OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable represents the maximum transmit power of 
+        "This variable represents the maximum transmit power of
         the subscriber unit measured during the current 
         operational minute. This is not a cumulative value."
     ::= { p2mpSu1MinMetricsEntry 12 }
@@ -575,7 +610,7 @@ p2mpSu1MinTxPowerMin OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the minimum transmit power of 
+        "This variable indicates the minimum transmit power of
         the subscriber unit measured during the current 
         operational minute. This is not a cumulative value."
     ::= { p2mpSu1MinMetricsEntry 13 }
@@ -603,8 +638,8 @@ p2mpSu1MinMainAntRxPowerMax OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This variable indicates the maximum receive power
-         measured at the main antenna during the current 
-         operational minute.  This is not a cumulative value."
+        measured at the main antenna during the current 
+        operational minute.  This is not a cumulative value."
     ::= { p2mpSu1MinMetricsEntry 15 }
 
 p2mpSu1MinMainAntRxPowerMin OBJECT-TYPE
@@ -628,9 +663,9 @@ p2mpSu1MinMainAntRxPowerAvg OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the average receive power 
-         measured at the main antenna during the current 
-         operational minute.  This is not a cumulative value."
+        "This variable indicates the average receive power
+        measured at the main antenna during the current 
+        operational minute.  This is not a cumulative value."
     ::= { p2mpSu1MinMetricsEntry 17 }
 
 p2mpSu1MinDivAntRxPowerMax OBJECT-TYPE
@@ -641,7 +676,7 @@ p2mpSu1MinDivAntRxPowerMax OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the maximum receive power 
+        "This variable indicates the maximum receive power
         measured at the diversity antenna during the current 
         operational minute.  This is not a cumulative value."
     ::= { p2mpSu1MinMetricsEntry 18 }
@@ -654,7 +689,7 @@ p2mpSu1MinDivAntRxPowerMin OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the minimum receive power 
+        "This variable indicates the minimum receive power
         measured at the diversity antenna during the current 
         operational minute.  This is not a cumulative value."
     ::= { p2mpSu1MinMetricsEntry 19 }
@@ -667,7 +702,7 @@ p2mpSu1MinDivAntRxPowerAvg OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the average received power 
+        "This variable indicates the average received power
         measured at the diversity antenna during the current 
         operational minute.  This is not a cumulative value."
     ::= { p2mpSu1MinMetricsEntry 20 }
@@ -702,16 +737,16 @@ p2mpSu1HrMetricsEntry OBJECT-TYPE
     ::= { p2mpSu1HrMetricsTable 1 }
 
 P2mpSu1HrMetricsEntry ::= SEQUENCE {
-    p2mpSu1HrIndex Integer32,
+    p2mpSu1HrIndex INTEGER,
     p2mpSu1HrUpdateTime CwrUpdateTime,
     p2mpSu1HrTotalCodewords WirelessGauge64,
     p2mpSu1HrTotalErrCodewords WirelessGauge64,
-    p2mpSu1HrValidDataPkt Counter32,
+    p2mpSu1HrValidDataPkt Counter,
     p2mpSu1HrErrorFreeSeconds CwrCwErrorFreeSecond,
     p2mpSu1HrErroredSeconds CwrCwErroredSecond,
     p2mpSu1HrSevErroredSeconds CwrCwSeverelyErroredSecond,
     p2mpSu1HrConsecSvErrSeconds CwrCwConsecutiveSevErrSecond,
-    p2mpSu1HrSyncLossSeconds Counter32,
+    p2mpSu1HrSyncLossSeconds Counter,
     p2mpSu1HrDegradedSeconds CwrCwDegradedSecond,
     p2mpSu1HrTxPowerMax CwrFixedPointValue,
     p2mpSu1HrTxPowerMin CwrFixedPointValue,
@@ -725,7 +760,7 @@ P2mpSu1HrMetricsEntry ::= SEQUENCE {
     }
 
 p2mpSu1HrIndex OBJECT-TYPE
-    SYNTAX Integer32(1..24)
+    SYNTAX INTEGER(1..24)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -735,112 +770,114 @@ p2mpSu1HrIndex OBJECT-TYPE
 
 p2mpSu1HrUpdateTime OBJECT-TYPE
     SYNTAX CwrUpdateTime
---    Rsyntax Integer32(0..2147483647)
+--    Rsyntax INTEGER(0..2147483647)
 --  Units
 --    seconds
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents time in seconds since system 
+        "This object represents time in seconds since system
         power up at which time this entry was last updated."
     ::= { p2mpSu1HrMetricsEntry 2 }
 
 p2mpSu1HrTotalCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the total received codewords
         detected from the last Link Admin Up time until the 
-               current operational hour."
+        current operational hour."
     ::= { p2mpSu1HrMetricsEntry 3 }
 
 p2mpSu1HrTotalErrCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the total number of errored 
-               codewords received from the last Link Admin Up time
-               until the current operational hour."
+        "This object represents the total number of errored
+        codewords received from the last Link Admin Up time
+        until the current operational hour."
     ::= { p2mpSu1HrMetricsEntry 4 }
 
 p2mpSu1HrValidDataPkt OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the number of data packets 
+        "This variable indicates the number of data packets
         received without any bit errors from the last Link Admin
         Up time until the current operational hour."
     ::= { p2mpSu1HrMetricsEntry 5 }
 
 p2mpSu1HrErrorFreeSeconds OBJECT-TYPE
     SYNTAX CwrCwErrorFreeSecond
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the cumulative Codeword Error 
-               Free Seconds (EFS) detected from the last Link Admin Up
-               time until the current operational hour."
+        "This object represents the cumulative Codeword Error
+        Free Seconds (EFS) detected from the last Link Admin Up
+        time until the current operational hour."
     ::= { p2mpSu1HrMetricsEntry 6 }
 
 p2mpSu1HrErroredSeconds OBJECT-TYPE
     SYNTAX CwrCwErroredSecond
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the cumulative Codeword Errored
-               Seconds (ES) detected from the last Link Admin Up time 
-               until the current operational hour"
+        Seconds (ES) detected from the last Link Admin Up time 
+        until the current operational hour"
     ::= { p2mpSu1HrMetricsEntry 7 }
 
 p2mpSu1HrSevErroredSeconds OBJECT-TYPE
     SYNTAX CwrCwSeverelyErroredSecond
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the cumulative Codeword Severely
-               Errored Seconds (SES) detected from the last Link Admin
-               Up time until the current operational hour"
+        Errored Seconds (SES) detected from the last Link Admin
+        Up time until the current operational hour"
     ::= { p2mpSu1HrMetricsEntry 8 }
 
 p2mpSu1HrConsecSvErrSeconds OBJECT-TYPE
     SYNTAX CwrCwConsecutiveSevErrSecond
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the cumulative Codeword 
-               Consecutive Severely Errored Seconds (CSES) detected
-               from the last Link Admin Up time until the current 
-               operational hour"
+        "This object represents the cumulative Codeword
+        Consecutive Severely Errored Seconds (CSES) detected
+        from the last Link Admin Up time until the current 
+        operational hour"
     ::= { p2mpSu1HrMetricsEntry 9 }
 
 p2mpSu1HrSyncLossSeconds OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the cumulative number of 
+        "This object represents the cumulative number of
         seconds from the last Link Admin Up time to the current 
         operational hour the link was out of synchronization."
     ::= { p2mpSu1HrMetricsEntry 10 }
 
 p2mpSu1HrDegradedSeconds OBJECT-TYPE
     SYNTAX CwrCwDegradedSecond
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the cumulative Codeword Degraded
-               Seconds detected from the last Link Admin Up time until
-               the current operational hour"
+        Seconds detected from the last Link Admin Up time until
+        the current operational hour"
     ::= { p2mpSu1HrMetricsEntry 11 }
 
 p2mpSu1HrTxPowerMax OBJECT-TYPE
@@ -851,7 +888,7 @@ p2mpSu1HrTxPowerMax OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the maximum transmit power 
+        "This variable indicates the maximum transmit power
         measured during the current operational hour.  This is 
         not a cumulative value."
     ::= { p2mpSu1HrMetricsEntry 12 }
@@ -864,7 +901,7 @@ p2mpSu1HrTxPowerMin OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the minimum transmit power 
+        "This variable indicates the minimum transmit power
         measured during the current operational hour.  This is 
         not a cumulative value."
     ::= { p2mpSu1HrMetricsEntry 13 }
@@ -877,7 +914,7 @@ p2mpSu1HrTxPowerAvg OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the average transmit power 
+        "This variable indicates the average transmit power
         measured during the current operational hour.  This is 
         not a cumulative value."
     ::= { p2mpSu1HrMetricsEntry 14 }
@@ -890,7 +927,7 @@ p2mpSu1HrMainAntRxPowerMax OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the maximum receive power 
+        "This variable indicates the maximum receive power
         measured at the main antenna during the current 
         operational hour.  This is not a cumulative value."
     ::= { p2mpSu1HrMetricsEntry 15 }
@@ -903,7 +940,7 @@ p2mpSu1HrMainAntRxPowerMin OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the minimum receive power 
+        "This variable indicates the minimum receive power
         measured at the main antenna during the current 
         operational hour.  This is not a cumulative value."
     ::= { p2mpSu1HrMetricsEntry 16 }
@@ -916,7 +953,7 @@ p2mpSu1HrMainAntRxPowerAvg OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the average received power 
+        "This variable indicates the average received power
         measured at the main antenna during the current 
         operational hour.  This is not a cumulative value."
     ::= { p2mpSu1HrMetricsEntry 17 }
@@ -929,7 +966,7 @@ p2mpSu1HrDivAntRxPowerMax OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the maximum receive power 
+        "This variable indicates the maximum receive power
         measured at the diversity antenna during the current 
         operational hour.  This is not a cumulative value."
     ::= { p2mpSu1HrMetricsEntry 18 }
@@ -942,7 +979,7 @@ p2mpSu1HrDivAntRxPowerMin OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the minimum receive power 
+        "This variable indicates the minimum receive power
         measured at the diversity antenna during the current 
         operational hour.  This is not a cumulative value."
     ::= { p2mpSu1HrMetricsEntry 19 }
@@ -955,7 +992,7 @@ p2mpSu1HrDivAntRxPowerAvg OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This variable indicates the average received power 
+        "This variable indicates the average received power
         measured at the diversity antenna during the current 
         operational hour.  This is not a cumulative value."
     ::= { p2mpSu1HrMetricsEntry 20 }
@@ -986,100 +1023,100 @@ p2mpSuCumulativeLinkMetricsEntry OBJECT-TYPE
     ::= { p2mpSuCumulativeLinkMetricsTable 1 }
 
 P2mpSuCumulativeLinkMetricsEntry ::= SEQUENCE {
-    p2mpSuAvailableSeconds Counter32,
-    p2mpSuUnAvailableSeconds Counter32,
+    p2mpSuAvailableSeconds Counter,
+    p2mpSuUnAvailableSeconds Counter,
     p2mpSuPctAvailSeconds CwrPercentageValue,
-    p2mpSuSyncLossSeconds Counter32,
+    p2mpSuSyncLossSeconds Counter,
     p2mpSuPctErrorFreeSeconds CwrPercentageValue,
     p2mpSuPctErroredSeconds CwrPercentageValue,
     p2mpSuPctSevErroredSeconds CwrPercentageValue,
     p2mpSuPctDegradedSeconds CwrPercentageValue,
-    p2mpSuInitialSyncSeconds Counter32,
-    p2mpSuSyncSuccessCount Counter32,
+    p2mpSuInitialSyncSeconds Counter,
+    p2mpSuSyncSuccessCount Counter,
     p2mpSuLastSyncSuccessTime TimeInterval,
-    p2mpSuSyncMedEffort Counter32,
-    p2mpSuSyncHighEffort Counter32,
-    p2mpSuSyncFailureCount Counter32,
+    p2mpSuSyncFailureCount Counter,
     p2mpSuLastSyncFailTime TimeInterval,
-    p2mpSuEffectiveDataRate Gauge32,
+    p2mpSuSyncMedEffort Counter,
+    p2mpSuSyncHighEffort Counter,
+    p2mpSuEffectiveDataRate Gauge,
     p2mpSuPercentEfficiency CwrPercentageValue
     }
 
 p2mpSuAvailableSeconds OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the total number of Available 
-               Seconds since the last Link Admin Up time. 
-               It is equal to: 
-               Error Free Seconds + Errored Seconds - Severely Errored
-               Seconds"
+        "This object represents the total number of Available
+        Seconds since the last Link Admin Up time. 
+        It is equal to: 
+        Error Free Seconds + Errored Seconds - Severely Errored
+        Seconds"
     ::= { p2mpSuCumulativeLinkMetricsEntry 1 }
 
 p2mpSuUnAvailableSeconds OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the total number of seconds 
-               since the last Link Admin Up time that the link was not
-               available for use. It is equal to:
+        "This object represents the total number of seconds
+        since the last Link Admin Up time that the link was not
+        available for use. It is equal to:
         Severely Errored Seconds + Sync Loss Seconds."
     ::= { p2mpSuCumulativeLinkMetricsEntry 2 }
 
 p2mpSuPctAvailSeconds OBJECT-TYPE
     SYNTAX CwrPercentageValue
---    Rsyntax Gauge32(0..10000000)
+--    Rsyntax Gauge(0..10000000)
 --  Units
 --    0.00001 percent
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the ratio of cumulative 
-                Available seconds to Link Admin Up seconds, expressed 
-                as a percentage."
+        "This object represents the ratio of cumulative
+        Available seconds to Link Admin Up seconds, expressed 
+        as a percentage."
     ::= { p2mpSuCumulativeLinkMetricsEntry 3 }
 
 p2mpSuSyncLossSeconds OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the number of seconds since the 
-               last Link Admin Up time during which the radio link was
-               out of sync with the remote end."
+        "This object represents the number of seconds since the
+        last Link Admin Up time during which the radio link was
+        out of sync with the remote end."
     ::= { p2mpSuCumulativeLinkMetricsEntry 4 }
 
 p2mpSuPctErrorFreeSeconds OBJECT-TYPE
     SYNTAX CwrPercentageValue
---    Rsyntax Gauge32(0..10000000)
+--    Rsyntax Gauge(0..10000000)
 --  Units
 --    0.00001 percent
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the ratio of cumulative Codeword
-               Error Free Seconds (EFS) to Link Admin Up seconds, 
-               expressed as a percentage."
+        Error Free Seconds (EFS) to Link Admin Up seconds, 
+        expressed as a percentage."
     ::= { p2mpSuCumulativeLinkMetricsEntry 5 }
 
 p2mpSuPctErroredSeconds OBJECT-TYPE
     SYNTAX CwrPercentageValue
---    Rsyntax Gauge32(0..10000000)
+--    Rsyntax Gauge(0..10000000)
 --  Units
 --    0.00001 percent
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the ratio of cumulative Codeword
-               Errored Seconds (ES) to Link Admin Up seconds, expressed
-               as a percentage."
+        Errored Seconds (ES) to Link Admin Up seconds, expressed
+        as a percentage."
     ::= { p2mpSuCumulativeLinkMetricsEntry 6 }
 
 p2mpSuPctSevErroredSeconds OBJECT-TYPE
     SYNTAX CwrPercentageValue
---    Rsyntax Gauge32(0..10000000)
+--    Rsyntax Gauge(0..10000000)
 --  Units
 --    0.00001 percent
     ACCESS read-only
@@ -1087,37 +1124,37 @@ p2mpSuPctSevErroredSeconds OBJECT-TYPE
     DESCRIPTION
         "This object represents the ratio of cumulative Codeword
         Severely Errored Seconds (SES) to Link Admin Up seconds,
-               expressed as a percentage."
+        expressed as a percentage."
     ::= { p2mpSuCumulativeLinkMetricsEntry 7 }
 
 p2mpSuPctDegradedSeconds OBJECT-TYPE
     SYNTAX CwrPercentageValue
---    Rsyntax Gauge32(0..10000000)
+--    Rsyntax Gauge(0..10000000)
 --  Units
 --    0.00001 percent
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the ratio of degraded seconds 
-               (DS) to Link Admin Up seconds, expressed as a 
-               percentage."
+        "This object represents the ratio of degraded seconds
+        (DS) to Link Admin Up seconds, expressed as a 
+        percentage."
     ::= { p2mpSuCumulativeLinkMetricsEntry 8 }
 
 p2mpSuInitialSyncSeconds OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "Time spent in acquiring sync for the first time after 
+        "Time spent in acquiring sync for the first time after
         the link is administratively configured up"
     ::= { p2mpSuCumulativeLinkMetricsEntry 9 }
 
 p2mpSuSyncSuccessCount OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the number of times the 
+        "This object represents the number of times the
         subscriber unit successfully synchronized with the head
         end."
     ::= { p2mpSuCumulativeLinkMetricsEntry 10 }
@@ -1128,17 +1165,17 @@ p2mpSuLastSyncSuccessTime OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents elapsed time since the 
-               subscriber unit last successfully synchronized with the
-               head end."
+        "This object represents elapsed time since the
+        subscriber unit last successfully synchronized with the
+        head end."
     ::= { p2mpSuCumulativeLinkMetricsEntry 11 }
 
 p2mpSuSyncFailureCount OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the number of times the 
+        "This object represents the number of times the
         subscriber unit attempted, but failed, to synchronize 
         with the head end."
     ::= { p2mpSuCumulativeLinkMetricsEntry 12 }
@@ -1149,33 +1186,33 @@ p2mpSuLastSyncFailTime OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents elapsed time since the 
-               subscriber unit last lost synchronization with the 
-               remote end."
+        "This object represents elapsed time since the
+        subscriber unit last lost synchronization with the 
+        remote end."
     ::= { p2mpSuCumulativeLinkMetricsEntry 13 }
 
 p2mpSuSyncMedEffort OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object indicates how many times sync was regained
-               (since Link Admin Up time) without the subscriber unit 
-               having to scan through the channels."
+        (since Link Admin Up time) without the subscriber unit 
+        having to scan through the channels."
     ::= { p2mpSuCumulativeLinkMetricsEntry 14 }
 
 p2mpSuSyncHighEffort OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object indicates how many times the channels were
-               scanned due to sync loss (after first sync at Link Admin
-               Up time)."
+        scanned due to sync loss (after first sync at Link Admin
+        Up time)."
     ::= { p2mpSuCumulativeLinkMetricsEntry 15 }
 
 p2mpSuEffectiveDataRate OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1187,13 +1224,13 @@ p2mpSuEffectiveDataRate OBJECT-TYPE
 
 p2mpSuPercentEfficiency OBJECT-TYPE
     SYNTAX CwrPercentageValue
---    Rsyntax Gauge32(0..10000000)
+--    Rsyntax Gauge(0..10000000)
 --  Units
 --    0.00001 percent
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "Represents the ratio of total good codewords received 
+        "Represents the ratio of total good codewords received
         to the total number of codewords received since Link 
         Admin Up, stated as a percentage"
     ::= { p2mpSuCumulativeLinkMetricsEntry 17 }
@@ -1203,7 +1240,7 @@ p2mpHeLinkMetricsThreshTable OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "This table contains thresholds that are the trigger 
+        "This table contains thresholds that are the trigger
         points to determine if an excessive number of errored 
         codewords are being transmitted.
         
@@ -1236,17 +1273,16 @@ p2mpHeLinkMetricsThreshEntry OBJECT-TYPE
     ::= { p2mpHeLinkMetricsThreshTable 1 }
 
 P2mpHeLinkMetricsThreshEntry ::= SEQUENCE {
-    p2mpHe1HrMinTotalCWThresh Unsigned32,
+    p2mpHe1HrMinTotalCWThresh Gauge,
     p2mpHe1HrPctErrCWThresh CwrPercentageValue
     }
 
 p2mpHe1HrMinTotalCWThresh OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This object specifies the threshold for the minimum 
+        "This object specifies the threshold for the minimum
         number of total codewords that should be transmitted in
         an operational hour before the percentage of errored 
         codewords is evaluated against the 
@@ -1255,7 +1291,7 @@ p2mpHe1HrMinTotalCWThresh OBJECT-TYPE
 
 p2mpHe1HrPctErrCWThresh OBJECT-TYPE
     SYNTAX CwrPercentageValue
---    Rsyntax Gauge32(0..10000000)
+--    Rsyntax Gauge(0..10000000)
 --  Units
 --    0.00001 percent
     ACCESS read-write
@@ -1289,7 +1325,7 @@ p2mpHeBadSuTable OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "This table lists all the subscriber units who have 
+        "This table lists all the subscriber units who have
         either failed to transmit a minimum number of codewords
         in an operational hour OR have transmitted a total 
         number of codewords equal to or greater than 
@@ -1304,7 +1340,7 @@ p2mpHeBadSuEntry OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "This represents one entry in the p2mpHeBadSuTable.  
+        "This represents one entry in the p2mpHeBadSuTable.
         This entry uses the ifIndex of propDocsWirelessMaclayer.
         
         An entry is created in this table when a 'bad' 
@@ -1315,31 +1351,31 @@ p2mpHeBadSuEntry OBJECT-TYPE
     ::= { p2mpHeBadSuTable 1 }
 
 P2mpHeBadSuEntry ::= SEQUENCE {
-    p2mpBadSuIndex Integer32,
+    p2mpBadSuIndex INTEGER,
     p2mpBadSuUpdateTime CwrUpdateTime,
     p2mpBadSuMacAddress MacAddress,
-    p2mpTotalErroredCodewords Unsigned32,
-    p2mpPctErroredCodewords Unsigned32
+    p2mpTotalErroredCodewords Gauge,
+    p2mpPctErroredCodewords Gauge
     }
 
 p2mpBadSuIndex OBJECT-TYPE
-    SYNTAX Integer32(1..2147483647)
+    SYNTAX INTEGER(1..2147483647)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "This object, along with the ifIndex of the MAC layer, 
-         identifies exactly one entry in the table."
+        "This object, along with the ifIndex of the MAC layer,
+        identifies exactly one entry in the table."
     ::= { p2mpHeBadSuEntry 1 }
 
 p2mpBadSuUpdateTime OBJECT-TYPE
     SYNTAX CwrUpdateTime
---    Rsyntax Integer32(0..2147483647)
+--    Rsyntax INTEGER(0..2147483647)
 --  Units
 --    seconds
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents time in seconds since system 
+        "This object represents time in seconds since system
         power up at which time this entry was last updated."
     ::= { p2mpHeBadSuEntry 2 }
 
@@ -1356,23 +1392,21 @@ p2mpBadSuMacAddress OBJECT-TYPE
     ::= { p2mpHeBadSuEntry 3 }
 
 p2mpTotalErroredCodewords OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the total errored codewords 
+        "This object represents the total errored codewords
         transmitted by this subscriber unit in the current 
         operational hour."
     ::= { p2mpHeBadSuEntry 4 }
 
 p2mpPctErroredCodewords OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represent the percentage of errored 
+        "This object represent the percentage of errored
         codewords to total codewords transmitted by the 
         subscriber unit in the current operational hour."
     ::= { p2mpHeBadSuEntry 5 }
@@ -1382,7 +1416,7 @@ p2mpHeCodewordErrorTable OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "This table contains codeword error history for the past 24 
+        "This table contains codeword error history for the past 24
         hours, at 1 hour intervals, on a per subscriber basis.
         
         This table will have a maximum of 24 entries providing 
@@ -1397,7 +1431,7 @@ p2mpHeCodewordErrorEntry OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "This represents one entry in the p2mpHeCodewordErrorTable 
+        "This represents one entry in the p2mpHeCodewordErrorTable
         indexed by ifIndex of propDocsWirelessMaclayer, the MAC 
         address of the subscriber unit, and p2mpHeCWErrorIndex
         
@@ -1411,7 +1445,7 @@ p2mpHeCodewordErrorEntry OBJECT-TYPE
 
 P2mpHeCodewordErrorEntry ::= SEQUENCE {
     p2mpSuMacAddress MacAddress,
-    p2mpHeCWErrorIndex Integer32,
+    p2mpHeCWErrorIndex INTEGER,
     p2mpHeCWErrorUpdateTime CwrUpdateTime,
     p2mpTotalCodewords WirelessGauge64,
     p2mpErroredCodewords WirelessGauge64,
@@ -1429,7 +1463,7 @@ p2mpSuMacAddress OBJECT-TYPE
     ::= { p2mpHeCodewordErrorEntry 1 }
 
 p2mpHeCWErrorIndex OBJECT-TYPE
-    SYNTAX Integer32(1..24)
+    SYNTAX INTEGER(1..24)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -1438,38 +1472,40 @@ p2mpHeCWErrorIndex OBJECT-TYPE
 
 p2mpHeCWErrorUpdateTime OBJECT-TYPE
     SYNTAX CwrUpdateTime
---    Rsyntax Integer32(0..2147483647)
+--    Rsyntax INTEGER(0..2147483647)
 --  Units
 --    seconds
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents time in seconds since system power up at 
+        "This object represents time in seconds since system power up at
         which time this entry was last updated."
     ::= { p2mpHeCodewordErrorEntry 3 }
 
 p2mpTotalCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the total received codewords
         detected on the subscriber unit identified by 
-               p2mpSuMacAddress from Link Admin Up time until the 
-               current operational hour."
+        p2mpSuMacAddress from Link Admin Up time until the 
+        current operational hour."
     ::= { p2mpHeCodewordErrorEntry 4 }
 
 p2mpErroredCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the total received errored 
+        "This object represents the total received errored
         codewords detected on the subscriber unit identified by 
-               p2mpSuMacAddress from Link Admin Up time until the 
-               current operational hour."
+        p2mpSuMacAddress from Link Admin Up time until the 
+        current operational hour."
     ::= { p2mpHeCodewordErrorEntry 5 }
 
 p2mpSINR OBJECT-TYPE
@@ -1478,9 +1514,9 @@ p2mpSINR OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the ratio of signal to 
-               (interference + noise) from Link Admin Up time until 
-               the current operational hour."
+        "This object represents the ratio of signal to
+        (interference + noise) from Link Admin Up time until 
+        the current operational hour."
     ::= { p2mpHeCodewordErrorEntry 6 }
 
 p2mpHe1SecMetricsTable OBJECT-TYPE
@@ -1518,14 +1554,14 @@ p2mpHe1SecMetricsEntry OBJECT-TYPE
     ::= { p2mpHe1SecMetricsTable 1 }
 
 P2mpHe1SecMetricsEntry ::= SEQUENCE {
-    p2mpHe1SecIndex Integer32,
+    p2mpHe1SecIndex INTEGER,
     p2mpHe1SecUpdateTime CwrUpdateTime,
     p2mpHe1SecTotalCodewords WirelessGauge64,
     p2mpHe1SecErroredCodewords WirelessGauge64
     }
 
 p2mpHe1SecIndex OBJECT-TYPE
-    SYNTAX Integer32(1..60)
+    SYNTAX INTEGER(1..60)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -1535,7 +1571,7 @@ p2mpHe1SecIndex OBJECT-TYPE
 
 p2mpHe1SecUpdateTime OBJECT-TYPE
     SYNTAX CwrUpdateTime
---    Rsyntax Integer32(0..2147483647)
+--    Rsyntax INTEGER(0..2147483647)
 --  Units
 --    seconds
     ACCESS read-only
@@ -1546,7 +1582,8 @@ p2mpHe1SecUpdateTime OBJECT-TYPE
     ::= { p2mpHe1SecMetricsEntry 2 }
 
 p2mpHe1SecTotalCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
@@ -1557,12 +1594,13 @@ p2mpHe1SecTotalCodewords OBJECT-TYPE
     ::= { p2mpHe1SecMetricsEntry 3 }
 
 p2mpHe1SecErroredCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the total number of errored 
+        "This object represents the total number of errored
         codewords received on a channel from the last Link Admin
         Up time until the current operational second."
     ::= { p2mpHe1SecMetricsEntry 4 }
@@ -1602,14 +1640,14 @@ p2mpHe1MinMetricsEntry OBJECT-TYPE
     ::= { p2mpHe1MinMetricsTable 1 }
 
 P2mpHe1MinMetricsEntry ::= SEQUENCE {
-    p2mpHe1MinIndex Integer32,
+    p2mpHe1MinIndex INTEGER,
     p2mpHe1MinUpdateTime CwrUpdateTime,
     p2mpHe1MinTotalCodewords WirelessGauge64,
     p2mpHe1MinErroredCodewords WirelessGauge64
     }
 
 p2mpHe1MinIndex OBJECT-TYPE
-    SYNTAX Integer32(1..60)
+    SYNTAX INTEGER(1..60)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -1619,18 +1657,19 @@ p2mpHe1MinIndex OBJECT-TYPE
 
 p2mpHe1MinUpdateTime OBJECT-TYPE
     SYNTAX CwrUpdateTime
---    Rsyntax Integer32(0..2147483647)
+--    Rsyntax INTEGER(0..2147483647)
 --  Units
 --    seconds
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents time in seconds since system 
+        "This object represents time in seconds since system
         power up at which time this entry was last updated."
     ::= { p2mpHe1MinMetricsEntry 2 }
 
 p2mpHe1MinTotalCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
@@ -1641,12 +1680,13 @@ p2mpHe1MinTotalCodewords OBJECT-TYPE
     ::= { p2mpHe1MinMetricsEntry 3 }
 
 p2mpHe1MinErroredCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the cumulative sum of errored 
+        "This object represents the cumulative sum of errored
         codewords received on a channel from the last Link Admin
         Up time until the current operational minute."
     ::= { p2mpHe1MinMetricsEntry 4 }
@@ -1686,24 +1726,24 @@ p2mpHe1HrMetricsEntry OBJECT-TYPE
     ::= { p2mpHe1HrMetricsTable 1 }
 
 P2mpHe1HrMetricsEntry ::= SEQUENCE {
-    p2mpHe1HrIndex Integer32,
+    p2mpHe1HrIndex INTEGER,
     p2mpHe1HrUpdateTime CwrUpdateTime,
     p2mpHe1HrTotalCodewords WirelessGauge64,
     p2mpHe1HrErroredCodewords WirelessGauge64
     }
 
 p2mpHe1HrIndex OBJECT-TYPE
-    SYNTAX Integer32(1..24)
+    SYNTAX INTEGER(1..24)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
         "This object, along with ifIndex, identifies exactly one
-               entry in the table."
+        entry in the table."
     ::= { p2mpHe1HrMetricsEntry 1 }
 
 p2mpHe1HrUpdateTime OBJECT-TYPE
     SYNTAX CwrUpdateTime
---    Rsyntax Integer32(0..2147483647)
+--    Rsyntax INTEGER(0..2147483647)
 --  Units
 --    seconds
     ACCESS read-only
@@ -1714,7 +1754,8 @@ p2mpHe1HrUpdateTime OBJECT-TYPE
     ::= { p2mpHe1HrMetricsEntry 2 }
 
 p2mpHe1HrTotalCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
@@ -1725,12 +1766,13 @@ p2mpHe1HrTotalCodewords OBJECT-TYPE
     ::= { p2mpHe1HrMetricsEntry 3 }
 
 p2mpHe1HrErroredCodewords OBJECT-TYPE
-    SYNTAX WirelessGauge64
+    SYNTAX --?? syntax is not convertable to SMIv1
+           WirelessGauge64
 --    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents the total number of errored 
+        "This object represents the total number of errored
         codewords received on this channel in the last 1 hour."
     ::= { p2mpHe1HrMetricsEntry 4 }
 
@@ -1755,9 +1797,9 @@ p2mpHeMacPctErrCWThreshTrap TRAP-TYPE
 --  Status
 --    mandatory
     DESCRIPTION
-        "The p2mpHe1HrPctErrCWThresh for the subscriber 
-         unit was exceeded.  The subscriber unit was added to 
-         the p2mpHeBadSuTable."
+        "The p2mpHe1HrPctErrCWThresh for the subscriber
+        unit was exceeded.  The subscriber unit was added to 
+        the p2mpHeBadSuTable."
     ::= 2
 
 p2mpSuErrSecAlarmTrap TRAP-TYPE
@@ -1874,12 +1916,24 @@ p2mpComplianceHeMetricsGroup OBJECT IDENTIFIER ::= { p2mpRadioLinkGroups 3 }
 --    p2mpHe1MinErroredCodewords, p2mpHe1HrUpdateTime, 
 --    p2mpHe1HrTotalCodewords, p2mpHe1HrErroredCodewords
 
+p2mpComplianceNotifGroup OBJECT IDENTIFIER ::= { p2mpRadioLinkGroups 4 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Group of notifications which indicate that a threshold was
+--    exceeded.
+--  notifications
+--    p2mpHeChPctErrCWThreshTrap, p2mpHeMacPctErrCWThreshTrap, 
+--    p2mpSuErrSecAlarmTrap, p2mpSuSevErrSecAlarmTrap, 
+--    p2mpSuConsecSevErrSecAlarmTrap, p2mpSuDegradedSecAlarmTrap
+
 p2mpRadioLinkCompliance OBJECT IDENTIFIER ::= { p2mpRadioLinkCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
 --    mandatory
 --  Descr
---    The compliance statement for devices implementing the 
+--    The compliance statement for devices implementing the
 --    Point to MultiPoint wireless interface compliant to 
 --    Cisco Systems Inc. specification.
 --  Module
@@ -1890,6 +1944,8 @@ p2mpRadioLinkCompliance OBJECT IDENTIFIER ::= { p2mpRadioLinkCompliances 1 }
 --    p2mpComplianceSuMetricsGroup
 --   OptGroup
 --    p2mpComplianceHeMetricsGroup
+--   OptGroup
+--    p2mpComplianceNotifGroup
 
 
 END

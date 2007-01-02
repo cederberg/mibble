@@ -1,63 +1,69 @@
--- MIB created 6/25/99 12:56:53, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 29-Sep-2004 18:38:53, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-BSC-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-BSC-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    Counter32, Integer32
-            FROM SNMPv2-SMI-v1
-    OBJECT-TYPE
-            FROM RFC-1212
     ifIndex
             FROM IF-MIB
     TruthValue
             FROM SNMPv2-TC-v1
     ciscoMgmt
-            FROM CISCO-SMI;
+            FROM CISCO-SMI
+    Counter
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
 
 ciscoBscMIB OBJECT IDENTIFIER ::= { ciscoMgmt 36 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    9701250000Z
+--    200408250000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
---     Cisco Systems
---     Customer Service
+--           Cisco Systems
+--            Customer Service
 --    
 --    Postal: 170 W. Tasman Drive
---     San Jose, CA 95134
---     USA
+--            San Jose, CA 95134
+--            USA
 --    
 --       Tel: +1 800 553-NETS
 --    E-mail: cs-bisync@cisco.com
 --  Descr
 --    The MIB module for BSC.
 --    
---     Overview of BSC MIB
+--    Overview of BSC MIB
 --    
---     MIB description
---     
---     The BSC MIB provides the configuration and operational information 
---     on Cisco's Binary Synchronous Communications implementation.  The 
---     following entities are managed:
---      1) BSC ports (serial interfaces)
---      2) BSC Control Units (stations on a port)
+--    MIB description
 --    
---     The BSC ports are identified by the interface index, and additional 
---     information about this interface can be obtained from the Cisco Serial 
---     Interface MIB.  
---     The BSC Control Units are identified by the Control Unit address; this 
---     is the address used by BSTUN to route the BSC traffic - it is therefore 
---     equivalent to the bstunRouteStationAddress in the bstunRouteTable MIB.
---              
+--    The BSC MIB provides the configuration and operational information 
+--    on Cisco's Binary Synchronous Communications implementation.  The 
+--    following entities are managed:
+--    1) BSC ports (serial interfaces)
+--    2) BSC Control Units (stations on a port)
+--    
+--    The BSC ports are identified by the interface index, and additional 
+--    information about this interface can be obtained from the Cisco 
+--    Serial Interface MIB.  
+--    The BSC Control Units are identified by the Control Unit address; 
+--    this is the address used by BSTUN to route the BSC traffic - it is
+--    therefore equivalent to the bstunRouteStationAddress in the 
+--    bstunRouteTable MIB.
+--  RevDate
+--    200408250000Z
+--  RevDescr
+--    Added 'generic' value to the bscPortRole object for
+--     BSC generic support.
 --  RevDate
 --    9701250000Z
 --  RevDescr
 --    Added support for BSTUN over Frame-relay,
---                  Extended address and 3780 dial-in.
+--     Extended address and 3780 dial-in.
 --  RevDate
 --    9508210000Z
 --  RevDescr
@@ -76,8 +82,8 @@ bscPortTable OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "A list of port (serial interfaces) which have been configured to 
-         support a BSC BSTUN group."
+        "A list of port (serial interfaces) which have been configured 
+         to support a BSC BSTUN group."
     ::= { bscPorts 1 }
 
 bscPortEntry OBJECT-TYPE
@@ -96,14 +102,14 @@ BscPortEntry ::= SEQUENCE {
     bscPortServlim INTEGER,
     bscPortPollTimeout INTEGER,
     bscPortRecoveryRetries INTEGER,
-    bscPortUnknownControlUnitsReceived Counter32,
-    bscPortSoftErrors Counter32,
-    bscPortHardErrors Counter32,
-    bscPortProtocolViolations Counter32,
-    bscPortHostTimeout Integer32,
+    bscPortUnknownControlUnitsReceived Counter,
+    bscPortSoftErrors Counter,
+    bscPortHardErrors Counter,
+    bscPortProtocolViolations Counter,
+    bscPortHostTimeout INTEGER,
     bscPortSpecPoll TruthValue,
-    bscPortVirtualAddress Integer32,
-    bscPortContentionDialTimeout Integer32
+    bscPortVirtualAddress INTEGER,
+    bscPortContentionDialTimeout INTEGER
     }
 
 bscPortRole OBJECT-TYPE
@@ -111,18 +117,21 @@ bscPortRole OBJECT-TYPE
         primary(1),
         secondary(2),
         contention(3),
-        dialContention(4)
+        dialContention(4),
+        generic(5)
         }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "The router's DLC role to the attached node.
-        (If the bscPortRole is primary, this implies that
-        the port is connected to a remote secondary device.)
-        If this object does not have the value 'contention'
+        If the bscPortRole is primary, this implies that
+        the port is connected to a remote secondary device.
+        If the role is generic, this indicates that the port 
+        will be running framed bisynchronous frames with an unknown 
+        protocol. If this object does not have the value 'contention'
         then bscPortVirtualAddress will not be instantiated.
         If this object does not have the value 'dialContention'
-        then bscPortContentionDialTimeout will not be instantiated"
+        then bscPortContentionDialTimeout will not be instantiated."
     ::= { bscPortEntry 1 }
 
 bscPortCodeSet OBJECT-TYPE
@@ -188,7 +197,7 @@ bscPortRecoveryRetries OBJECT-TYPE
     ::= { bscPortEntry 6 }
 
 bscPortUnknownControlUnitsReceived OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -199,7 +208,7 @@ bscPortUnknownControlUnitsReceived OBJECT-TYPE
     ::= { bscPortEntry 7 }
 
 bscPortSoftErrors OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -218,7 +227,7 @@ bscPortSoftErrors OBJECT-TYPE
     ::= { bscPortEntry 8 }
 
 bscPortHardErrors OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -236,7 +245,7 @@ bscPortHardErrors OBJECT-TYPE
     ::= { bscPortEntry 9 }
 
 bscPortProtocolViolations OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -253,7 +262,7 @@ bscPortProtocolViolations OBJECT-TYPE
     ::= { bscPortEntry 10 }
 
 bscPortHostTimeout OBJECT-TYPE
-    SYNTAX Integer32(30..3000)
+    SYNTAX INTEGER(30..3000)
 --  Units
 --    deciseconds
     ACCESS read-only
@@ -285,7 +294,7 @@ bscPortSpecPoll OBJECT-TYPE
     ::= { bscPortEntry 12 }
 
 bscPortVirtualAddress OBJECT-TYPE
-    SYNTAX Integer32(1..254)
+    SYNTAX INTEGER(1..254)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -296,7 +305,7 @@ bscPortVirtualAddress OBJECT-TYPE
     ::= { bscPortEntry 13 }
 
 bscPortContentionDialTimeout OBJECT-TYPE
-    SYNTAX Integer32(2..30)
+    SYNTAX INTEGER(2..30)
 --  Units
 --    seconds
     ACCESS read-only
@@ -329,15 +338,15 @@ bscCUEntry OBJECT-TYPE
 BscCUEntry ::= SEQUENCE {
     bscCUAddress INTEGER,
     bscCUState INTEGER,
-    bscCUBytesSent Counter32,
-    bscCUBytesReceived Counter32,
-    bscCUTotalFramesSent Counter32,
-    bscCUTotalFramesReceived Counter32,
-    bscCUDataFramesSent Counter32,
-    bscCUDataFramesReceived Counter32,
-    bscCUSoftErrors Counter32,
-    bscCUHardErrors Counter32,
-    bscCUProtocolViolations Counter32
+    bscCUBytesSent Counter,
+    bscCUBytesReceived Counter,
+    bscCUTotalFramesSent Counter,
+    bscCUTotalFramesReceived Counter,
+    bscCUDataFramesSent Counter,
+    bscCUDataFramesReceived Counter,
+    bscCUSoftErrors Counter,
+    bscCUHardErrors Counter,
+    bscCUProtocolViolations Counter
     }
 
 bscCUAddress OBJECT-TYPE
@@ -347,7 +356,7 @@ bscCUAddress OBJECT-TYPE
     DESCRIPTION
         "This value is the poll address of the
          BSC Control Unit.  This address must be unique
-                within a BSTUN Group."
+         within a BSTUN Group."
     ::= { bscCUEntry 1 }
 
 bscCUState OBJECT-TYPE
@@ -358,12 +367,12 @@ bscCUState OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "State of the BSC Control Unit; when active this indicates that the 
-         remote Control Unit is polling or responding to polls."
+        "State of the BSC Control Unit; when active this indicates that
+         the remote Control Unit is polling or responding to polls."
     ::= { bscCUEntry 2 }
 
 bscCUBytesSent OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -372,7 +381,7 @@ bscCUBytesSent OBJECT-TYPE
     ::= { bscCUEntry 3 }
 
 bscCUBytesReceived OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -381,7 +390,7 @@ bscCUBytesReceived OBJECT-TYPE
     ::= { bscCUEntry 4 }
 
 bscCUTotalFramesSent OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -390,7 +399,7 @@ bscCUTotalFramesSent OBJECT-TYPE
     ::= { bscCUEntry 5 }
 
 bscCUTotalFramesReceived OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -399,7 +408,7 @@ bscCUTotalFramesReceived OBJECT-TYPE
     ::= { bscCUEntry 6 }
 
 bscCUDataFramesSent OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -407,7 +416,7 @@ bscCUDataFramesSent OBJECT-TYPE
     ::= { bscCUEntry 7 }
 
 bscCUDataFramesReceived OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -415,7 +424,7 @@ bscCUDataFramesReceived OBJECT-TYPE
     ::= { bscCUEntry 8 }
 
 bscCUSoftErrors OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -431,7 +440,7 @@ bscCUSoftErrors OBJECT-TYPE
     ::= { bscCUEntry 9 }
 
 bscCUHardErrors OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -446,7 +455,7 @@ bscCUHardErrors OBJECT-TYPE
     ::= { bscCUEntry 10 }
 
 bscCUProtocolViolations OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -464,9 +473,10 @@ bscExtAddressTable OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "List of all addresses configured by the bsc extended-address 
-         command. This applies only to interfaces with an ifType of 
-         'bsc'. The address entries must be unique per interface."
+        "List of all addresses configured by the bsc
+         extended-address command. This applies only to interfaces
+         with an ifType of 'bsc'. The address entries must be
+         unique per interface."
     ::= { bscExtAddresses 1 }
 
 bscExtAddressEntry OBJECT-TYPE
@@ -479,12 +489,12 @@ bscExtAddressEntry OBJECT-TYPE
     ::= { bscExtAddressTable 1 }
 
 BscExtAddressEntry ::= SEQUENCE {
-    bscExtPollAddress Integer32,
-    bscExtSelectAddress Integer32
+    bscExtPollAddress INTEGER,
+    bscExtSelectAddress INTEGER
     }
 
 bscExtPollAddress OBJECT-TYPE
-    SYNTAX Integer32(1..255)
+    SYNTAX INTEGER(1..255)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -493,7 +503,7 @@ bscExtPollAddress OBJECT-TYPE
     ::= { bscExtAddressEntry 1 }
 
 bscExtSelectAddress OBJECT-TYPE
-    SYNTAX Integer32(1..255)
+    SYNTAX INTEGER(1..255)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION

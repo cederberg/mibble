@@ -1,17 +1,12 @@
--- MIB created 6/25/99 12:58:09, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 17-Jan-2006 16:26:06, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 TN3270E-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "TN3270E-MIB.my"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    TimeTicks, IpAddress, Counter32, Gauge32
-            FROM SNMPv2-SMI-v1
-    OBJECT-TYPE
-            FROM RFC-1212
-    Unsigned32
-            FROM CISCO-TC
     RowStatus, TestAndIncr, DateAndTime, TimeStamp
             FROM SNMPv2-TC-v1
     snanauMIB
@@ -23,12 +18,16 @@ IMPORTS
     IANATn3270eAddrType, IANATn3270eAddress, IANATn3270eClientType, 
     IANATn3270Functions, IANATn3270ResourceType, 
     IANATn3270DeviceType, IANATn3270eLogData
-            FROM IANATn3270eTC-MIB;
+            FROM IANATn3270eTC-MIB
+    Counter, Gauge, IpAddress, TimeTicks
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
 
 tn3270eMIB OBJECT IDENTIFIER ::= { snanauMIB 8 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    9807270000Z
+--    200601130000Z
 --  OrgName
 --    TN3270E Working Group
 --  ContactInfo
@@ -50,9 +49,16 @@ tn3270eMIB OBJECT IDENTIFIER ::= { snanauMIB 8 }
 --    This module defines a portion of the management
 --    information base (MIB) for managing TN3270E servers.
 --  RevDate
+--    200601130000Z
+--  RevDescr
+--    Removed the IMPORTing of Unsigned32 from CISCO-TC, by
+--    changing it back to be IMPORTed from SNMPv2-SMI (as in
+--    RFC 2561).
+--  RevDate
 --    9807270000Z
 --  RevDescr
---    RFC nnnn (Proposed Standard)
+--    Initial version of this MIB Module, published as
+--    RFC 2561.
 
 tn3270eNotifications OBJECT IDENTIFIER ::= { tn3270eMIB 0 }
 tn3270eObjects  OBJECT IDENTIFIER ::= { tn3270eMIB 1 }
@@ -87,7 +93,7 @@ SnaResourceName ::= OCTET STRING(SIZE(0..17))
 --     internationalization, and does not use the character
 --     encodings used by the Utf8String Textual Convention.
 
-Tn3270eTraceData ::= OCTET STRING(SIZE(0 | 3..4096))
+Tn3270eTraceData ::= OCTET STRING(SIZE(0|3..4096))
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
@@ -160,11 +166,11 @@ tn3270eSrvrConfEntry OBJECT-TYPE
     ::= { tn3270eSrvrConfTable 1 }
 
 Tn3270eSrvrConfEntry ::= SEQUENCE {
-    tn3270eSrvrConfIndex Unsigned32,
-    tn3270eSrvrConfInactivityTimeout Unsigned32,
+    tn3270eSrvrConfIndex Gauge,
+    tn3270eSrvrConfInactivityTimeout Gauge,
     tn3270eSrvrConfConnectivityChk INTEGER,
-    tn3270eSrvrConfTmNopInactTime Unsigned32,
-    tn3270eSrvrConfTmNopInterval Unsigned32,
+    tn3270eSrvrConfTmNopInactTime Gauge,
+    tn3270eSrvrConfTmNopInterval Gauge,
     tn3270eSrvrFunctionsSupported IANATn3270Functions,
     tn3270eSrvrConfAdminStatus INTEGER,
     tn3270eSrvrConfOperStatus INTEGER,
@@ -173,12 +179,11 @@ Tn3270eSrvrConfEntry ::= SEQUENCE {
     tn3270eSrvrConfContact SnmpAdminString,
     tn3270eSrvrConfRowStatus RowStatus,
     tn3270eSrvrConfLastActTime DateAndTime,
-    tn3270eSrvrConfTmTimeout Unsigned32
+    tn3270eSrvrConfTmTimeout Gauge
     }
 
 tn3270eSrvrConfIndex OBJECT-TYPE
-    SYNTAX Unsigned32(1..4294967295)
---    Rsyntax Gauge32(1..4294967295)
+    SYNTAX Gauge(1..4294967295)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -189,8 +194,7 @@ tn3270eSrvrConfIndex OBJECT-TYPE
     ::= { tn3270eSrvrConfEntry 1 }
 
 tn3270eSrvrConfInactivityTimeout OBJECT-TYPE
-    SYNTAX Unsigned32(0..99999999)
---    Rsyntax Gauge32(0..99999999)
+    SYNTAX Gauge(0..99999999)
 --  Units
 --    seconds
     ACCESS read-write
@@ -222,8 +226,7 @@ tn3270eSrvrConfConnectivityChk OBJECT-TYPE
     ::= { tn3270eSrvrConfEntry 3 }
 
 tn3270eSrvrConfTmNopInactTime OBJECT-TYPE
-    SYNTAX Unsigned32(1..86400)
---    Rsyntax Gauge32(1..86400)
+    SYNTAX Gauge(1..86400)
 --  Units
 --    seconds
     ACCESS read-write
@@ -239,8 +242,7 @@ tn3270eSrvrConfTmNopInactTime OBJECT-TYPE
     ::= { tn3270eSrvrConfEntry 4 }
 
 tn3270eSrvrConfTmNopInterval OBJECT-TYPE
-    SYNTAX Unsigned32(1..86400)
---    Rsyntax Gauge32(1..86400)
+    SYNTAX Gauge(1..86400)
 --  Units
 --    seconds
     ACCESS read-write
@@ -259,12 +261,24 @@ tn3270eSrvrConfTmNopInterval OBJECT-TYPE
 
 tn3270eSrvrFunctionsSupported OBJECT-TYPE
     SYNTAX IANATn3270Functions
---    Rsyntax OCTET STRING(SIZE(2))
+--    Rsyntax OCTET STRING(SIZE(1..2))
+--         BITS are:
+--           transmitBinary(0)
+--           timemark(1)
+--           endOfRecord(2)
+--           terminalType(3)
+--           tn3270Regime(4)
+--           scsCtlCodes(5)
+--           dataStreamCtl(6)
+--           responses(7)
+--           bindImage(8)
+--           sysreq(9)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object indicates the functions supported by a
          TN3270E server."
+    DEFVAL { '07c0'h }
     ::= { tn3270eSrvrConfEntry 6 }
 
 tn3270eSrvrConfAdminStatus OBJECT-TYPE
@@ -409,7 +423,7 @@ tn3270eSrvrConfContact OBJECT-TYPE
         "This object provides a scratch pad for a TN3270E
         server administrator for storing information for
         later retrieval."
-    DEFVAL { ''h }
+    DEFVAL { ''H }
     ::= { tn3270eSrvrConfEntry 11 }
 
 tn3270eSrvrConfRowStatus OBJECT-TYPE
@@ -458,7 +472,7 @@ tn3270eSrvrConfRowStatus OBJECT-TYPE
 
 tn3270eSrvrConfLastActTime OBJECT-TYPE
     SYNTAX DateAndTime
---    Rsyntax OCTET STRING(SIZE(8 | 11))
+--    Rsyntax OCTET STRING(SIZE(8|11))
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -469,12 +483,11 @@ tn3270eSrvrConfLastActTime OBJECT-TYPE
         server has never been active, i.e., that the value of
         tn3270eSrvrOperStatus has never been anything other
         than down(2)."
-    DEFVAL { '0000000000000000'h }
+    DEFVAL { '0000000000000000'H }
     ::= { tn3270eSrvrConfEntry 13 }
 
 tn3270eSrvrConfTmTimeout OBJECT-TYPE
-    SYNTAX Unsigned32(1..600)
---    Rsyntax Gauge32(1..600)
+    SYNTAX Gauge(1..600)
 --  Units
 --    seconds
     ACCESS read-write
@@ -517,15 +530,14 @@ tn3270eSrvrPortEntry OBJECT-TYPE
     ::= { tn3270eSrvrPortTable 1 }
 
 Tn3270eSrvrPortEntry ::= SEQUENCE {
-    tn3270eSrvrPort Unsigned32,
+    tn3270eSrvrPort Gauge,
     tn3270eSrvrPortAddrType IANATn3270eAddrType,
     tn3270eSrvrPortAddress IANATn3270eAddress,
     tn3270eSrvrPortRowStatus RowStatus
     }
 
 tn3270eSrvrPort OBJECT-TYPE
-    SYNTAX Unsigned32(0..65535)
---    Rsyntax Gauge32(0..65535)
+    SYNTAX Gauge(0..65535)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -535,6 +547,7 @@ tn3270eSrvrPort OBJECT-TYPE
 tn3270eSrvrPortAddrType OBJECT-TYPE
     SYNTAX IANATn3270eAddrType
 --    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
 --        unknown(0),
 --        ipv4(1),
 --        ipv6(2)
@@ -653,20 +666,20 @@ tn3270eSrvrStatsEntry OBJECT-TYPE
 
 Tn3270eSrvrStatsEntry ::= SEQUENCE {
     tn3270eSrvrStatsUpTime TimeStamp,
-    tn3270eSrvrStatsMaxTerms Unsigned32,
-    tn3270eSrvrStatsInUseTerms Gauge32,
-    tn3270eSrvrStatsSpareTerms Gauge32,
-    tn3270eSrvrStatsMaxPtrs Unsigned32,
-    tn3270eSrvrStatsInUsePtrs Gauge32,
-    tn3270eSrvrStatsSparePtrs Gauge32,
-    tn3270eSrvrStatsInConnects Counter32,
-    tn3270eSrvrStatsConnResrceRejs Counter32,
-    tn3270eSrvrStatsDisconnects Counter32,
---    tn3270eSrvrStatsHCInOctets Counter64,
-    tn3270eSrvrStatsInOctets Counter32,
---    tn3270eSrvrStatsHCOutOctets Counter64,
-    tn3270eSrvrStatsOutOctets Counter32,
-    tn3270eSrvrStatsConnErrorRejs Counter32
+    tn3270eSrvrStatsMaxTerms Gauge,
+    tn3270eSrvrStatsInUseTerms Gauge,
+    tn3270eSrvrStatsSpareTerms Gauge,
+    tn3270eSrvrStatsMaxPtrs Gauge,
+    tn3270eSrvrStatsInUsePtrs Gauge,
+    tn3270eSrvrStatsSparePtrs Gauge,
+    tn3270eSrvrStatsInConnects Counter,
+    tn3270eSrvrStatsConnResrceRejs Counter,
+    tn3270eSrvrStatsDisconnects Counter,
+    tn3270eSrvrStatsHCInOctets Counter,
+    tn3270eSrvrStatsInOctets Counter,
+    tn3270eSrvrStatsHCOutOctets Counter,
+    tn3270eSrvrStatsOutOctets Counter,
+    tn3270eSrvrStatsConnErrorRejs Counter
     }
 
 tn3270eSrvrStatsUpTime OBJECT-TYPE
@@ -686,8 +699,7 @@ tn3270eSrvrStatsUpTime OBJECT-TYPE
     ::= { tn3270eSrvrStatsEntry 2 }
 
 tn3270eSrvrStatsMaxTerms OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
 --  Units
 --    LUs
     ACCESS read-only
@@ -700,7 +712,7 @@ tn3270eSrvrStatsMaxTerms OBJECT-TYPE
     ::= { tn3270eSrvrStatsEntry 3 }
 
 tn3270eSrvrStatsInUseTerms OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    LUs
     ACCESS read-only
@@ -713,7 +725,7 @@ tn3270eSrvrStatsInUseTerms OBJECT-TYPE
     ::= { tn3270eSrvrStatsEntry 4 }
 
 tn3270eSrvrStatsSpareTerms OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    LUs
     ACCESS read-only
@@ -737,8 +749,7 @@ tn3270eSrvrStatsSpareTerms OBJECT-TYPE
     ::= { tn3270eSrvrStatsEntry 5 }
 
 tn3270eSrvrStatsMaxPtrs OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
 --  Units
 --    Printer Resources
     ACCESS read-only
@@ -751,7 +762,7 @@ tn3270eSrvrStatsMaxPtrs OBJECT-TYPE
     ::= { tn3270eSrvrStatsEntry 6 }
 
 tn3270eSrvrStatsInUsePtrs OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    Printer Resources
     ACCESS read-only
@@ -764,7 +775,7 @@ tn3270eSrvrStatsInUsePtrs OBJECT-TYPE
     ::= { tn3270eSrvrStatsEntry 7 }
 
 tn3270eSrvrStatsSparePtrs OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    Spare Printer Resources
     ACCESS read-only
@@ -789,7 +800,7 @@ tn3270eSrvrStatsSparePtrs OBJECT-TYPE
     ::= { tn3270eSrvrStatsEntry 8 }
 
 tn3270eSrvrStatsInConnects OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    connections
     ACCESS read-only
@@ -810,7 +821,7 @@ tn3270eSrvrStatsInConnects OBJECT-TYPE
     ::= { tn3270eSrvrStatsEntry 9 }
 
 tn3270eSrvrStatsConnResrceRejs OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    connection attempts
     ACCESS read-only
@@ -831,7 +842,7 @@ tn3270eSrvrStatsConnResrceRejs OBJECT-TYPE
     ::= { tn3270eSrvrStatsEntry 10 }
 
 tn3270eSrvrStatsDisconnects OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    disconnections
     ACCESS read-only
@@ -847,25 +858,26 @@ tn3270eSrvrStatsDisconnects OBJECT-TYPE
         object."
     ::= { tn3270eSrvrStatsEntry 11 }
 
--- tn3270eSrvrStatsHCInOctets OBJECT-TYPE
---    SYNTAX Counter64
+tn3270eSrvrStatsHCInOctets OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
 --  Units
 --    octets
---    ACCESS read-only
---    STATUS mandatory
---    DESCRIPTION
---        "Indicates the number of octets received from TN3270
---        and TN3270E clients for the granularity of this
---        conceptual row (server-wide, port, or
---        port-and-local-address).
---        
---        A Management Station can detect discontinuities in
---        this counter by monitoring the tn3270eSrvrStatsUpTime
---        object."
---    ::= { tn3270eSrvrStatsEntry 12 }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the number of octets received from TN3270
+        and TN3270E clients for the granularity of this
+        conceptual row (server-wide, port, or
+        port-and-local-address).
+        
+        A Management Station can detect discontinuities in
+        this counter by monitoring the tn3270eSrvrStatsUpTime
+        object."
+    ::= { tn3270eSrvrStatsEntry 12 }
 
 tn3270eSrvrStatsInOctets OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    octets
     ACCESS read-only
@@ -879,25 +891,26 @@ tn3270eSrvrStatsInOctets OBJECT-TYPE
         object."
     ::= { tn3270eSrvrStatsEntry 13 }
 
--- tn3270eSrvrStatsHCOutOctets OBJECT-TYPE
---    SYNTAX Counter64
+tn3270eSrvrStatsHCOutOctets OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
 --  Units
 --    octets
---    ACCESS read-only
---    STATUS mandatory
---    DESCRIPTION
---        "Indicates the number of octets sent to TN3270
---        and TN3270E clients for the granularity of this
---        conceptual row (server-wide, port, or
---        port-and-local-address).
---        
---        A Management Station can detect discontinuities in
---        this counter by monitoring the tn3270eSrvrStatsUpTime
---        object."
---    ::= { tn3270eSrvrStatsEntry 14 }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the number of octets sent to TN3270
+        and TN3270E clients for the granularity of this
+        conceptual row (server-wide, port, or
+        port-and-local-address).
+        
+        A Management Station can detect discontinuities in
+        this counter by monitoring the tn3270eSrvrStatsUpTime
+        object."
+    ::= { tn3270eSrvrStatsEntry 14 }
 
 tn3270eSrvrStatsOutOctets OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    octets
     ACCESS read-only
@@ -912,7 +925,7 @@ tn3270eSrvrStatsOutOctets OBJECT-TYPE
     ::= { tn3270eSrvrStatsEntry 15 }
 
 tn3270eSrvrStatsConnErrorRejs OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    connection attempts
     ACCESS read-only
@@ -966,7 +979,7 @@ Tn3270eClientGroupEntry ::= SEQUENCE {
     tn3270eClientGroupAddrType IANATn3270eAddrType,
     tn3270eClientGroupAddress IANATn3270eAddress,
     tn3270eClientGroupSubnetMask IpAddress,
-    tn3270eClientGroupPfxLength Unsigned32,
+    tn3270eClientGroupPfxLength Gauge,
     tn3270eClientGroupRowStatus RowStatus
     }
 
@@ -984,6 +997,7 @@ tn3270eClientGroupName OBJECT-TYPE
 tn3270eClientGroupAddrType OBJECT-TYPE
     SYNTAX IANATn3270eAddrType
 --    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
 --        unknown(0),
 --        ipv4(1),
 --        ipv6(2)
@@ -1018,12 +1032,11 @@ tn3270eClientGroupSubnetMask OBJECT-TYPE
         
          This object's value is meaningful only if
          tn3270eClientGroupAddrType has a value of ipv4(1)."
---    DEFVAL { 255.255.255.255 }
+    DEFVAL { 'ffffffff'H }
     ::= { tn3270eClientGroupEntry 4 }
 
 tn3270eClientGroupPfxLength OBJECT-TYPE
-    SYNTAX Unsigned32(0..128)
---    Rsyntax Gauge32(0..128)
+    SYNTAX Gauge(0..128)
 --  Units
 --    bits
     ACCESS read-write
@@ -1277,7 +1290,7 @@ tn3270eClientResMapEntry OBJECT-TYPE
 Tn3270eClientResMapEntry ::= SEQUENCE {
     tn3270eClientResMapPoolName Utf8String,
     tn3270eClientResMapClientGroupName Utf8String,
-    tn3270eClientResMapClientPort Unsigned32,
+    tn3270eClientResMapClientPort Gauge,
     tn3270eClientResMapRowStatus RowStatus
     }
 
@@ -1301,8 +1314,7 @@ tn3270eClientResMapClientGroupName OBJECT-TYPE
     ::= { tn3270eClientResMapEntry 2 }
 
 tn3270eClientResMapClientPort OBJECT-TYPE
-    SYNTAX Unsigned32(0..65535)
---    Rsyntax Gauge32(0..65535)
+    SYNTAX Gauge(0..65535)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -1365,7 +1377,7 @@ Tn3270eResMapEntry ::= SEQUENCE {
     tn3270eResMapElementName SnaResourceName,
     tn3270eResMapAddrType IANATn3270eAddrType,
     tn3270eResMapAddress IANATn3270eAddress,
-    tn3270eResMapPort Unsigned32,
+    tn3270eResMapPort Gauge,
     tn3270eResMapElementType IANATn3270ResourceType,
     tn3270eResMapSscpSuppliedName SnaResourceName
     }
@@ -1387,6 +1399,7 @@ tn3270eResMapElementName OBJECT-TYPE
 tn3270eResMapAddrType OBJECT-TYPE
     SYNTAX IANATn3270eAddrType
 --    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
 --        unknown(0),
 --        ipv4(1),
 --        ipv6(2)
@@ -1408,8 +1421,7 @@ tn3270eResMapAddress OBJECT-TYPE
     ::= { tn3270eResMapEntry 3 }
 
 tn3270eResMapPort OBJECT-TYPE
-    SYNTAX Unsigned32(0..65535)
---    Rsyntax Gauge32(0..65535)
+    SYNTAX Gauge(0..65535)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1482,18 +1494,18 @@ tn3270eTcpConnEntry OBJECT-TYPE
 Tn3270eTcpConnEntry ::= SEQUENCE {
     tn3270eTcpConnRemAddrType IANATn3270eAddrType,
     tn3270eTcpConnRemAddress IANATn3270eAddress,
-    tn3270eTcpConnRemPort Unsigned32,
+    tn3270eTcpConnRemPort Gauge,
     tn3270eTcpConnLocalAddrType IANATn3270eAddrType,
     tn3270eTcpConnLocalAddress IANATn3270eAddress,
-    tn3270eTcpConnLocalPort Unsigned32,
+    tn3270eTcpConnLocalPort Gauge,
     tn3270eTcpConnLastActivity TimeTicks,
-    tn3270eTcpConnBytesIn Counter32,
-    tn3270eTcpConnBytesOut Counter32,
+    tn3270eTcpConnBytesIn Counter,
+    tn3270eTcpConnBytesOut Counter,
     tn3270eTcpConnResourceElement SnaResourceName,
     tn3270eTcpConnResourceType IANATn3270ResourceType,
     tn3270eTcpConnDeviceType IANATn3270DeviceType,
     tn3270eTcpConnFunctions IANATn3270Functions,
-    tn3270eTcpConnId Unsigned32,
+    tn3270eTcpConnId Gauge,
     tn3270eTcpConnClientIdFormat IANATn3270eClientType,
     tn3270eTcpConnClientId OCTET STRING,
     tn3270eTcpConnTraceData Tn3270eTraceData,
@@ -1501,13 +1513,14 @@ Tn3270eTcpConnEntry ::= SEQUENCE {
     tn3270eTcpConnLuLuBindImage OCTET STRING,
     tn3270eTcpConnSnaState INTEGER,
     tn3270eTcpConnStateLastDiscReason INTEGER,
-    tn3270eTcpConnSrvrConfIndex Unsigned32,
+    tn3270eTcpConnSrvrConfIndex Gauge,
     tn3270eTcpConnActivationTime TimeStamp
     }
 
 tn3270eTcpConnRemAddrType OBJECT-TYPE
     SYNTAX IANATn3270eAddrType
 --    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
 --        unknown(0),
 --        ipv4(1),
 --        ipv6(2)
@@ -1537,8 +1550,7 @@ tn3270eTcpConnRemAddress OBJECT-TYPE
     ::= { tn3270eTcpConnEntry 2 }
 
 tn3270eTcpConnRemPort OBJECT-TYPE
-    SYNTAX Unsigned32(0..65535)
---    Rsyntax Gauge32(0..65535)
+    SYNTAX Gauge(0..65535)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -1554,6 +1566,7 @@ tn3270eTcpConnRemPort OBJECT-TYPE
 tn3270eTcpConnLocalAddrType OBJECT-TYPE
     SYNTAX IANATn3270eAddrType
 --    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
 --        unknown(0),
 --        ipv4(1),
 --        ipv6(2)
@@ -1578,8 +1591,7 @@ tn3270eTcpConnLocalAddress OBJECT-TYPE
     ::= { tn3270eTcpConnEntry 5 }
 
 tn3270eTcpConnLocalPort OBJECT-TYPE
-    SYNTAX Unsigned32(1..65535)
---    Rsyntax Gauge32(1..65535)
+    SYNTAX Gauge(1..65535)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -1597,7 +1609,7 @@ tn3270eTcpConnLastActivity OBJECT-TYPE
     ::= { tn3270eTcpConnEntry 7 }
 
 tn3270eTcpConnBytesIn OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    octets
     ACCESS read-only
@@ -1612,7 +1624,7 @@ tn3270eTcpConnBytesIn OBJECT-TYPE
     ::= { tn3270eTcpConnEntry 8 }
 
 tn3270eTcpConnBytesOut OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    octets
     ACCESS read-only
@@ -1677,7 +1689,18 @@ tn3270eTcpConnDeviceType OBJECT-TYPE
 
 tn3270eTcpConnFunctions OBJECT-TYPE
     SYNTAX IANATn3270Functions
---    Rsyntax OCTET STRING(SIZE(2))
+--    Rsyntax OCTET STRING(SIZE(1..2))
+--         BITS are:
+--           transmitBinary(0)
+--           timemark(1)
+--           endOfRecord(2)
+--           terminalType(3)
+--           tn3270Regime(4)
+--           scsCtlCodes(5)
+--           dataStreamCtl(6)
+--           responses(7)
+--           bindImage(8)
+--           sysreq(9)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1690,8 +1713,7 @@ tn3270eTcpConnFunctions OBJECT-TYPE
     ::= { tn3270eTcpConnEntry 13 }
 
 tn3270eTcpConnId OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1743,7 +1765,7 @@ tn3270eTcpConnClientId OBJECT-TYPE
 
 tn3270eTcpConnTraceData OBJECT-TYPE
     SYNTAX Tn3270eTraceData
---    Rsyntax OCTET STRING(SIZE(0 | 3..4096))
+--    Rsyntax OCTET STRING(SIZE(0|3..4096))
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1752,7 +1774,7 @@ tn3270eTcpConnTraceData OBJECT-TYPE
 
 tn3270eTcpConnLogInfo OBJECT-TYPE
     SYNTAX IANATn3270eLogData
---    Rsyntax OCTET STRING(SIZE(0 | 6..2048))
+--    Rsyntax OCTET STRING(SIZE(0|6..2048))
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1836,8 +1858,7 @@ tn3270eTcpConnStateLastDiscReason OBJECT-TYPE
     ::= { tn3270eTcpConnEntry 21 }
 
 tn3270eTcpConnSrvrConfIndex OBJECT-TYPE
-    SYNTAX Unsigned32(1..4294967295)
---    Rsyntax Gauge32(1..4294967295)
+    SYNTAX Gauge(1..4294967295)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION

@@ -1,26 +1,27 @@
--- MIB created 10/17/100 14:21:37, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 06-Dec-2005 16:31:52, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-COPS-CLIENT-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-COPS-CLIENT-MIB.my"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    OBJECT-TYPE
-            FROM RFC-1212
     DisplayString, RowStatus, TruthValue
             FROM SNMPv2-TC-v1
     ifIndex
             FROM IF-MIB
-    Unsigned32
-            FROM CISCO-TC
     ciscoMgmt
-            FROM CISCO-SMI;
+            FROM CISCO-SMI
+    Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
 
 ciscoCopsClientMIB OBJECT IDENTIFIER ::= { ciscoMgmt 140 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200006110000Z
+--    200511140000Z
 --  OrgName
 --    Cisco Systems Inc. 
 --  ContactInfo
@@ -46,6 +47,13 @@ ciscoCopsClientMIB OBJECT IDENTIFIER ::= { ciscoMgmt 140 }
 --    Decision Point or PDP) and its clients (Policy Enforcement Points
 --    or PEPs).
 --  RevDate
+--    200511140000Z
+--  RevDescr
+--    Updated the imports such that Unsigned32 is imported from 
+--    SNMPv2-SMI instead of CISCO-TC. Changed the syntax of the 
+--    textual conventions CopsRole, CopsRoleCombination, 
+--    CopsDomainName from DisplayString to OCTET STRING.
+--  RevDate
 --    200006110000Z
 --  RevDescr
 --    Added support for optional role configuration.
@@ -61,8 +69,7 @@ ccopsMIBConformance OBJECT IDENTIFIER ::= { ciscoCopsClientMIB 3 }
 ccopsMIBCompliances OBJECT IDENTIFIER ::= { ccopsMIBConformance 1 }
 ccopsMIBGroups  OBJECT IDENTIFIER ::= { ccopsMIBConformance 2 }
 
-CopsRole ::= DisplayString(SIZE(1..31))
--- Rsyntax OCTET STRING(SIZE(1..31))
+CopsRole ::= OCTET STRING(SIZE(1..31))
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
@@ -74,8 +81,7 @@ CopsRole ::= DisplayString(SIZE(1..31))
 --    policies indirectly as the policies of the roles assigned to
 --    that interface.
 
-CopsRoleCombination ::= DisplayString(SIZE(0..255))
--- Rsyntax OCTET STRING(SIZE(0..255))
+CopsRoleCombination ::= OCTET STRING(SIZE(0..255))
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
@@ -89,8 +95,7 @@ CopsRoleCombination ::= DisplayString(SIZE(0..255))
 --    When one or more roles assigned to an interface, that set of
 --    roles is known as a role-combination.
 
-CopsDomainName ::= DisplayString(SIZE(0..31))
--- Rsyntax OCTET STRING(SIZE(0..31))
+CopsDomainName ::= OCTET STRING(SIZE(0..31))
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
@@ -122,8 +127,7 @@ CopsClientType ::= INTEGER {
 --                        of PIBs (Policy Information Bases [PIB]).
 
 ccopsServerMax OBJECT-TYPE
-    SYNTAX Unsigned32(0..65535)
---    Rsyntax Gauge32(0..65535)
+    SYNTAX Gauge(0..65535)
 --  Units
 --    servers
     ACCESS read-only
@@ -135,8 +139,7 @@ ccopsServerMax OBJECT-TYPE
     ::= { ccopsGlobalObjects 1 }
 
 ccopsMaxRole OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
 --  Units
 --    roles
     ACCESS read-only
@@ -148,8 +151,7 @@ ccopsMaxRole OBJECT-TYPE
     ::= { ccopsGlobalObjects 2 }
 
 ccopsMaxRoleCombination OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
 --  Units
 --    role-combinations
     ACCESS read-only
@@ -180,7 +182,7 @@ ccopsServerConfigEntry OBJECT-TYPE
         is created and deleted by using ccopsServerConfigStatus.
         
         An entry may not exist in the active state unless all
-        objects in the entry have an appropriate value. 
+        objects in the entry have an appropriate value.
         
         Each client type can have its own COPS servers.
         By creating, deleting or modifying an entry in this table,
@@ -189,14 +191,15 @@ ccopsServerConfigEntry OBJECT-TYPE
         
         In order to get policies from COPS server for a client type,
         user has to create an entry for such client type."
-    INDEX { ccopsServerConfigClientType, IMPLIED ccopsServerConfigName }
+    INDEX { ccopsServerConfigClientType, --?? IMPLIED may cause problems
+            IMPLIED ccopsServerConfigName }
     ::= { ccopsServerConfigTable 1 }
 
 CcopsServerConfigEntry ::= SEQUENCE {
     ccopsServerConfigClientType CopsClientType,
     ccopsServerConfigName DisplayString,
-    ccopsServerConfigPriority Unsigned32,
-    ccopsServerConfigPort Unsigned32,
+    ccopsServerConfigPriority Gauge,
+    ccopsServerConfigPort Gauge,
     ccopsServerConfigStatus RowStatus
     }
 
@@ -228,8 +231,7 @@ ccopsServerConfigName OBJECT-TYPE
     ::= { ccopsServerConfigEntry 2 }
 
 ccopsServerConfigPriority OBJECT-TYPE
-    SYNTAX Unsigned32(0..255)
---    Rsyntax Gauge32(0..255)
+    SYNTAX Gauge(0..255)
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -237,7 +239,7 @@ ccopsServerConfigPriority OBJECT-TYPE
         The COPS client will attempt to contact COPS servers for
         the appropriate Client-Type in the order of their
         priority values.  COPS servers designated by the COPS
-        protocol PDP-Redirect mechanism are always used in 
+        protocol PDP-Redirect mechanism are always used in
         preference to any entries in this table.
         
         When ccopsServerMax mib object is not zero, the valid
@@ -258,8 +260,7 @@ ccopsServerConfigPriority OBJECT-TYPE
     ::= { ccopsServerConfigEntry 3 }
 
 ccopsServerConfigPort OBJECT-TYPE
-    SYNTAX Unsigned32(0..65535)
---    Rsyntax Gauge32(0..65535)
+    SYNTAX Gauge(0..65535)
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -290,13 +291,12 @@ ccopsServerConfigStatus OBJECT-TYPE
         objects in the entry have an appropriate value.
         
         Once a row becomes active, value in any other column within
-        such row cannot be modified except by setting 
+        such row cannot be modified except by setting
         ccopsServerConfigStatus to notInService(2) for such row."
     ::= { ccopsServerConfigEntry 5 }
 
 ccopsInitialTimeout OBJECT-TYPE
-    SYNTAX Unsigned32(0..65535)
---    Rsyntax Gauge32(0..65535)
+    SYNTAX Gauge(0..65535)
 --  Units
 --    seconds
     ACCESS read-write
@@ -317,8 +317,7 @@ ccopsInitialTimeout OBJECT-TYPE
     ::= { ccopsGlobalObjects 5 }
 
 ccopsTimeoutIncrement OBJECT-TYPE
-    SYNTAX Unsigned32(0..65535)
---    Rsyntax Gauge32(0..65535)
+    SYNTAX Gauge(0..65535)
 --  Units
 --    seconds
     ACCESS read-write
@@ -332,8 +331,7 @@ ccopsTimeoutIncrement OBJECT-TYPE
     ::= { ccopsGlobalObjects 6 }
 
 ccopsTimeoutMax OBJECT-TYPE
-    SYNTAX Unsigned32(0..65535)
---    Rsyntax Gauge32(0..65535)
+    SYNTAX Gauge(0..65535)
 --  Units
 --    seconds
     ACCESS read-write
@@ -341,7 +339,7 @@ ccopsTimeoutMax OBJECT-TYPE
     DESCRIPTION
         "The maximum retry time-out that the COPS client allows.
         On every consecutive failure to connect to all COPS servers,
-        the COPS client increases the retry time-out up to 
+        the COPS client increases the retry time-out up to
         ccopsTimeoutMax."
     DEFVAL { 300 }
     ::= { ccopsGlobalObjects 7 }
@@ -405,11 +403,11 @@ ccopsDomainName OBJECT-TYPE
         
         Changing the COPS domain name while qosPolicySource is cops(2)
         will result in requesting new policies from the cops server and
-        configuring the device with those new policies.  The value of 
+        configuring the device with those new policies.  The value of
         ccopsDomainName is ignored if qosPolicySource is local(1)."
     REFERENCE
         "Reference CISCO-QOS-MIB, qosPolicySource."
-    DEFVAL { ''h }
+    DEFVAL { ''H }
     ::= { ccopsDomainEntry 2 }
 
 ccopsRoleTable OBJECT-TYPE
@@ -438,7 +436,8 @@ ccopsRoleEntry OBJECT-TYPE
         
         Therefore, a particular role can not be added into the role
         combination for any interface if it is removed from this table."
-    INDEX { IMPLIED ccopsRoleName }
+    INDEX { --?? IMPLIED may cause problems
+            IMPLIED ccopsRoleName }
     ::= { ccopsRoleTable 1 }
 
 CcopsRoleEntry ::= SEQUENCE {
@@ -476,7 +475,7 @@ ccopsRoleStatus OBJECT-TYPE
         An entry may not exist in the active state unless all
         objects in the entry have an appropriate value.
         Once a row becomes active, value in any other column within
-        such row cannot be modified except by setting 
+        such row cannot be modified except by setting
         ccopsRoleStatus to notInService(2) for such row.
         
         Deleting a row results in removing this ccopsRoleName from all
@@ -595,7 +594,7 @@ ccopsRoleGroup OBJECT IDENTIFIER ::= { ccopsMIBGroups 3 }
 --  Status
 --    mandatory
 --  Descr
---    A collection of objects which allow an agent to require 
+--    A collection of objects which allow an agent to require
 --    a limited set of allowed roles be specified, and to reject
 --    any role-combination containing any other role.
 --  objects

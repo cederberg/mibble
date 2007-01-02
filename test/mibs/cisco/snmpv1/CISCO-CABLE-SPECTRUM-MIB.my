@@ -1,4 +1,4 @@
--- MIB file created 30-Jul-2002 16:13:46, by
+-- MIB file created 17-Sep-2004 18:17:43, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-CABLE-SPECTRUM-MIB DEFINITIONS ::= BEGIN
@@ -11,8 +11,6 @@ IMPORTS
             FROM SNMPv2-TC-v1
     ifIndex, InterfaceIndex, InterfaceIndexOrZero
             FROM IF-MIB
---  Unsigned32
---          FROM CISCO-TC
     ciscoMgmt
             FROM CISCO-SMI
     Counter, Gauge
@@ -25,7 +23,7 @@ IMPORTS
 ciscoCableSpectrumMIB OBJECT IDENTIFIER ::= { ciscoMgmt 114 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200102010000Z
+--    200403020000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -60,6 +58,31 @@ ciscoCableSpectrumMIB OBJECT IDENTIFIER ::= { ciscoMgmt 114 }
 --     detected to go on-line and off-line by flap detectors, the
 --     cable operators can look at the flap list and spectrum
 --     tables to determine the possible causes.
+--  RevDate
+--    200403020000Z
+--  RevDescr
+--    1. Modified description for ccsFlapListMaxSize and
+--        ccsFlapListCurrentSize.
+--     2. Implement ccsCmFlapTable using downstream, upstream and 
+--        Mac as indices to replace ccsFlapTable.
+--     3. Modified description for ccsSNRRequestTable.
+--     4. Added ccsUpSpecMgmtUpperBoundFreq.
+--     5. Added ccsCompliance5.
+--  RevDate
+--    200306180000Z
+--  RevDescr
+--    1. Changed range of CCSFrequency and CCSMeasuredFrequency
+--     TEXTUAL-CONVENTION to support Euro-DOCSIS and J-DOCSIS.
+--  RevDate
+--    200206100000Z
+--  RevDescr
+--    1. Changed range for ccsUpSpecMgmtFecCorrectThres1,
+--     ccsUpSpecMgmtFecCorrectThres2, 
+--     ccsUpSpecMgmtFecUnCorrectThres1,
+--     ccsUpSpecMgmtFecUnCorrectThres2 and ccsUpSpecMgmtSnrThres2.
+--     2. Changed modemOffline(1) enumeration to 
+--     stationMaintainenceMiss.
+--     3. Added ccsUpSpecMgmtGroupRev1 to ccsCompliance4.
 --  RevDate
 --    200102010000Z
 --  RevDescr
@@ -96,15 +119,22 @@ ciscoCableSpectrumMIBConformance OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIB 3
 ciscoCableSpectrumMIBCompliances OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBConformance 1 }
 ciscoCableSpectrumMIBGroups OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBConformance 2 }
 
-CCSFrequency ::= INTEGER(5000..42000)
+CCSFrequency ::= INTEGER(5000..65000)
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
 --  Descr
 --    This data type represents the frequency.
 --    The unit is in KHz.
+--    A range of 5000KHz to 42000KHz is appropriate for a cable
+--    plant using a North American Sub-Split channel plan.
+--    The spectrum range has been expanded to accommodate
+--    an upper edge of 65000KHz for some European channel plans.
+--    If DOCSIS is extended to cover other types of channel
+--    plans (and frequency allocations) this object will
+--    be modified accordingly.
 
-CCSMeasuredFrequency ::= INTEGER(4000..42000)
+CCSMeasuredFrequency ::= INTEGER(4000..65000)
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
@@ -175,17 +205,13 @@ ccsFlapListMaxSize OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "The maximum number of modems that a flap list can support.
-         This number controls the size of the flap list.  For each 
-         MAC domain or downstream,the maximum number of cable modems
-         that can be supported is 8191.The user may want to increase
-         or decrease the Flap List size according to the number of
-         downstreams and the number of modem line cards in the CMTS.
-        
-         When the number of modems exceeds the max flap list size,
-         the additional modems are ignored.  The flap detector is an
-         information filter to avoid inundating a management agent
-         with data which is less meaningful as a function of size."
+        "The maximum number of flapped modem entries 
+         (ccsCmFlapEntry) per Cable downstream interface that 
+         can be reported in the ccsCmFlapTable.  If the Cable
+         downstream interface has more flapped modems than
+         the ccsFlapListMaxSize, some of the flapped modems 
+         will not be shown in the ccsCmFlapTable.  In this case,
+         the users may want to increase the ccsFlapMaxSize."
     DEFVAL { 100 }
     ::= { ccsFlapObjects 1 }
 
@@ -196,8 +222,9 @@ ccsFlapListCurrentSize OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The current number of modems in the flap list.  Its value
-         will be less than or equal to ccsFlapListMaxSize."
+        "The total number of flapped modem entries (ccsCmFlapEntry)
+         that reported in the ccsCmFlapTable.  The maximum value 
+         will be ccsFlapListMaxSize * <no of downstreams> "
     ::= { ccsFlapObjects 2 }
 
 ccsFlapAging OBJECT-TYPE
@@ -234,7 +261,7 @@ ccsFlapInsertionTime OBJECT-TYPE
 ccsFlapTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CcsFlapEntry
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "This table keeps the records of modem state changes.
          It can be used to identify the problematic cable modems.
@@ -245,7 +272,7 @@ ccsFlapTable OBJECT-TYPE
 ccsFlapEntry OBJECT-TYPE
     SYNTAX CcsFlapEntry
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "List of attributes for an entry in the ccsFlapTable.
          An entry in this table exists for each cable modem that
@@ -280,17 +307,18 @@ ccsFlapMacAddr OBJECT-TYPE
     SYNTAX MacAddress
 --    Rsyntax OCTET STRING(SIZE(6))
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
-        "MAC address of the Cable Modem's Cable interface.
-         Identifies a flap-list entry for a flapping Cable Modem."
+        "MAC address of the Cable Modem's Cable interface
+         which identifies a flap-list entry for a flapping 
+         Cable Modem."
     ::= { ccsFlapEntry 1 }
 
 ccsFlapUpstreamIfIndex OBJECT-TYPE
     SYNTAX InterfaceIndex
 --    Rsyntax INTEGER(1..2147483647)
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The ifIndex of the Cable upstream interface whose ifType is
          docsCableUpstream(129).  The CMTS detects a flapping Cable
@@ -301,7 +329,7 @@ ccsFlapDownstreamIfIndex OBJECT-TYPE
     SYNTAX InterfaceIndex
 --    Rsyntax INTEGER(1..2147483647)
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The ifIndex of the Cable downstream interface whose ifType
          is docsCableDownstream(128)."
@@ -312,18 +340,16 @@ ccsFlapInsertionFails OBJECT-TYPE
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
-        "******** THIS OBJECT IS DEPRECATED ********
-        
-         The number of times a Cable Modem registered
+        "The number of times a Cable Modem registered
          more frequently than expected.  Excessive registration
          is defined as the presence of a time span between
          two successive registration cycles which is less than
          a threshold span (ccsFlapInsertionTime).
         
          A Cable Modem may fail the ranging or registration process
-         due to not being able to get an IP address.When the Cable
-         Modem can not finish registeration within the insertion
-         time,it retries the process and sends the Initial
+         due to not being able to get an IP address. When the Cable
+         Modem can not finish registration within the insertion
+         time, it retries the process and sends the Initial
          Maintenance packet again.
          CMTS will receive the Initial Maintenance
          packet from the Cable Modem sooner than expected and the
@@ -350,9 +376,7 @@ ccsFlapHits OBJECT-TYPE
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
-        "******** THIS OBJECT IS DEPRECATED ********
-        
-         The number of times the CMTS receives the Ranging request
+        "The number of times the CMTS receives the Ranging request
          from the Cable Modem.
         
          The CMTS issues a Station Maintenance transmit opportunity
@@ -378,9 +402,7 @@ ccsFlapMisses OBJECT-TYPE
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
-        "******** THIS OBJECT IS DEPRECATED ********
-        
-         The number of times the CMTS misses the Ranging request
+        "The number of times the CMTS misses the Ranging request
          from the Cable Modem.
         
          The CMTS issues a Station Maintenance packet every 10
@@ -401,9 +423,9 @@ ccsFlapMisses OBJECT-TYPE
         
          Laser clipping can happen if the signal power is too high
          when the upstream electrical signal is converted to an
-         optical signal.When it happens the more input produces less
-         output, until finally there is no more increase in output.
-         This phenomena is called laser clipping.
+         optical signal.  When it happens the more input produces 
+         less output, until finally there is no more increase in 
+         output.  This phenomena is called laser clipping.
         
          Discontinuites in the value of this counter can occur if
          this entry is removed from the table and then re-added, and
@@ -416,9 +438,7 @@ ccsFlapCrcErrors OBJECT-TYPE
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
-        "******** THIS OBJECT IS DEPRECATED ********
-        
-         The number of times the CMTS upstream receiver flagged
+        "The number of times the CMTS upstream receiver flagged
          a packet with a CRC error.
         
          If ccsFlapCrcErrors is high, it indicates the cable
@@ -432,9 +452,9 @@ ccsFlapCrcErrors OBJECT-TYPE
         
          Laser clipping can happen if the signal power is too high
          when the upstream electrical signal is converted to an
-         optical signal.When it happens the more input produces less
-         output, until finally there is no more increase in output.
-         This phenomena is called laser clipping.
+         optical signal.  When it happens the more input produces 
+         less output, until finally there is no more increase in 
+         output.  This phenomena is called laser clipping.
          Discontinuites in the value of this counter can occur if
          this entry is removed from the table and then re-added, and
          are indicated by a change in the value of
@@ -446,14 +466,12 @@ ccsFlapPowerAdjustments OBJECT-TYPE
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
-        "******** THIS OBJECT IS DEPRECATED ********
-        
-         The number of times the Cable Modem upstream
+        "The number of times the Cable Modem upstream
          transmit power is adjusted during station
          maintenance.  When the adjustment is greater than the
          power adjustment threshold the counter will be incremented.
          The power adjustment threshold is chosen in an
-         implementation-dependant manner.
+         implementation-dependent manner.
         
          The Flap Count (ccsFlapTotal) will be incremented when this
          counter is incremented.
@@ -482,9 +500,7 @@ ccsFlapTotal OBJECT-TYPE
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
-        "******** THIS OBJECT IS DEPRECATED ********
-        
-         Whenever the Cable Modem passes flap detection,
+        "Whenever the Cable Modem passes flap detection,
          then the flap counter is increased.
         
          There are 3 flap detectors defined:
@@ -508,7 +524,7 @@ ccsFlapLastFlapTime OBJECT-TYPE
     SYNTAX DateAndTime
 --    Rsyntax OCTET STRING(SIZE(8|11))
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The flap time is set whenever the Cable Modem triggers a
          flap detector."
@@ -518,12 +534,13 @@ ccsFlapCreateTime OBJECT-TYPE
     SYNTAX DateAndTime
 --    Rsyntax OCTET STRING(SIZE(8|11))
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The time that this entry was added to the table. If an
          entry is removed and then later re-added, there may be a
          discontinuity in the counters associated with this entry.
-         This timestamp can be used to detect those discontinuites."
+         This timestamp can be used to detect those 
+         discontinuities."
     ::= { ccsFlapEntry 11 }
 
 ccsFlapRowStatus OBJECT-TYPE
@@ -537,16 +554,16 @@ ccsFlapRowStatus OBJECT-TYPE
 --        destroy(6)
 --        }
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "Controls and reflects the status of rows in this table.
         
-         When a cable modem triggers a flap detector,if an entry
+         When a cable modem triggers a flap detector, if an entry
          does not already exist for this cable modem, and
          ccsFlapListCurrentSize is less than ccsFlapListMaxSize,
-         then an entry will be created in this table. The new instance
-         of this object will be set to active(1).  All flapping
-         modems have the status of active(1).
+         then an entry will be created in this table. The new 
+         instance of this object will be set to active(1).  All 
+         flapping modems have the status of active(1).
         
          Active entries are removed from the table after they have
          not triggered any additional flap detectors for the period
@@ -560,7 +577,7 @@ ccsFlapRowStatus OBJECT-TYPE
 ccsFlapInsertionFailNum OBJECT-TYPE
     SYNTAX Gauge
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The number of times a Cable Modem registered more frequently
          than expected.  Excessive registration is defined as the
@@ -569,9 +586,9 @@ ccsFlapInsertionFailNum OBJECT-TYPE
          (ccsFlapInsertionTime).
         
          A Cable Modem may fail the ranging or registration process
-         due to not being able to get an IP address.When the Cable
-         Modem can not finish registeration within the insertion
-         time,it retries the process and sends the Initial
+         due to not being able to get an IP address. When the Cable
+         Modem can not finish registration within the insertion
+         time, it retries the process and sends the Initial
          Maintenance packet again. CMTS will receive the Initial
          Maintenance packet from the Cable Modem sooner than expected
          and the Cable Modem is considered a flapping modem.
@@ -594,7 +611,7 @@ ccsFlapInsertionFailNum OBJECT-TYPE
 ccsFlapHitNum OBJECT-TYPE
     SYNTAX Gauge
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The number of times the CMTS receives the Ranging request
          from the Cable Modem.
@@ -620,7 +637,7 @@ ccsFlapHitNum OBJECT-TYPE
 ccsFlapMissNum OBJECT-TYPE
     SYNTAX Gauge
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The number of times the CMTS misses the Ranging request
          from the Cable Modem.
@@ -642,7 +659,7 @@ ccsFlapMissNum OBJECT-TYPE
         
          Laser clipping can happen if the signal power is too high
          when the upstream electrical signal is converted to an
-         optical signal.When it happens the more input produces less
+         optical signal.  When it happens the more input produces less
          output, until finally there is no more increase in output.
          This phenomena is called laser clipping.
         
@@ -657,7 +674,7 @@ ccsFlapMissNum OBJECT-TYPE
 ccsFlapCrcErrorNum OBJECT-TYPE
     SYNTAX Gauge
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The number of times the CMTS upstream receiver flagged
          a packet with a CRC error.
@@ -673,9 +690,9 @@ ccsFlapCrcErrorNum OBJECT-TYPE
         
          Laser clipping can happen if the signal power is too high
          when the upstream electrical signal is converted to an
-         optical signal.When it happens the more input produces less
-         output, until finally there is no more increase in output.
-         This phenomena is called laser clipping.
+         optical signal.  When it happens the more input produces 
+         less output, until finally there is no more increase in 
+         output.  This phenomena is called laser clipping.
         
          This object is going to replace the object ccsFlapCrcErrors
          and the value of this object can be reset to zero if this
@@ -688,13 +705,13 @@ ccsFlapCrcErrorNum OBJECT-TYPE
 ccsFlapPowerAdjustmentNum OBJECT-TYPE
     SYNTAX Gauge
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The number of times the Cable Modem upstream transmit power
-         is adjusted during station maintenance. When the adjustment is
-         greater than the power adjustment threshold the number will be
-         incremented. The power adjustment threshold is chosen in an
-         implementation-dependant manner
+         is adjusted during station maintenance.  When the adjustment 
+         is greater than the power adjustment threshold the number 
+         will be incremented. The power adjustment threshold is chosen 
+         in an implementation-dependent manner
         
          The Flap number (ccsFlapTotalNum) will be incremented when
          this object is incremented.
@@ -720,7 +737,7 @@ ccsFlapPowerAdjustmentNum OBJECT-TYPE
 ccsFlapTotalNum OBJECT-TYPE
     SYNTAX Gauge
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "Whenever the Cable Modem passes flap detection, then the flap
          number is increased.
@@ -748,7 +765,7 @@ ccsFlapResetNow OBJECT-TYPE
 --        false(2)
 --        }
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "Setting this object to true(1) will set the following objects
          of this entry to 0: ccsFlapInsertionFailsNum, ccsFlapHitsNum,
@@ -762,7 +779,7 @@ ccsFlapLastResetTime OBJECT-TYPE
     SYNTAX DateAndTime
 --    Rsyntax OCTET STRING(SIZE(8|11))
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The last time that all the statistical objects of this entry
          are started from zero. There are several ways to restart the
@@ -780,7 +797,7 @@ ccsFlapPowerAdjustThreshold OBJECT-TYPE
 --  Units
 --    db
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The power adjust threshold.  When the power of the modem is
          adjusted beyond this threshold, the modem will be inserted
@@ -791,7 +808,7 @@ ccsFlapPowerAdjustThreshold OBJECT-TYPE
 ccsFlapMissThreshold OBJECT-TYPE
     SYNTAX Gauge(1..12)
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "Per modem miss threshold which triggers polling flap detector.
          When the number of times a cable modem does not acknowledge a 
@@ -807,7 +824,7 @@ ccsFlapResetAll OBJECT-TYPE
 --        false(2)
 --        }
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "Setting this object to true(1) causes ccsFlapInsertionFailNum,
          ccsFlapHitNum, ccsFlapMissNum, ccsFlapCrcErrorNum, 
@@ -823,7 +840,7 @@ ccsFlapClearAll OBJECT-TYPE
 --        false(2)
 --        }
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "Setting this object to true(1) removes all cable modems from
          flap-list and all the entries in the ccsFlapTable are
@@ -839,7 +856,7 @@ ccsFlapLastClearTime OBJECT-TYPE
     SYNTAX DateAndTime
 --    Rsyntax OCTET STRING(SIZE(8|11))
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The last time that all the entries in the ccsFlapTable are
          destroyed. There are several ways to destroy all the entries
@@ -850,6 +867,338 @@ ccsFlapLastClearTime OBJECT-TYPE
          of all '00'Hs indicates that the entries in the ccsFlapTable
          have never been destroyed"
     ::= { ccsFlapObjects 10 }
+
+ccsCmFlapTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CcsCmFlapEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table keeps the records of modem state changes,
+         so it can be used to identify the problematic cable 
+         modems.
+         An entry per modem is added to the table automatically 
+         by the system when it detects any state changes to
+         the modem.  Therefore, it can be deleted but 
+         can not be added by the management system."
+    ::= { ccsFlapObjects 11 }
+
+ccsCmFlapEntry OBJECT-TYPE
+    SYNTAX CcsCmFlapEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "List of attributes for an entry in the ccsCmFlapTable.
+         An entry in this table exists for each cable modem that
+         triggered one of our flap detectors."
+    INDEX { ccsCmFlapDownstreamIfIndex, ccsCmFlapUpstreamIfIndex, ccsCmFlapMacAddr }
+    ::= { ccsCmFlapTable 1 }
+
+CcsCmFlapEntry ::= SEQUENCE {
+    ccsCmFlapDownstreamIfIndex InterfaceIndex,
+    ccsCmFlapUpstreamIfIndex InterfaceIndex,
+    ccsCmFlapMacAddr MacAddress,
+    ccsCmFlapLastFlapTime DateAndTime,
+    ccsCmFlapCreateTime DateAndTime,
+    ccsCmFlapInsertionFailNum Gauge,
+    ccsCmFlapHitNum Gauge,
+    ccsCmFlapMissNum Gauge,
+    ccsCmFlapCrcErrorNum Gauge,
+    ccsCmFlapPowerAdjustmentNum Gauge,
+    ccsCmFlapTotalNum Gauge,
+    ccsCmFlapResetNow TruthValue,
+    ccsCmFlapLastResetTime DateAndTime,
+    ccsCmFlapRowStatus RowStatus
+    }
+
+ccsCmFlapDownstreamIfIndex OBJECT-TYPE
+    SYNTAX InterfaceIndex
+--    Rsyntax INTEGER(1..2147483647)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The ifIndex of the Cable downstream interface whose ifType
+         is docsCableDownstream(128)."
+    ::= { ccsCmFlapEntry 1 }
+
+ccsCmFlapUpstreamIfIndex OBJECT-TYPE
+    SYNTAX InterfaceIndex
+--    Rsyntax INTEGER(1..2147483647)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The ifIndex of the Cable upstream interface whose ifType is
+         docsCableUpstream(129).  The CMTS detects a flapping Cable
+         Modem from its Cable upstream interface."
+    ::= { ccsCmFlapEntry 2 }
+
+ccsCmFlapMacAddr OBJECT-TYPE
+    SYNTAX MacAddress
+--    Rsyntax OCTET STRING(SIZE(6))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "MAC address of the Cable Modem's Cable interface which
+         identifies a flapping Cable Modem."
+    ::= { ccsCmFlapEntry 3 }
+
+ccsCmFlapLastFlapTime OBJECT-TYPE
+    SYNTAX DateAndTime
+--    Rsyntax OCTET STRING(SIZE(8|11))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The flap time is set whenever the Cable Modem triggers a
+         flap detector."
+    ::= { ccsCmFlapEntry 4 }
+
+ccsCmFlapCreateTime OBJECT-TYPE
+    SYNTAX DateAndTime
+--    Rsyntax OCTET STRING(SIZE(8|11))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The time that this entry was added to the table. If an
+         entry is removed and then later re-added, there may be a
+         discontinuity in the counters associated with this entry.
+         This timestamp can be used to detect those 
+         discontinuities."
+    ::= { ccsCmFlapEntry 5 }
+
+ccsCmFlapInsertionFailNum OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of times a Cable Modem registered more frequently
+         than expected.  Excessive registration is defined as the
+         presence of a time span between two successive registration
+         cycles which is less than a threshold span
+         (ccsFlapInsertionTime).
+        
+         A Cable Modem may fail the ranging or registration process
+         due to not being able to get an IP address. When the Cable
+         Modem can not finish registration within the insertion
+         time, it retries the process and sends the Initial
+         Maintenance packet again. CMTS will receive the Initial
+         Maintenance packet from the Cable Modem sooner than expected
+         and the Cable Modem is considered a flapping modem.
+        
+         This object may indicate:
+             Intermittent downstream sync loss, or
+             DHCP or modem registration problems.
+        
+         The Flap number (ccsCmFlapTotalNum) will be incremented when
+         this object is incremented.
+        
+         The value of this object can be reset to zero if this entry 
+         is removed from the table and then re-added, or if the 
+         ccsCmFlapResetNow object was set to true(1). The value of the 
+         object ccsCmFlapLastResetTime indicates the last reset time."
+    ::= { ccsCmFlapEntry 6 }
+
+ccsCmFlapHitNum OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of times the CMTS receives the Ranging request
+         from the Cable Modem.
+        
+         The CMTS issues a Station Maintenance transmit opportunity
+         at a typical rate of once every 10 seconds and waits for
+         a Ranging request from the Cable Modem. If the CMTS receives
+         a Ranging request then the Hit number will be increased by 1
+        
+         If the FlapTotal object is high, both Hit and Miss objects are
+         high, and other statistical objects are relatively low then
+         the flapping is probably caused by the modem going up and down.
+         The Hit and Miss objects keep-alive polling statistics. The
+         Hit object should be much greater than the Misses count.
+        
+         The value of this object can be reset to zero if this entry 
+         is removed from the table and then re-added, or if the 
+         ccsCmFlapResetNow object was set to true(1). The value of the 
+         object ccsCmFlapLastResetTime indicates the last reset time."
+    ::= { ccsCmFlapEntry 7 }
+
+ccsCmFlapMissNum OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of times the CMTS misses the Ranging request
+         from the Cable Modem.
+        
+         The CMTS issues a Station Maintenance packet every 10 seconds
+         and waits for a Ranging request from the Cable Modem. If the
+         CMTS misses a Ranging request within 25 msec then the Miss
+         Object will be incremented.
+        
+         If ccsCmFlapTotalNum is high, Hit and Miss are high but
+         ccsCmFlapPowerAdjustmentNum and ccsCmFlapInsertionFailNum 
+         are low then the flapping is probably caused by the modem 
+         going up and down.
+        
+         Miss object can indicate:
+             Intermittent upstream,
+             Laser clipping, or
+             Noise bursts.
+        
+         Laser clipping can happen if the signal power is too high
+         when the upstream electrical signal is converted to an
+         optical signal.  When it happens the more input produces less
+         output, until finally there is no more increase in output.
+         This phenomena is called laser clipping.
+        
+         The value of this object can be reset to zero if this entry 
+         is removed from the table and then re-added, or if the 
+         ccsCmFlapResetNow object was set to true(1). The value of the 
+         object ccsCmFlapLastResetTime indicates the last reset time."
+    ::= { ccsCmFlapEntry 8 }
+
+ccsCmFlapCrcErrorNum OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of times the CMTS upstream receiver flagged
+         a packet with a CRC error.
+        
+         If ccsCmFlapCrcErrorNum is high, it indicates the cable
+         upstream may have high noise level. The modem may not be
+         flapping yet but it may be a potential problem.
+        
+         This object can indicate:
+             Intermittent upstream,
+             Laser clipping, or
+             Noise bursts.
+        
+         Laser clipping can happen if the signal power is too high
+         when the upstream electrical signal is converted to an
+         optical signal.  When it happens the more input produces less
+         output, until finally there is no more increase in output.
+         This phenomena is called laser clipping.
+        
+         The value of this object can be reset to zero if this entry 
+         is removed from the table and then re-added, or if the 
+         ccsCmFlapResetNow object was set to true(1). The value of the 
+         object ccsCmFlapLastResetTime indicates the last reset time."
+    ::= { ccsCmFlapEntry 9 }
+
+ccsCmFlapPowerAdjustmentNum OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of times the Cable Modem upstream transmit power
+         is adjusted during station maintenance. When the adjustment is
+         greater than the power adjustment threshold the number will be
+         incremented. The power adjustment threshold is chosen in an
+         implementation-dependent manner
+        
+         The Flap number (ccsCmFlapTotalNum) will be incremented when
+         this object is incremented.
+        
+         If ccsCmFlapTotalNum is high, ccsCmFlapPowerAdjustmentNum is 
+         high but the Hit and Miss are low and 
+         ccsCmFlapInsertionFailNum are low then the flapping is 
+         probably caused by an improper transmit power level 
+         setting at the modem end.
+        
+         This object can indicate:
+             Amplifier degradation,
+             Poor connections, or
+             Wind, moisture, or temperature sensitivity.
+        
+         The value of this object can be reset to zero if this entry 
+         is removed from the table and then re-added, or if the 
+         ccsCmFlapResetNow object was set to true(1). The value of the 
+         object ccsCmFlapLastResetTime indicates the last reset time."
+    ::= { ccsCmFlapEntry 10 }
+
+ccsCmFlapTotalNum OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Whenever the Cable Modem passes flap detection, then the flap
+         number is increased.
+        
+         There are 3 flap detectors defined:
+         (1) When ccsCmFlapInsertionFailNum is increased the Flap number
+             will be increased.
+         (2) When the CMTS receives a Miss followed by a Hit
+             then the Flap number will be increased.
+         (3) When ccsCmFlapPowerAdjustmentNum is increased the Flap
+             number will be increased.
+        
+         The value of this object can be reset to zero if this entry 
+         is removed from the table and then re-added, or if the 
+         ccsCmFlapResetNow object was set to true(1). The value of the 
+         object ccsCmFlapLastResetTime indicates the last reset time."
+    ::= { ccsCmFlapEntry 11 }
+
+ccsCmFlapResetNow OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Setting this object to true(1) will set the value of
+         certain objects in this table to 0 and does not
+         destroy the entry, so the ccsCmFlapCreateTime will be 
+         unchanged. Reading this object always returns false(2)."
+    ::= { ccsCmFlapEntry 12 }
+
+ccsCmFlapLastResetTime OBJECT-TYPE
+    SYNTAX DateAndTime
+--    Rsyntax OCTET STRING(SIZE(8|11))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The last time that all the statistical objects of this entry
+         are started from zero. There are several ways to restart the
+         the statistical objects from zero. Setting the object
+         ccsCmFlapResetNow or ccsCmFlapResetAll to true via SNMP is one
+         way and and the other way is via command Line Interface. This
+         timestamp can be used to know the last time the statistical
+         objects are started from zero. The special value of all '00'Hs
+         indicates that these statistical objects of this entry in the
+         ccsCmFlapTable have never been reset"
+    ::= { ccsCmFlapEntry 13 }
+
+ccsCmFlapRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Controls and reflects the status of rows in this table.
+        
+         When a cable modem triggers a flap detector, if an entry
+         does not already exist for this cable modem, 
+         an entry will be created in this table.  The new instance
+         of this object will be set to active(1).  All flapping
+         modems have the status of active(1).
+        
+         Active entries are removed from the table after they have
+         not triggered any additional flap detectors for the period
+         of time defined in ccsFlapAging. Alternatively, setting
+         this instance to destroy(6) will remove the entry
+         immediately.
+        
+         createAndGo(4) and createAndWait(5) are not supported."
+    ::= { ccsCmFlapEntry 14 }
 
 ccsSpectrumRequestTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CcsSpectrumRequestEntry
@@ -939,7 +1288,7 @@ ccsSpectrumRequestMacAddr OBJECT-TYPE
 
 ccsSpectrumRequestLowFreq OBJECT-TYPE
     SYNTAX CCSFrequency
---    Rsyntax INTEGER(5000..42000)
+--    Rsyntax INTEGER(5000..65000)
 --  Units
 --    KHz
     ACCESS read-write
@@ -962,7 +1311,7 @@ ccsSpectrumRequestLowFreq OBJECT-TYPE
 
 ccsSpectrumRequestUpperFreq OBJECT-TYPE
     SYNTAX CCSFrequency
---    Rsyntax INTEGER(5000..42000)
+--    Rsyntax INTEGER(5000..65000)
 --  Units
 --    KHz
     ACCESS read-write
@@ -1126,7 +1475,7 @@ CcsSpectrumDataEntry ::= SEQUENCE {
 
 ccsSpectrumDataFreq OBJECT-TYPE
     SYNTAX CCSMeasuredFrequency
---    Rsyntax INTEGER(4000..42000)
+--    Rsyntax INTEGER(4000..65000)
 --  Units
 --    KHz
     ACCESS read-only
@@ -1158,7 +1507,7 @@ ccsSNRRequestTable OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "A table of SNR requests."
+        "A table of CNR requests."
     ::= { ccsSpectrumObjects 3 }
 
 ccsSNRRequestEntry OBJECT-TYPE
@@ -1166,7 +1515,7 @@ ccsSNRRequestEntry OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "Information about an SNR request.  The management
+        "Information about an CNR request.  The management
         system uses ccsSNRRequestStatus to control entry
         modification, creation, and deletion."
     INDEX { ccsSNRRequestIndex }
@@ -1198,7 +1547,7 @@ ccsSNRRequestMacAddr OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "A MAC address that identifies the remote online CM
-        that the SNR measurement operation is being
+        that the CNR measurement operation is being
         performed on."
     ::= { ccsSNRRequestEntry 2 }
 
@@ -1209,7 +1558,7 @@ ccsSNRRequestSNR OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "A snap shot of the SNR value that is measured over
+        "A snap shot of the CNR value that is measured over
         the in-use band frequency.  The ccsSNRRequestSNR is set
         to 0 when ccsSNRRequestOperState is in the 'running' state."
     ::= { ccsSNRRequestEntry 3 }
@@ -1272,7 +1621,7 @@ ccsSNRRequestStartTime OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The value of sysUpTime when the SNR measurement
+        "The value of sysUpTime when the CNR measurement
         operation starts."
     ::= { ccsSNRRequestEntry 6 }
 
@@ -1282,7 +1631,7 @@ ccsSNRRequestStoppedTime OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The value of sysUpTime when the SNR measurement
+        "The value of sysUpTime when the CNR measurement
         operation stops."
     ::= { ccsSNRRequestEntry 7 }
 
@@ -1314,7 +1663,7 @@ ccsUpSpecMgmtTable OBJECT-TYPE
         to be used for improving performance and proactive
         hopping.
         
-        Proactive hopping is achieved by setting the SNR
+        Proactive hopping is achieved by setting the SNR 
         polling period over the in-use band without CM
         signals."
     ::= { ccsConfigObjects 1 }
@@ -1344,7 +1693,8 @@ CcsUpSpecMgmtEntry ::= SEQUENCE {
     ccsUpSpecMgmtToBandWidth CCSFrequency,
     ccsUpSpecMgmtFromModProfile INTEGER,
     ccsUpSpecMgmtToModProfile INTEGER,
-    ccsUpSpecMgmtSNR INTEGER
+    ccsUpSpecMgmtSNR INTEGER,
+    ccsUpSpecMgmtUpperBoundFreq CCSFrequency
     }
 
 ccsUpSpecMgmtHopPriority OBJECT-TYPE
@@ -1437,10 +1787,11 @@ ccsUpSpecMgmtFecCorrectThres2 OBJECT-TYPE
         
         When CMTS detects that FEC correctable count goes higher
         than ccsUpSpecMgmtFecCorrectThres2, modulation change can
-        occur, depeding on the type of ccsUpSpecMgmtHopPriority.
+        occur, depending on the type of ccsUpSpecMgmtHopPriority.
         
-        Note: SNMP SET will be rejected if ccsUpSpecMgmtFecCorrectThres2
-        is lower than ccsUpSpecMgmtFecCorrectThres1."
+        Note: SNMP SET will be rejected if 
+        ccsUpSpecMgmtFecCorrectThres2 is lower than 
+        ccsUpSpecMgmtFecCorrectThres1."
     ::= { ccsUpSpecMgmtEntry 5 }
 
 ccsUpSpecMgmtFecUnCorrectThres1 OBJECT-TYPE
@@ -1478,7 +1829,7 @@ ccsUpSpecMgmtSnrPollPeriod OBJECT-TYPE
 --  Units
 --    msec
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "A period between SNR pollings.
         
@@ -1512,7 +1863,7 @@ ccsUpSpecMgmtHopCondition OBJECT-TYPE
 
 ccsUpSpecMgmtFromCenterFreq OBJECT-TYPE
     SYNTAX CCSFrequency
---    Rsyntax INTEGER(5000..42000)
+--    Rsyntax INTEGER(5000..65000)
 --  Units
 --    KHz
     ACCESS read-only
@@ -1523,7 +1874,7 @@ ccsUpSpecMgmtFromCenterFreq OBJECT-TYPE
 
 ccsUpSpecMgmtToCenterFreq OBJECT-TYPE
     SYNTAX CCSFrequency
---    Rsyntax INTEGER(5000..42000)
+--    Rsyntax INTEGER(5000..65000)
 --  Units
 --    KHz
     ACCESS read-only
@@ -1534,7 +1885,7 @@ ccsUpSpecMgmtToCenterFreq OBJECT-TYPE
 
 ccsUpSpecMgmtFromBandWidth OBJECT-TYPE
     SYNTAX CCSFrequency
---    Rsyntax INTEGER(5000..42000)
+--    Rsyntax INTEGER(5000..65000)
 --  Units
 --    KHz
     ACCESS read-only
@@ -1545,7 +1896,7 @@ ccsUpSpecMgmtFromBandWidth OBJECT-TYPE
 
 ccsUpSpecMgmtToBandWidth OBJECT-TYPE
     SYNTAX CCSFrequency
---    Rsyntax INTEGER(5000..42000)
+--    Rsyntax INTEGER(5000..65000)
 --  Units
 --    KHz
     ACCESS read-only
@@ -1589,8 +1940,19 @@ ccsUpSpecMgmtSNR OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "Current SNR."
+        "Current SNR/CNR."
     ::= { ccsUpSpecMgmtEntry 16 }
+
+ccsUpSpecMgmtUpperBoundFreq OBJECT-TYPE
+    SYNTAX CCSFrequency
+--    Rsyntax INTEGER(5000..65000)
+--  Units
+--    KHz
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Upper bound frequency that the upstream supports."
+    ::= { ccsUpSpecMgmtEntry 17 }
 
 ccsHoppingNotification TRAP-TYPE
 -- Reverse mappable trap
@@ -1616,9 +1978,7 @@ ccsFlapGroup OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBGroups 1 }
 --  Status
 --    deprecated
 --  Descr
---    ********* THIS GROUP IS DEPRECATED **********
---    
---     Group of objects implemented in CMTS
+--    Group of objects implemented in CMTS
 --     providing Flap List information.
 --    
 --     This object group has been deprecated and replaced by
@@ -1654,7 +2014,7 @@ ccsSpectrumGroup OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBGroups 2 }
 ccsUpSpecMgmtGroup OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBGroups 3 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    Group of objects implemented in Cable Modem
 --    Termination Systems for configuring cable upstream
@@ -1674,10 +2034,12 @@ ccsUpSpecMgmtGroup OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBGroups 3 }
 ccsFlapGroupRev1 OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBGroups 5 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    Group of objects implemented in CMTS
 --     providing Flap List information.
+--     This object group has been deprecated and replaced by
+--     ccsFlapGroupRev2.
 --  objects
 --    ccsFlapListMaxSize, ccsFlapListCurrentSize, ccsFlapAging, 
 --    ccsFlapInsertionTime, ccsFlapUpstreamIfIndex, 
@@ -1688,6 +2050,63 @@ ccsFlapGroupRev1 OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBGroups 5 }
 --    ccsFlapLastResetTime, ccsFlapPowerAdjustThreshold, 
 --    ccsFlapMissThreshold, ccsFlapResetAll, ccsFlapClearAll, 
 --    ccsFlapLastClearTime
+
+ccsUpSpecMgmtGroupRev1 OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--    Group of objects implemented in Cable Modem
+--    Termination Systems for configuring cable upstream
+--    interface attributes which are used to increase the
+--    performance and proactive hopping.
+--    
+--    This object group has been deprecated and replaced by
+--    ccsUpSpecMgmtGroupRev2.
+--  objects
+--    ccsUpSpecMgmtHopPriority, ccsUpSpecMgmtSnrThres1, 
+--    ccsUpSpecMgmtSnrThres2, ccsUpSpecMgmtFecCorrectThres1, 
+--    ccsUpSpecMgmtFecCorrectThres2, 
+--    ccsUpSpecMgmtFecUnCorrectThres1, 
+--    ccsUpSpecMgmtFecUnCorrectThres2, ccsUpSpecMgmtHopCondition, 
+--    ccsUpSpecMgmtFromCenterFreq, ccsUpSpecMgmtToCenterFreq, 
+--    ccsUpSpecMgmtFromBandWidth, ccsUpSpecMgmtToBandWidth, 
+--    ccsUpSpecMgmtFromModProfile, ccsUpSpecMgmtToModProfile, 
+--    ccsUpSpecMgmtSNR
+
+ccsFlapGroupRev2 OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBGroups 7 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Group of objects implemented in CMTS
+--     providing Flap List information.
+--  objects
+--    ccsFlapListMaxSize, ccsFlapListCurrentSize, ccsFlapAging, 
+--    ccsFlapInsertionTime, ccsCmFlapLastFlapTime, 
+--    ccsCmFlapCreateTime, ccsCmFlapInsertionFailNum, 
+--    ccsCmFlapHitNum, ccsCmFlapMissNum, ccsCmFlapCrcErrorNum, 
+--    ccsCmFlapPowerAdjustmentNum, ccsCmFlapTotalNum, 
+--    ccsCmFlapResetNow, ccsCmFlapLastResetTime, ccsCmFlapRowStatus
+
+ccsUpSpecMgmtGroupRev2 OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBGroups 8 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Group of objects implemented in Cable Modem
+--    Termination Systems for configuring cable upstream
+--    interface attributes.
+--  objects
+--    ccsUpSpecMgmtHopPriority, ccsUpSpecMgmtSnrThres1, 
+--    ccsUpSpecMgmtSnrThres2, ccsUpSpecMgmtFecCorrectThres1, 
+--    ccsUpSpecMgmtFecCorrectThres2, 
+--    ccsUpSpecMgmtFecUnCorrectThres1, 
+--    ccsUpSpecMgmtFecUnCorrectThres2, ccsUpSpecMgmtHopCondition, 
+--    ccsUpSpecMgmtFromCenterFreq, ccsUpSpecMgmtToCenterFreq, 
+--    ccsUpSpecMgmtFromBandWidth, ccsUpSpecMgmtToBandWidth, 
+--    ccsUpSpecMgmtFromModProfile, ccsUpSpecMgmtToModProfile, 
+--    ccsUpSpecMgmtSNR, ccsUpSpecMgmtUpperBoundFreq
 
 ccsNotificationGroup OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBGroups 4 }
 -- NOTIFICATION-GROUP
@@ -1735,7 +2154,7 @@ ccsCompliance2 OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBCompliances 2 }
 ccsCompliance3 OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBCompliances 3 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The compliance statement for devices that implement DOCSIS-
 --     compliant Radio Frequency Interfaces and Spectrum
@@ -1748,6 +2167,46 @@ ccsCompliance3 OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBCompliances 3 }
 --    ccsSpectrumGroup
 --   MandGroup
 --    ccsUpSpecMgmtGroup
+
+ccsCompliance4 OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBCompliances 4 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for devices that implement DOCSIS-
+--     compliant Radio Frequency Interfaces and Spectrum
+--     Management features.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ccsFlapGroupRev1
+--   MandGroup
+--    ccsSpectrumGroup
+--   MandGroup
+--    ccsNotificationGroup
+--   MandGroup
+--    ccsUpSpecMgmtGroupRev1
+
+ccsCompliance5 OBJECT IDENTIFIER ::= { ciscoCableSpectrumMIBCompliances 5 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for devices that implement DOCSIS-
+--     compliant Radio Frequency Interfaces and Spectrum
+--     Management features.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ccsFlapGroupRev2
+--   MandGroup
+--    ccsSpectrumGroup
+--   MandGroup
+--    ccsNotificationGroup
+--   MandGroup
+--    ccsUpSpecMgmtGroupRev2
+--   ObjVar
+--    ccsFlapListMaxSize
 
 
 END

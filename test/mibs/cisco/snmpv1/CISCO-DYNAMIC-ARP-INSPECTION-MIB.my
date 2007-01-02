@@ -1,0 +1,280 @@
+-- MIB file created 10-May-2004 18:31:30, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-DYNAMIC-ARP-INSPECTION-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-DYNAMIC-ARP-INSPECTION-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+    TruthValue
+            FROM SNMPv2-TC-v1
+    ifIndex
+            FROM IF-MIB
+    VlanIndex
+            FROM Q-BRIDGE-MIB
+    ciscoMgmt
+            FROM CISCO-SMI
+    Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
+
+ciscoDynamicArpInspectionMIB OBJECT IDENTIFIER ::= { ciscoMgmt 374 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200310291500Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--            Cisco Systems
+--             Customer Service
+--    
+--     Postal: 170 W Tasman Drive
+--             San Jose, CA 95134
+--             USA
+--    
+--        Tel: +1 800 553-NETS
+--    
+--     E-mail: cs-lan-switch-snmp@cisco.com
+--  Descr
+--    The MIB module is for configuration of Dynamic ARP Inspection 
+--     feature. Dynamic ARP Inspection is a security mechanism which
+--     validate ARP packets seen on access ports.
+--  RevDate
+--    200310291500Z
+--  RevDescr
+--    Initial revision of this MIB module.
+
+cdaiMIBNotifs   OBJECT IDENTIFIER ::= { ciscoDynamicArpInspectionMIB 0 }
+cdaiMIBObjects  OBJECT IDENTIFIER ::= { ciscoDynamicArpInspectionMIB 1 }
+cdaiMIBConformance OBJECT IDENTIFIER ::= { ciscoDynamicArpInspectionMIB 2 }
+cdaiGlobal      OBJECT IDENTIFIER ::= { cdaiMIBObjects 1 }
+cdaiVlan        OBJECT IDENTIFIER ::= { cdaiMIBObjects 2 }
+cdaiInterface   OBJECT IDENTIFIER ::= { cdaiMIBObjects 3 }
+cdaiMIBCompliances OBJECT IDENTIFIER ::= { cdaiMIBConformance 1 }
+cdaiMIBGroups   OBJECT IDENTIFIER ::= { cdaiMIBConformance 2 }
+
+cdaiLoggingEnable OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates whether the Dynamic ARP Inspection
+        logging is enabled on the device.
+        
+        If this object is set to 'true', Dynamic ARP Inspection
+        logging is enabled.
+        
+        If this object is set to 'false', Dynamic ARP Inspection
+        loging is disabled."
+    ::= { cdaiGlobal 1 }
+
+cdaiVlanConfigTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CdaiVlanConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table provides the mechanism to control Dynamic ARP
+        Inspection per VLAN. When a VLAN is created in a device
+        supporting this table, a corresponding entry of this table
+        will be added."
+    ::= { cdaiVlan 1 }
+
+cdaiVlanConfigEntry OBJECT-TYPE
+    SYNTAX CdaiVlanConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A row instance contains the configuration to enable
+         or disable Dynamic ARP Inspection at each existing VLAN."
+    INDEX { cdaiVlanIndex }
+    ::= { cdaiVlanConfigTable 1 }
+
+CdaiVlanConfigEntry ::= SEQUENCE {
+    cdaiVlanIndex VlanIndex,
+    cdaiVlanDynArpInspEnable TruthValue
+    }
+
+cdaiVlanIndex OBJECT-TYPE
+    SYNTAX VlanIndex
+--    Rsyntax Gauge
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates the VLAN number on which Dynamic ARP
+        Inspection feature is configured."
+    ::= { cdaiVlanConfigEntry 1 }
+
+cdaiVlanDynArpInspEnable OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates whether Dynamic ARP Inspection is
+         enabled in this VLAN.
+        
+         If this object is set to 'true', Dynamic ARP Inspection
+         is enabled. 
+        
+         If this object is set to 'false', Dynamic ARP Inspection
+         is disabled."
+    ::= { cdaiVlanConfigEntry 2 }
+
+cdaiIfConfigTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CdaiIfConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table provides the mechanism to configure the trust
+        state for Dynamic ARP Inspection purpose at each physical
+        interface capable of this feature. Some of the interfaces
+        (but not limited to) for which this feature might be
+        applicable are: ifType = ethernetCsmacd(6)."
+    ::= { cdaiInterface 1 }
+
+cdaiIfConfigEntry OBJECT-TYPE
+    SYNTAX CdaiIfConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A row instance contains the configuration to enable or
+        disable trust state for Dynamic ARP Inspection at each
+        physical interface capable of this feature."
+    INDEX { ifIndex }
+    ::= { cdaiIfConfigTable 1 }
+
+CdaiIfConfigEntry ::= SEQUENCE {
+    cdaiIfTrustEnable TruthValue
+    }
+
+cdaiIfTrustEnable OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates whether the interface is trusted for
+        Dynamic ARP Inspection purpose. 
+        
+        If this object is set to 'true', the interface is trusted.
+        ARP packets coming to this interface will be forwarded
+        without checking.
+        
+        If this object is set to 'false', the interface is not
+        trusted. ARP packets coming to this interface will be
+        subjected to ARP inspection."
+    ::= { cdaiIfConfigEntry 1 }
+
+cdaiIfRateLimitTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CdaiIfRateLimitEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table provides the mechanism to configure the rate limit
+        for Dynamic ARP Inspection purpose at each physical interface
+        capable of this feature."
+    ::= { cdaiInterface 2 }
+
+cdaiIfRateLimitEntry OBJECT-TYPE
+    SYNTAX CdaiIfRateLimitEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A row instance contains the configuration of rate limit 
+        Dynamic ARP Inspection at each physical interface capable
+        of this feature."
+    INDEX { ifIndex }
+    ::= { cdaiIfRateLimitTable 1 }
+
+CdaiIfRateLimitEntry ::= SEQUENCE {
+    cdaiIfRateLimit Gauge
+    }
+
+cdaiIfRateLimit OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    packet per second
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates rate limit value for Dynamic ARP
+         Inspection purpose. If the incoming rate of ARP packets 
+         exceeds the value of this object, ARP packets will be
+         dropped. "
+    ::= { cdaiIfRateLimitEntry 1 }
+
+cdaiGlobalLoggingGroup OBJECT IDENTIFIER ::= { cdaiMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of object which is used to configure Dynamic
+--    ARP Inspection logging.
+--  objects
+--    cdaiLoggingEnable
+
+cdaiVlanConfigGroup OBJECT IDENTIFIER ::= { cdaiMIBGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of object which are used to configure as
+--     well as show information regarding the Dynamic ARP
+--     Inspection feature per VLAN.
+--  objects
+--    cdaiVlanDynArpInspEnable
+
+cdaiIfConfigGroup OBJECT IDENTIFIER ::= { cdaiMIBGroups 3 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of object which are used to configure as
+--     well as show information regarding the interface trust
+--     state for Dynamic ARP Inspection purpose.
+--  objects
+--    cdaiIfTrustEnable
+
+cdaiIfRateLimitGroup OBJECT IDENTIFIER ::= { cdaiMIBGroups 4 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of object which are used to configure as
+--     well as show information regarding the rate limit per 
+--     interface for Dynamic ARP Inspection purpose.
+--  objects
+--    cdaiIfRateLimit
+
+cdaiMIBCompliance OBJECT IDENTIFIER ::= { cdaiMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for CISCO-DYNAMIC-ARP-INSPECTION-MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    cdaiVlanConfigGroup
+--   MandGroup
+--    cdaiIfConfigGroup
+--   OptGroup
+--    cdaiGlobalLoggingGroup
+--   OptGroup
+--    cdaiIfRateLimitGroup
+
+
+END
+

@@ -1,30 +1,29 @@
--- MIB created 8/19/100 14:49:16, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 07-Jan-2004 18:20:47, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-ATM-VIRTUAL-IF-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-ATM-VIRTUAL-IF-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    Integer32, Counter32
-            FROM SNMPv2-SMI-v1
-    OBJECT-TYPE
-            FROM RFC-1212
     RowStatus
             FROM SNMPv2-TC-v1
     AtmVpIdentifier
             FROM ATM-TC-MIB
     InterfaceIndex, ifIndex
             FROM IF-MIB
-    Unsigned32
-            FROM CISCO-TC
     ciscoMgmt
-            FROM CISCO-SMI;
+            FROM CISCO-SMI
+    Counter, Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
 
 ciscoAtmVirtualIfMIB OBJECT IDENTIFIER ::= { ciscoMgmt 129 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200008110000Z
+--    200210110000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -41,6 +40,51 @@ ciscoAtmVirtualIfMIB OBJECT IDENTIFIER ::= { ciscoMgmt 129 }
 --  Descr
 --    The MIB module to manage ATM Virtual interface objects.
 --     ATM virtual interfaces are configured on a physical line.
+--  RevDate
+--    200210110000Z
+--  RevDescr
+--    1. Added caviIngressIntervalTable. 
+--  RevDate
+--    200205070000Z
+--  RevDescr
+--    1. Added following objects to caviStatEgressTable, as 
+--        upper 32-bits for 64-bit wide counters:
+--        caviHighEgrRcvClp0Cells, caviHighEgrRcvClp1Cells,
+--        caviHighEgrClp0DiscCells, caviHighEgrClp1DiscCells,
+--        caviHighEgrXmtClp0Cells, caviHighEgrXmtClp1Cells.
+--     2. Added following 64-bit objects to 
+--        caviStatEgressTable for 64-bit counter support:
+--        caviHEgrRcvClp0Cells, caviHEgrClp0DiscCells,
+--        caviHEgrClp0DiscCells, caviHEgrClp1DiscCells.
+--     3. Added following objects to caviEgressIntervalTable, 
+--        as upper 32-bits for 64-bit wide counters:
+--        caviHighIntEgrRcvClp0Cells, 
+--        caviHighIntEgrRcvClp1Cells,
+--        caviHighIntEgrClp0DiscCells, 
+--        caviHighIntEgrClp1DiscCells,
+--        caviHighIntEgrXmtClp0Cells, 
+--        caviHighIntEgrXmtClp1Cells.
+--     4. Added following 64-bit objects to 
+--        caviEgressIntervalTable:
+--        caviHIntEgrRcvClp0Cells, caviHIntEgrRcvClp1Cells,
+--        caviHIntEgrClp0DiscCells, caviHIntEgrClp1DiscCells,
+--        caviHIntEgrXmtClp0Cells, caviHIntEgrXmtClp1Cells.
+--     5. Added following objects to caviStatIngressTable, as 
+--        upper 32-bits for 64-bit wide counters:
+--        caviHighIngRcvClp0Cells, caviHighIngRcvClp1Cells,
+--        caviHighIngClp0DiscCells, caviHighIngClp1DiscCells,
+--        caviHighIngXmtClp0Cells, caviHighIngXmtClp1Cells.
+--     6. Added following 64-bit objects to 
+--        caviStatIngressTable:
+--        caviHIngClp0DiscCells, caviHIngClp1DiscCells,
+--        caviHIngXmtClp0Cells, caviHIngXmtClp1Cells.
+--     7. Changed IMPORT for Unsigned32 to SNMPv2-SMI, instead 
+--        of CISCO-TC.
+--  RevDate
+--    200109030000Z
+--  RevDescr
+--    Added caviMinVpiNum and caviMaxVpiNum. Modified description
+--     for caviEntry and caviIfType.
 --  RevDate
 --    200008110000Z
 --  RevDescr
@@ -81,25 +125,32 @@ caviEntry OBJECT-TYPE
     DESCRIPTION
         "An entry in the caviTable table for each ATM virtual interface.
          An entry in this table can only be created if values for all
-         objects in a row are provided. caviVpiNum value is required only if
-         caviIfType is vuni(4) or vnni(5)."
+         objects in a row are provided.
+        
+         The caviVpiNum object is applicable only to interfaces of 
+         caviIfType vnni (3) or vuni (4).
+        
+         The caviMinVpiNum and caviMaxVpiNum are applicable only to 
+         interfaces of caviIfType evuni(5) or evnni(6)."
     INDEX { caviIndex }
     ::= { caviTable 1 }
 
 CaviEntry ::= SEQUENCE {
-    caviIndex Integer32,
+    caviIndex INTEGER,
     caviPhyIfIndex InterfaceIndex,
     caviViIfIndex InterfaceIndex,
-    caviMinRate Unsigned32,
-    caviMaxRate Unsigned32,
-    caviFileId Unsigned32,
+    caviMinRate Gauge,
+    caviMaxRate Gauge,
+    caviFileId Gauge,
     caviIfType INTEGER,
     caviVpiNum AtmVpIdentifier,
-    caviRowStatus RowStatus
+    caviRowStatus RowStatus,
+    caviMinVpiNum AtmVpIdentifier,
+    caviMaxVpiNum AtmVpIdentifier
     }
 
 caviIndex OBJECT-TYPE
-    SYNTAX Integer32(1..2147483647)
+    SYNTAX INTEGER(1..2147483647)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -108,7 +159,7 @@ caviIndex OBJECT-TYPE
 
 caviPhyIfIndex OBJECT-TYPE
     SYNTAX InterfaceIndex
---    Rsyntax Integer32(1..2147483647)
+--    Rsyntax INTEGER(1..2147483647)
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -118,7 +169,7 @@ caviPhyIfIndex OBJECT-TYPE
 
 caviViIfIndex OBJECT-TYPE
     SYNTAX InterfaceIndex
---    Rsyntax Integer32(1..2147483647)
+--    Rsyntax INTEGER(1..2147483647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -130,8 +181,7 @@ caviViIfIndex OBJECT-TYPE
     ::= { caviEntry 3 }
 
 caviMinRate OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
 --  Units
 --    cells-per-second
     ACCESS read-write
@@ -158,8 +208,7 @@ caviMinRate OBJECT-TYPE
     ::= { caviEntry 4 }
 
 caviMaxRate OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
 --  Units
 --    cells-per-second
     ACCESS read-write
@@ -184,8 +233,7 @@ caviMaxRate OBJECT-TYPE
     ::= { caviEntry 5 }
 
 caviFileId OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -199,17 +247,39 @@ caviIfType OBJECT-TYPE
         uni(1),
         nni(2),
         vnni(3),
-        vuni(4)
+        vuni(4),
+        evuni(5),
+        evnni(6)
         }
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This object reflects the format of the cellstransmitted by the
-         physical interface. The following formats can be configured:
-         uni : user port
-         nni : network port
-         vnni: virtual network port
-         vuni: virtual user port"
+        "This object reflects the type of ATM virtual interface that can be
+         configured within a physical interface. The supported types of virtual
+         interfaces and their description is shown below:
+        
+         uni : Only one virtual interface of uni type can be configured within 
+               a physical interface. The ATM cells used in this interface would
+               use a 8 bit VPI and a 4 bit GFC.
+         nni : Only one virtual interface of nni type can be configured within
+               a physical interface.The ATM cells used in this interface would 
+               use a 12 bit VPI.
+         vnni: Multiple virtual interfaces of vnni type can be configured 
+               within a physical interface. However, all cells sent on this
+               interface belong to a single VPI (defined by caviVpiNum) and
+               the cells use a 12 bit VPI.
+         vuni: Multiple virtual interfaces of vuni type can be configured 
+               within a physical interface. However, all cells sent on this
+               interface belong to a single VPI (defined by caviVpiNum) and
+               the cells use a 8 bit VPI and a 4 bit GFC.
+         evuni: Multiple virtual interfaces of evuni type can be configured 
+               within a physical interface. However, all cells sent on this
+               interface belong to a range of VPI (defined by caviMinVpiNum 
+               & caviMaxVpiNum) and the cells use a 8 bit VPI and a 4 bit GFC.
+         evnni: Multiple virtual interfaces of evuni type can be configured 
+               within a physical interface. However, all cells sent on this
+               interface belong to a range of VPI (defined by caviMinVpiNum 
+               & caviMaxVpiNum) and the cells use a 12 bit VPI."
     DEFVAL { uni }
     ::= { caviEntry 7 }
 
@@ -219,10 +289,13 @@ caviVpiNum OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This object is used to configure this ATM virtual interface
-         to be a virtual trunk.  A non-zero value is required for
-         virtual trunk operation.  A value of 0 means the ATM virtual
-         interface is configured as a user port or a network port."
+        "This object is used when configuring ATM virtual interfaces of
+         caviIftype vuni(4) or vnni (3). A non-zero value is required 
+         for vuni / vnni operation.
+        
+         The value set in this object for other type of caviIfTypes 
+         would be ignored by the agent. The GET operation on this object 
+         would return 0 for caviIfTypes other than vuni/vnni."
     DEFVAL { 0 }
     ::= { caviEntry 8 }
 
@@ -247,6 +320,45 @@ caviRowStatus OBJECT-TYPE
          destroy(6). 
          An entry in this table may be modified after creation."
     ::= { caviEntry 9 }
+
+caviMinVpiNum OBJECT-TYPE
+    SYNTAX AtmVpIdentifier
+--    Rsyntax INTEGER(0..4095)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object is mandatory while configuring this ATM virtual 
+         interface as caviIfType evuni(5) or evnni(6). The range of 
+         VPI accepted by the agent depends on caviIfType. 
+        
+         The evuni accepts a range from 0 to 255, while the evnni accepts
+         a range from 0 to 4095. 
+        
+         The object specifies the minimum VPI for a evuni/evnni interface.
+        
+         The agent ignores a SET on this object for any interface other 
+         than a evuni/evnni. A GET operation for interfaces other than a
+         evuni/evnni would always yield 0"
+    DEFVAL { 0 }
+    ::= { caviEntry 10 }
+
+caviMaxVpiNum OBJECT-TYPE
+    SYNTAX AtmVpIdentifier
+--    Rsyntax INTEGER(0..4095)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object is mandatory while configuring this ATM virtual 
+         interface as caviIfType evuni(5) or evnni(6). The range of 
+         VPI accepted by the agent depends on caviIfType. 
+        
+         The evuni accepts a range from 0 to 255, while the evnni accepts
+         a range from 0 to 4095. 
+        
+         The agent rejects a SET on this object for any interface other 
+         than a evuni/evnni. A GET operation for interfaces other than a
+         evuni/evnni would always yield 0"
+    ::= { caviEntry 11 }
 
 caviStatEgressTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CaviStatEgressEntry
@@ -276,23 +388,33 @@ caviStatEgressEntry OBJECT-TYPE
     ::= { caviStatEgressTable 1 }
 
 CaviStatEgressEntry ::= SEQUENCE {
-    caviEgrRcvClp0Cells Counter32,
-    caviEgrRcvClp1Cells Counter32,
-    caviEgrClp0DiscCells Counter32,
-    caviEgrClp1DiscCells Counter32,
-    caviEgrXmtClp0Cells Counter32,
-    caviEgrXmtClp1Cells Counter32,
-    caviEgrRcvOAMCells Counter32,
-    caviEgrRMCells Counter32,
-    caviEgrXmtEFCICells Counter32,
-    caviEgrRcvEFCICells Counter32,
-    caviEgrXmtOAMCells Counter32,
-    caviHEgrXmtClp0Cells Counter32,
-    caviHEgrXmtClp1Cells Counter32
+    caviEgrRcvClp0Cells Counter,
+    caviEgrRcvClp1Cells Counter,
+    caviEgrClp0DiscCells Counter,
+    caviEgrClp1DiscCells Counter,
+    caviEgrXmtClp0Cells Counter,
+    caviEgrXmtClp1Cells Counter,
+    caviEgrRcvOAMCells Counter,
+    caviEgrRMCells Counter,
+    caviEgrXmtEFCICells Counter,
+    caviEgrRcvEFCICells Counter,
+    caviEgrXmtOAMCells Counter,
+    caviHEgrXmtClp0Cells Counter,
+    caviHEgrXmtClp1Cells Counter,
+    caviHighEgrRcvClp0Cells Counter,
+    caviHighEgrRcvClp1Cells Counter,
+    caviHighEgrClp0DiscCells Counter,
+    caviHighEgrClp1DiscCells Counter,
+    caviHighEgrXmtClp0Cells Counter,
+    caviHighEgrXmtClp1Cells Counter,
+    caviHEgrRcvClp0Cells Counter,
+    caviHEgrRcvClp1Cells Counter,
+    caviHEgrClp0DiscCells Counter,
+    caviHEgrClp1DiscCells Counter
     }
 
 caviEgrRcvClp0Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -301,7 +423,7 @@ caviEgrRcvClp0Cells OBJECT-TYPE
     ::= { caviStatEgressEntry 1 }
 
 caviEgrRcvClp1Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -310,7 +432,7 @@ caviEgrRcvClp1Cells OBJECT-TYPE
     ::= { caviStatEgressEntry 2 }
 
 caviEgrClp0DiscCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -318,7 +440,7 @@ caviEgrClp0DiscCells OBJECT-TYPE
     ::= { caviStatEgressEntry 3 }
 
 caviEgrClp1DiscCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -326,7 +448,7 @@ caviEgrClp1DiscCells OBJECT-TYPE
     ::= { caviStatEgressEntry 4 }
 
 caviEgrXmtClp0Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -335,7 +457,7 @@ caviEgrXmtClp0Cells OBJECT-TYPE
     ::= { caviStatEgressEntry 5 }
 
 caviEgrXmtClp1Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -344,7 +466,7 @@ caviEgrXmtClp1Cells OBJECT-TYPE
     ::= { caviStatEgressEntry 6 }
 
 caviEgrRcvOAMCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -353,7 +475,7 @@ caviEgrRcvOAMCells OBJECT-TYPE
     ::= { caviStatEgressEntry 7 }
 
 caviEgrRMCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -361,7 +483,7 @@ caviEgrRMCells OBJECT-TYPE
     ::= { caviStatEgressEntry 8 }
 
 caviEgrXmtEFCICells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -370,7 +492,7 @@ caviEgrXmtEFCICells OBJECT-TYPE
     ::= { caviStatEgressEntry 9 }
 
 caviEgrRcvEFCICells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -379,7 +501,7 @@ caviEgrRcvEFCICells OBJECT-TYPE
     ::= { caviStatEgressEntry 10 }
 
 caviEgrXmtOAMCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -388,7 +510,8 @@ caviEgrXmtOAMCells OBJECT-TYPE
     ::= { caviStatEgressEntry 11 }
 
 caviHEgrXmtClp0Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -396,12 +519,113 @@ caviHEgrXmtClp0Cells OBJECT-TYPE
     ::= { caviStatEgressEntry 12 }
 
 caviHEgrXmtClp1Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "The 64-bit version of caviEgrXmtClp1Cells."
     ::= { caviStatEgressEntry 13 }
+
+caviHighEgrRcvClp0Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The Upper 32 bit of the number of CLP-0 cells received 
+         from switch at the traffic management and policing 
+         device."
+    ::= { caviStatEgressEntry 14 }
+
+caviHighEgrRcvClp1Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The Upper 32 bit of the number of CLP-1 cells received 
+         from switch at the traffic management and policing 
+         device."
+    ::= { caviStatEgressEntry 15 }
+
+caviHighEgrClp0DiscCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The Upper 32 bit of the number of CLP-0 cells discarded 
+         due to policing."
+    ::= { caviStatEgressEntry 16 }
+
+caviHighEgrClp1DiscCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The Upper 32 bit of the number of CLP-1 cells discarded 
+         due to policing."
+    ::= { caviStatEgressEntry 17 }
+
+caviHighEgrXmtClp0Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The Upper 32 bit of the number of CLP-0 cells 
+         transmitted to the network after traffic management and 
+         policing."
+    ::= { caviStatEgressEntry 18 }
+
+caviHighEgrXmtClp1Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The Upper 32 bit of the number of CLP-1 cells 
+         transmitted to the network after traffic management and 
+         policing."
+    ::= { caviStatEgressEntry 19 }
+
+caviHEgrRcvClp0Cells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-0 cells received 
+         from switch at the traffic management and policing 
+         device."
+    ::= { caviStatEgressEntry 20 }
+
+caviHEgrRcvClp1Cells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-1 cells received 
+         from switch at the traffic management and policing 
+         device."
+    ::= { caviStatEgressEntry 21 }
+
+caviHEgrClp0DiscCells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-0 cells 
+         discarded due to policing."
+    ::= { caviStatEgressEntry 22 }
+
+caviHEgrClp1DiscCells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-1 cells 
+         discarded due to policing."
+    ::= { caviStatEgressEntry 23 }
 
 caviEgressIntervalTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CaviEgressIntervalEntry
@@ -428,23 +652,34 @@ caviEgressIntervalEntry OBJECT-TYPE
     ::= { caviEgressIntervalTable 1 }
 
 CaviEgressIntervalEntry ::= SEQUENCE {
-    caviEgressIntervalNumber Unsigned32,
-    caviIntEgrRcvClp0Cells Counter32,
-    caviIntEgrRcvClp1Cells Counter32,
-    caviIntEgrClp0DiscCells Counter32,
-    caviIntEgrClp1DiscCells Counter32,
-    caviIntEgrXmtClp0Cells Counter32,
-    caviIntEgrXmtClp1Cells Counter32,
-    caviIntEgrRcvOAMCells Counter32,
-    caviIntEgrRMCells Counter32,
-    caviIntEgrXmtEFCICells Counter32,
-    caviIntEgrRcvEFCICells Counter32,
-    caviIntEgrXmtOAMCells Counter32
+    caviEgressIntervalNumber Gauge,
+    caviIntEgrRcvClp0Cells Counter,
+    caviIntEgrRcvClp1Cells Counter,
+    caviIntEgrClp0DiscCells Counter,
+    caviIntEgrClp1DiscCells Counter,
+    caviIntEgrXmtClp0Cells Counter,
+    caviIntEgrXmtClp1Cells Counter,
+    caviIntEgrRcvOAMCells Counter,
+    caviIntEgrRMCells Counter,
+    caviIntEgrXmtEFCICells Counter,
+    caviIntEgrRcvEFCICells Counter,
+    caviIntEgrXmtOAMCells Counter,
+    caviHighIntEgrRcvClp0Cells Counter,
+    caviHighIntEgrRcvClp1Cells Counter,
+    caviHighIntEgrClp0DiscCells Counter,
+    caviHighIntEgrClp1DiscCells Counter,
+    caviHighIntEgrXmtClp0Cells Counter,
+    caviHighIntEgrXmtClp1Cells Counter,
+    caviHIntEgrRcvClp0Cells Counter,
+    caviHIntEgrRcvClp1Cells Counter,
+    caviHIntEgrClp0DiscCells Counter,
+    caviHIntEgrClp1DiscCells Counter,
+    caviHIntEgrXmtClp0Cells Counter,
+    caviHIntEgrXmtClp1Cells Counter
     }
 
 caviEgressIntervalNumber OBJECT-TYPE
-    SYNTAX Unsigned32(0..96)
---    Rsyntax Gauge32(0..96)
+    SYNTAX Gauge(0..96)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -455,7 +690,7 @@ caviEgressIntervalNumber OBJECT-TYPE
     ::= { caviEgressIntervalEntry 1 }
 
 caviIntEgrRcvClp0Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -465,7 +700,7 @@ caviIntEgrRcvClp0Cells OBJECT-TYPE
     ::= { caviEgressIntervalEntry 2 }
 
 caviIntEgrRcvClp1Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -475,7 +710,7 @@ caviIntEgrRcvClp1Cells OBJECT-TYPE
     ::= { caviEgressIntervalEntry 3 }
 
 caviIntEgrClp0DiscCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -484,7 +719,7 @@ caviIntEgrClp0DiscCells OBJECT-TYPE
     ::= { caviEgressIntervalEntry 4 }
 
 caviIntEgrClp1DiscCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -493,7 +728,7 @@ caviIntEgrClp1DiscCells OBJECT-TYPE
     ::= { caviEgressIntervalEntry 5 }
 
 caviIntEgrXmtClp0Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -503,7 +738,7 @@ caviIntEgrXmtClp0Cells OBJECT-TYPE
     ::= { caviEgressIntervalEntry 6 }
 
 caviIntEgrXmtClp1Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -513,7 +748,7 @@ caviIntEgrXmtClp1Cells OBJECT-TYPE
     ::= { caviEgressIntervalEntry 7 }
 
 caviIntEgrRcvOAMCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -523,7 +758,7 @@ caviIntEgrRcvOAMCells OBJECT-TYPE
     ::= { caviEgressIntervalEntry 8 }
 
 caviIntEgrRMCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -532,7 +767,7 @@ caviIntEgrRMCells OBJECT-TYPE
     ::= { caviEgressIntervalEntry 9 }
 
 caviIntEgrXmtEFCICells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -542,7 +777,7 @@ caviIntEgrXmtEFCICells OBJECT-TYPE
     ::= { caviEgressIntervalEntry 10 }
 
 caviIntEgrRcvEFCICells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -552,7 +787,7 @@ caviIntEgrRcvEFCICells OBJECT-TYPE
     ::= { caviEgressIntervalEntry 11 }
 
 caviIntEgrXmtOAMCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -560,6 +795,130 @@ caviIntEgrXmtOAMCells OBJECT-TYPE
          after traffic management and policing during a 15 minute 
          interval."
     ::= { caviEgressIntervalEntry 12 }
+
+caviHighIntEgrRcvClp0Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-0 cells received 
+         from switch at the traffic management and policing 
+         device during a 15 minute interval."
+    ::= { caviEgressIntervalEntry 13 }
+
+caviHighIntEgrRcvClp1Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-1 cells received 
+         from switch at the traffic management and policing 
+         device during a 15 minute interval."
+    ::= { caviEgressIntervalEntry 14 }
+
+caviHighIntEgrClp0DiscCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-0 cells discarded
+         due to policing during a 15 minute interval."
+    ::= { caviEgressIntervalEntry 15 }
+
+caviHighIntEgrClp1DiscCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-1 cells discarded 
+         due to policing during a 15 minute interval."
+    ::= { caviEgressIntervalEntry 16 }
+
+caviHighIntEgrXmtClp0Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-0 cells 
+         transmitted to the network after traffic management and 
+         policing during a 15 minute interval."
+    ::= { caviEgressIntervalEntry 17 }
+
+caviHighIntEgrXmtClp1Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-1 cells 
+         transmitted to the network after traffic management and 
+         policing during a 15 minute interval."
+    ::= { caviEgressIntervalEntry 18 }
+
+caviHIntEgrRcvClp0Cells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-0 cells received 
+         from switch at the traffic management and policing 
+         device during a 15 minute interval."
+    ::= { caviEgressIntervalEntry 19 }
+
+caviHIntEgrRcvClp1Cells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-1 cells received 
+         from switch at the traffic management and policing 
+         device during a 15 minute interval."
+    ::= { caviEgressIntervalEntry 20 }
+
+caviHIntEgrClp0DiscCells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-0 cells 
+         discarded due to policing during a 15 minute 
+         interval."
+    ::= { caviEgressIntervalEntry 21 }
+
+caviHIntEgrClp1DiscCells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-1 cells 
+         discarded due to policing during a 15 minute 
+         interval."
+    ::= { caviEgressIntervalEntry 22 }
+
+caviHIntEgrXmtClp0Cells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-0 cells 
+         transmitted to the network after traffic management and 
+         policing during a 15 minute interval."
+    ::= { caviEgressIntervalEntry 23 }
+
+caviHIntEgrXmtClp1Cells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-1 cells 
+         transmitted to the network after traffic management and 
+         policing during a 15 minute interval."
+    ::= { caviEgressIntervalEntry 24 }
 
 caviStatIngressTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CaviStatIngressEntry
@@ -586,33 +945,43 @@ caviStatIngressEntry OBJECT-TYPE
     ::= { caviStatIngressTable 1 }
 
 CaviStatIngressEntry ::= SEQUENCE {
-    caviIngRcvClp0Cells Counter32,
-    caviIngRcvClp1Cells Counter32,
-    caviIngClp0DiscCells Counter32,
-    caviIngClp1DiscCells Counter32,
-    caviIngXmtClp0Cells Counter32,
-    caviIngXmtClp1Cells Counter32,
-    caviIngRcvOAMCells Counter32,
-    caviIngRMCells Counter32,
-    caviIngXmtEFCICells Counter32,
-    caviIngRcvEFCICells Counter32,
-    caviIngXmtOAMCells Counter32,
-    caviHIngRcvClp0Cells Counter32,
-    caviHIngRcvClp1Cells Counter32
+    caviIngRcvClp0Cells Counter,
+    caviIngRcvClp1Cells Counter,
+    caviIngClp0DiscCells Counter,
+    caviIngClp1DiscCells Counter,
+    caviIngXmtClp0Cells Counter,
+    caviIngXmtClp1Cells Counter,
+    caviIngRcvOAMCells Counter,
+    caviIngRMCells Counter,
+    caviIngXmtEFCICells Counter,
+    caviIngRcvEFCICells Counter,
+    caviIngXmtOAMCells Counter,
+    caviHIngRcvClp0Cells Counter,
+    caviHIngRcvClp1Cells Counter,
+    caviHighIngRcvClp0Cells Counter,
+    caviHighIngRcvClp1Cells Counter,
+    caviHighIngClp0DiscCells Counter,
+    caviHighIngClp1DiscCells Counter,
+    caviHighIngXmtClp0Cells Counter,
+    caviHighIngXmtClp1Cells Counter,
+    caviHIngClp0DiscCells Counter,
+    caviHIngClp1DiscCells Counter,
+    caviHIngXmtClp0Cells Counter,
+    caviHIngXmtClp1Cells Counter
     }
 
 caviIngRcvClp0Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The number of CLP-0 cells received from switch
+        "The number of CLP-0 cells received from network
          at the traffic management and policing device in
          ingress direction."
     ::= { caviStatIngressEntry 1 }
 
 caviIngRcvClp1Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -622,7 +991,7 @@ caviIngRcvClp1Cells OBJECT-TYPE
     ::= { caviStatIngressEntry 2 }
 
 caviIngClp0DiscCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -631,7 +1000,7 @@ caviIngClp0DiscCells OBJECT-TYPE
     ::= { caviStatIngressEntry 3 }
 
 caviIngClp1DiscCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -640,7 +1009,7 @@ caviIngClp1DiscCells OBJECT-TYPE
     ::= { caviStatIngressEntry 4 }
 
 caviIngXmtClp0Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -650,7 +1019,7 @@ caviIngXmtClp0Cells OBJECT-TYPE
     ::= { caviStatIngressEntry 5 }
 
 caviIngXmtClp1Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -660,7 +1029,7 @@ caviIngXmtClp1Cells OBJECT-TYPE
     ::= { caviStatIngressEntry 6 }
 
 caviIngRcvOAMCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -670,7 +1039,7 @@ caviIngRcvOAMCells OBJECT-TYPE
     ::= { caviStatIngressEntry 7 }
 
 caviIngRMCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -679,7 +1048,7 @@ caviIngRMCells OBJECT-TYPE
     ::= { caviStatIngressEntry 8 }
 
 caviIngXmtEFCICells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -689,7 +1058,7 @@ caviIngXmtEFCICells OBJECT-TYPE
     ::= { caviStatIngressEntry 9 }
 
 caviIngRcvEFCICells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -699,7 +1068,7 @@ caviIngRcvEFCICells OBJECT-TYPE
     ::= { caviStatIngressEntry 10 }
 
 caviIngXmtOAMCells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -709,7 +1078,8 @@ caviIngXmtOAMCells OBJECT-TYPE
     ::= { caviStatIngressEntry 11 }
 
 caviHIngRcvClp0Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -718,7 +1088,8 @@ caviHIngRcvClp0Cells OBJECT-TYPE
     ::= { caviStatIngressEntry 12 }
 
 caviHIngRcvClp1Cells OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -726,10 +1097,409 @@ caviHIngRcvClp1Cells OBJECT-TYPE
          ingress direction."
     ::= { caviStatIngressEntry 13 }
 
+caviHighIngRcvClp0Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-0 cells received 
+         from network at the traffic management and policing device 
+         in ingress direction."
+    ::= { caviStatIngressEntry 14 }
+
+caviHighIngRcvClp1Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-1 cells received 
+         from network at the traffic management and policing device 
+         in ingress direction."
+    ::= { caviStatIngressEntry 15 }
+
+caviHighIngClp0DiscCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-0 cells discarded 
+         due to policing in ingress direction."
+    ::= { caviStatIngressEntry 16 }
+
+caviHighIngClp1DiscCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-1 cells discarded 
+         due to policing in ingress direction."
+    ::= { caviStatIngressEntry 17 }
+
+caviHighIngXmtClp0Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-0 cells transmitted 
+         to the switch after traffic management and policing in
+         ingress direction."
+    ::= { caviStatIngressEntry 18 }
+
+caviHighIngXmtClp1Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-1 cells transmitted 
+         to the switch after traffic management and policing in
+         ingress direction."
+    ::= { caviStatIngressEntry 19 }
+
+caviHIngClp0DiscCells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-0 cells discarded 
+         due to policing in ingress direction."
+    ::= { caviStatIngressEntry 20 }
+
+caviHIngClp1DiscCells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-1 cells discarded 
+         due to policing in ingress direction."
+    ::= { caviStatIngressEntry 21 }
+
+caviHIngXmtClp0Cells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-0 cells transmitted 
+         to the switch after traffic management and policing in
+         ingress direction."
+    ::= { caviStatIngressEntry 22 }
+
+caviHIngXmtClp1Cells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-1 cells transmitted 
+         to the switch after traffic management and policing in
+         ingress direction."
+    ::= { caviStatIngressEntry 23 }
+
+caviIngressIntervalTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CaviIngressIntervalEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table reflects interval statistics associated with
+         each of the ATM virtual interfaces on the ingress side."
+    ::= { caviStatistics 4 }
+
+caviIngressIntervalEntry OBJECT-TYPE
+    SYNTAX CaviIngressIntervalEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry for ingress ATM virtual interface interval 
+         statistics. 
+         In addition to the current 15-minute interval bucket, 
+         the previous 24 hours worth of 15-minute interval buckets 
+         are collected for each ATM virtual interface.
+        
+         Statistics are being collected before and after the traffic 
+         management and policing device, in ingress direction."
+    INDEX { ifIndex, caviIngressIntervalNumber }
+    ::= { caviIngressIntervalTable 1 }
+
+CaviIngressIntervalEntry ::= SEQUENCE {
+    caviIngressIntervalNumber Gauge,
+    caviIntIngRcvClp0Cells Counter,
+    caviIntIngRcvClp1Cells Counter,
+    caviIntIngClp0DiscCells Counter,
+    caviIntIngClp1DiscCells Counter,
+    caviIntIngXmtClp0Cells Counter,
+    caviIntIngXmtClp1Cells Counter,
+    caviIntIngRcvOAMCells Counter,
+    caviIntIngRMCells Counter,
+    caviIntIngXmtEFCICells Counter,
+    caviIntIngRcvEFCICells Counter,
+    caviIntIngXmtOAMCells Counter,
+    caviHighIntIngRcvClp0Cells Counter,
+    caviHighIntIngRcvClp1Cells Counter,
+    caviHighIntIngClp0DiscCells Counter,
+    caviHighIntIngClp1DiscCells Counter,
+    caviHighIntIngXmtClp0Cells Counter,
+    caviHighIntIngXmtClp1Cells Counter,
+    caviHIntIngRcvClp0Cells Counter,
+    caviHIntIngRcvClp1Cells Counter,
+    caviHIntIngClp0DiscCells Counter,
+    caviHIntIngClp1DiscCells Counter,
+    caviHIntIngXmtClp0Cells Counter,
+    caviHIntIngXmtClp1Cells Counter
+    }
+
+caviIngressIntervalNumber OBJECT-TYPE
+    SYNTAX Gauge(0..96)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A number used to uniquely identify a ATM virtual interface's
+         interval statistics. 0 is used to identify the current
+         15-minute interval, which is  currently being updated. 
+         1-96 identify the previous 24 hours of 15-minute interval 
+         buckets, where interval 1 representing the most recent 
+         15-minute interval and interval  96 representing the least 
+         recent 15-minute interval"
+    ::= { caviIngressIntervalEntry 1 }
+
+caviIntIngRcvClp0Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of CLP-0 cells received from network
+         at the traffic management and policing device in
+         ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 2 }
+
+caviIntIngRcvClp1Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of CLP-1 cells received from network
+         at the traffic management and policing device in
+         ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 3 }
+
+caviIntIngClp0DiscCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of CLP-0 cells discarded due to policing in
+        ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 4 }
+
+caviIntIngClp1DiscCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of CLP-1 cells discarded due to policing in
+         ingress direction, during a 15-minute interval ."
+    ::= { caviIngressIntervalEntry 5 }
+
+caviIntIngXmtClp0Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of CLP-0 cells transmitted to the switch
+         after traffic management and policing in
+         ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 6 }
+
+caviIntIngXmtClp1Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of CLP-1 cells transmitted to the switch
+         after traffic management and policing in
+         ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 7 }
+
+caviIntIngRcvOAMCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of OAM cells received from the network
+         at the traffic management and policing device in
+         ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 8 }
+
+caviIntIngRMCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of RM cells transmitted to the switch from the 
+         network in ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 9 }
+
+caviIntIngXmtEFCICells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of EFCI cells transmitted to the switch 
+         after traffic management and policing in
+         ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 10 }
+
+caviIntIngRcvEFCICells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of EFCI cells received from the network
+         at traffic management and policing device in
+         ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 11 }
+
+caviIntIngXmtOAMCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of OAM loopback cells transmitted to switch
+         after traffic management and policing in
+         ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 12 }
+
+caviHighIntIngRcvClp0Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-0 cells received 
+         from network at the traffic management and policing device 
+         in ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 13 }
+
+caviHighIntIngRcvClp1Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-1 cells received 
+         from network at the traffic management and policing device 
+         in ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 14 }
+
+caviHighIntIngClp0DiscCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-0 cells discarded 
+         due to policing in ingress direction, during a 15-minute 
+         interval."
+    ::= { caviIngressIntervalEntry 15 }
+
+caviHighIntIngClp1DiscCells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-1 cells discarded 
+         due to policing in ingress direction, during a 15-minute 
+         interval."
+    ::= { caviIngressIntervalEntry 16 }
+
+caviHighIntIngXmtClp0Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-0 cells transmitted 
+         to the switch after traffic management and policing in
+         ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 17 }
+
+caviHighIntIngXmtClp1Cells OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The upper 32 bits of the number of CLP-1 cells transmitted 
+         to the switch after traffic management and policing in
+         ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 18 }
+
+caviHIntIngRcvClp0Cells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64-bit version of the number of CLP-0 cells received 
+         from network at the traffic management and policing device 
+         in ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 19 }
+
+caviHIntIngRcvClp1Cells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64-bit version of the number of CLP-1 cells received 
+         from network at the traffic management and policing device 
+         in ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 20 }
+
+caviHIntIngClp0DiscCells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-0 cells discarded 
+         due to policing in ingress direction, during a 15-minute 
+         interval."
+    ::= { caviIngressIntervalEntry 21 }
+
+caviHIntIngClp1DiscCells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-1 cells discarded 
+         due to policing in ingress direction, during a 15-minute 
+         interval."
+    ::= { caviIngressIntervalEntry 22 }
+
+caviHIntIngXmtClp0Cells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-0 cells transmitted 
+         to the switch after traffic management and policing in
+         ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 23 }
+
+caviHIntIngXmtClp1Cells OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The 64 bit version of the number of CLP-1 cells transmitted 
+         to the switch after traffic management and policing in
+         ingress direction, during a 15-minute interval."
+    ::= { caviIngressIntervalEntry 24 }
+
 caviMIBGroup OBJECT IDENTIFIER ::= { caviMIBGroups 1 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    These are objects related to ciscoAtmVirtualIf configuration group.
 --  objects
@@ -739,7 +1509,7 @@ caviMIBGroup OBJECT IDENTIFIER ::= { caviMIBGroups 1 }
 caviEgressStatMIBGroup OBJECT IDENTIFIER ::= { caviMIBGroups 2 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    These are objects related to the ATM virtual interface statistics 
 --     group caviStatistics.
@@ -753,7 +1523,7 @@ caviEgressStatMIBGroup OBJECT IDENTIFIER ::= { caviMIBGroups 2 }
 caviEgressHighSpeedStatMIBGroup OBJECT IDENTIFIER ::= { caviMIBGroups 3 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    These statistics apply to ingress ATM virtual interfaces with speed of
 --     OC12 or higher.
@@ -763,7 +1533,7 @@ caviEgressHighSpeedStatMIBGroup OBJECT IDENTIFIER ::= { caviMIBGroups 3 }
 caviEgressIntervalMIBGroup OBJECT IDENTIFIER ::= { caviMIBGroups 4 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    These are objects related to the ATM virtual interface 
 --     interval statistics group.
@@ -778,7 +1548,7 @@ caviEgressIntervalMIBGroup OBJECT IDENTIFIER ::= { caviMIBGroups 4 }
 caviIngressStatMIBGroup OBJECT IDENTIFIER ::= { caviMIBGroups 5 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    These are objects related to the ingress ATM virtual
 --     interface statistics.
@@ -792,17 +1562,141 @@ caviIngressStatMIBGroup OBJECT IDENTIFIER ::= { caviMIBGroups 5 }
 caviIngressHighSpeedStatMIBGroup OBJECT IDENTIFIER ::= { caviMIBGroups 6 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    These statistics apply to ingress ATM virtual interfaces with speed of
 --     OC12 or higher.
 --  objects
 --    caviHIngRcvClp0Cells, caviHIngRcvClp1Cells
 
+caviMIBGroupRev1 OBJECT IDENTIFIER ::= { caviMIBGroups 7 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Definition of additional objects caviMinVpiNum and caviMaxVpiNum,
+--     which are required to support the evuni and evnni functionality.
+--  objects
+--    caviPhyIfIndex, caviViIfIndex, caviMinRate, caviMaxRate, 
+--    caviFileId, caviIfType, caviVpiNum, caviRowStatus, 
+--    caviMinVpiNum, caviMaxVpiNum
+
+caviEgressStatMIBGroup1 OBJECT IDENTIFIER ::= { caviMIBGroups 8 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    These are objects related to the ATM virtual interface 
+--     statistics group caviStatistics.
+--  objects
+--    caviEgrRcvClp0Cells, caviEgrRcvClp1Cells, 
+--    caviEgrClp0DiscCells, caviEgrClp1DiscCells, 
+--    caviEgrXmtClp0Cells, caviEgrXmtClp1Cells, caviEgrRcvOAMCells, 
+--    caviEgrRMCells, caviEgrXmtEFCICells, caviEgrRcvEFCICells, 
+--    caviEgrXmtOAMCells, caviHighEgrRcvClp0Cells, 
+--    caviHighEgrRcvClp1Cells, caviHighEgrClp0DiscCells, 
+--    caviHighEgrClp1DiscCells, caviHighEgrXmtClp0Cells, 
+--    caviHighEgrXmtClp1Cells
+
+caviEgressHighSpeedStatMIBGroup1 OBJECT IDENTIFIER ::= { caviMIBGroups 9 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    These statistics apply to ingress ATM virtual interfaces 
+--     with speed of OC12 or higher.
+--  objects
+--    caviHEgrXmtClp0Cells, caviHEgrXmtClp1Cells, 
+--    caviHEgrRcvClp0Cells, caviHEgrRcvClp1Cells, 
+--    caviHEgrClp0DiscCells, caviHEgrClp1DiscCells, 
+--    caviHIntEgrRcvClp0Cells, caviHIntEgrRcvClp1Cells, 
+--    caviHIntEgrClp0DiscCells, caviHIntEgrClp1DiscCells, 
+--    caviHIntEgrXmtClp0Cells, caviHIntEgrXmtClp1Cells
+
+caviEgressIntervalMIBGroup1 OBJECT IDENTIFIER ::= { caviMIBGroups 10 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    These are objects related to the ATM virtual interface 
+--     interval statistics group.
+--  objects
+--    caviEgressIntervalNumber, caviIntEgrRcvClp0Cells, 
+--    caviIntEgrRcvClp1Cells, caviIntEgrClp0DiscCells, 
+--    caviIntEgrClp1DiscCells, caviIntEgrXmtClp0Cells, 
+--    caviIntEgrXmtClp1Cells, caviIntEgrRcvOAMCells, 
+--    caviIntEgrRMCells, caviIntEgrXmtEFCICells, 
+--    caviIntEgrRcvEFCICells, caviIntEgrXmtOAMCells, 
+--    caviHighIntEgrRcvClp0Cells, caviHighIntEgrRcvClp1Cells, 
+--    caviHighIntEgrClp0DiscCells, caviHighIntEgrClp1DiscCells, 
+--    caviHighIntEgrXmtClp0Cells, caviHighIntEgrXmtClp1Cells
+
+caviIngressStatMIBGroup1 OBJECT IDENTIFIER ::= { caviMIBGroups 11 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    These are objects related to the ingress ATM virtual
+--     interface statistics.
+--  objects
+--    caviIngRcvClp0Cells, caviIngRcvClp1Cells, 
+--    caviIngClp0DiscCells, caviIngClp1DiscCells, 
+--    caviIngXmtClp0Cells, caviIngXmtClp1Cells, caviIngRcvOAMCells, 
+--    caviIngRMCells, caviIngXmtEFCICells, caviIngRcvEFCICells, 
+--    caviIngXmtOAMCells, caviHighIngRcvClp0Cells, 
+--    caviHighIngRcvClp1Cells, caviHighIngClp0DiscCells, 
+--    caviHighIngClp1DiscCells, caviHighIngXmtClp0Cells, 
+--    caviHighIngXmtClp1Cells
+
+caviIngHighSpeedStatMIBGroup1 OBJECT IDENTIFIER ::= { caviMIBGroups 12 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--    These statistics apply to ingress ATM virtual interfaces 
+--     with speed of OC12 or higher.
+--  objects
+--    caviHIngRcvClp0Cells, caviHIngRcvClp1Cells, 
+--    caviHIngClp0DiscCells, caviHIngClp1DiscCells, 
+--    caviHIngXmtClp0Cells, caviHIngXmtClp1Cells
+
+caviIngressIntervalStatMIBGroup OBJECT IDENTIFIER ::= { caviMIBGroups 13 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    These are objects related to the ingress ATM virtual
+--     interface statistics.
+--  objects
+--    caviIntIngRcvClp0Cells, caviIntIngRcvClp1Cells, 
+--    caviIntIngClp0DiscCells, caviIntIngClp1DiscCells, 
+--    caviIntIngXmtClp0Cells, caviIntIngXmtClp1Cells, 
+--    caviIntIngRcvOAMCells, caviIntIngRMCells, 
+--    caviIntIngXmtEFCICells, caviIntIngRcvEFCICells, 
+--    caviIntIngXmtOAMCells
+
+caviIngHighSpeedStatMIBGroup2 OBJECT IDENTIFIER ::= { caviMIBGroups 14 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    These statistics apply to ingress ATM virtual interfaces 
+--     with speed of OC12 or higher.
+--  objects
+--    caviHighIntIngRcvClp0Cells, caviHighIntIngRcvClp1Cells, 
+--    caviHighIntIngClp0DiscCells, caviHighIntIngClp1DiscCells, 
+--    caviHighIntIngXmtClp0Cells, caviHighIntIngXmtClp1Cells, 
+--    caviHIngRcvClp0Cells, caviHIngRcvClp1Cells, 
+--    caviHIngClp0DiscCells, caviHIngClp1DiscCells, 
+--    caviHIngXmtClp0Cells, caviHIngXmtClp1Cells, 
+--    caviHIntIngRcvClp0Cells, caviHIntIngRcvClp1Cells, 
+--    caviHIntIngClp0DiscCells, caviHIntIngClp1DiscCells, 
+--    caviHIntIngXmtClp0Cells, caviHIntIngXmtClp1Cells
+
 caviMIBCompliance OBJECT IDENTIFIER ::= { caviMIBCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The Compliance statement for cisco AtmVirtualIf management group.
 --  Module
@@ -819,6 +1713,74 @@ caviMIBCompliance OBJECT IDENTIFIER ::= { caviMIBCompliances 1 }
 --    caviIngressStatMIBGroup
 --   OptGroup
 --    caviIngressHighSpeedStatMIBGroup
+
+caviMIBComplianceRev1 OBJECT IDENTIFIER ::= { caviMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    Compliance statement for cisco AtmVirtualIf management group
+--     with support for virtual user and network ports
+--  Module
+--    >>current<<
+--   MandGroup
+--    caviMIBGroupRev1
+--   MandGroup
+--    caviEgressStatMIBGroup
+--   OptGroup
+--    caviEgressHighSpeedStatMIBGroup
+--   OptGroup
+--    caviEgressIntervalMIBGroup
+--   OptGroup
+--    caviIngressStatMIBGroup
+--   OptGroup
+--    caviIngressHighSpeedStatMIBGroup
+
+caviMIBComplianceRev2 OBJECT IDENTIFIER ::= { caviMIBCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    Compliance statement for cisco AtmVirtualIf management 
+--     group with support for virtual user and network ports
+--  Module
+--    >>current<<
+--   MandGroup
+--    caviMIBGroupRev1
+--   MandGroup
+--    caviEgressStatMIBGroup1
+--   OptGroup
+--    caviEgressHighSpeedStatMIBGroup1
+--   OptGroup
+--    caviEgressIntervalMIBGroup1
+--   OptGroup
+--    caviIngressStatMIBGroup1
+--   OptGroup
+--    caviIngHighSpeedStatMIBGroup1
+
+caviMIBComplianceRev3 OBJECT IDENTIFIER ::= { caviMIBCompliances 4 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    Compliance statement for cisco AtmVirtualIf management 
+--     group with support for virtual user and network ports
+--  Module
+--    >>current<<
+--   MandGroup
+--    caviMIBGroupRev1
+--   MandGroup
+--    caviEgressStatMIBGroup1
+--   OptGroup
+--    caviEgressHighSpeedStatMIBGroup1
+--   OptGroup
+--    caviEgressIntervalMIBGroup1
+--   OptGroup
+--    caviIngressStatMIBGroup1
+--   OptGroup
+--    caviIngHighSpeedStatMIBGroup2
+--   OptGroup
+--    caviIngressIntervalStatMIBGroup
 
 
 END

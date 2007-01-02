@@ -1,4 +1,4 @@
--- MIB file created 10-Dec-2001 12:18:58, by
+-- MIB file created 04-Aug-2003 20:37:08, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-BSTUN-MIB DEFINITIONS ::= BEGIN
@@ -23,7 +23,7 @@ IMPORTS
 ciscoBstunMIB OBJECT IDENTIFIER ::= { ciscoMgmt 35 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200106190000Z
+--    200302100000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -78,6 +78,10 @@ ciscoBstunMIB OBJECT IDENTIFIER ::= { ciscoMgmt 35 }
 --        packet and byte counters.
 --              
 --              
+--  RevDate
+--    200302100000Z
+--  RevDescr
+--    Added Asynchronous POS to IP conversion support
 --  RevDate
 --    200106190000Z
 --  RevDescr
@@ -186,7 +190,10 @@ bstunProtocolType OBJECT-TYPE
         adplex(4),
         diebold(5),
         asyncGeneric(6),
-        mdi(7)
+        mdi(7),
+        mosec(8),
+        gddb(9),
+        apos(10)
         }
     ACCESS read-only
     STATUS mandatory
@@ -354,7 +361,8 @@ BstunRouteEntry ::= SEQUENCE {
     bstunRouteBIPPassive TruthValue,
     bstunRouteBIPLocalPort INTEGER,
     bstunRouteBIPForeignPort INTEGER,
-    bstunRouteBIPDeviceStatus OCTET STRING
+    bstunRouteBIPDeviceStatus OCTET STRING,
+    bstunRouteAPIPHeaderVersion INTEGER
     }
 
 bstunRouteGroupIndex OBJECT-TYPE
@@ -384,16 +392,17 @@ bstunRouteType OBJECT-TYPE
         serialDirect(4),
         serialFrameRelay(5),
         serialLLC2(6),
-        bip(7)
+        bip(7),
+        apip(8)
         }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "The type of identification of the remote partner.
          If ip then the value is in bstunRouteIP; if serial or
-         serialDirect then the value is in bstunRouteSerial; if bip 
-         then the value is in bstunRouteIP, bstunRouteBIPLocalPort 
-         and bstunRouteBIPForeignPort."
+         serialDirect then the value is in bstunRouteSerial; if 
+         bip or apip then the value is in bstunRouteIP, 
+         bstunRouteBIPLocalPort and bstunRouteBIPForeignPort."
     ::= { bstunRouteEntry 3 }
 
 bstunRouteIP OBJECT-TYPE
@@ -599,6 +608,27 @@ bstunRouteBIPDeviceStatus OBJECT-TYPE
                              reporting  a busy condition."
     ::= { bstunRouteEntry 18 }
 
+bstunRouteAPIPHeaderVersion OBJECT-TYPE
+    SYNTAX INTEGER {
+        v0(1),
+        v1(2),
+        v2(3)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Specifies the tunneling header format to use for APIP:
+         v0, if set, indicates a 2 byte encapsulation header. 
+             The length of the header is included in the size of 
+             the sent packet.
+         v1, if set, indicates a 2 byte encapsulation header. 
+             The length of the header is excluded from the size of 
+             the sent packet.
+         v2, if set, indicates a 4 byte encapsulation header. 
+             The length of the header is excluded from the size of 
+             the sent packet."
+    ::= { bstunRouteEntry 19 }
+
 bstunPeerStateChangeNotification TRAP-TYPE
 -- Reverse mappable trap
     ENTERPRISE bstunNotificationPrefix
@@ -695,7 +725,7 @@ bstunGlobalGroupRev1 OBJECT IDENTIFIER ::= { bstunMibGroups 5 }
 bstunRouteGroupRev1 OBJECT IDENTIFIER ::= { bstunMibGroups 6 }
 -- OBJECT-GROUP
 --  Status
---    deprecated
+--    mandatory
 --  Descr
 --    A collection of objects providing information about
 --     BSTUN defined routes.
@@ -708,7 +738,7 @@ bstunRouteGroupRev1 OBJECT IDENTIFIER ::= { bstunMibGroups 6 }
 bstunRouteGroupRev2 OBJECT IDENTIFIER ::= { bstunMibGroups 7 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    A collection of objects providing information about
 --     BSTUN defined routes.
@@ -719,6 +749,36 @@ bstunRouteGroupRev2 OBJECT IDENTIFIER ::= { bstunMibGroups 7 }
 --    bstunRouteDLCI, bstunRouteRSAP, bstunLLC2Priority, 
 --    bstunRouteBIPPassive, bstunRouteBIPLocalPort, 
 --    bstunRouteBIPForeignPort, bstunRouteBIPDeviceStatus
+
+bstunRouteBipGroup OBJECT IDENTIFIER ::= { bstunMibGroups 10 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A objects providing information about
+--     BSTUN defined routes for BIP protocol.
+--  objects
+--    bstunRouteBIPPassive, bstunRouteBIPDeviceStatus
+
+bstunRoutePortsGroup OBJECT IDENTIFIER ::= { bstunMibGroups 11 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A objects providing port number informaton information 
+--     about BSTUN defined routes for BIP and APIP protocols.
+--  objects
+--    bstunRouteBIPLocalPort, bstunRouteBIPForeignPort
+
+bstunRouteApipGroup OBJECT IDENTIFIER ::= { bstunMibGroups 12 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A objects providing information about
+--     BSTUN defined routes for APIP protocol.
+--  objects
+--    bstunRouteAPIPHeaderVersion
 
 bstunNotificationGroup OBJECT IDENTIFIER ::= { bstunMibGroups 8 }
 -- NOTIFICATION-GROUP
@@ -759,7 +819,7 @@ bstunMibCompliance OBJECT IDENTIFIER ::= { bstunMibCompliances 1 }
 bstunMibComplianceRev1 OBJECT IDENTIFIER ::= { bstunMibCompliances 2 }
 -- MODULE-COMPLIANCE
 --  Status
---    deprecated
+--    obsolete
 --  Descr
 --    The compliance statement for all Cisco systems that 
 --    implement  BSTUN functions.
@@ -777,7 +837,7 @@ bstunMibComplianceRev1 OBJECT IDENTIFIER ::= { bstunMibCompliances 2 }
 bstunMibComplianceRev2 OBJECT IDENTIFIER ::= { bstunMibCompliances 3 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The compliance statement for all Cisco systems that 
 --    implement  BSTUN functions.
@@ -793,6 +853,32 @@ bstunMibComplianceRev2 OBJECT IDENTIFIER ::= { bstunMibCompliances 3 }
 --    bstunRouteGroupRev2
 --   MandGroup
 --    bstunNotificationGroupRev1
+
+bstunMibComplianceRev3 OBJECT IDENTIFIER ::= { bstunMibCompliances 4 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for all Cisco systems that 
+--    implement  BSTUN functions.
+--  Module
+--    >>current<<
+--   MandGroup
+--    bstunGlobalGroupRev1
+--   MandGroup
+--    bstunGroupGroup
+--   MandGroup
+--    bstunPortGroup
+--   MandGroup
+--    bstunRouteGroupRev1
+--   MandGroup
+--    bstunNotificationGroupRev1
+--   OptGroup
+--    bstunRouteBipGroup
+--   OptGroup
+--    bstunRoutePortsGroup
+--   OptGroup
+--    bstunRouteApipGroup
 
 
 END

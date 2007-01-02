@@ -1,28 +1,29 @@
--- MIB created 2/09/100 15:55:27, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 06-Dec-2005 16:31:51, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-CALL-RESOURCE-POOL-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-CALL-RESOURCE-POOL-MIB.my"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    TimeTicks, Integer32, Gauge32, Counter32
-            FROM SNMPv2-SMI-v1
-    OBJECT-TYPE
-            FROM RFC-1212
     RowStatus, TruthValue
             FROM SNMPv2-TC-v1
-    Unsigned32, CiscoRowOperStatus
+    CiscoRowOperStatus
             FROM CISCO-TC
     SnmpAdminString
             FROM SNMP-FRAMEWORK-MIB
     ciscoMgmt
-            FROM CISCO-SMI;
+            FROM CISCO-SMI
+    Counter, Gauge, TimeTicks
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
 
 ciscoCallResourcePoolMIB OBJECT IDENTIFIER ::= { ciscoMgmt 124 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    9811130000Z
+--    200511180000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -43,6 +44,13 @@ ciscoCallResourcePoolMIB OBJECT IDENTIFIER ::= { ciscoMgmt 124 }
 --     CISCO IOS. This feature provides the ability to accept
 --     or reject calls based on DNIS numbers, resources required,
 --     user DNS domains, and counts of currently active sessions. 
+--  RevDate
+--    200511180000Z
+--  RevDescr
+--    Updated the imports such that Unsigned32 is imported from 
+--    SNMPv2-SMI instead of CISCO-TC. Changed the syntax of 
+--    ccrpCDCallType and ccrpCPResourceCallType from OCTET 
+--    STRING(SIZE(1)) to BITS.
 --  RevDate
 --    9811130000Z
 --  RevDescr
@@ -82,8 +90,7 @@ CcrpPhoneNumberPattern ::= OCTET STRING(SIZE(1..64))
 --     wild cards '.' and 'x'. Both wild card characters match
 --     single digits only.
 
-PhysicalPosition ::= Unsigned32
--- Rsyntax Gauge32
+PhysicalPosition ::= Gauge
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
@@ -177,7 +184,8 @@ ccrpDnisGroupEntry OBJECT-TYPE
          ccrpDnisGroupName from this table will cause
          associated entries in the dependent tables to
          transition to a 'missingDependency' CiscoRowOperStatus."
-    INDEX { ccrpDnisGroupName, IMPLIED ccrpDnisGroupMember }
+    INDEX { ccrpDnisGroupName, --?? IMPLIED may cause problems
+            IMPLIED ccrpDnisGroupMember }
     ::= { ccrpDnisGroupTable 1 }
 
 CcrpDnisGroupEntry ::= SEQUENCE {
@@ -273,7 +281,8 @@ ccrpDnisGroupCallTypeEntry OBJECT-TYPE
          to have the value 'missingDependency'.
         
          Existing rows may be modified when the row is active."
-    INDEX { IMPLIED ccrpDnisGroupName }
+    INDEX { --?? IMPLIED may cause problems
+            IMPLIED ccrpDnisGroupName }
     ::= { ccrpDnisGroupCallTypeTable 1 }
 
 CcrpDnisGroupCallTypeEntry ::= SEQUENCE {
@@ -374,7 +383,8 @@ ccrpCallDiscriminatorEntry OBJECT-TYPE
          to a 'missingDependency' CiscoRowOperStatus.
         
          Existing rows may be modified when the row is active."
-    INDEX { IMPLIED ccrpCDName }
+    INDEX { --?? IMPLIED may cause problems
+            IMPLIED ccrpCDName }
     ::= { ccrpCallDiscriminatorTable 1 }
 
 CcrpCallDiscriminatorEntry ::= SEQUENCE {
@@ -393,7 +403,12 @@ ccrpCDName OBJECT-TYPE
     ::= { ccrpCallDiscriminatorEntry 1 }
 
 ccrpCDCallType OBJECT-TYPE
-    SYNTAX OCTET STRING(SIZE(1))
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   digital(0)
+        --   speech(1)
+        --   v110(2)
+        --   v120(3)
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -414,6 +429,7 @@ ccrpCDCallType OBJECT-TYPE
          being rejected by this call discriminator.
          Setting all defined bits to zero would result in all
          calls being accepted by this discriminator."
+    DEFVAL { '00'h }
     ::= { ccrpCallDiscriminatorEntry 2 }
 
 ccrpCDRowStatus OBJECT-TYPE
@@ -600,13 +616,14 @@ ccrpResourceEntry OBJECT-TYPE
          to a 'missingDependency' CiscoRowOperStatus.
         
          Existing rows may be modified when the row is active."
-    INDEX { IMPLIED ccrpResourceName }
+    INDEX { --?? IMPLIED may cause problems
+            IMPLIED ccrpResourceName }
     ::= { ccrpResourceTable 1 }
 
 CcrpResourceEntry ::= SEQUENCE {
     ccrpResourceName SnmpAdminString,
     ccrpResourcePortBased TruthValue,
-    ccrpResourceLimit Unsigned32,
+    ccrpResourceLimit Gauge,
     ccrpResourceGroupOperStatus CiscoRowOperStatus,
     ccrpResourceGroupRowStatus RowStatus
     }
@@ -638,8 +655,7 @@ ccrpResourcePortBased OBJECT-TYPE
     ::= { ccrpResourceEntry 2 }
 
 ccrpResourceLimit OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -745,7 +761,7 @@ ccrpResourceRangeEntry OBJECT-TYPE
     ::= { ccrpResourceRangeTable 1 }
 
 CcrpResourceRangeEntry ::= SEQUENCE {
-    ccrpResourceRangeIndex Unsigned32,
+    ccrpResourceRangeIndex Gauge,
     ccrpResourceRangeStartPort PhysicalPosition,
     ccrpResourceRangeEndPort PhysicalPosition,
     ccrpResourceRangeOperStatus CiscoRowOperStatus,
@@ -753,8 +769,7 @@ CcrpResourceRangeEntry ::= SEQUENCE {
     }
 
 ccrpResourceRangeIndex OBJECT-TYPE
-    SYNTAX Unsigned32(1..4294967295)
---    Rsyntax Gauge32(1..4294967295)
+    SYNTAX Gauge(1..4294967295)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -764,7 +779,7 @@ ccrpResourceRangeIndex OBJECT-TYPE
 
 ccrpResourceRangeStartPort OBJECT-TYPE
     SYNTAX PhysicalPosition
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -782,7 +797,7 @@ ccrpResourceRangeStartPort OBJECT-TYPE
 
 ccrpResourceRangeEndPort OBJECT-TYPE
     SYNTAX PhysicalPosition
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -869,13 +884,14 @@ ccrpCustomerProfileEntry OBJECT-TYPE
          to a 'missingDependency' CiscoRowOperStatus.
         
          Existing rows may be modified when the row is active."
-    INDEX { IMPLIED ccrpCPName }
+    INDEX { --?? IMPLIED may cause problems
+            IMPLIED ccrpCPName }
     ::= { ccrpCustomerProfileTable 1 }
 
 CcrpCustomerProfileEntry ::= SEQUENCE {
     ccrpCPName SnmpAdminString,
-    ccrpCPSessionLimit Unsigned32,
-    ccrpCPOverflow Integer32,
+    ccrpCPSessionLimit Gauge,
+    ccrpCPOverflow INTEGER,
     ccrpCPRowStatus RowStatus
     }
 
@@ -889,8 +905,7 @@ ccrpCPName OBJECT-TYPE
     ::= { ccrpCustomerProfileEntry 1 }
 
 ccrpCPSessionLimit OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -903,7 +918,7 @@ ccrpCPSessionLimit OBJECT-TYPE
     ::= { ccrpCustomerProfileEntry 2 }
 
 ccrpCPOverflow OBJECT-TYPE
-    SYNTAX Integer32(-1..2147483647)
+    SYNTAX INTEGER(-1..2147483647)
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -979,7 +994,8 @@ ccrpCPDnisGrpEntry OBJECT-TYPE
          'missingDependency'.
         
          Existing rows may be modified when the row is active."
-    INDEX { ccrpCPName, IMPLIED ccrpDnisGroupName }
+    INDEX { ccrpCPName, --?? IMPLIED may cause problems
+            IMPLIED ccrpDnisGroupName }
     ::= { ccrpCPDnisGrpTable 1 }
 
 CcrpCPDnisGrpEntry ::= SEQUENCE {
@@ -1078,7 +1094,12 @@ CcrpCPResourceGrpEntry ::= SEQUENCE {
     }
 
 ccrpCPResourceCallType OBJECT-TYPE
-    SYNTAX OCTET STRING(SIZE(1))
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   digital(0)
+        --   speech(1)
+        --   v110(2)
+        --   v120(3)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -1232,7 +1253,8 @@ ccrpCPVGEntry OBJECT-TYPE
          'missingDependency'.
         
          Existing rows may be modified when the row is active."
-    INDEX { ccrpCPName, IMPLIED ccrpCPVGName }
+    INDEX { ccrpCPName, --?? IMPLIED may cause problems
+            IMPLIED ccrpCPVGName }
     ::= { ccrpCPVGTable 1 }
 
 CcrpCPVGEntry ::= SEQUENCE {
@@ -1313,26 +1335,27 @@ ccrpCPStatisticsEntry OBJECT-TYPE
         
          An entry is created for each customer profile within
          the ccrpCustomerProfileTable."
-    INDEX { IMPLIED ccrpCPName }
+    INDEX { --?? IMPLIED may cause problems
+            IMPLIED ccrpCPName }
 -- Augments ccrpCustomerProfileEntry
     ::= { ccrpCPStatisticsTable 1 }
 
 CcrpCPStatisticsEntry ::= SEQUENCE {
-    ccrpCPActiveSessions Gauge32,
-    ccrpCPActiveOverflowSessions Gauge32,
-    ccrpCPTotalSessions Counter32,
-    ccrpCPTotalOverflowSessions Counter32,
-    ccrpCPNumberOverflowState Counter32,
-    ccrpCPNumberMaxState Counter32,
+    ccrpCPActiveSessions Gauge,
+    ccrpCPActiveOverflowSessions Gauge,
+    ccrpCPTotalSessions Counter,
+    ccrpCPTotalOverflowSessions Counter,
+    ccrpCPNumberOverflowState Counter,
+    ccrpCPNumberMaxState Counter,
     ccrpCPOverflowTime TimeTicks,
     ccrpCPMaxStateTime TimeTicks,
-    ccrpCPPeakActiveSessions Gauge32,
-    ccrpCPOverflowRejected Counter32,
-    ccrpCPResourceRejected Counter32
+    ccrpCPPeakActiveSessions Gauge,
+    ccrpCPOverflowRejected Counter,
+    ccrpCPResourceRejected Counter
     }
 
 ccrpCPActiveSessions OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    sessions
     ACCESS read-only
@@ -1342,7 +1365,7 @@ ccrpCPActiveSessions OBJECT-TYPE
     ::= { ccrpCPStatisticsEntry 1 }
 
 ccrpCPActiveOverflowSessions OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    sessions
     ACCESS read-only
@@ -1357,7 +1380,7 @@ ccrpCPActiveOverflowSessions OBJECT-TYPE
     ::= { ccrpCPStatisticsEntry 2 }
 
 ccrpCPTotalSessions OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    sessions
     ACCESS read-only
@@ -1374,7 +1397,7 @@ ccrpCPTotalSessions OBJECT-TYPE
     ::= { ccrpCPStatisticsEntry 3 }
 
 ccrpCPTotalOverflowSessions OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    sessions
     ACCESS read-only
@@ -1390,7 +1413,7 @@ ccrpCPTotalOverflowSessions OBJECT-TYPE
     ::= { ccrpCPStatisticsEntry 4 }
 
 ccrpCPNumberOverflowState OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    occurrences
     ACCESS read-only
@@ -1406,7 +1429,7 @@ ccrpCPNumberOverflowState OBJECT-TYPE
     ::= { ccrpCPStatisticsEntry 5 }
 
 ccrpCPNumberMaxState OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    occurrences
     ACCESS read-only
@@ -1461,7 +1484,7 @@ ccrpCPMaxStateTime OBJECT-TYPE
     ::= { ccrpCPStatisticsEntry 8 }
 
 ccrpCPPeakActiveSessions OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    sessions
     ACCESS read-only
@@ -1481,7 +1504,7 @@ ccrpCPPeakActiveSessions OBJECT-TYPE
     ::= { ccrpCPStatisticsEntry 9 }
 
 ccrpCPOverflowRejected OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    call attempts
     ACCESS read-only
@@ -1511,7 +1534,7 @@ ccrpCPOverflowRejected OBJECT-TYPE
     ::= { ccrpCPStatisticsEntry 10 }
 
 ccrpCPResourceRejected OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    call attempts
     ACCESS read-only
@@ -1526,8 +1549,7 @@ ccrpCPResourceRejected OBJECT-TYPE
     ::= { ccrpCPStatisticsEntry 11 }
 
 ccrpDnisStatisticsTableMaxEntries OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -1550,8 +1572,7 @@ ccrpDnisStatisticsTableMaxEntries OBJECT-TYPE
     ::= { ccrpDnisStatistics 1 }
 
 ccrpDnisStatisticsTableSystemMax OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1562,7 +1583,7 @@ ccrpDnisStatisticsTableSystemMax OBJECT-TYPE
     ::= { ccrpDnisStatistics 2 }
 
 ccrpDnisStatisticsTableLengthExceeded OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1601,16 +1622,17 @@ ccrpDnisStatisticsEntry OBJECT-TYPE
         
          Entries are created as a result of a call being
          received by the system with the DNIS number."
-    INDEX { IMPLIED ccrpDnisStatisticsDnisNumber }
+    INDEX { --?? IMPLIED may cause problems
+            IMPLIED ccrpDnisStatisticsDnisNumber }
     ::= { ccrpDnisStatisticsTable 1 }
 
 CcrpDnisStatisticsEntry ::= SEQUENCE {
     ccrpDnisStatisticsDnisNumber CcrpPhoneNumber,
     ccrpDnisStatisticsGroupName SnmpAdminString,
-    ccrpDnisActiveSessions Gauge32,
-    ccrpDnisTotalSessions Counter32,
-    ccrpDnisPeakActiveSessions Gauge32,
-    ccrpDnisCallTypeRejected Counter32
+    ccrpDnisActiveSessions Gauge,
+    ccrpDnisTotalSessions Counter,
+    ccrpDnisPeakActiveSessions Gauge,
+    ccrpDnisCallTypeRejected Counter
     }
 
 ccrpDnisStatisticsDnisNumber OBJECT-TYPE
@@ -1636,7 +1658,7 @@ ccrpDnisStatisticsGroupName OBJECT-TYPE
     ::= { ccrpDnisStatisticsEntry 2 }
 
 ccrpDnisActiveSessions OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    sessions
     ACCESS read-only
@@ -1648,7 +1670,7 @@ ccrpDnisActiveSessions OBJECT-TYPE
     ::= { ccrpDnisStatisticsEntry 3 }
 
 ccrpDnisTotalSessions OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    sessions
     ACCESS read-only
@@ -1664,7 +1686,7 @@ ccrpDnisTotalSessions OBJECT-TYPE
     ::= { ccrpDnisStatisticsEntry 4 }
 
 ccrpDnisPeakActiveSessions OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    sessions
     ACCESS read-only
@@ -1678,7 +1700,7 @@ ccrpDnisPeakActiveSessions OBJECT-TYPE
     ::= { ccrpDnisStatisticsEntry 5 }
 
 ccrpDnisCallTypeRejected OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    sessions
     ACCESS read-only
@@ -1712,16 +1734,17 @@ ccrpCDStatisticsEntry OBJECT-TYPE
         
          An entry is created for each call discriminator within
          the ccrpCallDiscriminatorTable."
-    INDEX { IMPLIED ccrpCDName }
+    INDEX { --?? IMPLIED may cause problems
+            IMPLIED ccrpCDName }
 -- Augments ccrpCallDiscriminatorEntry
     ::= { ccrpCDStatisticsTable 1 }
 
 CcrpCDStatisticsEntry ::= SEQUENCE {
-    ccrpCDRejected Counter32
+    ccrpCDRejected Counter
     }
 
 ccrpCDRejected OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    sessions
     ACCESS read-only

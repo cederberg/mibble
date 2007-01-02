@@ -1,10 +1,10 @@
--- MIB file created 03-Sep-2002 17:50:26, by
---   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+-- MIB file created 23-Mar-2005 01:22:38, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco
 
 CISCO-CDL-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-CDL-MIB.my"
--- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
     TimeStamp, TruthValue
@@ -23,7 +23,7 @@ IMPORTS
 ciscoCdlMIB OBJECT IDENTIFIER ::= { ciscoExperiment 88 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200205300000Z
+--    200210020000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -72,6 +72,16 @@ ciscoCdlMIB OBJECT IDENTIFIER ::= { ciscoExperiment 88 }
 --    
 --    APS configuration and monitoring can be done using the
 --    CISCO-APS-MIB and CISCO-APS-EXT-MIB.
+--  RevDate
+--    200210020000Z
+--  RevDescr
+--    Second version of this MIB module.
+--    
+--     The following new counters have been added -
+--         coCdlFromCdlNetEthernetCRC
+--         coCdlFromCdlNetEthernetCRCOvrflw
+--         coCdlFromCdlNetHCEthernetCRC
+--     
 --  RevDate
 --    200205300000Z
 --  RevDescr
@@ -777,7 +787,10 @@ CoCdlFlowTermEntry ::= SEQUENCE {
     coCdlFromCdlNetFlowDICurrStatus CoCdlFlowDefectIndStatus,
     coCdlFromCdlNetFlowDILastChange TimeStamp,
     coCdlToCdlNetFlowDICurrStatus CoCdlFlowDefectIndStatus,
-    coCdlToCdlNetFlowDILastChange TimeStamp
+    coCdlToCdlNetFlowDILastChange TimeStamp,
+    coCdlFromCdlNetEthernetCRC Counter,
+    coCdlFromCdlNetEthernetCRCOvrflw Counter,
+    coCdlFromCdlNetHCEthernetCRC Counter
     }
 
 coCdlFromCdlNetFlowIdentifier OBJECT-TYPE
@@ -876,6 +889,64 @@ coCdlToCdlNetFlowDILastChange OBJECT-TYPE
         coCdlToCdlNetFlowDICurrStatus."
     ::= { coCdlFlowTermEntry 6 }
 
+coCdlFromCdlNetEthernetCRC OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the lower word value of the counter
+        that provides a count of Ethernet packets with CRC
+        errors, for an elementary packet stream, at the point where
+        the CDL header is removed. When Ethernet is used as an
+        encapsulation for transport of non-Ethernet protocols, this
+        is the number of Ethernet CRC errors, before the Ethernet
+        encapsulation is removed and the resulting traffic for the
+        underlying protocol is transmitted out this interface.
+        
+        NOTE: The object coCdlFromCdlNetEthernetCRCOvrflw contains the
+        higher 32 bits of this counter value. SNMP v2c or v3 managers
+        can use the coCdlFromCdlNetHCEthernetCRC object directly which
+        is a 64 bit counter."
+    ::= { coCdlFlowTermEntry 7 }
+
+coCdlFromCdlNetEthernetCRCOvrflw OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the higher word value of the counter
+        that provides a count of Ethernet packets with CRC
+        errors, for an elementary packet stream, at the point where
+        the CDL header is removed. When Ethernet is used as an
+        encapsulation for transport of non-Ethernet protocols, this
+        is the number of Ethernet CRC errors, before the Ethernet
+        encapsulation is removed and the resulting traffic for the
+        underlying protocol is transmitted out this interface.
+        
+        NOTE: The object coCdlFromCdlNetEthernetCRC contains the
+        lower 32 bits of this counter value. SNMP v2c or v3 managers
+        can use the coCdlFromCdlNetHCEthernetCRC object directly which
+        is a 64 bit counter."
+    ::= { coCdlFlowTermEntry 8 }
+
+coCdlFromCdlNetHCEthernetCRC OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object provides a count of Ethernet packets with CRC
+        errors, for an elementary packet stream, at the point where
+        the CDL header is removed. When Ethernet is used as an
+        encapsulation for transport of non-Ethernet protocols, this
+        is the number of Ethernet CRC errors, before the Ethernet
+        encapsulation is removed and the resulting traffic for the
+        underlying protocol is transmitted out this interface.
+        
+        This is a High Capacity (64 bit) version of the
+        coCdlFromCdlNetEthernetCRC counter. "
+    ::= { coCdlFlowTermEntry 9 }
+
 coCdlRxAggDefectIndChange TRAP-TYPE
 -- Reverse mappable trap
     ENTERPRISE ciscoCdlMIB
@@ -972,7 +1043,7 @@ coCdlMIBFlowIdGroup OBJECT IDENTIFIER ::= { coCdlMIBGroups 2 }
 coCdlMIBFlowTermGroup OBJECT IDENTIFIER ::= { coCdlMIBGroups 3 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    A collection of objects to configure and monitor the status of
 --    elementary packet streams at path terminating interfaces.
@@ -1006,6 +1077,21 @@ coCdlDIAggMandatoryGroup OBJECT IDENTIFIER ::= { coCdlMIBGroups 5 }
 --    coCdlDefectIndClearSoakInterval, 
 --    coCdlDINotifyThrottleInterval
 
+coCdlMIBFlowTerm2Group OBJECT IDENTIFIER ::= { coCdlMIBGroups 8 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects to configure and monitor the status of
+--    elementary packet streams at path terminating interfaces.
+--  objects
+--    coCdlFromCdlNetFlowIdentifier, coCdlToCdlNetFlowIdentifier, 
+--    coCdlFromCdlNetFlowDICurrStatus, 
+--    coCdlFromCdlNetFlowDILastChange, 
+--    coCdlToCdlNetFlowDICurrStatus, coCdlToCdlNetFlowDILastChange, 
+--    coCdlFromCdlNetEthernetCRC, coCdlFromCdlNetEthernetCRCOvrflw, 
+--    coCdlFromCdlNetHCEthernetCRC
+
 coCdlDIAggNotifGroup OBJECT IDENTIFIER ::= { coCdlMIBGroups 6 }
 -- NOTIFICATION-GROUP
 --  Status
@@ -1026,6 +1112,47 @@ coCdlDIFlowNotifGroup OBJECT IDENTIFIER ::= { coCdlMIBGroups 7 }
 --    coCdlFromCdlNetFlowDIChange
 
 coCdlMIBCompliance OBJECT IDENTIFIER ::= { coCdlMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The Compliance statement for the Cisco CDL MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    coCdlMIBBaseGroup
+--   MandGroup
+--    coCdlDIAggMandatoryGroup
+--   MandGroup
+--    coCdlDIAggNotifGroup
+--   ObjVar
+--    coCdlAdminStatus
+--   ObjVar
+--    coCdlDINotifyThrottleInterval
+--   ObjVar
+--    coCdlDefectIndSetSoakInterval
+--   ObjVar
+--    coCdlDefectIndClearSoakInterval
+--   OptGroup
+--    coCdlDIConfigGroup
+--   ObjVar
+--    coCdlForceEndOfHop
+--   OptGroup
+--    coCdlMIBFlowIdGroup
+--   ObjVar
+--    coCdlTransmitMaxFlowIdentifier
+--   ObjVar
+--    coCdlReceiveMaxFlowIdentifier
+--   OptGroup
+--    coCdlMIBFlowTermGroup
+--   ObjVar
+--    coCdlToCdlNetFlowIdentifier
+--   ObjVar
+--    coCdlFromCdlNetFlowIdentifier
+--   OptGroup
+--    coCdlDIFlowNotifGroup
+
+coCdlMIBCompliance2 OBJECT IDENTIFIER ::= { coCdlMIBCompliances 2 }
 -- MODULE-COMPLIANCE
 --  Status
 --    mandatory
@@ -1058,7 +1185,7 @@ coCdlMIBCompliance OBJECT IDENTIFIER ::= { coCdlMIBCompliances 1 }
 --   ObjVar
 --    coCdlReceiveMaxFlowIdentifier
 --   OptGroup
---    coCdlMIBFlowTermGroup
+--    coCdlMIBFlowTerm2Group
 --   ObjVar
 --    coCdlToCdlNetFlowIdentifier
 --   ObjVar

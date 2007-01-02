@@ -1,29 +1,31 @@
--- MIB file created 26-Jun-2001 15:25:57, by
+-- MIB file created 31-Oct-2005 15:29:13, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-CAT6K-CROSSBAR-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-CAT6K-CROSSBAR-MIB.my"
--- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
     ciscoMgmt
             FROM CISCO-SMI
     Percent
             FROM CISCO-QOS-PIB-MIB
---    Unsigned32
---            FROM CISCO-TC
     TruthValue, DisplayString
             FROM SNMPv2-TC-v1
+    entPhysicalName, entPhysicalVendorType
+            FROM ENTITY-MIB
     Counter, Gauge
             FROM RFC1155-SMI
     OBJECT-TYPE
-            FROM RFC-1212;
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
 
 ciscoCat6kCrossbarMIB OBJECT IDENTIFIER ::= { ciscoMgmt 217 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200106250000Z
+--    200408110000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -38,7 +40,36 @@ ciscoCat6kCrossbarMIB OBJECT IDENTIFIER ::= { ciscoMgmt 217 }
 --  Descr
 --    The Catalyst 6000 Crossbar MIB provides instrumentation for
 --    configuration and operation of the crossbar switching fabric
---    module.
+--    module, and additional functionalities for switching bus 
+--    and internal bus, etc.
+--  RevDate
+--    200408110000Z
+--  RevDescr
+--    Added cc6kxbarIntBusNotifControlGroup and
+--     cc6kxbarIntBusCRCErrNotifGroup.
+--  RevDate
+--    200406110000Z
+--  RevDescr
+--    Added cc6kxbarTruncatedModeOper Object and changed the 
+--     description of cc6kxbarTruncatedModeAllowed and 
+--     cc6kxbarMinFabricPresent.
+--  RevDate
+--    200309290000Z
+--  RevDescr
+--    Changed the description of cc6kxbarTruncatedModeAllowed and
+--     cc6kxbarMinFabricPresent. Removed default value for 
+--     cc6kxbarTruncatedModeAllowed.
+--  RevDate
+--    200304020000Z
+--  RevDescr
+--    Changed the SYNTAX and description of cc6kxbarMinFabricPresent 
+--     and  description of cc6kxbarTruncatedModeAllowed.
+--  RevDate
+--    200212050000Z
+--  RevDescr
+--    Added cc6kxbarModuleChannelSpeed, cc6kxbarSwBusSwitchingStatus,
+--     cc6kxbarSwBusFailureDuration, cc6kxbarSwBusNotifEnable 
+--     objects and cc6kxbarSwBusStallNotif notification.
 --  RevDate
 --    200106250000Z
 --  RevDescr
@@ -48,6 +79,9 @@ ciscoCat6kXbarMIBObjects OBJECT IDENTIFIER ::= { ciscoCat6kCrossbarMIB 1 }
 cc6kxbarConfiguration OBJECT IDENTIFIER ::= { ciscoCat6kXbarMIBObjects 1 }
 cc6kxbarStatus  OBJECT IDENTIFIER ::= { ciscoCat6kXbarMIBObjects 2 }
 cc6kxbarStatistics OBJECT IDENTIFIER ::= { ciscoCat6kXbarMIBObjects 3 }
+cc6kxbarSwBusObjects OBJECT IDENTIFIER ::= { ciscoCat6kXbarMIBObjects 4 }
+cc6kxbarIntBusObjects OBJECT IDENTIFIER ::= { ciscoCat6kXbarMIBObjects 5 }
+ciscoCat6kXbarMIBNotifs OBJECT IDENTIFIER ::= { ciscoCat6kCrossbarMIB 0 }
 cc6kxbarMIBConformance OBJECT IDENTIFIER ::= { ciscoCat6kCrossbarMIB 3 }
 cc6kxbarMIBCompliances OBJECT IDENTIFIER ::= { cc6kxbarMIBConformance 1 }
 cc6kxbarMIBGroups OBJECT IDENTIFIER ::= { cc6kxbarMIBConformance 2 }
@@ -133,19 +167,12 @@ cc6kxbarTruncatedModeAllowed OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This object determines the value of
-         cc6kxbarModuleModeSwitchingMode of each module.
-         'true' - With the cc6kxbarMinFabricPresent fabric capable
-                  modules present in the system, 
-                  cc6kxbarModuleModeSwitchingMode
-                  will be 'crossbarmode' for each module.
-         'false' - truncation mode is not allowed."
-    DEFVAL { true }
+        "Indicates whether truncated mode is 
+         administratively enabled on the device or not."
     ::= { cc6kxbarConfiguration 3 }
 
 cc6kxbarMinFabricPresent OBJECT-TYPE
-    SYNTAX ModuleSlotNumber
---    Rsyntax Gauge
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -153,11 +180,7 @@ cc6kxbarMinFabricPresent OBJECT-TYPE
          of switching fabric capable modules to be present in the 
          system, for any switching fabric capable module to be in
          'crossbarmode' indicated by  cc6kxbarModuleModeSwitchingMode,
-         when cc6kxbarTruncatedModeAllowed is set to 'true'.
-         When cc6kxbarMinFabricPresent has a 
-         value larger than the number of slots in the system then 
-         the value of cc6kxbarTruncatedModeAllowed has no effect."
-    DEFVAL { 2 }
+         when cc6kxbarTruncatedModeOper is 'false'."
     ::= { cc6kxbarConfiguration 4 }
 
 cc6kxbarLcdBannerTable OBJECT-TYPE
@@ -214,6 +237,27 @@ cc6kxbarLcdBannerMaxSize OBJECT-TYPE
         "Maximum size of the associated cc6kxbarLcdBannerBanner
          object."
     ::= { cc6kxbarLcdBannerEntry 3 }
+
+cc6kxbarTruncatedModeOper OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates if the truncated mode is
+         operationaly enabled on the device or not.
+         'true' - With the fabric module present in the system,
+                  cc6kxbarModuleModeSwitchingMode will be
+                  'crossbarmode' for all the fabric capable
+                   modules.
+         'false'- With the cc6kxbarMinFabricPresent fabric capable 
+                  modules and the fabric module  present in the system,
+                  cc6kxbarModuleModeSwitchingMode
+                  will be 'crossbarmode' for fabric capable modules."
+    ::= { cc6kxbarConfiguration 6 }
 
 cc6kxbarFabricActiveSlot OBJECT-TYPE
     SYNTAX ModuleSlotNumber
@@ -319,7 +363,8 @@ Cc6kxbarModuleChannelEntry ::= SEQUENCE {
     cc6kxbarModuleChannelModule ModuleSlotNumber,
     cc6kxbarModuleChannelChannel FabricChannelNumber,
     cc6kxbarModuleChannelModStatus ChannelStatus,
-    cc6kxbarModuleChannelFabStatus ChannelStatus
+    cc6kxbarModuleChannelFabStatus ChannelStatus,
+    cc6kxbarModuleChannelSpeed Gauge
     }
 
 cc6kxbarModuleChannelModule OBJECT-TYPE
@@ -375,6 +420,15 @@ cc6kxbarModuleChannelFabStatus OBJECT-TYPE
         "The status of the fabric channel at the 
          cc6kxbarFabricActiveSlot."
     ::= { cc6kxbarModuleChannelEntry 4 }
+
+cc6kxbarModuleChannelSpeed OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The speed in mega bits per second of the 
+         cc6kxbarModuleChannelChannel for cc6kxbarModuleChannelModule."
+    ::= { cc6kxbarModuleChannelEntry 5 }
 
 cc6kxbarStatisticsTable OBJECT-TYPE
     SYNTAX SEQUENCE OF Cc6kxbarStatisticsEntry
@@ -477,10 +531,142 @@ cc6kxbarStatisticsOutUtil OBJECT-TYPE
          cc6kxbarStatisticsModule."
     ::= { cc6kxbarStatisticsEntry 7 }
 
+cc6kxbarSwBusSwitchingStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        normal(1),
+        stalled(2),
+        isolated(3)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the current switching status of the 
+         switching bus on the system. 
+        
+         normal -- the switching bus is under normal 
+                   packet switching operation.
+        
+         stalled -- the switching bus has stopped packet 
+                    switching but is still attached to
+                    the system, i.e., the switching bus
+                    is stalled. 
+        
+         isolated -- the switching bus has stopped packet 
+                    switching and is detached from 
+                    the system, i.e., the switching bus 
+                    is isolated.
+        
+         The object is only instantiated on systems which 
+         support switching bus switching detection feature."
+    ::= { cc6kxbarSwBusObjects 1 }
+
+cc6kxbarSwBusFailureDuration OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    seconds
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the failure duration of the switching 
+         bus since the switching bus has transitioned 
+         out of the normal(1) state as monitored by  
+         cc6kxbarSwBusSwitchingStatus. If the object 
+         value of cc6kxbarSwBusSwitchingStatus is 
+         normal(1), then the object value of 
+         cc6kxbarSwBusFailureDuration should be zero.
+        
+         The object is only instantiated on systems which
+         support switching bus switching detection feature."
+    ::= { cc6kxbarSwBusObjects 2 }
+
+cc6kxbarSwBusNotifEnable OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether or not the notification 
+         cc6kxbarSwBusStatusChangeNotif should be generated 
+         when there is change in the switching status of the 
+         switching bus as monitored by 
+         cc6kxbarSwBusSwitchingStatus.
+        
+         The object is only instantiated on systems which
+         support switching bus switching detection feature."
+    ::= { cc6kxbarSwBusObjects 3 }
+
+cc6kxbarIntBusNotifEnable OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   intBusCRCErrExcd(0)
+        --   intBusCRCErrRcvrd(1)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether the generation of a specified
+        notification for internal bus is enabled or not. 
+        If a bit corresponding to a notification is set to 
+        1, then that notification can be generated.
+        
+        intBusCRCErrExcd -- the cc6kxbarIntBusCRCErrExcdNotif 
+                            notification.
+        
+        intBusCRCErrRcvrd -- the cc6kxbarIntBusCRCErrRcvrdNotif
+                            notification."
+    ::= { cc6kxbarIntBusObjects 1 }
+
+cc6kxbarSwBusStatusChangeNotif TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoCat6kCrossbarMIB
+    VARIABLES {
+        cc6kxbarSwBusSwitchingStatus, cc6kxbarSwBusFailureDuration }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "A cc6kxbarSwBusStatusChangeNotif notification 
+         is sent by the the device when there is change
+         in switching status of the switching bus as 
+         monited by cc6kxbarSwBusSwitchingStatus."
+    ::= 1
+
+cc6kxbarIntBusCRCErrExcdNotif TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoCat6kCrossbarMIB
+    VARIABLES {
+        entPhysicalName, entPhysicalVendorType }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "A cc6kxbarIntBusCRCThreshExcdNotif notification 
+        is sent by the system when the system has
+        detected that the internal bus CRC error on
+        a physical entity (such as a module) as specified
+        by entPhysicalName has exceeded the fatal threshold."
+    ::= 2
+
+cc6kxbarIntBusCRCErrRcvrdNotif TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoCat6kCrossbarMIB
+    VARIABLES {
+        entPhysicalName, entPhysicalVendorType }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "A cc6kxbarIntBusCRCErrRcvrdNotif notification 
+        is sent by the system when the system has
+        recovered as the internal bus CRC error on
+        a physical entity (such as a module) as
+        specified by entPhysicalName has fallen below
+        the normal threshold."
+    ::= 3
+
 cc6kxbarModuleStatusGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 1 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    A collection of objects providing 
 --     configuration and operation of the crossbar 
@@ -506,7 +692,7 @@ cc6kxbarChannelStatusGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 2 }
 cc6kxbarChannelStatisticsGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 3 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    A collection of objects providing statistics for
 --     the fabric channel.
@@ -535,13 +721,119 @@ cc6kxbarBusOnlyAllowedGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 5 }
 --  objects
 --    cc6kxbarBusOnlyModeAllowed
 
-cc6kxbarMIBCompliance OBJECT IDENTIFIER ::= { cc6kxbarMIBCompliances 2 }
--- MODULE-COMPLIANCE
+cc6kxbarModuleStatusGroupVer1 OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 6 }
+-- OBJECT-GROUP
 --  Status
 --    mandatory
 --  Descr
+--    A collection of objects providing 
+--     configuration and operation of the crossbar 
+--     switching fabric module and switching capable 
+--     module.
+--  objects
+--    cc6kxbarTruncatedModeAllowed, cc6kxbarMinFabricPresent, 
+--    cc6kxbarFabricActiveSlot, cc6kxbarFabricBackupSlot, 
+--    cc6kxbarModuleModeSwitchingMode
+
+cc6kxbarChannelStatisticsGroupVer1 OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 7 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing statistics for
+--     the fabric channel.
+--  objects
+--    cc6kxbarStatisticsInErrors, cc6kxbarStatisticsOutErrors, 
+--    cc6kxbarStatisticsOutDropped
+
+cc6kxbarLcdBannerGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 8 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing configuration of
+--     the lcd Banner of the fabric module.
+--  objects
+--    cc6kxbarLcdBannerMaxSize, cc6kxbarLcdBannerBanner
+
+cc6kxbarChannelUtilGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 9 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    These object determines Input and Output Utilization of the 
+--     fabric channel.
+--  objects
+--    cc6kxbarStatisticsInUtil, cc6kxbarStatisticsOutUtil
+
+cc6kxbarChannelSpeedGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 10 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the 
+--     speed of the fabric channel.
+--  objects
+--    cc6kxbarModuleChannelSpeed
+
+cc6kxbarSwBusGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 11 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects for the switching bus switching 
+--     detection feature.
+--  objects
+--    cc6kxbarSwBusSwitchingStatus, cc6kxbarSwBusFailureDuration, 
+--    cc6kxbarSwBusNotifEnable
+
+cc6kxbarTruncatedOperGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 13 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the 
+--     operational truncated mode.
+--  objects
+--    cc6kxbarTruncatedModeOper
+
+cc6kxbarIntBusNotifControlGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 14 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects to control the notification 
+--    generation for internal bus.
+--  objects
+--    cc6kxbarIntBusNotifEnable
+
+cc6kxbarSwBusNotifGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 12 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of notifications for the switching 
+--     bus switching detection feature.
+--  notifications
+--    cc6kxbarSwBusStatusChangeNotif
+
+cc6kxbarIntBusCRCErrNotifGroup OBJECT IDENTIFIER ::= { cc6kxbarMIBGroups 15 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of notifications for the 
+--    internal bus CRC error.
+--  notifications
+--    cc6kxbarIntBusCRCErrExcdNotif, cc6kxbarIntBusCRCErrRcvrdNotif
+
+cc6kxbarMIBCompliance OBJECT IDENTIFIER ::= { cc6kxbarMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
 --    The compliance statement for
---     the CISCO-CROSSBAR-MIB.
+--     the CISCO-CAT6K-CROSSBAR-MIB.
 --  Module
 --    >>current<<
 --   MandGroup
@@ -554,6 +846,104 @@ cc6kxbarMIBCompliance OBJECT IDENTIFIER ::= { cc6kxbarMIBCompliances 2 }
 --    cc6kxbarFallbackGroup
 --   OptGroup
 --    cc6kxbarBusOnlyAllowedGroup
+
+cc6kxbarMIBComplianceVer1 OBJECT IDENTIFIER ::= { cc6kxbarMIBCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for
+--     the CISCO-CAT6K-CROSSBAR-MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cc6kxbarModuleStatusGroupVer1
+--   MandGroup
+--    cc6kxbarChannelStatusGroup
+--   MandGroup
+--    cc6kxbarChannelStatisticsGroupVer1
+--   OptGroup
+--    cc6kxbarFallbackGroup
+--   OptGroup
+--    cc6kxbarBusOnlyAllowedGroup
+--   OptGroup
+--    cc6kxbarLcdBannerGroup
+--   OptGroup
+--    cc6kxbarChannelUtilGroup
+--   OptGroup
+--    cc6kxbarChannelSpeedGroup
+--   OptGroup
+--    cc6kxbarSwBusGroup
+--   OptGroup
+--    cc6kxbarSwBusNotifGroup
+
+cc6kxbarMIBComplianceVer2 OBJECT IDENTIFIER ::= { cc6kxbarMIBCompliances 4 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for
+--     the CISCO-CAT6K-CROSSBAR-MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cc6kxbarModuleStatusGroupVer1
+--   MandGroup
+--    cc6kxbarChannelStatusGroup
+--   MandGroup
+--    cc6kxbarChannelStatisticsGroupVer1
+--   OptGroup
+--    cc6kxbarFallbackGroup
+--   OptGroup
+--    cc6kxbarBusOnlyAllowedGroup
+--   OptGroup
+--    cc6kxbarLcdBannerGroup
+--   OptGroup
+--    cc6kxbarChannelUtilGroup
+--   OptGroup
+--    cc6kxbarChannelSpeedGroup
+--   OptGroup
+--    cc6kxbarSwBusGroup
+--   OptGroup
+--    cc6kxbarSwBusNotifGroup
+--   OptGroup
+--    cc6kxbarTruncatedOperGroup
+
+cc6kxbarMIBComplianceVer3 OBJECT IDENTIFIER ::= { cc6kxbarMIBCompliances 5 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for
+--     the CISCO-CAT6K-CROSSBAR-MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cc6kxbarModuleStatusGroupVer1
+--   MandGroup
+--    cc6kxbarChannelStatusGroup
+--   MandGroup
+--    cc6kxbarChannelStatisticsGroupVer1
+--   OptGroup
+--    cc6kxbarFallbackGroup
+--   OptGroup
+--    cc6kxbarBusOnlyAllowedGroup
+--   OptGroup
+--    cc6kxbarLcdBannerGroup
+--   OptGroup
+--    cc6kxbarChannelUtilGroup
+--   OptGroup
+--    cc6kxbarChannelSpeedGroup
+--   OptGroup
+--    cc6kxbarSwBusGroup
+--   OptGroup
+--    cc6kxbarSwBusNotifGroup
+--   OptGroup
+--    cc6kxbarTruncatedOperGroup
+--   OptGroup
+--    cc6kxbarIntBusNotifControlGroup
+--   OptGroup
+--    cc6kxbarIntBusCRCErrNotifGroup
 
 
 END

@@ -1,4 +1,4 @@
--- MIB file created 07-Aug-2002 10:53:23, by
+-- MIB file created 25-Mar-2003 15:57:32, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-ATM-CONN-MIB DEFINITIONS ::= BEGIN
@@ -9,16 +9,22 @@ CISCO-ATM-CONN-MIB DEFINITIONS ::= BEGIN
 IMPORTS
     TimeStamp, TruthValue, RowStatus
             FROM SNMPv2-TC-v1
-    ifIndex
+    ifIndex, InterfaceIndexOrZero
             FROM IF-MIB
-    atmVplVpi, atmVclVpi, atmVclVci, AtmTrafficDescrParamIndex
+-- FIX: changed type import to ATM-TC-MIB
+--    atmVplVpi, atmVclVpi, atmVclVci, AtmTrafficDescrParamIndex
+    atmVplVpi, atmVclVpi, atmVclVci
             FROM ATM-MIB
+    AtmTrafficDescrParamIndex
+            FROM ATM-TC-MIB
     NsapAtmAddr
             FROM CISCO-ATM-IF-MIB
     ciscoExperiment
             FROM CISCO-SMI
     LsPerVcqThresholdGroup
             FROM CISCO-ATM-RM-MIB
+    SnmpAdminString
+            FROM SNMP-FRAMEWORK-MIB
     Counter, Gauge
             FROM RFC1155-SMI
     OBJECT-TYPE
@@ -27,7 +33,7 @@ IMPORTS
 ciscoAtmConnMIB OBJECT IDENTIFIER ::= { ciscoExperiment 13 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200108060000Z
+--    200207120000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -44,6 +50,21 @@ ciscoAtmConnMIB OBJECT IDENTIFIER ::= { ciscoExperiment 13 }
 --  Descr
 --    This MIB module is a cisco extension to VPL/VCL table defined 
 --     in rfc1695 for ATM switch connection management.
+--  RevDate
+--    200207120000Z
+--  RevDescr
+--    Added a new enumeration 'useTrafficDescr' to the syntax of 
+--     ciscoAtmVclEpdEnable.
+--  RevDate
+--    200110300000Z
+--  RevDescr
+--    Added ciscoAtmVplConnType and ciscoAtmVclConnType objects  
+--     to the VPL and VCL tables.
+--  RevDate
+--    200110100000Z
+--  RevDescr
+--    Added ciscoAtmVplConnName and ciscoAtmVclConnName objects  
+--     to the VPL and VCL tables.
 --  RevDate
 --    200108060000Z
 --  RevDescr
@@ -93,16 +114,6 @@ ciscoAtmSnoopVp OBJECT IDENTIFIER ::= { ciscoAtmConnMIBObjects 6 }
 ciscoAtmConnMIBConformance OBJECT IDENTIFIER ::= { ciscoAtmConnMIB 3 }
 ciscoAtmConnMIBCompliances OBJECT IDENTIFIER ::= { ciscoAtmConnMIBConformance 1 }
 ciscoAtmConnMIBGroups OBJECT IDENTIFIER ::= { ciscoAtmConnMIBConformance 2 }
-
-InterfaceIndexOrZero ::= INTEGER(0..2147483647)
--- TEXTUAL-CONVENTION
---  DspHint
---    d
---  Status
---    mandatory
---  Descr
---    Either the value 0, or the ifIndex value of an
---    ATM Interface.
 
 CastType ::= INTEGER {
         pointToPoint(1),
@@ -326,7 +337,9 @@ CiscoAtmVplEntry ::= SEQUENCE {
     ciscoAtmVplTxNegTraffDescrIndex AtmTrafficDescrParamIndex,
     ciscoAtmVplSwFabOutCells Counter,
     ciscoAtmVplSwFabOutClp0Cells Counter,
-    ciscoAtmVplSwFabOutClp1Cells Counter
+    ciscoAtmVplSwFabOutClp1Cells Counter,
+    ciscoAtmVplConnName SnmpAdminString,
+    ciscoAtmVplConnType INTEGER
     }
 
 ciscoAtmVplCastType OBJECT-TYPE
@@ -977,6 +990,33 @@ ciscoAtmVplSwFabOutClp1Cells OBJECT-TYPE
          that do not have support for collecting such statistics."
     ::= { ciscoAtmVplEntry 50 }
 
+ciscoAtmVplConnName OBJECT-TYPE
+    SYNTAX SnmpAdminString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A human readable string that identifies this connection.
+         This object will return a zero-length string if value is
+         not set."
+    ::= { ciscoAtmVplEntry 51 }
+
+ciscoAtmVplConnType OBJECT-TYPE
+    SYNTAX INTEGER {
+        local(1),
+        endToEnd(2)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object represent the PVP Type for this connection.
+         - local       connection within the node
+         - endToEnd    across several nodes
+         This object serves as an information object for a
+         management system and has no functional meaning to
+         the switch."
+    ::= { ciscoAtmVplEntry 52 }
+
 ciscoAtmVclTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CiscoAtmVclEntry
     ACCESS not-accessible
@@ -1004,7 +1044,7 @@ CiscoAtmVclEntry ::= SEQUENCE {
     ciscoAtmVclSpanType SpanType,
     ciscoAtmVclConfigType ConfigType,
     ciscoAtmVclRxUpcMode UpcStatus,
-    ciscoAtmVclEpdEnable EnableStatus,
+    ciscoAtmVclEpdEnable INTEGER,
     ciscoAtmVclConnState ConnState,
     ciscoAtmVclOamLoopbkTxInterval INTEGER,
     ciscoAtmVclOamSegmentLoopback EnableStatus,
@@ -1052,7 +1092,9 @@ CiscoAtmVclEntry ::= SEQUENCE {
     ciscoAtmVclTxNegTraffDescrIndex AtmTrafficDescrParamIndex,
     ciscoAtmVclSwFabOutCells Counter,
     ciscoAtmVclSwFabOutClp0Cells Counter,
-    ciscoAtmVclSwFabOutClp1Cells Counter
+    ciscoAtmVclSwFabOutClp1Cells Counter,
+    ciscoAtmVclConnName SnmpAdminString,
+    ciscoAtmVclConnType INTEGER
     }
 
 ciscoAtmVclCastType OBJECT-TYPE
@@ -1119,16 +1161,28 @@ ciscoAtmVclRxUpcMode OBJECT-TYPE
     ::= { ciscoAtmVclEntry 4 }
 
 ciscoAtmVclEpdEnable OBJECT-TYPE
-    SYNTAX EnableStatus
---    Rsyntax INTEGER {
---        enable(1),
---        disable(2)
---        }
+    SYNTAX INTEGER {
+        enable(1),
+        disable(2),
+        useTrafficDescr(3)
+        }
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        " Early Packet Discard opeartion is enabled or disabled 
-        specified at this connection."
+        " Early Packet Discard option used for this VCL.
+          The use is as follows:
+          enable(1)
+             Packet-discard is enabled.
+          disable(2)
+             Packet-discard is disabled.
+          useTrafficDescr(3)
+             Packet-discard in the receive direction is as specified by
+             the atmTrafficFrameDiscard value in row corresponding to
+             atmVclReceiveTrafficDescrIndex.  For VCLs of type
+             spvcInitiator, the packet-discard in the reverse direction
+             is as specified by the atmTrafficFrameDiscard value in row
+             corresponding to atmVclTransmitTrafficDescrIndex. "
+    DEFVAL { useTrafficDescr }
     ::= { ciscoAtmVclEntry 5 }
 
 ciscoAtmVclConnState OBJECT-TYPE
@@ -1793,6 +1847,33 @@ ciscoAtmVclSwFabOutClp1Cells OBJECT-TYPE
          do not have support for collecting such statistics."
     ::= { ciscoAtmVclEntry 54 }
 
+ciscoAtmVclConnName OBJECT-TYPE
+    SYNTAX SnmpAdminString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A human readable string that identifies this connection.
+         This object will return a zero-length string if value is
+         not set."
+    ::= { ciscoAtmVclEntry 55 }
+
+ciscoAtmVclConnType OBJECT-TYPE
+    SYNTAX INTEGER {
+        local(1),
+        endToEnd(2)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object represent the PVC Type for this connection.
+         - local     connection within the node
+         - endToEnd  across several nodes.
+         This object serves as an information object for a
+         management system and has no functional meaning to
+         the switch."
+    ::= { ciscoAtmVclEntry 56 }
+
 ciscoAtmSvpAddrTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CiscoAtmSvpAddrEntry
     ACCESS not-accessible
@@ -2183,7 +2264,7 @@ ciscoAtmSvcFrameDiscardUsesAal5Ie OBJECT-TYPE
 ciscoAtmConnMIBGroup OBJECT IDENTIFIER ::= { ciscoAtmConnMIBGroups 1 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  objects
 --    ciscoAtmVplCastType, ciscoAtmVplSpanType, 
 --    ciscoAtmVplConfigType, ciscoAtmVplRxUpcMode, 
@@ -2333,6 +2414,88 @@ ciscoAtmConnMIBlsFcPfqGroup1 OBJECT IDENTIFIER ::= { ciscoAtmConnMIBGroups 8 }
 --    ciscoAtmVclVcqClpThreshCellDrops, ciscoAtmVclSwFabOutCells, 
 --    ciscoAtmVclSwFabOutClp0Cells, ciscoAtmVclSwFabOutClp1Cells
 
+ciscoAtmConnMIBGroup1 OBJECT IDENTIFIER ::= { ciscoAtmConnMIBGroups 9 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  objects
+--    ciscoAtmVplCastType, ciscoAtmVplSpanType, 
+--    ciscoAtmVplConfigType, ciscoAtmVplRxUpcMode, 
+--    ciscoAtmVplConnState, ciscoAtmVplOamLoopbkTxInterval, 
+--    ciscoAtmVplOamSegmentLoopback, ciscoAtmVplOamEndLoopback, 
+--    ciscoAtmVplOamAisEnable, ciscoAtmVplOamRdiEnable, 
+--    ciscoAtmVplInstallTime, ciscoAtmVplInCells, 
+--    ciscoAtmVplOutCells, ciscoAtmVplCrossIfIndex, 
+--    ciscoAtmVplCrossVpi, ciscoAtmVplNextLeafIfIndex, 
+--    ciscoAtmVplNextLeafVpi, ciscoAtmVplRemoteAddr, 
+--    ciscoAtmVplRemoteVpi, ciscoAtmVplLocation, 
+--    ciscoAtmVplSlowRetryIntv, ciscoAtmVplNumAttempts, 
+--    ciscoAtmVplLastReleaseCause, ciscoAtmVplLogicalPortDef, 
+--    ciscoAtmVplLogicalPortIndex, ciscoAtmVplConnName, 
+--    ciscoAtmVclCastType, ciscoAtmVclSpanType, 
+--    ciscoAtmVclConfigType, ciscoAtmVclRxUpcMode, 
+--    ciscoAtmVclEpdEnable, ciscoAtmVclConnState, 
+--    ciscoAtmVclOamLoopbkTxInterval, ciscoAtmVclOamSegmentLoopback, 
+--    ciscoAtmVclOamEndLoopback, ciscoAtmVclOamAisEnable, 
+--    ciscoAtmVclOamRdiEnable, ciscoAtmVclInstallTime, 
+--    ciscoAtmVclInCells, ciscoAtmVclOutCells, 
+--    ciscoAtmVclCrossIfIndex, ciscoAtmVclCrossVpi, 
+--    ciscoAtmVclCrossVci, ciscoAtmVclNextLeafIfIndex, 
+--    ciscoAtmVclNextLeafVpi, ciscoAtmVclNextLeafVci, 
+--    ciscoAtmVclAalEncapFlag, ciscoAtmVclAalEncapProtocol, 
+--    ciscoAtmVclAalUserVcType, ciscoAtmVclAtmInArpInterval, 
+--    ciscoAtmVclRemoteAddr, ciscoAtmVclRemoteVpi, 
+--    ciscoAtmVclRemoteVci, ciscoAtmVclLocation, 
+--    ciscoAtmVclSlowRetryIntv, ciscoAtmVclNumAttempts, 
+--    ciscoAtmVclLastReleaseCause, ciscoAtmVclConnName, 
+--    ciscoAtmSvpDirection, ciscoAtmSvcDirection
+
+ciscoAtmConnMIBGroup4 OBJECT IDENTIFIER ::= { ciscoAtmConnMIBGroups 10 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  objects
+--    ciscoAtmVplCastType, ciscoAtmVplSpanType, 
+--    ciscoAtmVplConfigType, ciscoAtmVplRxUpcMode, 
+--    ciscoAtmVplConnState, ciscoAtmVplOamLoopbkTxInterval, 
+--    ciscoAtmVplOamSegmentLoopback, ciscoAtmVplOamEndLoopback, 
+--    ciscoAtmVplOamAisEnable, ciscoAtmVplOamRdiEnable, 
+--    ciscoAtmVplInstallTime, ciscoAtmVplInCells, 
+--    ciscoAtmVplOutCells, ciscoAtmVplCrossIfIndex, 
+--    ciscoAtmVplCrossVpi, ciscoAtmVplNextLeafIfIndex, 
+--    ciscoAtmVplNextLeafVpi, ciscoAtmVplRemoteAddr, 
+--    ciscoAtmVplRemoteVpi, ciscoAtmVplLocation, 
+--    ciscoAtmVplSlowRetryIntv, ciscoAtmVplNumAttempts, 
+--    ciscoAtmVplLastReleaseCause, ciscoAtmVplLogicalPortDef, 
+--    ciscoAtmVplLogicalPortIndex, ciscoAtmVclCastType, 
+--    ciscoAtmVclSpanType, ciscoAtmVclConfigType, 
+--    ciscoAtmVclRxUpcMode, ciscoAtmVclEpdEnable, 
+--    ciscoAtmVclConnState, ciscoAtmVclOamLoopbkTxInterval, 
+--    ciscoAtmVclOamSegmentLoopback, ciscoAtmVclOamEndLoopback, 
+--    ciscoAtmVclOamAisEnable, ciscoAtmVclOamRdiEnable, 
+--    ciscoAtmVclInstallTime, ciscoAtmVclInCells, 
+--    ciscoAtmVclOutCells, ciscoAtmVclCrossIfIndex, 
+--    ciscoAtmVclCrossVpi, ciscoAtmVclCrossVci, 
+--    ciscoAtmVclNextLeafIfIndex, ciscoAtmVclNextLeafVpi, 
+--    ciscoAtmVclNextLeafVci, ciscoAtmVclAalEncapFlag, 
+--    ciscoAtmVclAalEncapProtocol, ciscoAtmVclAalUserVcType, 
+--    ciscoAtmVclAtmInArpInterval, ciscoAtmVclRemoteAddr, 
+--    ciscoAtmVclRemoteVpi, ciscoAtmVclRemoteVci, 
+--    ciscoAtmVclLocation, ciscoAtmVclSlowRetryIntv, 
+--    ciscoAtmVclNumAttempts, ciscoAtmVclLastReleaseCause, 
+--    ciscoAtmSvpDirection, ciscoAtmSvcDirection
+
+ciscoAtmConnNmsGroup OBJECT IDENTIFIER ::= { ciscoAtmConnMIBGroups 11 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A group of objects that provides additional information
+--     for a management system
+--  objects
+--    ciscoAtmVplConnName, ciscoAtmVplConnType, ciscoAtmVclConnName, 
+--    ciscoAtmVclConnType
+
 ciscoAtmConnMIBCompliance OBJECT IDENTIFIER ::= { ciscoAtmConnMIBCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
@@ -2418,7 +2581,7 @@ ciscoAtmConnMIBCompliance5 OBJECT IDENTIFIER ::= { ciscoAtmConnMIBCompliances 5 
 ciscoAtmConnMIBCompliance6 OBJECT IDENTIFIER ::= { ciscoAtmConnMIBCompliances 6 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The compliance statement for the Cisco ATM connection
 --    management group.
@@ -2434,6 +2597,48 @@ ciscoAtmConnMIBCompliance6 OBJECT IDENTIFIER ::= { ciscoAtmConnMIBCompliances 6 
 --    ciscoAtmConnMIBlsFcPfqGroup1
 --   MandGroup
 --    ciscoAtmConnMIBNegTraffGroup
+
+ciscoAtmConnMIBCompliance7 OBJECT IDENTIFIER ::= { ciscoAtmConnMIBCompliances 7 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for the Cisco ATM connection
+--    management group.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoAtmConnMIBGroup1
+--   MandGroup
+--    ciscoAtmConnMIBGroup3
+--   MandGroup
+--    ciscoAtmConnMIBlsPerVcqGroup2
+--   MandGroup
+--    ciscoAtmConnMIBlsFcPfqGroup1
+--   MandGroup
+--    ciscoAtmConnMIBNegTraffGroup
+
+ciscoAtmConnMIBCompliance8 OBJECT IDENTIFIER ::= { ciscoAtmConnMIBCompliances 8 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for the Cisco ATM connection
+--    management group.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoAtmConnMIBGroup4
+--   MandGroup
+--    ciscoAtmConnMIBGroup3
+--   MandGroup
+--    ciscoAtmConnMIBlsPerVcqGroup2
+--   MandGroup
+--    ciscoAtmConnMIBlsFcPfqGroup1
+--   MandGroup
+--    ciscoAtmConnMIBNegTraffGroup
+--   OptGroup
+--    ciscoAtmConnNmsGroup
 
 
 END

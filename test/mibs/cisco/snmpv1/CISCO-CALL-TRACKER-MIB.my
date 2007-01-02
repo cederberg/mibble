@@ -1,30 +1,29 @@
--- MIB created 6/20/100 21:46:00, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 20-Feb-2006 12:13:10, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-CALL-TRACKER-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-CALL-TRACKER-MIB.my"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    IpAddress, Gauge32, Integer32
-            FROM SNMPv2-SMI-v1
-    OBJECT-TYPE
-            FROM RFC-1212
-    TRAP-TYPE
-            FROM RFC-1215
     DisplayString, TimeStamp, TruthValue
             FROM SNMPv2-TC-v1
-    Unsigned32
-            FROM CISCO-TC
     ciscoMgmt
             FROM CISCO-SMI
     AbsoluteCounter32
-            FROM DIAL-CONTROL-MIB;
+            FROM DIAL-CONTROL-MIB
+    Gauge, IpAddress
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
 
 ciscoCallTrackerMIB OBJECT IDENTIFIER ::= { ciscoMgmt 163 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200006070000Z
+--    200504120000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -51,6 +50,23 @@ ciscoCallTrackerMIB OBJECT IDENTIFIER ::= { ciscoMgmt 163 }
 --     or in a packet format (e.g., PPP packets) from a
 --     data terminal (e.g., Personal Computer) to a
 --     data network (e.g., Internet).
+--  RevDate
+--    200504120000Z
+--  RevDescr
+--    [1] CctCallCategory - added syncData
+--     [2] CctCallCategory - added lapb-ta
+--     [3] Added new textual convention CctCallSigType
+--     [4] Added cctActiveCallSignalingType to cctActiveTable
+--     [5] Added cctHistoryCallSignalingType to
+--         cctHistoryTable
+--  RevDate
+--    200402020000Z
+--  RevDescr
+--    Included mgcpData in CctCallCategory.
+--  RevDate
+--    200002100000Z
+--  RevDescr
+--    Initial version of this MIB.
 
 cctMIBObjects   OBJECT IDENTIFIER ::= { ciscoCallTrackerMIB 1 }
 cctGeneral      OBJECT IDENTIFIER ::= { cctMIBObjects 1 }
@@ -63,8 +79,7 @@ cctMIBConformance OBJECT IDENTIFIER ::= { ciscoCallTrackerMIB 3 }
 cctMIBCompliances OBJECT IDENTIFIER ::= { cctMIBConformance 1 }
 cctMIBGroups    OBJECT IDENTIFIER ::= { cctMIBConformance 2 }
 
-CctCallId ::= Unsigned32(1..4294967295)
--- Rsyntax Gauge32(1..4294967295)
+CctCallId ::= Gauge(1..4294967295)
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
@@ -111,7 +126,10 @@ CctCallCategory ::= INTEGER {
         isdnSync(4),
         v110(5),
         v120(6),
-        casDigital(7)
+        casDigital(7),
+        mgcpData(8),
+        syncData(9),
+        lapb-ta(10)
         }
 -- TEXTUAL-CONVENTION
 --  Status
@@ -122,14 +140,37 @@ CctCallCategory ::= INTEGER {
 --     other       - None of the following
 --     modem       - Modem call
 --     isdn-sync   - ISDN sync digital call
+--                   Now mapped to syncData
 --     v110        - V110 Call
 --     v120        - V120 Call
 --     cas-digital - Channel Associated Signaling
 --                   (CAS) 56k data call
+--     mgcpData    - MGCP data call
+--                   Now mapped to syncData
+--     syncData    - Sync digital data call for any 
+--                   call control
+--     lapb-ta     - LAPB or LAPB-TA call
+
+CctCallSigType ::= INTEGER {
+        unknown(1),
+        external(2),
+        q931(3),
+        autoDetect(4)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    Represents supported signaling types for a call.
+--    
+--     Unknown    - Signaling origin of call type unknown.
+--     External   - Signaling origin of call type by external 
+--                  agent e.g. MGCP, H.248
+--     Q931       - Signaling origin of call type by Q.931/ISDN
+--     Autodetect - Signaling of call type by automatic detection 
 
 cctCallIdPrefix OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -143,7 +184,7 @@ cctCallIdPrefix OBJECT-TYPE
     ::= { cctGeneral 1 }
 
 cctActiveTableNumberEntries OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -152,7 +193,7 @@ cctActiveTableNumberEntries OBJECT-TYPE
     ::= { cctActive 1 }
 
 cctActiveTableHighWaterMark OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -205,25 +246,26 @@ CctActiveEntry ::= SEQUENCE {
     cctActiveUserSubnetMask IpAddress,
     cctActiveAccountingSessionId DisplayString,
     cctActiveCallCategory CctCallCategory,
-    cctActiveInitialRxRate Unsigned32,
-    cctActiveInitialTxRate Unsigned32,
-    cctActiveResourceSlot Integer32,
-    cctActiveResourcePort Integer32,
-    cctActiveEntrySlot Integer32,
-    cctActiveEntryPort Integer32,
-    cctActiveEntryDs1 Integer32,
-    cctActiveEntryChannel Integer32,
+    cctActiveInitialRxRate Gauge,
+    cctActiveInitialTxRate Gauge,
+    cctActiveResourceSlot INTEGER,
+    cctActiveResourcePort INTEGER,
+    cctActiveEntrySlot INTEGER,
+    cctActiveEntryPort INTEGER,
+    cctActiveEntryDs1 INTEGER,
+    cctActiveEntryChannel INTEGER,
     cctActiveCalledPartyId DisplayString,
     cctActiveCallingPartyId DisplayString,
-    cctActiveMpBundleId Unsigned32,
+    cctActiveMpBundleId Gauge,
     cctActiveChargedUnits AbsoluteCounter32,
     cctActiveReceiveBytes AbsoluteCounter32,
-    cctActiveTransmitBytes AbsoluteCounter32
+    cctActiveTransmitBytes AbsoluteCounter32,
+    cctActiveCallSignalingType CctCallSigType
     }
 
 cctActiveCallId OBJECT-TYPE
     SYNTAX CctCallId
---    Rsyntax Gauge32(1..4294967295)
+--    Rsyntax Gauge(1..4294967295)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -405,7 +447,10 @@ cctActiveCallCategory OBJECT-TYPE
 --        isdnSync(4),
 --        v110(5),
 --        v120(6),
---        casDigital(7)
+--        casDigital(7),
+--        mgcpData(8),
+--        syncData(9),
+--        lapb-ta(10)
 --        }
     ACCESS read-only
     STATUS mandatory
@@ -414,8 +459,7 @@ cctActiveCallCategory OBJECT-TYPE
     ::= { cctActiveEntry 13 }
 
 cctActiveInitialRxRate OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
 --  Units
 --    bits per second
     ACCESS read-only
@@ -441,8 +485,7 @@ cctActiveInitialRxRate OBJECT-TYPE
     ::= { cctActiveEntry 14 }
 
 cctActiveInitialTxRate OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
 --  Units
 --    bits per second
     ACCESS read-only
@@ -468,7 +511,7 @@ cctActiveInitialTxRate OBJECT-TYPE
     ::= { cctActiveEntry 15 }
 
 cctActiveResourceSlot OBJECT-TYPE
-    SYNTAX Integer32(-1..214783647)
+    SYNTAX INTEGER(-1..214783647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -485,7 +528,7 @@ cctActiveResourceSlot OBJECT-TYPE
     ::= { cctActiveEntry 16 }
 
 cctActiveResourcePort OBJECT-TYPE
-    SYNTAX Integer32(-1..214783647)
+    SYNTAX INTEGER(-1..214783647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -502,7 +545,7 @@ cctActiveResourcePort OBJECT-TYPE
     ::= { cctActiveEntry 17 }
 
 cctActiveEntrySlot OBJECT-TYPE
-    SYNTAX Integer32(0..214783647)
+    SYNTAX INTEGER(0..214783647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -511,7 +554,7 @@ cctActiveEntrySlot OBJECT-TYPE
     ::= { cctActiveEntry 18 }
 
 cctActiveEntryPort OBJECT-TYPE
-    SYNTAX Integer32(0..214783647)
+    SYNTAX INTEGER(0..214783647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -520,7 +563,7 @@ cctActiveEntryPort OBJECT-TYPE
     ::= { cctActiveEntry 19 }
 
 cctActiveEntryDs1 OBJECT-TYPE
-    SYNTAX Integer32(0..214783647)
+    SYNTAX INTEGER(0..214783647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -550,7 +593,7 @@ cctActiveEntryDs1 OBJECT-TYPE
     ::= { cctActiveEntry 20 }
 
 cctActiveEntryChannel OBJECT-TYPE
-    SYNTAX Integer32(0..214783647)
+    SYNTAX INTEGER(0..214783647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -595,8 +638,7 @@ cctActiveCallingPartyId OBJECT-TYPE
     ::= { cctActiveEntry 23 }
 
 cctActiveMpBundleId OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -610,7 +652,7 @@ cctActiveMpBundleId OBJECT-TYPE
 
 cctActiveChargedUnits OBJECT-TYPE
     SYNTAX AbsoluteCounter32
---    Rsyntax Gauge32
+--    Rsyntax Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -624,7 +666,7 @@ cctActiveChargedUnits OBJECT-TYPE
 
 cctActiveReceiveBytes OBJECT-TYPE
     SYNTAX AbsoluteCounter32
---    Rsyntax Gauge32
+--    Rsyntax Gauge
 --  Units
 --    bytes
     ACCESS read-only
@@ -638,7 +680,7 @@ cctActiveReceiveBytes OBJECT-TYPE
 
 cctActiveTransmitBytes OBJECT-TYPE
     SYNTAX AbsoluteCounter32
---    Rsyntax Gauge32
+--    Rsyntax Gauge
 --  Units
 --    bytes
     ACCESS read-only
@@ -650,9 +692,22 @@ cctActiveTransmitBytes OBJECT-TYPE
          of cctActiveServiceType."
     ::= { cctActiveEntry 27 }
 
+cctActiveCallSignalingType OBJECT-TYPE
+    SYNTAX CctCallSigType
+--    Rsyntax INTEGER {
+--        unknown(1),
+--        external(2),
+--        q931(3),
+--        autoDetect(4)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Signaling type used to setup the call."
+    ::= { cctActiveEntry 28 }
+
 cctHistoryTableEntriesLimit OBJECT-TYPE
-    SYNTAX Unsigned32(0..2147483647)
---    Rsyntax Gauge32(0..2147483647)
+    SYNTAX Gauge(0..2147483647)
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -667,8 +722,7 @@ cctHistoryTableEntriesLimit OBJECT-TYPE
     ::= { cctHistory 1 }
 
 cctHistoryTableMaxEntries OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -678,8 +732,7 @@ cctHistoryTableMaxEntries OBJECT-TYPE
     ::= { cctHistory 2 }
 
 cctHistoryTableRetainTimer OBJECT-TYPE
-    SYNTAX Unsigned32(0..2147483647)
---    Rsyntax Gauge32(0..2147483647)
+    SYNTAX Gauge(0..2147483647)
 --  Units
 --    minutes
     ACCESS read-write
@@ -694,7 +747,7 @@ cctHistoryTableRetainTimer OBJECT-TYPE
     ::= { cctHistory 3 }
 
 cctHistoryTableNumberEntries OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -703,7 +756,7 @@ cctHistoryTableNumberEntries OBJECT-TYPE
     ::= { cctHistory 4 }
 
 cctHistoryTableHighWaterMark OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -719,8 +772,7 @@ cctHistoryTableHighWaterMark OBJECT-TYPE
     ::= { cctHistory 5 }
 
 cctHistoryTableNewestIndex OBJECT-TYPE
-    SYNTAX Unsigned32(0..4294967295)
---    Rsyntax Gauge32(0..4294967295)
+    SYNTAX Gauge(0..4294967295)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -755,13 +807,13 @@ cctHistoryEntry OBJECT-TYPE
          longer than cctHistoryTableRetainTimer minutes.
         
          An entry is also removed if the table is full and a new
-         entry needs to be created to accomondate a terminated
+         entry needs to be created to accommodate a terminated
          call. The oldest entry in the table will be deleted."
     INDEX { cctHistoryIndex }
     ::= { cctHistoryTable 1 }
 
 CctHistoryEntry ::= SEQUENCE {
-    cctHistoryIndex Unsigned32,
+    cctHistoryIndex Gauge,
     cctHistoryCallId CctCallId,
     cctHistorySetupTime TimeStamp,
     cctHistoryOrigin INTEGER,
@@ -775,27 +827,27 @@ CctHistoryEntry ::= SEQUENCE {
     cctHistoryUserSubnetMask IpAddress,
     cctHistoryAccountingSessionId DisplayString,
     cctHistoryCallCategory CctCallCategory,
-    cctHistoryInitialRxRate Unsigned32,
-    cctHistoryInitialTxRate Unsigned32,
-    cctHistoryResourceSlot Integer32,
-    cctHistoryResourcePort Integer32,
-    cctHistoryEntrySlot Integer32,
-    cctHistoryEntryPort Integer32,
-    cctHistoryEntryDs1 Integer32,
-    cctHistoryEntryChannel Integer32,
+    cctHistoryInitialRxRate Gauge,
+    cctHistoryInitialTxRate Gauge,
+    cctHistoryResourceSlot INTEGER,
+    cctHistoryResourcePort INTEGER,
+    cctHistoryEntrySlot INTEGER,
+    cctHistoryEntryPort INTEGER,
+    cctHistoryEntryDs1 INTEGER,
+    cctHistoryEntryChannel INTEGER,
     cctHistoryCalledPartyId DisplayString,
     cctHistoryCallingPartyId DisplayString,
-    cctHistoryMpBundleId Unsigned32,
-    cctHistoryChargedUnits Gauge32,
-    cctHistoryReceiveBytes Gauge32,
-    cctHistoryTransmitBytes Gauge32,
+    cctHistoryMpBundleId Gauge,
+    cctHistoryChargedUnits Gauge,
+    cctHistoryReceiveBytes Gauge,
+    cctHistoryTransmitBytes Gauge,
     cctHistoryDisconnectTime TimeStamp,
-    cctHistoryDisconnectReasonText DisplayString
+    cctHistoryDisconnectReasonText DisplayString,
+    cctHistoryCallSignalingType CctCallSigType
     }
 
 cctHistoryIndex OBJECT-TYPE
-    SYNTAX Unsigned32(1..4294967295)
---    Rsyntax Gauge32(1..4294967295)
+    SYNTAX Gauge(1..4294967295)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -807,7 +859,7 @@ cctHistoryIndex OBJECT-TYPE
 
 cctHistoryCallId OBJECT-TYPE
     SYNTAX CctCallId
---    Rsyntax Gauge32(1..4294967295)
+--    Rsyntax Gauge(1..4294967295)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -990,7 +1042,10 @@ cctHistoryCallCategory OBJECT-TYPE
 --        isdnSync(4),
 --        v110(5),
 --        v120(6),
---        casDigital(7)
+--        casDigital(7),
+--        mgcpData(8),
+--        syncData(9),
+--        lapb-ta(10)
 --        }
     ACCESS read-only
     STATUS mandatory
@@ -999,8 +1054,7 @@ cctHistoryCallCategory OBJECT-TYPE
     ::= { cctHistoryEntry 14 }
 
 cctHistoryInitialRxRate OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
 --  Units
 --    bits per second
     ACCESS read-only
@@ -1026,8 +1080,7 @@ cctHistoryInitialRxRate OBJECT-TYPE
     ::= { cctHistoryEntry 15 }
 
 cctHistoryInitialTxRate OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
 --  Units
 --    bits per second
     ACCESS read-only
@@ -1053,7 +1106,7 @@ cctHistoryInitialTxRate OBJECT-TYPE
     ::= { cctHistoryEntry 16 }
 
 cctHistoryResourceSlot OBJECT-TYPE
-    SYNTAX Integer32(-1..214783647)
+    SYNTAX INTEGER(-1..214783647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1069,7 +1122,7 @@ cctHistoryResourceSlot OBJECT-TYPE
     ::= { cctHistoryEntry 17 }
 
 cctHistoryResourcePort OBJECT-TYPE
-    SYNTAX Integer32(-1..214783647)
+    SYNTAX INTEGER(-1..214783647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1085,7 +1138,7 @@ cctHistoryResourcePort OBJECT-TYPE
     ::= { cctHistoryEntry 18 }
 
 cctHistoryEntrySlot OBJECT-TYPE
-    SYNTAX Integer32(0..214783647)
+    SYNTAX INTEGER(0..214783647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1094,7 +1147,7 @@ cctHistoryEntrySlot OBJECT-TYPE
     ::= { cctHistoryEntry 19 }
 
 cctHistoryEntryPort OBJECT-TYPE
-    SYNTAX Integer32(0..214783647)
+    SYNTAX INTEGER(0..214783647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1103,7 +1156,7 @@ cctHistoryEntryPort OBJECT-TYPE
     ::= { cctHistoryEntry 20 }
 
 cctHistoryEntryDs1 OBJECT-TYPE
-    SYNTAX Integer32(0..214783647)
+    SYNTAX INTEGER(0..214783647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1133,7 +1186,7 @@ cctHistoryEntryDs1 OBJECT-TYPE
     ::= { cctHistoryEntry 22 }
 
 cctHistoryEntryChannel OBJECT-TYPE
-    SYNTAX Integer32(0..214783647)
+    SYNTAX INTEGER(0..214783647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1178,8 +1231,7 @@ cctHistoryCallingPartyId OBJECT-TYPE
     ::= { cctHistoryEntry 25 }
 
 cctHistoryMpBundleId OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1192,7 +1244,7 @@ cctHistoryMpBundleId OBJECT-TYPE
     ::= { cctHistoryEntry 26 }
 
 cctHistoryChargedUnits OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1205,7 +1257,7 @@ cctHistoryChargedUnits OBJECT-TYPE
     ::= { cctHistoryEntry 27 }
 
 cctHistoryReceiveBytes OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    bytes
     ACCESS read-only
@@ -1218,7 +1270,7 @@ cctHistoryReceiveBytes OBJECT-TYPE
     ::= { cctHistoryEntry 28 }
 
 cctHistoryTransmitBytes OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    bytes
     ACCESS read-only
@@ -1254,6 +1306,20 @@ cctHistoryDisconnectReasonText OBJECT-TYPE
         
          Value is zero-length string if no text is available."
     ::= { cctHistoryEntry 31 }
+
+cctHistoryCallSignalingType OBJECT-TYPE
+    SYNTAX CctCallSigType
+--    Rsyntax INTEGER {
+--        unknown(1),
+--        external(2),
+--        q931(3),
+--        autoDetect(4)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Signaling type used to setup the call."
+    ::= { cctHistoryEntry 32 }
 
 cctCallSetupTermNotifyEnable OBJECT-TYPE
     SYNTAX TruthValue
@@ -1313,7 +1379,7 @@ cctGeneralGroup OBJECT IDENTIFIER ::= { cctMIBGroups 1 }
 cctActiveGroup OBJECT IDENTIFIER ::= { cctMIBGroups 2 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    A collection of objects providing the
 --     active call information.
@@ -1335,7 +1401,7 @@ cctActiveGroup OBJECT IDENTIFIER ::= { cctMIBGroups 2 }
 cctHistoryGroup OBJECT IDENTIFIER ::= { cctMIBGroups 3 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    A collection of objects providing the
 --     historical call information.
@@ -1368,10 +1434,68 @@ cctNotificationConfigGroup OBJECT IDENTIFIER ::= { cctMIBGroups 4 }
 --  objects
 --    cctCallSetupTermNotifyEnable
 
+cctActiveGroupRev1 OBJECT IDENTIFIER ::= { cctMIBGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the
+--     active call information.
+--  objects
+--    cctActiveTableNumberEntries, cctActiveTableHighWaterMark, 
+--    cctActiveSetupTime, cctActiveOrigin, cctActiveConnectionTime, 
+--    cctActivePhysicalLayerReadyTime, cctActiveServiceUpTime, 
+--    cctActiveServiceType, cctActiveUserValidationTime, 
+--    cctActiveUserId, cctActiveUserIpAddr, cctActiveUserSubnetMask, 
+--    cctActiveAccountingSessionId, cctActiveCallCategory, 
+--    cctActiveInitialRxRate, cctActiveInitialTxRate, 
+--    cctActiveResourceSlot, cctActiveResourcePort, 
+--    cctActiveEntrySlot, cctActiveEntryPort, cctActiveEntryDs1, 
+--    cctActiveEntryChannel, cctActiveCalledPartyId, 
+--    cctActiveCallingPartyId, cctActiveMpBundleId, 
+--    cctActiveChargedUnits, cctActiveReceiveBytes, 
+--    cctActiveTransmitBytes, cctActiveCallSignalingType
+
+cctHistoryGroupRev1 OBJECT IDENTIFIER ::= { cctMIBGroups 7 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the
+--     historical call information.
+--  objects
+--    cctHistoryTableEntriesLimit, cctHistoryTableMaxEntries, 
+--    cctHistoryTableRetainTimer, cctHistoryTableNumberEntries, 
+--    cctHistoryTableHighWaterMark, cctHistoryTableNewestIndex, 
+--    cctHistoryCallId, cctHistorySetupTime, cctHistoryOrigin, 
+--    cctHistoryConnectionTime, cctHistoryPhysicalLayerReadyTime, 
+--    cctHistoryServiceUpTime, cctHistoryServiceType, 
+--    cctHistoryUserValidationTime, cctHistoryUserId, 
+--    cctHistoryUserIpAddr, cctHistoryUserSubnetMask, 
+--    cctHistoryAccountingSessionId, cctHistoryCallCategory, 
+--    cctHistoryInitialRxRate, cctHistoryInitialTxRate, 
+--    cctHistoryResourceSlot, cctHistoryResourcePort, 
+--    cctHistoryEntrySlot, cctHistoryEntryPort, cctHistoryEntryDs1, 
+--    cctHistoryEntryChannel, cctHistoryCalledPartyId, 
+--    cctHistoryCallingPartyId, cctHistoryMpBundleId, 
+--    cctHistoryChargedUnits, cctHistoryReceiveBytes, 
+--    cctHistoryTransmitBytes, cctHistoryDisconnectTime, 
+--    cctHistoryDisconnectReasonText, cctHistoryCallSignalingType
+
+cctNotificationGroup OBJECT IDENTIFIER ::= { cctMIBGroups 5 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of notifications used for
+--     call status changes.
+--  notifications
+--    cctCallSetupNotification, cctCallTerminateNotification
+
 cctMIBCompliance OBJECT IDENTIFIER ::= { cctMIBCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The compliance statement for entities which
 --     implement the CISCO CALL TRACKER MIB
@@ -1385,6 +1509,28 @@ cctMIBCompliance OBJECT IDENTIFIER ::= { cctMIBCompliances 1 }
 --    cctHistoryGroup
 --   MandGroup
 --    cctNotificationConfigGroup
+--   MandGroup
+--    cctNotificationGroup
+
+cctMIBComplianceRev1 OBJECT IDENTIFIER ::= { cctMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for entities which
+--     implement the CISCO CALL TRACKER MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    cctGeneralGroup
+--   MandGroup
+--    cctActiveGroupRev1
+--   MandGroup
+--    cctHistoryGroupRev1
+--   MandGroup
+--    cctNotificationConfigGroup
+--   MandGroup
+--    cctNotificationGroup
 
 
 END

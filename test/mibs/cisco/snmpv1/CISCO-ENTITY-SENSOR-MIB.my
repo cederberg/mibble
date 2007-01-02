@@ -1,28 +1,27 @@
--- MIB created 11/14/100 13:30:21, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 04-Nov-2005 16:44:02, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-ENTITY-SENSOR-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-ENTITY-SENSOR-MIB.my"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    Integer32
-            FROM SNMPv2-SMI-v1
-    OBJECT-TYPE
-            FROM RFC-1212
-    TRAP-TYPE
-            FROM RFC-1215
     TimeStamp, TruthValue
             FROM SNMPv2-TC-v1
     entPhysicalIndex
             FROM ENTITY-MIB
     ciscoMgmt
-            FROM CISCO-SMI;
+            FROM CISCO-SMI
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
 
-entitySensorMIB OBJECT IDENTIFIER ::= { ciscoMgmt 91 }
+ciscoEntitySensorMIB OBJECT IDENTIFIER ::= { ciscoMgmt 91 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    9812102112Z
+--    200509080000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -38,10 +37,30 @@ entitySensorMIB OBJECT IDENTIFIER ::= { ciscoMgmt 91 }
 --    The CISCO-ENTITY-SENSOR-MIB is used to monitor 
 --    the values of sensors in the Entity-MIB (RFC 2037) 
 --    entPhysicalTable.
+--  RevDate
+--    200509080000Z
+--  RevDescr
+--    Change the module descriptor name from entitySensorMIB
+--     to ciscoEntitySensorMIB since ENTITY-SENSOR-MIB also
+--     uses the same name and there is a conflict.
+--  RevDate
+--    200301070000Z
+--  RevDescr
+--    [1] Add dBm(14) in SensorDataType.
+--  RevDate
+--    200210160000Z
+--  RevDescr
+--    [1] Add critical(30) in CSensorThresholdSeverity.
+--     [2] Change to MAX-ACCESS read-write for 3 objects.
+--     [3] Add entitySensorMIBComplianceV02.
+--  RevDate
+--    200006200000Z
+--  RevDescr
+--    Initial version of this MIB module.
 
-entitySensorMIBObjects OBJECT IDENTIFIER ::= { entitySensorMIB 1 }
-entitySensorMIBNotificationPrefix OBJECT IDENTIFIER ::= { entitySensorMIB 2 }
-entitySensorMIBConformance OBJECT IDENTIFIER ::= { entitySensorMIB 3 }
+entitySensorMIBObjects OBJECT IDENTIFIER ::= { ciscoEntitySensorMIB 1 }
+entitySensorMIBNotificationPrefix OBJECT IDENTIFIER ::= { ciscoEntitySensorMIB 2 }
+entitySensorMIBConformance OBJECT IDENTIFIER ::= { ciscoEntitySensorMIB 3 }
 entSensorValues OBJECT IDENTIFIER ::= { entitySensorMIBObjects 1 }
 entSensorThresholds OBJECT IDENTIFIER ::= { entitySensorMIBObjects 2 }
 entitySensorMIBNotifications OBJECT IDENTIFIER ::= { entitySensorMIBNotificationPrefix 0 }
@@ -61,7 +80,8 @@ SensorDataType ::= INTEGER {
         rpm(10),
         cmm(11),
         truthvalue(12),
-        specialEnum(13)
+        specialEnum(13),
+        dBm(14)
         }
 -- TEXTUAL-CONVENTION
 --  Status
@@ -82,6 +102,7 @@ SensorDataType ::= INTEGER {
 --    cmm(11),:        cubic meters per minute (airflow)
 --    truthvalue(12):  value takes { true(1), false(2) }
 --    specialEnum(13): value takes user defined enumerated values
+--    dBm(14):         dB relative to 1mW of power
 
 SensorDataScale ::= INTEGER {
         yocto(1),
@@ -126,19 +147,21 @@ SensorPrecision ::= INTEGER(-8..9)
 --    correctly indicated.
 --    
 --    For example, a temperature sensor that can measure 0o to 
---    100o C in 0.1o increments, +/- 0.05o, would have a SensorPrecision
---    of 1, a SensorDataScale of units(0), and a SensorValue ranging from 
---    0 to 1000.  The SensorValue would be interpreted as (degrees C * 10).
+--    100o C in 0.1o increments, +/- 0.05o, would have a 
+--    SensorPrecision of 1, a SensorDataScale of units(0), and a 
+--    SensorValue ranging from 0 to 1000.  
+--    The SensorValue would be interpreted as (degrees C * 10).
 --    
---    If that temperature sensor's precision were 0.1o but its accuracy
---    were only +/- 0.5o, then the SensorPrecision would be 0.  The SensorValue 
---    would be interpreted as degrees C.
+--    If that temperature sensor's precision were 0.1o but its 
+--    accuracy were only +/- 0.5o, then the SensorPrecision would 
+--    be 0. The SensorValue would be interpreted as degrees C.
 --    
---    Another example: a fan rotation speed sensor that measures RPM from 
---    0 to 10,000 in 100 RPM increments, with an accuracy of +50/-37 RPM,
---    would have a SensorPrecision of -2, a SensorDataScale of units(9), and
---    and a SensorValue ranging from 0 to 10000.  The 10s and 1s digits of 
---    SensorValue would always be 0.
+--    Another example: a fan rotation speed sensor that measures RPM 
+--    from 0 to 10,000 in 100 RPM increments, with an accuracy of 
+--    +50/-37 RPM, would have a SensorPrecision of -2, a 
+--    SensorDataScale of units(9), and a SensorValue ranging from 0 
+--    to 10000. The 10s and 1s digits of SensorValue would always 
+--    be 0.
 
 SensorValue ::= INTEGER(-1000000000..1000000000)
 -- TEXTUAL-CONVENTION
@@ -218,7 +241,8 @@ SensorValueUpdateRate ::= INTEGER(0..999999999)
 SensorThresholdSeverity ::= INTEGER {
         other(1),
         minor(10),
-        major(20)
+        major(20),
+        critical(30)
         }
 -- TEXTUAL-CONVENTION
 --  Status
@@ -226,10 +250,13 @@ SensorThresholdSeverity ::= INTEGER {
 --  Descr
 --    sensor threshold severity.  Valid values are:
 --    
---    other(1): a severity other than those listed below.
---    minor(10): Minor Problem threshold.
---    major(20): Major Problem threshold.
---    
+--    other(1)    : a severity other than those listed below.
+--    minor(10)   : Minor Problem threshold.
+--    major(20)   : Major Problem threshold.
+--    critical(30): Critical problem threshold. A system might shut
+--                  down the sensor associated FRU automatically if
+--                  the sensor value reach the critical problem
+--                  threshold.
 
 SensorThresholdRelation ::= INTEGER {
         lessThan(1),
@@ -251,8 +278,8 @@ SensorThresholdRelation ::= INTEGER {
 --                        the threshold value
 --    greaterThan(3):     if the sensor value is greater than 
 --                        the threshold value
---    greaterOrEqual(4):  if the sensor value is greater than or equal to 
---                        the threshold value
+--    greaterOrEqual(4):  if the sensor value is greater than or equal
+--                        to the threshold value
 --    equalTo(5):         if the sensor value is equal to
 --                        the threshold value
 --    notEqualTo(6):      if the sensor value is not equal to
@@ -303,7 +330,8 @@ entSensorType OBJECT-TYPE
 --        rpm(10),
 --        cmm(11),
 --        truthvalue(12),
---        specialEnum(13)
+--        specialEnum(13),
+--        dBm(14)
 --        }
     ACCESS read-only
     STATUS mandatory
@@ -451,7 +479,7 @@ entSensorThresholdEntry OBJECT-TYPE
     ::= { entSensorThresholdTable 1 }
 
 EntSensorThresholdEntry ::= SEQUENCE {
-    entSensorThresholdIndex Integer32,
+    entSensorThresholdIndex INTEGER,
     entSensorThresholdSeverity SensorThresholdSeverity,
     entSensorThresholdRelation SensorThresholdRelation,
     entSensorThresholdValue SensorValue,
@@ -460,12 +488,12 @@ EntSensorThresholdEntry ::= SEQUENCE {
     }
 
 entSensorThresholdIndex OBJECT-TYPE
-    SYNTAX Integer32(1..99999999)
+    SYNTAX INTEGER(1..99999999)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
         "An index that uniquely identifies an entry
-        in the entSensorThreshold table. This index
+        in the entSensorThresholdTable. This index
         permits the same sensor to have several 
         different thresholds."
     ::= { entSensorThresholdEntry 1 }
@@ -475,9 +503,10 @@ entSensorThresholdSeverity OBJECT-TYPE
 --    Rsyntax INTEGER {
 --        other(1),
 --        minor(10),
---        major(20)
+--        major(20),
+--        critical(30)
 --        }
-    ACCESS read-only
+    ACCESS read-write
     STATUS mandatory
     DESCRIPTION
         "This variable indicates the severity of this threshold."
@@ -493,7 +522,7 @@ entSensorThresholdRelation OBJECT-TYPE
 --        equalTo(5),
 --        notEqualTo(6)
 --        }
-    ACCESS read-only
+    ACCESS read-write
     STATUS mandatory
     DESCRIPTION
         "This variable indicates the relation between sensor value 
@@ -511,7 +540,7 @@ entSensorThresholdRelation OBJECT-TYPE
             then
                 if (entSensorThresholdNotificationEnable == true)) 
                 then
-                    raise_alarm(entSensorThresholdAlarmOID);
+                    raise_alarm(sensor's entPhysicalIndex);
                 endif
             endif
         endif
@@ -521,7 +550,7 @@ entSensorThresholdRelation OBJECT-TYPE
 entSensorThresholdValue OBJECT-TYPE
     SYNTAX SensorValue
 --    Rsyntax INTEGER(-1000000000..1000000000)
-    ACCESS read-only
+    ACCESS read-write
     STATUS mandatory
     DESCRIPTION
         "This variable indicates the value of the threshold.
@@ -620,7 +649,34 @@ entitySensorThresholdGroup OBJECT IDENTIFIER ::= { entitySensorMIBGroups 2 }
 --    entSensorThresholdValue, entSensorThresholdEvaluation, 
 --    entSensorThresholdNotificationEnable
 
+entitySensorThresholdNotificationGroup OBJECT IDENTIFIER ::= { entitySensorMIBGroups 3 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    the collection of notifications used for
+--    monitoring sensor threshold activity.
+--  notifications
+--    entSensorThresholdNotification
+
 entitySensorMIBComplianceV01 OBJECT IDENTIFIER ::= { entitySensorMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    An Entity-MIB implementation that lists
+--    sensors in its entPhysicalTable must implement
+--    this group.
+--  Module
+--    >>current<<
+--   MandGroup
+--    entitySensorValueGroup
+--   MandGroup
+--    entitySensorThresholdGroup
+--   MandGroup
+--    entitySensorThresholdNotificationGroup
+
+entitySensorMIBComplianceV02 OBJECT IDENTIFIER ::= { entitySensorMIBCompliances 2 }
 -- MODULE-COMPLIANCE
 --  Status
 --    mandatory
@@ -631,9 +687,17 @@ entitySensorMIBComplianceV01 OBJECT IDENTIFIER ::= { entitySensorMIBCompliances 
 --  Module
 --    >>current<<
 --   MandGroup
---    entitySensorValueGroup
---   MandGroup
 --    entitySensorThresholdGroup
+--   OptGroup
+--    entitySensorValueGroup
+--   OptGroup
+--    entitySensorThresholdNotificationGroup
+--   ObjVar
+--    entSensorThresholdSeverity
+--   ObjVar
+--    entSensorThresholdRelation
+--   ObjVar
+--    entSensorThresholdValue
 
 
 END

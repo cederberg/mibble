@@ -1,23 +1,21 @@
--- MIB file created 28-Mar-2001 16:07:35, by
+-- MIB file created 05-Jan-2006 14:27:00, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-WIRELESS-DOCS-IF-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-WIRELESS-DOCS-IF-MIB.my"
--- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
     MacAddress, RowStatus, TruthValue, TimeStamp, TimeInterval
             FROM SNMPv2-TC-v1
---    Unsigned32
---            FROM CISCO-TC
     ifIndex, InterfaceIndexOrZero, InterfaceIndex
             FROM IF-MIB
     CwrdBm
             FROM CISCO-WIRELESS-TC-MIB
     ciscoMgmt
             FROM CISCO-SMI
-    Counter, IpAddress, Gauge
+    Counter, Gauge, IpAddress
             FROM RFC1155-SMI
     OBJECT-TYPE
             FROM RFC-1212;
@@ -25,23 +23,179 @@ IMPORTS
 ciscoWirelessDocsIfMib OBJECT IDENTIFIER ::= { ciscoMgmt 167 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200006071003Z
+--    200512271003Z
 --  OrgName
 --    Cisco Systems - Wireless Engineering
 --  ContactInfo
---        Cisco Systems
---         Customer Service
+--    Cisco Systems
+--    Customer Service
 --    
 --    Postal: 170 W Tasman Drive
---            San Jose, CA  95134
---            USA
+--       San Jose, CA  95134
+--       USA
 --    
---            Tel: +1 800 553-NETS
---            E-mail: wireless-nms@cisco.com
+--       Tel: +1 800 553-NETS
+--       E-mail: wireless-nms@cisco.com
 --  Descr
 --    This is the MIB Module for MCNS compliant Radio Frequency
---     (RF) interfaces in wireless point-to-multipoint subscriber
---     units (SU) and wireless Head-end (HE).
+--    (RF) interfaces in wireless point-to-multipoint subscriber
+--    units (SU) and wireless Head-end (HE).
+--    
+--    Glossary :
+--    
+--    The following terms are used in the MIB definitions below.
+--    
+--    MCNS        : Multimedia Cable Network System 
+--    P2MP        : Point-Multipoint wireless system consisting of
+--    Headend (HE)  and Subscriber-units (SU). 
+--    HE          : Head-end
+--    SU          : Subscriber-unit.
+--    Attached US  
+--    channel     : The upstream channel on which the SU is 
+--                  transmitting.
+--    codeword    : Data unit in a FEC (forward error correction) 
+--                  process.
+--    OFDM        : Orthogonal Frequency Division Multiplexing.
+--    ODU         : Outdoor unit (antenna).
+--    UCD         : Upstream Change Descriptor.
+--    
+--    Cisco Wireless DOCSIS MIB Organization:
+--    
+--    The Cisco Wireless DOCSIS MIB provides the following 
+--    categories :
+--    * Groups/Tables that are common between HE and SU
+--    * Groups/Tables that apply to SU only
+--    * Groups/Tables that apply to HE only
+--    
+--    Groups/Tables that are common between HE and SU
+--    
+--    o. cwdIfChannelTable
+--       This represents the RF channel within which upstream 
+--       and downstream sub-channels operate. There will one such
+--       RF channel per point-to-multipoint interface.
+--    
+--       A RF channel identifies the portion of the RF spectrum
+--       that will be used to create a broadcast domain that
+--       will be used for communication.
+--    
+--       This channel deploys a sub-channel plan, which is used by 
+--       the upstreams and downstreams. 
+--    
+--       The sub-channel number for a channel is determined based
+--       on the number of sub-channels allowed and sub-channel plan 
+--       version. If the maximum number of sub-channels allowed is
+--       4 and the sub-channel plan version is 1 the spectrum can
+--       be sub divided as shown below.  
+--    
+--       reference center frequency of a channel 
+--                      |
+--                      |
+--                      v
+--              +===============+
+--              |   sub 1       |   The whole spectrum is used 
+--              +=======+=======+   so only one sub-channel.
+--    
+--              +===============+
+--              |   2   |   3   |   The spectrum is divided into
+--              +===============+   two sub-channels.
+--    
+--              +===============+
+--              |   2   | 6 | 7 |   The spectrum is divided into
+--              +===============+   three sub-channels.
+--    
+--              +===============+
+--              | 4 | 5 |   3   |   The spectrum is divided into
+--              +===============+   three sub-channels.
+--    
+--              +===+===+===+===+
+--              | 4 | 5 | 6 | 7 |   The spectrum is divided into
+--              +===+===+===+===+   4 sub-channels
+--    
+--    
+--       The above sub-channel planning can be extended to
+--       allow maximum number of sub-channels to be 8, 26 etc.
+--    
+--       The objects in this group are configurable only at
+--       the head-end and are read-only at the subscriber end.
+--    
+--    o. cwdIfDownstreamChannelTable
+--       This table contains the configuration 
+--       information and attributes of downstream channel. 
+--       The objects in this group are configurable
+--       only at the head-end and are read-only at the 
+--       subscriber end.
+--    
+--    o. cwdIfUpstreamChannelTable
+--       This table contains the configuration information 
+--       and attributes of upstream channel. 
+--       Parameters in this table are configurable
+--       only at the Head-end, and are read-only at the SU.
+--       Only the rows that pertain to the upstream used by 
+--       the subscriber unit will be available at the SU.
+--    
+--    o. cwdIfQosProfileTable
+--       This table describes the attributes of each class of
+--       service.
+--       The entries in this table are referenced from the
+--       cwdIfHeServiceEntries or cwdIfSuServiceEntries.
+--       This table is implemented at both the SU and the HE.
+--       The SU need only maintain entries for the classes of
+--       service referenced by its cwdIfSuServiceTable.
+--    
+--    o. cwdIfSignalQualityTable
+--       At the SU, this table describes the PHY signal quality of 
+--       downstream channels. At the HE, it describes the PHY signal 
+--       quality of upstream channels. 
+--    
+--    o. cwdIfModulationTable
+--       Describes modulation parameters associated with one or more
+--       Upstream or downstream channels.
+--    
+--    Groups/Tables that apply to SU only
+--    
+--    o. cwdIfSuMacTable
+--       This table describes the attributes of each SU MAC 
+--       interface, extending the information available from 
+--       ifEntry. An entry in this table exists for each 
+--       ifEntry with an ifType of propDocsWirelessMacLayer(nnn).
+--    
+--    o. cwdIfSuStatusTable
+--       This table maintains a number of status objects
+--       and counters for Subscriber Units.
+--       An entry in this table exists for each ifEntry with an
+--       ifType of propDocsWirelessMacLayer(nnn).
+--    
+--    o. cwdIfSuServiceTable
+--       This table describes the attributes of each upstream 
+--       service queue on a SU.  
+--    
+--    Groups/Tables that apply to HE only
+--    
+--    o. cwdIfHeMacTable 
+--       Describes the attributes of each HE MAC interface,
+--       extending the information available from ifEntry. 
+--       An entry in this table exists for each ifEntry with an
+--       ifType of propDocsWirelessMacLayer(nnn).
+--    
+--    o. cwdIfHeStatusTable
+--       For the MAC layer, this group maintains a number of
+--       status objects and counters.
+--       An entry in this table exists for each ifEntry with an
+--       ifType of propDocsWirelessMacLayer(nnn).
+--    
+--    o. cwdIfHeServiceTable
+--       This table describes the attributes of upstream 
+--       service queues in a Head-end System. Entries in 
+--       this table exist for each ifEntry with an ifType 
+--       of propDocsWirelessMacLayer(nnn), and for each 
+--       service queue (Service ID) within this MAC layer.
+--       Entries in this table are created with the creation of
+--       individual Service IDs by the MAC layer and removed
+--       when a Service ID is removed.
+--  RevDate
+--    200512271003Z
+--  RevDescr
+--    Imported Unsigned32 from SNMPv2-SMI.
 --  RevDate
 --    200006071003Z
 --  RevDescr
@@ -61,9 +215,9 @@ cwdIfChannelTable OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "This table describes the attributes of a channel 
-         group which consists of one or more downstream and
-         upstream channels. "
+        "This table describes the attributes of a channel
+        group which consists of one or more downstream and
+        upstream channels. "
     ::= { cwdIfBaseObjects 1 }
 
 cwdIfChannelEntry OBJECT-TYPE
@@ -72,9 +226,9 @@ cwdIfChannelEntry OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "List of attributes for a single Channel. There
-         is one per Point-to-multipoint card. 
-         An entry in this table exists for each ifEntry with an
-         ifType of propDocsWirelessMacLayer(nnn)."
+        is one per Point-to-multipoint card. 
+        An entry in this table exists for each ifEntry with an
+        ifType of propDocsWirelessMacLayer(nnn)."
     INDEX { ifIndex }
     ::= { cwdIfChannelTable 1 }
 
@@ -95,7 +249,7 @@ cwdIfChannelUpFrequency OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The reference center frequency used by the upstream
-         channels in this channel."
+        channels in this channel."
     ::= { cwdIfChannelEntry 1 }
 
 cwdIfChannelUpWidth OBJECT-TYPE
@@ -106,9 +260,9 @@ cwdIfChannelUpWidth OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The maximum bandwidth that can be used by any upstream
-         channel. The sum of the bandwidths used by all 
-         upstream channels created within this channel cannot
-         exceed this value."
+        channel. The sum of the bandwidths used by all 
+        upstream channels created within this channel cannot
+        exceed this value."
     ::= { cwdIfChannelEntry 2 }
 
 cwdIfChannelDownFrequency OBJECT-TYPE
@@ -118,8 +272,8 @@ cwdIfChannelDownFrequency OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "The reference center frequency used by the 
-         downstream channels in this channel."
+        "The reference center frequency used by the
+        downstream channels in this channel."
     ::= { cwdIfChannelEntry 3 }
 
 cwdIfChannelDownWidth OBJECT-TYPE
@@ -130,9 +284,9 @@ cwdIfChannelDownWidth OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The maximum bandwidth that can be used by any
-         downstream channel.  The sum of the bandwidths
-         used by all downstream channels created
-         within this channel cannot exceed this value."
+        downstream channel.  The sum of the bandwidths
+        used by all downstream channels created
+        within this channel cannot exceed this value."
     ::= { cwdIfChannelEntry 4 }
 
 cwdIfChannelMiniSlotTimeBaseTick OBJECT-TYPE
@@ -142,9 +296,9 @@ cwdIfChannelMiniSlotTimeBaseTick OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "This object represents a unit of measurement of mini-slots. 
-         Upstream mini-slots and bandwidth allocations are done 
-         in multiples of this unit of time."
+        "This object represents a unit of measurement of mini-slots.
+        Upstream mini-slots and bandwidth allocations are done 
+        in multiples of this unit of time."
     ::= { cwdIfChannelEntry 5 }
 
 cwdIfChannelSubChannelPlanVer OBJECT-TYPE
@@ -153,8 +307,8 @@ cwdIfChannelSubChannelPlanVer OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This object represents the sub-channel plan version number
-         common to both upstream and downstream supported by the 
-         hardware."
+        common to both upstream and downstream supported by the 
+        hardware."
     REFERENCE
         "Firestorm(P2MP) Sub-Channel Plan Specification - ENG-51192"
     ::= { cwdIfChannelEntry 6 }
@@ -165,7 +319,7 @@ cwdIfDownstreamChannelTable OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This table describes the attributes of downstream
-         channels (frequency bands)."
+        channels (frequency bands)."
     ::= { cwdIfBaseObjects 2 }
 
 cwdIfDownstreamChannelEntry OBJECT-TYPE
@@ -174,8 +328,8 @@ cwdIfDownstreamChannelEntry OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "List of attributes for a single downstream channel.
-         The index to this table is an ifIndex with an ifType
-         of propDocsWirelessDownStream(nnn). "
+        The index to this table is an ifIndex with an ifType
+        of propDocsWirelessDownStream(nnn). "
     INDEX { ifIndex }
     ::= { cwdIfDownstreamChannelTable 1 }
 
@@ -194,8 +348,8 @@ cwdIfDownChannelSubChannelNumber OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This identifies the sub-channel used by this downstream.
-         The value of this object determines the usability of the
-         other downstream channels."
+        The value of this object determines the usability of the
+        other downstream channels."
     ::= { cwdIfDownstreamChannelEntry 1 }
 
 cwdIfDownChannelId OBJECT-TYPE
@@ -204,10 +358,10 @@ cwdIfDownChannelId OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The internal (DOCSIS) identification of the downstream
-         channel within this particular MAC interface. If the
-         interface is down, the object returns the last assigned 
-         value. If the downstream channel ID is unknown, this
-         object returns a value of 0."
+        channel within this particular MAC interface. If the
+        interface is down, the object returns the last assigned 
+        value. If the downstream channel ID is unknown, this
+        object returns a value of 0."
     ::= { cwdIfDownstreamChannelEntry 2 }
 
 cwdIfDownChannelFrequency OBJECT-TYPE
@@ -218,8 +372,8 @@ cwdIfDownChannelFrequency OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The downstream center frequency associated with
-         this channel. The channel settings determine this
-         value."
+        this channel. The channel settings determine this
+        value."
     ::= { cwdIfDownstreamChannelEntry 3 }
 
 cwdIfDownChannelWidth OBJECT-TYPE
@@ -230,7 +384,7 @@ cwdIfDownChannelWidth OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The bandwidth of this downstream channel. The channel
-         settings determine this value."
+        settings determine this value."
     ::= { cwdIfDownstreamChannelEntry 4 }
 
 cwdIfDownChannelPower OBJECT-TYPE
@@ -241,12 +395,12 @@ cwdIfDownChannelPower OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "At the HE, the operational transmit power. At the SU,
-         the received power level. May be set to zero at the SU
-         if power level measurement is not supported.
-         If the interface is down, this object returns the
-         configured value (if at HE), the most current value
-         (if at SU) or zero (if not supported by the 
-         implementation)."
+        the received power level. May be set to zero at the SU
+        if power level measurement is not supported.
+        If the interface is down, this object returns the
+        configured value (if at HE), the most current value
+        (if at SU) or zero (if not supported by the 
+        implementation)."
     ::= { cwdIfDownstreamChannelEntry 5 }
 
 cwdIfDownChannelModProfileIndex OBJECT-TYPE
@@ -254,12 +408,12 @@ cwdIfDownChannelModProfileIndex OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "An index into cwdIfModulationTable that describes 
-         modulation characteristics of this channel.
-         This object returns 0 if the cwdIfModulationTable
-         does not exist, or there is no corresponding row
-         in that table that describes modulation 
-         characteristics of this channel."
+        "An index into cwdIfModulationTable that describes
+        modulation characteristics of this channel.
+        This object returns 0 if the cwdIfModulationTable
+        does not exist, or there is no corresponding row
+        in that table that describes modulation 
+        characteristics of this channel."
     ::= { cwdIfDownstreamChannelEntry 6 }
 
 cwdIfUpstreamChannelTable OBJECT-TYPE
@@ -276,8 +430,8 @@ cwdIfUpstreamChannelEntry OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "List of attributes for a single upstream channel.
-         The primary index is an ifIndex with an ifType of 
-         propDocsWirelessUpstream(nnn)."
+        The primary index is an ifIndex with an ifType of 
+        propDocsWirelessUpstream(nnn)."
     INDEX { ifIndex }
     ::= { cwdIfUpstreamChannelTable 1 }
 
@@ -310,10 +464,10 @@ cwdIfUpChannelId OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The internal (DOCSIS) identification of the upstream
-         channel within this particular MAC interface. If the
-         interface is down, the object returns the most current
-         value. If the upstream channel ID is unknown, this
-         object returns a value of 0."
+        channel within this particular MAC interface. If the
+        interface is down, the object returns the most current
+        value. If the upstream channel ID is unknown, this
+        object returns a value of 0."
     ::= { cwdIfUpstreamChannelEntry 2 }
 
 cwdIfUpChannelFrequency OBJECT-TYPE
@@ -324,7 +478,7 @@ cwdIfUpChannelFrequency OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The center of the upstream frequency associated with
-         this channel. The channel settings determine this value."
+        this channel. The channel settings determine this value."
     ::= { cwdIfUpstreamChannelEntry 3 }
 
 cwdIfUpChannelWidth OBJECT-TYPE
@@ -335,7 +489,7 @@ cwdIfUpChannelWidth OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The bandwidth of this upstream channel. The channel
-         settings determine this value."
+        settings determine this value."
     ::= { cwdIfUpstreamChannelEntry 4 }
 
 cwdIfUpChannelTargetPower OBJECT-TYPE
@@ -346,8 +500,8 @@ cwdIfUpChannelTargetPower OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The target receive power of this upstream channel at the
-         headend and the transmit power of the channel at the
-         subscriber end."
+        headend and the transmit power of the channel at the
+        subscriber end."
     ::= { cwdIfUpstreamChannelEntry 5 }
 
 cwdIfUpChannelModProfileIndex OBJECT-TYPE
@@ -355,10 +509,10 @@ cwdIfUpChannelModProfileIndex OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "An index into cwdIfModulationTable that describes 
-         modulation characteristics of this channel.
-         This object returns 0 if the cwdIfModulationTable 
-         does not exist or is empty."
+        "An index into cwdIfModulationTable that describes
+        modulation characteristics of this channel.
+        This object returns 0 if the cwdIfModulationTable 
+        does not exist or is empty."
     ::= { cwdIfUpstreamChannelEntry 6 }
 
 cwdIfUpChannelSlotSize OBJECT-TYPE
@@ -367,9 +521,9 @@ cwdIfUpChannelSlotSize OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The number of units of time-slot (measured by
-         cwdIfChannelMiniSlotTimeBaseTick) in each upstream
-         mini-slot. Returns zero if the value is undefined
-         or unknown."
+        cwdIfChannelMiniSlotTimeBaseTick) in each upstream
+        mini-slot. Returns zero if the value is undefined
+        or unknown."
     ::= { cwdIfUpstreamChannelEntry 7 }
 
 cwdIfUpChannelTxTimingOffset OBJECT-TYPE
@@ -377,11 +531,11 @@ cwdIfUpChannelTxTimingOffset OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "A measure of the current round trip time at the SU, or the 
-         maximum round trip time seen by the HE.  Used for timing
-         of SU upstream transmissions to ensure synchronized
-         arrivals at the HE. Units are in terms of
-         (cwdIfChannelMiniSlotTimeBaseTick/64)."
+        "A measure of the current round trip time at the SU, or the
+        maximum round trip time seen by the HE.  Used for timing
+        of SU upstream transmissions to ensure synchronized
+        arrivals at the HE. Units are in terms of
+        (cwdIfChannelMiniSlotTimeBaseTick/64)."
     ::= { cwdIfUpstreamChannelEntry 8 }
 
 cwdIfUpChannelRangBackoffStart OBJECT-TYPE
@@ -390,14 +544,14 @@ cwdIfUpChannelRangBackoffStart OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This value determines the initial contention resolution
-         back-off window used by the SU when attempting to transmit
-         an initial ranging request. The SU randomly selects a 
-         number within the back-off window defined by this 
-         parameter then defers this number of contention 
-         transmit opportunities before actually attempting the 
-         transmission. Expressed as a power of 2. A value of 16
-         at the HE indicates that a proprietary adaptive retry 
-         mechanism is to be used."
+        back-off window used by the SU when attempting to transmit
+        an initial ranging request. The SU randomly selects a 
+        number within the back-off window defined by this 
+        parameter then defers this number of contention 
+        transmit opportunities before actually attempting the 
+        transmission. Expressed as a power of 2. A value of 16
+        at the HE indicates that a proprietary adaptive retry 
+        mechanism is to be used."
     ::= { cwdIfUpstreamChannelEntry 9 }
 
 cwdIfUpChannelRangBackoffEnd OBJECT-TYPE
@@ -406,14 +560,14 @@ cwdIfUpChannelRangBackoffEnd OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This value determines the final contention resolution
-         back-off window used by the SU when attempting to transmit
-         an initial ranging request. The SU randomly selects a 
-         number within the back-off window defined by this 
-         parameter then defers this number of contention 
-         transmit opportunities before actually attempting the 
-         transmission. Expressed as a power of 2. A value of 16
-         at the HE indicates that a proprietary adaptive retry 
-         mechanism is to be used."
+        back-off window used by the SU when attempting to transmit
+        an initial ranging request. The SU randomly selects a 
+        number within the back-off window defined by this 
+        parameter then defers this number of contention 
+        transmit opportunities before actually attempting the 
+        transmission. Expressed as a power of 2. A value of 16
+        at the HE indicates that a proprietary adaptive retry 
+        mechanism is to be used."
     ::= { cwdIfUpstreamChannelEntry 10 }
 
 cwdIfUpChannelTxBackoffStart OBJECT-TYPE
@@ -422,14 +576,14 @@ cwdIfUpChannelTxBackoffStart OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This value determines the initial contention resolution
-         back-off window used by the SU when attempting to 
-         transmit data packets. The SU randomly selects a 
-         number within the back-off window defined by this 
-         parameter then defers this number of contention 
-         transmit opportunities before actually attempting the 
-         transmission. Expressed as a power of 2. A value of 16
-         at the HE indicates that a proprietary adaptive retry 
-         mechanism is to be used."
+        back-off window used by the SU when attempting to 
+        transmit data packets. The SU randomly selects a 
+        number within the back-off window defined by this 
+        parameter then defers this number of contention 
+        transmit opportunities before actually attempting the 
+        transmission. Expressed as a power of 2. A value of 16
+        at the HE indicates that a proprietary adaptive retry 
+        mechanism is to be used."
     ::= { cwdIfUpstreamChannelEntry 11 }
 
 cwdIfUpChannelTxBackoffEnd OBJECT-TYPE
@@ -438,14 +592,14 @@ cwdIfUpChannelTxBackoffEnd OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This value determines the final contention resolution
-         back-off window used by the SU when attempting to 
-         transmit data packets. The SU randomly selects a 
-         number within the back-off window defined by this 
-         parameter then defers this number of contention 
-         transmit opportunities before actually attempting the 
-         transmission. Expressed as a power of 2. A value of 16
-         at the HE indicates that a proprietary adaptive retry 
-         mechanism is to be used."
+        back-off window used by the SU when attempting to 
+        transmit data packets. The SU randomly selects a 
+        number within the back-off window defined by this 
+        parameter then defers this number of contention 
+        transmit opportunities before actually attempting the 
+        transmission. Expressed as a power of 2. A value of 16
+        at the HE indicates that a proprietary adaptive retry 
+        mechanism is to be used."
     ::= { cwdIfUpstreamChannelEntry 12 }
 
 cwdIfQosProfileTable OBJECT-TYPE
@@ -463,36 +617,36 @@ cwdIfQosProfileEntry OBJECT-TYPE
     DESCRIPTION
         "Describes the attributes for a single class of service.
         
-         The row operation for this table is as follows:
-         1. This table will be implemented as read-only at the SU. 
-            SU entries are created by the agent based on 
-            information in REG-REQ MAC messages received at 
-            the SU from HE or based on information extracted 
-            from the TFTP option file 
-         2. Creation of entries in this table is controlled by
-            the value of cwdIfHeQosProfilePermissions.
-         3. There can be default entries created by the agent at
-            the initialization time.
-         3. If a table is created by agent, there should only
-            be a single entry for each Class of Service. Multiple
-            entries with the same Class of Service parameters are
-            not recommended as it doesn't add any extra benefit
-            and creates extra processing of a row in the table.
-         4. You CAN modify a row when it is active provided you
-            have the right cwdIfHeQosProfilePermissions. You can
-            also change the row to notInService and change 
-            the values. 
-               An entry in this table cannot be removed while it
-            is referenced by an entry in cwdIfSuServiceTable
-            (Subscriber Unit) or cwdIfHeServiceTable (Head-end
-            System).
-               An entry in this table cannot be modified while
-            it is referenced by an entry in cwdIfHeServiceTable.
-         5. If the cwdIfHeQosProfilePermissions is 
-            createBySubscriberUnits(2) then that row cannot be
-            modified by the management system.
-         6. Any arbitrary integer within the range can be used
-            as index to create a row."
+        The row operation for this table is as follows:
+        1. This table will be implemented as read-only at the SU. 
+           SU entries are created by the agent based on 
+           information in REG-REQ MAC messages received at 
+           the SU from HE or based on information extracted 
+           from the TFTP option file 
+        2. Creation of entries in this table is controlled by
+           the value of cwdIfHeQosProfilePermissions.
+        3. There can be default entries created by the agent at
+           the initialization time.
+        3. If a table is created by agent, there should only
+           be a single entry for each Class of Service. Multiple
+           entries with the same Class of Service parameters are
+           not recommended as it doesn't add any extra benefit
+           and creates extra processing of a row in the table.
+        4. You CAN modify a row when it is active provided you
+           have the right cwdIfHeQosProfilePermissions. You can
+           also change the row to notInService and change 
+           the values. 
+              An entry in this table cannot be removed while it
+           is referenced by an entry in cwdIfSuServiceTable
+           (Subscriber Unit) or cwdIfHeServiceTable (Head-end
+           System).
+              An entry in this table cannot be modified while
+           it is referenced by an entry in cwdIfHeServiceTable.
+        5. If the cwdIfHeQosProfilePermissions is 
+           createBySubscriberUnits(2) then that row cannot be
+           modified by the management system.
+        6. Any arbitrary integer within the range can be used
+           as index to create a row."
     INDEX { cwdIfQosProfIndex }
     ::= { cwdIfQosProfileTable 1 }
 
@@ -513,8 +667,8 @@ cwdIfQosProfIndex OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The index value which uniquely identifies an entry
-         in the cwdIfQosProfileTable. Any arbitrary integer
-         within the range can be used as index to create a row."
+        in the cwdIfQosProfileTable. Any arbitrary integer
+        within the range can be used as index to create a row."
     ::= { cwdIfQosProfileEntry 1 }
 
 cwdIfQosProfPriority OBJECT-TYPE
@@ -523,9 +677,9 @@ cwdIfQosProfPriority OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "A relative priority assigned to this service when
-         allocating bandwidth. Zero indicates lowest priority.
-         seven highest. 
-         Interpretation of priority is device-specific."
+        allocating bandwidth. Zero indicates lowest priority.
+        seven highest. 
+        Interpretation of priority is device-specific."
     DEFVAL { 0 }
     ::= { cwdIfQosProfileEntry 2 }
 
@@ -535,8 +689,8 @@ cwdIfQosProfMaxUpBandwidth OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The maximum upstream bandwidth, in bits per second,
-         allowed for a service with this service class.
-         Zero if there is no restriction of upstream bandwidth."
+        allowed for a service with this service class.
+        Zero if there is no restriction of upstream bandwidth."
     DEFVAL { 0 }
     ::= { cwdIfQosProfileEntry 3 }
 
@@ -545,8 +699,8 @@ cwdIfQosProfGuarUpBandwidth OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Minimum guaranteed upstream bandwidth, in bits per second, 
-         allowed for a service with this service class."
+        "Minimum guaranteed upstream bandwidth, in bits per second,
+        allowed for a service with this service class."
     DEFVAL { 0 }
     ::= { cwdIfQosProfileEntry 4 }
 
@@ -556,8 +710,8 @@ cwdIfQosProfMaxDownBandwidth OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The maximum downstream bandwidth, in bits per second,
-         allowed for a service with this service class.
-         Zero if there is no restriction of downstream bandwidth."
+        allowed for a service with this service class.
+        Zero if there is no restriction of downstream bandwidth."
     DEFVAL { 0 }
     ::= { cwdIfQosProfileEntry 5 }
 
@@ -567,8 +721,8 @@ cwdIfQosProfMaxTxBurst OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The maximum number of mini-slots that may be requested
-         for a single upstream transmission.
-         A value of zero means there is no limit."
+        for a single upstream transmission.
+        A value of zero means there is no limit."
     DEFVAL { 0 }
     ::= { cwdIfQosProfileEntry 6 }
 
@@ -582,7 +736,7 @@ cwdIfQosProfBaselinePrivacy OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Indicates whether Baseline Privacy is enabled for this
-         service class."
+        service class."
     DEFVAL { false }
     ::= { cwdIfQosProfileEntry 7 }
 
@@ -607,9 +761,9 @@ cwdIfSignalQualityTable OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "At the SU, this table describes the PHY signal quality 
-         of downstream channels. At the HE, this table describes
-         the PHY signal quality of upstream channels."
+        "At the SU, this table describes the PHY signal quality
+        of downstream channels. At the HE, this table describes
+        the PHY signal quality of upstream channels."
     ::= { cwdIfBaseObjects 6 }
 
 cwdIfSignalQualityEntry OBJECT-TYPE
@@ -618,12 +772,12 @@ cwdIfSignalQualityEntry OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "At the SU, describes the PHY signal quality of a
-         downstream channel. At the HE, describes the PHY signal
-         quality of an upstream channel.
-         An entry in this table exists for each ifEntry with an
-         ifType of propDocsWirelessUpstream(nnn) for Head-End
-         Systems and propDocsWirelessDownstream(nnn) for
-         Subscriber units."
+        downstream channel. At the HE, describes the PHY signal
+        quality of an upstream channel.
+        An entry in this table exists for each ifEntry with an
+        ifType of propDocsWirelessUpstream(nnn) for Head-End
+        Systems and propDocsWirelessDownstream(nnn) for
+        Subscriber units."
     INDEX { ifIndex }
     ::= { cwdIfSignalQualityTable 1 }
 
@@ -645,7 +799,7 @@ cwdIfSigQIncludesContention OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "true(1) if this HE includes contention intervals in
-         the counters in this table. Always false(2) for SUs."
+        the counters in this table. Always false(2) for SUs."
     ::= { cwdIfSignalQualityEntry 1 }
 
 cwdIfSigQUnerroreds OBJECT-TYPE
@@ -654,8 +808,8 @@ cwdIfSigQUnerroreds OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Codewords received on this channel without error.
-         This includes all codewords, whether or not they
-         were part of frames destined for this device."
+        This includes all codewords, whether or not they
+        were part of frames destined for this device."
     ::= { cwdIfSignalQualityEntry 2 }
 
 cwdIfSigQCorrecteds OBJECT-TYPE
@@ -664,8 +818,8 @@ cwdIfSigQCorrecteds OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Codewords received on this channel with correctable
-         errors. This includes all codewords, whether or not
-         they were part of frames destined for this device."
+        errors. This includes all codewords, whether or not
+        they were part of frames destined for this device."
     ::= { cwdIfSignalQualityEntry 3 }
 
 cwdIfSigQUncorrectables OBJECT-TYPE
@@ -674,8 +828,8 @@ cwdIfSigQUncorrectables OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Codewords received on this channel with uncorrectable
-         errors. This includes all codewords, whether or not
-         they were part of frames destined for this device."
+        errors. This includes all codewords, whether or not
+        they were part of frames destined for this device."
     ::= { cwdIfSignalQualityEntry 4 }
 
 cwdIfSigQSignalNoise OBJECT-TYPE
@@ -685,7 +839,7 @@ cwdIfSigQSignalNoise OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Signal to Interference plus Noise  ratio as perceived
-         for this channel. "
+        for this channel."
     ::= { cwdIfSignalQualityEntry 5 }
 
 cwdIfModulationTable OBJECT-TYPE
@@ -694,7 +848,7 @@ cwdIfModulationTable OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Describes  modulation parameters associated with one
-         or more upstream and/or downstream channels."
+        or more upstream and/or downstream channels."
     ::= { cwdIfBaseObjects 7 }
 
 cwdIfModulationEntry OBJECT-TYPE
@@ -702,19 +856,19 @@ cwdIfModulationEntry OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "Describes a modulation profile for one or more 
-         upstream and downstream channels.
-         Initial default entries may be created at system 
-         initialization time by the agent.
-         The row operation for this table is as follows :
-         1. Any arbitrary index within the range can be
-            used to create a row.
-         2. No individual non-index objects have to be
-            specified in order to create an entry in this table.
-         3. CreateAndWait is not supported.
-         4. You can update/change the values in a row when
-            the row is active.
-         5. The rows can be destroyed any time. "
+        "Describes a modulation profile for one or more
+        upstream and downstream channels.
+        Initial default entries may be created at system 
+        initialization time by the agent.
+        The row operation for this table is as follows :
+        1. Any arbitrary index within the range can be
+           used to create a row.
+        2. No individual non-index objects have to be
+           specified in order to create an entry in this table.
+        3. CreateAndWait is not supported.
+        4. You can update/change the values in a row when
+           the row is active.
+        5. The rows can be destroyed any time. "
     INDEX { cwdIfModIndex }
     ::= { cwdIfModulationTable 1 }
 
@@ -732,9 +886,9 @@ cwdIfModIndex OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "An index into the Channel Modulation table 
-         (cwdIfModulationTable) representing modulation
-         parameters of a channel."
+        "An index into the Channel Modulation table
+        (cwdIfModulationTable) representing modulation
+        parameters of a channel."
     ::= { cwdIfModulationEntry 1 }
 
 cwdIfModRowStatus OBJECT-TYPE
@@ -760,8 +914,8 @@ cwdIfModBandwidth OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "The maximum bandwidth that can be used by a channel 
-         with using this modulation profile."
+        "The maximum bandwidth that can be used by a channel
+        with using this modulation profile."
     DEFVAL { 6000 }
     ::= { cwdIfModulationEntry 3 }
 
@@ -772,8 +926,8 @@ cwdIfModThroughput OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This represents the throughput expected of the 
-         identified radio link."
+        "This represents the throughput expected of the
+        identified radio link."
     ::= { cwdIfModulationEntry 4 }
 
 cwdIfModBurstLength OBJECT-TYPE
@@ -787,12 +941,12 @@ cwdIfModBurstLength OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The duration of the OFDM burst used by the physical layer.
-         This is also the duration of the MAC minislot.  
-         Not all the settings  will be supported by a particular ODU.
-         Consult the capabilities of the ODU to determine the best
-         burst length setting to use.
-         The exact durations are hardware and implementation 
-         dependent."
+        This is also the duration of the MAC minislot.  
+        Not all the settings  will be supported by a particular ODU.
+        Consult the capabilities of the ODU to determine the best
+        burst length setting to use.
+        The exact durations are hardware and implementation 
+        dependent."
     DEFVAL { medium }
     ::= { cwdIfModulationEntry 5 }
 
@@ -805,10 +959,10 @@ cwdIfModMultipathRobustness OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The quantitative level of robustness to multipath (also
-         known as delay spread tolerance). The degree of 
-         multipath in the environment will vary with deployment.
-         Consult installation and deployment documentation to
-         determine the best setting to use."
+        known as delay spread tolerance). The degree of 
+        multipath in the environment will vary with deployment.
+        Consult installation and deployment documentation to
+        determine the best setting to use."
     DEFVAL { standard }
     ::= { cwdIfModulationEntry 6 }
 
@@ -818,7 +972,7 @@ cwdIfSuMacTable OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Describes the attributes of each SU MAC interface,
-         extending the information available from ifEntry."
+        extending the information available from ifEntry."
     ::= { cwdIfSuObjects 1 }
 
 cwdIfSuMacEntry OBJECT-TYPE
@@ -827,9 +981,9 @@ cwdIfSuMacEntry OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "An entry containing objects describing attributes of
-         each MAC entry, extending the information in ifEntry.
-         An entry in this table exists for each ifEntry with an
-         ifType of propDocsWirelessMacLayer(nnn)."
+        each MAC entry, extending the information in ifEntry.
+        An entry in this table exists for each ifEntry with an
+        ifType of propDocsWirelessMacLayer(nnn)."
     INDEX { ifIndex }
     ::= { cwdIfSuMacTable 1 }
 
@@ -846,20 +1000,23 @@ cwdIfSuHeAddress OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Identifies the HE that controls this MAC domain. At the
-         SU, this will be the source address from SYNC, MAP, and
-         other MAC-layer messages. If the HE is unknown, returns
-         00-00-00-00-00-00."
+        SU, this will be the source address from SYNC, MAP, and
+        other MAC-layer messages. If the HE is unknown, returns
+        00-00-00-00-00-00."
     ::= { cwdIfSuMacEntry 1 }
 
 cwdIfSuCapabilities OBJECT-TYPE
-    SYNTAX OCTET STRING(SIZE(1))
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   atmCells(0)
+        --   concatenation(1)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "Identifies the capabilities of the MAC implementation 
-         at this interface. Note that packet transmission is 
-         always supported. Therefore, there is no specific bit
-         required to explicitly indicate this capability."
+        "Identifies the capabilities of the MAC implementation
+        at this interface. Note that packet transmission is 
+        always supported. Therefore, there is no specific bit
+        required to explicitly indicate this capability."
     ::= { cwdIfSuMacEntry 2 }
 
 cwdIfSuRangingRespTimeout OBJECT-TYPE
@@ -871,7 +1028,7 @@ cwdIfSuRangingRespTimeout OBJECT-TYPE
         "Waiting time for a Ranging Response packet."
     REFERENCE
         "Data over Cable Radio Frequency Interface specification, 
-         Section 7, timer T3"
+        Section 7, timer T3"
     DEFVAL { 20 }
     ::= { cwdIfSuMacEntry 3 }
 
@@ -881,7 +1038,7 @@ cwdIfSuStatusTable OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This table maintains a number of status objects
-         and counters for Subscriber Units."
+        and counters for Subscriber Units."
     ::= { cwdIfSuObjects 2 }
 
 cwdIfSuStatusEntry OBJECT-TYPE
@@ -890,9 +1047,9 @@ cwdIfSuStatusEntry OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "A set of status objects and counters for a single MAC
-         layer instance in a Subscriber unit.
-         An entry in this table exists for each ifEntry with an
-         ifType of propDocsWirelessMacLayer(nnn)."
+        layer instance in a Subscriber unit.
+        An entry in this table exists for each ifEntry with an
+        ifType of propDocsWirelessMacLayer(nnn)."
     INDEX { ifIndex }
     ::= { cwdIfSuStatusTable 1 }
 
@@ -933,10 +1090,10 @@ cwdIfSuStatusValue OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Current Subscriber unit connectivity state, as specified
-         in the RF Interface Specification."
+        in the RF Interface Specification."
     REFERENCE
         "Data over Cable Radio Frequency Interface Specification,
-         Chapter 7.2."
+        Chapter 7.2."
     ::= { cwdIfSuStatusEntry 1 }
 
 cwdIfSuStatusCode OBJECT-TYPE
@@ -945,13 +1102,13 @@ cwdIfSuStatusCode OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Status code for this Subscriber unit as defined in the
-         RF Interface Specification. The status code consists
-         of a single character indicating error groups, followed
-         by a two- or three-digit number indicating the status
-         condition."
+        RF Interface Specification. The status code consists
+        of a single character indicating error groups, followed
+        by a two- or three-digit number indicating the status
+        condition."
     REFERENCE
         "Data over Cable Radio Frequency Interface Specification,
-         Subscriber unit status codes."
+        Subscriber unit status codes."
     ::= { cwdIfSuStatusEntry 2 }
 
 cwdIfSuStatusTxPower OBJECT-TYPE
@@ -962,7 +1119,7 @@ cwdIfSuStatusTxPower OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The operational transmit power for the attached upstream
-         channel."
+        channel."
     ::= { cwdIfSuStatusEntry 3 }
 
 cwdIfSuStatusResets OBJECT-TYPE
@@ -971,7 +1128,7 @@ cwdIfSuStatusResets OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Number of times the SU reset or initialized
-         this interface."
+        this interface."
     ::= { cwdIfSuStatusEntry 4 }
 
 cwdIfSuStatusLostSyncs OBJECT-TYPE
@@ -980,7 +1137,7 @@ cwdIfSuStatusLostSyncs OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Number of times the SU lost synchronization with
-         the downstream channel."
+        the downstream channel."
     ::= { cwdIfSuStatusEntry 5 }
 
 cwdIfSuStatusInvalidMaps OBJECT-TYPE
@@ -1005,7 +1162,7 @@ cwdIfSuStatusInvalidRangingResp OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Number of times the SU received invalid ranging response
-         messages."
+        messages."
     ::= { cwdIfSuStatusEntry 8 }
 
 cwdIfSuStatusInvalidRegResp OBJECT-TYPE
@@ -1014,7 +1171,7 @@ cwdIfSuStatusInvalidRegResp OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Number of times the SU received invalid registration
-         response messages."
+        response messages."
     ::= { cwdIfSuStatusEntry 9 }
 
 cwdIfSuStatusT1Timeouts OBJECT-TYPE
@@ -1055,7 +1212,7 @@ cwdIfSuStatusRangingAborteds OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Number of times the ranging process was aborted
-         by the HE."
+        by the HE."
     ::= { cwdIfSuStatusEntry 14 }
 
 cwdIfSuServiceTable OBJECT-TYPE
@@ -1064,7 +1221,7 @@ cwdIfSuServiceTable OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Describes the attributes of each upstream service queue
-         on a SU."
+        on a SU."
     ::= { cwdIfSuObjects 3 }
 
 cwdIfSuServiceEntry OBJECT-TYPE
@@ -1073,10 +1230,10 @@ cwdIfSuServiceEntry OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Describes the attributes of an upstream bandwidth service
-         queue.
-         An entry in this table exists for each Service ID.
-         The primary index is an ifIndex with an ifType of
-         propDocsWirelessMacLayer(nnn)."
+        queue.
+        An entry in this table exists for each Service ID.
+        The primary index is an ifIndex with an ifType of
+        propDocsWirelessMacLayer(nnn)."
     INDEX { ifIndex, cwdIfSuServiceId }
     ::= { cwdIfSuServiceTable 1 }
 
@@ -1097,10 +1254,10 @@ cwdIfSuServiceId OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Identifies a service queue for upstream bandwidth. The
-         attributes of this service queue are shared between the
-         SU and the HE. The HE allocates upstream bandwidth
-         to this service queue based on requests from the SU and
-         on the class of service associated with this queue."
+        attributes of this service queue are shared between the
+        SU and the HE. The HE allocates upstream bandwidth
+        to this service queue based on requests from the SU and
+        on the class of service associated with this queue."
     ::= { cwdIfSuServiceEntry 1 }
 
 cwdIfSuServiceQosProfile OBJECT-TYPE
@@ -1109,9 +1266,9 @@ cwdIfSuServiceQosProfile OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The index in cwdIfQosProfileTable describing the quality
-         of service attributes associated with this particular
-         service. If cwdIfQosProfileTable is not supported or
-         doesn't exist, this object returns the value of zero."
+        of service attributes associated with this particular
+        service. If cwdIfQosProfileTable is not supported or
+        doesn't exist, this object returns the value of zero."
     ::= { cwdIfSuServiceEntry 2 }
 
 cwdIfSuServiceTxSlotsImmed OBJECT-TYPE
@@ -1120,11 +1277,11 @@ cwdIfSuServiceTxSlotsImmed OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The number of upstream mini-slots which have been used to
-         transmit data PDUs in immediate (contention) mode. This
-         includes only those PDUs which are presumed to have
-         arrived at the headend (i.e., those which were explicitly
-         acknowledged.) It does not include retransmission attempts
-         or mini-slots used by requests."
+        transmit data PDUs in immediate (contention) mode. This
+        includes only those PDUs which are presumed to have
+        arrived at the headend (i.e., those which were explicitly
+        acknowledged.) It does not include retransmission attempts
+        or mini-slots used by requests."
     ::= { cwdIfSuServiceEntry 3 }
 
 cwdIfSuServiceTxSlotsDed OBJECT-TYPE
@@ -1133,8 +1290,8 @@ cwdIfSuServiceTxSlotsDed OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The number of upstream mini-slots which have been used to
-         transmit data PDUs in dedicated mode (i.e., as a result
-         of a unicast Data Grant)."
+        transmit data PDUs in dedicated mode (i.e., as a result
+        of a unicast Data Grant)."
     ::= { cwdIfSuServiceEntry 4 }
 
 cwdIfSuServiceTxRetries OBJECT-TYPE
@@ -1156,12 +1313,12 @@ cwdIfSuServiceTxExceeded OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The data PDUs transmitted directly in contention data
-         slots expects explicit acknowledgement from the Headend. 
-         If the acknowledgement is not received the PDUs are 
-         transmitted again. After excessive retries the data 
-         PDUs are dropped. This object represents the number 
-         of data PDU transmission failures due to excessive
-         retries without acknowledgment."
+        slots expects explicit acknowledgement from the Headend. 
+        If the acknowledgement is not received the PDUs are 
+        transmitted again. After excessive retries the data 
+        PDUs are dropped. This object represents the number 
+        of data PDU transmission failures due to excessive
+        retries without acknowledgment."
     ::= { cwdIfSuServiceEntry 6 }
 
 cwdIfSuServiceRqRetries OBJECT-TYPE
@@ -1170,7 +1327,7 @@ cwdIfSuServiceRqRetries OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The number of attempts to transmit bandwidth requests
-         which did not result in acknowledgment."
+        which did not result in acknowledgment."
     ::= { cwdIfSuServiceEntry 7 }
 
 cwdIfSuServiceRqExceeded OBJECT-TYPE
@@ -1179,7 +1336,7 @@ cwdIfSuServiceRqExceeded OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The number of requests for bandwidth which failed due to
-         excessive retries without acknowledgment."
+        excessive retries without acknowledgment."
     ::= { cwdIfSuServiceEntry 8 }
 
 cwdIfHeMacTable OBJECT-TYPE
@@ -1188,7 +1345,7 @@ cwdIfHeMacTable OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Describes the attributes of each HE MAC interface,
-         extending the information available from ifEntry."
+        extending the information available from ifEntry."
     ::= { cwdIfHeObjects 1 }
 
 cwdIfHeMacEntry OBJECT-TYPE
@@ -1197,9 +1354,9 @@ cwdIfHeMacEntry OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "An entry containing objects describing attributes of each
-         MAC entry, extending the information in ifEntry.
-         An entry in this table exists for each ifEntry with an
-         ifType of propDocsWirelessMacLayer(nnn)."
+        MAC entry, extending the information in ifEntry.
+        An entry in this table exists for each ifEntry with an
+        ifType of propDocsWirelessMacLayer(nnn)."
     INDEX { ifIndex }
     ::= { cwdIfHeMacTable 1 }
 
@@ -1213,15 +1370,18 @@ CwdIfHeMacEntry ::= SEQUENCE {
     }
 
 cwdIfHeCapabilities OBJECT-TYPE
-    SYNTAX OCTET STRING(SIZE(1))
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   atmCells(0)
+        --   concatenation(1)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "Identifies the capabilities of the HE MAC
-         implementation at this interface. Note that packet
-         transmission is always supported. Therefore, there
-         is no specific bit required to explicitly indicate
-         this capability."
+        implementation at this interface. Note that packet
+        transmission is always supported. Therefore, there
+        is no specific bit required to explicitly indicate
+        this capability."
     ::= { cwdIfHeMacEntry 1 }
 
 cwdIfHeSyncInterval OBJECT-TYPE
@@ -1231,11 +1391,11 @@ cwdIfHeSyncInterval OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "The interval between HE transmission of successive SYNC 
-         messages at this interface."
+        "The interval between HE transmission of successive SYNC
+        messages at this interface."
     REFERENCE
         "Data Over Cable Radio Frequency Interface Specification, 
-         Sync Interval."
+        Sync Interval."
     ::= { cwdIfHeMacEntry 2 }
 
 cwdIfHeUcdInterval OBJECT-TYPE
@@ -1246,11 +1406,11 @@ cwdIfHeUcdInterval OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The interval between HE transmission of successive
-         Upstream Channel Descriptor messages for each upstream
-         channel at this interface."
+        Upstream Channel Descriptor messages for each upstream
+        channel at this interface."
     REFERENCE
         "Data Over Cable Radio Frequency Interface Specification, 
-         UCD Interval."
+        UCD Interval."
     ::= { cwdIfHeMacEntry 3 }
 
 cwdIfHeMaxServiceIds OBJECT-TYPE
@@ -1258,12 +1418,12 @@ cwdIfHeMaxServiceIds OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The maximum number of service IDs that may be 
-         simultaneously active. "
+        "The maximum number of service IDs that may be
+        simultaneously active."
     REFERENCE
         "Data Over Cable Radio Frequency Interface Specification, 
-         Appendix A.  Well-Known Addresses. 
-                  A.2 MAC Service IDs."
+        Appendix A.  Well-Known Addresses. 
+          A.2 MAC Service IDs."
     ::= { cwdIfHeMacEntry 4 }
 
 cwdIfHeInsertionInterval OBJECT-TYPE
@@ -1272,15 +1432,15 @@ cwdIfHeInsertionInterval OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "The amount of time between each broadcast station 
-         maintenance grant. Broadcast station maintenance
-         grants are used to allow new subscriber units to join the
-         network. Zero indicates that a vendor-specific algorithm
-         is used instead of a fixed time. Maximum amount of time
-         permitted by the DOCSIS specification is 2 seconds."
+        "The amount of time between each broadcast station
+        maintenance grant. Broadcast station maintenance
+        grants are used to allow new subscriber units to join the
+        network. Zero indicates that a vendor-specific algorithm
+        is used instead of a fixed time. Maximum amount of time
+        permitted by the DOCSIS specification is 2 seconds."
     REFERENCE
         "Data Over Cable Radio Frequency Interface Specification, 
-         Ranging Interval."
+        Ranging Interval."
     ::= { cwdIfHeMacEntry 5 }
 
 cwdIfHeInvitedRangingAttempts OBJECT-TYPE
@@ -1289,8 +1449,8 @@ cwdIfHeInvitedRangingAttempts OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The maximum number of attempts to make on invitations
-         for ranging requests. A value of zero means the system 
-         should attempt to range forever."
+        for ranging requests. A value of zero means the system 
+        should attempt to range forever."
     ::= { cwdIfHeMacEntry 6 }
 
 cwdIfHeStatusTable OBJECT-TYPE
@@ -1298,8 +1458,8 @@ cwdIfHeStatusTable OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "For the MAC layer, this group maintains a number of 
-         status objects and counters."
+        "For the MAC layer, this group maintains a number of
+        status objects and counters."
     ::= { cwdIfHeObjects 2 }
 
 cwdIfHeStatusEntry OBJECT-TYPE
@@ -1308,8 +1468,8 @@ cwdIfHeStatusEntry OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Status entry for a single MAC layer.
-         An entry in this table exists for each ifEntry with an
-         ifType of propDocsWirelessMacLayer(nnn)."
+        An entry in this table exists for each ifEntry with an
+        ifType of propDocsWirelessMacLayer(nnn)."
     INDEX { ifIndex }
     ::= { cwdIfHeStatusTable 1 }
 
@@ -1328,7 +1488,7 @@ cwdIfHeStatusInvalidRangeReqs OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This object counts invalid RNG-REQ messages received on
-         this interface."
+        this interface."
     ::= { cwdIfHeStatusEntry 1 }
 
 cwdIfHeStatusRangingAborteds OBJECT-TYPE
@@ -1337,7 +1497,7 @@ cwdIfHeStatusRangingAborteds OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This object counts ranging attempts that were explicitly
-         aborted by the HE."
+        aborted by the HE."
     ::= { cwdIfHeStatusEntry 2 }
 
 cwdIfHeStatusInvalidRegReqs OBJECT-TYPE
@@ -1346,7 +1506,7 @@ cwdIfHeStatusInvalidRegReqs OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This object counts invalid REG-REQ messages received on
-         this interface."
+        this interface."
     ::= { cwdIfHeStatusEntry 3 }
 
 cwdIfHeStatusFailedRegReqs OBJECT-TYPE
@@ -1355,8 +1515,8 @@ cwdIfHeStatusFailedRegReqs OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This object counts failed registration attempts, i.e.,
-         authentication failures and class of service failures,
-         on this interface."
+        authentication failures and class of service failures,
+        on this interface."
     ::= { cwdIfHeStatusEntry 4 }
 
 cwdIfHeStatusInvalidDataReqs OBJECT-TYPE
@@ -1365,7 +1525,7 @@ cwdIfHeStatusInvalidDataReqs OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This object counts invalid data request messages
-         received on this interface."
+        received on this interface."
     ::= { cwdIfHeStatusEntry 5 }
 
 cwdIfHeStatusT5Timeouts OBJECT-TYPE
@@ -1374,12 +1534,12 @@ cwdIfHeStatusT5Timeouts OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This object counts the number of times counter T5
-         expired on this interface.
-         The T5 timer is the 'Wait for Upstream Channel Change 
-         Response Timer' on the Head end."
+        expired on this interface.
+        The T5 timer is the 'Wait for Upstream Channel Change 
+        Response Timer' on the Head end."
     REFERENCE
         "Data Over Cable Radio Frequency Interface Specification, 
-         Sync Interval. Appendix B"
+        Sync Interval. Appendix B"
     ::= { cwdIfHeStatusEntry 6 }
 
 cwdIfHeSuStatusTable OBJECT-TYPE
@@ -1388,7 +1548,7 @@ cwdIfHeSuStatusTable OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "A set of objects in the HE, maintained for each
-         Subscriber unit connected to this HE."
+        Subscriber unit connected to this HE."
     ::= { cwdIfHeObjects 3 }
 
 cwdIfHeSuStatusEntry OBJECT-TYPE
@@ -1397,8 +1557,8 @@ cwdIfHeSuStatusEntry OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Status information for a single Subscriber unit.
-         An entry in this table exists for each Subscriber unit 
-         that is connected to the HE implementing this table."
+        An entry in this table exists for each Subscriber unit 
+        that is connected to the HE implementing this table."
     INDEX { cwdIfHeSuStatusIndex }
     ::= { cwdIfHeSuStatusTable 1 }
 
@@ -1421,8 +1581,8 @@ cwdIfHeSuStatusIndex OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Index value to uniquely identify an entry in this table.
-         For an individual Subscriber Unit, this index value should
-         not change during HE uptime."
+        For an individual Subscriber Unit, this index value should
+        not change during HE uptime."
     ::= { cwdIfHeSuStatusEntry 1 }
 
 cwdIfHeSuStatusMacAddress OBJECT-TYPE
@@ -1432,9 +1592,9 @@ cwdIfHeSuStatusMacAddress OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "MAC address of this Subscriber Unit. If the Subscriber
-         Unit has multiple MAC addresses, this is the MAC
-         address associated with the Wireless interface.
-         Each SU has only one wireless MAC interface."
+        Unit has multiple MAC addresses, this is the MAC
+        address associated with the Wireless interface.
+        Each SU has only one wireless MAC interface."
     ::= { cwdIfHeSuStatusEntry 2 }
 
 cwdIfHeSuStatusIpAddress OBJECT-TYPE
@@ -1442,13 +1602,13 @@ cwdIfHeSuStatusIpAddress OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "IP address of this Subscriber Unit. If the Subscriber 
-         Unit has no IP address assigned, or the IP address is
-         unknown, this object returns a value of 0.0.0.0. If 
-         the Subscriber Unit has multiple IP addresses, this 
-         object returns the IP address associated with the 
-         Wireless interface. Each SU has only one wireless 
-         MAC interface."
+        "IP address of this Subscriber Unit. If the Subscriber
+        Unit has no IP address assigned, or the IP address is
+        unknown, this object returns a value of 0.0.0.0. If 
+        the Subscriber Unit has multiple IP addresses, this 
+        object returns the IP address associated with the 
+        Wireless interface. Each SU has only one wireless 
+        MAC interface."
     ::= { cwdIfHeSuStatusEntry 3 }
 
 cwdIfHeSuStatusDownChanIfIndex OBJECT-TYPE
@@ -1458,8 +1618,8 @@ cwdIfHeSuStatusDownChanIfIndex OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "IfIndex of the downstream channel this Subscriber Unit
-         is connected to. If the downstream channel is unknown, 
-         this object returns a value of zero."
+        is connected to. If the downstream channel is unknown, 
+        this object returns a value of zero."
     ::= { cwdIfHeSuStatusEntry 4 }
 
 cwdIfHeSuStatusUpChanIfIndex OBJECT-TYPE
@@ -1469,8 +1629,8 @@ cwdIfHeSuStatusUpChanIfIndex OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "IfIndex of the upstream channel this Subscriber Unit
-         is connected to. If the upstream channel is unknown, 
-         this object returns a value of zero."
+        is connected to. If the upstream channel is unknown, 
+        this object returns a value of zero."
     ::= { cwdIfHeSuStatusEntry 5 }
 
 cwdIfHeSuStatusRxPower OBJECT-TYPE
@@ -1481,9 +1641,9 @@ cwdIfHeSuStatusRxPower OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The receive power as perceived for upstream data from
-         this subscriber unit.
-         If the receive power is unknown, this object returns
-         a value of zero."
+        this subscriber unit.
+        If the receive power is unknown, this object returns
+        a value of zero."
     ::= { cwdIfHeSuStatusEntry 6 }
 
 cwdIfHeSuStatusTimingOffset OBJECT-TYPE
@@ -1492,10 +1652,10 @@ cwdIfHeSuStatusTimingOffset OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "A measure of the current round trip time for this SU.
-         Used for timing of SU upstream transmissions to ensure
-         synchronized arrivals at the HE. Units are in terms
-         of (cwdIfUpstreamMiniSlotTimeBaseTick/64). Returns
-         zero if the value is unknown."
+        Used for timing of SU upstream transmissions to ensure
+        synchronized arrivals at the HE. Units are in terms
+        of (cwdIfUpstreamMiniSlotTimeBaseTick/64). Returns
+        zero if the value is unknown."
     ::= { cwdIfHeSuStatusEntry 7 }
 
 cwdIfHeSuStatusValue OBJECT-TYPE
@@ -1512,32 +1672,32 @@ cwdIfHeSuStatusValue OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Current subscriber unit connectivity state, as specified
-         in the RF Interface Specification. Returned status
-         information is the SU status as assumed by the HE,
-         and indicates the following events:
-         other(1)
-            Any state other than below.
-         ranging(2)
-            The HE has received an Initial Ranging Request
-            message from the SU, and the ranging process is not
-            yet complete.
-         rangingAborted(3)
-            The HE has sent a Ranging Abort message to the SU.
-         rangingComplete(4)
-            The HE has sent a Ranging Complete message to the SU.
-         ipComplete(5)
-            The HE has received a DHCP reply message and forwarded
-            it to the SU.
-         registrationComplete(6)
-            The HE has sent a Registration Response message to
-            the SU.
-         accessDenied(7)
-            The HE has sent a Registration Aborted message
-            to the SU.
-         The HE only needs to report states it is able to detect."
+        in the RF Interface Specification. Returned status
+        information is the SU status as assumed by the HE,
+        and indicates the following events:
+        other(1)
+           Any state other than below.
+        ranging(2)
+           The HE has received an Initial Ranging Request
+           message from the SU, and the ranging process is not
+           yet complete.
+        rangingAborted(3)
+           The HE has sent a Ranging Abort message to the SU.
+        rangingComplete(4)
+           The HE has sent a Ranging Complete message to the SU.
+        ipComplete(5)
+           The HE has received a DHCP reply message and forwarded
+           it to the SU.
+        registrationComplete(6)
+           The HE has sent a Registration Response message to
+           the SU.
+        accessDenied(7)
+           The HE has sent a Registration Aborted message
+           to the SU.
+        The HE only needs to report states it is able to detect."
     REFERENCE
         "Data over Cable Radio Frequency Interface Specification,
-         Chapter 7.2."
+        Chapter 7.2."
     ::= { cwdIfHeSuStatusEntry 8 }
 
 cwdIfHeSuStatusIfIndex OBJECT-TYPE
@@ -1546,8 +1706,8 @@ cwdIfHeSuStatusIfIndex OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The HE MAC interface index (ifType of 
-         propDocsWirelessMacLayer(nnn)) that SU connects to."
+        "The HE MAC interface index (ifType of
+        propDocsWirelessMacLayer(nnn)) that SU connects to."
     ::= { cwdIfHeSuStatusEntry 9 }
 
 cwdIfHeSuStatusServiceId OBJECT-TYPE
@@ -1564,7 +1724,7 @@ cwdIfHeServiceTable OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Describes the attributes of upstream service queues
-         in a Head-end System."
+        in a Head-end System."
     ::= { cwdIfHeObjects 4 }
 
 cwdIfHeServiceEntry OBJECT-TYPE
@@ -1573,13 +1733,13 @@ cwdIfHeServiceEntry OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Describes the attributes of a single upstream bandwidth
-         service queue.
-         Entries in this table exist for each ifEntry with an
-         ifType of propDocsWirelessMacLayer(nnn), and for 
-         each service queue (Service ID) within this MAC layer.
-         Entries in this table are created with the creation of
-         individual Service IDs by the MAC layer and removed
-         when a Service ID is removed."
+        service queue.
+        Entries in this table exist for each ifEntry with an
+        ifType of propDocsWirelessMacLayer(nnn), and for 
+        each service queue (Service ID) within this MAC layer.
+        Entries in this table are created with the creation of
+        individual Service IDs by the MAC layer and removed
+        when a Service ID is removed."
     INDEX { ifIndex, cwdIfHeServiceId }
     ::= { cwdIfHeServiceTable 1 }
 
@@ -1598,12 +1758,12 @@ cwdIfHeServiceId OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "Identifies a service queue for upstream bandwidth. The 
-         attributes of this service queue are shared between the
-         Subscriber unit and the Head-end System.
-         The HE allocates upstream bandwidth to this service 
-         queue based on requests from the SU and on the class of
-         service associated with this queue."
+        "Identifies a service queue for upstream bandwidth. The
+        attributes of this service queue are shared between the
+        Subscriber unit and the Head-end System.
+        The HE allocates upstream bandwidth to this service 
+        queue based on requests from the SU and on the class of
+        service associated with this queue."
     ::= { cwdIfHeServiceEntry 1 }
 
 cwdIfHeServiceSuStatusIndex OBJECT-TYPE
@@ -1612,7 +1772,7 @@ cwdIfHeServiceSuStatusIndex OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Pointer to an entry in cwdIfHeSuStatusTable identifying
-         the Subscriber unit using this Service Queue."
+        the Subscriber unit using this Service Queue."
     ::= { cwdIfHeServiceEntry 2 }
 
 cwdIfHeServiceAdminStatus OBJECT-TYPE
@@ -1625,7 +1785,7 @@ cwdIfHeServiceAdminStatus OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Allows a service class for a particular modem to be
-         suppressed, (re-)enabled, or deleted altogether."
+        suppressed, (re-)enabled, or deleted altogether."
     ::= { cwdIfHeServiceEntry 3 }
 
 cwdIfHeServiceQosProfile OBJECT-TYPE
@@ -1634,9 +1794,9 @@ cwdIfHeServiceQosProfile OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The index in cwdIfQosProfileTable describing the quality
-         of service attributes associated with this particular
-         service. If cwdIfQosProfileTable is not supported, this
-         object returns the value of zero."
+        of service attributes associated with this particular
+        service. If cwdIfQosProfileTable is not supported, this
+        object returns the value of zero."
     ::= { cwdIfHeServiceEntry 4 }
 
 cwdIfHeServiceCreateTime OBJECT-TYPE
@@ -1654,8 +1814,8 @@ cwdIfHeServiceInOctets OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The cumulative number of Packet Data octets received
-         on this Service ID. The count does not include the
-         size of the Wireless MAC header"
+        on this Service ID. The count does not include the
+        size of the Wireless MAC header"
     ::= { cwdIfHeServiceEntry 6 }
 
 cwdIfHeServiceInPackets OBJECT-TYPE
@@ -1664,7 +1824,7 @@ cwdIfHeServiceInPackets OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The cumulative number of Packet Data packets received
-         on this Service ID."
+        on this Service ID."
     ::= { cwdIfHeServiceEntry 7 }
 
 cwdIfHeQosProfilePermissions OBJECT-TYPE
@@ -1677,26 +1837,26 @@ cwdIfHeQosProfilePermissions OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This object specifies permitted methods of creating
-         entries in cwdIfQosProfileTable.
-         CreateByManagement(0) is set if entries can be created
-         using SNMP. UpdateByManagement(1) is set if updating
-         entries using SNMP is permitted.
-         CreateBySubscriberUnits(2) is set if entries can be
-         created based on information in REG-REQ MAC messages
-         received from Subscriber units.  Information in this
-         object is only applicable if cwdIfQosProfileTable is
-         implemented as read-create.
-         Otherwise, this object is implemented as read-only
-         and returns CreateBySubscriberUnits(2).
-         Either CreateByManagement(0) or
-         CreateBySubscriberUnits(2) must be set when writing
-         to this object.  If this object has a value of
-         createByManagement(2) the qos entries can be created
-         and modified by the management. 
-         If this object has a value of UpdateByManagement(1)
-         the qos entries can be updated my management irrespective
-         of who created it. But the management cannot create
-         new entry in the cwdIfQosProfileTable."
+        entries in cwdIfQosProfileTable.
+        CreateByManagement(0) is set if entries can be created
+        using SNMP. UpdateByManagement(1) is set if updating
+        entries using SNMP is permitted.
+        CreateBySubscriberUnits(2) is set if entries can be
+        created based on information in REG-REQ MAC messages
+        received from Subscriber units.  Information in this
+        object is only applicable if cwdIfQosProfileTable is
+        implemented as read-create.
+        Otherwise, this object is implemented as read-only
+        and returns CreateBySubscriberUnits(2).
+        Either CreateByManagement(0) or
+        CreateBySubscriberUnits(2) must be set when writing
+        to this object.  If this object has a value of
+        createByManagement(2) the qos entries can be created
+        and modified by the management. 
+        If this object has a value of UpdateByManagement(1)
+        the qos entries can be updated my management irrespective
+        of who created it. But the management cannot create
+        new entry in the cwdIfQosProfileTable."
     ::= { cwdIfHeObjects 6 }
 
 cwdIfBasicGroup OBJECT IDENTIFIER ::= { cwdIfGroups 1 }
@@ -1705,7 +1865,7 @@ cwdIfBasicGroup OBJECT IDENTIFIER ::= { cwdIfGroups 1 }
 --    mandatory
 --  Descr
 --    Group of objects implemented in both Subscriber Units and
---     Head-end Systems.
+--    Head-end Systems.
 --  objects
 --    cwdIfChannelUpFrequency, cwdIfChannelUpWidth, 
 --    cwdIfChannelDownFrequency, cwdIfChannelDownWidth, 
@@ -1730,7 +1890,7 @@ cwdIfHeGroup OBJECT IDENTIFIER ::= { cwdIfGroups 7 }
 --    mandatory
 --  Descr
 --    Group of objects implemented in Head-end
---     Systems.
+--    Systems.
 --  objects
 --    cwdIfHeCapabilities, cwdIfHeSyncInterval, cwdIfHeUcdInterval, 
 --    cwdIfHeMaxServiceIds, cwdIfHeInsertionInterval, 
@@ -1772,8 +1932,8 @@ cwdIfQosGroup OBJECT IDENTIFIER ::= { cwdIfGroups 3 }
 --    mandatory
 --  Descr
 --    Quality of Service related group of objects.
---     This group is implemented in both Subscriber Units and
---     Head-end Systems.
+--    This group is implemented in both Subscriber Units and
+--    Head-end Systems.
 --  objects
 --    cwdIfQosProfPriority, cwdIfQosProfMaxUpBandwidth, 
 --    cwdIfQosProfGuarUpBandwidth, cwdIfQosProfMaxDownBandwidth, 
@@ -1786,8 +1946,8 @@ cwdIfQosHeGroup OBJECT IDENTIFIER ::= { cwdIfGroups 4 }
 --    mandatory
 --  Descr
 --    Quality of Service related group of objects.
---     This group is implemented in Head-end
---     Systems only.
+--    This group is implemented in Head-end
+--    Systems only.
 --  objects
 --    cwdIfHeQosProfilePermissions
 
@@ -1797,9 +1957,9 @@ cwdIfModGroup OBJECT IDENTIFIER ::= { cwdIfGroups 5 }
 --    mandatory
 --  Descr
 --    Objects that describe modulation characteristics
---     of a channel.
---     This group is implemented in both Subscriber Units and
---     Head-end Systems.
+--    of a channel.
+--    This group is implemented in both Subscriber Units and
+--    Head-end Systems.
 --  objects
 --    cwdIfModRowStatus, cwdIfModBandwidth, cwdIfModThroughput, 
 --    cwdIfModBurstLength, cwdIfModMultipathRobustness
@@ -1809,8 +1969,8 @@ cwdIfBasicCompliance OBJECT IDENTIFIER ::= { cwdIfCompliances 2 }
 --  Status
 --    mandatory
 --  Descr
---    The compliance statement for wireless devices that 
---     implement MCNS compliant Radio Frequency Interfaces.
+--    The compliance statement for wireless devices that
+--    implement MCNS compliant Radio Frequency Interfaces.
 --  Module
 --    >>current<<
 --   MandGroup

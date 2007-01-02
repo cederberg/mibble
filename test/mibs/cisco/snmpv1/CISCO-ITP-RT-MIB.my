@@ -1,4 +1,4 @@
--- MIB file created 16-Jan-2002 10:50:14, by
+-- MIB file created 24-Jul-2003 15:24:32, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-ITP-RT-MIB DEFINITIONS ::= BEGIN
@@ -24,7 +24,7 @@ IMPORTS
 ciscoItpRtMIB OBJECT IDENTIFIER ::= { ciscoMgmt 228 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200201070000Z
+--    200307100000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -39,21 +39,198 @@ ciscoItpRtMIB OBJECT IDENTIFIER ::= { ciscoMgmt 228 }
 --    
 --    E-mail: cs-ss7s@cisco.com
 --  Descr
---    This MIB is for managing route table used to control
---     messages transported over Signalling System 
+--    This MIB is for managing information required to 
+--     route messages transported over Signalling System 
 --     No. 7 (SS7) Network via Cisco IP Transfer
 --     Point.  
 --     
 --     The Cisco IP Transfer Point (ITP) is a hardware 
 --     and software solution that transports SS7 traffic 
---     using IP. Each ITP node provides the functions
---     necessary to act as a SS7 signaling point.   
+--     using IP.  Each ITP node provides the functions
+--     necessary to act as a SS7 signalling point.  Each 
+--     signalling point is connected to other signalling 
+--     point using IP based or traditional TDM links.
 --     
---     The ITU relevant documents describing this technology are
---     the ITU Q series, including ITU Q.700: Introduction
+--     The relevant ITU documents describing this technology 
+--     are the ITU Q series, including ITU Q.700: Introduction
 --     to CCITT Signalling System No. 7 and ITU Q.701 
 --     Functional description of the message transfer part
 --     (MTP) of Signalling System No. 7.
+--     
+--    
+--     Definitions and overview:
+--     
+--     Route:
+--     A route consists of one or more linksets used to transport
+--     MTP3 Message Signal Units(MSU) between signalling points.  
+--     A route is an association between a destination point 
+--     code(DPC) and a linkset, i.e., a linkset that can be used
+--     to send an MSU to the given DPC.
+--     
+--     Routeset:
+--     A routeset is a set of routes to a given DPC.  Each route
+--     within a routeset is on a possible path toward the DPC.
+--     Each route within the routeset has associated with it a
+--     route priority.
+--     
+--     In the following simple configuration, two routes exist
+--     that can be used to transport MSUs from STP1 to STP4.
+--     
+--       =========         STP1-STP2         ========= 
+--       - STP1  ============================= STP2  - 
+--       =========                           ========= 
+--           |                                   |
+--           | STP1-STP3               STP2-STP4 |
+--           |                                   |
+--       =========         STP3-STP4         ========= 
+--       - STP3  ============================= STP4  - 
+--       =========                           ========= 
+--     
+--     Routeset on STP1 for DPC = STP4:
+--         STP1-STP2,
+--         STP1-STP3
+--    
+--     
+--     Linkset:
+--     A linkset is a set of signalling links connecting
+--     two signalling points.
+--     
+--     Combined Linkset: 
+--     Two linksets with equal number of links and capacity
+--     that form routes of equal priority to a given DPC are
+--     called Combined Linksets.  It is primarily used for
+--     load sharing and redundancy.  In the following, example,
+--     linksets 'SSP1-STP1' and 'SSP1-STP2' form a combined 
+--     linsket.
+--       
+--        
+--             SSP1-STP1             =========
+--          |========================= STP1  -
+--          |                        =========
+--         - - 
+--       -     -
+--      -  SSP1 -  
+--       -     -
+--         - - 
+--          |  SSP1-STP2            =========
+--          |======================== STP2  -
+--                                  =========
+--     
+--     Routing:  
+--     The routing of SS7 Message signalling Units(MSU) is based 
+--     on the DPC.  Message Signalling Units are sent from an
+--     originating point code(OPC) to DPC.  Each MSU will 
+--     traverse one or more linksets as it is routed to its 
+--     final destination.  When an MSU arrives at a signalling
+--     point and the DPC does not match the signalling point's
+--     point code the MSU must be directed toward the DPC.  Each
+--     signalling point has enough routing information to 
+--     determine which linkset should be used to transmit the
+--     MSU toward its final destination.
+--     
+--     Route statement:  
+--     Each ITP Signalling Point has route statements needed to
+--     determine which linkset should be used to transmit 
+--     message signalling units to destinations.  Each route
+--     statement consists of a destination, a priority and a
+--     linkset name.  The destination is specified as a 
+--     combination of DPC and mask.  The priority, also know
+--     as cost, is used to define the order in which the routes
+--     are selected.  The linkset name specifies which linkset
+--     to use to reach the destination.
+--     
+--     Route table:  
+--     Each ITP Signalling Point has a table of routes.  
+--     These route entries are used to determine which linkset
+--     should be selected to transmit message signalling units 
+--     to a given destination.  
+--     
+--     There are two basic type of routing.  The first type
+--     is fully-qualified and uses all bits of the target DPC.  
+--     The other type is summary routing that uses a subset
+--     of the bits in the target DPC and is used to represent 
+--     groups of point codes rather than a single point code.
+--     
+--     Example of route table entries.
+--     
+--     Example 1: variant = ITU
+--     
+--     DPC/MASK  Priority  Linkset-name
+--     ========  ========  =======================
+--     5.5.5/14  3         STP1-STP2
+--     5.5.5/14  7         STP1-STP3
+--    
+--     Description: Two route table entries that define a
+--     primary route using linkset 'STP1-STP2' and an alternate
+--     route using linkset 'STP1-STP3' to point-code 5.5.5.
+--     
+--     Example 2: variant = ITU
+--     
+--     DPC/MASK  Priority  Linkset-name
+--     ========  ========  =======================
+--     5.5.5/14  3         STP1-STP2
+--     5.5.5/14  3         STP1-STP3
+--     5.5.5/14  7         STP1-STP4
+--    
+--     Description: Two route table entrys that define a
+--     combined linkset consisting of linkset 'STP1-STP2' and
+--     'STP1-STP3' to point code 5.5.5.  An alternate route is
+--     also defined using linkset 'STP1-STP4'.
+--     
+--     Example 3: variant = ANSI
+--     
+--     DPC/MASK  Priority  Linkset-name
+--     ========  ========  =======================
+--     5.5.0/16  3         STP1-STP2
+--     
+--     Description: A route table entry that defines routing
+--     to a cluster.  The cluster represents all point codes
+--     in the range from 5.5.0-5.5.255.
+--     
+--     Example 4: variant = ANSI
+--     
+--     DPC/MASK  Priority  Linkset-name
+--     ========  ========  =======================
+--     5.5.0/16  3         STP1-STP3
+--     5.5.5/24  3         STP1-STP2
+--     
+--    
+--     Description: The mixing of fully-qualified and summary
+--     route table entrys allow for different routes to be
+--     defined for certain DPC in a cluster.  In this 
+--     configuration, the fully-qualified route will be the 
+--     primary and the summary route will act as a backup.
+--                      
+--     Route table:  
+--     A group of route table entrys used to route MSU for a 
+--     particular instance of a signalling point.
+--     
+--     A sample route table.
+--    
+--     DPC/MASK  Priority  Linkset-name
+--     ========  ========  =======================
+--     0.0.0/0   7         STP1-STP4
+--     5.5.0/16  3         STP1-STP3
+--     5.5.5/24  3         STP1-STP2
+--     .
+--     .
+--     122.5.5   5         STP1-STP2
+--     .
+--     .
+--     243.200.1 6         STP1-STP3
+--     
+--  RevDate
+--    200307100000Z
+--  RevDescr
+--    Updated description to provide overview and 
+--     additional information. 
+--     
+--     The ability to allow multiple instances of 
+--     Signalling Points to run in the same device
+--     has introduce a new index structure.  All
+--     objects in this MIB will be deprecated and 
+--     replaced by objects in the CISCO-ITP-GACT-MIB.my
+--     MIB.
 --  RevDate
 --    200201070000Z
 --  RevDescr
@@ -93,7 +270,7 @@ cItpRtConfigLastChanged OBJECT-TYPE
     SYNTAX TimeStamp
 --    Rsyntax TimeTicks
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The value of sysUpTime at the time of the last
          creation or deletion of an entry in the cItpRouteTable.
@@ -108,7 +285,7 @@ cItpRtConfigLoad OBJECT-TYPE
     SYNTAX TimeStamp
 --    Rsyntax TimeTicks
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The value of sysUpTime at the time of the last
          load of the route table using file format."
@@ -124,7 +301,7 @@ cItpRtConfigLoadStatus OBJECT-TYPE
 --        loadFailed(5)
 --        }
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The status of the current load or status from
          the prior load operation.  This object will have
@@ -137,7 +314,7 @@ cItpRtConfigLoadStatus OBJECT-TYPE
 cItpRtStateChangeCount OBJECT-TYPE
     SYNTAX Counter
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "A count of the number of routes that have changed
          states. This value is incremented whenever the 
@@ -153,7 +330,7 @@ cItpRtStateChangeNotifEnabled OBJECT-TYPE
 --        false(2)
 --        }
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "A control to enable or disable cItpRouteStateChange
          notifications as follows:
@@ -171,7 +348,7 @@ cItpRtChangeNotifDelayTime OBJECT-TYPE
 --  Units
 --    seconds
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "This object specifies the maximum amount of time to delay
          before generating the cItpRouteStateChange notification.
@@ -198,7 +375,7 @@ cItpRtChangeNotifDelayTime OBJECT-TYPE
 cItpRtMaxDynamicRoutes OBJECT-TYPE
     SYNTAX INTEGER(100..1000)
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The maximum number of dynamic SS7 routes. This
          object is used to limit the size of the route table
@@ -216,7 +393,7 @@ cItpRtChangeNotifWindowTime OBJECT-TYPE
 --  Units
 --    seconds
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "This object specifies the time interval used to monitor
          the rate of route state changes notifications.  This object
@@ -229,7 +406,7 @@ cItpRtChangeNotifWindowTime OBJECT-TYPE
 cItpRtChangeNotifMaxPerWindow OBJECT-TYPE
     SYNTAX INTEGER(10..9000)
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "This object specifies the maximum number of route
          state changes that can occur in the time interval 
@@ -243,7 +420,7 @@ cItpRtChangeNotifMaxPerWindow OBJECT-TYPE
 cItpRouteTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CItpRouteTableEntry
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The route table for determining the linkset that a
          packet must traverse to arrive at its destination node
@@ -253,7 +430,7 @@ cItpRouteTable OBJECT-TYPE
 cItpRouteTableEntry OBJECT-TYPE
     SYNTAX CItpRouteTableEntry
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "Each table entry represents a configured route
          statement."
@@ -275,7 +452,7 @@ cItpRouteTableName OBJECT-TYPE
     SYNTAX CItpTcRouteTableName
 --    Rsyntax OCTET STRING(SIZE(1..19))
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The configured name for this route table."
     ::= { cItpRouteTableEntry 1 }
@@ -284,7 +461,7 @@ cItpRouteDpc OBJECT-TYPE
     SYNTAX CItpTcPointCode
 --    Rsyntax Gauge(0..16777216)
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The destination point code."
     ::= { cItpRouteTableEntry 2 }
@@ -292,7 +469,7 @@ cItpRouteDpc OBJECT-TYPE
 cItpRouteDestLsCost OBJECT-TYPE
     SYNTAX Gauge(1..9)
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The cost assigned to this linkset matching this
         route. Higher numbers represent higher cost."
@@ -302,7 +479,7 @@ cItpRouteDestLinkset OBJECT-TYPE
     SYNTAX CItpTcLinksetId
 --    Rsyntax OCTET STRING(SIZE(1..19))
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The linkset that the packet is to be forwarded to on
         matching this route."
@@ -311,11 +488,11 @@ cItpRouteDestLinkset OBJECT-TYPE
 cItpRouteMask OBJECT-TYPE
     SYNTAX Gauge(0..16777215)
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The mask used to define which part of
-        cItpRouteDpc  is significant when comparing
-        the cItpRouteDpc  to the destination code
+        cItpRouteDpc is significant when comparing
+        the cItpRouteDpc to the destination code
         point in the packet to be routed."
     ::= { cItpRouteTableEntry 5 }
 
@@ -323,7 +500,7 @@ cItpRouteQos OBJECT-TYPE
     SYNTAX CItpTcQos
 --    Rsyntax Gauge(0..7|255)
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The quality of service classification to be assigned 
          to the ip packets used to transport the SS7 messages.
@@ -340,7 +517,7 @@ cItpRouteStatus OBJECT-TYPE
         unavailable(4)
         }
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "List of the possible route status values.
             'unknown'     : Status can not be determined.
@@ -357,7 +534,7 @@ cItpRouteNonAdjStatus OBJECT-TYPE
         prohibited(4)
         }
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "List of the possible non-adjacent status values.
             'unknown'     : Status can not be determined.
@@ -374,7 +551,7 @@ cItpRtNotifInfoSuppressedFlag OBJECT-TYPE
 --        false(2)
 --        }
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "A flag to indicate whether cItpRouteStateChange 
          notifications have been suppressed in the current time 
@@ -393,7 +570,7 @@ cItpRtNotifInfoSuppressedFlag OBJECT-TYPE
 cItpRtNotifInfoStateChanges OBJECT-TYPE
     SYNTAX OCTET STRING(SIZE(0..480))
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "This object contains a list of route state changes 
          accumulated until the list is full or the time
@@ -408,11 +585,11 @@ cItpRtNotifInfoStateChanges OBJECT-TYPE
          '<cItpRouteTableName>       20 octets null padded
           <cItpRouteDpc>              4 octets
           <cItpRouteMask>             4 octets
-          routeStatus                 1 octet
-             0 - unknown state
-        1 - route is accessible
-             2 - route is inaccessible
-             3 - route is restricted'
+          destination status          1 octet
+             1 - unknown state          
+             2 - route is accessible    
+             3 - route is inaccessible  
+             4 - route is restricted'            
           reserved1                   1 octet(set to null)
           reserved2                   1 octet(set to null)
           reserved3                   1 octet(set to null)
@@ -427,7 +604,7 @@ cItpRouteStateChange TRAP-TYPE
         cItpRtStateChangeCount, cItpRtNotifInfoSuppressedFlag, 
         cItpRtNotifInfoStateChanges }
 --  Status
---    mandatory
+--    deprecated
     DESCRIPTION
         "This notification is generated whenever one or more
          route destination status changes states and includes
@@ -454,7 +631,7 @@ cItpRouteStateChange TRAP-TYPE
 cItpRtScalarGroup OBJECT IDENTIFIER ::= { cItpRtMIBGroups 1 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    Route scalars Group.
 --  objects
@@ -463,7 +640,7 @@ cItpRtScalarGroup OBJECT IDENTIFIER ::= { cItpRtMIBGroups 1 }
 cItpRouteGroup OBJECT IDENTIFIER ::= { cItpRtMIBGroups 2 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    Route table group.
 --  objects
@@ -472,7 +649,7 @@ cItpRouteGroup OBJECT IDENTIFIER ::= { cItpRtMIBGroups 2 }
 cItpRtScalarGroupRev1 OBJECT IDENTIFIER ::= { cItpRtMIBGroups 4 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    Route revision one scalars group.
 --  objects
@@ -485,7 +662,7 @@ cItpRtScalarGroupRev1 OBJECT IDENTIFIER ::= { cItpRtMIBGroups 4 }
 cItpRtNotificationsGroup OBJECT IDENTIFIER ::= { cItpRtMIBGroups 3 }
 -- NOTIFICATION-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    Route notification objects.
 --  notifications
@@ -508,7 +685,7 @@ cItpRtMIBCompliance OBJECT IDENTIFIER ::= { cItpRtMIBCompliances 1 }
 cItpRtMIBComplianceRev1 OBJECT IDENTIFIER ::= { cItpRtMIBCompliances 2 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The compliance statement for entities which implement
 --     the Cisco CISCO-ITP-RT-MIB.my MIB

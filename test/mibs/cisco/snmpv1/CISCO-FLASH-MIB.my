@@ -1,17 +1,21 @@
--- MIB file created 01-May-2001 11:36:41, by
+-- MIB file created 24-Jun-2005 14:17:52, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-FLASH-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-FLASH-MIB.my"
--- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
     DisplayString, TruthValue, TimeStamp, InstancePointer, 
-    RowStatus
+    RowStatus, DateAndTime
             FROM SNMPv2-TC-v1
+    PhysicalIndex
+            FROM ENTITY-MIB
     ciscoMgmt
             FROM CISCO-SMI
+    InetAddressType, InetAddress
+            FROM INET-ADDRESS-MIB
     Counter, Gauge, IpAddress, TimeTicks
             FROM RFC1155-SMI
     OBJECT-TYPE
@@ -22,30 +26,119 @@ IMPORTS
 ciscoFlashMIB OBJECT IDENTIFIER ::= { ciscoMgmt 10 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200102211234Z
+--    200506010000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
---     Cisco Systems
---     Customer Service
+--           Cisco Systems
+--            Customer Service
 --    
 --    Postal: 170 W. Tasman Drive
---     San Jose, CA  95134
---     USA
+--            San Jose, CA  95134
+--            USA
 --    
 --    Tel: +1 800 553-NETS
 --    
 --    E-mail: cs-snmp@cisco.com
 --  Descr
---    Change MAX-ACCESS of CiscoFlashDeviceIndex
---     from not-accessible to accessible-to-notfiy
+--    This MIB provides for the management of Cisco
+--     Flash Devices.
+--  RevDate
+--    200506010000Z
+--  RevDescr
+--    Added ciscoFlashFileDate to ciscoFlashFileTable 
+--    
+--     Added ciscoFlashCopyRemotePassword to
+--               ciscoFlashCopyTable.
+--    
+--     Added following enumerations to
+--     ciscoFlashCopyProtocol -
+--      ftp, scp, sftp. 
+--  RevDate
+--    200501280000Z
+--  RevDescr
+--    Added a new status copyOperationPending(0)
+--    to object ciscoFlashCopyStatus.
+--  RevDate
+--    200403180000Z
+--  RevDescr
+--    The object ciscoFlashCopyServerAddress is
+--     deprecated since it supports only IPv4 address. Two
+--     new objects ciscoFlashCopyServerAddrRev1
+--     ciscoFlashCopyServerAddrType are defined.
+--  RevDate
+--    200304230000Z
+--  RevDescr
+--    Added ciscoFlashDeviceNameExtended to support upto 
+--     255 characters in flash device name.
+--     Deprecated ciscoFlashDeviceName. 
+--  RevDate
+--    200301311234Z
+--  RevDescr
+--    Add ciscoFlashCopyVerify object to
+--     CiscoFlashCopyEntry, & ciscoFlashCopyOpGroup.
+--     Fix scalability problem for the following tables and 
+--     MIB objects: ciscoFlashDevicesSupported, 
+--     ciscoFlashDeviceTable, ciscoFlashPhyEntIndex (added),
+--     ciscoFlashPartitionTable and ciscoFlashFileTable.
+--  RevDate
+--    200204010000Z
+--  RevDescr
+--    Added Notifications ciscoFlashDeviceInsertedNotif
+--     and ciscoFlashDeviceRemovedNotif. Deprecated the
+--     ciscoFlashDeviceChangeTrap.
+--     Added Scalars ciscoFlashCfgDevInsNotifEnable and
+--     ciscoFlashCfgDevRemNotifEnable to control the above
+--     notifications.
+--  RevDate
+--    200201250000Z
+--  RevDescr
+--    Added object ciscoFlashFileType to 
+--     ciscoFlashFileTable and
+--     added FlashFileType as a TEXTUAL-CONVENTION.
+--  RevDate
+--    200201220000Z
+--  RevDescr
+--    Fixing several problems with the previous 
+--     version of the MIB:
+--      o Changing MAX-ACCESS of ciscoFlashDeviceIndex
+--        back to 'not-accessible'.  The change described
+--        below in REVISION '200102211234Z' was not legal.
+--      o Changing the definition of the
+--        ciscoFlashDeviceChangeTrap notification.
+--        The original definition of this notification include
+--        a 'not-accessible' object (ciscoFlashDeviceIndex).
+--        It will instead include the following objects:
+--           ciscoFlashDeviceMinPartitionSize
+--           ciscoFlashDeviceName
+--        Instances of these object will carry the value of 
+--        ciscoFlashDeviceIndex implicitly in their object 
+--        identifiers.  This change is being made without
+--        deprecation of the notification and has the 
+--        potential to cause problems with existing 
+--        implementations of the notification on the agent 
+--        and the manager.
+--      o Past versions of the MIB have had a incorrectly 
+--        formatted REVISION/DESCRIPTION section.  That will
+--        be corrected in this REVISION.
+--      o Past versions of the MIB have not defined a
+--        NOTIFICATION-GROUP for the notifications defined
+--        by this MIB.  That will be corrected in this
+--        REVISION by adding ciscoFlashNotifGroup.  This
+--        group will be considered optional for 
+--        implementation.
+--      o Gratuitous ranges specified in Entry definitions 
+--        have been removed.
 --  RevDate
 --    200102211234Z
 --  RevDescr
---    Change ciscoFlashChipCode to match implementation,
---    and remove FlashChipCode as a TEXTUAL-CONVENTION.
+--    Change MAX-ACCESS of CiscoFlashDeviceIndex
+--     from not-accessible to accessible-to-notfiy
 --  RevDate
 --    9808270000Z
+--  RevDescr
+--    Change ciscoFlashChipCode to match implementation,
+--    and remove FlashChipCode as a TEXTUAL-CONVENTION.
 --  RevDate
 --    9604170000Z
 --  RevDescr
@@ -75,6 +168,7 @@ ciscoFlashMIBObjects OBJECT IDENTIFIER ::= { ciscoFlashMIB 1 }
 ciscoFlashDevice OBJECT IDENTIFIER ::= { ciscoFlashMIBObjects 1 }
 ciscoFlashOps   OBJECT IDENTIFIER ::= { ciscoFlashMIBObjects 2 }
 ciscoFlashMIBTrapPrefix OBJECT IDENTIFIER ::= { ciscoFlashMIBObjects 3 }
+ciscoFlashCfg   OBJECT IDENTIFIER ::= { ciscoFlashMIBObjects 4 }
 ciscoFlashChips OBJECT IDENTIFIER ::= { ciscoFlashDevice 3 }
 ciscoFlashPartitions OBJECT IDENTIFIER ::= { ciscoFlashDevice 4 }
 ciscoFlashFiles OBJECT IDENTIFIER ::= { ciscoFlashPartitions 2 }
@@ -92,8 +186,29 @@ ChecksumString ::= OCTET STRING
 --  Descr
 --    Represents the checksum of a file.
 
+FlashFileType ::= INTEGER {
+        unknown(1),
+        config(2),
+        image(3),
+        directory(4),
+        crashinfo(5)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    File types for files in a flash.
+--    
+--     unknown        - file type is not one of the following.
+--     config         - configuration file like 
+--                      startup configuration or 
+--                      running configuration.
+--     image          - image file.
+--     directory      - directory entry.
+--     crashinfo      - file containing crashinfo.
+
 ciscoFlashDevicesSupported OBJECT-TYPE
-    SYNTAX INTEGER(1..32)
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -129,10 +244,10 @@ ciscoFlashDeviceTable OBJECT-TYPE
         ciscoFlashDeviceSize equal to zero,
         and the following objects will have
         an indeterminate value:
-         ciscoFlashDeviceMinPartitionSize,
-         ciscoFlashDeviceMaxPartitions,
-         ciscoFlashDevicePartitions, and
-         ciscoFlashDeviceChipCount.
+                ciscoFlashDeviceMinPartitionSize,
+                ciscoFlashDeviceMaxPartitions,
+                ciscoFlashDevicePartitions, and
+                ciscoFlashDeviceChipCount.
         ciscoFlashDeviceRemovable will be
         true to indicate it is removable."
     ::= { ciscoFlashDevice 2 }
@@ -154,11 +269,11 @@ ciscoFlashDeviceEntry OBJECT-TYPE
     ::= { ciscoFlashDeviceTable 1 }
 
 CiscoFlashDeviceEntry ::= SEQUENCE {
-    ciscoFlashDeviceIndex INTEGER,
-    ciscoFlashDeviceSize INTEGER,
-    ciscoFlashDeviceMinPartitionSize INTEGER,
-    ciscoFlashDeviceMaxPartitions INTEGER,
-    ciscoFlashDevicePartitions INTEGER,
+    ciscoFlashDeviceIndex Gauge,
+    ciscoFlashDeviceSize Gauge,
+    ciscoFlashDeviceMinPartitionSize Gauge,
+    ciscoFlashDeviceMaxPartitions Gauge,
+    ciscoFlashDevicePartitions Gauge,
     ciscoFlashDeviceChipCount INTEGER,
     ciscoFlashDeviceName DisplayString,
     ciscoFlashDeviceDescr DisplayString,
@@ -166,23 +281,25 @@ CiscoFlashDeviceEntry ::= SEQUENCE {
     ciscoFlashDeviceCard InstancePointer,
     ciscoFlashDeviceProgrammingJumper INTEGER,
     ciscoFlashDeviceInitTime TimeStamp,
-    ciscoFlashDeviceRemovable TruthValue
+    ciscoFlashDeviceRemovable TruthValue,
+    ciscoFlashPhyEntIndex PhysicalIndex,
+    ciscoFlashDeviceNameExtended DisplayString
     }
 
 ciscoFlashDeviceIndex OBJECT-TYPE
-    SYNTAX INTEGER(1..32)
-    ACCESS read-only
+    SYNTAX Gauge(1..4294967295)
+    ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
         "Flash device sequence number to index within the
         table of initialized flash devices.
         The lowest value should be 1. The highest should be 
         less than or equal to the value of the 
-        ciscoFlashDevicesSupported object."
+        ciscoFlashDevicesSupported object. "
     ::= { ciscoFlashDeviceEntry 1 }
 
 ciscoFlashDeviceSize OBJECT-TYPE
-    SYNTAX INTEGER
+    SYNTAX Gauge(1..4294967295)
 --  Units
 --    bytes
     ACCESS read-only
@@ -194,7 +311,7 @@ ciscoFlashDeviceSize OBJECT-TYPE
     ::= { ciscoFlashDeviceEntry 2 }
 
 ciscoFlashDeviceMinPartitionSize OBJECT-TYPE
-    SYNTAX INTEGER
+    SYNTAX Gauge(1..4294967295)
 --  Units
 --    bytes
     ACCESS read-only
@@ -231,7 +348,7 @@ ciscoFlashDeviceMinPartitionSize OBJECT-TYPE
     ::= { ciscoFlashDeviceEntry 3 }
 
 ciscoFlashDeviceMaxPartitions OBJECT-TYPE
-    SYNTAX INTEGER(1..8)
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -250,11 +367,11 @@ ciscoFlashDeviceMaxPartitions OBJECT-TYPE
         system.
         For systems executing code out of DRAM, partitioning
         gives a way of sub-dividing a large Flash device for
-        easier management of files."
+        easier management of files. "
     ::= { ciscoFlashDeviceEntry 4 }
 
 ciscoFlashDevicePartitions OBJECT-TYPE
-    SYNTAX INTEGER
+    SYNTAX Gauge(1..4294967295)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -267,7 +384,7 @@ ciscoFlashDevicePartitions OBJECT-TYPE
         spans the entire device (actually no partitioning).
         A partition will contain one or more minimum partition
         units (where a minimum partition unit is defined by
-        ciscoFlashDeviceMinPartitionSize)."
+        ciscoFlashDeviceMinPartitionSize). "
     ::= { ciscoFlashDeviceEntry 5 }
 
 ciscoFlashDeviceChipCount OBJECT-TYPE
@@ -287,7 +404,7 @@ ciscoFlashDeviceName OBJECT-TYPE
     SYNTAX DisplayString(SIZE(0..16))
 --    Rsyntax OCTET STRING(SIZE(0..16))
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "Flash device name. This name is used to refer to the
         device within the system. Flash operations get directed 
@@ -313,11 +430,11 @@ ciscoFlashDeviceDescr OBJECT-TYPE
         to explain what the Flash device and its purpose is.
         Current values are:
           System flash - for the primary Flash used to store full
-           system images.
+                         system images.
           Boot flash   - for the secondary Flash used to store 
-           bootstrap images.
+                         bootstrap images.
         The ciscoFlashDeviceDescr, ciscoFlashDeviceController 
-        (if applicable), and ciscoFlashDeviceCard objects are 
+        (if applicable), and ciscoFlashPhyEntIndex objects are 
         expected to collectively give all information about a 
         Flash device.
         The device description will always be available for a 
@@ -347,7 +464,7 @@ ciscoFlashDeviceCard OBJECT-TYPE
     SYNTAX InstancePointer
 --    Rsyntax OBJECT IDENTIFIER
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "This object will point to an instance of a card entry
         in the cardTable. The card entry will give details about
@@ -441,6 +558,39 @@ ciscoFlashDeviceRemovable OBJECT-TYPE
           2. interrupt generation on removal or insertion."
     ::= { ciscoFlashDeviceEntry 13 }
 
+ciscoFlashPhyEntIndex OBJECT-TYPE
+    SYNTAX PhysicalIndex
+--    Rsyntax INTEGER(1..2147483647)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates the physical entity index of a 
+        physical entity in entPhysicalTable which the flash 
+        device actually located."
+    ::= { ciscoFlashDeviceEntry 14 }
+
+ciscoFlashDeviceNameExtended OBJECT-TYPE
+    SYNTAX DisplayString(SIZE(0..255))
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Extended Flash device name whose size can be upto
+        255 characters. This name is used to refer to the
+        device within the system. Flash operations get directed 
+        to a device based on this name.
+        The system has a concept of a default device.
+        This would be the primary or most used device in case 
+        of multiple devices. The system directs an operation
+        to the default device whenever a device name is not 
+        specified. The device name is therefore mandatory 
+        except when the operation is being done on the 
+        default device, or, the system supports only a single
+        Flash device. The device name will always be available
+        for a removable device, even when the device has been
+        removed."
+    ::= { ciscoFlashDeviceEntry 15 }
+
 ciscoFlashChipTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CiscoFlashChipEntry
     ACCESS not-accessible
@@ -471,8 +621,8 @@ CiscoFlashChipEntry ::= SEQUENCE {
     ciscoFlashChipDescr DisplayString,
     ciscoFlashChipWriteRetries Counter,
     ciscoFlashChipEraseRetries Counter,
-    ciscoFlashChipMaxWriteRetries INTEGER,
-    ciscoFlashChipMaxEraseRetries INTEGER
+    ciscoFlashChipMaxWriteRetries Gauge,
+    ciscoFlashChipMaxEraseRetries Gauge
     }
 
 ciscoFlashChipIndex OBJECT-TYPE
@@ -573,21 +723,21 @@ ciscoFlashChipEraseRetries OBJECT-TYPE
     ::= { ciscoFlashChipEntry 5 }
 
 ciscoFlashChipMaxWriteRetries OBJECT-TYPE
-    SYNTAX INTEGER
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "The maximum number of write retries done at any
-        single location before declaring a write failure."
+        single location before declaring a write failure. "
     ::= { ciscoFlashChipEntry 6 }
 
 ciscoFlashChipMaxEraseRetries OBJECT-TYPE
-    SYNTAX INTEGER
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "The maximum number of erase retries done within
-        an erase sector before declaring an erase failure."
+        an erase sector before declaring an erase failure. "
     ::= { ciscoFlashChipEntry 7 }
 
 ciscoFlashPartitionTable OBJECT-TYPE
@@ -615,12 +765,12 @@ ciscoFlashPartitionEntry OBJECT-TYPE
     ::= { ciscoFlashPartitionTable 1 }
 
 CiscoFlashPartitionEntry ::= SEQUENCE {
-    ciscoFlashPartitionIndex INTEGER,
+    ciscoFlashPartitionIndex Gauge,
     ciscoFlashPartitionStartChip INTEGER,
     ciscoFlashPartitionEndChip INTEGER,
-    ciscoFlashPartitionSize INTEGER,
+    ciscoFlashPartitionSize Gauge,
     ciscoFlashPartitionFreeSpace Gauge,
-    ciscoFlashPartitionFileCount INTEGER,
+    ciscoFlashPartitionFileCount Gauge,
     ciscoFlashPartitionChecksumAlgorithm INTEGER,
     ciscoFlashPartitionStatus INTEGER,
     ciscoFlashPartitionUpgradeMethod INTEGER,
@@ -630,12 +780,12 @@ CiscoFlashPartitionEntry ::= SEQUENCE {
     }
 
 ciscoFlashPartitionIndex OBJECT-TYPE
-    SYNTAX INTEGER(1..8)
+    SYNTAX Gauge(1..4294967295)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
         "Flash partition sequence number used to index within
-        table of initialized flash partitions."
+        table of initialized flash partitions. "
     ::= { ciscoFlashPartitionEntry 1 }
 
 ciscoFlashPartitionStartChip OBJECT-TYPE
@@ -657,7 +807,7 @@ ciscoFlashPartitionEndChip OBJECT-TYPE
     ::= { ciscoFlashPartitionEntry 3 }
 
 ciscoFlashPartitionSize OBJECT-TYPE
-    SYNTAX INTEGER
+    SYNTAX Gauge(1..4294967295)
 --  Units
 --    bytes
     ACCESS read-only
@@ -666,7 +816,7 @@ ciscoFlashPartitionSize OBJECT-TYPE
         "Flash partition size. It should be an integral
         multiple of ciscoFlashDeviceMinPartitionSize.
         If there is a single partition, this size will be equal
-        to ciscoFlashDeviceSize."
+        to ciscoFlashDeviceSize. "
     ::= { ciscoFlashPartitionEntry 4 }
 
 ciscoFlashPartitionFreeSpace OBJECT-TYPE
@@ -699,13 +849,13 @@ ciscoFlashPartitionFreeSpace OBJECT-TYPE
     ::= { ciscoFlashPartitionEntry 5 }
 
 ciscoFlashPartitionFileCount OBJECT-TYPE
-    SYNTAX INTEGER
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "Count of all files in a flash partition. Both 
         good and bad (deleted or invalid checksum) files 
-        will be included in this count."
+        will be included in this count. "
     ::= { ciscoFlashPartitionEntry 6 }
 
 ciscoFlashPartitionChecksumAlgorithm OBJECT-TYPE
@@ -790,15 +940,15 @@ ciscoFlashPartitionUpgradeMethod OBJECT-TYPE
         later version of software that supports the Flash chips.
         
         unknown      -  the current system image does not know
-          how Flash can be programmed. A possible
-          method would be to reload the ROM image
-          and perform the upgrade manually.
+                        how Flash can be programmed. A possible
+                        method would be to reload the ROM image
+                        and perform the upgrade manually.
         rxbootFLH    -  the Flash Load Helper is available to
-          download files to Flash. A copy-to-flash
-          command can be used and this system image
-          will automatically reload the Rxboot image
-          in ROM and direct it to carry out the 
-          download request.
+                        download files to Flash. A copy-to-flash
+                        command can be used and this system image
+                        will automatically reload the Rxboot image
+                        in ROM and direct it to carry out the 
+                        download request.
         direct       -  will be done directly by this image."
     ::= { ciscoFlashPartitionEntry 9 }
 
@@ -892,30 +1042,34 @@ ciscoFlashFileEntry OBJECT-TYPE
     ::= { ciscoFlashFileTable 1 }
 
 CiscoFlashFileEntry ::= SEQUENCE {
-    ciscoFlashFileIndex INTEGER,
-    ciscoFlashFileSize INTEGER,
+    ciscoFlashFileIndex Gauge,
+    ciscoFlashFileSize Gauge,
     ciscoFlashFileChecksum ChecksumString,
     ciscoFlashFileStatus INTEGER,
-    ciscoFlashFileName DisplayString
+    ciscoFlashFileName DisplayString,
+    ciscoFlashFileType FlashFileType,
+    ciscoFlashFileDate DateAndTime
     }
 
 ciscoFlashFileIndex OBJECT-TYPE
-    SYNTAX INTEGER(1..32)
+    SYNTAX Gauge(1..4294967295)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
         "Flash file sequence number used to index within
-        a Flash partition directory table."
+        a Flash partition directory table. "
     ::= { ciscoFlashFileEntry 1 }
 
 ciscoFlashFileSize OBJECT-TYPE
-    SYNTAX INTEGER
+    SYNTAX Gauge
+--  Units
+--    bytes
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "Size of the file in bytes. Note that this size does 
         not include the size of the filesystem file header.
-        File size will always be non-zero."
+        File size will always be non-zero. "
     ::= { ciscoFlashFileEntry 2 }
 
 ciscoFlashFileChecksum OBJECT-TYPE
@@ -973,6 +1127,30 @@ ciscoFlashFileName OBJECT-TYPE
         file name."
     ::= { ciscoFlashFileEntry 5 }
 
+ciscoFlashFileType OBJECT-TYPE
+    SYNTAX FlashFileType
+--    Rsyntax INTEGER {
+--        unknown(1),
+--        config(2),
+--        image(3),
+--        directory(4),
+--        crashinfo(5)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Type of the file."
+    ::= { ciscoFlashFileEntry 6 }
+
+ciscoFlashFileDate OBJECT-TYPE
+    SYNTAX DateAndTime
+--    Rsyntax OCTET STRING(SIZE(8|11))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The time at which this file was created."
+    ::= { ciscoFlashFileEntry 7 }
+
 ciscoFlashCopyTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CiscoFlashCopyEntry
     ACCESS not-accessible
@@ -1008,7 +1186,7 @@ ciscoFlashCopyEntry OBJECT-TYPE
         set request or by default, the row status should be set
         to active to initiate the operation. Note that this entire
         procedure may be initiated via a single set request which
-        specifies a row status of createAndGo as well as specifies
+        specifies a row status  of createAndGo as well as specifies
         valid values for the non-defaulted parameter objects.
         
         Once an operation has been activated, it cannot be
@@ -1034,7 +1212,11 @@ CiscoFlashCopyEntry ::= SEQUENCE {
     ciscoFlashCopyStatus INTEGER,
     ciscoFlashCopyNotifyOnCompletion TruthValue,
     ciscoFlashCopyTime TimeTicks,
-    ciscoFlashCopyEntryStatus RowStatus
+    ciscoFlashCopyEntryStatus RowStatus,
+    ciscoFlashCopyVerify TruthValue,
+    ciscoFlashCopyServerAddrType InetAddressType,
+    ciscoFlashCopyServerAddrRev1 InetAddress,
+    ciscoFlashCopyRemotePassword DisplayString
     }
 
 ciscoFlashCopySerialNumber OBJECT-TYPE
@@ -1068,57 +1250,60 @@ ciscoFlashCopyCommand OBJECT-TYPE
         If a command is unsupported, the invalidOperation(3)
         error will be reported in the operation status.
         
-        Command   Remarks
-        copyToFlashWithErase Copy a file to flash; erase
-           flash before copy.
-           Use the TFTP or rcp protocol.
+        Command                 Remarks
+        copyToFlashWithErase    Copy a file to flash; erase
+                                flash before copy.
+                                Use the TFTP or rcp protocol.
         copyToFlashWithoutErase Copy a file to flash; do not
-           erase.
-           Note that this command will fail
-           if the PartitionNeedErasure
-           object specifies that the
-           partition being copied to needs
-           erasure.
-           Use the TFTP or rcp protocol.
-        copyFromFlash  Copy a file from flash using
-           the TFTP, rcp or lex protocol.
-           Note that the lex protocol
-           can only be used to copy to a
-           lex device.
-        copyFromFlhLog  Copy contents of FLH log to 
-           server using TFTP protocol.
+                                erase.
+                                Note that this command will fail
+                                if the PartitionNeedErasure
+                                object specifies that the
+                                partition being copied to needs
+                                erasure.
+                                Use the TFTP or rcp protocol.
+        copyFromFlash           Copy a file from flash using
+                                the TFTP, rcp or lex protocol.
+                                Note that the lex protocol
+                                can only be used to copy to a
+                                lex device.
+        copyFromFlhLog          Copy contents of FLH log to 
+                                server using TFTP protocol.
         
         
-        Command table  Parameters
-        copyToFlashWithErase CopyProtocol
-           CopyServerAddress
-           CopySourceName
-           CopyDestinationName (opt)
-           CopyRemoteUserName (opt)
-           CopyNotifyOnCompletion (opt)
+        Command table           Parameters
+        copyToFlashWithErase    CopyProtocol
+                                CopyServerAddress
+                                CopySourceName
+                                CopyDestinationName (opt)
+                                CopyRemoteUserName (opt)
+                                CopyNotifyOnCompletion (opt)
         copyToFlashWithoutErase CopyProtocol
-           CopyServerAddress
-           CopySourceName
-           CopyDestinationName (opt)
-           CopyRemoteUserName (opt)
-           CopyNotifyOnCompletion (opt)
-        copyFromFlash  CopyProtocol
-           CopyServerAddress
-           CopySourceName
-           CopyDestinationName (opt)
-           CopyRemoteUserName (opt)
-           CopyNotifyOnCompletion (opt)
-        copyFromFlhLog  CopyProtocol
-           CopyServerAddress
-           CopyDestinationName 
-           CopyNotifyOnCompletion (opt)"
+                                CopyServerAddress
+                                CopySourceName
+                                CopyDestinationName (opt)
+                                CopyRemoteUserName (opt)
+                                CopyNotifyOnCompletion (opt)
+        copyFromFlash           CopyProtocol
+                                CopyServerAddress
+                                CopySourceName
+                                CopyDestinationName (opt)
+                                CopyRemoteUserName (opt)
+                                CopyNotifyOnCompletion (opt)
+        copyFromFlhLog          CopyProtocol
+                                CopyServerAddress
+                                CopyDestinationName 
+                                CopyNotifyOnCompletion (opt)"
     ::= { ciscoFlashCopyEntry 2 }
 
 ciscoFlashCopyProtocol OBJECT-TYPE
     SYNTAX INTEGER {
         tftp(1),
         rcp(2),
-        lex(3)
+        lex(3),
+        ftp(4),
+        scp(5),
+        sftp(6)
         }
     ACCESS read-write
     STATUS mandatory
@@ -1137,10 +1322,14 @@ ciscoFlashCopyProtocol OBJECT-TYPE
 ciscoFlashCopyServerAddress OBJECT-TYPE
     SYNTAX IpAddress
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The server address to be used for any copy. Optional.
-        Will default to 'FFFFFFFF'H  (or 255.255.255.255)."
+        Will default to 'FFFFFFFF'H  (or 255.255.255.255).
+        
+        Since this object can just hold only IPv4 Transport
+        type, it is deprecated and replaced by
+        ciscoFlashCopyServerAddrRev1."
     DEFVAL { 'ffffffff'H }
     ::= { ciscoFlashCopyEntry 4 }
 
@@ -1155,9 +1344,9 @@ ciscoFlashCopySourceName OBJECT-TYPE
         
         For a copy from Flash:
         File name must be of the form 
-         [device>:][<partition>:]<file>
+                [device>:][<partition>:]<file>
         where <device> is a value obtained from FlashDeviceName,
-         <partition> is obtained from FlashPartitionName
+                <partition> is obtained from FlashPartitionName
             and <file> is the name of a file in Flash.
         A management station could derive its own partition name
         as per the description for the ciscoFlashPartitionName
@@ -1183,7 +1372,7 @@ ciscoFlashCopyDestinationName OBJECT-TYPE
         
         For a copy to Flash:
         File name must be of the form 
-         {device>:][<partition>:]<file>
+                {device>:][<partition>:]<file>
         where <device> is a value obtained from FlashDeviceName,
               <partition> is obtained from FlashPartitionName
           and <file> is any character string that does not have
@@ -1220,7 +1409,7 @@ ciscoFlashCopyRemoteUserName OBJECT-TYPE
         rcp. 
         If specified, it will override the remote user-name
         configured through the 
-         rcmd remote-username <username>
+                rcmd remote-username <username>
         configuration command. 
         The remote user-name is sent as the server user-name 
         in an rcp command request sent by the system to a
@@ -1229,6 +1418,8 @@ ciscoFlashCopyRemoteUserName OBJECT-TYPE
 
 ciscoFlashCopyStatus OBJECT-TYPE
     SYNTAX INTEGER {
+        --?? enum value of zero may cause problems
+        copyOperationPending(0),
         copyInProgress(1),
         copyOperationSuccess(2),
         copyInvalidOperation(3),
@@ -1245,77 +1436,81 @@ ciscoFlashCopyStatus OBJECT-TYPE
         copyFileTransferError(14),
         copyFileChecksumError(15),
         copyNoMemory(16),
-        copyUnknownFailure(17)
+        copyUnknownFailure(17),
+        copyInvalidSignature(18)
         }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "The status of the specified copy operation.
         
+        copyOperationPending :
+                operation request is received and 
+                pending for validation and process 
+        
         copyInProgress : 
-         specified operation is active
+                specified operation is active
         
         copyOperationSuccess : 
-         specified operation is supported and
-         completed successfully
+                specified operation is supported and
+                completed successfully
         
         copyInvalidOperation : 
-         command invalid or command-protocol-device 
-         combination unsupported
+                command invalid or command-protocol-device 
+                combination unsupported
         
         copyInvalidProtocol :
-         invalid protocol specified
+                invalid protocol specified
         
         copyInvalidSourceName :
-         invalid source file name specified
-         For the  copy from flash to lex operation, this
-         error code will be returned when the source file
-         is not a valid lex image.
+                invalid source file name specified
+                For the  copy from flash to lex operation, this
+                error code will be returned when the source file
+                is not a valid lex image.
         
         copyInvalidDestName :
-         invalid target name (file or partition or 
-         device name) specified
-         For the  copy from flash to lex operation, this
-         error code will be returned when no lex devices 
-         are connected to the router or when an invalid
-         lex interface number has been specified in 
-         the destination string.
+                invalid target name (file or partition or 
+                device name) specified
+                For the  copy from flash to lex operation, this
+                error code will be returned when no lex devices 
+                are connected to the router or when an invalid
+                lex interface number has been specified in 
+                the destination string.
         
         copyInvalidServerAddress :
-         invalid server address specified
+                invalid server address specified
         
         copyDeviceBusy :
-         specified device is in use and locked by 
-         another process
+                specified device is in use and locked by 
+                another process
         
         copyDeviceOpenError :
-         invalid device name
+                invalid device name
         
         copyDeviceError :
-         device read, write or erase error
+                device read, write or erase error
         
         copyDeviceNotProgrammable :
-         device is read-only but a write or erase 
-         operation was specified
+                device is read-only but a write or erase 
+                operation was specified
         
         copyDeviceFull :
-         device is filled to capacity
+                device is filled to capacity
         
         copyFileOpenError :
-         invalid file name; file not found in partition
+                invalid file name; file not found in partition
         
         copyFileTransferError :
-         file transfer was unsuccessfull; network failure
+                file transfer was unsuccessfull; network failure
         
         copyFileChecksumError :
-         file checksum in Flash failed
+                file checksum in Flash failed
         
         copyNoMemory :
-         system running low on memory
+                system running low on memory
         
         copyUnknownFailure :
-         failure unknown
-                      "
+                failure unknown"
     ::= { ciscoFlashCopyEntry 8 }
 
 ciscoFlashCopyNotifyOnCompletion OBJECT-TYPE
@@ -1333,8 +1528,7 @@ ciscoFlashCopyNotifyOnCompletion OBJECT-TYPE
         will be generated. It is the responsibility of the 
         management entity to ensure that the SNMP administrative 
         model is configured in such a way as to allow the 
-        notification to be delivered.
-                      "
+        notification to be delivered."
     DEFVAL { false }
     ::= { ciscoFlashCopyEntry 9 }
 
@@ -1367,6 +1561,77 @@ ciscoFlashCopyEntryStatus OBJECT-TYPE
     DESCRIPTION
         "The status of this table entry."
     ::= { ciscoFlashCopyEntry 11 }
+
+ciscoFlashCopyVerify OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Specifies whether the file that is copied need to
+        be verified for integrity / authenticity, after
+        copy succeeds. If it is set to true, and if the
+        file that is copied doesn't have integrity /authenticity
+        attachement, or the integrity / authenticity check
+        fails, then the command will be aborted, and the file
+        that is copied will be deleted from the destination
+        file system."
+    DEFVAL { false }
+    ::= { ciscoFlashCopyEntry 12 }
+
+ciscoFlashCopyServerAddrType OBJECT-TYPE
+    SYNTAX InetAddressType
+--    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        unknown(0),
+--        ipv4(1),
+--        ipv6(2),
+--        ipv4z(3),
+--        ipv6z(4),
+--        dns(16)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates the transport type of the
+        address contained in
+        ciscoFlashCopyServerAddrRev1. Optional.
+        Will default to '1' (IPv4 address type)."
+    DEFVAL { ipv4 }
+    ::= { ciscoFlashCopyEntry 13 }
+
+ciscoFlashCopyServerAddrRev1 OBJECT-TYPE
+    SYNTAX InetAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The server address to be used for any copy. Optional.
+        Will default to 'FFFFFFFF'H  (or 255.255.255.255).
+        
+        The Format of this address depends on the value of the
+        ciscoFlashCopyServerAddrType.
+        
+        This object deprecates the old
+        ciscoFlashCopyServerAddress object."
+    DEFVAL { 'FFFFFFFF'H }
+    ::= { ciscoFlashCopyEntry 14 }
+
+ciscoFlashCopyRemotePassword OBJECT-TYPE
+    SYNTAX DisplayString(SIZE(1..40))
+--    Rsyntax OCTET STRING(SIZE(1..40))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Password used by ftp, sftp or scp for copying a file
+         to/from an ftp/sftp/scp server. This object must be
+         created when the ciscoFlashCopyProtocol is ftp, sftp or
+         scp. Reading it returns a zero-length string for
+         security reasons."
+    ::= { ciscoFlashCopyEntry 15 }
 
 ciscoFlashPartitioningTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CiscoFlashPartitioningEntry
@@ -1421,7 +1686,7 @@ CiscoFlashPartitioningEntry ::= SEQUENCE {
     ciscoFlashPartitioningSerialNumber INTEGER,
     ciscoFlashPartitioningCommand INTEGER,
     ciscoFlashPartitioningDestinationName DisplayString,
-    ciscoFlashPartitioningPartitionCount INTEGER,
+    ciscoFlashPartitioningPartitionCount Gauge,
     ciscoFlashPartitioningPartitionSizes DisplayString,
     ciscoFlashPartitioningStatus INTEGER,
     ciscoFlashPartitioningNotifyOnCompletion TruthValue,
@@ -1452,18 +1717,18 @@ ciscoFlashPartitioningCommand OBJECT-TYPE
         If the command is unsupported, the 
         partitioningInvalidOperation
         error will be reported in the operation status.
-                     
-        Command   Remarks
-        partition  Partition a Flash device.
-           All the prerequisites for
-           partitioning must be met for 
-           this command to succeed.
         
-        Command table  Parameters
-        1) partition  PartitioningDestinationName
-           PartitioningPartitionCount
-           PartitioningPartitionSizes (opt)
-           PartitioningNotifyOnCompletion (opt)"
+        Command                 Remarks
+        partition               Partition a Flash device.
+                                All the prerequisites for
+                                partitioning must be met for 
+                                this command to succeed.
+        
+        Command table           Parameters
+        1) partition            PartitioningDestinationName
+                                PartitioningPartitionCount
+                                PartitioningPartitionSizes (opt)
+                                PartitioningNotifyOnCompletion (opt)"
     DEFVAL { partition }
     ::= { ciscoFlashPartitioningEntry 2 }
 
@@ -1481,7 +1746,7 @@ ciscoFlashPartitioningDestinationName OBJECT-TYPE
     ::= { ciscoFlashPartitioningEntry 3 }
 
 ciscoFlashPartitioningPartitionCount OBJECT-TYPE
-    SYNTAX INTEGER
+    SYNTAX Gauge(1..4294967295)
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -1490,7 +1755,7 @@ ciscoFlashPartitioningPartitionCount OBJECT-TYPE
         the value of ciscoFlashDeviceMaxPartitions.
         
         To undo partitioning (revert to a single partition),
-        this object must have the value 1."
+        this object must have the value 1. "
     DEFVAL { 2 }
     ::= { ciscoFlashPartitioningEntry 4 }
 
@@ -1505,8 +1770,8 @@ ciscoFlashPartitioningPartitionSizes OBJECT-TYPE
         The size of each partition will be in units of 
         ciscoFlashDeviceMinPartitionSize.
         The value of this object will be in the form:
-         <part1>:<part2>...:<partn>
-                   
+                <part1>:<part2>...:<partn>
+        
         If partition sizes are not specified, the system
         will calculate default sizes based on the partition
         count, the minimum partition size, and the device
@@ -1538,43 +1803,43 @@ ciscoFlashPartitioningStatus OBJECT-TYPE
     DESCRIPTION
         "The status of the specified partitioning operation.
         partitioningInProgress :
-         specified operation is active
+                specified operation is active
         
         partitioningOperationSuccess :
-         specified operation is supported and completed 
-         successfully
+                specified operation is supported and completed 
+                successfully
         
         partitioningInvalidOperation :
-         command invalid or command-protocol-device 
-         combination unsupported
+                command invalid or command-protocol-device 
+                combination unsupported
         
         partitioningInvalidDestName :
-         invalid target name (file or partition or 
-         device name) specified
+                invalid target name (file or partition or 
+                device name) specified
         
         partitioningInvalidPartitionCount :
-         invalid partition count specified for the 
-         partitioning command
+                invalid partition count specified for the 
+                partitioning command
         
         partitioningInvalidPartitionSizes :
-         invalid partition size, or invalid count of 
-         partition sizes
+                invalid partition size, or invalid count of 
+                partition sizes
         
         partitioningDeviceBusy :
-         specified device is in use and locked by 
-         another process
+                specified device is in use and locked by 
+                another process
         
         partitioningDeviceOpenError :
-         invalid device name
+                invalid device name
         
         partitioningDeviceError :
-         device read, write or erase error
+                device read, write or erase error
         
         partitioningNoMemory :
-         system running low on memory
+                system running low on memory
         
         partitioningUnknownFailure :
-         failure unknown"
+                failure unknown"
     ::= { ciscoFlashPartitioningEntry 6 }
 
 ciscoFlashPartitioningNotifyOnCompletion OBJECT-TYPE
@@ -1716,38 +1981,38 @@ ciscoFlashMiscOpCommand OBJECT-TYPE
         file system may support only a subset of these commands.
         If a command is unsupported, the miscOpInvalidOperation(3)
         error will be reported in the operation status.
-                     
-        Command  Remarks
-        erase  Erase flash.
-        verify  Verify flash file checksum.
-        delete  Delete a file.
-        undelete Revive a deleted file .
-          Note that there are limits on
-          the number of times a file can
-          be deleted and undeleted. When
-          this limit is exceeded, the 
-          system will return the appropriate
-          error.
-        squeeze  Recover space occupied by 
-          deleted files. This command   
-          preserves the good files, erases
-          out the file system, then restores
-          the preserved good files.
-        format  Format a flash device.
         
-        Command table Parameters
-        erase  MiscOpDestinationName
-          MiscOpNotifyOnCompletion (opt)
-        verify  MiscOpDestinationName
-          MiscOpNotifyOnCompletion (opt)
-        delete  MiscOpDestinationName
-          MiscOpNotifyOnCompletion (opt)
-        undelete MiscOpDestinationName
-          MiscOpNotifyOnCompletion (opt)
-        squeeze  MiscOpDestinationName
-          MiscOpNotifyOnCompletion (opt)
-        format  MiscOpDestinationName
-          MiscOpNotifyOnCompletion (opt)"
+        Command         Remarks
+        erase           Erase flash.
+        verify          Verify flash file checksum.
+        delete          Delete a file.
+        undelete        Revive a deleted file .
+                        Note that there are limits on
+                        the number of times a file can
+                        be deleted and undeleted. When
+                        this limit is exceeded, the 
+                        system will return the appropriate
+                        error.
+        squeeze         Recover space occupied by 
+                        deleted files. This command   
+                        preserves the good files, erases
+                        out the file system, then restores
+                        the preserved good files.
+        format          Format a flash device.
+        
+        Command table   Parameters
+        erase           MiscOpDestinationName
+                        MiscOpNotifyOnCompletion (opt)
+        verify          MiscOpDestinationName
+                        MiscOpNotifyOnCompletion (opt)
+        delete          MiscOpDestinationName
+                        MiscOpNotifyOnCompletion (opt)
+        undelete        MiscOpDestinationName
+                        MiscOpNotifyOnCompletion (opt)
+        squeeze         MiscOpDestinationName
+                        MiscOpNotifyOnCompletion (opt)
+        format          MiscOpDestinationName
+                        MiscOpNotifyOnCompletion (opt)"
     ::= { ciscoFlashMiscOpEntry 2 }
 
 ciscoFlashMiscOpDestinationName OBJECT-TYPE
@@ -1758,7 +2023,7 @@ ciscoFlashMiscOpDestinationName OBJECT-TYPE
     DESCRIPTION
         "Destination file, or partition name. 
         File name must be of the form 
-         [device>:][<partition>:]<file>
+                [device>:][<partition>:]<file>
         where <device> is a value obtained from FlashDeviceName,
               <partition> is obtained from FlashPartitionName
           and <file> is the name of a file in Flash.
@@ -1777,7 +2042,7 @@ ciscoFlashMiscOpDestinationName OBJECT-TYPE
         For an operation on a partition, eg., the erase
         command, this object would specify the partition name
         in the form:
-         [device>:][<partition>:]"
+                [device>:][<partition>:]"
     DEFVAL { ''B }
     ::= { ciscoFlashMiscOpEntry 3 }
 
@@ -1806,61 +2071,61 @@ ciscoFlashMiscOpStatus OBJECT-TYPE
     DESCRIPTION
         "The status of the specified operation.
         miscOpInProgress :
-         specified operation is active
+                specified operation is active
         
         miscOpOperationSuccess :
-         specified operation is supported and completed 
-         successfully
+                specified operation is supported and completed 
+                successfully
         
         miscOpInvalidOperation :
-         command invalid or command-protocol-device 
-         combination unsupported
+                command invalid or command-protocol-device 
+                combination unsupported
         
         miscOpInvalidDestName :
-         invalid target name (file or partition or 
-         device name) specified
+                invalid target name (file or partition or 
+                device name) specified
         
         miscOpDeviceBusy :
-         specified device is in use and locked by another 
-         process
+                specified device is in use and locked by another 
+                process
         
         miscOpDeviceOpenError :
-         invalid device name
+                invalid device name
         
         miscOpDeviceError :
-         device read, write or erase error
+                device read, write or erase error
         
         miscOpDeviceNotProgrammable :
-         device is read-only but a write or erase 
-         operation was specified
+                device is read-only but a write or erase 
+                operation was specified
         
         miscOpFileOpenError :
-         invalid file name; file not found in partition
+                invalid file name; file not found in partition
         
         miscOpFileDeleteFailure :
-         file could not be deleted; delete count exceeded
+                file could not be deleted; delete count exceeded
         
         miscOpFileUndeleteFailure :
-         file could not be undeleted; undelete count 
-         exceeded
+                file could not be undeleted; undelete count 
+                exceeded
         
         miscOpFileChecksumError :
-         file has a bad checksum
+                file has a bad checksum
         
         miscOpNoMemory :
-         system running low on memory
+                system running low on memory
         
         miscOpUnknownFailure :
-         failure unknown
+                failure unknown
         
         miscOpSqueezeFailure :
-         the squeeze operation failed
+                the squeeze operation failed
         
         miscOpNoSuchFile :
-         a valid but nonexistent file name was specified
+                a valid but nonexistent file name was specified
         
         miscOpFormatFailure :
-         the format operation failed"
+                the format operation failed"
     ::= { ciscoFlashMiscOpEntry 4 }
 
 ciscoFlashMiscOpNotifyOnCompletion OBJECT-TYPE
@@ -1912,6 +2177,60 @@ ciscoFlashMiscOpEntryStatus OBJECT-TYPE
         "The status of this table entry."
     ::= { ciscoFlashMiscOpEntry 7 }
 
+ciscoFlashCfgDevInsNotifEnable OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Specifies whether or not a notification should be 
+        generated on the insertion of a Flash device.
+        
+        If the value of this object is 'true' then the
+        ciscoFlashDeviceInsertedNotif notification
+        will be generated. 
+        
+        If the value of this object is 'false' then the
+        ciscoFlashDeviceInsertedNotif notification
+        will not be generated. 
+        
+        It is the responsibility of the management entity to 
+        ensure that the SNMP administrative model is
+        configured in such a way as to allow the 
+        notification to be delivered."
+    DEFVAL { false }
+    ::= { ciscoFlashCfg 1 }
+
+ciscoFlashCfgDevRemNotifEnable OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Specifies whether or not a notification should be 
+        generated on the removal of a Flash device.
+        
+        If the value of this object is 'true' then the
+        ciscoFlashDeviceRemovedNotif notification
+        will be generated. 
+        
+        If the value of this object is 'false' then the
+        ciscoFlashDeviceRemovedNotif notification
+        will not be generated. 
+        
+        It is the responsibility of the management entity to 
+        ensure that the SNMP administrative model is
+        configured in such a way as to allow the 
+        notification to be delivered."
+    DEFVAL { false }
+    ::= { ciscoFlashCfg 2 }
+
 ciscoFlashCopyCompletionTrap TRAP-TYPE
 -- Reverse mappable trap
     ENTERPRISE ciscoFlashMIBTrapPrefix
@@ -1956,18 +2275,77 @@ ciscoFlashDeviceChangeTrap TRAP-TYPE
 -- Reverse mappable trap
     ENTERPRISE ciscoFlashMIBTrapPrefix
     VARIABLES {
-        ciscoFlashDeviceIndex }
+        ciscoFlashDeviceMinPartitionSize, ciscoFlashDeviceName }
 --  Status
---    mandatory
+--    deprecated
     DESCRIPTION
         "A ciscoFlashDeviceChangeTrap is sent whenever a
         removable Flash device is inserted or removed."
     ::= 4
 
+ciscoFlashDeviceInsertedNotif TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoFlashMIBTrapPrefix
+    VARIABLES {
+        ciscoFlashDeviceMinPartitionSize, ciscoFlashDeviceName }
+--  Status
+--    deprecated
+    DESCRIPTION
+        "A ciscoFlashDeviceInsertedNotif notification is sent 
+        whenever a removable Flash device is inserted."
+    ::= 5
+
+ciscoFlashDeviceRemovedNotif TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoFlashMIBTrapPrefix
+    VARIABLES {
+        ciscoFlashDeviceName }
+--  Status
+--    deprecated
+    DESCRIPTION
+        "A ciscoFlashDeviceRemovedNotif notification is sent 
+        whenever a removable Flash device is removed."
+    ::= 6
+
+ciscoFlashDeviceInsertedNotifRev1 TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoFlashMIBTrapPrefix
+    VARIABLES {
+        ciscoFlashDeviceMinPartitionSize, 
+        ciscoFlashDeviceNameExtended }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "A ciscoFlashDeviceInsertedNotif notification is sent 
+         whenever a removable Flash device is inserted
+        
+         ciscoFlashDeviceInsertedNotifRev1 depcrecates
+         ciscoFlashDeviceInsertedNotif since it uses
+         ciscoFlashDeviceName as a varbind which is
+         deprecated"
+    ::= 7
+
+ciscoFlashDeviceRemovedNotifRev1 TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoFlashMIBTrapPrefix
+    VARIABLES {
+        ciscoFlashDeviceNameExtended }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "A ciscoFlashDeviceRemovedNotif notification is sent 
+        whenever a removable Flash device is removed.
+        
+        ciscoFlashDeviceRemovedNotifRev1 depcrecates
+        ciscoFlashDeviceRemovedNotif since it uses
+        ciscoFlashDeviceName as a varbind which is
+        deprecated"
+    ::= 8
+
 ciscoFlashDeviceInfoGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 1 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    A collection of objects providing mandatory Flash
 --    device level information.
@@ -1977,10 +2355,40 @@ ciscoFlashDeviceInfoGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 1 }
 --    ciscoFlashDeviceProgrammingJumper, ciscoFlashDeviceInitTime, 
 --    ciscoFlashDeviceChipCount, ciscoFlashDeviceRemovable
 
-ciscoFlashDeviceOptionalInfoGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 2 }
+ciscoFlashDeviceInfoGroupRev1 OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 12 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--    A collection of objects providing mandatory Flash
+--    device level information.
+--  objects
+--    ciscoFlashDevicesSupported, ciscoFlashDeviceSize, 
+--    ciscoFlashDeviceName, ciscoFlashDeviceDescr, 
+--    ciscoFlashDeviceProgrammingJumper, ciscoFlashDeviceInitTime, 
+--    ciscoFlashDeviceChipCount, ciscoFlashDeviceRemovable, 
+--    ciscoFlashCfgDevInsNotifEnable, 
+--    ciscoFlashCfgDevRemNotifEnable
+
+ciscoFlashDeviceInfoGroupRev2 OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 15 }
 -- OBJECT-GROUP
 --  Status
 --    mandatory
+--  Descr
+--    A collection of objects providing mandatory Flash
+--    device level information.
+--  objects
+--    ciscoFlashDevicesSupported, ciscoFlashDeviceSize, 
+--    ciscoFlashDeviceNameExtended, ciscoFlashDeviceDescr, 
+--    ciscoFlashDeviceProgrammingJumper, ciscoFlashDeviceInitTime, 
+--    ciscoFlashDeviceChipCount, ciscoFlashDeviceRemovable, 
+--    ciscoFlashCfgDevInsNotifEnable, 
+--    ciscoFlashCfgDevRemNotifEnable
+
+ciscoFlashDeviceOptionalInfoGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
 --  Descr
 --    A collection of optional objects providing 
 --    Flash device level information.
@@ -1988,6 +2396,19 @@ ciscoFlashDeviceOptionalInfoGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 2 
 --    ciscoFlashDeviceMinPartitionSize, 
 --    ciscoFlashDeviceMaxPartitions, ciscoFlashDevicePartitions, 
 --    ciscoFlashDeviceController, ciscoFlashDeviceCard
+
+ciscoFlashDeviceOptionalInfoGroupRev1 OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 13 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of optional objects providing 
+--    Flash device level information. This deprecates
+--    ciscoFlashDeviceOptionalInfoGroup object group.
+--  objects
+--    ciscoFlashDeviceMinPartitionSize, 
+--    ciscoFlashDeviceMaxPartitions, ciscoFlashDevicePartitions, 
+--    ciscoFlashDeviceController, ciscoFlashPhyEntIndex
 
 ciscoFlashChipInfoGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 3 }
 -- OBJECT-GROUP
@@ -2023,7 +2444,7 @@ ciscoFlashPartitionInfoGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 4 }
 ciscoFlashFileInfoGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 5 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    A collection of objects providing Flash
 --    file level information.
@@ -2031,10 +2452,21 @@ ciscoFlashFileInfoGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 5 }
 --    ciscoFlashFileSize, ciscoFlashFileChecksum, 
 --    ciscoFlashFileStatus, ciscoFlashFileName
 
-ciscoFlashCopyOpGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 6 }
+ciscoFlashFileInfoGroupRev1 OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 10 }
 -- OBJECT-GROUP
 --  Status
 --    mandatory
+--  Descr
+--    A collection of objects providing Flash
+--    file level information.
+--  objects
+--    ciscoFlashFileSize, ciscoFlashFileChecksum, 
+--    ciscoFlashFileStatus, ciscoFlashFileName, ciscoFlashFileType
+
+ciscoFlashCopyOpGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
 --  Descr
 --    A collection of objects providing the ability
 --    to copy files to and from a Flash partition.
@@ -2044,6 +2476,24 @@ ciscoFlashCopyOpGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 6 }
 --    ciscoFlashCopyDestinationName, ciscoFlashCopyRemoteUserName, 
 --    ciscoFlashCopyStatus, ciscoFlashCopyNotifyOnCompletion, 
 --    ciscoFlashCopyTime, ciscoFlashCopyEntryStatus
+
+ciscoFlashCopyOpGroupRev1 OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 14 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--    A collection of objects providing the ability
+--    to copy files to and from a Flash partition.
+--    
+--    This group is deprecated by new group
+--    ciscoFlashCopyOpGroupRev2.
+--  objects
+--    ciscoFlashCopyCommand, ciscoFlashCopyProtocol, 
+--    ciscoFlashCopyServerAddress, ciscoFlashCopySourceName, 
+--    ciscoFlashCopyDestinationName, ciscoFlashCopyRemoteUserName, 
+--    ciscoFlashCopyStatus, ciscoFlashCopyNotifyOnCompletion, 
+--    ciscoFlashCopyTime, ciscoFlashCopyEntryStatus, 
+--    ciscoFlashCopyVerify
 
 ciscoFlashPartitioningOpGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 7 }
 -- OBJECT-GROUP
@@ -2074,10 +2524,86 @@ ciscoFlashMiscOpGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 8 }
 --    ciscoFlashMiscOpStatus, ciscoFlashMiscOpNotifyOnCompletion, 
 --    ciscoFlashMiscOpTime, ciscoFlashMiscOpEntryStatus
 
+ciscoFlashCopyOpGroupRev2 OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 16 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the ability
+--    to copy files to and from a Flash partition.
+--    
+--    This Group deprecates ciscoFlashCopyOpGroupRev1.
+--  objects
+--    ciscoFlashCopyCommand, ciscoFlashCopyProtocol, 
+--    ciscoFlashCopySourceName, ciscoFlashCopyDestinationName, 
+--    ciscoFlashCopyRemoteUserName, ciscoFlashCopyStatus, 
+--    ciscoFlashCopyNotifyOnCompletion, ciscoFlashCopyTime, 
+--    ciscoFlashCopyEntryStatus, ciscoFlashCopyVerify, 
+--    ciscoFlashCopyServerAddrType, ciscoFlashCopyServerAddrRev1
+
+ciscoFlashCopyOpGroupRev3 OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 18 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the ability
+--    to copy files to and from a Flash partition.
+--    
+--    This Group supplements ciscoFlashCopyOpGroupRev2.
+--  objects
+--    ciscoFlashCopyRemotePassword
+
+ciscoFlashFileInfoGroupSupp1 OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 19 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing Flash
+--    file level information in addition to the
+--    objects found in ciscoFlashFileInfoGroupRev1.  
+--  objects
+--    ciscoFlashFileDate
+
+ciscoFlashNotifGroup OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 9 }
+-- NOTIFICATION-GROUP
+--  Status
+--    deprecated
+--  Descr
+--    The set of notification defined by this MIB.
+--  notifications
+--    ciscoFlashCopyCompletionTrap, 
+--    ciscoFlashPartitioningCompletionTrap, 
+--    ciscoFlashMiscOpCompletionTrap, ciscoFlashDeviceChangeTrap
+
+ciscoFlashNotifGroupRev1 OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 11 }
+-- NOTIFICATION-GROUP
+--  Status
+--    deprecated
+--  Descr
+--    The set of notification defined by this MIB.
+--  notifications
+--    ciscoFlashCopyCompletionTrap, 
+--    ciscoFlashPartitioningCompletionTrap, 
+--    ciscoFlashMiscOpCompletionTrap, ciscoFlashDeviceInsertedNotif, 
+--    ciscoFlashDeviceRemovedNotif
+
+ciscoFlashNotifGroupRev2 OBJECT IDENTIFIER ::= { ciscoFlashMIBGroups 17 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The set of notification defined by this MIB.
+--  notifications
+--    ciscoFlashCopyCompletionTrap, 
+--    ciscoFlashPartitioningCompletionTrap, 
+--    ciscoFlashMiscOpCompletionTrap, 
+--    ciscoFlashDeviceInsertedNotifRev1, 
+--    ciscoFlashDeviceRemovedNotifRev1
+
 ciscoFlashMIBCompliance OBJECT IDENTIFIER ::= { ciscoFlashMIBCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The compliance statement for entities that support
 --    the Cisco Flash MIB.
@@ -2099,6 +2625,204 @@ ciscoFlashMIBCompliance OBJECT IDENTIFIER ::= { ciscoFlashMIBCompliances 1 }
 --    ciscoFlashPartitioningOpGroup
 --   OptGroup
 --    ciscoFlashMiscOpGroup
+
+ciscoFlashMIBComplianceRev1 OBJECT IDENTIFIER ::= { ciscoFlashMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities that support
+--    the Cisco Flash MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoFlashDeviceInfoGroup
+--   MandGroup
+--    ciscoFlashPartitionInfoGroup
+--   MandGroup
+--    ciscoFlashFileInfoGroupRev1
+--   MandGroup
+--    ciscoFlashChipInfoGroup
+--   MandGroup
+--    ciscoFlashCopyOpGroup
+--   OptGroup
+--    ciscoFlashDeviceOptionalInfoGroup
+--   OptGroup
+--    ciscoFlashPartitioningOpGroup
+--   OptGroup
+--    ciscoFlashMiscOpGroup
+
+ciscoFlashMIBComplianceRev2 OBJECT IDENTIFIER ::= { ciscoFlashMIBCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities that support
+--    the Cisco Flash MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoFlashDeviceInfoGroupRev1
+--   MandGroup
+--    ciscoFlashPartitionInfoGroup
+--   MandGroup
+--    ciscoFlashFileInfoGroupRev1
+--   MandGroup
+--    ciscoFlashChipInfoGroup
+--   MandGroup
+--    ciscoFlashCopyOpGroup
+--   OptGroup
+--    ciscoFlashDeviceOptionalInfoGroup
+--   OptGroup
+--    ciscoFlashPartitioningOpGroup
+--   OptGroup
+--    ciscoFlashMiscOpGroup
+--   OptGroup
+--    ciscoFlashNotifGroupRev1
+
+ciscoFlashMIBComplianceRev3 OBJECT IDENTIFIER ::= { ciscoFlashMIBCompliances 4 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities that support
+--    the Cisco Flash MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoFlashDeviceInfoGroupRev1
+--   MandGroup
+--    ciscoFlashPartitionInfoGroup
+--   MandGroup
+--    ciscoFlashFileInfoGroupRev1
+--   MandGroup
+--    ciscoFlashChipInfoGroup
+--   MandGroup
+--    ciscoFlashCopyOpGroupRev1
+--   OptGroup
+--    ciscoFlashDeviceOptionalInfoGroupRev1
+--   OptGroup
+--    ciscoFlashPartitioningOpGroup
+--   OptGroup
+--    ciscoFlashMiscOpGroup
+--   OptGroup
+--    ciscoFlashNotifGroupRev1
+
+ciscoFlashMIBComplianceRev4 OBJECT IDENTIFIER ::= { ciscoFlashMIBCompliances 5 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities that support
+--    the Cisco Flash MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoFlashDeviceInfoGroupRev2
+--   MandGroup
+--    ciscoFlashPartitionInfoGroup
+--   MandGroup
+--    ciscoFlashFileInfoGroupRev1
+--   MandGroup
+--    ciscoFlashChipInfoGroup
+--   MandGroup
+--    ciscoFlashCopyOpGroupRev1
+--   OptGroup
+--    ciscoFlashDeviceOptionalInfoGroupRev1
+--   OptGroup
+--    ciscoFlashPartitioningOpGroup
+--   OptGroup
+--    ciscoFlashMiscOpGroup
+--   OptGroup
+--    ciscoFlashNotifGroupRev1
+
+ciscoFlashMIBComplianceRev5 OBJECT IDENTIFIER ::= { ciscoFlashMIBCompliances 6 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities that support
+--    the Cisco Flash MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoFlashDeviceInfoGroupRev2
+--   MandGroup
+--    ciscoFlashPartitionInfoGroup
+--   MandGroup
+--    ciscoFlashFileInfoGroupRev1
+--   MandGroup
+--    ciscoFlashChipInfoGroup
+--   MandGroup
+--    ciscoFlashCopyOpGroupRev2
+--   OptGroup
+--    ciscoFlashDeviceOptionalInfoGroup
+--   OptGroup
+--    ciscoFlashPartitioningOpGroup
+--   OptGroup
+--    ciscoFlashMiscOpGroup
+--   OptGroup
+--    ciscoFlashNotifGroupRev1
+
+ciscoFlashMIBComplianceRev6 OBJECT IDENTIFIER ::= { ciscoFlashMIBCompliances 7 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities that support
+--    the Cisco Flash MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoFlashDeviceInfoGroupRev2
+--   MandGroup
+--    ciscoFlashPartitionInfoGroup
+--   MandGroup
+--    ciscoFlashFileInfoGroupRev1
+--   MandGroup
+--    ciscoFlashChipInfoGroup
+--   MandGroup
+--    ciscoFlashCopyOpGroupRev2
+--   OptGroup
+--    ciscoFlashDeviceOptionalInfoGroupRev1
+--   OptGroup
+--    ciscoFlashPartitioningOpGroup
+--   OptGroup
+--    ciscoFlashMiscOpGroup
+--   OptGroup
+--    ciscoFlashNotifGroupRev2
+
+ciscoFlashMIBComplianceRev7 OBJECT IDENTIFIER ::= { ciscoFlashMIBCompliances 8 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for entities that support
+--    the Cisco Flash MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoFlashDeviceInfoGroupRev2
+--   MandGroup
+--    ciscoFlashPartitionInfoGroup
+--   MandGroup
+--    ciscoFlashFileInfoGroupRev1
+--   MandGroup
+--    ciscoFlashFileInfoGroupSupp1
+--   MandGroup
+--    ciscoFlashChipInfoGroup
+--   MandGroup
+--    ciscoFlashCopyOpGroupRev2
+--   MandGroup
+--    ciscoFlashCopyOpGroupRev3
+--   OptGroup
+--    ciscoFlashDeviceOptionalInfoGroupRev1
+--   OptGroup
+--    ciscoFlashPartitioningOpGroup
+--   OptGroup
+--    ciscoFlashMiscOpGroup
+--   OptGroup
+--    ciscoFlashNotifGroupRev2
 
 
 END

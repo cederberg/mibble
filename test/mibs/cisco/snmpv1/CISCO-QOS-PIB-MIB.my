@@ -1,19 +1,17 @@
--- MIB file created 25-Apr-2001 15:23:14, by
+-- MIB file created 14-Jan-2005 16:15:53, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-QOS-PIB-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-QOS-PIB-MIB.my"
--- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
     DisplayString, MacAddress, TruthValue
             FROM SNMPv2-TC-v1
---    Unsigned32
---            FROM CISCO-TC
     ciscoPibToMib
             FROM CISCO-SMI
-    IpAddress, Gauge, Counter
+    Gauge, IpAddress, Counter
             FROM RFC1155-SMI
     OBJECT-TYPE
             FROM RFC-1212;
@@ -21,7 +19,7 @@ IMPORTS
 ciscoQosPIBMIB OBJECT IDENTIFIER ::= { ciscoPibToMib 1 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200006160000Z
+--    200405030000Z
 --  OrgName
 --    Cisco Systems Inc.
 --  ContactInfo
@@ -37,6 +35,23 @@ ciscoQosPIBMIB OBJECT IDENTIFIER ::= { ciscoPibToMib 1 }
 --    E-mail: cs-wbu@cisco.com
 --  Descr
 --    The Cisco QOS Policy PIB for provisioning QOS policy.
+--  RevDate
+--    200405030000Z
+--  RevDescr
+--    Add new enum value in QosInterfaceQueueType
+--     textual convention for 1p3q8t queue type.
+--  RevDate
+--    200302210000Z
+--  RevDescr
+--    Add new enum values in QosInterfaceQueueType
+--     textual convention to indicate queue types
+--     containing priority queue. Add new enum value
+--     in ThresholdSetRange textual convention for
+--     zero threshold.
+--  RevDate
+--    200205020000Z
+--  RevDescr
+--    Fix the SYNTAX of Role and RoleCombination.
 --  RevDate
 --    200006160000Z
 --  RevDescr
@@ -92,6 +107,8 @@ QueueRange ::= INTEGER {
 --    number of codepoints.
 
 ThresholdSetRange ::= INTEGER {
+        --?? enum value of zero may cause problems
+        zeroT(0),
         oneT(1),
         twoT(2),
         fourT(4),
@@ -144,7 +161,15 @@ QosInterfaceQueueType ::= INTEGER {
         sixteenQ4t(23),
         sixtyfourQ1t(24),
         sixtyfourQ2t(25),
-        sixtyfourQ4t(26)
+        sixtyfourQ4t(26),
+        oneP1Q0t(27),
+        oneP1Q4t(28),
+        oneP1Q8t(29),
+        oneP2Q1t(30),
+        oneP2Q2t(31),
+        oneP3Q1t(32),
+        oneP7Q8t(33),
+        oneP3Q8t(34)
         }
 -- TEXTUAL-CONVENTION
 --  Status
@@ -156,7 +181,35 @@ QosInterfaceQueueType ::= INTEGER {
 --    queues and thresholds does not exceed 64 (i.e., the total
 --    number of DSCPs.
 
-QosInterfaceTypeCapabilities ::= OCTET STRING(SIZE(4))
+QosInterfaceTypeCapabilities ::= OCTET STRING(SIZE(1..4))
+        -- BITS are:
+        --   unspecified(0)
+        --   inputL2Classification(1)
+        --   inputIpClassification(2)
+        --   outputL2Classification(3)
+        --   outputIpClassification(4)
+        --   inputUflowPolicing(5)
+        --   inputAggregatePolicing(6)
+        --   outputUflowPolicing(7)
+        --   outputAggregatePolicing(8)
+        --   policeByMarkingDown(9)
+        --   policeByDropping(10)
+        --   fifo(11)
+        --   wrr(12)
+        --   wfq(13)
+        --   cq(14)
+        --   pq(15)
+        --   cbwfq(16)
+        --   tailDrop(17)
+        --   wred(18)
+        --   inputPortClassification(19)
+        --   outputPortClassification(20)
+        --   inputUflowShaping(21)
+        --   inputAggregateShaping(22)
+        --   outputUflowShaping(23)
+        --   outputAggregateShaping(24)
+        --   pqWrr(25)
+        --   pqCbwfq(26)
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
@@ -164,8 +217,7 @@ QosInterfaceTypeCapabilities ::= OCTET STRING(SIZE(4))
 --    An enumeration of interface capabilities.  Used by the PDP to
 --    select policies and configuration to push to the PEP.
 
-RoleCombination ::= DisplayString(SIZE(0..255))
--- Rsyntax OCTET STRING(SIZE(0..255))
+RoleCombination ::= OCTET STRING(SIZE(0..255))
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
@@ -190,8 +242,8 @@ PolicyInstanceId ::= Gauge
 --    another instance without first deleting the referring
 --    instance.
 
-Unsigned64 ::= --?? syntax is not convertable to SMIv1
-        Counter
+-- Unsigned64 ::= ?? syntax is not convertable to SMIv1
+--        Counter64
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
@@ -356,7 +408,12 @@ qosDeviceMaxMessageSize OBJECT-TYPE
     ::= { qosDeviceAttributeEntry 5 }
 
 qosDeviceCapabilities OBJECT-TYPE
-    SYNTAX OCTET STRING(SIZE(1))
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   unspecified(0)
+        --   layer2Cos(1)
+        --   ipPrecedence(2)
+        --   dscp(3)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -429,13 +486,21 @@ qosInterfaceQueueType OBJECT-TYPE
 --        sixteenQ4t(23),
 --        sixtyfourQ1t(24),
 --        sixtyfourQ2t(25),
---        sixtyfourQ4t(26)
+--        sixtyfourQ4t(26),
+--        oneP1Q0t(27),
+--        oneP1Q4t(28),
+--        oneP1Q8t(29),
+--        oneP2Q1t(30),
+--        oneP2Q2t(31),
+--        oneP3Q1t(32),
+--        oneP7Q8t(33),
+--        oneP3Q8t(34)
 --        }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "The interface type in terms of number of queues and
-        thresholds"
+        thresholds."
     ::= { qosInterfaceTypeEntry 2 }
 
 qosInterfaceTypeRoles OBJECT-TYPE
@@ -445,12 +510,40 @@ qosInterfaceTypeRoles OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "A combination of roles on at least one interface of type
-        qosInterfaceType"
+        qosInterfaceType."
     ::= { qosInterfaceTypeEntry 3 }
 
 qosInterfaceTypeCapabilities OBJECT-TYPE
     SYNTAX QosInterfaceTypeCapabilities
---    Rsyntax OCTET STRING(SIZE(4))
+--    Rsyntax OCTET STRING(SIZE(1..4))
+--         BITS are:
+--           unspecified(0)
+--           inputL2Classification(1)
+--           inputIpClassification(2)
+--           outputL2Classification(3)
+--           outputIpClassification(4)
+--           inputUflowPolicing(5)
+--           inputAggregatePolicing(6)
+--           outputUflowPolicing(7)
+--           outputAggregatePolicing(8)
+--           policeByMarkingDown(9)
+--           policeByDropping(10)
+--           fifo(11)
+--           wrr(12)
+--           wfq(13)
+--           cq(14)
+--           pq(15)
+--           cbwfq(16)
+--           tailDrop(17)
+--           wred(18)
+--           inputPortClassification(19)
+--           outputPortClassification(20)
+--           inputUflowShaping(21)
+--           inputAggregateShaping(22)
+--           outputUflowShaping(23)
+--           outputAggregateShaping(24)
+--           pqWrr(25)
+--           pqCbwfq(26)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -468,7 +561,7 @@ qosDiffServMappingTable OBJECT-TYPE
         first time, all 64 entries of the table must be
         specified. Thereafter, instances may be modified (with a
         delete and install in a single decision) but not deleted
-        unless all instances are deleted"
+        unless all instances are deleted."
     ::= { qosDomainConfig 1 }
 
 qosDiffServMappingEntry OBJECT-TYPE
@@ -524,7 +617,7 @@ qosCosToDscpTable OBJECT-TYPE
         the first time, all 8 entries of the table must be
         specified. Thereafter, instances may be modified (with a
         delete and install in a single decision) but not deleted
-        unless all instances are deleted"
+        unless all instances are deleted."
     ::= { qosDomainConfig 2 }
 
 qosCosToDscpEntry OBJECT-TYPE
@@ -681,87 +774,87 @@ qosUnmatchedPolicyAggregateId OBJECT-TYPE
         any aggregate."
     ::= { qosUnmatchedPolicyEntry 7 }
 
-qosPolicerTable OBJECT-TYPE
-    SYNTAX SEQUENCE OF QosPolicerEntry
-    ACCESS not-accessible
-    STATUS mandatory
-    DESCRIPTION
-        "A class specifying policing parameters for both microflows
-        and aggregate flows.  This table is designed for policing
-        according to a token bucket scheme where an average rate and
-        burst size is specified."
-    ::= { qosPolicer 1 }
+-- qosPolicerTable OBJECT-TYPE
+--    SYNTAX SEQUENCE OF QosPolicerEntry
+--    ACCESS not-accessible
+--    STATUS mandatory
+--    DESCRIPTION
+--        "A class specifying policing parameters for both microflows
+--        and aggregate flows.  This table is designed for policing
+--        according to a token bucket scheme where an average rate and
+--        burst size is specified."
+--    ::= { qosPolicer 1 }
 
-qosPolicerEntry OBJECT-TYPE
-    SYNTAX QosPolicerEntry
-    ACCESS not-accessible
-    STATUS mandatory
-    DESCRIPTION
-        "An instance of this class specifies a set of policing
-        parameters."
-    INDEX { qosPolicerId }
-    ::= { qosPolicerTable 1 }
+-- qosPolicerEntry OBJECT-TYPE
+--    SYNTAX QosPolicerEntry
+--    ACCESS not-accessible
+--    STATUS mandatory
+--    DESCRIPTION
+--        "An instance of this class specifies a set of policing
+--        parameters."
+--    INDEX { qosPolicerId }
+--    ::= { qosPolicerTable 1 }
 
-QosPolicerEntry ::= SEQUENCE {
-    qosPolicerId PolicyInstanceId,
-    qosPolicerRate Unsigned64,
-    qosPolicerNormalBurst Gauge,
-    qosPolicerExcessBurst Gauge,
-    qosPolicerAction INTEGER
-    }
+-- QosPolicerEntry ::= SEQUENCE {
+--    qosPolicerId PolicyInstanceId,
+--    qosPolicerRate Unsigned64,
+--    qosPolicerNormalBurst Gauge,
+--    qosPolicerExcessBurst Gauge,
+--    qosPolicerAction INTEGER
+--    }
 
-qosPolicerId OBJECT-TYPE
-    SYNTAX PolicyInstanceId
+-- qosPolicerId OBJECT-TYPE
+--    SYNTAX PolicyInstanceId
 --    Rsyntax Gauge
-    ACCESS not-accessible
-    STATUS mandatory
-    DESCRIPTION
-        "An integer index to identify the instance of the policy class."
-    ::= { qosPolicerEntry 1 }
+--    ACCESS not-accessible
+--    STATUS mandatory
+--    DESCRIPTION
+--        "An integer index to identify the instance of the policy class."
+--    ::= { qosPolicerEntry 1 }
 
-qosPolicerRate OBJECT-TYPE
-    SYNTAX --?? syntax is not convertable to SMIv1
-           Unsigned64
+-- qosPolicerRate OBJECT-TYPE
+--    SYNTAX ?? syntax is not convertable to SMIv1
+--           Unsigned64
 --    Rsyntax Counter64
-    ACCESS read-only
-    STATUS mandatory
-    DESCRIPTION
-        "The token rate.  It is specified in units of bit/s. A rate of
-        zero means that all packets will be out of profile.  If the
-        qosPolicerAction is set to drop then this effectively
-        denies any service to packets policed by this policer."
-    ::= { qosPolicerEntry 2 }
+--    ACCESS read-only
+--    STATUS mandatory
+--    DESCRIPTION
+--        "The token rate.  It is specified in units of bit/s. A rate of
+--        zero means that all packets will be out of profile.  If the
+--        qosPolicerAction is set to drop then this effectively
+--        denies any service to packets policed by this policer."
+--    ::= { qosPolicerEntry 2 }
 
-qosPolicerNormalBurst OBJECT-TYPE
-    SYNTAX Gauge
-    ACCESS read-only
-    STATUS mandatory
-    DESCRIPTION
-        "The normal size of a burst in terms of bits."
-    ::= { qosPolicerEntry 3 }
+-- qosPolicerNormalBurst OBJECT-TYPE
+--    SYNTAX Gauge
+--    ACCESS read-only
+--    STATUS mandatory
+--    DESCRIPTION
+--        "The normal size of a burst in terms of bits."
+--    ::= { qosPolicerEntry 3 }
 
-qosPolicerExcessBurst OBJECT-TYPE
-    SYNTAX Gauge
-    ACCESS read-only
-    STATUS mandatory
-    DESCRIPTION
-        "The excess size of a burst in terms of bits."
-    ::= { qosPolicerEntry 4 }
+-- qosPolicerExcessBurst OBJECT-TYPE
+--    SYNTAX Gauge
+--    ACCESS read-only
+--    STATUS mandatory
+--    DESCRIPTION
+--        "The excess size of a burst in terms of bits."
+--    ::= { qosPolicerEntry 4 }
 
-qosPolicerAction OBJECT-TYPE
-    SYNTAX INTEGER {
-        --?? enum value of zero may cause problems
-        drop(0),
-        mark(1),
-        shape(2)
-        }
-    ACCESS read-only
-    STATUS mandatory
-    DESCRIPTION
-        "An indication of how to handle out of profile packets.  When
-        the shape action is chosen then traffic is shaped to the rate
-        specified by qosPolicerRate."
-    ::= { qosPolicerEntry 5 }
+-- qosPolicerAction OBJECT-TYPE
+--    SYNTAX INTEGER {
+--        ?? enum value of zero may cause problems
+--        drop(0),
+--        mark(1),
+--        shape(2)
+--        }
+--    ACCESS read-only
+--    STATUS mandatory
+--    DESCRIPTION
+--        "An indication of how to handle out of profile packets.  When
+--        the shape action is chosen then traffic is shaped to the rate
+--        specified by qosPolicerRate."
+--    ::= { qosPolicerEntry 5 }
 
 qosAggregateTable OBJECT-TYPE
     SYNTAX SEQUENCE OF QosAggregateEntry
@@ -1237,7 +1330,7 @@ qosIpAclAggregateId OBJECT-TYPE
         to.  It must correspond to the integer index of an instance of
         class qosAggregateTable or be zero.  If zero, the microflow
         does not belong to any aggregate and is not policed as part of
-        any aggregate.."
+        any aggregate."
     ::= { qosIpAclActionEntry 9 }
 
 qosIfSchedulingPreferencesTable OBJECT-TYPE
@@ -1344,7 +1437,15 @@ qosIfSchedulingQueueType OBJECT-TYPE
 --        sixteenQ4t(23),
 --        sixtyfourQ1t(24),
 --        sixtyfourQ2t(25),
---        sixtyfourQ4t(26)
+--        sixtyfourQ4t(26),
+--        oneP1Q0t(27),
+--        oneP1Q4t(28),
+--        oneP1Q8t(29),
+--        oneP2Q1t(30),
+--        oneP2Q2t(31),
+--        oneP3Q1t(32),
+--        oneP7Q8t(33),
+--        oneP3Q8t(34)
 --        }
     ACCESS read-only
     STATUS mandatory
@@ -1396,7 +1497,7 @@ qosIfDropRoles OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The combination of roles the interface must have for this
-        policy instance to apply to that interface"
+        policy instance to apply to that interface."
     ::= { qosIfDropPreferenceEntry 2 }
 
 qosIfDropPreference OBJECT-TYPE
@@ -1495,7 +1596,15 @@ qosIfQueueType OBJECT-TYPE
 --        sixteenQ4t(23),
 --        sixtyfourQ1t(24),
 --        sixtyfourQ2t(25),
---        sixtyfourQ4t(26)
+--        sixtyfourQ4t(26),
+--        oneP1Q0t(27),
+--        oneP1Q4t(28),
+--        oneP1Q8t(29),
+--        oneP2Q1t(30),
+--        oneP2Q2t(31),
+--        oneP3Q1t(32),
+--        oneP7Q8t(33),
+--        oneP3Q8t(34)
 --        }
     ACCESS read-only
     STATUS mandatory
@@ -1585,6 +1694,8 @@ qosIfRedRoles OBJECT-TYPE
 qosIfRedNumThresholdSets OBJECT-TYPE
     SYNTAX ThresholdSetRange
 --    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        zeroT(0),
 --        oneT(1),
 --        twoT(2),
 --        fourT(4),
@@ -1678,6 +1789,8 @@ qosIfTailDropRoles OBJECT-TYPE
 qosIfTailDropNumThresholdSets OBJECT-TYPE
     SYNTAX ThresholdSetRange
 --    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        zeroT(0),
 --        oneT(1),
 --        twoT(2),
 --        fourT(4),

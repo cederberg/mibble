@@ -1,30 +1,29 @@
--- MIB created 8/24/100 10:42:51, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 15-Oct-2004 00:03:31, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-DSP-MGMT-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-DSP-MGMT-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    Counter32, Gauge32, Integer32
-            FROM SNMPv2-SMI-v1
-    OBJECT-TYPE
-            FROM RFC-1212
-    TRAP-TYPE
-            FROM RFC-1215
     TimeStamp, TruthValue, DisplayString
             FROM SNMPv2-TC-v1
     entPhysicalIndex
             FROM ENTITY-MIB
-    Unsigned32
-            FROM CISCO-TC
     ciscoMgmt
-            FROM CISCO-SMI;
+            FROM CISCO-SMI
+    Counter, Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
 
 ciscoDspMgmtMIB OBJECT IDENTIFIER ::= { ciscoMgmt 86 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200008140000Z
+--    200310100000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -39,12 +38,49 @@ ciscoDspMgmtMIB OBJECT IDENTIFIER ::= { ciscoMgmt 86 }
 --    
 --    E-mail: cs-voice@cisco.com
 --  Descr
+--    Changing the DESCRIPTION of
+--     cdspMIBCardStateNotification 
+--     to notify Manager whenever
+--     cdspCardState enters normal.
+--  RevDate
+--    200310100000Z
+--  RevDescr
+--    Added object cdspDspNum to cdspStatusTable.
+--  RevDate
+--    200308200000Z
+--  RevDescr
 --    Digital Signal Processing (DSP) Management MIB module.
 --     The MIB module monitors the DSP resource and status.
+--    
+--     Acronyms & Terms
+--     ================
+--    
+--     DTMF - Dual Tone Multi-Frequency. 
+--            DTMF uses two frequencies, the high frequency
+--            component and the low frequency component, 
+--            to generate digit signals.
+--  RevDate
+--    200308140000Z
+--  RevDescr
+--    (1) Added following objects to cdspCardStatusTable:
+--             cdspTotalDsp
+--             cdspFailedDsp
+--             cdspCongestedDsp  
+--             cdspNormalDsp       
+--             cdspNx64Dsp
+--             cdspDspSwitchOverThreshold
+--     (2) Added cdspVoiceParamTable 
+--     (3) Added following objects to cdspStatusTable:
+--             cdspSigBearerChannelSplit
+--             cdspNumCongestionOccurrence
+--     (4) Added following enumerations to cdspOperState:
+--             congested (3)
+--             failed    (4)
+--     (5) Added cdspStatusXTable                         
 --  RevDate
 --    200008140000Z
 --  RevDescr
---    Fix typo in the DESCRIPTION caluse of 
+--    Fix typo in the DESCRIPTION clause of 
 --    cdspMIBEnableCardStatusNotification object;
 --    change 'cdspFatalNotification' to 
 --    'cdspMIBCardStateNotification'.
@@ -53,10 +89,12 @@ ciscoDspMgmtMIB OBJECT IDENTIFIER ::= { ciscoMgmt 86 }
 --  RevDescr
 --    Add new objects to support channelized DSP features.
 
+cdspMgmtNotifications OBJECT IDENTIFIER ::= { ciscoDspMgmtMIB 0 }
 cdspMgmtObjects OBJECT IDENTIFIER ::= { ciscoDspMgmtMIB 1 }
 cdspCardObjects OBJECT IDENTIFIER ::= { cdspMgmtObjects 1 }
 cdspObjects     OBJECT IDENTIFIER ::= { cdspMgmtObjects 2 }
 cdspMIBNotificationEnables OBJECT IDENTIFIER ::= { cdspMgmtObjects 3 }
+cdspVoiceObjects OBJECT IDENTIFIER ::= { cdspMgmtObjects 4 }
 cdspMIBNotificationPrefix OBJECT IDENTIFIER ::= { ciscoDspMgmtMIB 2 }
 cdspMIBNotifications OBJECT IDENTIFIER ::= { cdspMIBNotificationPrefix 0 }
 cdspMgmtConformance OBJECT IDENTIFIER ::= { ciscoDspMgmtMIB 3 }
@@ -86,16 +124,22 @@ cdspCardStatusEntry OBJECT-TYPE
     ::= { cdspCardStatusTable 1 }
 
 CdspCardStatusEntry ::= SEQUENCE {
-    cdspCardIndex Integer32,
+    cdspCardIndex INTEGER,
     cdspCardState INTEGER,
-    cdspCardResourceUtilization Unsigned32,
-    cdspCardLastHiWaterUtilization Unsigned32,
+    cdspCardResourceUtilization Gauge,
+    cdspCardLastHiWaterUtilization Gauge,
     cdspCardLastResetTime TimeStamp,
-    cdspCardMaxChanPerDSP Unsigned32
+    cdspCardMaxChanPerDSP Gauge,
+    cdspTotalDsp Gauge,
+    cdspFailedDsp Gauge,
+    cdspDspSwitchOverThreshold Gauge,
+    cdspCongestedDsp Gauge,
+    cdspNormalDsp Gauge,
+    cdspNx64Dsp Gauge
     }
 
 cdspCardIndex OBJECT-TYPE
-    SYNTAX Integer32
+    SYNTAX INTEGER
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -133,8 +177,7 @@ cdspCardState OBJECT-TYPE
     ::= { cdspCardStatusEntry 2 }
 
 cdspCardResourceUtilization OBJECT-TYPE
-    SYNTAX Unsigned32(0..100)
---    Rsyntax Gauge32(0..100)
+    SYNTAX Gauge(0..100)
 --  Units
 --    percent
     ACCESS read-only
@@ -148,8 +191,7 @@ cdspCardResourceUtilization OBJECT-TYPE
     ::= { cdspCardStatusEntry 3 }
 
 cdspCardLastHiWaterUtilization OBJECT-TYPE
-    SYNTAX Unsigned32(0..100)
---    Rsyntax Gauge32(0..100)
+    SYNTAX Gauge(0..100)
 --  Units
 --    percent
     ACCESS read-only
@@ -171,8 +213,7 @@ cdspCardLastResetTime OBJECT-TYPE
     ::= { cdspCardStatusEntry 5 }
 
 cdspCardMaxChanPerDSP OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
 --  Units
 --    channels
     ACCESS read-only
@@ -185,14 +226,78 @@ cdspCardMaxChanPerDSP OBJECT-TYPE
          DSP mode is turned off."
     ::= { cdspCardStatusEntry 6 }
 
+cdspTotalDsp OBJECT-TYPE
+    SYNTAX Gauge(1..2048)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of DSPs in the card."
+    ::= { cdspCardStatusEntry 7 }
+
+cdspFailedDsp OBJECT-TYPE
+    SYNTAX Gauge(0..2048)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of DSPs in the failed state (i.e 
+         cdspOperstate is 'failed')"
+    ::= { cdspCardStatusEntry 8 }
+
+cdspDspSwitchOverThreshold OBJECT-TYPE
+    SYNTAX Gauge(1..2048)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the threshold of DSP failures.
+         When 'cdspFailedDsp' reaches the value of this object,
+         the voice gateway switchover will occur.          
+         The maximum value of this object can not be more than 
+         the value in 'cdspTotalDsp'"
+    ::= { cdspCardStatusEntry 9 }
+
+cdspCongestedDsp OBJECT-TYPE
+    SYNTAX Gauge(0..2048)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of DSPs in the congested state (i.e 
+         cdspOperstate is 'congested')."
+    ::= { cdspCardStatusEntry 10 }
+
+cdspNormalDsp OBJECT-TYPE
+    SYNTAX Gauge(0..2048)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of DSPs in the normal state (i.e 
+         cdspOperstate is 'normal')."
+    ::= { cdspCardStatusEntry 11 }
+
+cdspNx64Dsp OBJECT-TYPE
+    SYNTAX Gauge(0..2048)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the number of DSPs that need to be set
+         aside for making Nx64 calls. 
+         The max value of this object is limited to the value of the
+         object 'cdspTotalDsp'. 
+        
+         If this value is 0, it is not allowed to make any 
+         Nx64 call. The default value of this object is 0."
+    ::= { cdspCardStatusEntry 12 }
+
 cdspStatusTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CdspStatusEntry
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
         "Status information for the DSPs.
-         For tracking dangling DSP resources, the dangling DSP 
-        channels can be computed by 
+         This status table is used for tracking dangling DSP 
+         resources. The dangling DSP channel means that the DSP 
+         channel is reserved for serving calls but the channel 
+         is not used by active calls. The number of the dangling 
+         DSP channels can be computed by 
         'cdspInUseChannels - cdspActiveChannels'."
     ::= { cdspObjects 1 }
 
@@ -201,39 +306,49 @@ cdspStatusEntry OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "An entry in the DSP table indicates the DSP state and 
+        "An entry in cdspStatusTable indicates the DSP state and 
         alarm conditions. Each entry is created when a DSP is 
         detected on a DSP card. The entry is deleted when the DSP 
-        card is deleted. "
+        card is deleted. 
+         The 'entPhysicalIndex' represents a DSP entity, and the
+         'entPhysicalClass' is 'other(1)'."
     INDEX { entPhysicalIndex }
     ::= { cdspStatusTable 1 }
 
 CdspStatusEntry ::= SEQUENCE {
     cdspOperState INTEGER,
-    cdspAlarms Counter32,
+    cdspAlarms Counter,
     cdspLastAlarmCause INTEGER,
     cdspLastAlarmCauseText DisplayString,
     cdspLastAlarmTime TimeStamp,
-    cdspTotalChannels Unsigned32,
-    cdspInUseChannels Gauge32,
-    cdspActiveChannels Gauge32
+    cdspTotalChannels Gauge,
+    cdspInUseChannels Gauge,
+    cdspActiveChannels Gauge,
+    cdspSigBearerChannelSplit TruthValue,
+    cdspNumCongestionOccurrence Counter,
+    cdspDspNum Gauge
     }
 
 cdspOperState OBJECT-TYPE
     SYNTAX INTEGER {
         normal(1),
-        shutdown(2)
+        shutdown(2),
+        congested(3),
+        failed(4)
         }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "The current operational state of the DSP.
-         normal   - DSP operates normally 
-         shutdown - DSP is shutdown due to fatal error."
+         normal    - DSP operates normally 
+         shutdown  - DSP is shutdown due to fatal error
+         congested - DSP does not accept call because 
+                     the DSP buffer is full
+         failed    - DSP failed"
     ::= { cdspStatusEntry 1 }
 
 cdspAlarms OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -286,12 +401,11 @@ cdspLastAlarmTime OBJECT-TYPE
     DESCRIPTION
         "The value of sysUpTime when the last DSP Alarm
          occurred. The value of this object is 0 if the value of
-         cdspLastAlarmCause object is noAlarm. "
+         cdspLastAlarmCause object is 'noAlarm'. "
     ::= { cdspStatusEntry 5 }
 
 cdspTotalChannels OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
 --  Units
 --    channels
     ACCESS read-only
@@ -304,7 +418,7 @@ cdspTotalChannels OBJECT-TYPE
     ::= { cdspStatusEntry 6 }
 
 cdspInUseChannels OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    channels
     ACCESS read-only
@@ -318,7 +432,7 @@ cdspInUseChannels OBJECT-TYPE
     ::= { cdspStatusEntry 7 }
 
 cdspActiveChannels OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    channels
     ACCESS read-only
@@ -331,6 +445,331 @@ cdspActiveChannels OBJECT-TYPE
          after the call is disconnected."
     ::= { cdspStatusEntry 8 }
 
+cdspSigBearerChannelSplit OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates if the DSP channels are splitted 
+         for signaling call and bearer call.
+         If the value of this object is 'true' which
+         means that signaling call and bearer call cannot share
+         any DSP channel. 
+         This object is not applicable when Channelized DSP 
+        mode is turned off. "
+    ::= { cdspStatusEntry 9 }
+
+cdspNumCongestionOccurrence OBJECT-TYPE
+    SYNTAX Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of congestion occurred on the DSP. 
+         This value is set to 0 when system is reset."
+    ::= { cdspStatusEntry 10 }
+
+cdspDspNum OBJECT-TYPE
+    SYNTAX Gauge(1..252)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object identifies the DSP number associated with 
+         this DSP entity."
+    ::= { cdspStatusEntry 11 }
+
+cdspStatusXTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CdspStatusXEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table provides the additional detailed 
+         state and statistics information for a DSP 
+         that supports the splitted signalling and 
+         bearer channels."
+    ::= { cdspObjects 2 }
+
+cdspStatusXEntry OBJECT-TYPE
+    SYNTAX CdspStatusXEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry of this table is created when its associated 
+         entry in cdspStatusTable is created and the value of
+         cdspSigBearerChannelSplit object  is 'true'."
+    INDEX { entPhysicalIndex }
+-- Augments cdspStatusEntry
+    ::= { cdspStatusXTable 1 }
+
+CdspStatusXEntry ::= SEQUENCE {
+    cdspXNumberOfBearerCalls Gauge,
+    cdspXNumberOfSigCalls Gauge,
+    cdspXAvailableBearerBandwidth Gauge,
+    cdspXAvailableSigBandwidth Gauge
+    }
+
+cdspXNumberOfBearerCalls OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    calls
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The current number of bearer calls on the DSP. "
+    ::= { cdspStatusXEntry 1 }
+
+cdspXNumberOfSigCalls OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    calls
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The current number of signaling calls on the DSP."
+    ::= { cdspStatusXEntry 2 }
+
+cdspXAvailableBearerBandwidth OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    percent
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The percentage of channels on the DSP currently
+         available for bearer calls."
+    ::= { cdspStatusXEntry 3 }
+
+cdspXAvailableSigBandwidth OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    percent
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The percentage of channels on the DSP currently
+         available for signaling calls. "
+    ::= { cdspStatusXEntry 4 }
+
+cdspVoiceParamTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CdspVoiceParamEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains information on voice call setup
+         related parameters for DSP resource."
+    ::= { cdspVoiceObjects 1 }
+
+cdspVoiceParamEntry OBJECT-TYPE
+    SYNTAX CdspVoiceParamEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry in the DSP table contains information 
+         regarding a single DSP resource associated voice 
+         call setup parameters.
+        
+         An entry in this table is created when a DSP is
+         detected and the DSP resource can be used by voice
+         applications. 
+        
+         An entry in this table is deleted when the DSP
+         associated card/module is removed from the system. 
+        
+         The 'entPhysicalClass' for the entry is 'other'."
+    INDEX { entPhysicalIndex }
+    ::= { cdspVoiceParamTable 1 }
+
+CdspVoiceParamEntry ::= SEQUENCE {
+    cdspRtpSidPayloadType INTEGER,
+    cdspRtcpControl TruthValue,
+    cdspRtcpTransInterval Gauge,
+    cdspRtcpRecvMultiplier Gauge,
+    cdspVadAdaptive TruthValue,
+    cdspDtmfPowerLevel INTEGER,
+    cdspDtmfPowerTwist INTEGER
+    }
+
+cdspRtpSidPayloadType OBJECT-TYPE
+    SYNTAX INTEGER {
+        hexadecimal(19),
+        decimal(13)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the RTP (Real Time Protocol) payload 
+         type of the SID (Silence Insertion Descriptor) packet 
+         that is sent to the remote endpoint at the onset 
+         of silence suppression.            "
+    REFERENCE
+        "Section 5.1 of RFC2833"
+    DEFVAL { decimal }
+    ::= { cdspVoiceParamEntry 1 }
+
+cdspRtcpControl OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This objects controls if RTCP (Real Time Control Protocol) 
+         will be enabled.
+         If this object is set to 'true', both transmission and 
+         reception of RTCP packets are enabled; otherwise, 
+         transmission of RTCP packets is disabled while any 
+         received RTCP packets are ignored. "
+    REFERENCE
+        "Appendix A.7 of RFC1889"
+    DEFVAL { true }
+    ::= { cdspVoiceParamEntry 2 }
+
+cdspRtcpTransInterval OBJECT-TYPE
+    SYNTAX Gauge(5000..65535)
+--  Units
+--    milliseconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This attribute specifies the RTCP report interval (defined
+         in RFC1889). It indicates the interval in which the RTCP 
+         reports should be sent to the participating members. 
+        
+         RTCP reports is sent out in a random interval computed
+         by using 'cdspRtcpTransInterval' and a random number
+         that is between 0.5 and 1.5. 
+        
+         This interval timer also serves the purpose 
+         of RTP packets receive timer. At every interval 
+         multiplier times this interval, where a check is made on 
+         a VoIP connection (which is in SENDRECV or RECVONLY xGCP 
+         modes) to see if any RTP packets have been received. If 
+         not, gateway-initiated DLCX should be sent to the 
+         Call Agent. 
+        
+         This object is applicable only if 'cdspRtcpControl' is
+         set to 'true'."
+    REFERENCE
+        "Appendix A.7 of RFC1889"
+    DEFVAL { 5000 }
+    ::= { cdspVoiceParamEntry 3 }
+
+cdspRtcpRecvMultiplier OBJECT-TYPE
+    SYNTAX Gauge(1..60)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies an approximate RTCP report interval 
+         (defined in RFC 1889) in milliseconds in which the RTCP 
+         reports should be sent to the participating members.
+        
+         It specifies how many times the RTCP reports may fail  
+         before exception condition activity may be done.
+         In the time elapse of value of this MIB object times the 
+         RTCP Report Interval specified by 'cdspRtcpTransInterval', 
+         a check will be done on a VoIP connection (which is in   
+         SENDRECV or RECVONLY xGCP modes) to see if any RTP packets 
+         have been received. If not, gateway-initiated DLCX should 
+         be sent to the Call Agent.
+        
+         This object is applicable only if 'cdspRtcpControl' is
+         set to 'true'."
+    REFERENCE
+        "Section 6.2.1 of RFC1889"
+    DEFVAL { 5 }
+    ::= { cdspVoiceParamEntry 4 }
+
+cdspVadAdaptive OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This attribute is used to enable or disable the Adaptive 
+         VAD knob of the VAD algorithm. 
+         Adaptive VAD works in conjunction with VAD Threshold
+         (cvifcfgMusicOnHoldThreshold from CISCO-VOICE-IF-MIB). 
+         When this object set to 'true', VAD Threshold is ignored 
+         and the DSP adjusts the threshold automatically according 
+         to the background noise level. 
+         When the adaptive VAD configuration is 'false', VAD 
+         threshold is used directly. The VAD configuration is 
+         ignored for all CODECs that contain their own VAD 
+         (G.729AB, G.723.1A and GSM-EFR).
+         Likewise, when a channel is configured in ClearChannel 
+         mode (Clear Channel is Non-Compression CODEC channel), 
+         VAD will automatically be disabled irrespective of 
+         the configuration.  "
+    DEFVAL { false }
+    ::= { cdspVoiceParamEntry 5 }
+
+cdspDtmfPowerLevel OBJECT-TYPE
+    SYNTAX INTEGER(-250..30)
+--  Units
+--    0.1 dBm
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the power level of the low 
+         frequency component of DTMF. The power level of the high 
+         frequency component of DTMF is relative above or below
+         the value specified in object cdspDtmfPowerTwist.
+         If the value of cdspDtmfPowerTwist is 0, the power
+         level of the high frequency component as well as the low 
+         frequency component is specified by this object."
+    REFERENCE
+        "Q.23, Q.24, EIA/TIA-464"
+    DEFVAL { -120 }
+    ::= { cdspVoiceParamEntry 6 }
+
+cdspDtmfPowerTwist OBJECT-TYPE
+    SYNTAX INTEGER(-100..100)
+--  Units
+--    0.1 dB
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the relative power level of the
+         high frequency component of DTMF.
+         The low frequency group is always fixed to the value
+         specified by cdspDtmfPowerLevel. 
+         When this object is set to 0, the power level of both
+         frequency components is set to the same level.
+         When this object is set to a positive value, the power
+         level of the high frequency component is set to 
+         relatively higher specified in this object than the 
+         low frequency component. 
+         For example if cdspDtmfPowerLevel is set to -120(-12 dBm)
+         and this object is set to 50, the power level of the 
+         high frequency component becomes -70(-7 dBm).
+         When this object is set to a negative value, the power
+         level of the high frequency component is set to 
+         relatively lower specified in this object than the low
+         frequency component. For example if cdspDtmfPowerLevel is 
+         set to -120(-12 dBm) and this object is set to -100, 
+         the power level of the high frequency component becomes 
+         -220(-22 dBm).
+         The power level of the high frequency component has to be
+         in the data range specified in cdspDtmfPowerLevel. 
+         For example if cdspDtmfPowerLevel is set to -200(-20 dBm)
+         and this object is set to -100, the power level
+         of the high frequency component will become -300(-30 dBm)
+         which is out of the range (-250..30) of data specified in
+         cdspDtmfPowerLevel, so -100 is illegitimate for
+         this setting."
+    REFERENCE
+        "Q.23, Q.24, EIA/TIA-464"
+    DEFVAL { 0 }
+    ::= { cdspVoiceParamEntry 7 }
+
 cdspMIBEnableCardStatusNotification OBJECT-TYPE
     SYNTAX TruthValue
 --    Rsyntax INTEGER {
@@ -340,7 +779,7 @@ cdspMIBEnableCardStatusNotification OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This variable  indicates  whether  the  system
+        "This variable controls whether the system
          produces the cdspMIBCardStateNotification.  A false
          value will prevent DSP card fatal notifications
          from being generated by this system."
@@ -356,7 +795,8 @@ cdspMIBCardStateNotification TRAP-TYPE
 --    mandatory
     DESCRIPTION
         "A cdspMIBCardStateNotification is sent when the cdspCardState
-         enters into or exits from fatal(4) state. "
+         enters into normal(1) state and enters into or exits from
+         fatal(4) state."
     ::= 1
 
 cdspMgmtGeneralInfoGroup OBJECT IDENTIFIER ::= { cdspMgmtGroups 1 }
@@ -364,8 +804,8 @@ cdspMgmtGeneralInfoGroup OBJECT IDENTIFIER ::= { cdspMgmtGroups 1 }
 --  Status
 --    mandatory
 --  Descr
---    A collection of objects providing the Digital Signal Processing
---     related information.
+--    A collection of objects providing the Digital Signal 
+--     Processing related information.
 --  objects
 --    cdspCardIndex, cdspCardState, cdspCardResourceUtilization, 
 --    cdspCardLastHiWaterUtilization, cdspCardLastResetTime, 
@@ -384,6 +824,50 @@ cdspChannelGroup OBJECT IDENTIFIER ::= { cdspMgmtGroups 2 }
 --    cdspCardMaxChanPerDSP, cdspTotalChannels, cdspInUseChannels, 
 --    cdspActiveChannels
 
+cdspMgmtExtGeneralInfoGroup OBJECT IDENTIFIER ::= { cdspMgmtGroups 3 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing information for DSP.
+--  objects
+--    cdspTotalDsp, cdspFailedDsp, cdspCongestedDsp, cdspNormalDsp, 
+--    cdspDspSwitchOverThreshold, cdspNx64Dsp, cdspDspNum
+
+cdspVoiceInfoGroup OBJECT IDENTIFIER ::= { cdspMgmtGroups 4 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing DSP voice
+--     application parameters.
+--  objects
+--    cdspRtpSidPayloadType, cdspRtcpControl, cdspRtcpTransInterval, 
+--    cdspRtcpRecvMultiplier, cdspVadAdaptive, cdspDtmfPowerLevel, 
+--    cdspDtmfPowerTwist
+
+cdspChannelExtGroup OBJECT IDENTIFIER ::= { cdspMgmtGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing DSP channels
+--     splitting information. 
+--  objects
+--    cdspSigBearerChannelSplit, cdspNumCongestionOccurrence, 
+--    cdspXNumberOfBearerCalls, cdspXNumberOfSigCalls, 
+--    cdspXAvailableBearerBandwidth, cdspXAvailableSigBandwidth
+
+cdspMgmtNotificationsGroup OBJECT IDENTIFIER ::= { cdspMgmtGroups 5 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The notifications which a DSP Management entity is
+--     required to implement.
+--  notifications
+--    cdspMIBCardStateNotification
+
 cdspMgmtCompliance OBJECT IDENTIFIER ::= { cdspMgmtCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
@@ -399,7 +883,7 @@ cdspMgmtCompliance OBJECT IDENTIFIER ::= { cdspMgmtCompliances 1 }
 cdspMgmtComplianceRev1 OBJECT IDENTIFIER ::= { cdspMgmtCompliances 2 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The compliance statement for systems that contain a 
 --    Cisco DSP card and its associated DSPs.
@@ -409,6 +893,28 @@ cdspMgmtComplianceRev1 OBJECT IDENTIFIER ::= { cdspMgmtCompliances 2 }
 --    cdspMgmtGeneralInfoGroup
 --   OptGroup
 --    cdspChannelGroup
+
+cdspMgmtComplianceRev2 OBJECT IDENTIFIER ::= { cdspMgmtCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for systems that contain a 
+--    Cisco DSP card and its associated DSPs.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cdspMgmtGeneralInfoGroup
+--   MandGroup
+--    cdspMgmtNotificationsGroup
+--   OptGroup
+--    cdspMgmtExtGeneralInfoGroup
+--   OptGroup
+--    cdspChannelGroup
+--   OptGroup
+--    cdspChannelExtGroup
+--   OptGroup
+--    cdspVoiceInfoGroup
 
 
 END

@@ -1,21 +1,19 @@
--- MIB file created 15-May-2001 21:49:20, by
+-- MIB file created 20-Jan-2006 14:48:13, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-SRP-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-SRP-MIB.my"
--- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
---    Unsigned32
---            FROM CISCO-TC
     MacAddress, TruthValue, TimeStamp, DisplayString
             FROM SNMPv2-TC-v1
     ifIndex
-            FROM RFC1213-MIB
+            FROM IF-MIB
     ciscoExperiment
             FROM CISCO-SMI
-    Counter,Gauge
+    Counter, Gauge
             FROM RFC1155-SMI
     OBJECT-TYPE
             FROM RFC-1212
@@ -25,7 +23,7 @@ IMPORTS
 ciscosrpMIB OBJECT IDENTIFIER ::= { ciscoExperiment 60 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200103280000Z
+--    200512190000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -42,6 +40,17 @@ ciscosrpMIB OBJECT IDENTIFIER ::= { ciscoExperiment 60 }
 --  Descr
 --    The MIB module to describe objects for Spatial Reuse
 --     Protocol (SRP) interface layer.
+--  RevDate
+--    200512190000Z
+--  RevDescr
+--    Updated the mib to import, Unsigned32 from SNMPv2-SMI 
+--     instead of CISCO-TC and ifIndex from IF-MIB instead
+--     of RFC1213-MIB.
+--     Modified the PerfCurrentCount64 and PerfIntervalCount64
+--     as per the HCPerfCurrentCount and HCPerfIntervalCount TCs
+--     in RFC3705. Replaced the use of CounterBasedGauge64 with
+--     PerfCurrentCount64 or PerfIntervalCount64.
+--     Added a new compliance including all the groups.
 --  RevDate
 --    200103280000Z
 --  RevDescr
@@ -65,8 +74,6 @@ srpTrapsNotifications OBJECT IDENTIFIER ::= { srpTrapsNotificationsPrefix 0 }
 srpConformance  OBJECT IDENTIFIER ::= { ciscosrpMIB 6 }
 srpGroups       OBJECT IDENTIFIER ::= { srpConformance 1 }
 srpCompliances  OBJECT IDENTIFIER ::= { srpConformance 2 }
-
-CounterBasedGauge64 ::= Counter
 
 InterfaceSide ::= INTEGER {
         sideA(1),
@@ -144,60 +151,96 @@ IpsMode ::= INTEGER {
 --         in effect when no other mode has been automatically
 --         detected/invoked.
 
-PerfCurrentCount64 ::= CounterBasedGauge64
--- Rsyntax Counter
+PerfCurrentCount64 ::= --?? syntax is not convertable to SMIv1
+        Counter
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
 --  Descr
---    A counter associated with a
---     performance measurement in a current 15
---     minute measurement interval. The value
---     of this counter starts from zero and is
---     increased when associated events occur,
---     until the end of the 15 minute interval.
---     At that time the value of the counter is
---     stored in the first 15 minute history
---     interval, and the CurrentCount is
---     restarted at zero. In the
---     case where the agent has no valid data
---     available for the current interval the
---     corresponding object instance is not
---     available and upon a retrieval request
---     a corresponding error message shall be
---     returned to indicate that this instance
---     does not exist (for example, a noSuchInstance
---     for SNMPv2 GET operation).
+--    A gauge associated with a performance measurement in a
+--    current 15 minute measurement interval.  The value of an
+--    object with an HCPerfCurrentCount syntax starts from zero
+--    and is increased when associated events occur, until the
+--    end of the 15 minute interval.  At that time the value of
+--    the gauge is stored in the first 15 minute history
+--    interval, and the gauge is restarted at zero.  In the case
+--    where the agent has no valid data available for the
+--    current interval, the corresponding object instance is not
+--    available and upon a retrieval request a corresponding
+--    error message shall be returned to indicate that this
+--    instance does not exist.
+--    
+--    This count represents a non-negative integer, which
+--    may increase or decrease, but shall never exceed 2^64-1
+--    (18446744073709551615 decimal), nor fall below 0.  The
+--    value of an object with HCPerfCurrentCount syntax
+--    assumes its maximum value whenever the underlying count
+--    exceeds 2^64-1.  If the underlying count subsequently
+--    decreases below 2^64-1 (due, e.g., to a retroactive
+--    adjustment as a result of entering or exiting unavailable
+--    time), then the object's value also decreases.
+--    
+--    Note that this TC is not strictly supported in SMIv2,
+--    because the 'always increasing' and 'counter wrap'
+--    semantics associated with the Counter64 base type are not
+--    preserved.  It is possible that management applications
+--    which rely solely upon the (Counter64) ASN.1 tag to
+--    determine object semantics will mistakenly operate upon
+--    objects of this type as they would for Counter64 objects.
+--    
+--    This textual convention represents a limited and short-
+--    term solution, and may be deprecated as a long term
+--    solution is defined and deployed to replace it.
 
-PerfIntervalCount64 ::= CounterBasedGauge64
--- Rsyntax Counter
+PerfIntervalCount64 ::= --?? syntax is not convertable to SMIv1
+        Counter
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
 --  Descr
---    A counter associated with a
---     performance measurement in a previous
---     15 minute measurement interval. In the
---     case where the agent has no valid data
---     available for a particular interval the
---     corresponding object instance is not
---     available and upon a retrieval request
---     a corresponding error message shall be
---     returned to indicate that this instance
---     does not exist (for example, a noSuchInstance
---     for SNMPv2 GET operation).
---     In a system supporting
---     a history of n intervals with
---     IntervalCount(1) and IntervalCount(n) the
---     most and least recent intervals
---     respectively, the following applies at
---     the end of a 15 minute interval:
---     - discard the value of IntervalCount(n)
---     - the value of IntervalCount(i) becomes that
---       of IntervalCount(i-1) for n >= i > 1
---     - the value of IntervalCount(1) becomes that
---       of CurrentCount
---     - the TotalCount, if supported, is adjusted.
+--    A gauge associated with a performance measurement in
+--    a previous 15 minute measurement interval.  In the case
+--    where the agent has no valid data available for a
+--    particular interval, the corresponding object instance is
+--    not available and upon a retrieval request a corresponding
+--    error message shall be returned to indicate that this
+--    instance does not exist.
+--    
+--    Let X be an object with HCPerfIntervalCount syntax
+--    Let Y be an object with HCPerfCurrentCount syntax.
+--    Let Z be an object with HCPerfTotalCount syntax.
+--    Then, in a system supporting a history of n intervals with
+--    X(1) and X(n) the most and least recent intervals
+--    respectively, the following applies at the end of a 15
+--    minute interval:
+--    
+--       - discard the value of X(n)
+--       - the value of X(i) becomes that of X(i-1)
+--         for n >= i > 1
+--       - the value of X(1) becomes that of Y.
+--       - the value of Z, if supported, is adjusted.
+--    
+--    This count represents a non-negative integer, which
+--    may increase or decrease, but shall never exceed 2^64-1
+--    (18446744073709551615 decimal), nor fall below 0.  The
+--    value of an object with HCPerfIntervalCount syntax
+--    assumes its maximum value whenever the underlying count
+--    exceeds 2^64-1.  If the underlying count subsequently
+--    decreases below 2^64-1 (due, e.g., to a retroactive
+--    adjustment as a result of entering or exiting unavailable
+--    time), then the value of the object also decreases.
+--    
+--    Note that this TC is not strictly supported in SMIv2,
+--    because the 'always increasing' and 'counter wrap'
+--    semantics associated with the Counter64 base type are not
+--    preserved.  It is possible that management applications
+--    which rely solely upon the (Counter64) ASN.1 tag to
+--    determine object semantics will mistakenly operate upon
+--    objects of this type as they would for Counter64 objects.
+--    
+--    This textual convention represents a limited and short-
+--    term solution, and may be deprecated as a long term
+--    solution is defined and deployed to replace it.
 
 srpIfTable OBJECT-TYPE
     SYNTAX SEQUENCE OF SrpIfEntry
@@ -355,8 +398,8 @@ srpIfValidIntervals OBJECT-TYPE
          The minimum value of n is 4.
          The default of n is 32.
          The maximum value of n is 96.
-         The value will be <n> unless the measurement was
-         (re-)started within the last (<n>*15) minutes, in which
+         The value will be  unless the measurement was
+         (re-)started within the last (*15) minutes, in which
          case the value will be the number of complete 15
          minute intervals for which the agent has at least
          some data. In certain cases (e.g., in the case
@@ -868,22 +911,22 @@ srpRingCountersCurrentEntry OBJECT-TYPE
 
 SrpRingCountersCurrentEntry ::= SEQUENCE {
     srpRingInterfaceSide InterfaceSide,
-    srpRingCurUcastLowPriPktsIn CounterBasedGauge64,
-    srpRingCurUcastLowPriOctetsIn CounterBasedGauge64,
-    srpRingCurMcastLowPriPktsIn CounterBasedGauge64,
-    srpRingCurMcastLowPriOctetsIn CounterBasedGauge64,
-    srpRingCurUcastHighPriPktsIn CounterBasedGauge64,
-    srpRingCurUcastHighPriOctetsIn CounterBasedGauge64,
-    srpRingCurMcastHighPriPktsIn CounterBasedGauge64,
-    srpRingCurMcastHighPriOctetsIn CounterBasedGauge64,
-    srpRingCurUcastLowPriPktsOut CounterBasedGauge64,
-    srpRingCurUcastLowPriOctetsOut CounterBasedGauge64,
-    srpRingCurMcastLowPriPktsOut CounterBasedGauge64,
-    srpRingCurMcastLowPriOctetsOut CounterBasedGauge64,
-    srpRingCurUcastHighPriPktsOut CounterBasedGauge64,
-    srpRingCurUcastHighPriOctetsOut CounterBasedGauge64,
-    srpRingCurMcastHighPriPktsOut CounterBasedGauge64,
-    srpRingCurMcastHighPriOctetsOut CounterBasedGauge64
+    srpRingCurUcastLowPriPktsIn PerfCurrentCount64,
+    srpRingCurUcastLowPriOctetsIn PerfCurrentCount64,
+    srpRingCurMcastLowPriPktsIn PerfCurrentCount64,
+    srpRingCurMcastLowPriOctetsIn PerfCurrentCount64,
+    srpRingCurUcastHighPriPktsIn PerfCurrentCount64,
+    srpRingCurUcastHighPriOctetsIn PerfCurrentCount64,
+    srpRingCurMcastHighPriPktsIn PerfCurrentCount64,
+    srpRingCurMcastHighPriOctetsIn PerfCurrentCount64,
+    srpRingCurUcastLowPriPktsOut PerfCurrentCount64,
+    srpRingCurUcastLowPriOctetsOut PerfCurrentCount64,
+    srpRingCurMcastLowPriPktsOut PerfCurrentCount64,
+    srpRingCurMcastLowPriOctetsOut PerfCurrentCount64,
+    srpRingCurUcastHighPriPktsOut PerfCurrentCount64,
+    srpRingCurUcastHighPriOctetsOut PerfCurrentCount64,
+    srpRingCurMcastHighPriPktsOut PerfCurrentCount64,
+    srpRingCurMcastHighPriOctetsOut PerfCurrentCount64
     }
 
 srpRingInterfaceSide OBJECT-TYPE
@@ -900,8 +943,9 @@ srpRingInterfaceSide OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 1 }
 
 srpRingCurUcastLowPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -912,8 +956,9 @@ srpRingCurUcastLowPriPktsIn OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 2 }
 
 srpRingCurUcastLowPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -924,8 +969,9 @@ srpRingCurUcastLowPriOctetsIn OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 3 }
 
 srpRingCurMcastLowPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -936,8 +982,9 @@ srpRingCurMcastLowPriPktsIn OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 4 }
 
 srpRingCurMcastLowPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -948,8 +995,9 @@ srpRingCurMcastLowPriOctetsIn OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 5 }
 
 srpRingCurUcastHighPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -960,8 +1008,9 @@ srpRingCurUcastHighPriPktsIn OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 6 }
 
 srpRingCurUcastHighPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -972,8 +1021,9 @@ srpRingCurUcastHighPriOctetsIn OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 7 }
 
 srpRingCurMcastHighPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -984,8 +1034,9 @@ srpRingCurMcastHighPriPktsIn OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 8 }
 
 srpRingCurMcastHighPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -996,8 +1047,9 @@ srpRingCurMcastHighPriOctetsIn OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 9 }
 
 srpRingCurUcastLowPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1007,8 +1059,9 @@ srpRingCurUcastLowPriPktsOut OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 10 }
 
 srpRingCurUcastLowPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1018,8 +1071,9 @@ srpRingCurUcastLowPriOctetsOut OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 11 }
 
 srpRingCurMcastLowPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1029,8 +1083,9 @@ srpRingCurMcastLowPriPktsOut OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 12 }
 
 srpRingCurMcastLowPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1040,8 +1095,9 @@ srpRingCurMcastLowPriOctetsOut OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 13 }
 
 srpRingCurUcastHighPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1051,8 +1107,9 @@ srpRingCurUcastHighPriPktsOut OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 14 }
 
 srpRingCurUcastHighPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1062,8 +1119,9 @@ srpRingCurUcastHighPriOctetsOut OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 15 }
 
 srpRingCurMcastHighPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1073,8 +1131,9 @@ srpRingCurMcastHighPriPktsOut OBJECT-TYPE
     ::= { srpRingCountersCurrentEntry 16 }
 
 srpRingCurMcastHighPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1111,22 +1170,22 @@ SrpRingCountersIntervalEntry ::= SEQUENCE {
     srpRingIntInterfaceSide InterfaceSide,
     srpRingIntNumber INTEGER,
     srpRingIntWrapCounter Counter,
-    srpRingIntUcastLowPriPktsIn CounterBasedGauge64,
-    srpRingIntUcastLowPriOctetsIn CounterBasedGauge64,
-    srpRingIntMcastLowPriPktsIn CounterBasedGauge64,
-    srpRingIntMcastLowPriOctetsIn CounterBasedGauge64,
-    srpRingIntUcastHighPriPktsIn CounterBasedGauge64,
-    srpRingIntUcastHighPriOctetsIn CounterBasedGauge64,
-    srpRingIntMcastHighPriPktsIn CounterBasedGauge64,
-    srpRingIntMcastHighPriOctetsIn CounterBasedGauge64,
-    srpRingIntUcastLowPriPktsOut CounterBasedGauge64,
-    srpRingIntUcastLowPriOctetsOut CounterBasedGauge64,
-    srpRingIntMcastLowPriPktsOut CounterBasedGauge64,
-    srpRingIntMcastLowPriOctetsOut CounterBasedGauge64,
-    srpRingIntUcastHighPriPktsOut CounterBasedGauge64,
-    srpRingIntUcastHighPriOctetsOut CounterBasedGauge64,
-    srpRingIntMcastHighPriPktsOut CounterBasedGauge64,
-    srpRingIntMcastHighPriOctetsOut CounterBasedGauge64
+    srpRingIntUcastLowPriPktsIn PerfIntervalCount64,
+    srpRingIntUcastLowPriOctetsIn PerfIntervalCount64,
+    srpRingIntMcastLowPriPktsIn PerfIntervalCount64,
+    srpRingIntMcastLowPriOctetsIn PerfIntervalCount64,
+    srpRingIntUcastHighPriPktsIn PerfIntervalCount64,
+    srpRingIntUcastHighPriOctetsIn PerfIntervalCount64,
+    srpRingIntMcastHighPriPktsIn PerfIntervalCount64,
+    srpRingIntMcastHighPriOctetsIn PerfIntervalCount64,
+    srpRingIntUcastLowPriPktsOut PerfIntervalCount64,
+    srpRingIntUcastLowPriOctetsOut PerfIntervalCount64,
+    srpRingIntMcastLowPriPktsOut PerfIntervalCount64,
+    srpRingIntMcastLowPriOctetsOut PerfIntervalCount64,
+    srpRingIntUcastHighPriPktsOut PerfIntervalCount64,
+    srpRingIntUcastHighPriOctetsOut PerfIntervalCount64,
+    srpRingIntMcastHighPriPktsOut PerfIntervalCount64,
+    srpRingIntMcastHighPriOctetsOut PerfIntervalCount64
     }
 
 srpRingIntInterfaceSide OBJECT-TYPE
@@ -1162,13 +1221,14 @@ srpRingIntWrapCounter OBJECT-TYPE
     DESCRIPTION
         "The counter counts the number of
          transition from unwrap to wrap state
-         for the last <N> intervals described by
+         for the last  intervals described by
          the srpRingIntNumber variable."
     ::= { srpRingCountersIntervalEntry 3 }
 
 srpRingIntUcastLowPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1179,8 +1239,9 @@ srpRingIntUcastLowPriPktsIn OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 4 }
 
 srpRingIntUcastLowPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1191,8 +1252,9 @@ srpRingIntUcastLowPriOctetsIn OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 5 }
 
 srpRingIntMcastLowPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1203,8 +1265,9 @@ srpRingIntMcastLowPriPktsIn OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 6 }
 
 srpRingIntMcastLowPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1215,8 +1278,9 @@ srpRingIntMcastLowPriOctetsIn OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 7 }
 
 srpRingIntUcastHighPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1227,8 +1291,9 @@ srpRingIntUcastHighPriPktsIn OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 8 }
 
 srpRingIntUcastHighPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1239,8 +1304,9 @@ srpRingIntUcastHighPriOctetsIn OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 9 }
 
 srpRingIntMcastHighPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1251,8 +1317,9 @@ srpRingIntMcastHighPriPktsIn OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 10 }
 
 srpRingIntMcastHighPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1263,8 +1330,9 @@ srpRingIntMcastHighPriOctetsIn OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 11 }
 
 srpRingIntUcastLowPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1274,8 +1342,9 @@ srpRingIntUcastLowPriPktsOut OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 12 }
 
 srpRingIntUcastLowPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1285,8 +1354,9 @@ srpRingIntUcastLowPriOctetsOut OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 13 }
 
 srpRingIntMcastLowPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1296,8 +1366,9 @@ srpRingIntMcastLowPriPktsOut OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 14 }
 
 srpRingIntMcastLowPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1307,8 +1378,9 @@ srpRingIntMcastLowPriOctetsOut OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 15 }
 
 srpRingIntUcastHighPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1318,8 +1390,9 @@ srpRingIntUcastHighPriPktsOut OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 16 }
 
 srpRingIntUcastHighPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1329,8 +1402,9 @@ srpRingIntUcastHighPriOctetsOut OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 17 }
 
 srpRingIntMcastHighPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1340,8 +1414,9 @@ srpRingIntMcastHighPriPktsOut OBJECT-TYPE
     ::= { srpRingCountersIntervalEntry 18 }
 
 srpRingIntMcastHighPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1374,22 +1449,22 @@ srpHostCountersCurrentEntry OBJECT-TYPE
 
 SrpHostCountersCurrentEntry ::= SEQUENCE {
     srpHostInterfaceSide InterfaceSide,
-    srpHostCurUcastLowPriPktsIn CounterBasedGauge64,
-    srpHostCurUcastLowPriOctetsIn CounterBasedGauge64,
-    srpHostCurMcastLowPriPktsIn CounterBasedGauge64,
-    srpHostCurMcastLowPriOctetsIn CounterBasedGauge64,
-    srpHostCurUcastHighPriPktsIn CounterBasedGauge64,
-    srpHostCurUcastHighPriOctetsIn CounterBasedGauge64,
-    srpHostCurMcastHighPriPktsIn CounterBasedGauge64,
-    srpHostCurMcastHighPriOctetsIn CounterBasedGauge64,
-    srpHostCurUcastLowPriPktsOut CounterBasedGauge64,
-    srpHostCurUcastLowPriOctetsOut CounterBasedGauge64,
-    srpHostCurMcastLowPriPktsOut CounterBasedGauge64,
-    srpHostCurMcastLowPriOctetsOut CounterBasedGauge64,
-    srpHostCurUcastHighPriPktsOut CounterBasedGauge64,
-    srpHostCurUcastHighPriOctetsOut CounterBasedGauge64,
-    srpHostCurMcastHighPriPktsOut CounterBasedGauge64,
-    srpHostCurMcastHighPriOctetsOut CounterBasedGauge64
+    srpHostCurUcastLowPriPktsIn PerfCurrentCount64,
+    srpHostCurUcastLowPriOctetsIn PerfCurrentCount64,
+    srpHostCurMcastLowPriPktsIn PerfCurrentCount64,
+    srpHostCurMcastLowPriOctetsIn PerfCurrentCount64,
+    srpHostCurUcastHighPriPktsIn PerfCurrentCount64,
+    srpHostCurUcastHighPriOctetsIn PerfCurrentCount64,
+    srpHostCurMcastHighPriPktsIn PerfCurrentCount64,
+    srpHostCurMcastHighPriOctetsIn PerfCurrentCount64,
+    srpHostCurUcastLowPriPktsOut PerfCurrentCount64,
+    srpHostCurUcastLowPriOctetsOut PerfCurrentCount64,
+    srpHostCurMcastLowPriPktsOut PerfCurrentCount64,
+    srpHostCurMcastLowPriOctetsOut PerfCurrentCount64,
+    srpHostCurUcastHighPriPktsOut PerfCurrentCount64,
+    srpHostCurUcastHighPriOctetsOut PerfCurrentCount64,
+    srpHostCurMcastHighPriPktsOut PerfCurrentCount64,
+    srpHostCurMcastHighPriOctetsOut PerfCurrentCount64
     }
 
 srpHostInterfaceSide OBJECT-TYPE
@@ -1406,8 +1481,9 @@ srpHostInterfaceSide OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 1 }
 
 srpHostCurUcastLowPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1417,8 +1493,9 @@ srpHostCurUcastLowPriPktsIn OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 2 }
 
 srpHostCurUcastLowPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1428,8 +1505,9 @@ srpHostCurUcastLowPriOctetsIn OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 3 }
 
 srpHostCurMcastLowPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1439,8 +1517,9 @@ srpHostCurMcastLowPriPktsIn OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 4 }
 
 srpHostCurMcastLowPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1450,8 +1529,9 @@ srpHostCurMcastLowPriOctetsIn OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 5 }
 
 srpHostCurUcastHighPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1461,8 +1541,9 @@ srpHostCurUcastHighPriPktsIn OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 6 }
 
 srpHostCurUcastHighPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1472,8 +1553,9 @@ srpHostCurUcastHighPriOctetsIn OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 7 }
 
 srpHostCurMcastHighPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1483,8 +1565,9 @@ srpHostCurMcastHighPriPktsIn OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 8 }
 
 srpHostCurMcastHighPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1494,8 +1577,9 @@ srpHostCurMcastHighPriOctetsIn OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 9 }
 
 srpHostCurUcastLowPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1505,8 +1589,9 @@ srpHostCurUcastLowPriPktsOut OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 10 }
 
 srpHostCurUcastLowPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1516,8 +1601,9 @@ srpHostCurUcastLowPriOctetsOut OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 11 }
 
 srpHostCurMcastLowPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1527,8 +1613,9 @@ srpHostCurMcastLowPriPktsOut OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 12 }
 
 srpHostCurMcastLowPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1538,8 +1625,9 @@ srpHostCurMcastLowPriOctetsOut OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 13 }
 
 srpHostCurUcastHighPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1549,8 +1637,9 @@ srpHostCurUcastHighPriPktsOut OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 14 }
 
 srpHostCurUcastHighPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1560,8 +1649,9 @@ srpHostCurUcastHighPriOctetsOut OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 15 }
 
 srpHostCurMcastHighPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1571,8 +1661,9 @@ srpHostCurMcastHighPriPktsOut OBJECT-TYPE
     ::= { srpHostCountersCurrentEntry 16 }
 
 srpHostCurMcastHighPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1606,22 +1697,22 @@ srpHostCountersIntervalEntry OBJECT-TYPE
 SrpHostCountersIntervalEntry ::= SEQUENCE {
     srpHostIntInterfaceSide InterfaceSide,
     srpHostIntNumber INTEGER,
-    srpHostIntUcastLowPriPktsIn CounterBasedGauge64,
-    srpHostIntUcastLowPriOctetsIn CounterBasedGauge64,
-    srpHostIntMcastLowPriPktsIn CounterBasedGauge64,
-    srpHostIntMcastLowPriOctetsIn CounterBasedGauge64,
-    srpHostIntUcastHighPriPktsIn CounterBasedGauge64,
-    srpHostIntUcastHighPriOctetsIn CounterBasedGauge64,
-    srpHostIntMcastHighPriPktsIn CounterBasedGauge64,
-    srpHostIntMcastHighPriOctetsIn CounterBasedGauge64,
-    srpHostIntUcastLowPriPktsOut CounterBasedGauge64,
-    srpHostIntUcastLowPriOctetsOut CounterBasedGauge64,
-    srpHostIntMcastLowPriPktsOut CounterBasedGauge64,
-    srpHostIntMcastLowPriOctetsOut CounterBasedGauge64,
-    srpHostIntUcastHighPriPktsOut CounterBasedGauge64,
-    srpHostIntUcastHighPriOctetsOut CounterBasedGauge64,
-    srpHostIntMcastHighPriPktsOut CounterBasedGauge64,
-    srpHostIntMcastHighPriOctetsOut CounterBasedGauge64
+    srpHostIntUcastLowPriPktsIn PerfIntervalCount64,
+    srpHostIntUcastLowPriOctetsIn PerfIntervalCount64,
+    srpHostIntMcastLowPriPktsIn PerfIntervalCount64,
+    srpHostIntMcastLowPriOctetsIn PerfIntervalCount64,
+    srpHostIntUcastHighPriPktsIn PerfIntervalCount64,
+    srpHostIntUcastHighPriOctetsIn PerfIntervalCount64,
+    srpHostIntMcastHighPriPktsIn PerfIntervalCount64,
+    srpHostIntMcastHighPriOctetsIn PerfIntervalCount64,
+    srpHostIntUcastLowPriPktsOut PerfIntervalCount64,
+    srpHostIntUcastLowPriOctetsOut PerfIntervalCount64,
+    srpHostIntMcastLowPriPktsOut PerfIntervalCount64,
+    srpHostIntMcastLowPriOctetsOut PerfIntervalCount64,
+    srpHostIntUcastHighPriPktsOut PerfIntervalCount64,
+    srpHostIntUcastHighPriOctetsOut PerfIntervalCount64,
+    srpHostIntMcastHighPriPktsOut PerfIntervalCount64,
+    srpHostIntMcastHighPriOctetsOut PerfIntervalCount64
     }
 
 srpHostIntInterfaceSide OBJECT-TYPE
@@ -1651,8 +1742,9 @@ srpHostIntNumber OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 2 }
 
 srpHostIntUcastLowPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1662,8 +1754,9 @@ srpHostIntUcastLowPriPktsIn OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 3 }
 
 srpHostIntUcastLowPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1673,8 +1766,9 @@ srpHostIntUcastLowPriOctetsIn OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 4 }
 
 srpHostIntMcastLowPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1684,8 +1778,9 @@ srpHostIntMcastLowPriPktsIn OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 5 }
 
 srpHostIntMcastLowPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1695,8 +1790,9 @@ srpHostIntMcastLowPriOctetsIn OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 6 }
 
 srpHostIntUcastHighPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1706,8 +1802,9 @@ srpHostIntUcastHighPriPktsIn OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 7 }
 
 srpHostIntUcastHighPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1717,8 +1814,9 @@ srpHostIntUcastHighPriOctetsIn OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 8 }
 
 srpHostIntMcastHighPriPktsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1728,8 +1826,9 @@ srpHostIntMcastHighPriPktsIn OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 9 }
 
 srpHostIntMcastHighPriOctetsIn OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1739,8 +1838,9 @@ srpHostIntMcastHighPriOctetsIn OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 10 }
 
 srpHostIntUcastLowPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1750,8 +1850,9 @@ srpHostIntUcastLowPriPktsOut OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 11 }
 
 srpHostIntUcastLowPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1761,8 +1862,9 @@ srpHostIntUcastLowPriOctetsOut OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 12 }
 
 srpHostIntMcastLowPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1772,8 +1874,9 @@ srpHostIntMcastLowPriPktsOut OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 13 }
 
 srpHostIntMcastLowPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1783,8 +1886,9 @@ srpHostIntMcastLowPriOctetsOut OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 14 }
 
 srpHostIntUcastHighPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1794,8 +1898,9 @@ srpHostIntUcastHighPriPktsOut OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 15 }
 
 srpHostIntUcastHighPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1805,8 +1910,9 @@ srpHostIntUcastHighPriOctetsOut OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 16 }
 
 srpHostIntMcastHighPriPktsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1816,8 +1922,9 @@ srpHostIntMcastHighPriPktsOut OBJECT-TYPE
     ::= { srpHostCountersIntervalEntry 17 }
 
 srpHostIntMcastHighPriOctetsOut OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1849,15 +1956,15 @@ srpErrorsCountersCurrentEntry OBJECT-TYPE
 
 SrpErrorsCountersCurrentEntry ::= SEQUENCE {
     srpErrorsInterfaceSide InterfaceSide,
-    srpRingCurRxErrorsDataParity CounterBasedGauge64,
-    srpRingCurRxErrorsShortPackets CounterBasedGauge64,
-    srpRingCurRxErrorsGiantPackets CounterBasedGauge64,
-    srpRingCurRxErrorsSideBadPackets CounterBasedGauge64,
-    srpRingCurRxErrorsCRC CounterBasedGauge64,
-    srpHostCurRxErrorsDataParity CounterBasedGauge64,
-    srpHostCurRxErrorsShortPackets CounterBasedGauge64,
-    srpHostCurRxErrorsGiantPackets CounterBasedGauge64,
-    srpHostCurRxErrorsSideBadPackets CounterBasedGauge64
+    srpRingCurRxErrorsDataParity PerfCurrentCount64,
+    srpRingCurRxErrorsShortPackets PerfCurrentCount64,
+    srpRingCurRxErrorsGiantPackets PerfCurrentCount64,
+    srpRingCurRxErrorsSideBadPackets PerfCurrentCount64,
+    srpRingCurRxErrorsCRC PerfCurrentCount64,
+    srpHostCurRxErrorsDataParity PerfCurrentCount64,
+    srpHostCurRxErrorsShortPackets PerfCurrentCount64,
+    srpHostCurRxErrorsGiantPackets PerfCurrentCount64,
+    srpHostCurRxErrorsSideBadPackets PerfCurrentCount64
     }
 
 srpErrorsInterfaceSide OBJECT-TYPE
@@ -1874,8 +1981,9 @@ srpErrorsInterfaceSide OBJECT-TYPE
     ::= { srpErrorsCountersCurrentEntry 1 }
 
 srpRingCurRxErrorsDataParity OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -1886,8 +1994,9 @@ srpRingCurRxErrorsDataParity OBJECT-TYPE
     ::= { srpErrorsCountersCurrentEntry 2 }
 
 srpRingCurRxErrorsShortPackets OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -1899,8 +2008,9 @@ srpRingCurRxErrorsShortPackets OBJECT-TYPE
     ::= { srpErrorsCountersCurrentEntry 3 }
 
 srpRingCurRxErrorsGiantPackets OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -1913,8 +2023,9 @@ srpRingCurRxErrorsGiantPackets OBJECT-TYPE
     ::= { srpErrorsCountersCurrentEntry 4 }
 
 srpRingCurRxErrorsSideBadPackets OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -1927,8 +2038,9 @@ srpRingCurRxErrorsSideBadPackets OBJECT-TYPE
     ::= { srpErrorsCountersCurrentEntry 5 }
 
 srpRingCurRxErrorsCRC OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -1939,8 +2051,9 @@ srpRingCurRxErrorsCRC OBJECT-TYPE
     ::= { srpErrorsCountersCurrentEntry 6 }
 
 srpHostCurRxErrorsDataParity OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -1951,8 +2064,9 @@ srpHostCurRxErrorsDataParity OBJECT-TYPE
     ::= { srpErrorsCountersCurrentEntry 7 }
 
 srpHostCurRxErrorsShortPackets OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -1963,8 +2077,9 @@ srpHostCurRxErrorsShortPackets OBJECT-TYPE
     ::= { srpErrorsCountersCurrentEntry 8 }
 
 srpHostCurRxErrorsGiantPackets OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -1975,8 +2090,9 @@ srpHostCurRxErrorsGiantPackets OBJECT-TYPE
     ::= { srpErrorsCountersCurrentEntry 9 }
 
 srpHostCurRxErrorsSideBadPackets OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -2010,15 +2126,15 @@ srpErrorsCountersIntervalEntry OBJECT-TYPE
 SrpErrorsCountersIntervalEntry ::= SEQUENCE {
     srpErrorsIntervalInterfaceSide InterfaceSide,
     srpErrorsIntervalNumber INTEGER,
-    srpRingIntRxErrorsDataParity CounterBasedGauge64,
-    srpRingIntRxErrorsShortPackets CounterBasedGauge64,
-    srpRingIntRxErrorsGiantPackets CounterBasedGauge64,
-    srpRingIntRxErrorsSideBadPackets CounterBasedGauge64,
-    srpRingIntRxErrorsCRC CounterBasedGauge64,
-    srpHostIntRxErrorsDataParity CounterBasedGauge64,
-    srpHostIntRxErrorsShortPackets CounterBasedGauge64,
-    srpHostIntRxErrorsGiantPackets CounterBasedGauge64,
-    srpHostIntRxErrorsSideBadPackets CounterBasedGauge64
+    srpRingIntRxErrorsDataParity PerfIntervalCount64,
+    srpRingIntRxErrorsShortPackets PerfIntervalCount64,
+    srpRingIntRxErrorsGiantPackets PerfIntervalCount64,
+    srpRingIntRxErrorsSideBadPackets PerfIntervalCount64,
+    srpRingIntRxErrorsCRC PerfIntervalCount64,
+    srpHostIntRxErrorsDataParity PerfIntervalCount64,
+    srpHostIntRxErrorsShortPackets PerfIntervalCount64,
+    srpHostIntRxErrorsGiantPackets PerfIntervalCount64,
+    srpHostIntRxErrorsSideBadPackets PerfIntervalCount64
     }
 
 srpErrorsIntervalInterfaceSide OBJECT-TYPE
@@ -2048,8 +2164,9 @@ srpErrorsIntervalNumber OBJECT-TYPE
     ::= { srpErrorsCountersIntervalEntry 2 }
 
 srpRingIntRxErrorsDataParity OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -2060,8 +2177,9 @@ srpRingIntRxErrorsDataParity OBJECT-TYPE
     ::= { srpErrorsCountersIntervalEntry 3 }
 
 srpRingIntRxErrorsShortPackets OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -2072,8 +2190,9 @@ srpRingIntRxErrorsShortPackets OBJECT-TYPE
     ::= { srpErrorsCountersIntervalEntry 4 }
 
 srpRingIntRxErrorsGiantPackets OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -2084,8 +2203,9 @@ srpRingIntRxErrorsGiantPackets OBJECT-TYPE
     ::= { srpErrorsCountersIntervalEntry 5 }
 
 srpRingIntRxErrorsSideBadPackets OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -2096,8 +2216,9 @@ srpRingIntRxErrorsSideBadPackets OBJECT-TYPE
     ::= { srpErrorsCountersIntervalEntry 6 }
 
 srpRingIntRxErrorsCRC OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -2108,8 +2229,9 @@ srpRingIntRxErrorsCRC OBJECT-TYPE
     ::= { srpErrorsCountersIntervalEntry 7 }
 
 srpHostIntRxErrorsDataParity OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -2120,8 +2242,9 @@ srpHostIntRxErrorsDataParity OBJECT-TYPE
     ::= { srpErrorsCountersIntervalEntry 8 }
 
 srpHostIntRxErrorsShortPackets OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -2132,8 +2255,9 @@ srpHostIntRxErrorsShortPackets OBJECT-TYPE
     ::= { srpErrorsCountersIntervalEntry 9 }
 
 srpHostIntRxErrorsGiantPackets OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -2144,8 +2268,9 @@ srpHostIntRxErrorsGiantPackets OBJECT-TYPE
     ::= { srpErrorsCountersIntervalEntry 10 }
 
 srpHostIntRxErrorsSideBadPackets OBJECT-TYPE
-    SYNTAX CounterBasedGauge64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -2202,8 +2327,9 @@ srpErrCntCurrInterfaceSide OBJECT-TYPE
     ::= { srpErrCntCurrEntry 1 }
 
 srpErrCntCurrRingRxTtlExpPkts OBJECT-TYPE
-    SYNTAX PerfCurrentCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2214,8 +2340,9 @@ srpErrCntCurrRingRxTtlExpPkts OBJECT-TYPE
     ::= { srpErrCntCurrEntry 2 }
 
 srpErrCntCurrRingRxShortPkts OBJECT-TYPE
-    SYNTAX PerfCurrentCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2227,8 +2354,9 @@ srpErrCntCurrRingRxShortPkts OBJECT-TYPE
     ::= { srpErrCntCurrEntry 3 }
 
 srpErrCntCurrRingRxGiantPkts OBJECT-TYPE
-    SYNTAX PerfCurrentCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2241,8 +2369,9 @@ srpErrCntCurrRingRxGiantPkts OBJECT-TYPE
     ::= { srpErrCntCurrEntry 4 }
 
 srpErrCntCurrRingRxAbortPkts OBJECT-TYPE
-    SYNTAX PerfCurrentCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2255,8 +2384,9 @@ srpErrCntCurrRingRxAbortPkts OBJECT-TYPE
     ::= { srpErrCntCurrEntry 5 }
 
 srpErrCntCurrRingRxCRC OBJECT-TYPE
-    SYNTAX PerfCurrentCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2267,8 +2397,9 @@ srpErrCntCurrRingRxCRC OBJECT-TYPE
     ::= { srpErrCntCurrEntry 6 }
 
 srpErrCntCurrHostRxDiscardPkts OBJECT-TYPE
-    SYNTAX PerfCurrentCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2280,8 +2411,9 @@ srpErrCntCurrHostRxDiscardPkts OBJECT-TYPE
     ::= { srpErrCntCurrEntry 7 }
 
 srpErrCntCurrHostRxShortPkts OBJECT-TYPE
-    SYNTAX PerfCurrentCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2293,8 +2425,9 @@ srpErrCntCurrHostRxShortPkts OBJECT-TYPE
     ::= { srpErrCntCurrEntry 8 }
 
 srpErrCntCurrHostRxGiantPkts OBJECT-TYPE
-    SYNTAX PerfCurrentCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfCurrentCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2366,8 +2499,9 @@ srpErrCntIntNumber OBJECT-TYPE
     ::= { srpErrCntIntEntry 2 }
 
 srpErrCntIntRingRxTtlExpPkts OBJECT-TYPE
-    SYNTAX PerfIntervalCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2378,8 +2512,9 @@ srpErrCntIntRingRxTtlExpPkts OBJECT-TYPE
     ::= { srpErrCntIntEntry 3 }
 
 srpErrCntIntRingRxShortPkts OBJECT-TYPE
-    SYNTAX PerfIntervalCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2390,8 +2525,9 @@ srpErrCntIntRingRxShortPkts OBJECT-TYPE
     ::= { srpErrCntIntEntry 4 }
 
 srpErrCntIntRingRxGiantPkts OBJECT-TYPE
-    SYNTAX PerfIntervalCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2402,8 +2538,9 @@ srpErrCntIntRingRxGiantPkts OBJECT-TYPE
     ::= { srpErrCntIntEntry 5 }
 
 srpErrCntIntRingRxAbortPkts OBJECT-TYPE
-    SYNTAX PerfIntervalCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2414,8 +2551,9 @@ srpErrCntIntRingRxAbortPkts OBJECT-TYPE
     ::= { srpErrCntIntEntry 6 }
 
 srpErrCntIntRingRxCRC OBJECT-TYPE
-    SYNTAX PerfIntervalCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2426,8 +2564,9 @@ srpErrCntIntRingRxCRC OBJECT-TYPE
     ::= { srpErrCntIntEntry 7 }
 
 srpErrCntIntHostRxDiscardPkts OBJECT-TYPE
-    SYNTAX PerfIntervalCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2438,8 +2577,9 @@ srpErrCntIntHostRxDiscardPkts OBJECT-TYPE
     ::= { srpErrCntIntEntry 8 }
 
 srpErrCntIntHostRxShortPkts OBJECT-TYPE
-    SYNTAX PerfIntervalCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2450,8 +2590,9 @@ srpErrCntIntHostRxShortPkts OBJECT-TYPE
     ::= { srpErrCntIntEntry 9 }
 
 srpErrCntIntHostRxGiantPkts OBJECT-TYPE
-    SYNTAX PerfIntervalCount64
---    Rsyntax Counter
+    SYNTAX --?? syntax is not convertable to SMIv1
+           PerfIntervalCount64
+--    Rsyntax Counter64
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -2723,6 +2864,36 @@ srpCompliance OBJECT IDENTIFIER ::= { srpCompliances 1 }
 --    srpMACSideGroup
 --   MandGroup
 --    srpRingTopologyMapGroup
+--   OptGroup
+--    srpRingCountersCurrentGroup
+--   OptGroup
+--    srpRingCountersIntervalGroup
+--   OptGroup
+--    srpHostCountersCurrentGroup
+--   OptGroup
+--    srpHostCountersIntervalGroup
+--   OptGroup
+--    srpErrCntCurrGroup
+--   OptGroup
+--    srpErrCntIntGroup
+--   OptGroup
+--    srpNotificationsGroup
+
+srpComplianceOld OBJECT IDENTIFIER ::= { srpCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    A compliance statement whose only purpose is to list
+--    explicitly the deprecated groups.
+--  Module
+--    >>current<<
+--   OptGroup
+--    srpMACCountersGroup
+--   OptGroup
+--    srpErrorsCountersCurrentGroup
+--   OptGroup
+--    srpErrorsCountersIntervalGroup
 
 
 END

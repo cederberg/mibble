@@ -1,19 +1,15 @@
--- MIB file created 09-Apr-2002 11:01:48, by
+-- MIB file created 01-Nov-2005 16:58:07, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-CATOS-ACL-QOS-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-CATOS-ACL-QOS-MIB.my"
--- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
     RowStatus, MacAddress, TruthValue
             FROM SNMPv2-TC-v1
---    Unsigned32
---            FROM CISCO-TC
-    Gauge, Counter
-            FROM RFC1155-SMI
-    ifIndex
+    ifIndex, InterfaceIndex
             FROM IF-MIB
     ciscoMgmt
             FROM CISCO-SMI
@@ -21,19 +17,26 @@ IMPORTS
             FROM CISCO-VTP-MIB
     Dscp, QosLayer2Cos, Percent, QosInterfaceQueueType
             FROM CISCO-QOS-PIB-MIB
-    entPhysicalIndex 
-            FROM ENTITY-MIB
-    cseFlowQueryIndex, cseFlowDataIndex
-            FROM CISCO-SWITCH-ENGINE-MIB
+--?? may need import of entPhysicalIndex from ENTITY-MIB
+    entPhysicalIndex
+	FROM ENTITY-MIB
+--    cseFlowQueryIndex, cseFlowDataIndex
+--             FROM CISCO-SWITCH-ENGINE-MIB
+    SnmpAdminString
+            FROM SNMP-FRAMEWORK-MIB
+    CiscoPortList
+            FROM CISCO-TC
     InetAddressType, InetAddress
             FROM INET-ADDRESS-MIB
+    Counter, Gauge
+            FROM RFC1155-SMI
     OBJECT-TYPE
             FROM RFC-1212;
 
 ciscoCatOSAclQosMIB OBJECT IDENTIFIER ::= { ciscoMgmt 179 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200201170000Z
+--    200507260000Z
 --  OrgName
 --    Cisco Systems Inc. 
 --  ContactInfo
@@ -86,6 +89,8 @@ ciscoCatOSAclQosMIB OBJECT IDENTIFIER ::= { ciscoMgmt 179 }
 --        specifies whether packets that match with it are either
 --        forwarded or dropped.
 --    
+--        ESP: Enscrypted Security Payload.
+--    
 --        QoS is the method which attempts to ensure that the network
 --        requirements of different applications can be met by giving
 --        preferential forwarding treatment to some traffic. It is
@@ -109,6 +114,17 @@ ciscoCatOSAclQosMIB OBJECT IDENTIFIER ::= { ciscoMgmt 179 }
 --    
 --        DSCP (Differentiated Services Code Point) is the six most 
 --        significant bits of the ToS field in a IP packet header.
+--    
+--        DSCP Mutation: the previous hop(s) and the following hop(s)
+--        of a device may reside in a different QoS domain. A QoS
+--        domain refers to the set of QoS rules and conventions
+--        adopted by an administrative entity. For instance, a set
+--        of DSCP values may have a different meaning in different
+--        domains. DSCP mutation allows a DSCP set to be mutated or
+--        transformed in order to maintain semantic compatibility
+--        between adjacent domains. The mutation is done via mapping
+--        tables which maps the old DSCP value from one domain to a
+--        new DSCP value in the other domain. 
 --    
 --        IP precedence is the three most significant bits of the ToS 
 --        field in a IP packet header.
@@ -163,6 +179,71 @@ ciscoCatOSAclQosMIB OBJECT IDENTIFIER ::= { ciscoMgmt 179 }
 --    either permitted to go through the device or blocked and
 --    dropped or redirected to another interface.
 --  RevDate
+--    200507260000Z
+--  RevDescr
+--    Add 'matchEapoudp' and 'matchUrlRedirect' enum value
+--     for caqIpProtocolMatchCriteria object.
+--  RevDate
+--    200405260000Z
+--  RevDescr
+--    Add the following groups to support ACL hit count
+--     configuration and statistics: 
+--    
+--     caqAclFeatureGroup 
+--     caqAclHitCountGroup 
+--    
+--     Add the following groups to support additional matching
+--     criteria for MAC ACE and MAC packet classify feature on
+--     VLAN:
+--    
+--     caqMacAceExtGroup. 
+--     caqMacPktClassifyVlanGroup.
+--  RevDate
+--    200311260000Z
+--  RevDescr
+--    Add the following objects to support group name for source
+--     and destination fields in caqIpAceTable:
+--     caqIpAceSrcGroup
+--     caqIpAceDestGroup.
+--  RevDate
+--    200310280000Z
+--  RevDescr
+--    Add caqIfSecurityAclConfigGroup to support port ACL.
+--  RevDate
+--    200309300000Z
+--  RevDescr
+--    Add the dhcpSnooping bit for caqSecurityRateLimitFeatures
+--     object.
+--     
+--     Fix a typo in the DESCRIPTION clause for caqSecurityAction
+--     object.
+--  RevDate
+--    200307010000Z
+--  RevDescr
+--    Deprecate caqSecurityRedirectPortList object and add
+--     caqSecurityRedirect2kPortList to support up to 2048
+--     bridge ports.
+--  RevDate
+--    200303050000Z
+--  RevDescr
+--    Add the following objects and tables:
+--     caqClassifierMapDirection,
+--     caqIpAceSecurityId,
+--     caqDscpRewriteEnabled,
+--     caqAggPolicerOctets,
+--     caqAggPolicerNRExceedOctets,
+--     caqAggPolicerERExceedOctets,
+--     caqDscpMutationMapTable,
+--     caqVlanMutationIdMapTable,
+--     caqQosDefaultActionTable.
+--  RevDate
+--    200210100000Z
+--  RevDescr
+--    Add the caqLoggingGroup, caqArpInspGroup and 
+--     caqSecurityRateLimitGroup to support security ACL logging,
+--     security ACL features rate limit and ARP Inspection
+--     device configuration.
+--  RevDate
 --    200201170000Z
 --  RevDescr
 --    Add the caqIfTrustDeviceGroup and caqQosExcessBurstGroup
@@ -193,6 +274,9 @@ caqAclObjects   OBJECT IDENTIFIER ::= { ciscoCatOSAclQosMIBObjects 3 }
 caqQosStatsObjects OBJECT IDENTIFIER ::= { ciscoCatOSAclQosMIBObjects 4 }
 caqExtObjects   OBJECT IDENTIFIER ::= { ciscoCatOSAclQosMIBObjects 5 }
 caqPbfObjects   OBJECT IDENTIFIER ::= { ciscoCatOSAclQosMIBObjects 6 }
+caqLoggingObjects OBJECT IDENTIFIER ::= { ciscoCatOSAclQosMIBObjects 7 }
+caqArpInspObjects OBJECT IDENTIFIER ::= { ciscoCatOSAclQosMIBObjects 8 }
+caqAclHitCountObjects OBJECT IDENTIFIER ::= { ciscoCatOSAclQosMIBObjects 9 }
 caqMIBNotifications OBJECT IDENTIFIER ::= { ciscoCatOSAclQosMIB 2 }
 caqMIBConformance OBJECT IDENTIFIER ::= { ciscoCatOSAclQosMIB 3 }
 caqMIBCompliances OBJECT IDENTIFIER ::= { caqMIBConformance 1 }
@@ -279,6 +363,18 @@ CaqThresholdNumber ::= Gauge(1..100)
 --    mandatory
 --  Descr
 --    An integer indicates a threshold number.
+
+CaqHitCountAclType ::= INTEGER {
+        ipSecurity(1),
+        ipxSecurity(2),
+        macSecurity(3)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    An integer indicating the ACL type that 
+--     supports ACL hit count feature.
 
 caqCosToDscpTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CaqCosToDscpEntry
@@ -563,7 +659,15 @@ caqCosAssignQueueType OBJECT-TYPE
 --        sixteenQ4t(23),
 --        sixtyfourQ1t(24),
 --        sixtyfourQ2t(25),
---        sixtyfourQ4t(26)
+--        sixtyfourQ4t(26),
+--        oneP1Q0t(27),
+--        oneP1Q4t(28),
+--        oneP1Q8t(29),
+--        oneP2Q1t(30),
+--        oneP2Q2t(31),
+--        oneP3Q1t(32),
+--        oneP7Q8t(33),
+--        oneP3Q8t(34)
 --        }
     ACCESS not-accessible
     STATUS mandatory
@@ -662,7 +766,15 @@ caqQueueThreshQueueType OBJECT-TYPE
 --        sixteenQ4t(23),
 --        sixtyfourQ1t(24),
 --        sixtyfourQ2t(25),
---        sixtyfourQ4t(26)
+--        sixtyfourQ4t(26),
+--        oneP1Q0t(27),
+--        oneP1Q4t(28),
+--        oneP1Q8t(29),
+--        oneP2Q1t(30),
+--        oneP2Q2t(31),
+--        oneP3Q1t(32),
+--        oneP7Q8t(33),
+--        oneP3Q8t(34)
 --        }
     ACCESS not-accessible
     STATUS mandatory
@@ -828,7 +940,15 @@ caqQueueType OBJECT-TYPE
 --        sixteenQ4t(23),
 --        sixtyfourQ1t(24),
 --        sixtyfourQ2t(25),
---        sixtyfourQ4t(26)
+--        sixtyfourQ4t(26),
+--        oneP1Q0t(27),
+--        oneP1Q4t(28),
+--        oneP1Q8t(29),
+--        oneP2Q1t(30),
+--        oneP2Q2t(31),
+--        oneP3Q1t(32),
+--        oneP7Q8t(33),
+--        oneP3Q8t(34)
 --        }
     ACCESS not-accessible
     STATUS mandatory
@@ -864,6 +984,187 @@ caqQueueBufferSizeRatio OBJECT-TYPE
         "Indicates the percentage of ingress or egress packet buffer
         memory allocated to the specified queue."
     ::= { caqQueueEntry 5 }
+
+caqDscpMutationMapTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CaqDscpMutationMapEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The table provides the DSCP mutation mapping configuration
+         on the device. This table is only instantiated if DSCP
+         Mutation is supported by the device."
+    ::= { caqGlobalObjects 7 }
+
+caqDscpMutationMapEntry OBJECT-TYPE
+    SYNTAX CaqDscpMutationMapEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Each row contains the mapping from old DSCP value to new
+        DSCP value per specific mutation table."
+    INDEX { caqDscpMutationTableId, caqDscpMutationOldDscp }
+    ::= { caqDscpMutationMapTable 1 }
+
+CaqDscpMutationMapEntry ::= SEQUENCE {
+    caqDscpMutationTableId Gauge,
+    caqDscpMutationOldDscp Dscp,
+    caqDscpMutationNewDscp Dscp
+    }
+
+caqDscpMutationTableId OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The mutation table ID number."
+    ::= { caqDscpMutationMapEntry 1 }
+
+caqDscpMutationOldDscp OBJECT-TYPE
+    SYNTAX Dscp
+--    Rsyntax INTEGER(0..63)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The old DSCP value."
+    ::= { caqDscpMutationMapEntry 2 }
+
+caqDscpMutationNewDscp OBJECT-TYPE
+    SYNTAX Dscp
+--    Rsyntax INTEGER(0..63)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The new DSCP value which the old DSCP values maps to for
+        a specific mutation table. The default mapping of old DSCP to
+        new DSCP for mutation purpose is the identity function.
+        That is:
+            63 -> 63
+            62 -> 62
+                ...
+            31 -> 31
+                ...
+            2 -> 2
+            1 -> 1
+            0 -> 0."
+    ::= { caqDscpMutationMapEntry 3 }
+
+caqVlanMutationIdMapTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CaqVlanMutationIdMapEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The table provides the VLAN to mutation table mapping
+         configuration on the device. This table is only
+         instantiated if DSCP Mutation is supported by the 
+         device."
+    ::= { caqGlobalObjects 8 }
+
+caqVlanMutationIdMapEntry OBJECT-TYPE
+    SYNTAX CaqVlanMutationIdMapEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "When the first time a VLAN is created in a device supporting
+        this table, a corresponding entry of this table will be added.
+        The value of caqVlanMutationTableId object in such row will be
+        initialized to 0."
+    INDEX { caqVlanMutationIndex }
+    ::= { caqVlanMutationIdMapTable 1 }
+
+CaqVlanMutationIdMapEntry ::= SEQUENCE {
+    caqVlanMutationIndex VlanIndex,
+    caqVlanMutationTableId Gauge
+    }
+
+caqVlanMutationIndex OBJECT-TYPE
+    SYNTAX VlanIndex
+--    Rsyntax INTEGER(0..4095)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the VLAN number."
+    ::= { caqVlanMutationIdMapEntry 1 }
+
+caqVlanMutationTableId OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the mutation table ID number. The value of this
+        object should match one of caqDscpMutationTableId object
+        value in caqDscpMutationMapTable. 
+        
+        Mutation table 0 always provides the identity mapping."
+    ::= { caqVlanMutationIdMapEntry 2 }
+
+caqDscpRewriteEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether DSCP rewrite is enabled or disabled
+        in the device. 
+        
+        if true(1), all outgoing packets will have their DSCP
+        value rewrited based on the result of classification,
+        policing or DSCP mutation configured in the device.
+        
+        if false(2), all outgoing packets will have their DSCP
+        values as when they arrived."
+    ::= { caqGlobalObjects 9 }
+
+caqMacPktClassifyVlansLow OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(0..256))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A string of octets containing one bit per VLAN for
+         VLANs with VlanIndex value of 0 to 2047. The first
+         octet corresponds to VLANs with VlanIndex values
+         of 0 through 7; the second octet to VLANs 8 through
+         15; etc.  The most significant bit of each octet
+         corresponds to the lowest value VlanIndex in that octet.
+        
+         For each VLAN, if Ethernet packet classify feature is 
+         enabled then the bit corresponding to that VLAN is set
+         to '1'.
+        
+         Note that if the length of this string is less than
+         256 octets, any 'missing' octets are assumed to contain
+         the value zero. A NMS may omit any zero-valued octets
+         from the end of this string in order to reduce SetPDU size,
+         and the agent may also omit zero-valued trailing octets,
+         to reduce the size of GetResponse PDUs."
+    ::= { caqGlobalObjects 10 }
+
+caqMacPktClassifyVlansHigh OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(0..256))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A string of octets containing one bit per VLAN for
+         VLANs with VlanIndex value of 2048 to 4095. The first
+         octet corresponds to VLANs with VlanIndex values
+         of 2048 through 2055; the second octet to VLANs 2056
+         through 2063; etc.  The most significant bit of each
+         octet corresponds to the lowest value VlanIndex in that
+         octet.
+        
+         For each VLAN, if Ethernet packet classify feature is 
+         enabled then the bit corresponding to that VLAN is set
+         to '1'.
+        
+         Note that if the length of this string is less than
+         256 octets, any 'missing' octets are assumed to contain
+         the value zero. A NMS may omit any zero-valued octets
+         from the end of this string in order to reduce SetPDU size,
+         and the agent may also omit zero-valued trailing octets,
+         to reduce the size of GetResponse PDUs."
+    ::= { caqGlobalObjects 11 }
 
 caqIfConfigTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CaqIfConfigEntry
@@ -1063,7 +1364,8 @@ caqClassifierEntry OBJECT-TYPE
 CaqClassifierEntry ::= SEQUENCE {
     caqClassifierAclType INTEGER,
     caqClassifierAclName CaqAclName,
-    caqClassifierMapStatus RowStatus
+    caqClassifierMapStatus RowStatus,
+    caqClassifierMapDirection OCTET STRING
     }
 
 caqClassifierAclType OBJECT-TYPE
@@ -1127,6 +1429,76 @@ caqClassifierMapStatus OBJECT-TYPE
          such row cannot be modified except by setting
          caqClassifierMapStatus to notInService(2) for such row."
     ::= { caqClassifierEntry 3 }
+
+caqClassifierMapDirection OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   ingress(0)
+        --   egress(1)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether this ACL are to be attached to ingress or
+         egress direction."
+    DEFVAL { '80'h }
+    ::= { caqClassifierEntry 4 }
+
+caqIfSecurityAclConfigTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CaqIfSecurityAclConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A list of the interfaces which support the security
+         ACL feature."
+    ::= { caqInterfaceObjects 3 }
+
+caqIfSecurityAclConfigEntry OBJECT-TYPE
+    SYNTAX CaqIfSecurityAclConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry contains configuration information about
+         a security ACL mapped to a interface which is capable
+         for this feature."
+    INDEX { ifIndex }
+    ::= { caqIfSecurityAclConfigTable 1 }
+
+CaqIfSecurityAclConfigEntry ::= SEQUENCE {
+    caqIfSecurityAclBase INTEGER
+    }
+
+caqIfSecurityAclBase OBJECT-TYPE
+    SYNTAX INTEGER {
+        port(1),
+        vlan(2),
+        merge(3)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The security ACL configuration mode for an interface.
+        
+         Setting this variable to the value port(1) will cause the 
+         packets (L3 forwarded packets and L2 packets) arriving at that
+         interface to be filtered based on the ACL mapped to that
+         interface.
+        
+         Setting this variable to the value vlan(2) will cause the 
+         packets (L3 forwarded packets and L2 packets) arriving at that
+         access interface to be filtered based on two ACL(the router's
+         ACL and the ACL of the VLAN to which the interface belongs).
+         If it is a trunking interface, the vlan-tag packets will be 
+         filtered based on the ACL of the tag-vlan. 
+          
+         Setting this variable to the value merge(3) will merge the
+         physical interface ACL, the VLAN ACL and the router ACL 
+         together to emulate the logical serial model shown below.
+        
+                                 L3 only
+         Port ACL -> VLAN ACL -> Router ACL -> Router ACL -> VLAN ACL
+         physical    ingress     ingress       egress        egress
+         interface"
+    ::= { caqIfSecurityAclConfigEntry 1 }
 
 caqAclCapabilities OBJECT-TYPE
     SYNTAX OCTET STRING(SIZE(1..2))
@@ -1217,7 +1589,10 @@ CaqIpAceEntry ::= SEQUENCE {
     caqIpAceIgmpType Gauge,
     caqIpAceOrderPosition Gauge,
     caqIpAceBeforePosition Gauge,
-    caqIpAceStatus RowStatus
+    caqIpAceStatus RowStatus,
+    caqIpAceSecurityId Gauge,
+    caqIpAceSrcGroup SnmpAdminString,
+    caqIpAceDestGroup SnmpAdminString
     }
 
 caqIpAceFeature OBJECT-TYPE
@@ -1291,6 +1666,8 @@ caqIpAceAddrType OBJECT-TYPE
 --        unknown(0),
 --        ipv4(1),
 --        ipv6(2),
+--        ipv4z(3),
+--        ipv6z(4),
 --        dns(16)
 --        }
     ACCESS read-only
@@ -1538,15 +1915,19 @@ caqIpAceProtocolMatchCriteria OBJECT-TYPE
         matchIgmpType(2),
         matchIcmpType(3),
         matchIcmpTypeAndCode(4),
-        matchEstablished(5)
+        matchEstablished(5),
+        matchSecurityId(6),
+        matchEapoudp(7),
+        matchUrlRedirect(8)
         }
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
         "Indicates what field in the packet header for ICMP or IGMP
-         or TCP protocol to be matched. 
+         or TCP protocol or IPv4 ESP (Enscrypted Security Payload)
+         to be matched. 
          
-         none(1) = no comparison is to be done for ICMP/IGMP/TCP.
+         none(1) = no comparison is to be done for ICMP/IGMP/TCP/ESP.
         
          matchIgmpType(2) means that the Type field of IGMP protocol
          packet header needs to be matched. If this value is specified,
@@ -1565,7 +1946,19 @@ caqIpAceProtocolMatchCriteria OBJECT-TYPE
          
          matchEstablished(5) means that a match occurs if the TCP packet
          has the ACK or RST bits set. The non matching case is that of
-         the intial TCP packet to form a connection."
+         the intial TCP packet to form a connection.
+        
+         matchSecurityId(6) means that the Security Association
+         Identifier field of IPv4 ESP packet header needs to be matched.
+         If this value is specified, the caqIpAceSecurityId object in
+         the same row should be configured.
+        
+         matchEapoudp(7) means that this ACE needs to be matched
+         against the criteria for EAP (Extensible Authentication
+         Protocol) over UDP purpose. 
+        
+         matchUrlRedirect(8) means that this ACE needs to be matched
+         against the criteria for URL redirection purpose."
     DEFVAL { none }
     ::= { caqIpAceEntry 20 }
 
@@ -1680,6 +2073,45 @@ caqIpAceStatus OBJECT-TYPE
         this entry will also remove the associated entry in the 
         caqClassifierTable."
     ::= { caqIpAceEntry 26 }
+
+caqIpAceSecurityId OBJECT-TYPE
+    SYNTAX Gauge(0|4..233)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the Security Association Identifier of IPv4 ESP
+        packets. 
+        
+        The value of this object is ignored whenever the value of 
+        caqIpAceProtocolMatchCritial object is not matchSecurityId(6)."
+    DEFVAL { 0 }
+    ::= { caqIpAceEntry 27 }
+
+caqIpAceSrcGroup OBJECT-TYPE
+    SYNTAX SnmpAdminString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the source group name which the source IP address
+         in the IP packet header belongs to. If this object is 
+         configured, the value of caqIpAceProtocolType object in the
+         same row will have the value of 0."
+    DEFVAL { "" }
+    ::= { caqIpAceEntry 28 }
+
+caqIpAceDestGroup OBJECT-TYPE
+    SYNTAX SnmpAdminString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the destination group name which the destination
+         IP address in the IP packet header belongs to. If this object
+         is configured, the value of caqIpAceProtocolType object in
+         the same row will have the value of 0."
+    DEFVAL { "" }
+    ::= { caqIpAceEntry 29 }
 
 caqIpxAceTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CaqIpxAceEntry
@@ -2002,7 +2434,10 @@ CaqMacAceEntry ::= SEQUENCE {
     caqMacAceEthertype Gauge,
     caqMacAceOrderPosition Gauge,
     caqMacAceBeforePosition Gauge,
-    caqMacAceStatus RowStatus
+    caqMacAceStatus RowStatus,
+    caqMacAceMatchCriteria OCTET STRING,
+    caqMacAceCos QosLayer2Cos,
+    caqMacAceVlan VlanIndex
     }
 
 caqMacAceFeature OBJECT-TYPE
@@ -2178,6 +2613,52 @@ caqMacAceStatus OBJECT-TYPE
         this entry will also remove the associated entry in the 
         caqClassifierTable."
     ::= { caqMacAceEntry 12 }
+
+caqMacAceMatchCriteria OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   matchCos(0)
+        --   matchVlan(1)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates which field in the packet header to be matched. 
+        
+        matchCos(0) means that the packet Cos value  
+        will be matched against the value specified by
+        caqMacAceCos object in the same row.
+        
+        matchVlan(1) means that the packet VLAN value 
+        will be matched against the value specified by
+        caqMacAceVlan object in the same row."
+    DEFVAL { '00'h }
+    ::= { caqMacAceEntry 13 }
+
+caqMacAceCos OBJECT-TYPE
+    SYNTAX QosLayer2Cos
+--    Rsyntax INTEGER(0..7)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the packet Cos value to be matched.
+        
+         The value of this object is ignored whenever the
+         matchCos(0) bit of caqMacAceMatchCriteria object
+         is not on."
+    ::= { caqMacAceEntry 14 }
+
+caqMacAceVlan OBJECT-TYPE
+    SYNTAX VlanIndex
+--    Rsyntax INTEGER(0..4095)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the packet VLAN number to be matched.
+        
+         The value of this object is ignored whenever the
+         matchVlan(1) bit of caqMacAceMatchCriteria object
+         is not on."
+    ::= { caqMacAceEntry 15 }
 
 caqFlowPolicingCpb OBJECT-TYPE
     SYNTAX OCTET STRING(SIZE(1..2))
@@ -2652,7 +3133,9 @@ CaqSecurityActionEntry ::= SEQUENCE {
     caqSecurityRedirectPortList OCTET STRING,
     caqSecurityCapture TruthValue,
     caqSecurityActionStatus RowStatus,
-    caqSecurityAdjIndex Gauge
+    caqSecurityAdjIndex Gauge,
+    caqSecurityArpMacAddress MacAddress,
+    caqSecurityRedirect2kPortList OCTET STRING
     }
 
 caqSecurityActionIndex OBJECT-TYPE
@@ -2669,7 +3152,11 @@ caqSecurityAction OBJECT-TYPE
         permit(1),
         deny(2),
         redirect(3),
-        redirectWithAdj(4)
+        redirectWithAdj(4),
+        denyWithLog(5),
+        denyArpInspection(6),
+        denyArpInspWithLog(7),
+        permitArpInspection(8)
         }
     ACCESS read-write
     STATUS mandatory
@@ -2680,7 +3167,7 @@ caqSecurityAction OBJECT-TYPE
         If permit(1) is specified, the matched traffic will be allowed
         through the device.
         
-        If deny(3) is specified, the matched traffic will be blocked and
+        If deny(2) is specified, the matched traffic will be blocked and
         dropped.
         
         If redirect(3) is specified, the matched traffic will be
@@ -2691,13 +3178,25 @@ caqSecurityAction OBJECT-TYPE
         
         If redirectWithAdj(4) is specified, the matched traffic will
         be redirected to the VLAN configured in the adjacency entry
-        denoted by caqSecurityAdjIndex."
+        denoted by caqSecurityAdjIndex.
+        
+        If denyWithLog(5) is specified, the matched traffic will be
+        blocked, dropped and logged. 
+        
+        If denyArpInspection(6) is specified, the matched ARP traffic
+        will be blocked and dropped.
+        
+        If denyArpInspWithLog(7) is specified, the matched ARP traffic
+        will be blocked, dropped and logged.
+        
+        If permitArpInspection(8) is specified, the matched ARP
+        traffic will be allowed through the device."
     ::= { caqSecurityActionEntry 2 }
 
 caqSecurityRedirectPortList OBJECT-TYPE
     SYNTAX OCTET STRING(SIZE(0..128))
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "Indicates the set of physical port(s) that matched
         traffic is redirected to. Each octet within the value of
@@ -2783,6 +3282,44 @@ caqSecurityAdjIndex OBJECT-TYPE
     DEFVAL { 0 }
     ::= { caqSecurityActionEntry 6 }
 
+caqSecurityArpMacAddress OBJECT-TYPE
+    SYNTAX MacAddress
+--    Rsyntax OCTET STRING(SIZE(6))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the 48 bits Mac address used in ARP packet.
+        The value of this object is ignored whenever the value of
+        caqSecurityAction object in the same row is not one of
+        the following values denyArpInspection(6), denyArpInspWithLog(7)
+        and permitArpInspection(8)."
+    DEFVAL { 'FFFFFFFFFFFF'H }
+    ::= { caqSecurityActionEntry 7 }
+
+caqSecurityRedirect2kPortList OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(0..256))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the set of physical port(s) that matched
+        traffic is redirected to. Each octet within the value of
+        this object specifies a set of eight ports, with the first
+        octet specifying ports 1 through 8, the second octet
+        specifying ports 9 through 16, etc. Within each octet, the
+        most significant bit represents the lowest numbered port,
+        and the least significant bit represents the highest numbered
+        port. Thus, each port is represented by a single bit within
+        the value of this object. If that bit has a value of '1' then
+        that port is included in the set of redirect ports; the port
+        is not included if its bit has a value of '0'. The value of
+        this object is ignored whenever the value of caqSecurityAction
+        object in the same row is not redirect(3). This object can
+        accommodate up to 2048 ports.
+        
+        A port number is the value of dot1dBasePort for the port in
+        the BRIDGE-MIB (RFC 1493)."
+    ::= { caqSecurityActionEntry 8 }
+
 caqSecurityAclCaptureIfTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CaqSecurityAclCaptureIfEntry
     ACCESS not-accessible
@@ -2837,6 +3374,189 @@ caqFlowPolicerExcessBurstSupport OBJECT-TYPE
         "Indicates whether the device supports excess burst 
          size configuration."
     ::= { caqAclObjects 11 }
+
+caqSecurityRateLimitFeatures OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   arpInspection(0)
+        --   dot1xDHCP(1)
+        --   dhcpSnooping(2)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the features which implement rate limit
+         on their traffic flows using the rate limit value
+         denoted by caqSecurityAclRateLimit object. This 
+         rate limit value is shared among all features denoted
+         by this object."
+    ::= { caqAclObjects 12 }
+
+caqSecurityAclRateLimit OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    packet per second
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the maximum rate of all traffic flows
+         subjected to rate limiting imposed by all features
+         denoted by caqSecurityRateLimitFeatures object."
+    ::= { caqAclObjects 13 }
+
+caqQosDefaultActionTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CaqQosDefaultActionEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains the QoS default action taken by the
+        device for traffic which is not matched by a specific
+        QoS ACE."
+    ::= { caqAclObjects 14 }
+
+caqQosDefaultActionEntry OBJECT-TYPE
+    SYNTAX CaqQosDefaultActionEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The entries in this table are corresponding to the type of
+        traffic as well as its direction and contain the default
+        DSCP value, trust state and policers information. The number
+        of entry in this table depends on what type of traffic
+        supported by the device."
+    INDEX { caqQosTrafficDirection, caqQosTrafficType }
+    ::= { caqQosDefaultActionTable 1 }
+
+CaqQosDefaultActionEntry ::= SEQUENCE {
+    caqQosTrafficDirection CaqDirection,
+    caqQosTrafficType INTEGER,
+    caqQosDefaultTrustState INTEGER,
+    caqQosDefaultDscp Dscp,
+    caqQosDefaultMicroflow CaqPolicerNameOrEmpty,
+    caqQosDefaultAggregate CaqPolicerNameOrEmpty
+    }
+
+caqQosTrafficDirection OBJECT-TYPE
+    SYNTAX CaqDirection
+--    Rsyntax INTEGER {
+--        ingress(1),
+--        egress(2)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether this row's parameters are to
+        be applied for ingress or for egress traffic."
+    ::= { caqQosDefaultActionEntry 1 }
+
+caqQosTrafficType OBJECT-TYPE
+    SYNTAX INTEGER {
+        mac(1),
+        ip(2),
+        ipx(3)
+        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether this row's parameters are to
+        be applied for Ethernet, IP or IPX traffic."
+    ::= { caqQosDefaultActionEntry 2 }
+
+caqQosDefaultTrustState OBJECT-TYPE
+    SYNTAX INTEGER {
+        noTrust(1),
+        trustCos(2),
+        trustIpPrec(3),
+        trustDscp(4)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the default assigned trust state.     
+        
+        If trustCos(2) is specified, the default DSCP value of an
+        unmatched packet should refer to caqCosToDscpDscp
+        object in caqCosToDscpTable to transfer layer 2 CoS value to
+        DSCP value.
+        
+        If trustIpPrec(3) is specified, the default DSCP value of an
+        unmatched packet should refer to caqIpPrecToDscpDscp
+        object in caqIpPrecToDscpTable to transfer IP Precedence value
+        to DSCP value.
+        
+        If trustDscp(4) is specified, the default DSCP value of an
+        unmatched packet is the one which packets carry.
+        
+        If noTrust(1) is specified, the default DSCP value of an
+        unmatched packet will have the value of caqQosDefaultDscp
+        object."
+    ::= { caqQosDefaultActionEntry 3 }
+
+caqQosDefaultDscp OBJECT-TYPE
+    SYNTAX Dscp
+--    Rsyntax INTEGER(0..63)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object is only instantiated when the
+        caqQosDefaultTrust object in the same entry has been set
+        to noTrust(1)."
+    ::= { caqQosDefaultActionEntry 4 }
+
+caqQosDefaultMicroflow OBJECT-TYPE
+    SYNTAX CaqPolicerNameOrEmpty
+--    Rsyntax OCTET STRING(SIZE(0..31))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates a microflow policer name. The value of
+        this object either matches the value of caqFlowPolicerName
+        object of an active entry in caqFlowPolicerTable or has an
+        empty string value.
+        If there is no default microflow policer defined for unmatched
+        traffic, this object should be an empty string. If the
+        microflow(0) bit of caqFlowPolicingCpb object is turned off,
+        this object should also be an empty string. Otherwise it should
+        match the value of caqFlowPolicerName of an entry in the 
+        caqFlowPolicerTable which has its RowStatus value to be
+        active(1) and the type of the policer should be microflow(1)."
+    ::= { caqQosDefaultActionEntry 5 }
+
+caqQosDefaultAggregate OBJECT-TYPE
+    SYNTAX CaqPolicerNameOrEmpty
+--    Rsyntax OCTET STRING(SIZE(0..31))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates an aggregate policer name. The value of this object
+        either matches the value of caqFlowPolicerName object of an
+        active entry in caqFlowPolicerTable or has an empty string
+        value. If there is no default aggregate policer defined for
+        unmatched traffic, this object should be an empty string. If
+        the aggregate(1) bit of caqFlowPolicingCpb object is turned
+        off, this object should also be an an empty string. Otherwise
+        it should match the value of caqFlowPolicerName of an entry in
+        the caqFlowPolicerTable which has its RowStatus value to be
+        active(1) and the type of the policer should be aggregate(2)."
+    ::= { caqQosDefaultActionEntry 6 }
+
+caqAclFeatureCpb OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   vlanAclHitCount(0)
+        --   portAclHitCount(1)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the set of features that the device supports
+         related to ACLs configured in the device. 
+        
+         vlanAclHitCount(0) indicates that the device supports 
+         ACL hit count feature for ACLs attached to VLAN interfaces.
+        
+         portAclHitCount(1) indicates that the device supports 
+         ACL hit count feature for ACLs attached to physical 
+         interfaces."
+    ::= { caqAclObjects 15 }
 
 caqL3PacketsDropByPolicer OBJECT-TYPE
     SYNTAX --?? syntax is not convertable to SMIv1
@@ -2949,38 +3669,38 @@ caqPortStatsDropPkts OBJECT-TYPE
         at this queue and threshold of this interface."
     ::= { caqPortStatsEntry 4 }
 
-caqFlowStatsTable OBJECT-TYPE
-    SYNTAX SEQUENCE OF CaqFlowStatsEntry
-    ACCESS not-accessible
-    STATUS mandatory
-    DESCRIPTION
-        "A table containing QoS statistics counter per flow."
-    ::= { caqQosStatsObjects 6 }
+-- caqFlowStatsTable OBJECT-TYPE
+--    SYNTAX SEQUENCE OF CaqFlowStatsEntry
+--    ACCESS not-accessible
+--    STATUS mandatory
+--    DESCRIPTION
+--        "A table containing QoS statistics counter per flow."
+--    ::= { caqQosStatsObjects 6 }
 
-caqFlowStatsEntry OBJECT-TYPE
-    SYNTAX CaqFlowStatsEntry
-    ACCESS not-accessible
-    STATUS mandatory
-    DESCRIPTION
-        "An entry contains the number of out of profile packet
-         per flow maintained by the switching engine."
-    INDEX { entPhysicalIndex, cseFlowQueryIndex, cseFlowDataIndex }
+-- caqFlowStatsEntry OBJECT-TYPE
+--    SYNTAX CaqFlowStatsEntry
+--    ACCESS not-accessible
+--    STATUS mandatory
+--    DESCRIPTION
+--        "An entry contains the number of out of profile packet
+--         per flow maintained by the switching engine."
+--    INDEX { entPhysicalIndex, cseFlowQueryIndex, cseFlowDataIndex }
 -- Augments cseFlowDataEntry FROM CISCO-SWITCH-ENGINE-MIB
-    ::= { caqFlowStatsTable 1 }
+--    ::= { caqFlowStatsTable 1 }
 
-CaqFlowStatsEntry ::= SEQUENCE {
-    caqFlowStatsOutOfProfilePackets Counter
-    }
+-- CaqFlowStatsEntry ::= SEQUENCE {
+--    caqFlowStatsOutOfProfilePackets Counter
+--    }
 
-caqFlowStatsOutOfProfilePackets OBJECT-TYPE
-    SYNTAX --?? syntax is not convertable to SMIv1
-           Counter
-    ACCESS read-only
-    STATUS mandatory
-    DESCRIPTION
-        "Indicates the number of out-of-profile packets in
-         this flow."
-    ::= { caqFlowStatsEntry 1 }
+-- caqFlowStatsOutOfProfilePackets OBJECT-TYPE
+--    SYNTAX ?? syntax is not convertable to SMIv1
+--           Counter
+--    ACCESS read-only
+--    STATUS mandatory
+--    DESCRIPTION
+--        "Indicates the number of out-of-profile packets in
+--         this flow."
+--    ::= { caqFlowStatsEntry 1 }
 
 caqAggPolicerStatsTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CaqAggPolicerStatsEntry
@@ -3006,7 +3726,10 @@ CaqAggPolicerStatsEntry ::= SEQUENCE {
     caqAggPolicerName CaqPolicerName,
     caqAggPolicerPackets Counter,
     caqAggPolicerNRExceedPackets Counter,
-    caqAggPolicerERExceedPackets Counter
+    caqAggPolicerERExceedPackets Counter,
+    caqAggPolicerOctets Counter,
+    caqAggPolicerNRExceedOctets Counter,
+    caqAggPolicerERExceedOctets Counter
     }
 
 caqAggPolicerName OBJECT-TYPE
@@ -3026,7 +3749,8 @@ caqAggPolicerPackets OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Indicates the number of packets is policed by this aggregate 
-         policer."
+         policer. This object is only instantiated if such info is
+         available in the device."
     ::= { caqAggPolicerStatsEntry 2 }
 
 caqAggPolicerNRExceedPackets OBJECT-TYPE
@@ -3036,7 +3760,8 @@ caqAggPolicerNRExceedPackets OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Indicates the number of packets exceeded the normal rate of
-         this aggregate policer."
+         this aggregate policer. This object in only instantiated if
+         such info is available in the device."
     ::= { caqAggPolicerStatsEntry 3 }
 
 caqAggPolicerERExceedPackets OBJECT-TYPE
@@ -3046,10 +3771,46 @@ caqAggPolicerERExceedPackets OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Indicates the number of packets exceeded the excess rate of
-         this policer. This object is only instantiated if excess
-         rate is supported by this device as indicated by
-         caqFlowPolicerExcessRateSupport object."
+         this policer. This object is only instantiated if such info
+         is available in the device and if excess rate is supported
+         by the device as indicated by caqFlowPolicerExcessRateSupport
+         object."
     ::= { caqAggPolicerStatsEntry 4 }
+
+caqAggPolicerOctets OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the number of octets is policed by this aggregate 
+         policer. This object is only instantiated if such info is
+         available in the device."
+    ::= { caqAggPolicerStatsEntry 5 }
+
+caqAggPolicerNRExceedOctets OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the number of octets exceeded the normal rate of
+         this aggregate policer. This object is only instantiated if
+         such info is available in the device."
+    ::= { caqAggPolicerStatsEntry 6 }
+
+caqAggPolicerERExceedOctets OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the number of octets exceeded the excess rate of
+         this policer. This object is only instantiated if such info
+         is available in the device and if excess rate is supported
+         by the device as indicated by caqFlowPolicerExcessRateSupport
+         object."
+    ::= { caqAggPolicerStatsEntry 7 }
 
 caqBridgedPolicerTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CaqBridgedPolicerEntry
@@ -3153,7 +3914,7 @@ caqCosVlanNumber OBJECT-TYPE
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "Indicates the vlan number."
+        "Indicates the VLAN number."
     ::= { caqCosMacVlanRouterEntry 2 }
 
 caqMacAddressCpb OBJECT-TYPE
@@ -3373,6 +4134,844 @@ caqAdjStatus OBJECT-TYPE
         - That entry has caqSecurityAction set to redirectWithAdj(4)."
     ::= { caqAdjacencyEntry 8 }
 
+caqAclLogMaxFlow OBJECT-TYPE
+    SYNTAX Gauge(256..2048)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the maximum number of traffic flow will be logged
+        by the device."
+    ::= { caqLoggingObjects 1 }
+
+caqAclSecurityLoggingRateLimit OBJECT-TYPE
+    SYNTAX Gauge(500..5000)
+--  Units
+--    packet per second
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the redirect rate of traffic flow subjected 
+         to security ACL logging."
+    ::= { caqLoggingObjects 2 }
+
+caqAclRouterAclRateLimit OBJECT-TYPE
+    SYNTAX Gauge(1..1000)
+--  Units
+--    packet per second
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the redirect rate of traffic flow subjected 
+         to router ACL logging."
+    ::= { caqLoggingObjects 3 }
+
+caqIpFlowLoggingTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CaqIpFlowLoggingEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains a list of IP flows that describes the 
+        IP traffic denied and logged by the device."
+    ::= { caqLoggingObjects 4 }
+
+caqIpFlowLoggingEntry OBJECT-TYPE
+    SYNTAX CaqIpFlowLoggingEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry describes an IP flow, consisting of a set of data 
+        such as source and destination address, source and destination
+        port as well as protocol specific information. To keep the
+        table from overflow, each entry contains a TTL (Time to Live)
+        object. An entry will be removed from this table when its TTL
+        value reaches zero."
+    INDEX { caqIpFlowLoggingIndex }
+    ::= { caqIpFlowLoggingTable 1 }
+
+CaqIpFlowLoggingEntry ::= SEQUENCE {
+    caqIpFlowLoggingIndex Gauge,
+    caqIpFlowVlan VlanIndex,
+    caqIpFlowIfIndex InterfaceIndex,
+    caqIpFlowProtocolType Gauge,
+    caqIpFlowAddrType InetAddressType,
+    caqIpFlowSrcIp InetAddress,
+    caqIpFlowSrcPort INTEGER,
+    caqIpFlowDestIp InetAddress,
+    caqIpFlowDestPort INTEGER,
+    caqIpFlowIcmpType INTEGER,
+    caqIpFlowIcmpCode INTEGER,
+    caqIpFlowIgmpType INTEGER,
+    caqIpFlowArpOpcode INTEGER,
+    caqIpFlowArpSrcMacAddr MacAddress,
+    caqIpFlowArpHeaderSrcMacAddr MacAddress,
+    caqIpFlowPacketsCount Counter,
+    caqIpFlowLoggingTTL Gauge
+    }
+
+caqIpFlowLoggingIndex OBJECT-TYPE
+    SYNTAX Gauge(1..65535)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The index of this table for indicating a logged IP flow."
+    ::= { caqIpFlowLoggingEntry 1 }
+
+caqIpFlowVlan OBJECT-TYPE
+    SYNTAX VlanIndex
+--    Rsyntax INTEGER(0..4095)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the VLAN number which this logged IP flow belongs."
+    ::= { caqIpFlowLoggingEntry 2 }
+
+caqIpFlowIfIndex OBJECT-TYPE
+    SYNTAX InterfaceIndex
+--    Rsyntax INTEGER(1..2147483647)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the ifIndex of the interface where this logged
+        IP flow arrived."
+    ::= { caqIpFlowLoggingEntry 3 }
+
+caqIpFlowProtocolType OBJECT-TYPE
+    SYNTAX Gauge(0..255)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The protocol number field in the IP header of this logged
+         IP flow as specified in RFC 1700."
+    REFERENCE
+        "RFC 1700, Assigned Numbers."
+    ::= { caqIpFlowLoggingEntry 4 }
+
+caqIpFlowAddrType OBJECT-TYPE
+    SYNTAX InetAddressType
+--    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        unknown(0),
+--        ipv4(1),
+--        ipv6(2),
+--        ipv4z(3),
+--        ipv6z(4),
+--        dns(16)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the address type for addresses specified in
+        caqIpFlowSrcIp and caqIpFlowDestIp of this logged IP
+        flow."
+    ::= { caqIpFlowLoggingEntry 5 }
+
+caqIpFlowSrcIp OBJECT-TYPE
+    SYNTAX InetAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the source address of this logged IP flow."
+    ::= { caqIpFlowLoggingEntry 6 }
+
+caqIpFlowSrcPort OBJECT-TYPE
+    SYNTAX INTEGER(-1|0..65535)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the source port number of this logged IP flow
+        when its protocol field is TCP or UDP. The value of this
+        object is -1 if the flow is not UDP or TCP traffic."
+    ::= { caqIpFlowLoggingEntry 7 }
+
+caqIpFlowDestIp OBJECT-TYPE
+    SYNTAX InetAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the destination address of this logged IP flow."
+    ::= { caqIpFlowLoggingEntry 8 }
+
+caqIpFlowDestPort OBJECT-TYPE
+    SYNTAX INTEGER(-1|0..65535)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the destination port number of this logged IP flow
+        when its protocol field is TCP or UDP. The value of this
+        object is -1 if the flow is not UDP or TCP traffic."
+    ::= { caqIpFlowLoggingEntry 9 }
+
+caqIpFlowIcmpType OBJECT-TYPE
+    SYNTAX INTEGER(-1|0..255)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the message type of ICMP packets. The value of this
+        object is -1 if the flow is not ICMP traffic."
+    ::= { caqIpFlowLoggingEntry 10 }
+
+caqIpFlowIcmpCode OBJECT-TYPE
+    SYNTAX INTEGER(-1|0..255)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the message code of ICMP packets. The value of this
+        object is -1 if the flow is not ICMP traffic."
+    ::= { caqIpFlowLoggingEntry 11 }
+
+caqIpFlowIgmpType OBJECT-TYPE
+    SYNTAX INTEGER(-1|0..15)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the message type of IGMP packets. The value of this
+        object is -1 if the flow is not IGMP traffic."
+    ::= { caqIpFlowLoggingEntry 12 }
+
+caqIpFlowArpOpcode OBJECT-TYPE
+    SYNTAX INTEGER {
+        notApplicable(1),
+        request(2),
+        reply(3)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the ARP opcode value of this ARP flow.
+         
+         If the value of this object is notApplicable(1), this flow
+         is not ARP traffic.
+        
+         If the value of this object is request(2), this flow
+         is ARP request traffic.
+         
+         If the value of this object is reply(3), this flow
+         is ARP reply traffic."
+    ::= { caqIpFlowLoggingEntry 13 }
+
+caqIpFlowArpSrcMacAddr OBJECT-TYPE
+    SYNTAX MacAddress
+--    Rsyntax OCTET STRING(SIZE(6))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the Ethernet Source Address value of this ARP
+        flow.  This object is ignored if the flow is not ARP
+        traffic."
+    ::= { caqIpFlowLoggingEntry 14 }
+
+caqIpFlowArpHeaderSrcMacAddr OBJECT-TYPE
+    SYNTAX MacAddress
+--    Rsyntax OCTET STRING(SIZE(6))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the Ethernet Source Address value included in the
+        ARP header of this ARP flow. This object is ignored if the
+        flow is not ARP traffic."
+    ::= { caqIpFlowLoggingEntry 15 }
+
+caqIpFlowPacketsCount OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the number of packets that belong to this IP flow."
+    ::= { caqIpFlowLoggingEntry 16 }
+
+caqIpFlowLoggingTTL OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    seconds
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the TTL (Time to Live) of this entry. The entry 
+        is removed when its value of this object reaches 0."
+    ::= { caqIpFlowLoggingEntry 17 }
+
+caqAclArpInspMatchMac OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(1),
+        enable(2),
+        drop(3),
+        dropAndLog(4)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether for ARP packets MAC address matching of
+        ethernet header and the source MAC address specified in ARP
+        header is enabled. It also indicates the action taken when
+        the addresses do not match. 
+        
+        If this object value is disable(1), the device will not check
+        for matching of source MAC address in ethernet header with the
+        sender MAC address in ARP header for ARP packets. 
+        
+        If this object value is enable(2), the device will check
+        for matching of source MAC address in ethernet header with the
+        sender MAC address in ARP header for ARP packets. A syslog
+        message is generated if the MAC addresses check fails. 
+        
+        If this object value is drop(3), the device will check for
+        MAC addresses matching and ARP packets whose MAC addresses
+        do not match will be dropped. 
+        
+        If this object value is dropAndLog(4), the device will check
+        for MAC addresses matching and ARP packets whose MAC addresses
+        do not match will be dropped and logged into
+        caqIpFlowLoggingTable."
+    ::= { caqArpInspObjects 2 }
+
+caqAclArpInspAddrValidation OBJECT-TYPE
+    SYNTAX INTEGER {
+        disable(1),
+        enable(2),
+        drop(3),
+        dropAndLog(4)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether for ARP packets checking for valid source MAC
+        and source IP address specified in ARP header is enabled. It
+        also indicates the action taken when the addresses are not
+        valid. 
+        
+        If this object value is disable(1), the device will not check
+        for valid MAC and IP address for ARP packets. 
+        
+        If this object value is enable(2), the device will check
+        for valid MAC and IP address for ARP packets. A syslog
+        message is generated if the addresses check fails. 
+        
+        If this object value is drop(3), the device will check for
+        valid MAC and IP addresses. ARP packets whose have illegal MAC
+        and IP addresses will be dropped. 
+        
+        If this object value is dropAndLog(4), the device will check
+        for valid MAC and IP addresses. ARP packets whose have invalid
+        MAC and IP addresses will be dropped and logged into
+        caqIpFlowLoggingTable."
+    ::= { caqArpInspObjects 3 }
+
+caqArpInspGlobalForwardedPkts OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the total number of packets subjected to
+        ARP Inspection is forwarded."
+    ::= { caqArpInspObjects 4 }
+
+caqArpInspGlobalDroppedPkts OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the total number of packets subjected to
+        ARP Inspection is dropped."
+    ::= { caqArpInspObjects 5 }
+
+caqRARPForwardedPkts OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the total number of packets subjected to
+        Reverse ARP (RARP) Inspection is forwarded."
+    ::= { caqArpInspObjects 6 }
+
+caqMatchedMacFailedPkts OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the total number of packets subjected to
+        ARP Inspection whose MAC address specified in the ethernet
+        header and the source MAC address specified in ARP
+        header does not match."
+    ::= { caqArpInspObjects 7 }
+
+caqAddrValidationFailedPkts OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the total number of ARP packets that have 
+        invalid source MAC address or invalid source IP address
+        specified in the ARP header."
+    ::= { caqArpInspObjects 8 }
+
+caqArpInspIpDroppedPkts OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the total number of IP packets dropped by 
+         ARP Inspection because of invalid IP address."
+    ::= { caqArpInspObjects 9 }
+
+caqArpInspStatsTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CaqArpInspStatsEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table containing ARP Inspection statistics counter per ACL."
+    ::= { caqArpInspObjects 10 }
+
+caqArpInspStatsEntry OBJECT-TYPE
+    SYNTAX CaqArpInspStatsEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry contains the numbers of packet permitted or denied 
+         per ACL."
+    INDEX { --?? IMPLIED may cause problems
+            IMPLIED caqArpInspAclName }
+    ::= { caqArpInspStatsTable 1 }
+
+CaqArpInspStatsEntry ::= SEQUENCE {
+    caqArpInspAclName CaqAclName,
+    caqArpInspForwardedPackets Counter,
+    caqArpInspDroppedPackets Counter
+    }
+
+caqArpInspAclName OBJECT-TYPE
+    SYNTAX CaqAclName
+--    Rsyntax OCTET STRING(SIZE(1..31))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The name of an ACL that contains ACE used for ARP Inspection."
+    ::= { caqArpInspStatsEntry 1 }
+
+caqArpInspForwardedPackets OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the number of packets subjected to ARP Inspection
+         is forwarded by this ACL."
+    ::= { caqArpInspStatsEntry 2 }
+
+caqArpInspDroppedPackets OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the number of packets subjected to ARP Inspection
+         is dropped by this ACL."
+    ::= { caqArpInspStatsEntry 3 }
+
+caqIfArpInspConfigTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CaqIfArpInspConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains the configuration of several threshold
+        values related to ARP Inspection at each physical interface."
+    ::= { caqArpInspObjects 11 }
+
+caqIfArpInspConfigEntry OBJECT-TYPE
+    SYNTAX CaqIfArpInspConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Each entry contains the configuration for drop threshold
+        and shutdown threshold for ARP Inspection at each physical 
+        interface that supports this feature. Some of the
+        interfaces (but not limited to) for which this feature
+        might be applicable are: ifType = ethernetCsmacd(6)."
+    INDEX { ifIndex }
+    ::= { caqIfArpInspConfigTable 1 }
+
+CaqIfArpInspConfigEntry ::= SEQUENCE {
+    caqIfArpInspDropThreshold Gauge,
+    caqIfArpInspShutdownThreshold Gauge
+    }
+
+caqIfArpInspDropThreshold OBJECT-TYPE
+    SYNTAX Gauge(0..5000)
+--  Units
+--    packet per second
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the drop threshold value where excess packets of
+        a traffic flow subjected to ARP Inspection will be dropped
+        if its rate is greater than this threshold value. If the value
+        of this object is 0, no rate limit is applied for dropping
+        ARP traffic at this interface."
+    ::= { caqIfArpInspConfigEntry 1 }
+
+caqIfArpInspShutdownThreshold OBJECT-TYPE
+    SYNTAX Gauge(0..5000)
+--  Units
+--    packet per second
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the threshold value where the interface will be
+        shutdown if traffic rate subjected to ARP Inspection is greater
+        than this threshold value. If the value of this object is 0,
+        no ARP traffic rate limit is applied for shutting down the
+        interface."
+    ::= { caqIfArpInspConfigEntry 2 }
+
+caqAclHitCountVlansLow OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(0..256))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A string of octets containing one bit per VLAN for
+         VLANs with VlanIndex value of 0 to 2047. The first
+         octet corresponds to VLANs with VlanIndex values
+         of 0 through 7; the second octet to VLANs 8 through
+         15; etc.  The most significant bit of each octet
+         corresponds to the lowest value VlanIndex in that octet.
+        
+         For each VLAN, if ACL hit count feature is enabled then
+         the bit corresponding to that VLAN is set to '1'.
+        
+         Note that if the length of this string is less than
+         256 octets, any 'missing' octets are assumed to contain
+         the value zero. A NMS may omit any zero-valued octets
+         from the end of this string in order to reduce SetPDU size,
+         and the agent may also omit zero-valued trailing octets,
+         to reduce the size of GetResponse PDUs.
+        
+         This object is only instantiated when the vlanAclHitCount(0)
+         bit is set to '1' in the caqAclFeatureCpb object."
+    ::= { caqAclHitCountObjects 1 }
+
+caqAclHitCountVlansHigh OBJECT-TYPE
+    SYNTAX OCTET STRING(SIZE(0..256))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A string of octets containing one bit per VLAN for
+         VLANs with VlanIndex value of 2048 to 4095. The first
+         octet corresponds to VLANs with VlanIndex values
+         of 2048 through 2055; the second octet to VLANs 2056
+         through 2063; etc.  The most significant bit of each
+         octet corresponds to the lowest value VlanIndex in that
+         octet.
+        
+         For each VLAN, if ACL hit count feature is enabled then
+         the bit corresponding to that VLAN is set to '1'.
+        
+         Note that if the length of this string is less than
+         256 octets, any 'missing' octets are assumed to contain
+         the value zero. A NMS may omit any zero-valued octets
+         from the end of this string in order to reduce SetPDU size,
+         and the agent may also omit zero-valued trailing octets,
+         to reduce the size of GetResponse PDUs.
+        
+         This object is only instantiated when the vlanAclHitCount(0)
+         bit is set to '1' in the caqAclFeatureCpb object."
+    ::= { caqAclHitCountObjects 2 }
+
+caqAclHitCountPortList OBJECT-TYPE
+    SYNTAX CiscoPortList
+--    Rsyntax OCTET STRING(SIZE(0..256))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the set of physical port(s), in bridge port
+        number, where ACL hit count feature is enabled. 
+        
+        For each port, if ACL hit count feature is enabled then 
+        the bit corresponding to that port is set to '1'.
+        
+        This object is only instantiated when the portAclHitCount(1)
+        bit is set to '1' in the caqAclFeatureCpb object."
+    ::= { caqAclHitCountObjects 3 }
+
+caqAclHitCountTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CaqAclHitCountEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table provides the hit count configuration on 
+        ACLs which support this feature."
+    ::= { caqAclHitCountObjects 4 }
+
+caqAclHitCountEntry OBJECT-TYPE
+    SYNTAX CaqAclHitCountEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry indicates whether the hit count feature is enabled
+        on a particular ACL as well as its statistic collection mode."
+    INDEX { caqAclHitCountAclType, --?? IMPLIED may cause problems
+            IMPLIED caqAclHitCountAclName }
+    ::= { caqAclHitCountTable 1 }
+
+CaqAclHitCountEntry ::= SEQUENCE {
+    caqAclHitCountAclType CaqHitCountAclType,
+    caqAclHitCountAclName CaqAclName,
+    caqAclHitCountEnable TruthValue
+    }
+
+caqAclHitCountAclType OBJECT-TYPE
+    SYNTAX CaqHitCountAclType
+--    Rsyntax INTEGER {
+--        ipSecurity(1),
+--        ipxSecurity(2),
+--        macSecurity(3)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the type of ACL.
+        
+        ipSecurity(1) indicates that this ACL is an IP Security ACL.
+        
+        ipxSecurity(2) indicates that this ACL is an IPX Security ACL.
+        
+        macSecurity(3) indicates that this ACL is a MAC Security ACL."
+    ::= { caqAclHitCountEntry 1 }
+
+caqAclHitCountAclName OBJECT-TYPE
+    SYNTAX CaqAclName
+--    Rsyntax OCTET STRING(SIZE(1..31))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the ACL name which should exist in the ACL tables
+         e.g. in caqIpAceTable. This ACL must be matching the type
+         specified in caqAclHitCountAclType in the same row."
+    ::= { caqAclHitCountEntry 2 }
+
+caqAclHitCountEnable OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether this ACL hit count is enabled."
+    ::= { caqAclHitCountEntry 3 }
+
+caqAceHitCountTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CaqAceHitCountEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table provides the hit count configuration on 
+        ACEs which support this feature."
+    ::= { caqAclHitCountObjects 5 }
+
+caqAceHitCountEntry OBJECT-TYPE
+    SYNTAX CaqAceHitCountEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry indicates whether the hit count feature is enabled
+        on a particular ACE as well as its hit count statistic."
+    INDEX { caqAceHitCountAclType, caqAceHitCountAclName, caqAceHitCountAceIndex }
+    ::= { caqAceHitCountTable 1 }
+
+CaqAceHitCountEntry ::= SEQUENCE {
+    caqAceHitCountAclType CaqHitCountAclType,
+    caqAceHitCountAclName CaqAclName,
+    caqAceHitCountAceIndex Gauge,
+    caqAceHitCountEnable TruthValue,
+    caqAceIngressHitCount Counter,
+    caqAceEgressHitCount Counter
+    }
+
+caqAceHitCountAclType OBJECT-TYPE
+    SYNTAX CaqHitCountAclType
+--    Rsyntax INTEGER {
+--        ipSecurity(1),
+--        ipxSecurity(2),
+--        macSecurity(3)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the type of ACL.
+        
+        ipSecurity(1) indicates that this ACL is an IP Security ACL.
+        
+        ipxSecurity(2) indicates that this ACL is an IPX Security ACL.
+        
+        macSecurity(3) indicates that this ACL is a MAC Security ACL."
+    ::= { caqAceHitCountEntry 1 }
+
+caqAceHitCountAclName OBJECT-TYPE
+    SYNTAX CaqAclName
+--    Rsyntax OCTET STRING(SIZE(1..31))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the ACL name which should exist in the ACL tables
+         e.g. in caqIpAceTable. This ACL must be matching the type
+         specified in caqAceHitCountAclType in the same row."
+    ::= { caqAceHitCountEntry 2 }
+
+caqAceHitCountAceIndex OBJECT-TYPE
+    SYNTAX Gauge(1..65535)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The index of an ACE within an ACL."
+    ::= { caqAceHitCountEntry 3 }
+
+caqAceHitCountEnable OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether this ACE hit count is enabled."
+    ::= { caqAceHitCountEntry 4 }
+
+caqAceIngressHitCount OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates number of hit count for this ACE for
+        ingress traffic."
+    ::= { caqAceHitCountEntry 5 }
+
+caqAceEgressHitCount OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates number of hit count for this ACE for
+        egress traffic."
+    ::= { caqAceHitCountEntry 6 }
+
+caqIfAclHitCountTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CaqIfAclHitCountEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table provides the ACL hit count statistics at
+         an interface. An interface can be a physical port if
+         the bit portAclHitCount(1) is set in the object
+         caqAclFeatureCpb or a VLAN if the bit vlanAclHitCount(0)
+         is set in the object caqAclFeatureCpb."
+    ::= { caqAclHitCountObjects 6 }
+
+caqIfAclHitCountEntry OBJECT-TYPE
+    SYNTAX CaqIfAclHitCountEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Each entry indicates the number of hit count at each
+         ACE belonged to an ACL which supports hit count collection
+         at an interface where the ACL is attached."
+    INDEX { ifIndex, caqIfAclHitCountAclType, caqIfAclHitCountAclName, caqIfAclHitCountAceIndex }
+    ::= { caqIfAclHitCountTable 1 }
+
+CaqIfAclHitCountEntry ::= SEQUENCE {
+    caqIfAclHitCountAclType CaqHitCountAclType,
+    caqIfAclHitCountAclName CaqAclName,
+    caqIfAclHitCountAceIndex Gauge,
+    caqIfAclIngressHitCount Counter,
+    caqIfAclEgressHitCount Counter
+    }
+
+caqIfAclHitCountAclType OBJECT-TYPE
+    SYNTAX CaqHitCountAclType
+--    Rsyntax INTEGER {
+--        ipSecurity(1),
+--        ipxSecurity(2),
+--        macSecurity(3)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the type of ACL.
+        
+        ipSecurity(1) indicates that this ACL is an IP Security ACL.
+        
+        ipxSecurity(2) indicates that this ACL is an IPX Security ACL.
+        
+        macSecurity(3) indicates that this ACL is a MAC Security ACL."
+    ::= { caqIfAclHitCountEntry 1 }
+
+caqIfAclHitCountAclName OBJECT-TYPE
+    SYNTAX CaqAclName
+--    Rsyntax OCTET STRING(SIZE(1..31))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the ACL name which should exist in the ACL tables
+         e.g. in caqIpAceTable. This ACL must be matching the type
+         specified in caqIfAclHitCountAclType in the same row."
+    ::= { caqIfAclHitCountEntry 2 }
+
+caqIfAclHitCountAceIndex OBJECT-TYPE
+    SYNTAX Gauge(1..65535)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The index of an ACE within an ACL."
+    ::= { caqIfAclHitCountEntry 3 }
+
+caqIfAclIngressHitCount OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the number of hit count of this ACE for
+        ingress traffic on this interface."
+    ::= { caqIfAclHitCountEntry 4 }
+
+caqIfAclEgressHitCount OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the number of hit count of this ACE for
+        egress traffic on this interface."
+    ::= { caqIfAclHitCountEntry 5 }
+
 caqIfConfigGroup OBJECT IDENTIFIER ::= { caqMIBGroups 1 }
 -- OBJECT-GROUP
 --  Status
@@ -3554,7 +5153,7 @@ caqQosStatsGroup OBJECT IDENTIFIER ::= { caqMIBGroups 15 }
 caqSecurityGroup OBJECT IDENTIFIER ::= { caqMIBGroups 16 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    A collection of objects providing the security information.
 --  objects
@@ -3617,10 +5216,210 @@ caqIfTrustDeviceGroup OBJECT IDENTIFIER ::= { caqMIBGroups 21 }
 --  objects
 --    caqIfTrustDevice, caqIfOperTrustState
 
+caqLoggingGroup OBJECT IDENTIFIER ::= { caqMIBGroups 22 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the security logging 
+--    configuration and statistics.
+--  objects
+--    caqAclLogMaxFlow, caqAclSecurityLoggingRateLimit, 
+--    caqAclRouterAclRateLimit, caqIpFlowVlan, caqIpFlowIfIndex, 
+--    caqIpFlowProtocolType, caqIpFlowAddrType, caqIpFlowSrcIp, 
+--    caqIpFlowSrcPort, caqIpFlowDestIp, caqIpFlowDestPort, 
+--    caqIpFlowIcmpType, caqIpFlowIcmpCode, caqIpFlowIgmpType, 
+--    caqIpFlowArpOpcode, caqIpFlowArpSrcMacAddr, 
+--    caqIpFlowArpHeaderSrcMacAddr, caqIpFlowPacketsCount, 
+--    caqIpFlowLoggingTTL
+
+caqArpInspGroup OBJECT IDENTIFIER ::= { caqMIBGroups 23 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the ARP Inspection 
+--    configuration and statistics.
+--  objects
+--    caqSecurityArpMacAddress, caqAclArpInspMatchMac, 
+--    caqAclArpInspAddrValidation, caqArpInspGlobalForwardedPkts, 
+--    caqArpInspGlobalDroppedPkts, caqRARPForwardedPkts, 
+--    caqMatchedMacFailedPkts, caqAddrValidationFailedPkts, 
+--    caqArpInspIpDroppedPkts, caqArpInspForwardedPackets, 
+--    caqArpInspDroppedPackets, caqIfArpInspDropThreshold, 
+--    caqIfArpInspShutdownThreshold
+
+caqSecurityRateLimitGroup OBJECT IDENTIFIER ::= { caqMIBGroups 24 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the security acl
+--    feature rate limit configuration state.
+--  objects
+--    caqSecurityRateLimitFeatures, caqSecurityAclRateLimit
+
+caqDscpMutationGroup OBJECT IDENTIFIER ::= { caqMIBGroups 25 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the DSCP mutation 
+--    configuration information.
+--  objects
+--    caqDscpMutationNewDscp, caqVlanMutationTableId
+
+caqQosDefaultActionGroup OBJECT IDENTIFIER ::= { caqMIBGroups 26 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the default Qos action 
+--    configuration on the device.
+--  objects
+--    caqQosDefaultTrustState, caqQosDefaultDscp, 
+--    caqQosDefaultMicroflow, caqQosDefaultAggregate
+
+caqIfAclConfigGroup2 OBJECT IDENTIFIER ::= { caqMIBGroups 27 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of object providing the additional ACL attachment
+--    configuration on the device.
+--  objects
+--    caqClassifierMapDirection
+
+caqIpEspGroup OBJECT IDENTIFIER ::= { caqMIBGroups 28 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of object providing the Ip ESP traffic matching 
+--    configuration on the device.
+--  objects
+--    caqIpAceSecurityId
+
+caqDscpRewriteGroup OBJECT IDENTIFIER ::= { caqMIBGroups 29 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of object providing the configuration of
+--    DSCP rewrite feature on the device.
+--  objects
+--    caqDscpRewriteEnabled
+
+caqAggPolicerOctetStatsGroup OBJECT IDENTIFIER ::= { caqMIBGroups 30 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the QoS statistics
+--    information per aggregate policer in unit of octet.
+--  objects
+--    caqAggPolicerOctets, caqAggPolicerNRExceedOctets, 
+--    caqAggPolicerERExceedOctets
+
+caqSecurityGroup2 OBJECT IDENTIFIER ::= { caqMIBGroups 31 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the security information.
+--  objects
+--    caqSecurityAction, caqSecurityCapture, 
+--    caqSecurityRedirect2kPortList, caqSecurityActionStatus, 
+--    caqSecurityAclCaptureEnable
+
+caqIfSecurityAclConfigGroup OBJECT IDENTIFIER ::= { caqMIBGroups 32 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the security ACL 
+--     information on the device.
+--  objects
+--    caqIfSecurityAclBase
+
+caqIpAceExtGroup OBJECT IDENTIFIER ::= { caqMIBGroups 33 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the source and destination
+--     group information to configure IP ACL on the device.
+--  objects
+--    caqIpAceSrcGroup, caqIpAceDestGroup
+
+caqAclHitCountGroup OBJECT IDENTIFIER ::= { caqMIBGroups 34 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the ACL hit count 
+--     configuration and statistics on the device.
+--  objects
+--    caqAclHitCountEnable, caqAceHitCountEnable, 
+--    caqAceIngressHitCount, caqAceEgressHitCount, 
+--    caqIfAclIngressHitCount, caqIfAclEgressHitCount
+
+caqMacAceExtGroup OBJECT IDENTIFIER ::= { caqMIBGroups 35 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing addtional matching
+--     criteria such as the VLAN, Cos information to configure
+--     MAC ACE on the device.
+--  objects
+--    caqMacAceMatchCriteria, caqMacAceVlan, caqMacAceCos
+
+caqMacPktClassifyVlanGroup OBJECT IDENTIFIER ::= { caqMIBGroups 36 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the VLAN
+--     configuration for MAC packet classify feature 
+--     on the device.
+--  objects
+--    caqMacPktClassifyVlansLow, caqMacPktClassifyVlansHigh
+
+caqAclFeatureGroup OBJECT IDENTIFIER ::= { caqMIBGroups 37 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of object providing what feature
+--     related to ACL that the device is capable of.
+--  objects
+--    caqAclFeatureCpb
+
+caqPortAclHitCountGroup OBJECT IDENTIFIER ::= { caqMIBGroups 38 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of object providing the set of physical
+--     ports where ACL hit count feature is enabled.
+--  objects
+--    caqAclHitCountPortList
+
+caqVlanAclHitCountGroup OBJECT IDENTIFIER ::= { caqMIBGroups 39 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing the set of VLANs 
+--     where ACL hit count feature is enabled.
+--  objects
+--    caqAclHitCountVlansLow, caqAclHitCountVlansHigh
+
 caqMIBCompliance OBJECT IDENTIFIER ::= { caqMIBCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The compliance statement for the  CISCO-CATOS-ACL-QOS-MIB.
 --  Module
@@ -3659,6 +5458,203 @@ caqMIBCompliance OBJECT IDENTIFIER ::= { caqMIBCompliances 1 }
 --    caqQosMacVlanGroup
 --   OptGroup
 --    caqQosExcessRateGroup
+--   ObjVar
+--    caqIpAceSrcIp
+--   ObjVar
+--    caqIpAceSrcIpMask
+--   ObjVar
+--    caqIpAceDestIp
+--   ObjVar
+--    caqIpAceDestIpMask
+
+caqMIBCompliance2 OBJECT IDENTIFIER ::= { caqMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for the  CISCO-CATOS-ACL-QOS-MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    caqIfConfigGroup
+--   MandGroup
+--    caqAclCpbGroup
+--   MandGroup
+--    caqFlowPolicingCpbGroup
+--   MandGroup
+--    caqQueueAssignmentGroup
+--   MandGroup
+--    caqQueueGroup
+--   OptGroup
+--    caqQosStatsGroup
+--   OptGroup
+--    caqQosMappingGroup
+--   OptGroup
+--    caqIfAclConfigGroup
+--   OptGroup
+--    caqIpAceGroup
+--   OptGroup
+--    caqIpxAceGroup
+--   OptGroup
+--    caqMacAceGroup
+--   OptGroup
+--    caqPolicingGroup
+--   OptGroup
+--    caqActionGroup
+--   OptGroup
+--    caqSecurityGroup
+--   OptGroup
+--    caqQosBridgedFlowPolicerGroup
+--   OptGroup
+--    caqQosMacVlanGroup
+--   OptGroup
+--    caqLoggingGroup
+--   OptGroup
+--    caqArpInspGroup
+--   ObjVar
+--    caqIpAceSrcIp
+--   ObjVar
+--    caqIpAceSrcIpMask
+--   ObjVar
+--    caqIpAceDestIp
+--   ObjVar
+--    caqIpAceDestIpMask
+
+caqMIBCompliance3 OBJECT IDENTIFIER ::= { caqMIBCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for the  CISCO-CATOS-ACL-QOS-MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    caqIfConfigGroup
+--   MandGroup
+--    caqAclCpbGroup
+--   MandGroup
+--    caqFlowPolicingCpbGroup
+--   MandGroup
+--    caqQueueAssignmentGroup
+--   MandGroup
+--    caqQueueGroup
+--   OptGroup
+--    caqQosStatsGroup
+--   OptGroup
+--    caqQosMappingGroup
+--   OptGroup
+--    caqIfAclConfigGroup
+--   OptGroup
+--    caqIpAceGroup
+--   OptGroup
+--    caqIpxAceGroup
+--   OptGroup
+--    caqMacAceGroup
+--   OptGroup
+--    caqPolicingGroup
+--   OptGroup
+--    caqActionGroup
+--   OptGroup
+--    caqSecurityGroup2
+--   OptGroup
+--    caqQosBridgedFlowPolicerGroup
+--   OptGroup
+--    caqQosMacVlanGroup
+--   OptGroup
+--    caqLoggingGroup
+--   OptGroup
+--    caqArpInspGroup
+--   ObjVar
+--    caqIpAceSrcIp
+--   ObjVar
+--    caqIpAceSrcIpMask
+--   ObjVar
+--    caqIpAceDestIp
+--   ObjVar
+--    caqIpAceDestIpMask
+
+caqMIBCompliance4 OBJECT IDENTIFIER ::= { caqMIBCompliances 4 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for the  CISCO-CATOS-ACL-QOS-MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    caqIfConfigGroup
+--   MandGroup
+--    caqAclCpbGroup
+--   MandGroup
+--    caqFlowPolicingCpbGroup
+--   MandGroup
+--    caqQueueAssignmentGroup
+--   MandGroup
+--    caqQueueGroup
+--   OptGroup
+--    caqQosStatsGroup
+--   OptGroup
+--    caqQosMappingGroup
+--   OptGroup
+--    caqIfAclConfigGroup
+--   OptGroup
+--    caqIpAceGroup
+--   OptGroup
+--    caqIpxAceGroup
+--   OptGroup
+--    caqMacAceGroup
+--   OptGroup
+--    caqPolicingGroup
+--   OptGroup
+--    caqActionGroup
+--   OptGroup
+--    caqSecurityGroup2
+--   OptGroup
+--    caqQosBridgedFlowPolicerGroup
+--   OptGroup
+--    caqQosMacVlanGroup
+--   OptGroup
+--    caqLoggingGroup
+--   OptGroup
+--    caqArpInspGroup
+--   OptGroup
+--    caqQosStatsGroup2
+--   OptGroup
+--    caqSecurityPBFGroup
+--   OptGroup
+--    caqQosExcessBurstGroup
+--   OptGroup
+--    caqIfTrustDeviceGroup
+--   OptGroup
+--    caqSecurityRateLimitGroup
+--   OptGroup
+--    caqDscpMutationGroup
+--   OptGroup
+--    caqQosDefaultActionGroup
+--   OptGroup
+--    caqIfAclConfigGroup2
+--   OptGroup
+--    caqIpEspGroup
+--   OptGroup
+--    caqDscpRewriteGroup
+--   OptGroup
+--    caqAggPolicerOctetStatsGroup
+--   OptGroup
+--    caqIfSecurityAclConfigGroup
+--   OptGroup
+--    caqIpAceExtGroup
+--   OptGroup
+--    caqAclHitCountGroup
+--   OptGroup
+--    caqMacAceExtGroup
+--   OptGroup
+--    caqMacPktClassifyVlanGroup
+--   OptGroup
+--    caqAclFeatureGroup
+--   OptGroup
+--    caqPortAclHitCountGroup
+--   OptGroup
+--    caqVlanAclHitCountGroup
 --   ObjVar
 --    caqIpAceSrcIp
 --   ObjVar

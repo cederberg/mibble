@@ -1,10 +1,10 @@
--- MIB file created 27-Aug-2002 09:30:25, by
---   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+-- MIB file created 23-Mar-2005 00:21:47, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco
 
 CISCO-METRO-PHY-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-METRO-PHY-MIB.my"
--- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
     TruthValue
@@ -13,7 +13,7 @@ IMPORTS
             FROM IF-MIB
     ciscoExperiment
             FROM CISCO-SMI
-    Counter
+    Counter, Gauge
             FROM RFC1155-SMI
     OBJECT-TYPE
             FROM RFC-1212;
@@ -21,7 +21,7 @@ IMPORTS
 ciscoMetroPhyMIB OBJECT IDENTIFIER ::= { ciscoExperiment 69 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200205140000Z
+--    200411190000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -57,6 +57,20 @@ ciscoMetroPhyMIB OBJECT IDENTIFIER ::= { ciscoExperiment 69 }
 --    The third group, cmPhySonetSectionTrace group, provides
 --    objects for section trace monitoring on SONET/SDH
 --    interfaces. 
+--  RevDate
+--    200411190000Z
+--  RevDescr
+--    cmPhyIfTransType object has been added to cmPhyIfTable.
+--     'e1', 't1', 'e3', 't3', 'dvb', 'sdi' and 'its' enumeration 
+--     has been added to cmPhyIfProtocol object.
+--  RevDate
+--    200308250000Z
+--  RevDescr
+--    cmPhyIfAutoNegotiation object has been added to cmPhyIfTable.
+--  RevDate
+--    200301080000Z
+--  RevDescr
+--    cmPhyIfTxBufferSize object has been added to cmPhyIfTable.
 --  RevDate
 --    200205140000Z
 --  RevDescr
@@ -94,6 +108,27 @@ ciscoMetroPhyMIBConformance OBJECT IDENTIFIER ::= { ciscoMetroPhyMIB 3 }
 ciscoMetroPhyMIBCompliances OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBConformance 1 }
 ciscoMetroPhyMIBGroups OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBConformance 2 }
 
+TransmissionType ::= INTEGER {
+        unknown(1),
+        copper(2),
+        optical(3)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    An integer value that identifies the physical layer medium
+--     used across an interface.
+--    
+--     The value 'unknown' indicates the physical layer medium is not
+--     known.
+--    
+--     The value 'copper' indicates the physical layer medium is
+--     copper.
+--    
+--     The value 'optical' indicates the physical layer medium is
+--     optical.
+
 ProtocolType ::= INTEGER {
         other(1),
         unknown(2),
@@ -109,7 +144,14 @@ ProtocolType ::= INTEGER {
         sysplexTimerEtr(12),
         sysplexTimerClo(13),
         fastEthernet(14),
-        fddi(15)
+        fddi(15),
+        e1(16),
+        t1(17),
+        e3(18),
+        t3(19),
+        dvb(20),
+        sdi(21),
+        its(22)
         }
 -- TEXTUAL-CONVENTION
 --  Status
@@ -117,6 +159,38 @@ ProtocolType ::= INTEGER {
 --  Descr
 --    An integer value that identifies the protocol used across an
 --    interface.
+--    
+--     The value 'e1' indicates an interface that implements the
+--     physical layer of E1.
+--    
+--     The value 't1' indicates an interface that implements the
+--     physical layer of T1.
+--    
+--     The value 'e3' indicates an interface that implements the
+--     physical layer of E3.
+--    
+--     The value 't3' indicates an interface that implements the
+--     physical layer of T3.
+--     
+--     The value 'dvb' indicates an interface that implements the
+--     physical layer of DVB.
+--     
+--     The value 'sdi' indicates an interface that implements the
+--     physical layer of SDI.
+--    
+--     The value 'its' indicates an interface that implements the
+--     physical layer of ITS. 
+
+TriValue ::= INTEGER {
+        true(1),
+        false(2),
+        notApplicable(3)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    A three codepoint value.
 
 cmPhyIfTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CmPhyIfEntry
@@ -145,7 +219,10 @@ CmPhyIfEntry ::= SEQUENCE {
     cmPhyIfLoopback INTEGER,
     cmPhyIfOFC TruthValue,
     cmPhyIfLaserSafetyControl TruthValue,
-    cmPhyIfForwardLaserControl TruthValue
+    cmPhyIfForwardLaserControl TruthValue,
+    cmPhyIfTxBufferSize Gauge,
+    cmPhyIfAutoNegotiation TriValue,
+    cmPhyIfTransType TransmissionType
     }
 
 cmPhyIfMode OBJECT-TYPE
@@ -183,7 +260,14 @@ cmPhyIfProtocol OBJECT-TYPE
 --        sysplexTimerEtr(12),
 --        sysplexTimerClo(13),
 --        fastEthernet(14),
---        fddi(15)
+--        fddi(15),
+--        e1(16),
+--        t1(17),
+--        e3(18),
+--        t3(19),
+--        dvb(20),
+--        sdi(21),
+--        its(22)
 --        }
     ACCESS read-write
     STATUS mandatory
@@ -346,6 +430,79 @@ cmPhyIfForwardLaserControl OBJECT-TYPE
         condition. A 'false' value disables this feature and is
         the default value assigned to this object."
     ::= { cmPhyIfEntry 8 }
+
+cmPhyIfTxBufferSize OBJECT-TYPE
+    SYNTAX Gauge(0..65536)
+--  Units
+--    bytes
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object applies when circuit emulation of the client
+        protocol is used. It allows the management client to
+        configure the size of the transmit buffer on the client
+        port. A value of 0 implies that this object does not apply
+        to this interface.
+        
+        Controlling the size of the transmit buffer on a client
+        port may be essential in scenarios where packet streams
+        from various client ports are aggregated onto a single
+        trunk port. The latency associated with an elementary
+        stream received on a client port, from the trunk port is
+        influenced by the nature of other elementary streams in
+        the aggregate. For example, a giant packet in one stream
+        will increase latency in processing packets in other
+        elementary streams. The size of the transmit buffer on
+        the client port must be configured proportional to this
+        expected latency. Increasing the buffer size when latency
+        is higher helps in reassembly of fragmented packets before
+        transmitting them to the client device.
+        
+        Note that increasing the buffer size results in higher
+        latency even when the elementary packet stream is not
+        subject to high jitters. Refer to the platform specific
+        documentation for guidelines on configuring this buffer
+        size."
+    ::= { cmPhyIfEntry 9 }
+
+cmPhyIfAutoNegotiation OBJECT-TYPE
+    SYNTAX TriValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2),
+--        notApplicable(3)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object allows the management client to enable
+        auto negotiation signaling on the client side interface,
+        by writing a 'true' value to this object. A 'false'
+        value would disable auto negotiation. Setting the value 
+        'notApplicable' to this object will not change the 
+        existing value in this object.
+        
+        Auto negotiation is applicable only for a few client
+        protocols such as gigabitEthernet. If the client 
+        interface does not support 'auto negotiation' feature, 
+        then this object has the value of 'notApplicable' and 
+        the value will not be changed via a set operation."
+    ::= { cmPhyIfEntry 10 }
+
+cmPhyIfTransType OBJECT-TYPE
+    SYNTAX TransmissionType
+--    Rsyntax INTEGER {
+--        unknown(1),
+--        copper(2),
+--        optical(3)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object is used to identify the physical layer medium used
+         for carrying data. For non-relevant interfaces, this value is
+         'unknown'."
+    ::= { cmPhyIfEntry 11 }
 
 cmPhyStatisticsTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CmPhyStatisticsEntry
@@ -759,6 +916,36 @@ cmPhyEncapFarEndPktErrorsGroup OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBGroups 7 
 --    cmPhyTxEncapFarEndPktErrors, cmPhyTxEncapFarEndPktErrOverflow, 
 --    cmPhyHCTxEncapFarEndPktErrors
 
+cmPhyIfTxBufferSizeGroup OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBGroups 8 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of objects used to control size of
+--    transmit buffer.
+--  objects
+--    cmPhyIfTxBufferSize
+
+cmPhyIfAutoNegGroup OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBGroups 9 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of objects used to control auto
+--    negotiation behavior.
+--  objects
+--    cmPhyIfAutoNegotiation
+
+cmPhyIfGroupSup1 OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBGroups 10 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The object that gives information related to transmission 
+--     types on the client interface.
+--  objects
+--    cmPhyIfTransType
+
 cmPhyMIBCompliance OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
@@ -789,7 +976,7 @@ cmPhyMIBCompliance OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBCompliances 1 }
 cmPhyMIBCompliance2 OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBCompliances 2 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The compliance statement for platforms that monitor the
 --    operating status with respect to error
@@ -816,6 +1003,121 @@ cmPhyMIBCompliance2 OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBCompliances 2 }
 --    cmPhyIfMonitor
 --   ObjVar
 --    cmPhyIfOFC
+
+cmPhyMIBCompliance3 OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for platforms that monitor the
+--    operating status with respect to error
+--    counters, for the physical layer.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cmPhyIf2Group
+--   OptGroup
+--    cmPhyCVRDErrorsGroup
+--   OptGroup
+--    cmPhyCRCErrorsGroup
+--   OptGroup
+--    cmPhyEncapFarEndPktErrorsGroup
+--   OptGroup
+--    cmPhySonetSectionTraceGroup
+--   OptGroup
+--    cmPhyIfTxBufferSizeGroup
+--   ObjVar
+--    cmPhyIfMode
+--   ObjVar
+--    cmPhyIfProtocol
+--   ObjVar
+--    cmPhyIfClockRate
+--   ObjVar
+--    cmPhyIfMonitor
+--   ObjVar
+--    cmPhyIfOFC
+--   ObjVar
+--    cmPhyIfTxBufferSize
+
+cmPhyMIBComplianceRev4 OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBCompliances 4 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for platforms that monitor the
+--    operating status with respect to error
+--    counters, for the physical layer.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cmPhyIf2Group
+--   OptGroup
+--    cmPhyCVRDErrorsGroup
+--   OptGroup
+--    cmPhyCRCErrorsGroup
+--   OptGroup
+--    cmPhyEncapFarEndPktErrorsGroup
+--   OptGroup
+--    cmPhySonetSectionTraceGroup
+--   OptGroup
+--    cmPhyIfTxBufferSizeGroup
+--   OptGroup
+--    cmPhyIfAutoNegGroup
+--   ObjVar
+--    cmPhyIfMode
+--   ObjVar
+--    cmPhyIfProtocol
+--   ObjVar
+--    cmPhyIfClockRate
+--   ObjVar
+--    cmPhyIfMonitor
+--   ObjVar
+--    cmPhyIfOFC
+--   ObjVar
+--    cmPhyIfTxBufferSize
+--   ObjVar
+--    cmPhyIfAutoNegotiation
+
+cmPhyMIBComplianceRev5 OBJECT IDENTIFIER ::= { ciscoMetroPhyMIBCompliances 5 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for platforms that monitor the
+--    operating status with respect to error
+--    counters, for the physical layer.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cmPhyIf2Group
+--   OptGroup
+--    cmPhyCVRDErrorsGroup
+--   OptGroup
+--    cmPhyCRCErrorsGroup
+--   OptGroup
+--    cmPhyEncapFarEndPktErrorsGroup
+--   OptGroup
+--    cmPhySonetSectionTraceGroup
+--   OptGroup
+--    cmPhyIfTxBufferSizeGroup
+--   OptGroup
+--    cmPhyIfAutoNegGroup
+--   OptGroup
+--    cmPhyIfGroupSup1
+--   ObjVar
+--    cmPhyIfMode
+--   ObjVar
+--    cmPhyIfProtocol
+--   ObjVar
+--    cmPhyIfClockRate
+--   ObjVar
+--    cmPhyIfMonitor
+--   ObjVar
+--    cmPhyIfOFC
+--   ObjVar
+--    cmPhyIfTxBufferSize
+--   ObjVar
+--    cmPhyIfAutoNegotiation
 
 
 END

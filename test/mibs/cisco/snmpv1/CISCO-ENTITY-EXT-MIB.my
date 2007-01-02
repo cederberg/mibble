@@ -1,14 +1,14 @@
--- MIB file created 14-Sep-2001 10:54:20, by
+-- MIB file created 20-Oct-2004 18:58:28, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-ENTITY-EXT-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-ENTITY-EXT-MIB.my"
--- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    DisplayString
-            FROM SNMPv2-TC-v1
+    SnmpAdminString
+            FROM SNMP-FRAMEWORK-MIB
     entPhysicalIndex
             FROM ENTITY-MIB
     ciscoMgmt
@@ -21,7 +21,7 @@ IMPORTS
 ciscoEntityExtMIB OBJECT IDENTIFIER ::= { ciscoMgmt 195 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200104050000Z
+--    200407060000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -40,7 +40,7 @@ ciscoEntityExtMIB OBJECT IDENTIFIER ::= { ciscoMgmt 195 }
 --     specified in RFC2737.
 --    
 --     This MIB module contains  Cisco-defined  extensions 
---     to the  entityPhysicalTable to represent infomation
+--     to the  entityPhysicalTable to represent information
 --     related to entities of class module(entPhysicalClass
 --     = 'module') which have a Processor.
 --    
@@ -52,7 +52,7 @@ ciscoEntityExtMIB OBJECT IDENTIFIER ::= { ciscoMgmt 195 }
 --     This module is the entry point for external
 --     applications like SNMP Manager, CLI, FTP etc.
 --    
---     Line card is an interface card  with atleast a 
+--     Line card is an interface card  with at least a 
 --     Processor and RAM. This might be referred to as 
 --     Service Module in some cisco products.
 --    
@@ -73,13 +73,37 @@ ciscoEntityExtMIB OBJECT IDENTIFIER ::= { ciscoMgmt 195 }
 --     Booting is the process of initializing the
 --     hardware and starting the Operating System.
 --  RevDate
+--    200407060000Z
+--  RevDescr
+--    Added a new table object 'ceExtEntPhysicalTable' .
+--  RevDate
+--    200403030000Z
+--  RevDescr
+--    Importing Unsigned32 from SNMPv2-SMI, instead of CISCO-TC. 
+--  RevDate
+--    200401260000Z
+--  RevDescr
+--    Added new enum to ceExtEntityLEDType. 
+--  RevDate
+--    200308240000Z
+--  RevDescr
+--    Added ceExtEntityLEDTable.  Added ceExtKickstartImageList to
+--     ceExtConfigRegTable.
+--        Added new group ciscoEntityExtLEDGroup.
+--        Added group ceExtSysBootImageListGroupRev1.
+--  RevDate
+--    200105170000Z
+--  RevDescr
+--    Corrected the description for the TC 
+--     ConfigRegisterValue.
+--  RevDate
 --    200104050000Z
 --  RevDescr
 --    Initial version of this MIB module.
 
 ciscoEntityExtMIBObjects OBJECT IDENTIFIER ::= { ciscoEntityExtMIB 1 }
-ciscoEntityExtMIBNotificationPrefix OBJECT IDENTIFIER ::= { ciscoEntityExtMIB 2 }
-ciscoEntityExtMIBNotifications OBJECT IDENTIFIER ::= { ciscoEntityExtMIBNotificationPrefix 0 }
+ceExtMIBNotificationPrefix OBJECT IDENTIFIER ::= { ciscoEntityExtMIB 2 }
+ciscoEntityExtMIBNotifications OBJECT IDENTIFIER ::= { ceExtMIBNotificationPrefix 0 }
 ciscoEntityExtMIBConformance OBJECT IDENTIFIER ::= { ciscoEntityExtMIB 3 }
 ciscoEntityExtMIBCompliances OBJECT IDENTIFIER ::= { ciscoEntityExtMIBConformance 1 }
 ciscoEntityExtMIBGroups OBJECT IDENTIFIER ::= { ciscoEntityExtMIBConformance 2 }
@@ -87,13 +111,13 @@ ciscoEntityExtMIBGroups OBJECT IDENTIFIER ::= { ciscoEntityExtMIBConformance 2 }
 ConfigRegisterValue ::= OCTET STRING(SIZE(2))
 -- TEXTUAL-CONVENTION
 --  DspHint
---    x
+--    2x
 --  Status
 --    mandatory
 --  Descr
 --    An Integer containing the value of config register.
 --     
---     The definition of individual bits from left to right 
+--     The definition of individual bits from right to left 
 --     when set are as follows:
 --    
 --     00 to 
@@ -125,7 +149,8 @@ ConfigRegisterValue ::= OCTET STRING(SIZE(2))
 --     13  Boots default Flash software if 
 --      network boot fails.
 --    
---     14  IP broadcasts do not have network numbers.
+--     14         IP broadcasts do not have network 
+--                                  numbers.
 --    
 --     15  Enables diagnostic messages and ignores 
 --      the contents of NVRAM.
@@ -157,8 +182,7 @@ ConfigRegisterValue ::= OCTET STRING(SIZE(2))
 --      ceExtSysBootImageList, it 
 --      stays in ROM monitor mode.
 
-BootImageList ::= DisplayString(SIZE(0..255))
--- Rsyntax OCTET STRING(SIZE(0..255))
+BootImageList ::= OCTET STRING(SIZE(0..255))
 -- TEXTUAL-CONVENTION
 --  Status
 --    mandatory
@@ -273,7 +297,7 @@ ceExtNVRAMUsed OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "Number of bytes of NVRAM in use. This object
-         is irrelevent if ceExtNVRAMSize is 0."
+         is irrelevant if ceExtNVRAMSize is 0."
     ::= { ceExtPhysicalProcessorEntry 3 }
 
 ceExtConfigRegTable OBJECT-TYPE
@@ -307,7 +331,8 @@ ceExtConfigRegEntry OBJECT-TYPE
 CeExtConfigRegEntry ::= SEQUENCE {
     ceExtConfigRegister ConfigRegisterValue,
     ceExtConfigRegNext ConfigRegisterValue,
-    ceExtSysBootImageList BootImageList
+    ceExtSysBootImageList BootImageList,
+    ceExtKickstartImageList BootImageList
     }
 
 ceExtConfigRegister OBJECT-TYPE
@@ -343,7 +368,157 @@ ceExtSysBootImageList OBJECT-TYPE
     DEFVAL { "" }
     ::= { ceExtConfigRegEntry 3 }
 
-ciscoEntityExtPhysicalProcessorGroup OBJECT IDENTIFIER ::= { ciscoEntityExtMIBGroups 1 }
+ceExtKickstartImageList OBJECT-TYPE
+    SYNTAX BootImageList
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The list of system kickstart images which
+         can be used for booting."
+    DEFVAL { "" }
+    ::= { ceExtConfigRegEntry 4 }
+
+ceExtEntityLEDTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CeExtEntityLEDEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table containing information of LED on an entity. "
+    ::= { ciscoEntityExtMIBObjects 3 }
+
+ceExtEntityLEDEntry OBJECT-TYPE
+    SYNTAX CeExtEntityLEDEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry (conceptual row) in the ceExtEntityLEDTable, 
+        containing information about an LED on an entity, identified by 
+        entPhysicalIndex. "
+    INDEX { entPhysicalIndex, ceExtEntityLEDType }
+    ::= { ceExtEntityLEDTable 1 }
+
+CeExtEntityLEDEntry ::= SEQUENCE {
+    ceExtEntityLEDType INTEGER,
+    ceExtEntityLEDColor INTEGER
+    }
+
+ceExtEntityLEDType OBJECT-TYPE
+    SYNTAX INTEGER {
+        status(1),
+        system(2),
+        active(3),
+        power(4),
+        battery(5)
+        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The type of LED on this entity. 
+        'status' - indicates the entity status.
+        'system' - indicates the overall system status. 
+        'active' - the redundancy status of a module, for e.g.
+                   supervisor module. 
+        'power'  - indicates sufficient power availability for all 
+                   modules.
+        'battery'- indicates the battery status. "
+    REFERENCE
+        "Cisco MDS 9500 Series Hardware Installation Guide,
+        Product Overview."
+    ::= { ceExtEntityLEDEntry 1 }
+
+ceExtEntityLEDColor OBJECT-TYPE
+    SYNTAX INTEGER {
+        off(1),
+        green(2),
+        amber(3),
+        red(4)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The color of the LED."
+    REFERENCE
+        "Cisco MDS 9500 Series Multilayer Switches, Product
+        Overview."
+    ::= { ceExtEntityLEDEntry 2 }
+
+ceExtEntPhysicalTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CeExtEntPhysicalEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains additional information about 
+        a particular physical entity.
+        This table augments the 'entPhysicalTable'  of
+        the ENTITY-MIB."
+    REFERENCE
+        "RFC2737: Section 2.12.1"
+    ::= { ciscoEntityExtMIBObjects 4 }
+
+ceExtEntPhysicalEntry OBJECT-TYPE
+    SYNTAX CeExtEntPhysicalEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry (conceptual row) in the 'ceExtEntPhysicalTable',
+        containing additional information about a physical entity, 
+        identified by 'entPhysicalIndex'."
+    INDEX { entPhysicalIndex }
+-- Augments entPhysicalEntry FROM ENTITY-MIB
+    ::= { ceExtEntPhysicalTable 1 }
+
+CeExtEntPhysicalEntry ::= SEQUENCE {
+    ceEntPhysicalSecondSerialNum SnmpAdminString
+    }
+
+ceEntPhysicalSecondSerialNum OBJECT-TYPE
+    SYNTAX SnmpAdminString(SIZE(0..32))
+--    Rsyntax OCTET STRING(SIZE(0..32))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the vendor-specific second 
+        serial number string for the physical entity. 
+        The first serial number string of the physical
+        entity is represented in the value of corresponding 
+        instance of the 'entPhysicalSerialNum' object.
+        
+        On the first instantiation of an physical entity, the value
+        of this object is the correct vendor-assigned second 
+        serial number, if this information is available to the agent. 
+        
+        If the second serial number is unknown or non-existent, then 
+        the value of this object will be a zero-length string instead.
+        
+        Note that implementations which can correctly identify the
+        second serial numbers of all installed physical entities do 
+        not need to provide write access to this object. 
+        Agents which cannot provide non-volatile storage for the 
+        second serial number strings are not required to implement 
+        write access for this object.
+        
+        Not every physical component will have a serial number, or
+        even need one.  Physical entities for which the associated
+        value of the entPhysicalIsFRU object is equal to 'false(2)'
+        (e.g., the repeater ports within a repeater module), do not
+        need their own unique serial number. An agent does not have
+        to provide write access for such entities, and may return a
+        zero-length string.
+        
+        If write access is implemented for an instance of
+        'ceEntPhysicalSecondSerialNum', and a value is written into 
+        the instance, the agent must retain the supplied value in the
+        'ceEntPhysicalSecondSerialNum' instance associated with the 
+        same physical entity for as long as that entity remains
+        instantiated. This includes instantiations across all re-
+        initializations/reboots of the network management system,
+        including those which result in a change of the physical
+        entity's entPhysicalIndex value."
+    DEFVAL { "" }
+    ::= { ceExtEntPhysicalEntry 1 }
+
+ceExtPhysicalProcessorGroup OBJECT IDENTIFIER ::= { ciscoEntityExtMIBGroups 1 }
 -- OBJECT-GROUP
 --  Status
 --    mandatory
@@ -365,7 +540,7 @@ ciscoEntityExtConfigRegGroup OBJECT IDENTIFIER ::= { ciscoEntityExtMIBGroups 2 }
 --  objects
 --    ceExtConfigRegister, ceExtConfigRegNext
 
-ciscoEntityExtSysBootImageListGroup OBJECT IDENTIFIER ::= { ciscoEntityExtMIBGroups 3 }
+ceExtSysBootImageListGroup OBJECT IDENTIFIER ::= { ciscoEntityExtMIBGroups 3 }
 -- OBJECT-GROUP
 --  Status
 --    mandatory
@@ -377,7 +552,76 @@ ciscoEntityExtSysBootImageListGroup OBJECT IDENTIFIER ::= { ciscoEntityExtMIBGro
 --  objects
 --    ceExtSysBootImageList
 
+ciscoEntityExtLEDGroup OBJECT IDENTIFIER ::= { ciscoEntityExtMIBGroups 4 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects for giving led information.
+--  objects
+--    ceExtEntityLEDColor
+
+ceExtSysBootImageListGroupRev1 OBJECT IDENTIFIER ::= { ciscoEntityExtMIBGroups 5 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A group containing an object providing information 
+--    about the system boot images.
+--    
+--    Implementation of this group is optional.
+--  objects
+--    ceExtKickstartImageList
+
+ciscoExtEntityPhysicalGroup OBJECT IDENTIFIER ::= { ciscoEntityExtMIBGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of objects for providing additional 
+--    information about the physical entity.
+--    
+--    Implementation of this group is optional.
+--  objects
+--    ceEntPhysicalSecondSerialNum
+
 ciscoEntityExtMIBCompliance OBJECT IDENTIFIER ::= { ciscoEntityExtMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    Compliance for SNMP Entities which support modules 
+--    with CPU, NVRAM and configuration register.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ceExtPhysicalProcessorGroup
+--   OptGroup
+--    ciscoEntityExtConfigRegGroup
+--   OptGroup
+--    ceExtSysBootImageListGroup
+
+ciscoEntityExtMIBComplianceRev1 OBJECT IDENTIFIER ::= { ciscoEntityExtMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    Compliance for SNMP Entities which support modules 
+--    with CPU, NVRAM and configuration register.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ceExtPhysicalProcessorGroup
+--   OptGroup
+--    ciscoEntityExtConfigRegGroup
+--   OptGroup
+--    ceExtSysBootImageListGroup
+--   OptGroup
+--    ciscoEntityExtLEDGroup
+--   OptGroup
+--    ceExtSysBootImageListGroupRev1
+
+ciscoEntityExtMIBComplianceRev2 OBJECT IDENTIFIER ::= { ciscoEntityExtMIBCompliances 3 }
 -- MODULE-COMPLIANCE
 --  Status
 --    mandatory
@@ -387,11 +631,17 @@ ciscoEntityExtMIBCompliance OBJECT IDENTIFIER ::= { ciscoEntityExtMIBCompliances
 --  Module
 --    >>current<<
 --   MandGroup
---    ciscoEntityExtPhysicalProcessorGroup
+--    ceExtPhysicalProcessorGroup
 --   OptGroup
 --    ciscoEntityExtConfigRegGroup
 --   OptGroup
---    ciscoEntityExtSysBootImageListGroup
+--    ceExtSysBootImageListGroup
+--   OptGroup
+--    ciscoEntityExtLEDGroup
+--   OptGroup
+--    ceExtSysBootImageListGroupRev1
+--   OptGroup
+--    ciscoExtEntityPhysicalGroup
 
 
 END

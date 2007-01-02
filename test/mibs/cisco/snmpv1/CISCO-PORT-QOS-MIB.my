@@ -1,10 +1,10 @@
--- MIB file created 03-Sep-2002 14:39:18, by
+-- MIB file created 25-Jul-2006 16:23:26, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-PORT-QOS-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-PORT-QOS-MIB.my"
--- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
     TruthValue
@@ -13,7 +13,7 @@ IMPORTS
             FROM IF-MIB
     ciscoMgmt
             FROM CISCO-SMI
-    Counter,Gauge
+    Counter, Gauge
             FROM RFC1155-SMI
     OBJECT-TYPE
             FROM RFC-1212;
@@ -21,7 +21,7 @@ IMPORTS
 ciscoPortQosMIB OBJECT IDENTIFIER ::= { ciscoMgmt 189 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200203200000Z
+--    200502230000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -55,6 +55,23 @@ ciscoPortQosMIB OBJECT IDENTIFIER ::= { ciscoMgmt 189 }
 --    possible.
 --    
 --    This MIB module also provides per port QoS statistics.
+--  RevDate
+--    200502230000Z
+--  RevDescr
+--    Deprecated the cportQosIndexType added the 
+--     cportQosIndexTypeNew which is read-write.
+--     In addition, added the cportQosInProfPolicyPkts and
+--     cportQosOutOfProfPolicyPkts objects to the
+--     statistic table.
+--  RevDate
+--    200405200000Z
+--  RevDescr
+--    Extend per port QoS Statistics table by adding 
+--    no_change object.
+--  RevDate
+--    200401300000Z
+--  RevDescr
+--    Add cos(4) to cportQosIndexType.
 --  RevDate
 --    200203200000Z
 --  RevDescr
@@ -261,15 +278,20 @@ cportQosIndexType OBJECT-TYPE
     SYNTAX INTEGER {
         none(1),
         dscp(2),
-        ipPrecedence(3)
+        ipPrecedence(3),
+        cos(4)
         }
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "This object specifies the sorting mechanism used to
         collect and store the statistical QoS information.  
         This object value is device dependent and it could be
-        optionally configured via command-line."
+        optionally configured via command-line.
+        
+        This object has been deprecated in order to make the
+        selection of sorting mechanism selectable from the
+        MIB. The replacement object is cportQosIndexTypeNew."
     ::= { cportQosStatistics 1 }
 
 cportQosStatsTable OBJECT-TYPE
@@ -303,7 +325,11 @@ CportQosStatsEntry ::= SEQUENCE {
     cportQosDropPkts Counter,
     cportQosDropOctets Counter,
     cportQosClassifiedOctets Counter,
-    cportQosClassifiedPkts Counter
+    cportQosClassifiedPkts Counter,
+    cportQosNoChangePkts Counter,
+    cportQosNoChangeOctets Counter,
+    cportQosInProfPolicyPkts Counter,
+    cportQosOutOfProfPolicyPkts Counter
     }
 
 cportQosDirection OBJECT-TYPE
@@ -328,11 +354,11 @@ cportQosIndex OBJECT-TYPE
         cportQosIndex value, which may have non-contiguous
         range, is linked to cportQosIndexType:
         
-         -if cportQosIndexType equals 'none', cportQosIndex 
+         -if cportQosIndexTypeNew equals 'none', cportQosIndex 
           is constant with the value of 1 and all statistics
           are classified per port
         
-         -if cportQosIndexType equals 'dscp', cportQosIndex
+         -if cportQosIndexTypeNew equals 'dscp', cportQosIndex
           range is from 1 to 65 and all statistics are
           classified per port and dscp value.  The range
           of dscp values reported is shifted up one meaning 
@@ -343,12 +369,27 @@ cportQosIndex OBJECT-TYPE
           in the 1 to 64 range.  This usually happens when the
           range value of cportQosIndex is non-contiguous
         
-         -if cportQosIndexType equals 'ipPrecedence', 
+         -if cportQosIndexTypeNew equals 'ipPrecedence', 
           cportQosIndex range is from 1 to 8 and all
           statistics are classified per port and ip precedence
           value.  The range of ip precedence values reported
           is shifted up one meaning a cportQosIndex of 1
-          translates to an ip precedence value of 0"
+          translates to an ip precedence value of 0
+        
+         -if cportQosIndexTypeNew equals 'cos', 
+          cportQosIndex range is from 1 to 8 and all
+          statistics are classified per interface and L2 cos
+          value.  The range of cos values reported
+          is shifted up one meaning a cportQosIndex of 1
+          translates to a cos value of 0
+         
+         -if cportQosIndexTypeNew equals 'police', 
+          cportQosIndex range is from 1 to 65 and all
+          statistics are classified per interface and police
+          index. 
+          The police indexes are arbitrary numbers that do
+          not correlate to policers names or ids.  
+          "
     ::= { cportQosStatsEntry 2 }
 
 cportQosPrePolicyPkts OBJECT-TYPE
@@ -395,8 +436,9 @@ cportQosDropPkts OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The count of dropped packets as the result of all 
-        QoS features that can produce drops."
+        "The count of dropped packets as the result of
+        queueing and scheduling related QoS features that
+        can produce drops."
     ::= { cportQosStatsEntry 7 }
 
 cportQosDropOctets OBJECT-TYPE
@@ -405,8 +447,9 @@ cportQosDropOctets OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The count of dropped octets as the result of all
-        QoS features that can produce drops."
+        "The count of dropped octets as the result of
+        queueing and scheduling related QoS features that
+        can produce drops."
     ::= { cportQosStatsEntry 8 }
 
 cportQosClassifiedOctets OBJECT-TYPE
@@ -427,6 +470,62 @@ cportQosClassifiedPkts OBJECT-TYPE
         "The count of classified packets during QoS."
     ::= { cportQosStatsEntry 10 }
 
+cportQosNoChangePkts OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The count of packets maintain unchange after 
+        executing QoS policies."
+    ::= { cportQosStatsEntry 11 }
+
+cportQosNoChangeOctets OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The count of octets maintain unchange after 
+        executing QoS policies."
+    ::= { cportQosStatsEntry 12 }
+
+cportQosInProfPolicyPkts OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The count of packets that are within the policer 
+        profile limit configured for this policy."
+    ::= { cportQosStatsEntry 13 }
+
+cportQosOutOfProfPolicyPkts OBJECT-TYPE
+    SYNTAX --?? syntax is not convertable to SMIv1
+           Counter
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The count of packets that exceeds the policer
+        profile limit configured for this policy."
+    ::= { cportQosStatsEntry 14 }
+
+cportQosIndexTypeNew OBJECT-TYPE
+    SYNTAX INTEGER {
+        none(1),
+        dscp(2),
+        ipPrecedence(3),
+        cos(4),
+        police(5)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the sorting mechanism used to
+        collect and store the statistical QoS information.  
+        This object value is device dependent."
+    ::= { cportQosStatistics 3 }
+
 ciscoPortQosMIBGroup OBJECT IDENTIFIER ::= { ciscoPortQosMIBGroups 1 }
 -- OBJECT-GROUP
 --  Status
@@ -442,7 +541,21 @@ ciscoPortQosMIBGroup OBJECT IDENTIFIER ::= { ciscoPortQosMIBGroups 1 }
 ciscoPortQosStatsMIBGroup OBJECT IDENTIFIER ::= { ciscoPortQosMIBGroups 2 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
+--  Descr
+--    A collection of objects providing per Port QoS
+--    statistics. 
+--    Replaced by: ciscoPortQosStatsMIBGroupRev1
+--  objects
+--    cportQosIndexType, cportQosPrePolicyPkts, 
+--    cportQosPrePolicyOctets, cportQosPostPolicyOctets, 
+--    cportQosPostPolicyPkts, cportQosDropPkts, cportQosDropOctets, 
+--    cportQosClassifiedOctets, cportQosClassifiedPkts
+
+ciscoPortQosStatsMIBGroupRev1 OBJECT IDENTIFIER ::= { ciscoPortQosMIBGroups 3 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
 --  Descr
 --    A collection of objects providing per Port QoS
 --    statistics.
@@ -450,9 +563,53 @@ ciscoPortQosStatsMIBGroup OBJECT IDENTIFIER ::= { ciscoPortQosMIBGroups 2 }
 --    cportQosIndexType, cportQosPrePolicyPkts, 
 --    cportQosPrePolicyOctets, cportQosPostPolicyOctets, 
 --    cportQosPostPolicyPkts, cportQosDropPkts, cportQosDropOctets, 
---    cportQosClassifiedOctets, cportQosClassifiedPkts
+--    cportQosClassifiedOctets, cportQosClassifiedPkts, 
+--    cportQosNoChangePkts, cportQosNoChangeOctets
+
+ciscoPortQosStatsMIBGroupRev2 OBJECT IDENTIFIER ::= { ciscoPortQosMIBGroups 4 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing per Port QoS
+--    statistics.
+--  objects
+--    cportQosIndexTypeNew, cportQosPrePolicyPkts, 
+--    cportQosPrePolicyOctets, cportQosPostPolicyOctets, 
+--    cportQosPostPolicyPkts, cportQosDropPkts, cportQosDropOctets, 
+--    cportQosClassifiedOctets, cportQosClassifiedPkts, 
+--    cportQosNoChangePkts, cportQosNoChangeOctets, 
+--    cportQosInProfPolicyPkts, cportQosOutOfProfPolicyPkts
 
 ciscoPortQosMIBCompliance OBJECT IDENTIFIER ::= { ciscoPortQosMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities which
+--    implement Port QoS functions on a Cisco router.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoPortQosMIBGroup
+--   OptGroup
+--    ciscoPortQosStatsMIBGroup
+
+ciscoPortQosMIBComplianceRev1 OBJECT IDENTIFIER ::= { ciscoPortQosMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities which
+--    implement Port QoS functions on a Cisco router.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoPortQosMIBGroup
+--   OptGroup
+--    ciscoPortQosStatsMIBGroupRev1
+
+ciscoPortQosMIBComplianceRev2 OBJECT IDENTIFIER ::= { ciscoPortQosMIBCompliances 3 }
 -- MODULE-COMPLIANCE
 --  Status
 --    mandatory
@@ -464,7 +621,9 @@ ciscoPortQosMIBCompliance OBJECT IDENTIFIER ::= { ciscoPortQosMIBCompliances 1 }
 --   MandGroup
 --    ciscoPortQosMIBGroup
 --   OptGroup
---    ciscoPortQosStatsMIBGroup
+--    ciscoPortQosStatsMIBGroupRev2
+--   ObjVar
+--    cportQosIndexTypeNew
 
 
 END

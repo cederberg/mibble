@@ -1,4 +1,4 @@
--- MIB file created 10-Sep-2001 11:32:44, by
+-- MIB file created 12-Sep-2004 09:41:07, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-SONET-MIB DEFINITIONS ::= BEGIN
@@ -9,21 +9,25 @@ CISCO-SONET-MIB DEFINITIONS ::= BEGIN
 IMPORTS
     TruthValue
             FROM SNMPv2-TC-v1
---    Unsigned32
---            FROM CISCO-TC
-    InterfaceIndex, ifIndex
+    InterfaceIndex, ifIndex, ifDescr
             FROM IF-MIB
     ciscoMgmt
             FROM CISCO-SMI
+--?? may need import of ifIndex from RFC1213-MIB
+    sonetSectionCurrentStatus, sonetLineCurrentStatus, 
+    sonetPathCurrentStatus, sonetVTCurrentStatus
+            FROM SONET-MIB
     Counter, Gauge
             FROM RFC1155-SMI
     OBJECT-TYPE
-            FROM RFC-1212;
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
 
 ciscoSonetMIB OBJECT IDENTIFIER ::= { ciscoMgmt 126 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200007120000Z
+--    200303070000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -42,6 +46,64 @@ ciscoSonetMIB OBJECT IDENTIFIER ::= { ciscoMgmt 126 }
 --     objects. This is an extension to the standard SONET 
 --     MIB(RFC 2558).
 --  RevDate
+--    200303070000Z
+--  RevDescr
+--    (1) Added enumerations e3(8) and vtStructured(9) 
+--         in object cspSonetPathPayload.
+--     (2) Added table csAu4Tug3Config to configure the  
+--         VC(Virtual Container) related properties of a 
+--         TUG-3 within a AU-4 paths.
+--  RevDate
+--    200206140000Z
+--  RevDescr
+--    (1)Added following objects to cspConfigTable:
+--          cspTributaryMappingType
+--          cspSignallingTransportMode
+--          cspTributaryGroupingType
+--     (2)Added an optional ciscoSonetPathConfMIBGroup1 
+--        for the above objects.
+--  RevDate
+--    200205220000Z
+--  RevDescr
+--    (1) Added cspConfigTable which augments 
+--         sonetPathCurrentTable.
+--     (2) Added the Notifications - 
+--               ciscoSonetSectionStatusChange,
+--               ciscoSonetLineStatusChange,
+--               ciscoSonetPathStatusChange,
+--               ciscoSonetVTStatusChange
+--         and the object - 
+--               csNotificationsEnabled.
+--     (3) Changed the Module-Compliance and made 
+--         ciscoSonetStatsMIBGroup and
+--         ciscoSonetApsMIBGroup1 groups as optional
+--  RevDate
+--    200110170000Z
+--  RevDescr
+--    (1) Added CsApsLineFailureCode,
+--         CsApsLineFailureStatus, and
+--         CsApsLineSwitchReason TEXTUAL-CONVENTION.
+--     (2) Added csApsSwitchReason, csApsFailureStatus,
+--         and csApsPrimarySection columnar objects to
+--         CsApsConfigEntry.
+--     (3) Added csApsModeMismatch enumeration to
+--         CsApsLineFailureCode.
+--     (4) Added csApsNoSwitch enumeration to
+--         CsApsLineSwitchReason.
+--     (5) Changed descriptions for csApsWorkingIndex,
+--         and csApsProtectionIndex specifically related
+--         to ITU G.783 AnnexB protocol support.
+--     (6) Add objects csConfigRDIVType and csConfigRDIPType in table
+--         csConfigTable.
+--     (7) Add enum sonetSts3(9) for obj csConfigType.
+--     (8) Add table csVTConfigTable augmenting the table csConfigTable.
+--         The table csVTVonfigTable contains the following objects:
+--                   csTributaryType
+--                   csTributaryMappingType
+--                   csTributaryFramingType
+--                   csSignallingTransportMode
+--                   csTributaryGroupingType
+--  RevDate
 --    200007120000Z
 --  RevDescr
 --    Made following changes
@@ -58,6 +120,7 @@ ciscoSonetMIB OBJECT IDENTIFIER ::= { ciscoMgmt 126 }
 --  RevDescr
 --    Initial version of the MIB.
 
+ciscoSonetMIBNotifs OBJECT IDENTIFIER ::= { ciscoSonetMIB 0 }
 ciscoSonetMIBObjects OBJECT IDENTIFIER ::= { ciscoSonetMIB 1 }
 csConfig        OBJECT IDENTIFIER ::= { ciscoSonetMIBObjects 1 }
 csApsConfig     OBJECT IDENTIFIER ::= { ciscoSonetMIBObjects 2 }
@@ -65,9 +128,106 @@ csSection       OBJECT IDENTIFIER ::= { ciscoSonetMIBObjects 3 }
 csLine          OBJECT IDENTIFIER ::= { ciscoSonetMIBObjects 4 }
 csPath          OBJECT IDENTIFIER ::= { ciscoSonetMIBObjects 5 }
 csStats         OBJECT IDENTIFIER ::= { ciscoSonetMIBObjects 6 }
+cspConfig       OBJECT IDENTIFIER ::= { ciscoSonetMIBObjects 7 }
+csNotifications OBJECT IDENTIFIER ::= { ciscoSonetMIBObjects 8 }
+csAu4Tug3Config OBJECT IDENTIFIER ::= { ciscoSonetMIBObjects 9 }
 ciscoSonetMIBConformance OBJECT IDENTIFIER ::= { ciscoSonetMIB 3 }
 ciscoSonetMIBCompliances OBJECT IDENTIFIER ::= { ciscoSonetMIBConformance 1 }
 ciscoSonetMIBGroups OBJECT IDENTIFIER ::= { ciscoSonetMIBConformance 2 }
+
+CsApsLineFailureCode ::= INTEGER {
+        csApsChannelMismatch(1),
+        csApsProtectionByteFail(2),
+        csApsFEProtectionFailure(3),
+        csApsModeMismatch(4)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The Sonet APS line failure code - this is the failure
+--     encountered by the APS line.
+--    
+--         csApsChannelMismatch:     Transmitted K1 byte and
+--                                   received K2 byte do not match.
+--         csApsProtectionByteFail:  It could mean either K1 byte
+--                                   with invalid type of switch
+--                                   request bits was received, or,
+--                                   priority of received K1 byte
+--                                   is lower than the transmitted
+--                                   K1 byte.
+--         csApsFEProtectionFailure: Remote end error detected.
+--         csApsModeMismatch:        APS architecture mode mismatch.
+
+CsApsLineFailureStatus ::= OCTET STRING(SIZE(1..2))
+        -- BITS are:
+        --   noApsLineFailure(0)
+        --   csApsChannelMismatchBit(1)
+        --   csApsProtectionByteFailBit(2)
+        --   csApsFEProtectionFailureBit(3)
+        --   csApsModeMismatchBit(4)
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The indication of the APS line failure status with a bit
+--     map representing multiple failures. 
+--    
+--        noApsLineFailure bit indicates current failure status.
+--          This bit should be set ONLY if no other bit is set.
+--    
+--        csApsChannelMismatchBit is set when the APS line is in
+--          csApsChannelMismatch.
+--    
+--        csApsProtectionByteFailBit is set when the APS line is
+--          in csApsProtectionByteFail failure code.
+--    
+--        csApsFEProtectionFailureBit is set when the APS line is
+--          in csApsFEProtectionFailure.
+--    
+--        csApsModeMismatchBit is set when the APS line is in 
+--          csApsModeMismatch.
+
+CsApsLineSwitchReason ::= INTEGER {
+        csApsOther(1),
+        csApsRevertive(2),
+        csApsManual(3),
+        csApsSignalDefectLow(4),
+        csApsSignalDefectHigh(5),
+        csApsSignalFailureLow(6),
+        csApsSignalFailureHigh(7),
+        csApsForceSwitch(8),
+        csApsLockOut(9),
+        csApsNoSwitch(10)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The reason why APS switch happened. When the working
+--     line on one end fails, its other end is told to do
+--     an APS switch. The following options in the increasing
+--     order of priority indicate what type of switch request
+--     it is.
+--    
+--       csApsRevertive : Switch back to working line after the
+--         Wait-to-Restore interval is over, and failures are
+--         cleared. It is the lowest priority.
+--       csApsManual : Manual switch causes APS switch unless a
+--         request of equal or higher priority is in effect.
+--       csApsSignalDefectLow : Switch happened because threshold
+--         for 'csApsSigFaultBER' was exceeded.
+--       csApsSignalDefectHigh : Same as above, but higher priority.
+--       csApsSignalFailureLow : Switch happened because threshold
+--         for 'csApsSigDegradeBER' was exceeded.
+--       csApsSignalFailureHigh : Same as above, but higher
+--         priority.
+--       csApsForceSwitch : Forced switch forces hardware to switch
+--         the active line even if the other line (could be
+--         working line or protection line) is in alarm.
+--       csApsLockOut : This is the highest priority switch. This
+--         will override all other requests.
+--       csApsNoSwitch : This is a state when no switch happens.
 
 csConfigTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CsConfigEntry
@@ -86,8 +246,9 @@ csConfigEntry OBJECT-TYPE
         "An entry in the table. There is an entry for each SONET line 
          in the table. Entries are automatically created for an 
          ifType value of sonet(39). 'ifAdminStatus' from the ifTable 
-         must be used to enable or disable a line. By default, the 
-         line state is down."
+         must be used to enable or disable a line. A line is in 
+         disabled(down) state unless provisioned 'up' using 
+         'ifAdminStatus'."
     INDEX { ifIndex }
     ::= { csConfigTable 1 }
 
@@ -95,7 +256,9 @@ CsConfigEntry ::= SEQUENCE {
     csConfigLoopbackType INTEGER,
     csConfigXmtClockSource INTEGER,
     csConfigFrameScramble INTEGER,
-    csConfigType INTEGER
+    csConfigType INTEGER,
+    csConfigRDIVType INTEGER,
+    csConfigRDIPType INTEGER
     }
 
 csConfigLoopbackType OBJECT-TYPE
@@ -107,18 +270,26 @@ csConfigLoopbackType OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This object represents the desired loopback 
-         configuration of the  SONET line.
-         The Values mean:
+        "This object specifies the desired loopback mode
+         configuration of the SONET line.
+         The possible values of this objects are follows:
         
          noLoopback :  
                  Not in the loopback state.  
          lineLocal : 
-                 The sent signal at this line is looped back
-                 through the device.
+                 The signal transmitted from this interface
+                 is connected to the associated incoming
+                 receiver. This ensures that the SONET frame
+                 transmitted from the interface is received back
+                 at the interface.
          lineRemote :
-                 The sent signal does not go through the 
-                 device but is looped back out."
+                 The signal received at the interface is looped
+                 back out to the associated transmitter.
+                 This ensures that the remote equipment that
+                 originated the signal receives it back. The 
+                 signal may undergo degradation as a result of
+                 the characteristics of the transmission 
+                 medium."
     DEFVAL { noLoopback }
     ::= { csConfigEntry 1 }
 
@@ -130,7 +301,7 @@ csConfigXmtClockSource OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "The source of the transmit clock.
+        "Specifies the source of the transmit clock.
          
          loopTiming: indicates that the recovered receive 
                      clock is used as the transmit clock.
@@ -151,10 +322,9 @@ csConfigFrameScramble OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This object is used to disable or enable the Scrambling
-         option in SONET line. Please refer to GR-253-CORE for 
-         frame scrambling."
+         option in SONET line."
     REFERENCE
-        "GR-253-CORE"
+        "GR-253-CORE Issue 3, September 2000: Section 5.1.3."
     DEFVAL { enabled }
     ::= { csConfigEntry 3 }
 
@@ -167,22 +337,194 @@ csConfigType OBJECT-TYPE
         sonetSts48c(5),
         sonetStm16(6),
         sonetSts192c(7),
-        sonetStm64(8)
+        sonetStm64(8),
+        sonetSts3(9)
         }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object represents the configured line type.
          Sts is SONET format. Stm is SDH format. 
-             sonetSts3c   : For OC3
-             sonetStm1    : For European standard OC3
-             sonetSts12c  : For OC12
+             sonetSts3c   : OC3 concatenated
+             sonetStm1    : European standard OC3
+             sonetSts12c  : OC12 concatenated
              sonetStm4    : European standard OC12
-             sonetSts48c  : OC48
+             sonetSts48c  : OC48 concatenated
              sonetStm16   : European standard OC48 
-             sonetSts192c : OC-192
-             sonetStm64   : European standard OC-192"
+             sonetSts192c : OC-192 concatenated
+             sonetStm64   : European standard OC-192
+             sonetSts3    : OC3 (unconcatenated)
+             "
     ::= { csConfigEntry 4 }
+
+csConfigRDIVType OBJECT-TYPE
+    SYNTAX INTEGER {
+        onebit(1),
+        threebit(3)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object specifies the type of RDI-V (Remote Defect
+         Indication - Virtual Tributary/Container) sent by this 
+         Network Element (NE) to the remote Network Element.
+        
+               onebit     : use 1 bit RDI-V
+               threebit   : use 3 bit enhanced RDI-V.
+        
+         Default is onebit."
+    DEFVAL { onebit }
+    ::= { csConfigEntry 5 }
+
+csConfigRDIPType OBJECT-TYPE
+    SYNTAX INTEGER {
+        onebit(1),
+        threebit(3)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the type of RDI-P (Remote Defect
+         Indication - Path) sent by this Network Element (NE)
+         to remote Network Element.
+        
+               onebit     : use 1 bit RDI-P
+               threebit   : use 3 bit enhanced RDI-P.
+        
+         Default is onebit."
+    DEFVAL { onebit }
+    ::= { csConfigEntry 6 }
+
+csVTConfigTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CsVTConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains objects to configure the VT/VC (Virtual
+         Tributary / Virtual Container) related properties of 
+         SONET/SDH lines."
+    ::= { csConfig 2 }
+
+csVTConfigEntry OBJECT-TYPE
+    SYNTAX CsVTConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "There is an entry in this table for each SONET line that 
+         supports SONET virtual tributaries or SDH virtual containers.
+         Each entry in this table will have a corresponding entry 
+         in csConfigTable."
+    INDEX { ifIndex }
+-- Augments csConfigEntry
+    ::= { csVTConfigTable 1 }
+
+CsVTConfigEntry ::= SEQUENCE {
+    csTributaryType INTEGER,
+    csTributaryMappingType INTEGER,
+    csTributaryFramingType INTEGER,
+    csSignallingTransportMode INTEGER,
+    csTributaryGroupingType INTEGER
+    }
+
+csTributaryType OBJECT-TYPE
+    SYNTAX INTEGER {
+        vt15vc11(1),
+        vt2vc12(2)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Type of the tributary carried within the SONET/SDH signal.
+        
+               vt15vc11    : carries T1 signal
+               vt2vc12     : carries E1 signal"
+    ::= { csVTConfigEntry 1 }
+
+csTributaryMappingType OBJECT-TYPE
+    SYNTAX INTEGER {
+        asynchronous(1),
+        byteSynchronous(2)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the VT/VC mapping type.
+        
+               asynchronous:    In this mode, the channel structure of 
+                                DS1/E1 is neither visible nor preserved.
+        
+               byteSynchronous: In this mode, the DS0 signals inside the
+                                VT/VC can be found and extracted from the
+                                frame.
+        
+         Default is asynchronous(1)."
+    ::= { csVTConfigEntry 2 }
+
+csTributaryFramingType OBJECT-TYPE
+    SYNTAX INTEGER {
+        notApplicable(1),
+        dsx1D4(2),
+        dsx1ESF(3)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the framing type to be assigned to the
+         virtual tributaries in byte sync mapping mode.
+        
+               notApplicable  :  If VT mapping is not byteSynchronous(2).
+               dsx1ESF        :  Extended Superframe Format
+               dsx1D4         :  Superframe Format
+        
+         Default is dsx1ESF(3) if csTributaryMappingType is 
+         byteSynchronous(2). For asynchronous(1) mapping, the default is 
+         notApplicable(1).
+        
+         The value notApplicable(1) can not be set."
+    ::= { csVTConfigEntry 3 }
+
+csSignallingTransportMode OBJECT-TYPE
+    SYNTAX INTEGER {
+        notApplicable(1),
+        signallingTransferMode(2),
+        clearMode(3)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the mode used to transport DS0 
+         signalling information for T1 byteSynchronous mapping (GR253).
+         In signallingTransferMode(2), the robbed-bit signalling is 
+         transferred to the VT header. In clearMode(3), only the 
+         framing bit is transferred to the VT header.
+              
+         Default is signallingTransferMode(2) if csTributaryMappingType 
+         is byteSynchronous. For asynchronous mapping, it is 
+         notApplicable(1).
+        
+         The value notApplicable(1) can not be set."
+    ::= { csVTConfigEntry 4 }
+
+csTributaryGroupingType OBJECT-TYPE
+    SYNTAX INTEGER {
+        notApplicable(1),
+        au3Grouping(2),
+        au4Grouping(3)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the method used to group VCs into an
+         STM-1 signal. Applicable only to SDH.
+        
+           au3Grouping: STM1<-AU-3<-TUG-2<-TU-12<-VC12 or
+                        STM1<-AU-3<-TUG-2<-TU-11<-VC11.
+        
+           au4Grouping: STM1<-AU-4<-TUG-3<-TUG-2<-TU-12<-VC12 or
+                        STM1<-AU-4<-TUG-3<-TUG-2<-TU-11<-VC11.
+        
+         Default is au3Grouping(2) for SDH and notApplicable(1) for SONET."
+    ::= { csVTConfigEntry 5 }
 
 csApsConfigTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CsApsConfigEntry
@@ -232,7 +574,10 @@ CsApsConfigEntry ::= SEQUENCE {
     csApsRevertive INTEGER,
     csApsDirectionOperational INTEGER,
     csApsArchModeOperational INTEGER,
-    csApsChannelProtocol INTEGER
+    csApsChannelProtocol INTEGER,
+    csApsFailureStatus CsApsLineFailureStatus,
+    csApsSwitchReason CsApsLineSwitchReason,
+    csApsPrimarySection INTEGER
     }
 
 csApsWorkingIndex OBJECT-TYPE
@@ -245,7 +590,10 @@ csApsWorkingIndex OBJECT-TYPE
          to be the working line, which is the primary line,
          and the other has to be the protection line, which
          is the backup line. This object refers to the working line
-         in the APS pair."
+         in the APS pair. For G.783 AnnexB, this index refers to
+         Working Section 1."
+    REFERENCE
+        "GR-253-CORE, G.783 AnnexB"
     ::= { csApsConfigEntry 1 }
 
 csApsProtectionIndex OBJECT-TYPE
@@ -256,7 +604,11 @@ csApsProtectionIndex OBJECT-TYPE
     DESCRIPTION
         "The protection line indicates that it will become
          the active line when an APS switch occurs (APS switch
-         could occur because of a failure on the working line)."
+         could occur because of a failure on the working line).
+         For G.783 AnnexB, This index refers to Working Section
+         2."
+    REFERENCE
+        "GR-253-CORE, G.783 AnnexB"
     ::= { csApsConfigEntry 2 }
 
 csApsEnable OBJECT-TYPE
@@ -329,9 +681,12 @@ csApsActiveLine OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This object indicates which line is currently active. 
-         It could be the working line, the protection line or 
-         none if neither working nor protection line is active. 
+         It could be the working line(Section 1 for Annex B),
+         the protection line(Section 2 for Annex B) or none
+         if neither working nor protection line is active. 
          This object reflects the status of receive direction."
+    REFERENCE
+        "GR-253-CORE, G.783 AnnexB"
     ::= { csApsConfigEntry 5 }
 
 csApsSigFaultBER OBJECT-TYPE
@@ -468,74 +823,118 @@ csApsChannelProtocol OBJECT-TYPE
          bellcore(1) : Implements APS channel protocol as defined
                        in bellcore document GR-253-CORE.
          itu(2) : Implements APS channel protocol as defined in 
-                  ITU document G.783, Annex A."
+                  ITU document G.783."
     REFERENCE
         "GR-253-CORE, G.783"
     ::= { csApsConfigEntry 13 }
 
-csApsLineFailureCode OBJECT-TYPE
+csApsFailureStatus OBJECT-TYPE
+    SYNTAX CsApsLineFailureStatus
+--    Rsyntax OCTET STRING(SIZE(1..2))
+--         BITS are:
+--           noApsLineFailure(0)
+--           csApsChannelMismatchBit(1)
+--           csApsProtectionByteFailBit(2)
+--           csApsFEProtectionFailureBit(3)
+--           csApsModeMismatchBit(4)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates APS line failure status."
+    REFERENCE
+        "GR-253-CORE, G.783"
+    ::= { csApsConfigEntry 14 }
+
+csApsSwitchReason OBJECT-TYPE
+    SYNTAX CsApsLineSwitchReason
+--    Rsyntax INTEGER {
+--        csApsOther(1),
+--        csApsRevertive(2),
+--        csApsManual(3),
+--        csApsSignalDefectLow(4),
+--        csApsSignalDefectHigh(5),
+--        csApsSignalFailureLow(6),
+--        csApsSignalFailureHigh(7),
+--        csApsForceSwitch(8),
+--        csApsLockOut(9),
+--        csApsNoSwitch(10)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates APS line switch reason."
+    REFERENCE
+        "GR-253-CORE, G.783"
+    ::= { csApsConfigEntry 15 }
+
+csApsPrimarySection OBJECT-TYPE
     SYNTAX INTEGER {
-        csApsChannelMismatch(1),
-        csApsProtectionByteFail(2),
-        csApsFEProtectionFailure(3)
+        workingSection1(1),
+        workingSection2(2),
+        none(3)
         }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The Sonet APS line failure code - this is the failure 
-         encountered by the APS line. 
+        "This object indicates which working section is the APS
+         primary section. In G.783 AnnexB, the K1/K2 Bytes are
+         received on the secondary Section. All the Switch
+         Requests are for a switch from the primary section to
+         the secondary section. The object csApsActiveline will
+         indicate which section is currently carrying the
+         traffic.  Once the switch request clears normally,
+         traffic is maintained on the section to which it was
+         switched by making that section the primary section. 
         
-         csApsChannelMismatch: trasmitted K1 byte and
-                               received K2 byte do not match.
-         csApsProtectionByteFail: It could mean either K1 byte 
-                                  with invalid type of switch 
-                                  request bits was received, or,  
-                                  priority of received K1 byte 
-                                  is lower than the transmitted 
-                                  K1 byte.
-         csApsFEProtectionFailure: Remote end error detected."
+         Possible values: 
+         workingSection1(1): Working Section 1 is Primary Section
+         workingSection2(2): Working Section 2 is Primary Section
+         none(3)           : none."
     REFERENCE
-        "GR-253-CORE"
+        "G.783 AnnexB"
+    ::= { csApsConfigEntry 16 }
+
+csApsLineFailureCode OBJECT-TYPE
+    SYNTAX CsApsLineFailureCode
+--    Rsyntax INTEGER {
+--        csApsChannelMismatch(1),
+--        csApsProtectionByteFail(2),
+--        csApsFEProtectionFailure(3),
+--        csApsModeMismatch(4)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The object indicates the APS line failure code. This is the
+         failure encountered by the APS line.
+         Refer to CsApsLineFailureCode TC for failure code definitions.
+         The object is used for notifications."
+    REFERENCE
+        "GR-253-CORE, G.783"
     ::= { csApsConfig 2 }
 
 csApsLineSwitchReason OBJECT-TYPE
-    SYNTAX INTEGER {
-        csApsOther(1),
-        csApsRevertive(2),
-        csApsManual(3),
-        csApsSignalDefectLow(4),
-        csApsSignalDefectHigh(5),
-        csApsSignalFailureLow(6),
-        csApsSignalFailureHigh(7),
-        csApsForceSwitch(8),
-        csApsLockOut(9)
-        }
+    SYNTAX CsApsLineSwitchReason
+--    Rsyntax INTEGER {
+--        csApsOther(1),
+--        csApsRevertive(2),
+--        csApsManual(3),
+--        csApsSignalDefectLow(4),
+--        csApsSignalDefectHigh(5),
+--        csApsSignalFailureLow(6),
+--        csApsSignalFailureHigh(7),
+--        csApsForceSwitch(8),
+--        csApsLockOut(9),
+--        csApsNoSwitch(10)
+--        }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The reason why APS switch happened. When the working
-         line on one end fails, its other end is told to do
-         an  APS switch. The following options in the increasing
-         order of priority indicate what type of switch request 
-         it is. 
-        
-        csApsRevertive : Switch back to working line after the 
-          Wait-to-Restore interval is over, and failures are 
-          cleared. It is the lowest priority.
-        csApsManual : Manual switch causes APS switch unless a 
-          request of equal or higher priority is in effect.
-        csApsSignalDefectLow : Switch happened because threshold 
-          for 'csApsSigFaultBER' was exceeded. 
-        csApsSignalDefectHigh : Same as above, but higher priority.
-        csApsSignalFailureLow : Switch happened because threshold 
-          for 'csApsSigDegradeBER' was exceeded. 
-        csApsSignalFailureHigh : Same as above, but higher 
-          priority.
-        csApsForceSwitch : Forced switch forces hardware to switch
-          the active line even if the other line (could be 
-          working line or protection line) is in alarm.
-        csApsLockOut : This is the highest priority switch. This
-          will override all other requests. "
+        "This object indicates the APS line switch reason.
+         When the working line on one end fails, its other end
+         is told to do an APS switch. 
+         Refer to CsApsLineSwitchReason TC for more information.
+         The object is used for notifications."
     ::= { csApsConfig 3 }
 
 cssTotalTable OBJECT-TYPE
@@ -1232,10 +1631,310 @@ cspRFIs OBJECT-TYPE
         " RFC2558 "
     ::= { csStatsEntry 6 }
 
+cspConfigTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CspConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Cisco extension to SONET Path current table."
+    ::= { cspConfig 1 }
+
+cspConfigEntry OBJECT-TYPE
+    SYNTAX CspConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry in Cisco extension to the SONET path current table."
+    INDEX { ifIndex }
+-- Augments sonetPathCurrentEntry FROM SONET-MIB
+    ::= { cspConfigTable 1 }
+
+CspConfigEntry ::= SEQUENCE {
+    cspSonetPathPayload INTEGER,
+    cspTributaryMappingType INTEGER,
+    cspSignallingTransportMode INTEGER,
+    cspTributaryGroupingType INTEGER
+    }
+
+cspSonetPathPayload OBJECT-TYPE
+    SYNTAX INTEGER {
+        unequipped(1),
+        unspecified(2),
+        ds3(3),
+        vt15vc11(4),
+        vt2vc12(5),
+        atmCell(6),
+        hdlcFr(7),
+        e3(8),
+        vtStructured(9)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Specifies the payload carried by the SONET/SDH Path.
+        The payload specification corresponds to C2 (Signal Label)
+        overhead byte in SONET/SDH Path Overhead:
+        unequipped(1)    : Path is not provisioned to carry any payload.
+        unspecified(2)   : Path is carrying an unspecifed payload.
+        ds3(3)           : Path is carrying a DS3 path as payload.
+        vt15vc11(4)      : Path is carrying SONET-VT1.5/SDH-VC11 payload.
+        vt2vc12(5)       : Path is carrying SONET-VT2/SDH-VC12 as payload.
+        atmCell(6)       : Path is carrying ATM Cells as payload.
+        hdlcFr(7)        : Path is carrying Frame Relay (HDLC) payload.
+        e3(8)            : Path is carrying an E3 path as payload.
+        vtStructured(9)  : Path is carrying VTGs/TUG3s/TUG2s which may
+                           each carry a different payload. 
+        A write operation on this object will result in update to
+        C2 overhead byte in the Path Overhead."
+    REFERENCE
+        "Telcordia GR-253, ITU G.707"
+    ::= { cspConfigEntry 1 }
+
+cspTributaryMappingType OBJECT-TYPE
+    SYNTAX INTEGER {
+        asynchronous(1),
+        byteSynchronous(2)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the VT/VC mapping type.
+         asynchronous: In this mode, the channel structure of 
+                       DS1/E1 is neither visible nor preserved.
+        
+         byteSynchronous: In this mode, the DS0 signals inside 
+                          the VT/VC can be found and extracted 
+                          from the frame.
+         The initial value is asynchronous(1)."
+    ::= { cspConfigEntry 2 }
+
+cspSignallingTransportMode OBJECT-TYPE
+    SYNTAX INTEGER {
+        notApplicable(1),
+        signallingTransferMode(2),
+        clearMode(3)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the mode used to transport DS0 
+         Signalling information for T1 byteSynchronous mapping
+         (GR253).
+         In signallingTransferMode(2), the robbed-bit signalling 
+         is transferred to the VT header. In clearMode(3), only 
+         the framing bit is transferred to the VT header.
+                  
+         The initial value is signallingTransferMode(2) 
+         if csTributaryMappingType is byteSynchronous. 
+         For asynchronous mapping, it is 
+         notApplicable(1).
+        
+         The value notApplicable(1) can not be set."
+    ::= { cspConfigEntry 3 }
+
+cspTributaryGroupingType OBJECT-TYPE
+    SYNTAX INTEGER {
+        notApplicable(1),
+        au3Grouping(2),
+        au4Grouping(3)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the method used to group VCs into
+         an STM-1 signal. Applicable only to SDH.
+        
+         au3Grouping: STM1<-AU-3<-TUG-2<-TU-12<-VC12 or
+                      STM1<-AU-3<-TUG-2<-TU-11<-VC11.
+        
+         au4Grouping: STM1<-AU-4<-TUG-3<-TUG-2<-TU-12<-VC12 or
+                      STM1<-AU-4<-TUG-3<-TUG-2<-TU-11<-VC11.
+        
+         The initial value is au3Grouping(2) for SDH and 
+         notApplicable(1) for SONET."
+    REFERENCE
+        "ITU-T,G707, Section 6 Basic Multiplexing Priciples"
+    ::= { cspConfigEntry 4 }
+
+csAu4Tug3ConfigTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CsAu4Tug3ConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains objects to configure the VC( Virtual
+         Container) related properties of a TUG-3 within a AU-4 
+         paths.
+        
+         This table allows creation of
+         following multiplexing structure:
+         STM-1/AU-4/TUG-3/TU-3/DS3
+         STM-1/AU-4/TUG-3/TU-3/E3
+         STM-1/AU-4/TUG-3/TUG-2/TU-11/DS1
+         STM-1/AU-4/TUG-3/TUG-2/TU-12/E1
+        
+        Three entries are created in this table for a given AU-4 
+        path when cspSonetPathPayload object is set to one of the 
+        following:
+             vt15vc11(4),
+             vt2vc12(5),
+             ds3(3),
+             e3(8),
+             vtStructured(9)
+        "
+    REFERENCE
+        "ITU-T, G.707"
+    ::= { csAu4Tug3Config 1 }
+
+csAu4Tug3ConfigEntry OBJECT-TYPE
+    SYNTAX CsAu4Tug3ConfigEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "There is an entry in this table for each TUG-3 within a 
+         AU-4 SDH path that supports SDH virtual container VC-4.
+         The ifIndex value represents an entry in ifTable with
+         ifType = sonetPath(50).The ifTable entry applicable for
+         this entry belongs to AU-4 path."
+    INDEX { ifIndex, csAu4Tug3 }
+    ::= { csAu4Tug3ConfigTable 1 }
+
+CsAu4Tug3ConfigEntry ::= SEQUENCE {
+    csAu4Tug3 INTEGER,
+    csAu4Tug3Payload INTEGER
+    }
+
+csAu4Tug3 OBJECT-TYPE
+    SYNTAX INTEGER(1..3)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the TUG-3 number."
+    REFERENCE
+        "ITU-T G.707 for SDH Multiplexing hierarchy."
+    ::= { csAu4Tug3ConfigEntry 1 }
+
+csAu4Tug3Payload OBJECT-TYPE
+    SYNTAX INTEGER {
+        other(1),
+        vc11(2),
+        vc12(3),
+        tu3ds3(4),
+        tu3e3(5)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object is used for configuring the payload
+         for the tributary group.
+        
+         The possible values are :
+        
+         vc11   : When set to 'vc11' following things are done:
+                - 28 entries created in ifTable for TU-11 with 
+                  ifType = sonetVT(51)
+                - 28 entries created in ifTable for DS1 with 
+                  ifType = ds1(18)
+        
+                  STM1<-AU-4<-TUG-3<-TUG-2<-TU-11<-VC11
+        
+         vc12   : When set to 'vc12' following things are done:
+                - 21 entries created in ifTable for TU-12 with 
+                  ifType = sonetVT(51)
+                - 21 entries created in ifTable for E1 with 
+                  ifType = ds1(18)
+        
+                  STM1<-AU-4<-TUG-3<-TUG-2<-TU-12<-VC12
+        
+         tu3ds3 : When set to 'tu3ds3' following things are done:
+                - 1 entry created in ifTable for TU-3 with 
+                  ifType = sonetVT(51)
+                - 1 entry created in ifTable for DS3 with 
+                  ifType = ds3(30)
+        
+                  STM1<-AU-4<-TUG-3<-TU-3<-VC3
+        
+         tu3e3  : When set to 'tu3e3' following things are done:
+                - 1 entry created in ifTable for TU-3 with 
+                  ifType = sonetVT(51)
+                - 1 entry created in ifTable for E3 with 
+                  ifType = ds3(30)
+        
+                  STM1<-AU-4<-TUG-3<-TU-3<-VC3
+        
+         The value 'other' can not be set."
+    DEFVAL { vc11 }
+    ::= { csAu4Tug3ConfigEntry 2 }
+
+csNotificationsEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object controls if the generation of 
+         ciscoSonetSectionStatusChange, ciscoSonetLineStatusChange, 
+         ciscoSonetPathStatusChange and ciscoSonetVTStatusChange
+         notifications is enabled. If the value of this object
+         is 'true(1)', then all notifications in this MIB are
+         enabled; otherwise they are disabled."
+    DEFVAL { false }
+    ::= { csNotifications 1 }
+
+ciscoSonetSectionStatusChange TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoSonetMIB
+    VARIABLES {
+        sonetSectionCurrentStatus, ifDescr }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification is generated whenever the value of
+         sonetSectionCurrentStatus changes."
+    ::= 1
+
+ciscoSonetLineStatusChange TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoSonetMIB
+    VARIABLES {
+        sonetLineCurrentStatus, ifDescr }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification is generated whenever the value of
+         sonetLineCurrentStatus changes."
+    ::= 2
+
+ciscoSonetPathStatusChange TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoSonetMIB
+    VARIABLES {
+        sonetPathCurrentStatus, ifDescr }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification is generated whenever the value of
+         sonetPathCurrentStatus changes."
+    ::= 3
+
+ciscoSonetVTStatusChange TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoSonetMIB
+    VARIABLES {
+        sonetVTCurrentStatus, ifDescr }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification is generated whenever the value of
+         sonetVTCurrentStatus changes."
+    ::= 4
+
 ciscoSonetConfMIBGroup OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 1 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    Objects used for configuring Sonet lines.
 --  objects
@@ -1271,7 +1970,7 @@ ciscoSonetTraceMIBGroup OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 3 }
 ciscoSonetApsMIBGroup OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 4 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    Objects used for configuring APS over Sonet lines.
 --  objects
@@ -1282,10 +1981,126 @@ ciscoSonetApsMIBGroup OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 4 }
 --    csApsDirectionOperational, csApsArchModeOperational, 
 --    csApsChannelProtocol
 
+ciscoSonetApsMIBGroup1 OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 5 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Objects used for configuring APS over Sonet lines.
+--     This group includes 3 new objects in addition to
+--     those in the deprecated group ciscoSonetApsMIBGroup.
+--  objects
+--    csApsProtectionIndex, csApsEnable, csApsArchMode, 
+--    csApsActiveLine, csApsSigFaultBER, csApsSigDegradeBER, 
+--    csApsWaitToRestore, csApsDirection, csApsRevertive, 
+--    csApsLineFailureCode, csApsLineSwitchReason, 
+--    csApsDirectionOperational, csApsArchModeOperational, 
+--    csApsChannelProtocol, csApsFailureStatus, csApsSwitchReason, 
+--    csApsPrimarySection
+
+ciscoSonetConfMIBGroup1 OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Objects used for configuring Sonet lines.
+--  objects
+--    csConfigLoopbackType, csConfigXmtClockSource, 
+--    csConfigFrameScramble, csConfigType, csConfigRDIPType, 
+--    csConfigRDIVType
+
+ciscoSonetVTConfMIBGroup OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 7 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Objects used for configuring Sonet Virtual tributaries.
+--  objects
+--    csTributaryType, csTributaryMappingType, 
+--    csTributaryFramingType, csSignallingTransportMode, 
+--    csTributaryGroupingType
+
+ciscoSonetPathConfMIBGroup OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 8 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Objects used for configuring Sonet Paths.
+--  objects
+--    cspSonetPathPayload
+
+ciscoSonetNotifEnableGroup OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 9 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of objects which enable notifications.
+--  objects
+--    csNotificationsEnabled
+
+ciscoSonetPathConfMIBGroup1 OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 14 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Objects used for configuring Sonet Paths.
+--  objects
+--    cspTributaryMappingType, cspSignallingTransportMode, 
+--    cspTributaryGroupingType
+
+ciscoSonetAu4Tug3Group OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 15 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Objects used for configuring AU-4:TUG-3 paths.
+--  objects
+--    csAu4Tug3Payload
+
+ciscoSonetSectionNotifGroup OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 10 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of Section notifications which are 
+--     required to be implemented.
+--  notifications
+--    ciscoSonetSectionStatusChange
+
+ciscoSonetLineNotifGroup OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 11 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of Line notifications which are 
+--     required to be implemented.
+--  notifications
+--    ciscoSonetLineStatusChange
+
+ciscoSonetPathNotifGroup OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 12 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of Path notifications which are 
+--     required to be implemented.
+--  notifications
+--    ciscoSonetPathStatusChange
+
+ciscoSonetVTNotifGroup OBJECT IDENTIFIER ::= { ciscoSonetMIBGroups 13 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of VT notifications which are 
+--     required to be implemented.
+--  notifications
+--    ciscoSonetVTStatusChange
+
 ciscoSonetMIBCompliance OBJECT IDENTIFIER ::= { ciscoSonetMIBCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The Compliance statement for ciscoSonet management group.
 --  Module
@@ -1302,6 +2117,105 @@ ciscoSonetMIBCompliance OBJECT IDENTIFIER ::= { ciscoSonetMIBCompliances 1 }
 --    cssTraceReceived
 --   ObjVar
 --    cspTraceReceived
+
+ciscoSonetMIBCompliance1 OBJECT IDENTIFIER ::= { ciscoSonetMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The Compliance statement for ciscoSonet management group.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoSonetConfMIBGroup1
+--   MandGroup
+--    ciscoSonetStatsMIBGroup
+--   MandGroup
+--    ciscoSonetTraceMIBGroup
+--   OptGroup
+--    ciscoSonetApsMIBGroup1
+--   ObjVar
+--    cssTraceReceived
+--   ObjVar
+--    cspTraceReceived
+--   OptGroup
+--    ciscoSonetVTConfMIBGroup
+
+ciscoSonetMIBCompliance2 OBJECT IDENTIFIER ::= { ciscoSonetMIBCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The Compliance statement for ciscoSonet management group.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoSonetConfMIBGroup1
+--   MandGroup
+--    ciscoSonetTraceMIBGroup
+--   MandGroup
+--    ciscoSonetNotifEnableGroup
+--   MandGroup
+--    ciscoSonetSectionNotifGroup
+--   ObjVar
+--    cssTraceReceived
+--   ObjVar
+--    cspTraceReceived
+--   OptGroup
+--    ciscoSonetVTConfMIBGroup
+--   OptGroup
+--    ciscoSonetPathConfMIBGroup
+--   OptGroup
+--    ciscoSonetPathConfMIBGroup1
+--   OptGroup
+--    ciscoSonetStatsMIBGroup
+--   OptGroup
+--    ciscoSonetApsMIBGroup1
+--   OptGroup
+--    ciscoSonetLineNotifGroup
+--   OptGroup
+--    ciscoSonetPathNotifGroup
+--   OptGroup
+--    ciscoSonetVTNotifGroup
+
+ciscoSonetMIBCompliance3 OBJECT IDENTIFIER ::= { ciscoSonetMIBCompliances 4 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The Compliance statement for ciscoSonet management group.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoSonetConfMIBGroup1
+--   MandGroup
+--    ciscoSonetTraceMIBGroup
+--   MandGroup
+--    ciscoSonetNotifEnableGroup
+--   MandGroup
+--    ciscoSonetSectionNotifGroup
+--   ObjVar
+--    cssTraceReceived
+--   ObjVar
+--    cspTraceReceived
+--   OptGroup
+--    ciscoSonetVTConfMIBGroup
+--   OptGroup
+--    ciscoSonetPathConfMIBGroup
+--   OptGroup
+--    ciscoSonetPathConfMIBGroup1
+--   OptGroup
+--    ciscoSonetStatsMIBGroup
+--   OptGroup
+--    ciscoSonetApsMIBGroup1
+--   OptGroup
+--    ciscoSonetLineNotifGroup
+--   OptGroup
+--    ciscoSonetPathNotifGroup
+--   OptGroup
+--    ciscoSonetVTNotifGroup
+--   OptGroup
+--    ciscoSonetAu4Tug3Group
 
 
 END

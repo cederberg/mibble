@@ -1,0 +1,532 @@
+-- MIB file created 02-Feb-2006 13:42:31, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
+
+CISCO-STACKWISE-MIB DEFINITIONS ::= BEGIN
+
+-- From file: "CISCO-STACKWISE-MIB.my"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
+
+IMPORTS
+    entPhysicalIndex
+            FROM ENTITY-MIB
+    ifIndex
+            FROM IF-MIB
+    TruthValue, MacAddress
+            FROM SNMPv2-TC-v1
+    SnmpAdminString
+            FROM SNMP-FRAMEWORK-MIB
+    ciscoMgmt
+            FROM CISCO-SMI
+    EntPhysicalIndexOrZero
+            FROM CISCO-TC
+    Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
+
+ciscoStackWiseMIB OBJECT IDENTIFIER ::= { ciscoMgmt 500 }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    200510120000Z
+--  OrgName
+--    Cisco Systems, Inc.
+--  ContactInfo
+--    Cisco Systems
+--     Customer Service
+--    
+--    Postal:   170 W Tasman Drive
+--     San Jose, CA 95134
+--    
+--    Tel:   +1 800 553-NETS
+--    
+--    E-mail:   cs-dsbu@cisco.com
+--  Descr
+--    This MIB module contain a collection of managed objects
+--     that apply to network devices supporting the Cisco
+--     StackWise(TM) technology.
+--    
+--     The StackWise technology provides a method for collectively
+--     utilizing a stack of switches to create a single switching
+--     unit.
+--    
+--     Terminology:
+--     Stack     - A collection of switches connected by the
+--                 Cisco StackWise technology.
+--    
+--     Master    - The switch that is managing the stack.
+--    
+--     Member    - A switch in the stack that is
+--                 NOT the stack master.
+--    
+--     Ring      - Components that makes up the connections
+--                 between the switches in order to create a
+--                 stack.
+--    
+--     Stackport - A special physical connector used by the ring.
+--                 It is possible for a switch have more than
+--                 one stackport.
+--    
+--     SDM       - Switch Database Management.
+--  RevDate
+--    200510120000Z
+--  RevDescr
+--    Initial version of this MIB module.
+
+ciscoStackWiseMIBNotifs OBJECT IDENTIFIER ::= { ciscoStackWiseMIB 0 }
+ciscoStackWiseMIBObjects OBJECT IDENTIFIER ::= { ciscoStackWiseMIB 1 }
+ciscoStackWiseMIBConform OBJECT IDENTIFIER ::= { ciscoStackWiseMIB 2 }
+cswGlobals      OBJECT IDENTIFIER ::= { ciscoStackWiseMIBObjects 1 }
+cswStackInfo    OBJECT IDENTIFIER ::= { ciscoStackWiseMIBObjects 2 }
+cswMIBNotifications OBJECT IDENTIFIER ::= { ciscoStackWiseMIBNotifs 0 }
+cswStackWiseMIBCompliances OBJECT IDENTIFIER ::= { ciscoStackWiseMIBConform 1 }
+cswStackWiseMIBGroups OBJECT IDENTIFIER ::= { ciscoStackWiseMIBConform 2 }
+
+CswSwitchNumber ::= Gauge(1..4294967295)
+-- TEXTUAL-CONVENTION
+--  DspHint
+--    d
+--  Status
+--    mandatory
+--  Descr
+--    A unique value, greater than zero, for each switch in a group
+--    of stackable switches.
+
+CswSwitchNumberOrZero ::= Gauge(0..4294967295)
+-- TEXTUAL-CONVENTION
+--  DspHint
+--    d
+--  Status
+--    mandatory
+--  Descr
+--    A unique value, greater than or equal to zero, for each switch
+--    in a group of stackable switches.
+--    
+--    A value of zero means that the switch number can not be
+--    determined.  The value of zero is not unique.
+
+CswSwitchPriority ::= Gauge(0..4294967295)
+-- TEXTUAL-CONVENTION
+--  DspHint
+--    d
+--  Status
+--    mandatory
+--  Descr
+--    A value, greater than or equal to zero, that defines the
+--    priority of a switch in a group of stackable switches.  The
+--    higher the value, the higher the priority.
+
+cswMaxSwitchNum OBJECT-TYPE
+    SYNTAX CswSwitchNumber
+--    Rsyntax Gauge(1..4294967295)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The maximum number of switches that can be configured on
+        this stack.  This is also the maximum value that can be
+        set by the cswSwitchNumNextReload object."
+    ::= { cswGlobals 1 }
+
+cswMaxSwitchConfigPriority OBJECT-TYPE
+    SYNTAX CswSwitchPriority
+--    Rsyntax Gauge(0..4294967295)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The maximum configurable priority for a switch in this stack.
+        Highest value equals highest priority.  This is the highest
+        value that can be set by the cswSwitchSwPriority object."
+    ::= { cswGlobals 2 }
+
+cswRingRedundant OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "A value of 'true' is returned when the stackports are
+        connected in such a way that it forms a redundant ring."
+    ::= { cswGlobals 3 }
+
+cswEnableStackNotifications OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates whether the system generates the
+        notifications defined in this MIB or not.  A value of
+        'false' will prevent the notifications from being sent."
+    ::= { cswGlobals 4 }
+
+cswSwitchInfoTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CswSwitchInfoEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains information specific to switches in a
+        stack.  Every switch with an entry in the entPhysicalTable
+        (ENTITY-MIB) whose entPhysicalClass is 'chassis' will have
+        an entry in this table."
+    ::= { cswStackInfo 1 }
+
+cswSwitchInfoEntry OBJECT-TYPE
+    SYNTAX CswSwitchInfoEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A conceptual row in the cswSwitchInfoTable describing
+        a switch information."
+    INDEX { entPhysicalIndex }
+    ::= { cswSwitchInfoTable 1 }
+
+CswSwitchInfoEntry ::= SEQUENCE {
+    cswSwitchNumCurrent CswSwitchNumber,
+    cswSwitchNumNextReload CswSwitchNumberOrZero,
+    cswSwitchRole INTEGER,
+    cswSwitchSwPriority CswSwitchPriority,
+    cswSwitchHwPriority CswSwitchPriority,
+    cswSwitchState INTEGER,
+    cswSwitchMacAddress MacAddress,
+    cswSwitchSoftwareImage SnmpAdminString
+    }
+
+cswSwitchNumCurrent OBJECT-TYPE
+    SYNTAX CswSwitchNumber
+--    Rsyntax Gauge(1..4294967295)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object contains the current switch identification number.
+        This number should match any logical labeling on the switch.
+        For example, a switch whose interfaces are labeled
+        'interface #3' this value should be 3."
+    ::= { cswSwitchInfoEntry 1 }
+
+cswSwitchNumNextReload OBJECT-TYPE
+    SYNTAX CswSwitchNumberOrZero
+--    Rsyntax Gauge(0..4294967295)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object contains the cswSwitchNumCurrent to be
+        used at next reload.  The maximum value for this object is
+        defined by the cswMaxSwitchNum object.
+        
+        Note: This object will contain 0 and cannot be set if the
+        cswSwitchState value is other than 'ready'."
+    ::= { cswSwitchInfoEntry 2 }
+
+cswSwitchRole OBJECT-TYPE
+    SYNTAX INTEGER {
+        master(1),
+        member(2),
+        notMember(3)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object describes the function of the switch:
+        
+        master    - stack master.
+        
+        member    - active member of the stack.
+        
+        notMember - none-active stack member, see
+                    cswSwitchState for status."
+    ::= { cswSwitchInfoEntry 3 }
+
+cswSwitchSwPriority OBJECT-TYPE
+    SYNTAX CswSwitchPriority
+--    Rsyntax Gauge(0..4294967295)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "A number containing the priority of a switch.  The switch with
+        the highest priority will become the master.  The maximum value
+        for this object is defined by the cswMaxSwitchConfigPriority
+        object.
+        
+        If after a reload the value of cswMaxSwitchConfigPriority
+        changes to a smaller value, and the value of cswSwitchSwPriority
+        has been previously set to a value greater or equal to the
+        new cswMaxSwitchConfigPriority, then the SNMP agent must set
+        cswSwitchSwPriority to the new cswMaxSwitchConfigPriority.
+        
+        Note: This object will contain the value of 0 if the
+        cswSwitchState value is other than 'ready'."
+    ::= { cswSwitchInfoEntry 4 }
+
+cswSwitchHwPriority OBJECT-TYPE
+    SYNTAX CswSwitchPriority
+--    Rsyntax Gauge(0..4294967295)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object contains the hardware priority of a switch.  If
+        two or more entries in this table have the same
+        cswSwitchSwPriority value during the master election time,
+        the switch with the highest cswSwitchHwPriority will become
+        the master.
+        
+        Note: This object will contain the value of 0 if the
+        cswSwitchState value is other than 'ready'."
+    ::= { cswSwitchInfoEntry 5 }
+
+cswSwitchState OBJECT-TYPE
+    SYNTAX INTEGER {
+        waiting(1),
+        progressing(2),
+        added(3),
+        ready(4),
+        sdmMismatch(5),
+        verMismatch(6),
+        featureMismatch(7),
+        newMasterInit(8),
+        provisioned(9),
+        invalid(10)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The current state of a switch:
+        
+        waiting         - Waiting for a limited time on other
+                          switches in the stack to come online.
+        
+        progressing     - Master election or mismatch checks in
+                          progress.
+        
+        added           - The switch is added to the stack.
+        
+        ready           - The switch is operational.
+        
+        sdmMismatch     - The SDM template configured on the master
+                          is not supported by the new member.
+        
+        verMismatch     - The operating system version running on the
+                          master is different from the operating
+                          system version running on this member.
+        
+        featureMismatch - Some of the features configured on the
+                          master are not supported on this member.
+        
+        newMasterInit   - Waiting for the new master to finish
+                          initialization after master switchover
+                          (Master Re-Init).
+        
+        provisioned     - The switch is not an active member of the
+                          stack.
+        
+        invalid         - The switch's state machine is in an
+                          invalid state."
+    ::= { cswSwitchInfoEntry 6 }
+
+cswSwitchMacAddress OBJECT-TYPE
+    SYNTAX MacAddress
+--    Rsyntax OCTET STRING(SIZE(6))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The MAC address of the switch.
+        
+        Note: This object will contain the value of 0000:0000:0000
+        if the cswSwitchState value is other than 'ready'."
+    ::= { cswSwitchInfoEntry 7 }
+
+cswSwitchSoftwareImage OBJECT-TYPE
+    SYNTAX SnmpAdminString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The software image type running on the switch.
+        
+        Note: This object will contain an empty string if the
+        cswSwitchState value is other than 'ready'."
+    ::= { cswSwitchInfoEntry 8 }
+
+cswStackPortInfoTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CswStackPortInfoEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains stackport specific information.  There
+        exists an entry in this table for every physical stack
+        port that have an entry in the ifTable (IF-MIB)."
+    ::= { cswStackInfo 2 }
+
+cswStackPortInfoEntry OBJECT-TYPE
+    SYNTAX CswStackPortInfoEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A conceptual row in the cswStackPortInfoTable.  An entry
+        contains information about a stackport."
+    INDEX { ifIndex }
+    ::= { cswStackPortInfoTable 1 }
+
+CswStackPortInfoEntry ::= SEQUENCE {
+    cswStackPortOperStatus INTEGER,
+    cswStackPortNeighbor EntPhysicalIndexOrZero
+    }
+
+cswStackPortOperStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+        up(1),
+        down(2),
+        forcedDown(3)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The state of the stackport.
+        
+        up         - Connected and operational.
+        
+        down       - Not connected to a neighboring switch or
+                     administrative down.
+        
+        forcedDown - Shut down by stack manager due to mismatch or
+                     stackport errors."
+    ::= { cswStackPortInfoEntry 1 }
+
+cswStackPortNeighbor OBJECT-TYPE
+    SYNTAX EntPhysicalIndexOrZero
+--    Rsyntax INTEGER(0..2147483647)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object contains the value of the entPhysicalIndex of the
+        switch's chassis to which this stackport is connected to.  If
+        the stackport is not connected, the value 0 is returned."
+    ::= { cswStackPortInfoEntry 2 }
+
+cswStackPortChange TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoStackWiseMIBNotifs
+    VARIABLES {
+        ifIndex, cswStackPortOperStatus, cswSwitchNumCurrent }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification is generated when the state
+        of a stack port has changed."
+    ::= 1
+
+cswStackNewMaster TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoStackWiseMIBNotifs
+    VARIABLES {
+        cswSwitchNumCurrent }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification is generated when a new master has been
+        elected.  The notification will contain the cswSwitchNumCurrent
+        object to indicate the new master ID."
+    ::= 2
+
+cswStackMismatch TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoStackWiseMIBNotifs
+    VARIABLES {
+        cswSwitchState, cswSwitchNumCurrent }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification is generated when a new member attempt
+        to join the stack but was denied due to a mismatch.  The
+        cswSwitchState object will indicate the type of mismatch."
+    ::= 3
+
+cswStackRingRedundant TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoStackWiseMIBNotifs
+    VARIABLES {
+        cswRingRedundant }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification is generated when the redundancy of the
+        ring has changed."
+    ::= 4
+
+cswStackNewMember TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoStackWiseMIBNotifs
+    VARIABLES {
+        cswSwitchNumCurrent }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification is generated when a new member joins the
+        stack."
+    ::= 5
+
+cswStackMemberRemoved TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoStackWiseMIBNotifs
+    VARIABLES {
+        cswSwitchNumCurrent }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "This notification is generated when a member is removed
+        from the stack."
+    ::= 6
+
+cswStatusGroup OBJECT IDENTIFIER ::= { cswStackWiseMIBGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects that are used for control and
+--    status.
+--  objects
+--    cswMaxSwitchNum, cswMaxSwitchConfigPriority, cswRingRedundant, 
+--    cswEnableStackNotifications, cswSwitchNumCurrent, 
+--    cswSwitchNumNextReload, cswSwitchRole, cswSwitchSwPriority, 
+--    cswSwitchHwPriority, cswSwitchState, cswSwitchMacAddress, 
+--    cswSwitchSoftwareImage, cswStackPortOperStatus, 
+--    cswStackPortNeighbor
+
+cswNotificationGroup OBJECT IDENTIFIER ::= { cswStackWiseMIBGroups 2 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of notifications that are required.
+--  notifications
+--    cswStackPortChange, cswStackNewMaster, cswStackMismatch, 
+--    cswStackRingRedundant, cswStackNewMember, 
+--    cswStackMemberRemoved
+
+cswStackWiseMIBCompliance OBJECT IDENTIFIER ::= { cswStackWiseMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for entities that implement the
+--    CISCO-STACKWISE-MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cswStatusGroup
+--   MandGroup
+--    cswNotificationGroup
+--   ObjVar
+--    cswSwitchSwPriority
+--   ObjVar
+--    cswSwitchNumNextReload
+
+
+END
+

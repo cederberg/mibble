@@ -1,28 +1,31 @@
--- MIB created 6/25/99 12:57:50, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 19-Aug-2003 11:43:04, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-VPDN-MGMT-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-VPDN-MGMT-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    TimeTicks, Gauge32, Counter32, Integer32, IpAddress
-            FROM SNMPv2-SMI-v1
-    OBJECT-TYPE
-            FROM RFC-1212
     TimeStamp, DisplayString, TruthValue
             FROM SNMPv2-TC-v1
+    SnmpAdminString
+            FROM SNMP-FRAMEWORK-MIB
     InterfaceIndexOrZero
             FROM IF-MIB
-    Unsigned32
-            FROM CISCO-TC
     ciscoExperiment
-            FROM CISCO-SMI;
+            FROM CISCO-SMI
+    Counter, Gauge, IpAddress, TimeTicks
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
 
 ciscoVpdnMgmtMIB OBJECT IDENTIFIER ::= { ciscoExperiment 24 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    9707150000Z
+--    200207080000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -56,12 +59,20 @@ ciscoVpdnMgmtMIB OBJECT IDENTIFIER ::= { ciscoExperiment 24 }
 --    4) Failure history per user
 --    
 --      The following example configuration shows how the VPDN MIB returns
---      VPDN information, from either CISCO A - Network Access Server (NAS)/
---    Local Access Concentrator (LAC) or CISCO B - Home Gateway (HGW)/
---    Local Network Server (LNS). User call is projected by either 
+--      VPDN information, from either CISCO A - Network Access Server (NAS)
+--    or CISCO B - Tunnel Server (TS).  The User call is projected by either 
 --    domain name or Dialed Number Identification Service (DNIS).
 --    
---       (NAS/LAC)     (HGW/LNS)
+--    The terms NAS and TS are generic terms refering to the VPDN systems.
+--    The following table shows the corresponding technology-specific terms.
+--    
+--           Network Access Server            Tunnel Server
+--           ==============================   =========================
+--       L2F   Network Access Server    (NAS)   Home Gateway (HGW) 
+--     L2TP  L2TP Access Concentrator (LAC)   L2TP Network Server (LNS)
+--     PPTP  PPTP Access Concentrator (PAC)   PPTP Network Server (PNS)
+--    
+--       (NAS)     (TS)
 --       User ===== Cisco A ===== IP Network ===== Cisco B ===== Server 
 --                   |                          |
 --            +========== VPDN ==========+
@@ -69,17 +80,37 @@ ciscoVpdnMgmtMIB OBJECT IDENTIFIER ::= { ciscoExperiment 24 }
 --      1) The VPDN global entry identifies the system wide VPDN information.
 --      2) The VPDN tunnel table identifies the active VPDN tunnels on Cisco A 
 --      and Cisco B. The table contains an entry for each active tunnel 
---            on the router.
+--            on the system.
 --      3) The VPDN tunnel user table identifies the active users for each
---      active tunnel on each router and provides relevant information
+--      active tunnel on each system and provides relevant information
 --      for each user.
 --    4) The VPDN failure history table identifies the last failure
 --      recorded per user and provides relevant information.
 --       
 --  RevDate
---    9707150000Z
+--    200207080000Z
 --  RevDescr
---    Initial version of this MIB module.
+--    Added support for VPDN Template information.  The template
+--     table reports the number of active sessions for each template.
+--     This number is the sum of active sessions for all VPDN groups
+--     associated with each template.
+--  RevDate
+--    200205170000Z
+--  RevDescr
+--    Changed cvpdnSessionAttrVirtualCircuitID to an Unsigned32
+--     object.  Also, moved Unsigned32 import to SNMPv2-SMI.
+--           
+--  RevDate
+--    200204020000Z
+--  RevDescr
+--    Added virtual circuit ID, packets dropped, and notification
+--     objects for WAN/IP support.
+--           
+--  RevDate
+--    200001120000Z
+--  RevDescr
+--    Added support for Point-to-Point Tunneling Protocol (PPTP).
+--     Changed object descriptions to use generic terms.
 --  RevDate
 --    9903240000Z
 --  RevDescr
@@ -92,18 +123,24 @@ ciscoVpdnMgmtMIB OBJECT IDENTIFIER ::= { ciscoExperiment 24 }
 --      1) cvpdnTunnelTotal, cvpdnSessionTotal, cvpdnDeniedUsersTotal 
 --      2) cvpdnTunnelTable 
 --      3) cvpdnTunnelSessionTable 
+--  RevDate
+--    9707150000Z
+--  RevDescr
+--    Initial version of this MIB module.
 
 ciscoVpdnMgmtMIBObjects OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIB 1 }
 cvpdnSystemInfo OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBObjects 1 }
 cvpdnTunnelInfo OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBObjects 2 }
 cvpdnTunnelSessionInfo OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBObjects 3 }
 cvpdnUserToFailHistInfo OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBObjects 4 }
+cvpdnTemplateInfo OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBObjects 5 }
+ciscoVpdnMgmtMIBNotifs OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIB 0 }
 ciscoVpdnMgmtMIBConformance OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIB 3 }
 ciscoVpdnMgmtMIBCompliances OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBConformance 1 }
 ciscoVpdnMgmtMIBGroups OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBConformance 2 }
 
 cvpdnTunnelTotal OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    tunnels
     ACCESS read-only
@@ -114,7 +151,7 @@ cvpdnTunnelTotal OBJECT-TYPE
     ::= { cvpdnSystemInfo 1 }
 
 cvpdnSessionTotal OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    users
     ACCESS read-only
@@ -125,7 +162,7 @@ cvpdnSessionTotal OBJECT-TYPE
     ::= { cvpdnSystemInfo 2 }
 
 cvpdnDeniedUsersTotal OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    attempts
     ACCESS read-only
@@ -156,15 +193,16 @@ cvpdnSystemEntry OBJECT-TYPE
 
 CvpdnSystemEntry ::= SEQUENCE {
     cvpdnSystemTunnelType INTEGER,
-    cvpdnSystemTunnelTotal Gauge32,
-    cvpdnSystemSessionTotal Gauge32,
-    cvpdnSystemDeniedUsersTotal Counter32
+    cvpdnSystemTunnelTotal Gauge,
+    cvpdnSystemSessionTotal Gauge,
+    cvpdnSystemDeniedUsersTotal Counter
     }
 
 cvpdnSystemTunnelType OBJECT-TYPE
     SYNTAX INTEGER {
         l2f(1),
-        l2tp(2)
+        l2tp(2),
+        pptp(3)
         }
     ACCESS not-accessible
     STATUS mandatory
@@ -173,7 +211,7 @@ cvpdnSystemTunnelType OBJECT-TYPE
     ::= { cvpdnSystemEntry 1 }
 
 cvpdnSystemTunnelTotal OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    tunnels
     ACCESS read-only
@@ -184,7 +222,7 @@ cvpdnSystemTunnelTotal OBJECT-TYPE
     ::= { cvpdnSystemEntry 2 }
 
 cvpdnSystemSessionTotal OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    sessions
     ACCESS read-only
@@ -195,7 +233,7 @@ cvpdnSystemSessionTotal OBJECT-TYPE
     ::= { cvpdnSystemEntry 3 }
 
 cvpdnSystemDeniedUsersTotal OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    attempts
     ACCESS read-only
@@ -205,6 +243,20 @@ cvpdnSystemDeniedUsersTotal OBJECT-TYPE
          VPDN tunnels of this tunnel type since last system
          re-initialization."
     ::= { cvpdnSystemEntry 4 }
+
+cvpdnSystemNotifSessionEnabled OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates whether Layer 2 VPN session notifications are
+         enabled."
+    DEFVAL { false }
+    ::= { cvpdnSystemInfo 5 }
 
 cvpdnTunnelTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CvpdnTunnelEntry
@@ -225,16 +277,16 @@ cvpdnTunnelEntry OBJECT-TYPE
     ::= { cvpdnTunnelTable 1 }
 
 CvpdnTunnelEntry ::= SEQUENCE {
-    cvpdnTunnelTunnelId Unsigned32,
-    cvpdnTunnelRemoteTunnelId Unsigned32,
+    cvpdnTunnelTunnelId Gauge,
+    cvpdnTunnelRemoteTunnelId Gauge,
     cvpdnTunnelLocalName DisplayString,
     cvpdnTunnelRemoteName DisplayString,
     cvpdnTunnelRemoteEndpointName DisplayString,
     cvpdnTunnelLocalInitConnection TruthValue,
     cvpdnTunnelOrigCause INTEGER,
     cvpdnTunnelState INTEGER,
-    cvpdnTunnelActiveSessions Gauge32,
-    cvpdnTunnelDeniedUsers Counter32,
+    cvpdnTunnelActiveSessions Gauge,
+    cvpdnTunnelDeniedUsers Counter,
     cvpdnTunnelSoftshut TruthValue,
     cvpdnTunnelNetworkServiceType INTEGER,
     cvpdnTunnelLocalIpAddress IpAddress,
@@ -243,8 +295,7 @@ CvpdnTunnelEntry ::= SEQUENCE {
     }
 
 cvpdnTunnelTunnelId OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS not-accessible
     STATUS deprecated
     DESCRIPTION
@@ -254,8 +305,7 @@ cvpdnTunnelTunnelId OBJECT-TYPE
     ::= { cvpdnTunnelEntry 1 }
 
 cvpdnTunnelRemoteTunnelId OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -271,7 +321,7 @@ cvpdnTunnelLocalName OBJECT-TYPE
     STATUS deprecated
     DESCRIPTION
         "The local name of an active VPDN tunnel. It will be the
-        NAS/LAC name of the tunnel if the router is serves as 
+        NAS/LAC name of the tunnel if the router serves as the
         NAS/LAC, or the HGW/LNS name of the tunnel if the  
         system serves as the home gateway. Typically, the local 
         name is the configured host name of the router."
@@ -353,7 +403,7 @@ cvpdnTunnelState OBJECT-TYPE
     ::= { cvpdnTunnelEntry 8 }
 
 cvpdnTunnelActiveSessions OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    sessions
     ACCESS read-only
@@ -363,7 +413,7 @@ cvpdnTunnelActiveSessions OBJECT-TYPE
     ::= { cvpdnTunnelEntry 9 }
 
 cvpdnTunnelDeniedUsers OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    calls
     ACCESS read-only
@@ -449,16 +499,16 @@ cvpdnTunnelAttrEntry OBJECT-TYPE
     ::= { cvpdnTunnelAttrTable 1 }
 
 CvpdnTunnelAttrEntry ::= SEQUENCE {
-    cvpdnTunnelAttrTunnelId Integer32,
-    cvpdnTunnelAttrRemoteTunnelId Integer32,
+    cvpdnTunnelAttrTunnelId INTEGER,
+    cvpdnTunnelAttrRemoteTunnelId INTEGER,
     cvpdnTunnelAttrLocalName DisplayString,
     cvpdnTunnelAttrRemoteName DisplayString,
     cvpdnTunnelAttrRemoteEndpointName DisplayString,
     cvpdnTunnelAttrLocalInitConnection TruthValue,
     cvpdnTunnelAttrOrigCause INTEGER,
     cvpdnTunnelAttrState INTEGER,
-    cvpdnTunnelAttrActiveSessions Gauge32,
-    cvpdnTunnelAttrDeniedUsers Counter32,
+    cvpdnTunnelAttrActiveSessions Gauge,
+    cvpdnTunnelAttrDeniedUsers Counter,
     cvpdnTunnelAttrSoftshut TruthValue,
     cvpdnTunnelAttrNetworkServiceType INTEGER,
     cvpdnTunnelAttrLocalIpAddress IpAddress,
@@ -467,26 +517,26 @@ CvpdnTunnelAttrEntry ::= SEQUENCE {
     }
 
 cvpdnTunnelAttrTunnelId OBJECT-TYPE
-    SYNTAX Integer32(0..65535)
+    SYNTAX INTEGER(0..65535)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
         "The Tunnel ID of an active VPDN tunnel. If this end is the
-         instigator of the tunnel, the ID is the HGW/LNS tunnel ID,
-         otherwise it is the NAS/LAC tunnel ID.
+         instigator of the tunnel, the ID is the TS tunnel ID,
+         otherwise it is the NAS tunnel ID.
         
          Two distinct tunnels with the same tunnel ID may exist, but
          with different tunnel types."
     ::= { cvpdnTunnelAttrEntry 1 }
 
 cvpdnTunnelAttrRemoteTunnelId OBJECT-TYPE
-    SYNTAX Integer32(0..65535)
+    SYNTAX INTEGER(0..65535)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "The remote Tunnel ID of an active VPDN tunnel. If this end is 
-         the instigator of the tunnel, the ID is the NAS/LAC tunnel 
-         ID, otherwise it is the HGW/LNS tunnel ID."
+         the instigator of the tunnel, the ID is the NAS tunnel 
+         ID, otherwise it is the TS tunnel ID."
     ::= { cvpdnTunnelAttrEntry 2 }
 
 cvpdnTunnelAttrLocalName OBJECT-TYPE
@@ -496,10 +546,10 @@ cvpdnTunnelAttrLocalName OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The local name of an active VPDN tunnel. It will be the
-         NAS/LAC name of the tunnel if the router is serves as 
-         NAS/LAC, or the HGW/LNS name of the tunnel if the  
-         system serves as the home gateway. Typically, the local 
-         name is the configured host name of the router."
+         NAS name of the tunnel if the system serves as the
+         NAS, or the TS name of the tunnel if the  
+         system serves as the tunnel server. Typically, the local 
+         name is the configured host name of the system."
     ::= { cvpdnTunnelAttrEntry 3 }
 
 cvpdnTunnelAttrRemoteName OBJECT-TYPE
@@ -509,9 +559,9 @@ cvpdnTunnelAttrRemoteName OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The remote name of an active VPDN tunnel. It will be the
-         home gateway name of the tunnel if the system is a NAS/LAC, 
-         or the NAS/LAC name of the tunnel if the system serves as 
-         the home gateway."
+         tunnel server name of the tunnel if the system is a NAS, 
+         or the NAS name of the tunnel if the system serves as 
+         the tunnel server."
     ::= { cvpdnTunnelAttrEntry 4 }
 
 cvpdnTunnelAttrRemoteEndpointName OBJECT-TYPE
@@ -543,13 +593,15 @@ cvpdnTunnelAttrOrigCause OBJECT-TYPE
     SYNTAX INTEGER {
         domain(1),
         dnis(2),
-        stack(3)
+        stack(3),
+        xconnect(4)
         }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "The cause which originated an active VPDN tunnel. The tunnel 
-         can be projected via domain name, DNIS or a stack group."
+         can be projected via domain name, DNIS, stack group, or
+        L2 Xconnect."
     ::= { cvpdnTunnelAttrEntry 7 }
 
 cvpdnTunnelAttrState OBJECT-TYPE
@@ -564,7 +616,14 @@ cvpdnTunnelAttrState OBJECT-TYPE
         l2tpWaitCtlReply(8),
         l2tpEstablished(9),
         l2tpShuttingDown(10),
-        l2tpNoSessionLeft(11)
+        l2tpNoSessionLeft(11),
+        pptpIdle(12),
+        pptpWaitConnect(13),
+        pptpWaitCtlRequest(14),
+        pptpWaitCtlReply(15),
+        pptpEstablished(16),
+        pptpWaitStopReply(17),
+        pptpTerminal(18)
         }
     ACCESS read-only
     STATUS mandatory
@@ -572,8 +631,9 @@ cvpdnTunnelAttrState OBJECT-TYPE
         "The current state of an active VPDN tunnel.
          Tunnels of type l2f will have states with the 'l2f' prefix.
          Tunnels of type l2tp will have states with the 'l2tp' prefix.
+        Tunnels of type pptp will have states with the 'pptp' prefix.
         
-         Each state codeis explained below:
+         Each state code is explained below:
         
                     unknown: The current state of the tunnel is unknown.
         
@@ -606,11 +666,27 @@ cvpdnTunnelAttrState OBJECT-TYPE
         
                     l2tpNoSessionLeft: There is no session left in
                             the tunnel.
-             "
+        
+        pptpIdle: No tunnel is initiated yet.
+        
+        pptpWaitConnect: The tunnel is waiting for a TCP connection.
+        
+        pptpWaitCtlRequest:  The tunnel has been initiated and
+        is pending for a remote end request. 
+        
+        pptpWaitCtlReply: The tunnel has been initated and is
+        pending for a remote end reply.
+        
+        pptpEstablished: The tunnel is active.
+        
+        pptpWaitStopReply: The tunnel is being shut down and is 
+        pending for a remote end reply.
+        
+        pptpTerminal: The tunnel has been shut down."
     ::= { cvpdnTunnelAttrEntry 8 }
 
 cvpdnTunnelAttrActiveSessions OBJECT-TYPE
-    SYNTAX Gauge32
+    SYNTAX Gauge
 --  Units
 --    sessions
     ACCESS read-only
@@ -620,7 +696,7 @@ cvpdnTunnelAttrActiveSessions OBJECT-TYPE
     ::= { cvpdnTunnelAttrEntry 9 }
 
 cvpdnTunnelAttrDeniedUsers OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    calls
     ACCESS read-only
@@ -704,30 +780,29 @@ cvpdnTunnelSessionEntry OBJECT-TYPE
     ::= { cvpdnTunnelSessionTable 1 }
 
 CvpdnTunnelSessionEntry ::= SEQUENCE {
-    cvpdnTunnelSessionId Unsigned32,
+    cvpdnTunnelSessionId Gauge,
     cvpdnTunnelSessionUserName DisplayString,
     cvpdnTunnelSessionState INTEGER,
     cvpdnTunnelSessionCallDuration TimeTicks,
-    cvpdnTunnelSessionPacketsOut Counter32,
-    cvpdnTunnelSessionBytesOut Counter32,
-    cvpdnTunnelSessionPacketsIn Counter32,
-    cvpdnTunnelSessionBytesIn Counter32,
+    cvpdnTunnelSessionPacketsOut Counter,
+    cvpdnTunnelSessionBytesOut Counter,
+    cvpdnTunnelSessionPacketsIn Counter,
+    cvpdnTunnelSessionBytesIn Counter,
     cvpdnTunnelSessionDeviceType INTEGER,
     cvpdnTunnelSessionDeviceCallerId DisplayString,
     cvpdnTunnelSessionDevicePhyId InterfaceIndexOrZero,
     cvpdnTunnelSessionMultilink TruthValue,
-    cvpdnTunnelSessionModemSlotIndex Unsigned32,
-    cvpdnTunnelSessionModemPortIndex Unsigned32,
-    cvpdnTunnelSessionDS1SlotIndex Unsigned32,
-    cvpdnTunnelSessionDS1PortIndex Unsigned32,
-    cvpdnTunnelSessionDS1ChannelIndex Unsigned32,
+    cvpdnTunnelSessionModemSlotIndex Gauge,
+    cvpdnTunnelSessionModemPortIndex Gauge,
+    cvpdnTunnelSessionDS1SlotIndex Gauge,
+    cvpdnTunnelSessionDS1PortIndex Gauge,
+    cvpdnTunnelSessionDS1ChannelIndex Gauge,
     cvpdnTunnelSessionModemCallStartTime TimeStamp,
-    cvpdnTunnelSessionModemCallStartIndex Unsigned32
+    cvpdnTunnelSessionModemCallStartIndex Gauge
     }
 
 cvpdnTunnelSessionId OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS not-accessible
     STATUS deprecated
     DESCRIPTION
@@ -787,7 +862,7 @@ cvpdnTunnelSessionCallDuration OBJECT-TYPE
     ::= { cvpdnTunnelSessionEntry 4 }
 
 cvpdnTunnelSessionPacketsOut OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    packets
     ACCESS read-only
@@ -798,7 +873,7 @@ cvpdnTunnelSessionPacketsOut OBJECT-TYPE
     ::= { cvpdnTunnelSessionEntry 5 }
 
 cvpdnTunnelSessionBytesOut OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    bytes
     ACCESS read-only
@@ -809,7 +884,7 @@ cvpdnTunnelSessionBytesOut OBJECT-TYPE
     ::= { cvpdnTunnelSessionEntry 6 }
 
 cvpdnTunnelSessionPacketsIn OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    packets
     ACCESS read-only
@@ -820,7 +895,7 @@ cvpdnTunnelSessionPacketsIn OBJECT-TYPE
     ::= { cvpdnTunnelSessionEntry 7 }
 
 cvpdnTunnelSessionBytesIn OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    bytes
     ACCESS read-only
@@ -879,7 +954,7 @@ cvpdnTunnelSessionDeviceCallerId OBJECT-TYPE
 
 cvpdnTunnelSessionDevicePhyId OBJECT-TYPE
     SYNTAX InterfaceIndexOrZero
---    Rsyntax Integer32(0..2147483647)
+--    Rsyntax INTEGER(0..2147483647)
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -903,8 +978,7 @@ cvpdnTunnelSessionMultilink OBJECT-TYPE
     ::= { cvpdnTunnelSessionEntry 12 }
 
 cvpdnTunnelSessionModemSlotIndex OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -915,8 +989,7 @@ cvpdnTunnelSessionModemSlotIndex OBJECT-TYPE
     ::= { cvpdnTunnelSessionEntry 13 }
 
 cvpdnTunnelSessionModemPortIndex OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -927,8 +1000,7 @@ cvpdnTunnelSessionModemPortIndex OBJECT-TYPE
     ::= { cvpdnTunnelSessionEntry 14 }
 
 cvpdnTunnelSessionDS1SlotIndex OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -939,8 +1011,7 @@ cvpdnTunnelSessionDS1SlotIndex OBJECT-TYPE
     ::= { cvpdnTunnelSessionEntry 15 }
 
 cvpdnTunnelSessionDS1PortIndex OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -951,8 +1022,7 @@ cvpdnTunnelSessionDS1PortIndex OBJECT-TYPE
     ::= { cvpdnTunnelSessionEntry 16 }
 
 cvpdnTunnelSessionDS1ChannelIndex OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
@@ -974,13 +1044,12 @@ cvpdnTunnelSessionModemCallStartTime OBJECT-TYPE
     ::= { cvpdnTunnelSessionEntry 18 }
 
 cvpdnTunnelSessionModemCallStartIndex OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS deprecated
     DESCRIPTION
         "Arbitrary small integer to distinguish modem calls that 
-         occured at the same time tick. Only session over device
+          occured at the same time tick. Only session over device
                 asyncInternalModem will have a valid value for this
                 object."
     ::= { cvpdnTunnelSessionEntry 19 }
@@ -1007,29 +1076,32 @@ cvpdnSessionAttrEntry OBJECT-TYPE
     ::= { cvpdnSessionAttrTable 1 }
 
 CvpdnSessionAttrEntry ::= SEQUENCE {
-    cvpdnSessionAttrSessionId Integer32,
+    cvpdnSessionAttrSessionId INTEGER,
     cvpdnSessionAttrUserName DisplayString,
     cvpdnSessionAttrState INTEGER,
     cvpdnSessionAttrCallDuration TimeTicks,
-    cvpdnSessionAttrPacketsOut Counter32,
-    cvpdnSessionAttrBytesOut Counter32,
-    cvpdnSessionAttrPacketsIn Counter32,
-    cvpdnSessionAttrBytesIn Counter32,
+    cvpdnSessionAttrPacketsOut Counter,
+    cvpdnSessionAttrBytesOut Counter,
+    cvpdnSessionAttrPacketsIn Counter,
+    cvpdnSessionAttrBytesIn Counter,
     cvpdnSessionAttrDeviceType INTEGER,
     cvpdnSessionAttrDeviceCallerId DisplayString,
     cvpdnSessionAttrDevicePhyId InterfaceIndexOrZero,
     cvpdnSessionAttrMultilink TruthValue,
-    cvpdnSessionAttrModemSlotIndex Unsigned32,
-    cvpdnSessionAttrModemPortIndex Unsigned32,
-    cvpdnSessionAttrDS1SlotIndex Unsigned32,
-    cvpdnSessionAttrDS1PortIndex Unsigned32,
-    cvpdnSessionAttrDS1ChannelIndex Unsigned32,
+    cvpdnSessionAttrModemSlotIndex Gauge,
+    cvpdnSessionAttrModemPortIndex Gauge,
+    cvpdnSessionAttrDS1SlotIndex Gauge,
+    cvpdnSessionAttrDS1PortIndex Gauge,
+    cvpdnSessionAttrDS1ChannelIndex Gauge,
     cvpdnSessionAttrModemCallStartTime TimeStamp,
-    cvpdnSessionAttrModemCallStartIndex Unsigned32
+    cvpdnSessionAttrModemCallStartIndex Gauge,
+    cvpdnSessionAttrVirtualCircuitID Gauge,
+    cvpdnSessionAttrSentPktsDropped Counter,
+    cvpdnSessionAttrRecvPktsDropped Counter
     }
 
 cvpdnSessionAttrSessionId OBJECT-TYPE
-    SYNTAX Integer32(0..65535)
+    SYNTAX INTEGER(0..65535)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -1057,7 +1129,14 @@ cvpdnSessionAttrState OBJECT-TYPE
         l2tpWaitReply(8),
         l2tpWaitConnect(9),
         l2tpEstablished(10),
-        l2tpShuttingDown(11)
+        l2tpShuttingDown(11),
+        pptpWaitVAccess(12),
+        pptpPacEstablished(13),
+        pptpWaitTunnel(14),
+        pptpWaitOCRP(15),
+        pptpPnsEstablished(16),
+        pptpWaitCallDisc(17),
+        pptpTerminal(18)
         }
     ACCESS read-only
     STATUS mandatory
@@ -1103,7 +1182,23 @@ cvpdnSessionAttrState OBJECT-TYPE
                     l2tpEstablished: The session is active.
         
                     l2tpShuttingDown: The session is in progress of 
-                            shutting down."
+                            shutting down.
+        
+        pptpWaitVAccess: The seession is waiting for the
+        creation of a virtual access interface. 
+        
+        pptpPacEstablished:  The session is active.
+        
+        pptpWaitTunnel: The session is waiting for the tunnel
+        to be established.  
+        
+        pptpWaitOCRP:  The session has been initiated and is 
+        pending for the remote end reply to complete
+        the process. 
+        
+        pptpPnsEstablished: The session is active.
+        
+        pptpWaitCallDisc: Session shutdown is in progress."
     ::= { cvpdnSessionAttrEntry 3 }
 
 cvpdnSessionAttrCallDuration OBJECT-TYPE
@@ -1116,7 +1211,7 @@ cvpdnSessionAttrCallDuration OBJECT-TYPE
     ::= { cvpdnSessionAttrEntry 4 }
 
 cvpdnSessionAttrPacketsOut OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    packets
     ACCESS read-only
@@ -1127,7 +1222,7 @@ cvpdnSessionAttrPacketsOut OBJECT-TYPE
     ::= { cvpdnSessionAttrEntry 5 }
 
 cvpdnSessionAttrBytesOut OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    bytes
     ACCESS read-only
@@ -1138,7 +1233,7 @@ cvpdnSessionAttrBytesOut OBJECT-TYPE
     ::= { cvpdnSessionAttrEntry 6 }
 
 cvpdnSessionAttrPacketsIn OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    packets
     ACCESS read-only
@@ -1149,7 +1244,7 @@ cvpdnSessionAttrPacketsIn OBJECT-TYPE
     ::= { cvpdnSessionAttrEntry 7 }
 
 cvpdnSessionAttrBytesIn OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    bytes
     ACCESS read-only
@@ -1208,7 +1303,7 @@ cvpdnSessionAttrDeviceCallerId OBJECT-TYPE
 
 cvpdnSessionAttrDevicePhyId OBJECT-TYPE
     SYNTAX InterfaceIndexOrZero
---    Rsyntax Integer32(0..2147483647)
+--    Rsyntax INTEGER(0..2147483647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1234,8 +1329,7 @@ cvpdnSessionAttrMultilink OBJECT-TYPE
     ::= { cvpdnSessionAttrEntry 12 }
 
 cvpdnSessionAttrModemSlotIndex OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1246,8 +1340,7 @@ cvpdnSessionAttrModemSlotIndex OBJECT-TYPE
     ::= { cvpdnSessionAttrEntry 13 }
 
 cvpdnSessionAttrModemPortIndex OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1258,8 +1351,7 @@ cvpdnSessionAttrModemPortIndex OBJECT-TYPE
     ::= { cvpdnSessionAttrEntry 14 }
 
 cvpdnSessionAttrDS1SlotIndex OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1270,8 +1362,7 @@ cvpdnSessionAttrDS1SlotIndex OBJECT-TYPE
     ::= { cvpdnSessionAttrEntry 15 }
 
 cvpdnSessionAttrDS1PortIndex OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1282,8 +1373,7 @@ cvpdnSessionAttrDS1PortIndex OBJECT-TYPE
     ::= { cvpdnSessionAttrEntry 16 }
 
 cvpdnSessionAttrDS1ChannelIndex OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1306,8 +1396,7 @@ cvpdnSessionAttrModemCallStartTime OBJECT-TYPE
     ::= { cvpdnSessionAttrEntry 18 }
 
 cvpdnSessionAttrModemCallStartIndex OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1316,6 +1405,36 @@ cvpdnSessionAttrModemCallStartIndex OBJECT-TYPE
          'asyncInternalModem' will have a valid value for this
          object; otherwise, it is not instantiated."
     ::= { cvpdnSessionAttrEntry 19 }
+
+cvpdnSessionAttrVirtualCircuitID OBJECT-TYPE
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The virtual circuit ID of an active Layer 2 VPN session."
+    ::= { cvpdnSessionAttrEntry 20 }
+
+cvpdnSessionAttrSentPktsDropped OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of dropped packets that could not be
+        sent into this active session."
+    ::= { cvpdnSessionAttrEntry 21 }
+
+cvpdnSessionAttrRecvPktsDropped OBJECT-TYPE
+    SYNTAX Counter
+--  Units
+--    packets
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of dropped packets that were received
+         from this active session."
+    ::= { cvpdnSessionAttrEntry 22 }
 
 cvpdnUserToFailHistInfoTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CvpdnUserToFailHistInfoEntry
@@ -1342,14 +1461,14 @@ cvpdnUserToFailHistInfoEntry OBJECT-TYPE
 
 CvpdnUserToFailHistInfoEntry ::= SEQUENCE {
     cvpdnUnameToFailHistUname DisplayString,
-    cvpdnUnameToFailHistTunnelId Unsigned32,
-    cvpdnUnameToFailHistUserId Unsigned32,
+    cvpdnUnameToFailHistTunnelId Gauge,
+    cvpdnUnameToFailHistUserId Gauge,
     cvpdnUnameToFailHistLocalInitConn TruthValue,
     cvpdnUnameToFailHistLocalName DisplayString,
     cvpdnUnameToFailHistRemoteName DisplayString,
     cvpdnUnameToFailHistSourceIp IpAddress,
     cvpdnUnameToFailHistDestIp IpAddress,
-    cvpdnUnameToFailHistCount Counter32,
+    cvpdnUnameToFailHistCount Counter,
     cvpdnUnameToFailHistFailTime TimeStamp,
     cvpdnUnameToFailHistFailType DisplayString,
     cvpdnUnameToFailHistFailReason DisplayString
@@ -1365,19 +1484,17 @@ cvpdnUnameToFailHistUname OBJECT-TYPE
     ::= { cvpdnUserToFailHistInfoEntry 1 }
 
 cvpdnUnameToFailHistTunnelId OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
         "The Tunnel ID for this failure entry. If it is the 
-        instigator of the tunnel, the ID is the HGW/LNS tunnel ID, 
-        otherwise it is the NAS/LAC tunnel ID."
+        instigator of the tunnel, the ID is the TS tunnel ID, 
+        otherwise it is the NAS tunnel ID."
     ::= { cvpdnUserToFailHistInfoEntry 2 }
 
 cvpdnUnameToFailHistUserId OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -1404,10 +1521,10 @@ cvpdnUnameToFailHistLocalName OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The local name of the VPDN tunnel in which the failure 
-        occurred. It will be the NAS/LAC name of the tunnel if the 
-        router is serves a NAS/LAC, or the HGW/LNS name of the tunnel 
-        if the system serves as the home gateway. The local name is
-         the configured host name of the router. This object can
+        occurred. It will be the NAS name of the tunnel if the 
+        system serves as the NAS, or the TS name of the tunnel 
+        if the system serves as the tunnel server. The local name is
+         the configured host name of the system. This object can
         be empty if the failure occurred prior to successful tunnel
         projection, thus no source name will be available."
     ::= { cvpdnUserToFailHistInfoEntry 5 }
@@ -1419,9 +1536,9 @@ cvpdnUnameToFailHistRemoteName OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The remote name of the VPDN tunnel in which the failure 
-        occurred. It will be the home gateway name of the tunnel if 
-        the system is a NAS/LAC, or the NAS/LAC name of the tunnel 
-        if the system serves as the home gateway. This object can
+        occurred. It will be the tunnel server name of the tunnel if 
+        the system is a NAS, or the NAS name of the tunnel 
+        if the system serves as the tunnel server. This object can
          be empty if the failure occurred prior to successful tunnel
          projection, thus no source name will be available."
     ::= { cvpdnUserToFailHistInfoEntry 6 }
@@ -1447,7 +1564,7 @@ cvpdnUnameToFailHistDestIp OBJECT-TYPE
     ::= { cvpdnUserToFailHistInfoEntry 8 }
 
 cvpdnUnameToFailHistCount OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
 --  Units
 --    failures
     ACCESS read-only
@@ -1487,6 +1604,92 @@ cvpdnUnameToFailHistFailReason OBJECT-TYPE
     DESCRIPTION
         "The reason of failure for the current failure record."
     ::= { cvpdnUserToFailHistInfoEntry 12 }
+
+cvpdnNotifSessionID OBJECT-TYPE
+    SYNTAX INTEGER(0..65535)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object contains the local session ID of the
+        L2X session for which this notification has been
+        generated."
+    ::= { ciscoVpdnMgmtMIBNotifs 1 }
+
+cvpdnNotifSessionEvent OBJECT-TYPE
+    SYNTAX INTEGER {
+        up(1),
+        down(2)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicates the event that generated the L2X session
+         notification."
+    ::= { ciscoVpdnMgmtMIBNotifs 2 }
+
+cvpdnTemplateTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CvpdnTemplateEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Table of information about the VPDN templates.  The VPDN
+        template is a grouping mechanism that allows configuration
+        settings to be shared among multiple VPDN groups.  One such
+        setting is a limit on the number of active sessions across
+        all VPDN groups associated with the template.  The template
+        table allows customers to monitor template-wide information
+        such as tracking the allocation of sessions across templates."
+    ::= { cvpdnTemplateInfo 1 }
+
+cvpdnTemplateEntry OBJECT-TYPE
+    SYNTAX CvpdnTemplateEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry in the table, containing information about a single
+        VPDN template."
+    INDEX { --?? IMPLIED may cause problems
+            IMPLIED cvpdnTemplateName }
+    ::= { cvpdnTemplateTable 1 }
+
+CvpdnTemplateEntry ::= SEQUENCE {
+    cvpdnTemplateName SnmpAdminString,
+    cvpdnTemplateActiveSessions Gauge
+    }
+
+cvpdnTemplateName OBJECT-TYPE
+    SYNTAX SnmpAdminString(SIZE(1..255))
+--    Rsyntax OCTET STRING(SIZE(1..255))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The name of the VPDN template."
+    ::= { cvpdnTemplateEntry 1 }
+
+cvpdnTemplateActiveSessions OBJECT-TYPE
+    SYNTAX Gauge
+--  Units
+--    sessions
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The total number of active session in all groups associated
+        with the template."
+    ::= { cvpdnTemplateEntry 2 }
+
+cvpdnNotifSession TRAP-TYPE
+-- Reverse mappable trap
+    ENTERPRISE ciscoVpdnMgmtMIB
+    VARIABLES {
+        cvpdnNotifSessionID, cvpdnNotifSessionEvent, 
+        cvpdnSessionAttrDevicePhyId, 
+        cvpdnSessionAttrVirtualCircuitID }
+--  Status
+--    mandatory
+    DESCRIPTION
+        "Conveys an event regarding the L2X session with the
+         indicated session ID and Xconnect VCID."
+    ::= 3
 
 cvpdnSystemInfoGroup OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBGroups 1 }
 -- OBJECT-GROUP
@@ -1539,7 +1742,7 @@ cvpdnUserToFailHistInfoGroup OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBGroups 4 }
 --    mandatory
 --  Descr
 --    A collection of objects providing user failure information of VPDN 
---    system.
+--     system.
 --  objects
 --    cvpdnUnameToFailHistUserId, cvpdnUnameToFailHistLocalInitConn, 
 --    cvpdnUnameToFailHistLocalName, cvpdnUnameToFailHistRemoteName, 
@@ -1578,7 +1781,7 @@ cvpdnTunnelAttrGroup OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBGroups 6 }
 cvpdnSessionAttrGroup OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBGroups 7 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    A collection of objects providing session attributed
 --     information for multiple tunnel types.
@@ -1593,6 +1796,58 @@ cvpdnSessionAttrGroup OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBGroups 7 }
 --    cvpdnSessionAttrDS1PortIndex, cvpdnSessionAttrDS1ChannelIndex, 
 --    cvpdnSessionAttrModemCallStartTime, 
 --    cvpdnSessionAttrModemCallStartIndex
+
+cvpdnSessionAttrGroupRev1 OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBGroups 8 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing session attributed
+--     information for multiple tunnel types.
+--  objects
+--    cvpdnSessionAttrUserName, cvpdnSessionAttrState, 
+--    cvpdnSessionAttrCallDuration, cvpdnSessionAttrPacketsOut, 
+--    cvpdnSessionAttrBytesOut, cvpdnSessionAttrPacketsIn, 
+--    cvpdnSessionAttrBytesIn, cvpdnSessionAttrDeviceType, 
+--    cvpdnSessionAttrDeviceCallerId, cvpdnSessionAttrDevicePhyId, 
+--    cvpdnSessionAttrMultilink, cvpdnSessionAttrModemSlotIndex, 
+--    cvpdnSessionAttrModemPortIndex, cvpdnSessionAttrDS1SlotIndex, 
+--    cvpdnSessionAttrDS1PortIndex, cvpdnSessionAttrDS1ChannelIndex, 
+--    cvpdnSessionAttrModemCallStartTime, 
+--    cvpdnSessionAttrModemCallStartIndex, 
+--    cvpdnSessionAttrVirtualCircuitID, 
+--    cvpdnSessionAttrSentPktsDropped, 
+--    cvpdnSessionAttrRecvPktsDropped
+
+cvpdnNotifEnabledGroup OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBGroups 9 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects indicating whether Layer 2 VPN
+--     notifications are enabled.
+--  objects
+--    cvpdnSystemNotifSessionEnabled, cvpdnNotifSessionID, 
+--    cvpdnNotifSessionEvent
+
+cvpdnTemplateGroup OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBGroups 11 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing VPDN template information.
+--  objects
+--    cvpdnTemplateActiveSessions
+
+cvpdnSessionNotifGroup OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBGroups 10 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    A collection of objects providing basic Layer 2 VPN
+--     session notifications.
+--  notifications
+--    cvpdnNotifSession
 
 ciscoVpdnMgmtMIBCompliance OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBCompliances 1 }
 -- MODULE-COMPLIANCE
@@ -1615,6 +1870,48 @@ ciscoVpdnMgmtMIBCompliance OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBCompliances 1
 ciscoVpdnMgmtMIBComplianceRev1 OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBCompliances 2 }
 -- MODULE-COMPLIANCE
 --  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities which implement
+--    the Cisco VPDN Management MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    cvpdnSystemInfoGroup
+--   MandGroup
+--    cvpdnTunnelInfoGroup
+--   MandGroup
+--    cvpdnTunnelSessionInfoGroup
+--   MandGroup
+--    cvpdnUserToFailHistInfoGroup
+--   MandGroup
+--    cvpdnSystemGroup
+--   MandGroup
+--    cvpdnTunnelAttrGroup
+--   MandGroup
+--    cvpdnSessionAttrGroup
+
+ciscoVpdnMgmtMIBComplianceRev2 OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities which implement
+--    the Cisco VPDN Management MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    cvpdnUserToFailHistInfoGroup
+--   MandGroup
+--    cvpdnSystemGroup
+--   MandGroup
+--    cvpdnTunnelAttrGroup
+--   MandGroup
+--    cvpdnSessionAttrGroupRev1
+
+ciscoVpdnMgmtMIBComplianceRev3 OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBCompliances 4 }
+-- MODULE-COMPLIANCE
+--  Status
 --    mandatory
 --  Descr
 --    The compliance statement for entities which implement
@@ -1628,7 +1925,9 @@ ciscoVpdnMgmtMIBComplianceRev1 OBJECT IDENTIFIER ::= { ciscoVpdnMgmtMIBComplianc
 --   MandGroup
 --    cvpdnTunnelAttrGroup
 --   MandGroup
---    cvpdnSessionAttrGroup
+--    cvpdnSessionAttrGroupRev1
+--   MandGroup
+--    cvpdnTemplateGroup
 
 
 END

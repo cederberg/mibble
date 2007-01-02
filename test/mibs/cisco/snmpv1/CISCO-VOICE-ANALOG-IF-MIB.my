@@ -1,26 +1,27 @@
--- MIB created 6/25/99 12:57:44, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 26-Oct-2005 17:43:32, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-VOICE-ANALOG-IF-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-VOICE-ANALOG-IF-MIB.my"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    Integer32, Counter32
-            FROM SNMPv2-SMI-v1
-    OBJECT-TYPE
-            FROM RFC-1212
     TruthValue
             FROM SNMPv2-TC-v1
     ifIndex
             FROM IF-MIB
     ciscoMgmt
-            FROM CISCO-SMI;
+            FROM CISCO-SMI
+    Counter
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
 
 ciscoVoiceAnalogIfMIB OBJECT IDENTIFIER ::= { ciscoMgmt 62 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    9605150000Z
+--    200510030000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -38,6 +39,57 @@ ciscoVoiceAnalogIfMIB OBJECT IDENTIFIER ::= { ciscoMgmt 62 }
 --    Analog Voice Interface MIB module.
 --     This MIB manages the E&M, FXO, FXS         
 --     Interfaces in the router.
+--  RevDate
+--    200510030000Z
+--  RevDescr
+--    Extend cvaIfEMCfgSignalType to include
+--     fgd(5) and fgd-eana(6)
+--  RevDate
+--    200410140000Z
+--  RevDescr
+--    Extend CvaIfEMCfgEntry to include
+--        cvaIfEMCfgAutoGainControl
+--     Extend CvaIfEMTimingEntry to include
+--        cvaIfEMTimeoutPttXmt
+--        cvaIfEMTimeoutPttRcv
+--        cvaIfEMTimingDelayVoice
+--     add cvaIfEMGroupRev2
+--     
+--  RevDate
+--    200401150000Z
+--  RevDescr
+--    Extend cvaIfEMCfgSignalType to include 
+--     lmr(4)
+--     Extend CvaIfEMCfgEntry to include 
+--     cvaIfEMCfgLmrMCap & cvaIfEMCfgLmrECap
+--     Extend CvaIfEMTimingEntry to include
+--     cvaIfEMTimingVoiceHangover &
+--     cvaIfEMTimeoutLmrTeardown
+--     Deprecated cvaIfEMGroup
+--     add cvaIfEMGroupRev1
+--     Addition of fxoCama in cvaIfFXOCfgSignalType.
+--     Deprecated cvaIfFXOCfgSupDisconnect in favor of
+--     cvaIfFXOCfgSupDisconnect2.
+--     Add cvaIfMIBCompliance2
+--  RevDate
+--    200208030000Z
+--  RevDescr
+--    Addition of fxoCama in cvaIfFXOCfgSignalType.
+--  RevDate
+--    200207290000Z
+--  RevDescr
+--    Deprecated cvaIfFXOCfgSupDisconnect in favor of
+--     cvaIfFXOCfgSupDisconnect2.
+--  RevDate
+--    200201210000Z
+--  RevDescr
+--    Created TC InterfaceDialType. Updated 
+--     cvaIfEMCfgDialType and cvaIfFXOCfgDialType
+--     objects to use this TC InterfaceDialType.
+--     Added enumeration 'trunked(3)' to the SYNTAX of
+--     cvaIfFXSHookStatus. 
+--     Added enumeration 'trunked(3)' to the SYNTAX of 
+--     cvaIfFXOHookStatus.
 
 cvaIfObjects    OBJECT IDENTIFIER ::= { ciscoVoiceAnalogIfMIB 1 }
 cvaIfGeneralObjects OBJECT IDENTIFIER ::= { cvaIfObjects 1 }
@@ -47,6 +99,21 @@ cvaIfFXSObjects OBJECT IDENTIFIER ::= { cvaIfObjects 4 }
 cvaIfMIBConformance OBJECT IDENTIFIER ::= { ciscoVoiceAnalogIfMIB 3 }
 cvaIfMIBCompliances OBJECT IDENTIFIER ::= { cvaIfMIBConformance 1 }
 cvaIfMIBGroups  OBJECT IDENTIFIER ::= { cvaIfMIBConformance 2 }
+
+InterfaceDialType ::= INTEGER {
+        dtmf(1),
+        pulse(2),
+        mf(3)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    Specifies the out dialing type of E&M interface and 
+--     FXO type interfaces.
+--     dtmf  - DTMF digit.
+--     pulse - pulse.
+--     mf    - mf digit.
 
 cvaIfCfgTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CvaIfCfgEntry
@@ -139,7 +206,7 @@ cvaIfStatusEntry OBJECT-TYPE
 CvaIfStatusEntry ::= SEQUENCE {
     cvaIfStatusInfoType INTEGER,
     cvaIfMaintenanceMode INTEGER,
-    cvaIfStatusSignalErrors Counter32
+    cvaIfStatusSignalErrors Counter
     }
 
 cvaIfStatusInfoType OBJECT-TYPE
@@ -230,7 +297,7 @@ cvaIfMaintenanceMode OBJECT-TYPE
     ::= { cvaIfStatusEntry 2 }
 
 cvaIfStatusSignalErrors OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -261,14 +328,20 @@ CvaIfEMCfgEntry ::= SEQUENCE {
     cvaIfEMCfgSignalType INTEGER,
     cvaIfEMCfgOperation INTEGER,
     cvaIfEMCfgType INTEGER,
-    cvaIfEMCfgDialType INTEGER
+    cvaIfEMCfgDialType InterfaceDialType,
+    cvaIfEMCfgLmrMCap INTEGER,
+    cvaIfEMCfgLmrECap INTEGER,
+    cvaIfEMCfgAutoGainControl TruthValue
     }
 
 cvaIfEMCfgSignalType OBJECT-TYPE
     SYNTAX INTEGER {
         winkStart(1),
         immediateDial(2),
-        delayDial(3)
+        delayDial(3),
+        lmr(4),
+        fgd(5),
+        fgd-eana(6)
         }
     ACCESS read-write
     STATUS mandatory
@@ -291,9 +364,19 @@ cvaIfEMCfgSignalType OBJECT-TYPE
                      side waits until the called side goes
                      on-hook and then starts sending address
                      information.
-         The default value of this object is winkStart(1)."
+         lmr       - the e&m port is used to interface with
+                     Land Mobil Radio system. The e-lead and 
+                     m-lead are not used in the traditional
+                     way.
+         fgd       - Feature Group D is an access switched services
+                     that provides access to Local Exchange Carrier
+                     of the public switched network. It is supported
+                     in North America only based on E&M wink-start.
+         fgd-eana  - Exchange Access North American signalling
+                     protocol of Feature Group D."
     REFERENCE
         "EIA/TIA-464B: Sections 4.1.3.4.1 Signaling Protocols."
+    DEFVAL { winkStart }
     ::= { cvaIfEMCfgEntry 1 }
 
 cvaIfEMCfgOperation OBJECT-TYPE
@@ -306,8 +389,8 @@ cvaIfEMCfgOperation OBJECT-TYPE
     DESCRIPTION
         "Specify the operation of the E&M signal.
          twoWires  - 2-wire operation.
-         fourWires - 4-wire operation.
-         The default value of this object is twoWires(1)."
+         fourWires - 4-wire operation."
+    DEFVAL { twoWires }
     ::= { cvaIfEMCfgEntry 2 }
 
 cvaIfEMCfgType OBJECT-TYPE
@@ -434,25 +517,76 @@ cvaIfEMCfgType OBJECT-TYPE
               E:   V--/\/\/---|-----X----G
                               |          
               M:   G-----X----|---/\/\/--V
-                              |
-         The default value of this object is typeI(1)."
+                              |"
     REFERENCE
         "EIA/TIA-464B: Sections 4.2.3 E&M Lead Signaling. "
+    DEFVAL { typeI }
     ::= { cvaIfEMCfgEntry 3 }
 
 cvaIfEMCfgDialType OBJECT-TYPE
+    SYNTAX InterfaceDialType
+--    Rsyntax INTEGER {
+--        dtmf(1),
+--        pulse(2),
+--        mf(3)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Specifies the out dialing type of E&M interface."
+    DEFVAL { dtmf }
+    ::= { cvaIfEMCfgEntry 4 }
+
+cvaIfEMCfgLmrMCap OBJECT-TYPE
     SYNTAX INTEGER {
-        dtmf(1),
-        pulse(2)
+        inact(1),
+        audio(2),
+        dial(3)
         }
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Specifies the out dialing type of E&M interface.
-         dtmf  - DTMF digit.
-         pulse - pulse.
-         The default value of this object is dtmf(1)."
-    ::= { cvaIfEMCfgEntry 4 }
+        "The M lead behavior of E&M LMR interface.
+         inact - The m-lead status should be ignored.
+         audio - The m-lead status is used to control
+                  generating voice packet.
+         dial  - Perform the same audio case except abling to
+                  initiate a call when offhook in a idle state."
+    DEFVAL { inact }
+    ::= { cvaIfEMCfgEntry 5 }
+
+cvaIfEMCfgLmrECap OBJECT-TYPE
+    SYNTAX INTEGER {
+        seize(4),
+        voice(5),
+        inactive(6)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The E lead behavior of E&M LMR interface.
+         seize - The e-lead used as seize signal
+         voice -  The e-lead status is used to indicate
+                  voice packet received or not.
+         inactive -- e-lead is inactive."
+    DEFVAL { seize }
+    ::= { cvaIfEMCfgEntry 6 }
+
+cvaIfEMCfgAutoGainControl OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object is used to enabling/disabling automatic
+         gain control(AGC) on this interface. AGC allows DSP
+         to adjust the input voice volume and avoid rapid
+         voice volume change."
+    DEFVAL { false }
+    ::= { cvaIfEMCfgEntry 7 }
 
 cvaIfEMStatusTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CvaIfEMStatusEntry
@@ -528,111 +662,117 @@ cvaIfEMTimingEntry OBJECT-TYPE
     ::= { cvaIfEMTimingTable 1 }
 
 CvaIfEMTimingEntry ::= SEQUENCE {
-    cvaIfEMTimingDigitDuration Integer32,
-    cvaIfEMTimingInterDigitDuration Integer32,
-    cvaIfEMTimingPulseRate Integer32,
-    cvaIfEMTimingPulseInterDigitDuration Integer32,
-    cvaIfEMTimingClearWaitDuration Integer32,
-    cvaIfEMTimingMaxWinkWaitDuration Integer32,
-    cvaIfEMTimingMaxWinkDuration Integer32,
-    cvaIfEMTimingDelayStart Integer32,
-    cvaIfEMTimingMaxDelayDuration Integer32,
-    cvaIfEMTimingMinDelayPulseWidth Integer32
+    cvaIfEMTimingDigitDuration INTEGER,
+    cvaIfEMTimingInterDigitDuration INTEGER,
+    cvaIfEMTimingPulseRate INTEGER,
+    cvaIfEMTimingPulseInterDigitDuration INTEGER,
+    cvaIfEMTimingClearWaitDuration INTEGER,
+    cvaIfEMTimingMaxWinkWaitDuration INTEGER,
+    cvaIfEMTimingMaxWinkDuration INTEGER,
+    cvaIfEMTimingDelayStart INTEGER,
+    cvaIfEMTimingMaxDelayDuration INTEGER,
+    cvaIfEMTimingMinDelayPulseWidth INTEGER,
+    cvaIfEMTimingVoiceHangover INTEGER,
+    cvaIfEMTimeoutLmrTeardown INTEGER,
+    cvaIfEMTimeoutPttXmt INTEGER,
+    cvaIfEMTimeoutPttRcv INTEGER,
+    cvaIfEMTimingDelayVoice INTEGER
     }
 
 cvaIfEMTimingDigitDuration OBJECT-TYPE
-    SYNTAX Integer32(50..500)
+    SYNTAX INTEGER(50..500)
 --  Units
 --    milliseconds
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Outgoing DTMF digit duration in milliseconds.
-         The default value of this object is 100 milliseconds."
+        "Outgoing DTMF digit duration in milliseconds."
+    DEFVAL { 100 }
     ::= { cvaIfEMTimingEntry 1 }
 
 cvaIfEMTimingInterDigitDuration OBJECT-TYPE
-    SYNTAX Integer32(50..500)
+    SYNTAX INTEGER(50..500)
 --  Units
 --    milliseconds
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Outgoing DTMF inter-digit duration in milliseconds.
-         The default value of this object is 100 milliseconds."
+        "Outgoing DTMF inter-digit duration in milliseconds."
+    DEFVAL { 100 }
     ::= { cvaIfEMTimingEntry 2 }
 
 cvaIfEMTimingPulseRate OBJECT-TYPE
-    SYNTAX Integer32(10..20)
+    SYNTAX INTEGER(10..20)
 --  Units
 --    pulses per second
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Outgoing pulse dialing rate in pulses per second (pps).
-         The default value of this object is 10 pps."
+        "Outgoing pulse dialing rate in pulses per second (pps)."
+    DEFVAL { 10 }
     ::= { cvaIfEMTimingEntry 3 }
 
 cvaIfEMTimingPulseInterDigitDuration OBJECT-TYPE
-    SYNTAX Integer32(100..1000)
+    SYNTAX INTEGER(100..1000)
 --  Units
 --    milliseconds
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Outgoing Pulse dialing inter-digit timing in milliseconds.
-         The default value of this object is 500 milliseconds."
+        "Outgoing Pulse dialing inter-digit timing in 
+         milliseconds."
+    DEFVAL { 750 }
     ::= { cvaIfEMTimingEntry 4 }
 
 cvaIfEMTimingClearWaitDuration OBJECT-TYPE
-    SYNTAX Integer32(200..2000)
+    SYNTAX INTEGER(200..2000)
 --  Units
 --    milliseconds
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Time of Inactive seizure signal to declare call cleared.
-         The default value of this object is 400 milliseconds."
+        "Time of Inactive seizure signal to declare call cleared."
+    DEFVAL { 400 }
     ::= { cvaIfEMTimingEntry 5 }
 
 cvaIfEMTimingMaxWinkWaitDuration OBJECT-TYPE
-    SYNTAX Integer32(100..5000)
+    SYNTAX INTEGER(100..5000)
 --  Units
 --    milliseconds
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
         "Maximum time to wait from the outgoing seizure of the line
-         to the time of sending out a wink-pulse. 
-         The default value of this object is 200 milliseconds."
+         to the time of sending out a wink-pulse."
+    DEFVAL { 200 }
     ::= { cvaIfEMTimingEntry 6 }
 
 cvaIfEMTimingMaxWinkDuration OBJECT-TYPE
-    SYNTAX Integer32(100..3000)
+    SYNTAX INTEGER(100..3000)
 --  Units
 --    milliseconds
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
         "Maximum outgoing wink duration (between the wink-pulse leading
-         edge and trailing edge) for wink start signaling.
-         The default value of this object is 200 milliseconds."
+         edge and trailing edge) for wink start signaling."
+    DEFVAL { 200 }
     ::= { cvaIfEMTimingEntry 7 }
 
 cvaIfEMTimingDelayStart OBJECT-TYPE
-    SYNTAX Integer32(20..2000)
+    SYNTAX INTEGER(20..2000)
 --  Units
 --    milliseconds
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
         "Minimum time to wait from outgoing seizure to
-         out-dialing digits for delay start signaling.
-         The default value of this object is 300 milliseconds."
+         out-dialing digits for delay start signaling."
+    DEFVAL { 300 }
     ::= { cvaIfEMTimingEntry 8 }
 
 cvaIfEMTimingMaxDelayDuration OBJECT-TYPE
-    SYNTAX Integer32(100..5000)
+    SYNTAX INTEGER(100..5000)
 --  Units
 --    milliseconds
     ACCESS read-write
@@ -641,12 +781,12 @@ cvaIfEMTimingMaxDelayDuration OBJECT-TYPE
         "Maximum time to wait from outgoing seizure to
          out-dialing digits. If the far end does not allow to
          send digits after the duration specified in the object,
-         a reorder tone will be sent to the calling party.
-         The default value of this object is 2000 milliseconds."
+         a reorder tone will be sent to the calling party."
+    DEFVAL { 2000 }
     ::= { cvaIfEMTimingEntry 9 }
 
 cvaIfEMTimingMinDelayPulseWidth OBJECT-TYPE
-    SYNTAX Integer32(0 | 140..5000)
+    SYNTAX INTEGER(0|140..5000)
 --  Units
 --    milliseconds
     ACCESS read-write
@@ -654,9 +794,75 @@ cvaIfEMTimingMinDelayPulseWidth OBJECT-TYPE
     DESCRIPTION
         "Minimum delay-dial pulse duration for incoming call.
          If the value of this object is 0, then no delay-dial
-         is sent to the far end for the incoming call.
-         The default value of this object is 140 milliseconds."
+         is sent to the far end for the incoming call."
+    DEFVAL { 140 }
     ::= { cvaIfEMTimingEntry 10 }
+
+cvaIfEMTimingVoiceHangover OBJECT-TYPE
+    SYNTAX INTEGER(0..10000)
+--  Units
+--    milliseconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The hangover time used to  determine the casethere is
+         no more voice packet arrived. "
+    DEFVAL { 250 }
+    ::= { cvaIfEMTimingEntry 11 }
+
+cvaIfEMTimeoutLmrTeardown OBJECT-TYPE
+    SYNTAX INTEGER(-1|5..60000)
+--  Units
+--    seconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "LMR port tear down  timeout.
+         This object is relevant to the waiting time of 
+         teardown call on LMR port.
+         if the value of this object is '-1', then the timeout
+         is disable."
+    DEFVAL { 1800 }
+    ::= { cvaIfEMTimingEntry 12 }
+
+cvaIfEMTimeoutPttXmt OBJECT-TYPE
+    SYNTAX INTEGER(0..30)
+--  Units
+--    minutes
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object signifies LMR port maxinum transmit time.
+         This object is relevant to how long LMR port can
+         continue transmit voice packet without pause."
+    DEFVAL { 0 }
+    ::= { cvaIfEMTimingEntry 13 }
+
+cvaIfEMTimeoutPttRcv OBJECT-TYPE
+    SYNTAX INTEGER(0..30)
+--  Units
+--    minutes
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object signifies LMR port maxinum receive time.
+         This object is relevant to how long LMR port can
+         continue receive voice packet without pause.
+         "
+    DEFVAL { 0 }
+    ::= { cvaIfEMTimingEntry 14 }
+
+cvaIfEMTimingDelayVoice OBJECT-TYPE
+    SYNTAX INTEGER(0..1500)
+--  Units
+--    milliseconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "This object is relevant to how long DSP will delay
+         sending the voice packet to the LMR port."
+    DEFVAL { 0 }
+    ::= { cvaIfEMTimingEntry 15 }
 
 cvaIfFXOCfgTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CvaIfFXOCfgEntry
@@ -682,15 +888,17 @@ cvaIfFXOCfgEntry OBJECT-TYPE
 
 CvaIfFXOCfgEntry ::= SEQUENCE {
     cvaIfFXOCfgSignalType INTEGER,
-    cvaIfFXOCfgNumberRings Integer32,
+    cvaIfFXOCfgNumberRings INTEGER,
     cvaIfFXOCfgSupDisconnect TruthValue,
-    cvaIfFXOCfgDialType INTEGER
+    cvaIfFXOCfgDialType InterfaceDialType,
+    cvaIfFXOCfgSupDisconnect2 INTEGER
     }
 
 cvaIfFXOCfgSignalType OBJECT-TYPE
     SYNTAX INTEGER {
         fxoLoopStart(1),
-        fxoGroundStart(2)
+        fxoGroundStart(2),
+        fxoCama(3)
         }
     ACCESS read-write
     STATUS mandatory
@@ -698,18 +906,19 @@ cvaIfFXOCfgSignalType OBJECT-TYPE
         "the signaling type of FXO interface.
          fxoLoopStart   - loop start.
          fxoGroundStart - ground start.
-         The default value of this object is fxoLoopStart(1)."
+         fxoCama        - cama."
+    DEFVAL { fxoLoopStart }
     ::= { cvaIfFXOCfgEntry 1 }
 
 cvaIfFXOCfgNumberRings OBJECT-TYPE
-    SYNTAX Integer32(1..10)
+    SYNTAX INTEGER(1..10)
 --  Units
 --    rings
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "The number of rings detected before closing loop.
-         The default value of this object is 1 ring."
+        "The number of rings detected before closing loop."
+    DEFVAL { 1 }
     ::= { cvaIfFXOCfgEntry 2 }
 
 cvaIfFXOCfgSupDisconnect OBJECT-TYPE
@@ -719,27 +928,50 @@ cvaIfFXOCfgSupDisconnect OBJECT-TYPE
 --        false(2)
 --        }
     ACCESS read-write
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         " Specifies whether a supervisory disconnect signal (CPC) will 
           be presented to the interface when the connected party at 
-          the interface hangs up.
-          The default value of this object is 'true'."
+          the interface hangs up."
+    DEFVAL { true }
     ::= { cvaIfFXOCfgEntry 3 }
 
 cvaIfFXOCfgDialType OBJECT-TYPE
+    SYNTAX InterfaceDialType
+--    Rsyntax INTEGER {
+--        dtmf(1),
+--        pulse(2),
+--        mf(3)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "Specifies the out dialing type of FXO interface."
+    DEFVAL { dtmf }
+    ::= { cvaIfFXOCfgEntry 4 }
+
+cvaIfFXOCfgSupDisconnect2 OBJECT-TYPE
     SYNTAX INTEGER {
-        dtmf(1),
-        pulse(2)
+        --?? enum value of zero may cause problems
+        signal(0),
+        anytone(1),
+        dualtoneMidcall(2),
+        dualtonePreconnect(3)
         }
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Specifies the out dialing type of FXO interface.
-         dtmf  - DTMF digit.
-         pulse - pulse.
-         The default value of this object is dtmf(1)."
-    ::= { cvaIfFXOCfgEntry 4 }
+        " Specifies the type of supervisory disconnect signal 
+          (CPC) to be presented to the interface when the 
+          connected party at the interface hangs up.
+          signal - power denial recognition
+          anytone - tone detection of all call progressing tones
+          dualtoneMidcall - tone detection to operate throughout 
+                            the call duration
+          dualtonePreconnect - tone detection to operate only 
+                               during call setup"
+    DEFVAL { signal }
+    ::= { cvaIfFXOCfgEntry 5 }
 
 cvaIfFXOStatusTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CvaIfFXOStatusEntry
@@ -771,14 +1003,16 @@ CvaIfFXOStatusEntry ::= SEQUENCE {
 cvaIfFXOHookStatus OBJECT-TYPE
     SYNTAX INTEGER {
         onHook(1),
-        offHook(2)
+        offHook(2),
+        trunked(3)
         }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object contains the hook status of FXO interface.
          onHook  - Present the onHook to the connected equipment.
-         offHook - Present the offHook to the connected equipment."
+         offHook - Present the offHook to the connected equipment.
+         trunked - Present the trunk to the connected equipment."
     ::= { cvaIfFXOStatusEntry 1 }
 
 cvaIfFXORingDetect OBJECT-TYPE
@@ -849,54 +1083,54 @@ cvaIfFXOTimingEntry OBJECT-TYPE
     ::= { cvaIfFXOTimingTable 1 }
 
 CvaIfFXOTimingEntry ::= SEQUENCE {
-    cvaIfFXOTimingDigitDuration Integer32,
-    cvaIfFXOTimingInterDigitDuration Integer32,
-    cvaIfFXOTimingPulseRate Integer32,
-    cvaIfFXOTimingPulseInterDigitDuration Integer32
+    cvaIfFXOTimingDigitDuration INTEGER,
+    cvaIfFXOTimingInterDigitDuration INTEGER,
+    cvaIfFXOTimingPulseRate INTEGER,
+    cvaIfFXOTimingPulseInterDigitDuration INTEGER
     }
 
 cvaIfFXOTimingDigitDuration OBJECT-TYPE
-    SYNTAX Integer32(50..500)
+    SYNTAX INTEGER(50..500)
 --  Units
 --    milliseconds
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Outgoing DTMF digit duration in milliseconds.
-         The default value of this object is 100 msec."
+        "Outgoing DTMF digit duration in milliseconds."
+    DEFVAL { 100 }
     ::= { cvaIfFXOTimingEntry 1 }
 
 cvaIfFXOTimingInterDigitDuration OBJECT-TYPE
-    SYNTAX Integer32(50..500)
+    SYNTAX INTEGER(50..500)
 --  Units
 --    milliseconds
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Outgoing DTMF inter-digit duration in milliseconds.
-         The default value of this object is 100 msec."
+        "Outgoing DTMF inter-digit duration in milliseconds."
+    DEFVAL { 100 }
     ::= { cvaIfFXOTimingEntry 2 }
 
 cvaIfFXOTimingPulseRate OBJECT-TYPE
-    SYNTAX Integer32(10..20)
+    SYNTAX INTEGER(10..20)
 --  Units
 --    pulses per second
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Outgoing pulse dialing rate in pulses per second (pps).
-         The default value of this object is 10 pps.   "
+        "Outgoing pulse dialing rate in pulses per second (pps)."
+    DEFVAL { 10 }
     ::= { cvaIfFXOTimingEntry 3 }
 
 cvaIfFXOTimingPulseInterDigitDuration OBJECT-TYPE
-    SYNTAX Integer32(100..1000)
+    SYNTAX INTEGER(100..1000)
 --  Units
 --    milliseconds
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Outgoing pulse dialing inter-digit timing in milliseconds.
-         The default value of this object is 500 milliseconds.   "
+        "Outgoing pulse dialing inter-digit timing in milliseconds."
+    DEFVAL { 500 }
     ::= { cvaIfFXOTimingEntry 4 }
 
 cvaIfFXSCfgTable OBJECT-TYPE
@@ -936,8 +1170,8 @@ cvaIfFXSCfgSignalType OBJECT-TYPE
     DESCRIPTION
         "the signaling type of FXS interface.
          fxsLoopStart   - loop start.
-         fxsGroundStart - ground start.
-         The default value of this object is fxsLoopStart(1)."
+         fxsGroundStart - ground start."
+    DEFVAL { fxsLoopStart }
     ::= { cvaIfFXSCfgEntry 1 }
 
 cvaIfFXSRingFrequency OBJECT-TYPE
@@ -987,14 +1221,16 @@ CvaIfFXSStatusEntry ::= SEQUENCE {
 cvaIfFXSHookStatus OBJECT-TYPE
     SYNTAX INTEGER {
         onHook(1),
-        offHook(2)
+        offHook(2),
+        trunked(3)
         }
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "This object contains the hook status of FXS interface.
          onHook - the connected equipment(e.g., phone) is onHook.
-         offHook - the connected equipment is offHook."
+         offHook - the connected equipment is offHook.
+         trunked - the connected equipment is trunked."
     ::= { cvaIfFXSStatusEntry 1 }
 
 cvaIfFXSRingActive OBJECT-TYPE
@@ -1066,30 +1302,30 @@ cvaIfFXSTimingEntry OBJECT-TYPE
     ::= { cvaIfFXSTimingTable 1 }
 
 CvaIfFXSTimingEntry ::= SEQUENCE {
-    cvaIfFXSTimingDigitDuration Integer32,
-    cvaIfFXSTimingInterDigitDuration Integer32
+    cvaIfFXSTimingDigitDuration INTEGER,
+    cvaIfFXSTimingInterDigitDuration INTEGER
     }
 
 cvaIfFXSTimingDigitDuration OBJECT-TYPE
-    SYNTAX Integer32(50..500)
+    SYNTAX INTEGER(50..500)
 --  Units
 --    milliseconds
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Outgoing DTMF digit duration in milliseconds.
-         The default value of this object is 100 milliseconds.   "
+        "Outgoing DTMF digit duration in milliseconds."
+    DEFVAL { 100 }
     ::= { cvaIfFXSTimingEntry 1 }
 
 cvaIfFXSTimingInterDigitDuration OBJECT-TYPE
-    SYNTAX Integer32(50..500)
+    SYNTAX INTEGER(50..500)
 --  Units
 --    milliseconds
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Outgoing DTMF inter-digit duration in milliseconds.
-         The default value of this object is 100 milliseconds.   "
+        "Outgoing DTMF inter-digit duration in milliseconds."
+    DEFVAL { 100 }
     ::= { cvaIfFXSTimingEntry 2 }
 
 cvaIfGeneralGroup OBJECT IDENTIFIER ::= { cvaIfMIBGroups 1 }
@@ -1106,7 +1342,7 @@ cvaIfGeneralGroup OBJECT IDENTIFIER ::= { cvaIfMIBGroups 1 }
 cvaIfEMGroup OBJECT IDENTIFIER ::= { cvaIfMIBGroups 2 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The collection of objects providing information
 --     about the Cisco E&M trunk interface.
@@ -1125,7 +1361,7 @@ cvaIfEMGroup OBJECT IDENTIFIER ::= { cvaIfMIBGroups 2 }
 cvaIfFXOGroup OBJECT IDENTIFIER ::= { cvaIfMIBGroups 3 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The collection of objects providing information
 --     about the Cisco FXO interface.
@@ -1150,10 +1386,69 @@ cvaIfFXSGroup OBJECT IDENTIFIER ::= { cvaIfMIBGroups 4 }
 --    cvaIfFXSRingFrequency, cvaIfFXSTimingDigitDuration, 
 --    cvaIfFXSTimingInterDigitDuration
 
+cvaIfFXOGroup2 OBJECT IDENTIFIER ::= { cvaIfMIBGroups 5 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of objects providing information
+--     about the Cisco FXO interface.
+--  objects
+--    cvaIfFXOHookStatus, cvaIfFXORingDetect, cvaIfFXORingGround, 
+--    cvaIfFXOTipGround, cvaIfFXOCfgSignalType, 
+--    cvaIfFXOCfgNumberRings, cvaIfFXOCfgSupDisconnect2, 
+--    cvaIfFXOCfgDialType, cvaIfFXOTimingDigitDuration, 
+--    cvaIfFXOTimingInterDigitDuration, cvaIfFXOTimingPulseRate, 
+--    cvaIfFXOTimingPulseInterDigitDuration
+
+cvaIfEMGroupRev1 OBJECT IDENTIFIER ::= { cvaIfMIBGroups 6 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--    The collection of objects providing information
+--     about the Cisco E&M trunk interface.
+--  objects
+--    cvaIfEMInSeizureActive, cvaIfEMOutSeizureActive, 
+--    cvaIfEMCfgSignalType, cvaIfEMCfgOperation, cvaIfEMCfgType, 
+--    cvaIfEMCfgDialType, cvaIfEMTimingDigitDuration, 
+--    cvaIfEMTimingInterDigitDuration, cvaIfEMTimingPulseRate, 
+--    cvaIfEMTimingPulseInterDigitDuration, 
+--    cvaIfEMTimingClearWaitDuration, 
+--    cvaIfEMTimingMaxWinkWaitDuration, 
+--    cvaIfEMTimingMaxWinkDuration, cvaIfEMTimingDelayStart, 
+--    cvaIfEMTimingMaxDelayDuration, 
+--    cvaIfEMTimingMinDelayPulseWidth, cvaIfEMCfgLmrMCap, 
+--    cvaIfEMCfgLmrECap, cvaIfEMTimingVoiceHangover, 
+--    cvaIfEMTimeoutLmrTeardown
+
+cvaIfEMGroupRev2 OBJECT IDENTIFIER ::= { cvaIfMIBGroups 7 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of objects providing information
+--     about the Cisco E&M trunk interface.
+--  objects
+--    cvaIfEMInSeizureActive, cvaIfEMOutSeizureActive, 
+--    cvaIfEMCfgSignalType, cvaIfEMCfgOperation, cvaIfEMCfgType, 
+--    cvaIfEMCfgDialType, cvaIfEMTimingDigitDuration, 
+--    cvaIfEMTimingInterDigitDuration, cvaIfEMTimingPulseRate, 
+--    cvaIfEMTimingPulseInterDigitDuration, 
+--    cvaIfEMTimingClearWaitDuration, 
+--    cvaIfEMTimingMaxWinkWaitDuration, 
+--    cvaIfEMTimingMaxWinkDuration, cvaIfEMTimingDelayStart, 
+--    cvaIfEMTimingMaxDelayDuration, 
+--    cvaIfEMTimingMinDelayPulseWidth, cvaIfEMCfgLmrMCap, 
+--    cvaIfEMCfgLmrECap, cvaIfEMTimingVoiceHangover, 
+--    cvaIfEMTimeoutLmrTeardown, cvaIfEMCfgAutoGainControl, 
+--    cvaIfEMTimeoutPttXmt, cvaIfEMTimeoutPttRcv, 
+--    cvaIfEMTimingDelayVoice
+
 cvaIfMIBCompliance OBJECT IDENTIFIER ::= { cvaIfMIBCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The compliance statement for entities which implement
 --     the Cisco Analog Voice interface MIB
@@ -1169,6 +1464,14 @@ cvaIfMIBCompliance OBJECT IDENTIFIER ::= { cvaIfMIBCompliances 1 }
 --    cvaIfFXSGroup
 --   ObjVar
 --    cvaIfCfgImpedance
+--   ObjVar
+--    cvaIfCfgIntegratedDSP
+--   ObjVar
+--    cvaIfStatusInfoType
+--   ObjVar
+--    cvaIfMaintenanceMode
+--   ObjVar
+--    cvaIfStatusSignalErrors
 --   ObjVar
 --    cvaIfEMCfgSignalType
 --   ObjVar
@@ -1203,6 +1506,190 @@ cvaIfMIBCompliance OBJECT IDENTIFIER ::= { cvaIfMIBCompliances 1 }
 --    cvaIfFXOCfgNumberRings
 --   ObjVar
 --    cvaIfFXOCfgSupDisconnect
+--   ObjVar
+--    cvaIfFXOCfgDialType
+--   ObjVar
+--    cvaIfFXOTimingDigitDuration
+--   ObjVar
+--    cvaIfFXOTimingInterDigitDuration
+--   ObjVar
+--    cvaIfFXOTimingPulseRate
+--   ObjVar
+--    cvaIfFXOTimingPulseInterDigitDuration
+--   ObjVar
+--    cvaIfFXSCfgSignalType
+--   ObjVar
+--    cvaIfFXSRingFrequency
+--   ObjVar
+--    cvaIfFXSTimingDigitDuration
+--   ObjVar
+--    cvaIfFXSTimingInterDigitDuration
+
+cvaIfMIBCompliance2 OBJECT IDENTIFIER ::= { cvaIfMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for entities which implement
+--     the Cisco Analog Voice interface MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    cvaIfGeneralGroup
+--   OptGroup
+--    cvaIfEMGroupRev1
+--   OptGroup
+--    cvaIfFXOGroup2
+--   OptGroup
+--    cvaIfFXSGroup
+--   ObjVar
+--    cvaIfCfgImpedance
+--   ObjVar
+--    cvaIfCfgIntegratedDSP
+--   ObjVar
+--    cvaIfStatusInfoType
+--   ObjVar
+--    cvaIfMaintenanceMode
+--   ObjVar
+--    cvaIfStatusSignalErrors
+--   ObjVar
+--    cvaIfEMCfgSignalType
+--   ObjVar
+--    cvaIfEMCfgOperation
+--   ObjVar
+--    cvaIfEMCfgType
+--   ObjVar
+--    cvaIfEMCfgDialType
+--   ObjVar
+--    cvaIfEMCfgLmrMCap
+--   ObjVar
+--    cvaIfEMCfgLmrECap
+--   ObjVar
+--    cvaIfEMTimingDigitDuration
+--   ObjVar
+--    cvaIfEMTimingInterDigitDuration
+--   ObjVar
+--    cvaIfEMTimingPulseRate
+--   ObjVar
+--    cvaIfEMTimingPulseInterDigitDuration
+--   ObjVar
+--    cvaIfEMTimingClearWaitDuration
+--   ObjVar
+--    cvaIfEMTimingMaxWinkWaitDuration
+--   ObjVar
+--    cvaIfEMTimingMaxWinkDuration
+--   ObjVar
+--    cvaIfEMTimingDelayStart
+--   ObjVar
+--    cvaIfEMTimingMaxDelayDuration
+--   ObjVar
+--    cvaIfEMTimingMinDelayPulseWidth
+--   ObjVar
+--    cvaIfEMTimingVoiceHangover
+--   ObjVar
+--    cvaIfEMTimeoutLmrTeardown
+--   ObjVar
+--    cvaIfFXOCfgSignalType
+--   ObjVar
+--    cvaIfFXOCfgNumberRings
+--   ObjVar
+--    cvaIfFXOCfgSupDisconnect2
+--   ObjVar
+--    cvaIfFXOCfgDialType
+--   ObjVar
+--    cvaIfFXOTimingDigitDuration
+--   ObjVar
+--    cvaIfFXOTimingInterDigitDuration
+--   ObjVar
+--    cvaIfFXOTimingPulseRate
+--   ObjVar
+--    cvaIfFXOTimingPulseInterDigitDuration
+--   ObjVar
+--    cvaIfFXSCfgSignalType
+--   ObjVar
+--    cvaIfFXSRingFrequency
+--   ObjVar
+--    cvaIfFXSTimingDigitDuration
+--   ObjVar
+--    cvaIfFXSTimingInterDigitDuration
+
+cvaIfMIBCompliance3 OBJECT IDENTIFIER ::= { cvaIfMIBCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for entities which implement
+--     the Cisco Analog Voice interface MIB
+--  Module
+--    >>current<<
+--   MandGroup
+--    cvaIfGeneralGroup
+--   OptGroup
+--    cvaIfEMGroupRev2
+--   OptGroup
+--    cvaIfFXOGroup2
+--   OptGroup
+--    cvaIfFXSGroup
+--   ObjVar
+--    cvaIfCfgImpedance
+--   ObjVar
+--    cvaIfCfgIntegratedDSP
+--   ObjVar
+--    cvaIfStatusInfoType
+--   ObjVar
+--    cvaIfMaintenanceMode
+--   ObjVar
+--    cvaIfStatusSignalErrors
+--   ObjVar
+--    cvaIfEMCfgSignalType
+--   ObjVar
+--    cvaIfEMCfgOperation
+--   ObjVar
+--    cvaIfEMCfgType
+--   ObjVar
+--    cvaIfEMCfgDialType
+--   ObjVar
+--    cvaIfEMCfgLmrMCap
+--   ObjVar
+--    cvaIfEMCfgLmrECap
+--   ObjVar
+--    cvaIfEMCfgAutoGainControl
+--   ObjVar
+--    cvaIfEMTimingDigitDuration
+--   ObjVar
+--    cvaIfEMTimingInterDigitDuration
+--   ObjVar
+--    cvaIfEMTimingPulseRate
+--   ObjVar
+--    cvaIfEMTimingPulseInterDigitDuration
+--   ObjVar
+--    cvaIfEMTimingClearWaitDuration
+--   ObjVar
+--    cvaIfEMTimingMaxWinkWaitDuration
+--   ObjVar
+--    cvaIfEMTimingMaxWinkDuration
+--   ObjVar
+--    cvaIfEMTimingDelayStart
+--   ObjVar
+--    cvaIfEMTimingMaxDelayDuration
+--   ObjVar
+--    cvaIfEMTimingMinDelayPulseWidth
+--   ObjVar
+--    cvaIfEMTimingVoiceHangover
+--   ObjVar
+--    cvaIfEMTimeoutLmrTeardown
+--   ObjVar
+--    cvaIfEMTimeoutPttXmt
+--   ObjVar
+--    cvaIfEMTimeoutPttRcv
+--   ObjVar
+--    cvaIfEMTimingDelayVoice
+--   ObjVar
+--    cvaIfFXOCfgSignalType
+--   ObjVar
+--    cvaIfFXOCfgNumberRings
+--   ObjVar
+--    cvaIfFXOCfgSupDisconnect2
 --   ObjVar
 --    cvaIfFXOCfgDialType
 --   ObjVar

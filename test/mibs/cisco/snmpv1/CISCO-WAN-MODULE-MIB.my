@@ -1,24 +1,25 @@
--- MIB created 5/02/100 19:14:48, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 07-Jan-2004 14:37:46, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-WAN-MODULE-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-WAN-MODULE-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    OBJECT-TYPE
-            FROM RFC-1212
     DisplayString
             FROM SNMPv2-TC-v1
-    Unsigned32
-            FROM CISCO-TC
     ciscoMgmt
-            FROM CISCO-SMI;
+            FROM CISCO-SMI
+    Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212;
 
 ciscoWanModuleMIB OBJECT IDENTIFIER ::= { ciscoMgmt 145 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    9910220000Z
+--    200209110000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -38,6 +39,21 @@ ciscoWanModuleMIB OBJECT IDENTIFIER ::= { ciscoMgmt 145 }
 --     The Service Module(SM) is defined as any Module which
 --     provides services such as ATM, Frame Relay or Voice in a
 --     Wide Area Network(WAN) switch.
+--  RevDate
+--    200209110000Z
+--  RevDescr
+--    Imported Unsigned32 from SNMPv2-SMI instead
+--    of CISCO-TC.
+--    Added cwmUploadCounter in cwmConfigTable.
+--  RevDate
+--    200107200000Z
+--  RevDescr
+--     1. Added cwmSCTFileVerCfg and cwmSCTFileVerOpr to
+--     CwmConfigEntry. 
+--  RevDate
+--    9910220000Z
+--  RevDescr
+--    Initial version of the mib module.
 
 cwmMIBObjects   OBJECT IDENTIFIER ::= { ciscoWanModuleMIB 1 }
 cwmConfig       OBJECT IDENTIFIER ::= { cwmMIBObjects 1 }
@@ -49,7 +65,8 @@ ciscoWanModuleMIBCompliances OBJECT IDENTIFIER ::= { ciscoWanModuleMIBConformanc
 ciscoWanModuleMIBGroups OBJECT IDENTIFIER ::= { ciscoWanModuleMIBConformance 2 }
 
 StatisticsLevel ::= INTEGER {
---        notApplicable(0),
+        --?? enum value of zero may cause problems
+        notApplicable(0),
         levelOne(1),
         levelTwo(2),
         levelThree(3)
@@ -98,15 +115,17 @@ cwmConfigEntry OBJECT-TYPE
     ::= { cwmConfigTable 1 }
 
 CwmConfigEntry ::= SEQUENCE {
-    cwmIndex Unsigned32,
-    cwmIngressSCTFileId Unsigned32,
+    cwmIndex Gauge,
+    cwmIngressSCTFileId Gauge,
     cwmIngressSCTFileName DisplayString,
-    cwmAutoLineDiagEnable INTEGER
+    cwmAutoLineDiagEnable INTEGER,
+    cwmSCTFileVerCfg Gauge,
+    cwmSCTFileVerOpr Gauge,
+    cwmUploadCounter Gauge
     }
 
 cwmIndex OBJECT-TYPE
-    SYNTAX Unsigned32(1..2147483647)
---    Rsyntax Gauge32(1..2147483647)
+    SYNTAX Gauge(1..2147483647)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
@@ -116,8 +135,7 @@ cwmIndex OBJECT-TYPE
     ::= { cwmConfigEntry 1 }
 
 cwmIngressSCTFileId OBJECT-TYPE
-    SYNTAX Unsigned32(0..255)
---    Rsyntax Gauge32(0..255)
+    SYNTAX Gauge(0..255)
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
@@ -174,6 +192,65 @@ cwmAutoLineDiagEnable OBJECT-TYPE
     DEFVAL { disable }
     ::= { cwmConfigEntry 4 }
 
+cwmSCTFileVerCfg OBJECT-TYPE
+    SYNTAX Gauge(0..65535)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The Configured version of the Service Class Template(SCT)
+        file. This version applies to both the card SCT and the port
+        SCT files in a service module.
+        
+        The port SCT files are specified while provisioning a port using
+        the caviFileId field in the CISCO-WAN-VIRTUAL-IF-MIB.my MIB.
+        The card SCT file is specifed in this MIB using the 
+        cwmIngressSCTFileName object.
+        
+        The configured version of the SCT does not take effect until
+        the service module is rebooted. However, graceful invocation
+        of a new SCT version can be achieved by using redundant service
+        modules. The configured SCT version is first applied on a standby
+        service module by rebooting it. When the standby reboots, it 
+        comes up with the configured SCT version. Thereafter a switchover
+        can be performed, making the standby SM take over as active."
+    ::= { cwmConfigEntry 5 }
+
+cwmSCTFileVerOpr OBJECT-TYPE
+    SYNTAX Gauge(0..65535)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The operational version of the Service Class Template(SCT)
+        file. This is sct version currently in use. The operational 
+        version could be different from the configured version 
+        (cwmSCTFileVerCfg), until the service module is rebooted."
+    ::= { cwmConfigEntry 6 }
+
+cwmUploadCounter OBJECT-TYPE
+    SYNTAX Gauge(0..4294967295)
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This counter is used by the management station to 
+        determine if any changes(other than ATM/FR connections)
+        have been done on configuration of a card.
+        
+        The use of this object is implementation specific.
+        This requires the NMS application saving the previous
+        value of this object and compare it later for finding
+        any changes in the card.
+        
+        The upload counter is incremented in, for instance:
+        
+        - any physical interface characteristics are modified.
+        - any logical interface is added/deleted/modified.
+        - any IMA Group/MFR bundle is added/deleted/modified.
+        - any resource is added/deleted/modified on an interface.
+        - any configuration changes are done(not specified above)
+          which are not related to ATM/FR Connections
+          (SPVCs for example)."
+    ::= { cwmConfigEntry 7 }
+
 cwmStatConfigTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CwmStatConfigEntry
     ACCESS not-accessible
@@ -205,7 +282,7 @@ CwmStatConfigEntry ::= SEQUENCE {
     cwmStatCollectionStatus INTEGER,
     cwmStatCurrentLevel StatisticsLevel,
     cwmStatLevelConfigured StatisticsLevel,
-    cwmStatMaximumConnections Unsigned32
+    cwmStatMaximumConnections Gauge
     }
 
 cwmStatBucketInterval OBJECT-TYPE
@@ -233,7 +310,8 @@ cwmStatBucketInterval OBJECT-TYPE
 
 cwmStatCollectionInterval OBJECT-TYPE
     SYNTAX INTEGER {
---        default(0),
+        --?? enum value of zero may cause problems
+        default(0),
         one(1),
         five(5)
         }
@@ -250,7 +328,7 @@ cwmStatCollectionInterval OBJECT-TYPE
          
          In case of bucket interval being 5 minutes, default(0) and five(5)
          values for this object has the same effect."
---    DEFVAL { default }
+    DEFVAL { default }
     ::= { cwmStatConfigEntry 2 }
 
 cwmStatCollectionStatus OBJECT-TYPE
@@ -268,6 +346,7 @@ cwmStatCollectionStatus OBJECT-TYPE
 cwmStatCurrentLevel OBJECT-TYPE
     SYNTAX StatisticsLevel
 --    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
 --        notApplicable(0),
 --        levelOne(1),
 --        levelTwo(2),
@@ -289,6 +368,7 @@ cwmStatCurrentLevel OBJECT-TYPE
 cwmStatLevelConfigured OBJECT-TYPE
     SYNTAX StatisticsLevel
 --    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
 --        notApplicable(0),
 --        levelOne(1),
 --        levelTwo(2),
@@ -307,8 +387,7 @@ cwmStatLevelConfigured OBJECT-TYPE
     ::= { cwmStatConfigEntry 5 }
 
 cwmStatMaximumConnections OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -337,16 +416,85 @@ cwmStatConfigGroup OBJECT IDENTIFIER ::= { ciscoWanModuleMIBGroups 2 }
 --    cwmStatLevelConfigured, cwmStatCollectionStatus, 
 --    cwmStatCollectionInterval, cwmStatMaximumConnections
 
+cwmConfigGroup2 OBJECT IDENTIFIER ::= { ciscoWanModuleMIBGroups 3 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Group containing additional Module Specific Parameters.
+--  objects
+--    cwmSCTFileVerCfg, cwmSCTFileVerOpr
+
+cwmUploadGroup OBJECT IDENTIFIER ::= { ciscoWanModuleMIBGroups 4 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Group containing objects related to configuration
+--    changes in a card.
+--  objects
+--    cwmUploadCounter
+
 ciscoWanModuleMIBCompliance OBJECT IDENTIFIER ::= { ciscoWanModuleMIBCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The Compliance statement for cwmConfigGroup group.
 --  Module
 --    >>current<<
 --   MandGroup
 --    cwmConfigGroup
+--   ObjVar
+--    cwmIngressSCTFileName
+--   OptGroup
+--    cwmStatConfigGroup
+--   ObjVar
+--    cwmStatCollectionInterval
+--   ObjVar
+--    cwmStatCurrentLevel
+--   ObjVar
+--    cwmStatLevelConfigured
+
+ciscoWanModuleMIBComplianceRev1 OBJECT IDENTIFIER ::= { ciscoWanModuleMIBCompliances 2 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The Compliance statement for cwmConfigGroup group,
+--     with addition of SCT file versioning 
+--  Module
+--    >>current<<
+--   MandGroup
+--    cwmConfigGroup
+--   MandGroup
+--    cwmConfigGroup2
+--   ObjVar
+--    cwmIngressSCTFileName
+--   OptGroup
+--    cwmStatConfigGroup
+--   ObjVar
+--    cwmStatCollectionInterval
+--   ObjVar
+--    cwmStatCurrentLevel
+--   ObjVar
+--    cwmStatLevelConfigured
+
+ciscoWanModuleMIBComplianceRev2 OBJECT IDENTIFIER ::= { ciscoWanModuleMIBCompliances 3 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The Compliance statement for cwmConfigGroup group,
+--     with addition of SCT file versioning 
+--  Module
+--    >>current<<
+--   MandGroup
+--    cwmConfigGroup
+--   MandGroup
+--    cwmConfigGroup2
+--   OptGroup
+--    cwmUploadGroup
 --   ObjVar
 --    cwmIngressSCTFileName
 --   OptGroup

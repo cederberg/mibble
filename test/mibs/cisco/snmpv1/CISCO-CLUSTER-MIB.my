@@ -1,30 +1,29 @@
--- MIB created 2/09/100 15:55:33, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 06-Dec-2005 16:31:52, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-CLUSTER-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-CLUSTER-MIB.my"
+-- Compile options "4 7 F H N O W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    ciscoMgmt
-            FROM CISCO-SMI
-    Integer32
-            FROM SNMPv2-SMI-v1
-    OBJECT-TYPE
-            FROM RFC-1212
-    TRAP-TYPE
-            FROM RFC-1215
     TAddress, TDomain, MacAddress, TimeStamp, RowStatus
             FROM SNMPv2-TC-v1
     SnmpAdminString
             FROM SNMP-FRAMEWORK-MIB
-    Unsigned32
-            FROM CISCO-TC;
+    ciscoMgmt
+            FROM CISCO-SMI
+    Gauge
+            FROM RFC1155-SMI
+    OBJECT-TYPE
+            FROM RFC-1212
+    TRAP-TYPE
+            FROM RFC-1215;
 
 ciscoClusterMIB OBJECT IDENTIFIER ::= { ciscoMgmt 134 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    9907280000Z
+--    200511180000Z
 --  OrgName
 --    Cisco Systems Inc.
 --  ContactInfo
@@ -49,8 +48,8 @@ ciscoClusterMIB OBJECT IDENTIFIER ::= { ciscoMgmt 134 }
 --    
 --    2. Zero or more expansion switches, or called the
 --       cluster members throughout the context of this MIB,
---       which are devices that can be managed via a command 
---       switch.  The command switch is also considered as a 
+--       which are devices that can be managed via a command
+--       switch.  The command switch is also considered as a
 --       cluster member.  Thus it has an entry in the MIB tables
 --       defined below for cluster members.
 --    
@@ -58,17 +57,29 @@ ciscoClusterMIB OBJECT IDENTIFIER ::= { ciscoMgmt 134 }
 --    community strings need to be configured in order to
 --    provide management access to members of the cluster.
 --    
---    The Entity MIB is cross-referenced from this MIB for 
---    some of its table entries, which contain useful 
---    information about a cluster.  For example, in the 
+--    The Entity MIB is cross-referenced from this MIB for
+--    some of its table entries, which contain useful
+--    information about a cluster.  For example, in the
 --    Entity MIB, there is the logical table which contains
---    the community string.  This information is used to 
---    access detailed management information for some logical 
+--    the community string.  This information is used to
+--    access detailed management information for some logical
 --    entity (the cluster, in this case).
 --    
 --    To determine if a particular device can be a command switch
 --    or a member switch please refer to the device's
 --    user's guide.
+--  RevDate
+--    200511180000Z
+--  RevDescr
+--    Updated the imports such that Unsigned32 is imported from 
+--    SNMPv2-SMI instead of CISCO-TC. Re-ordered the imports such 
+--    that the SNMPv2 imports are imported first. Added a new 
+--    NOTIFICATION GROUP ciscoClusterNotificationGroup to include
+--    the notification ccStatusMemberStatusChange. Also deprecated the 
+--    old MODULE-COMPLIANCE ciscoClusterCompliance, and added a new
+--    MODULE-COMPLIANCE ciscoClusterComplianceRev1 such that its 
+--    MANDATORY-GROUPS include this new NOTIFICATION GROUP and all the 
+--    MANDATORY-GROUPS of ciscoClusterCompliance.
 --  RevDate
 --    9907280000Z
 --  RevDescr
@@ -121,7 +132,7 @@ ccStatusCommanderTDomain OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "Indicates the kind of transport service used by the command 
+        "Indicates the kind of transport service used by the command
          switch of the cluster.  Possible values for this object, such
          as snmpUDPDomain, are defined in the Transport Mappings for
          SNMPv2 document (RFC 1906)."
@@ -133,7 +144,7 @@ ccStatusCommanderTAddress OBJECT-TYPE
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
-        "The transport service address of the command switch 
+        "The transport service address of the command switch
          of the cluster.  The address is formatted according to the
          corresponding value of ccStatusCommanderTDomain.
         
@@ -162,7 +173,7 @@ ccStatusTimeOfLastChange OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The value of sysUpTime on the command switch when
-         the last time the value of an instance of ccMemberOperStatus 
+         the last time the value of an instance of ccMemberOperStatus
          changed.  The value 0 indicates that no member's status
          has ever changed since commander system initialization."
     DEFVAL { 0 }
@@ -186,7 +197,7 @@ ccStatusLastNMSAddMemberTAddress OBJECT-TYPE
     DESCRIPTION
         "The transport service address of the last NMS which
          tried to add a member to the cluster.  The address is
-         formatted according to the corresponding value of 
+         formatted according to the corresponding value of
          ccStatusLastNMSAddMemberTDomain."
     ::= { ccStatus 8 }
 
@@ -211,19 +222,18 @@ ccStatusLastFailureAddMember OBJECT-TYPE
                     cluster members supported by the command switch.
                     See ccStatusMaxNumberOfMembers.
         
-         noncandidate:  The member is not a candidate switch, or it 
+         noncandidate:  The member is not a candidate switch, or it
                         does not show up in the candidate table.
         
          memberNumberInUse:  The member number is used by an existing
                              member in the cluster.
-                                
+        
          unreachable:   The member is a candidate but is unreachable or
                         has no connectivity."
     ::= { ccStatus 9 }
 
 ccStatusMaxNumberOfMembers OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -241,9 +251,9 @@ ccStatusMemberOrder OBJECT-TYPE
         "The suggested order in which the cluster members are
          displayed in network management applications.  The
          format of the string is n1,n2,n3,n4, ..., where
-         <n#> is any valid member number in the cluster.  The
+          is any valid member number in the cluster.  The
          member numbers are separated by commas with no spaces
-         in between.  An example of the object's value is 
+         in between.  An example of the object's value is
          '3,8,14,0,2' for a cluster containing member numbers
          0, 2, 3, 8, and 14."
     DEFVAL { "" }
@@ -270,9 +280,9 @@ ccMemberEntry OBJECT-TYPE
 
 CcMemberEntry ::= SEQUENCE {
     ccMemberMacAddress MacAddress,
-    ccMemberNumber Unsigned32,
+    ccMemberNumber Gauge,
     ccMemberOperStatus INTEGER,
-    ccMemberEntityLogicalIndex Integer32,
+    ccMemberEntityLogicalIndex INTEGER,
     ccMemberRowStatus RowStatus
     }
 
@@ -286,12 +296,11 @@ ccMemberMacAddress OBJECT-TYPE
     ::= { ccMemberEntry 1 }
 
 ccMemberNumber OBJECT-TYPE
-    SYNTAX Unsigned32
---    Rsyntax Gauge32
+    SYNTAX Gauge
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "An arbitrary value which uniquely identifies the 
+        "An arbitrary value which uniquely identifies the
          cluster member switch number. It ranges from 1 to
          ccStatusMaxNumberOfMembers."
     ::= { ccMemberEntry 2 }
@@ -314,7 +323,7 @@ ccMemberOperStatus OBJECT-TYPE
     ::= { ccMemberEntry 3 }
 
 ccMemberEntityLogicalIndex OBJECT-TYPE
-    SYNTAX Integer32(1..2147483647)
+    SYNTAX INTEGER(1..2147483647)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -338,7 +347,7 @@ ccMemberRowStatus OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The status of this conceptual row. A device
-         is added to the cluster of a command switch by 
+         is added to the cluster of a command switch by
          creating an entry in this table for the device. The
          devices currently eligible to be added into the
          cluster are listed in the ccCandidateTable.
@@ -361,11 +370,11 @@ ccCandidateTable OBJECT-TYPE
          2. It is directly connected to an existing cluster
             member.
         
-         The entries in this table and the entries in 
+         The entries in this table and the entries in
          ccMemberTable are mutually exclusive at all
          times.  That is, any device that is a cluster
          member never shows up in the ccCandidateTable
-         or is never a candidate at the same time .  Also, any 
+         or is never a candidate at the same time .  Also, any
          candidate that shows up in ccCandidateTable should not
          appear in ccMemberTable."
     ::= { ccCandidate 1 }
@@ -390,7 +399,7 @@ ccCandidateMacAddress OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "The MAC address of a device qualified to
-         to be a cluster member of the command switch 
+         to be a cluster member of the command switch
          cluster."
     ::= { ccCandidateEntry 1 }
 
@@ -457,7 +466,34 @@ ciscoClusterCandidateGroup OBJECT IDENTIFIER ::= { ciscoClusterMIBGroups 4 }
 --  objects
 --    ccCandidateMacAddress
 
+ciscoClusterNotificationGroup OBJECT IDENTIFIER ::= { ciscoClusterMIBGroups 5 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of notifications defined for the cluster
+--    candidates.
+--  notifications
+--    ccStatusMemberStatusChange
+
 ciscoClusterCompliance OBJECT IDENTIFIER ::= { ciscoClusterMIBCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statement for the CLUSTER MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    ciscoClusterStatusGroup
+--   MandGroup
+--    ciscoClusterMemberStatusGroup
+--   MandGroup
+--    ciscoClusterMemberGroup
+--   MandGroup
+--    ciscoClusterCandidateGroup
+
+ciscoClusterComplianceRev1 OBJECT IDENTIFIER ::= { ciscoClusterMIBCompliances 2 }
 -- MODULE-COMPLIANCE
 --  Status
 --    mandatory
@@ -473,6 +509,8 @@ ciscoClusterCompliance OBJECT IDENTIFIER ::= { ciscoClusterMIBCompliances 1 }
 --    ciscoClusterMemberGroup
 --   MandGroup
 --    ciscoClusterCandidateGroup
+--   MandGroup
+--    ciscoClusterNotificationGroup
 
 
 END

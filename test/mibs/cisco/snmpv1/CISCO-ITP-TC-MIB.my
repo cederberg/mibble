@@ -1,4 +1,4 @@
--- MIB file created 16-Jan-2002 10:50:14, by
+-- MIB file created 19-Oct-2003 03:28:53, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-ITP-TC-MIB DEFINITIONS ::= BEGIN
@@ -15,7 +15,7 @@ IMPORTS
 ciscoItpTextualConventions OBJECT IDENTIFIER ::= { ciscoMgmt 231 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200112110000Z
+--    200308030000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -60,6 +60,7 @@ ciscoItpTextualConventions OBJECT IDENTIFIER ::= { ciscoMgmt 231 }
 --    MTP3  - Layer 3 of Message Transport Protocol
 --    NAI   - Nature of Address Indicator
 --    NP    - Numbering Plan         
+--    NTT   - The Japanese Nippon Telephone & Telegraph 
 --    OPC   - Originating Point Code
 --    PC    - Point Code
 --    RTN   - Route Table Name
@@ -68,14 +69,41 @@ ciscoItpTextualConventions OBJECT IDENTIFIER ::= { ciscoMgmt 231 }
 --    SCTP  - Stream Transmission Protocol(RFC 2960)
 --    SI    - Signalling Indicator
 --    SP    - Signalling Point
+--    SLC   - Signalling Link Code
+--    SLS   - Signalling Link Selector
 --    SSN   - Subsystem Number
 --    SUA   - SCCP-User Adaptation 
 --    TFR   - Transfer Restricted messages  
 --    TT    - Title Translation
+--    TTC   - The Japanese Telecommunications Technology 
+--       Committee 
 --    UDT   - unitdata message
 --    UDTS  - unitdata service message
 --    XUDT  - extended unitdata message
 --    XUDTS - extended unitdata service message
+--  RevDate
+--    200308030000Z
+--  RevDescr
+--    Updated CItpTcPointCode textual convention to 
+--     include descriptions for Japanese NTT and TTC
+--     variants.
+--  RevDate
+--    200301290000Z
+--  RevDescr
+--    Added textual convention used to support the 
+--     ability to define multiple instances of the 
+--     signalling points.  The following textual conventions
+--     were added.                                         
+--        CItpTcNetworkName
+--        CItpTcInstanceNumber
+--        CItpTcSls
+--    
+--     Also deprecated CItpTcGtaAddr and CItpTcGtaDisplayZB.
+--     Added CItpTcGtaLongAddr and CItpTcGtaLongDisplay.
+--     
+--     Added new enumerated value to CItpTcLinkType object
+--     for virtual link used to connect signalling points
+--     acting as gateways.
 --  RevDate
 --    200112110000Z
 --  RevDescr
@@ -113,7 +141,7 @@ CItpTcCLLI ::= OCTET STRING(SIZE(0..11))
 --     
 --     The CLLI code is supported as octet string containing
 --     administrative information in human-readable form.
---     
+--    
 --     The use of control codes should be avoided.
 --     
 --     The use of newline should be avoided.
@@ -173,28 +201,36 @@ CItpTcGlobalTitleSelectorName ::= OCTET STRING(SIZE(1..9))
 --  Descr
 --    The configured name associated with SCCP GTT
 --     Selector.
---     
---     An octet string specified by the administrative
---     must be in human-readable form. The names must
---     conform the allowed character that can be specified
---     via Command Line Interface(CLI). The names
---     cannot contain control character and should not 
---     contain leading or trailing white space.
+--    
+--     An octet string specified by an administrator that
+--     must be in human-readable form.  The names must
+--     conform to the allowed characters that can be 
+--     specified via Command Line Interface(CLI).  The 
+--     names cannot contain control character and should 
+--     not contain leading or trailing white space.
 
 CItpTcGtaAddr ::= OCTET STRING(SIZE(8))
 -- TEXTUAL-CONVENTION
 --  Status
---    mandatory
+--    deprecated
 --  Descr
 --    The configured digits in the SCCP GTT
 --     Global Title Address.
 --     
---     An octet string specified by the administrative
---     must be in human-readable form. The names must
---     conform the allowed character that can be specified
---     via Command Line Interface(CLI). The names
---     cannot contain control character and should not 
---     contain leading or trailing white space.
+--     An octet string specified by an administrator
+--     must be in human-readable form.  The names must
+--     conform to the allowed characters that can be 
+--     specified via Command Line Interface(CLI).  The 
+--     names cannot contain control character and should 
+--     not contain leading or trailing white space.
+
+CItpTcGtaLongAddr ::= OCTET STRING(SIZE(0..64))
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The configured hexadecimal digits in the SCCP GTT
+--     Global Title Address.
 
 CItpTcGtaDisplay ::= OCTET STRING(SIZE(1..15))
 -- TEXTUAL-CONVENTION
@@ -211,6 +247,15 @@ CItpTcGtaDisplay ::= OCTET STRING(SIZE(1..15))
 CItpTcGtaDisplayZB ::= OCTET STRING(SIZE(0..15))
 -- TEXTUAL-CONVENTION
 --  Status
+--    deprecated
+--  Descr
+--    The configured digits in the SCCP GTT
+--     Global Title Address. It consists of ASCII
+--     representation of GTA hex digits.
+
+CItpTcGtaLongDisplay ::= OCTET STRING(SIZE(0..64))
+-- TEXTUAL-CONVENTION
+--  Status
 --    mandatory
 --  Descr
 --    The configured digits in the SCCP GTT
@@ -224,6 +269,43 @@ CItpTcGtaDisplayLen ::= Gauge(1..15)
 --  Descr
 --    The SCCP GTT Global Title Address length.
 
+CItpTcGtaLongDisplayLen ::= Gauge(0..64)
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The SCCP GTT Global Title Address length.
+
+CItpTcNetworkName ::= OCTET STRING(SIZE(0..19))
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The network name is used to indicate the network
+--     in which this signalling point is participating.
+--     One or more instances of signalling points can 
+--     exist in the same physical device.  This identifier
+--     will be used to correlate instances of signalling 
+--     points by network.
+--     
+--     When multiple instance support is not enable the 
+--     network name will default to the null string.
+--      
+--     An octet string specified by an administrator that
+--     must be in human-readable form.  The names must conform
+--     to the allowed characters that can be specified via 
+--     Command Line Interface(CLI).  The names cannot contain
+--     control character and should not contain leading or 
+--     trailing white space.
+
+CItpTcInstanceNumber ::= Gauge(0..255)
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The instance number used to select a particular
+--     Signalling point.
+
 CItpTcLinksetId ::= OCTET STRING(SIZE(1..19))
 -- TEXTUAL-CONVENTION
 --  Status
@@ -232,12 +314,12 @@ CItpTcLinksetId ::= OCTET STRING(SIZE(1..19))
 --    The configured name associated with an Signalling
 --     Point Linkset.
 --         
---     An octet string specified by the administrative
---     must be in human-readable form. The names must
---     conform the allowed character that can be specified
---     via Command Line Interface(CLI). The names
---     cannot contain control character and should not 
---     contain leading or trailing white space.
+--     An octet string specified by an administrator that must
+--     be in human-readable form.  The names must conform to 
+--     the allowed characters that can be specified via 
+--     Command Line Interface(CLI).  The names cannot contain
+--     control character and should not contain leading or 
+--     trailing white space.
 
 CItpTcLinkSLC ::= Gauge(0..15)
 -- TEXTUAL-CONVENTION
@@ -251,7 +333,8 @@ CItpTcLinkType ::= INTEGER {
         other(1),
         serial(2),
         sctpIp(3),
-        hsl(4)
+        hsl(4),
+        virtual(5)
         }
 -- TEXTUAL-CONVENTION
 --  Status
@@ -265,6 +348,11 @@ CItpTcLinkType ::= INTEGER {
 --                  SS7 traffic.
 --     'hsl'    : This link is a high speed link using the ATM 
 --                protocol for transporting SS7 traffic.
+--     'virtual': This link is virtual link used to connect to 
+--                instance of signalling point running on the 
+--                same physical device.  The link will be used to 
+--                send and manage traffic between two signalling
+--                acting as a gateway.
 
 CItpTcNAI ::= INTEGER(0..255)
 -- TEXTUAL-CONVENTION
@@ -329,20 +417,26 @@ CItpTcPointCode ::= Gauge(0..16777216)
 --    mandatory
 --  Descr
 --    The SS7 network node address as specified in the
---     the following references. The format of the Point
---     code depends on the variant as follows.
+--     following references.  The format of the Point
+--     code depends on the variant defined in the 
+--     CgspSS7Variant object as follows.
 --     
 --            33222222222211111111110000000000
 --            10987654321098765432109876543210
---     ANSI:          cccccccc                 - Network
+--     ANSI:          nnnnnnnn                 - Network
 --                            cccccccc         - Cluster
 --                                    mmmmmmmm - Member
---     ITU  -                   zzz            - Zone
+--     ITU:                     zzz            - Zone
 --                                 aaaaaaaa    - Area/Network
 --                                         iii - Identifier
---                                         
+--     NTT:                   zzzzz            - Zone         
+--                                 aaaa        - Area/Network 
+--                                     iiiiiii - Identifier   
+--     TTC:                   zzzzz            - Zone         
+--                                 aaaa        - Area/Network 
+--                                     iiiiiii - Identifier   
+--     
 --     Note: The China variant has the same format as ANSI.
---                            
 --                                         
 --     This form of the point-code is not intended for
 --     for presentation.
@@ -381,7 +475,7 @@ CItpTcPointCodeType ::= INTEGER {
 --  Descr
 --    List of the possible Point Code types.
 --      'primary'     : The primary point used to communicate
---                      information on the signalling point.
+--                      information on the Signalling point.
 --      'additional'  : Additional point codes.
 
 CItpTcQos ::= Gauge(0..7|255)
@@ -394,7 +488,7 @@ CItpTcQos ::= Gauge(0..7|255)
 --     The value can be from one to seven when selecting
 --     a Qos class or 255 to indicate the packet will not
 --     be assigned a Qos class. This value will be set to
---     zero zero when cItpSpLinkType indicates that 
+--     zero when cItpSpLinkType indicates that 
 --     Quality of Service does not apply to this link.
 
 CItpTcRouteTableName ::= OCTET STRING(SIZE(1..19))
@@ -405,12 +499,12 @@ CItpTcRouteTableName ::= OCTET STRING(SIZE(1..19))
 --    The configured name associated with an SP Route
 --     Table.
 --         
---     An octet string specified by the administrative
---     must be in human-readable form. The names must
---     conform the allowed character that can be specified
---     via Command Line Interface(CLI). The names
---     cannot contain control character and should not 
---     contain leading or trailing white space.
+--     An octet string specified by an administrator that must
+--     be in human-readable form.  The names must conform to 
+--     the allowed characters that can be specified via 
+--     Command Line Interface(CLI).  The names cannot contain
+--     control character and should not contain leading or 
+--     trailing white space.
 
 CItpTcServiceIndicator ::= INTEGER {
         --?? enum value of zero may cause problems
@@ -439,7 +533,7 @@ CItpTcServiceIndicator ::= INTEGER {
 --     identifies the type of SS7 packet.
 --    
 --     The service indicator codes for the international
---     signalling network are allocated as follows:
+--     Signalling network are allocated as follows:
 --    
 --     'SNMM'        : Signalling network management 
 --                     messages (SNMM)
@@ -464,6 +558,19 @@ CItpTcServiceIndicator ::= INTEGER {
 --  Refer
 --    ITU Q.704 Signalling network functions and messages section
 --     14.2.1 Service indicator.
+
+CItpTcSls ::= Gauge(0..255)
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The Signalling Link Selector is a numeric value that
+--     contains the MTP3 packets to allow load balancing of
+--     traffic across a link within a linkset or combined linkset.
+--     Each linkset provides one or more tables used to map
+--     Signalling Link Selectors to Signalling Link Codes.  The
+--     number of Signalling Link Selectors is 16 for ITU and 256
+--     for ANSI.
 
 CItpTcSs7Variant ::= INTEGER {
         ansi(1),
@@ -490,7 +597,7 @@ CItpTcSubSystemNumber ::= Gauge(0|2..255)
 --  Status
 --    mandatory
 --  Descr
---    The SCCP SubSystem Number .  A  value of zero 
+--    The SCCP Subsystem Number .  A  value of zero 
 --     indicates that a subsystem is not specified.
 
 CItpTcSubSystemNumberMask ::= Gauge(2..255)
@@ -498,7 +605,7 @@ CItpTcSubSystemNumberMask ::= Gauge(2..255)
 --  Status
 --    mandatory
 --  Descr
---    The SCCP SubSystem Number Mask.
+--    The SCCP Subsystem Number Mask.
 
 CItpTcTableLoadStatus ::= INTEGER {
         loadNotRequested(1),
@@ -544,7 +651,7 @@ CItpTcTimerMtp2T01 ::= Gauge(5000..150000)
 --     Adaptation Layer.
 --  Refer
 --    ITU Q.703 Signalling Link.
---     ANSI T1.111.3 Telecommunications - Signaling system
+--     ANSI T1.111.3 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp2T02 ::= Gauge(0|5000..150000)
@@ -568,7 +675,7 @@ CItpTcTimerMtp2T02 ::= Gauge(0|5000..150000)
 --     the ANSI and ITU variants.
 --  Refer
 --    ITU Q.703 Signalling Link.
---     ANSI T1.111.3 Telecommunications - Signaling system
+--     ANSI T1.111.3 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp2T03 ::= Gauge(0|1000..14000)
@@ -592,7 +699,7 @@ CItpTcTimerMtp2T03 ::= Gauge(0|1000..14000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.703 Signalling Link.
---     ANSI T1.111.3 Telecommunications - Signaling system
+--     ANSI T1.111.3 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp2T04E ::= Gauge(0|400..660)
@@ -617,7 +724,7 @@ CItpTcTimerMtp2T04E ::= Gauge(0|400..660)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.703 Signalling Link.
---    ANSI T1.111.3 Telecommunications - Signaling system
+--    ANSI T1.111.3 Telecommunications - Signalling system
 --    No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp2T04N ::= Gauge(0|2007..9500)
@@ -642,7 +749,7 @@ CItpTcTimerMtp2T04N ::= Gauge(0|2007..9500)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.703 Signalling Link.
---     ANSI T1.111.3 Telecommunications - Signaling system
+--     ANSI T1.111.3 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp2T05 ::= Gauge(0|80..120)
@@ -666,7 +773,7 @@ CItpTcTimerMtp2T05 ::= Gauge(0|80..120)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.703 Signalling Link.
---    ANSI T1.111.3 Telecommunications - Signaling system
+--    ANSI T1.111.3 Telecommunications - Signalling system
 --    No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp2T06 ::= Gauge(1000..6000)
@@ -687,7 +794,7 @@ CItpTcTimerMtp2T06 ::= Gauge(1000..6000)
 --     Adaptation Layer.
 --  Refer
 --    ITU Q.703 Signalling Link.
---    ANSI T1.111.3 Telecommunications - Signaling system
+--    ANSI T1.111.3 Telecommunications - Signalling system
 --    No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp2T07 ::= Gauge(0|100..6000)
@@ -712,7 +819,7 @@ CItpTcTimerMtp2T07 ::= Gauge(0|100..6000)
 --    the ANSI and ITU variants.
 --  Refer
 --    ITU Q.703 Signalling Link.
---    ANSI T1.111.3 Telecommunications - Signaling system
+--    ANSI T1.111.3 Telecommunications - Signalling system
 --    No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T01 ::= Gauge(500..1200)
@@ -732,7 +839,7 @@ CItpTcTimerMtp3T01 ::= Gauge(500..1200)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --    No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T02 ::= Gauge(700..2000)
@@ -752,7 +859,7 @@ CItpTcTimerMtp3T02 ::= Gauge(700..2000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --    No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T03 ::= Gauge(500..1200)
@@ -773,7 +880,7 @@ CItpTcTimerMtp3T03 ::= Gauge(500..1200)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --    No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T04 ::= Gauge(500..1200)
@@ -794,7 +901,7 @@ CItpTcTimerMtp3T04 ::= Gauge(500..1200)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --    No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T05 ::= Gauge(500..1200)
@@ -815,7 +922,7 @@ CItpTcTimerMtp3T05 ::= Gauge(500..1200)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --    No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T06 ::= Gauge(500..1200)
@@ -836,7 +943,7 @@ CItpTcTimerMtp3T06 ::= Gauge(500..1200)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --    No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T07 ::= Gauge(0|1000..2000)
@@ -844,7 +951,7 @@ CItpTcTimerMtp3T07 ::= Gauge(0|1000..2000)
 --  Status
 --    mandatory
 --  Descr
---    Waiting for signalling data link connection
+--    Waiting for Signalling data link connection
 --     acknowledgement.
 --     Ranges by variant.
 --     
@@ -859,7 +966,7 @@ CItpTcTimerMtp3T07 ::= Gauge(0|1000..2000)
 --     variant or is not supported by the implementation.
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T08 ::= Gauge(800..1200)
@@ -880,7 +987,7 @@ CItpTcTimerMtp3T08 ::= Gauge(800..1200)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T10 ::= Gauge(30000..60000)
@@ -888,7 +995,7 @@ CItpTcTimerMtp3T10 ::= Gauge(30000..60000)
 --  Status
 --    mandatory
 --  Descr
---    Waiting to repeat signalling routeset test message.
+--    Waiting to repeat Signalling routeset test message.
 --     Ranges by variant.
 --     
 --           Min      Max      Def
@@ -900,7 +1007,7 @@ CItpTcTimerMtp3T10 ::= Gauge(30000..60000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T11 ::= Gauge(30000..90000)
@@ -922,7 +1029,7 @@ CItpTcTimerMtp3T11 ::= Gauge(30000..90000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T12 ::= Gauge(800..1500)
@@ -942,7 +1049,7 @@ CItpTcTimerMtp3T12 ::= Gauge(800..1500)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T13 ::= Gauge(800..1500)
@@ -962,7 +1069,7 @@ CItpTcTimerMtp3T13 ::= Gauge(800..1500)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --    No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T14 ::= Gauge(2000..3000)
@@ -982,7 +1089,7 @@ CItpTcTimerMtp3T14 ::= Gauge(2000..3000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T15 ::= Gauge(2000..3000)
@@ -990,7 +1097,7 @@ CItpTcTimerMtp3T15 ::= Gauge(2000..3000)
 --  Status
 --    mandatory
 --  Descr
---    Waiting to start signalling routeset congestion
+--    Waiting to start Signalling routeset congestion
 --     test. Ranges by variant.
 --     
 --           Min      Max      Def
@@ -1002,7 +1109,7 @@ CItpTcTimerMtp3T15 ::= Gauge(2000..3000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T16 ::= Gauge(1400..2000)
@@ -1022,7 +1129,7 @@ CItpTcTimerMtp3T16 ::= Gauge(1400..2000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T17 ::= Gauge(800..1500)
@@ -1043,7 +1150,7 @@ CItpTcTimerMtp3T17 ::= Gauge(800..1500)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T18 ::= Gauge(1000..31000)
@@ -1066,7 +1173,7 @@ CItpTcTimerMtp3T18 ::= Gauge(1000..31000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T19 ::= Gauge(67000..600000)
@@ -1089,7 +1196,7 @@ CItpTcTimerMtp3T19 ::= Gauge(67000..600000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T20 ::= Gauge(1000..120000)
@@ -1101,7 +1208,7 @@ CItpTcTimerMtp3T20 ::= Gauge(1000..120000)
 --     variant.
 --     
 --     ANSI: waiting to repeat local inhibit test
---     ITU:  MTP restart timer at the signaling point
+--     ITU:  MTP restart timer at the Signalling point
 --     
 --           Min      Max      Def
 --           ======   ======   ======  
@@ -1112,7 +1219,7 @@ CItpTcTimerMtp3T20 ::= Gauge(1000..120000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T21 ::= Gauge(63000..120000)
@@ -1124,7 +1231,7 @@ CItpTcTimerMtp3T21 ::= Gauge(63000..120000)
 --     variant.
 --     
 --     ANSI: waiting to repeat remote inhibit test)       
---     ITU:  MTP restart timer at adjacent signaling point
+--     ITU:  MTP restart timer at adjacent Signalling point
 --     
 --           Min      Max      Def
 --           ======   ======   ======  
@@ -1135,7 +1242,7 @@ CItpTcTimerMtp3T21 ::= Gauge(63000..120000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T22 ::= Gauge(36000..360000)
@@ -1146,7 +1253,7 @@ CItpTcTimerMtp3T22 ::= Gauge(36000..360000)
 --    This timers servers different function based on the 
 --     variant.
 --     
---     ANSI: restarting SP waiting for signaling links avail
+--     ANSI: restarting SP waiting for Signalling links avail
 --     ITU:  local inhibit test timer 
 --     
 --           Min      Max      Def
@@ -1158,7 +1265,7 @@ CItpTcTimerMtp3T22 ::= Gauge(36000..360000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T23 ::= Gauge(9000..360000)
@@ -1181,7 +1288,7 @@ CItpTcTimerMtp3T23 ::= Gauge(9000..360000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T24 ::= Gauge(500..60000)
@@ -1204,7 +1311,7 @@ CItpTcTimerMtp3T24 ::= Gauge(500..60000)
 --     the ANSI and ITU variants. 
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerMtp3T25 ::= Gauge(0|30000..35000)
@@ -1225,7 +1332,7 @@ CItpTcTimerMtp3T25 ::= Gauge(0|30000..35000)
 --      for a particular variant or is not supported by the
 --      implementation.
 --  Refer
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP)
 
 CItpTcTimerMtp3T26 ::= Gauge(0|12000..15000)
@@ -1246,7 +1353,7 @@ CItpTcTimerMtp3T26 ::= Gauge(0|12000..15000)
 --      for a particular variant or is not supported by
 --      the implementation.
 --  Refer
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP)
 
 CItpTcTimerMtp3T27 ::= Gauge(0|2000..50000)
@@ -1266,7 +1373,7 @@ CItpTcTimerMtp3T27 ::= Gauge(0|2000..50000)
 --     for a particular variant or is not supported by
 --     the implementation.
 --  Refer
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP)
 
 CItpTcTimerMtp3T28 ::= Gauge(0|3000..35000)
@@ -1287,7 +1394,7 @@ CItpTcTimerMtp3T28 ::= Gauge(0|3000..35000)
 --     for a particular variant or is not supported by
 --     the implementation.
 --  Refer
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP)
 
 CItpTcTimerMtp3T29 ::= Gauge(0|60000..65000)
@@ -1308,7 +1415,7 @@ CItpTcTimerMtp3T29 ::= Gauge(0|60000..65000)
 --     for a particular variant or is not supported by
 --     the implementation.
 --  Refer
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP)
 
 CItpTcTimerMtp3T30 ::= Gauge(0|30000..35000)
@@ -1329,7 +1436,7 @@ CItpTcTimerMtp3T30 ::= Gauge(0|30000..35000)
 --     for a particular variant or is not supported by
 --     the implementation.
 --  Refer
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP)
 
 CItpTcTimerMtp3T31 ::= Gauge(0|10000..120000)
@@ -1349,7 +1456,7 @@ CItpTcTimerMtp3T31 ::= Gauge(0|10000..120000)
 --     for a particular variant or is not supported by
 --     the implementation.
 --  Refer
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP)
 
 CItpTcTimerMtp3T32 ::= Gauge(0|5000..120000)
@@ -1369,7 +1476,7 @@ CItpTcTimerMtp3T32 ::= Gauge(0|5000..120000)
 --     for a particular variant or is not supported by
 --     the implementation.
 --  Refer
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP)
 
 CItpTcTimerMtp3T33 ::= Gauge(0|60000..600000)
@@ -1389,7 +1496,7 @@ CItpTcTimerMtp3T33 ::= Gauge(0|60000..600000)
 --     for a particular variant or is not supported by
 --     the implementation.
 --  Refer
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP)
 
 CItpTcTimerMtp3T34 ::= Gauge(0|5000..120000)
@@ -1409,7 +1516,7 @@ CItpTcTimerMtp3T34 ::= Gauge(0|5000..120000)
 --     for a particular variant or is not supported by
 --     the implementation.
 --  Refer
---    ANSI T1.111 Telecommunications - Signaling system
+--    ANSI T1.111 Telecommunications - Signalling system
 --    No. 7 (SS7)-Message Transfer Part (MTP)
 
 CItpTcTimerLinkTest ::= Gauge(0|4000..12000)
@@ -1417,7 +1524,7 @@ CItpTcTimerLinkTest ::= Gauge(0|4000..12000)
 --  Status
 --    mandatory
 --  Descr
---    Signaling Link test acknowledgement timer.
+--    Signalling Link test acknowledgement timer.
 --     
 --            Min      Max      Def
 --           ======   ======   ======  
@@ -1429,7 +1536,7 @@ CItpTcTimerLinkTest ::= Gauge(0|4000..12000)
 --     the implementation.
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerLinkMessage ::= Gauge(0|30000..90000)
@@ -1449,7 +1556,7 @@ CItpTcTimerLinkMessage ::= Gauge(0|30000..90000)
 --     the implementation.
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTimerLinkActRetry ::= Gauge(0|60000..90000)
@@ -1469,7 +1576,7 @@ CItpTcTimerLinkActRetry ::= Gauge(0|60000..90000)
 --     the implementation.
 --  Refer
 --    ITU Q.704 Signalling network functions and messages.
---     ANSI T1.111 Telecommunications - Signaling system
+--     ANSI T1.111 Telecommunications - Signalling system
 --     No. 7 (SS7)-Message Transfer Part (MTP).
 
 CItpTcTranslationType ::= INTEGER {
@@ -1481,9 +1588,23 @@ CItpTcTranslationType ::= INTEGER {
 --    mandatory
 --  Descr
 --    The Translation Type for SCCP GTT GTA specifies Title 
---     Translation or subsystem number (SSN)
+--     Translation or Subsystem Number (SSN)
 --    'tt'  : The GTT GTA has specified Title Translation
---    'ssn' : The GTT GTA has specified SubSystem Number.
+--    'ssn' : The GTT GTA has specified Subsystem Number.
+
+CItpTcURL ::= OCTET STRING(SIZE(0..255))
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The URL used to load a configuration file.
+--         
+--     An octet string specified by an administrator that must
+--     be in human-readable form.  The names must conform to 
+--     the allowed characters that can be specified via 
+--     Command Line Interface(CLI).  The names cannot contain
+--     control character and should not contain leading or 
+--     trailing white space.
 
 CItpTcXuaName ::= OCTET STRING(SIZE(0..12))
 -- TEXTUAL-CONVENTION
@@ -1493,12 +1614,12 @@ CItpTcXuaName ::= OCTET STRING(SIZE(0..12))
 --    The configured name associated with M3UA/SUA
 --     ASP or AS name.
 --     
---     An octet string specified by the administrative
---     must be in human-readable form. The names must
---     conform the allowed character that can be specified
---     via Command Line Interface(CLI). The names
---     cannot contain control character and should not 
---     contain leading or trailing white space.
+--     An octet string specified by an administrator that
+--     must be in human-readable form.  The names must
+--     conform to the allowed characters that can be 
+--     specified via Command Line Interface(CLI).  The 
+--     names cannot contain control character and should 
+--     not contain leading or trailing white space.
 
 
 END

@@ -1,37 +1,36 @@
--- MIB created 5/02/100 19:13:54, by
---   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- MIB file created 22-Jan-2004 14:44:29, by
+--   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-AAA-SERVER-MIB DEFINITIONS ::= BEGIN
 
 -- From file: "CISCO-AAA-SERVER-MIB.my"
+-- Compile options "4 7 F H N W 03 06 0B 0G 0N 0T"
 
 IMPORTS
-    Counter32, IpAddress
-            FROM SNMPv2-SMI-v1
+    TimeInterval, DisplayString, TruthValue, RowStatus
+            FROM SNMPv2-TC-v1
+    ciscoExperiment
+            FROM CISCO-SMI
+    Counter, Gauge, IpAddress
+            FROM RFC1155-SMI
     OBJECT-TYPE
             FROM RFC-1212
     TRAP-TYPE
-            FROM RFC-1215
-    TimeInterval, DisplayString, TruthValue, RowStatus
-            FROM SNMPv2-TC-v1
-    Unsigned32
-            FROM CISCO-TC
-    ciscoExperiment
-            FROM CISCO-SMI;
+            FROM RFC-1215;
 
 ciscoAAAServerMIB OBJECT IDENTIFIER ::= { ciscoExperiment 56 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200001200000Z
+--    200311170000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
---           Cisco Systems
---            Customer Service
+--     Cisco Systems
+--     Customer Service
 --    
 --    Postal: 170 W Tasman Drive
---            San Jose, CA  95134
---            USA
+--     San Jose, CA  95134
+--     USA
 --    
 --       Tel: +1 800 553-NETS
 --    
@@ -40,16 +39,27 @@ ciscoAAAServerMIB OBJECT IDENTIFIER ::= { ciscoExperiment 56 }
 --    The MIB module for monitoring communications and status
 --     of AAA Server operation
 --  RevDate
+--    200311170000Z
+--  RevDescr
+--    Expanded the list of AAA protocols to include LDAP,
+--    Kerberos, NTLM and SDI; defined textual convention
+--    CiscoAAAProtocol to denote the type of AAA protocols.
+--  RevDate
+--    200203280000Z
+--  RevDescr
+--    Imported Unsigned32 from SNMPv2-SMI instead of
+--    CISCO-TC
+--  RevDate
 --    200001200000Z
 --  RevDescr
 --    Added objects to support AAA server configuration
---              casConfigTable
---                 casProtocol
---                 casIndex
---                 casAddress
---                 casAuthenPort
---                 casAcctPort
---                 casConfigRowStatus
+--       casConfigTable
+--          casProtocol
+--          casIndex
+--          casAddress
+--          casAuthenPort
+--          casAcctPort
+--          casConfigRowStatus
 
 cAAAServerMIBObjects OBJECT IDENTIFIER ::= { ciscoAAAServerMIB 1 }
 casConfig       OBJECT IDENTIFIER ::= { cAAAServerMIBObjects 1 }
@@ -60,6 +70,43 @@ cAAAServerMIBConformance OBJECT IDENTIFIER ::= { ciscoAAAServerMIB 3 }
 casMIBCompliances OBJECT IDENTIFIER ::= { cAAAServerMIBConformance 1 }
 casMIBGroups    OBJECT IDENTIFIER ::= { cAAAServerMIBConformance 2 }
 
+CiscoAAAProtocol ::= INTEGER {
+        tacacsplus(1),
+        radius(2),
+        ldap(3),
+        kerberos(4),
+        ntlm(5),
+        sdi(6),
+        other(7)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    Protocol used with this server.
+--         tacacsplus(1) - TACACS+
+--    
+--         radius(2)   - RADIUS
+--    
+--         ldap(3)     -   Light Weight Directory Protocol
+--    
+--         kerberos(4) -   Kerberos
+--    
+--         ntlm(5)     -   Authentication/Authorization using
+--    NT Domain
+--    
+--         sdi(6)      -   Authentication/Authorization using
+--    Secure ID
+--    
+--         other(7)    -   Other protocols
+--        
+--  Refer
+--    
+--     RFC 2138 Remote Authentication Dial In User Service 
+--    (RADIUS)
+--     RFC 2139 RADIUS Accounting
+--     The TACACS+ Protocol Version 1.78, Internet Draft
+
 casServerStateChangeEnable OBJECT-TYPE
     SYNTAX TruthValue
 --    Rsyntax INTEGER {
@@ -69,11 +116,11 @@ casServerStateChangeEnable OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "This variable controls the generation of 
+        "This variable controls the generation of
          casServerStateChange notification.
         
          When this variable is true(1), generation of
-         casServerStateChange notifications is enabled.  
+         casServerStateChange notifications is enabled.
          When this variable is false(2), generation of
          casServerStateChange notifications is disabled.
         
@@ -99,36 +146,36 @@ casConfigEntry OBJECT-TYPE
          and its index.
         
          An entry is created/removed when a server is defined
-         or undefined with IOS configuration commands via 
-         CLI or by issuing appropriate sets to this table 
+         or undefined with IOS configuration commands via
+         CLI or by issuing appropriate sets to this table
          using snmp.
         
          A management station wishing to create an entry should
-         first generate a random number to be used as the index 
-         to this sparse table.  The station should then create the 
-         associated instance of the row status and row index objects.  
-         It must also, either in the same or in successive PDUs, 
-         create an instance of casAddress where casAddress is the 
+         first generate a random number to be used as the index
+         to this sparse table.  The station should then create the
+         associated instance of the row status and row index objects.
+         It must also, either in the same or in successive PDUs,
+         create an instance of casAddress where casAddress is the
          IP address of the server to be added.
         
-         It should also modify the default values for casAuthenPort, 
+         It should also modify the default values for casAuthenPort,
          casAcctPort if the defaults are not appropriate.
         
          If casKey is a zero-length string or is not explicitly set,
-         then the global key will be used.  Otherwise, this value
+         then the global key will be used. Otherwise, this value
          is used as the key for this server instance.
         
          Once the appropriate instance of all the configuration
          objects have been created, either by an explicit SNMP set
          request or by default, the row status should be set to
-         active(1) to initiate the request.  
+         active(1) to initiate the request.
         
-         After the AAA server is made active, the entry can not be 
-         modified - the only allowed operation after this is to 
+         After the AAA server is made active, the entry can not be
+         modified - the only allowed operation after this is to
          destroy the entry by setting casConfigRowStatus to destroy(6).
         
          casPriority is automatically assigned once the entry is
-         made active and reflects the relative priority of the 
+         made active and reflects the relative priority of the
          defined server with respect to already configured servers.
          Newly-created servers will be assigned the lowest priority.
          To reassign server priorities to existing server entries,
@@ -136,73 +183,69 @@ casConfigEntry OBJECT-TYPE
          of priority.
         
          Entries in this table with casConfigRowStatus equal to
-         active(1) remain in the table until destroyed.  
+         active(1) remain in the table until destroyed.
         
-         Entries in this table with casConfigRowStatus equal to 
+         Entries in this table with casConfigRowStatus equal to
          values other than active(1) will be destroyed after timeout
-         (5 minutes).   
+         (5 minutes).
         
          If a server address being created via SNMP exists already
          in another active casConfigEntry, then a newly created row
-         can not be made active until the original row with the 
+         can not be made active until the original row with the
          with the same server address value is destroyed.
         
          Upon reload, casIndex values may be changed, but the
          priorities that were saved before reload will be retained,
-         with lowest priority number corresponding to the higher 
+         with lowest priority number corresponding to the higher
          priority servers.
          "
     INDEX { casProtocol, casIndex }
     ::= { casConfigTable 1 }
 
 CasConfigEntry ::= SEQUENCE {
-    casProtocol INTEGER,
-    casIndex Unsigned32,
+    casProtocol CiscoAAAProtocol,
+    casIndex Gauge,
     casAddress IpAddress,
     casAuthenPort INTEGER,
     casAcctPort INTEGER,
     casKey DisplayString,
-    casPriority Unsigned32,
+    casPriority Gauge,
     casConfigRowStatus RowStatus
     }
 
 casProtocol OBJECT-TYPE
-    SYNTAX INTEGER {
-        tacacsplus(1),
-        radius(2)
-        }
+    SYNTAX CiscoAAAProtocol
+--    Rsyntax INTEGER {
+--        tacacsplus(1),
+--        radius(2),
+--        ldap(3),
+--        kerberos(4),
+--        ntlm(5),
+--        sdi(6),
+--        other(7)
+--        }
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
-        "Protocol used with this server.
-        
-             tacacsplus(1) - TACACS+
-        
-             radius(2)     - RADIUS
-        
-            "
-    REFERENCE
-        "
-         RFC 2138 Remote Authentication Dial In User Service (RADIUS)
-         RFC 2139 RADIUS Accounting
-         The TACACS+ Protocol Version 1.78, Internet Draft"
+        "The variable denotes the protocol used by the
+         managed device with the AAA server corresponding to
+        this entry in the table."
     ::= { casConfigEntry 1 }
 
 casIndex OBJECT-TYPE
-    SYNTAX Unsigned32(1..4294967295)
---    Rsyntax Gauge32(1..4294967295)
+    SYNTAX Gauge(1..4294967295)
     ACCESS not-accessible
     STATUS mandatory
     DESCRIPTION
         "A management station wishing to initiate a new AAA server
          configuration should use a random value for this object
          when creating an instance of casConfigEntry.
-          
+        
          The RowStatus semantics of the casConfigRowStatus object
          will prevent access conflicts.
         
-         If the randomly chosen casIndex value for row creation 
-         is already in use by an existing entry, snmp set to the 
+         If the randomly chosen casIndex value for row creation
+         is already in use by an existing entry, snmp set to the
          casIndex value will fail."
     ::= { casConfigEntry 2 }
 
@@ -222,7 +265,7 @@ casAuthenPort OBJECT-TYPE
         "UDP/TCP port used for authentication in the configuration
         
          For TACACS+, this object should be explictly set.
-         
+        
          Default value is the IOS default for radius: 1645."
     DEFVAL { 1645 }
     ::= { casConfigEntry 4 }
@@ -234,7 +277,7 @@ casAcctPort OBJECT-TYPE
     DESCRIPTION
         "UDP/TCP port used for accounting service in the configuration
         
-         For TACACS+, the value of casAcctPort is ignored.  
+         For TACACS+, the value of casAcctPort is ignored.
          casAuthenPort will be used instead.
         
          Default value is the IOS default for radius: 1646."
@@ -249,14 +292,13 @@ casKey OBJECT-TYPE
     DESCRIPTION
         "The server key to be used with this server.
         
-         Retrieving the value of this object via SNMP will 
+         Retrieving the value of this object via SNMP will
          return an empty string for security reasons."
     DEFVAL { "" }
     ::= { casConfigEntry 6 }
 
 casPriority OBJECT-TYPE
-    SYNTAX Unsigned32(1..4294967295)
---    Rsyntax Gauge32(1..4294967295)
+    SYNTAX Gauge(1..4294967295)
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -303,58 +345,58 @@ casStatisticsEntry OBJECT-TYPE
          is made active.
         
          Objects in this table disappear when casConfigRowStatus
-         for the corresponding casConfigEntry is set to the 
+         for the corresponding casConfigEntry is set to the
          destroy(6) state."
     INDEX { casProtocol, casIndex }
 -- Augments casConfigEntry
     ::= { casStatisticsTable 1 }
 
 CasStatisticsEntry ::= SEQUENCE {
-    casAuthenRequests Counter32,
-    casAuthenRequestTimeouts Counter32,
-    casAuthenUnexpectedResponses Counter32,
-    casAuthenServerErrorResponses Counter32,
-    casAuthenIncorrectResponses Counter32,
+    casAuthenRequests Counter,
+    casAuthenRequestTimeouts Counter,
+    casAuthenUnexpectedResponses Counter,
+    casAuthenServerErrorResponses Counter,
+    casAuthenIncorrectResponses Counter,
     casAuthenResponseTime TimeInterval,
-    casAuthenTransactionSuccesses Counter32,
-    casAuthenTransactionFailures Counter32,
-    casAuthorRequests Counter32,
-    casAuthorRequestTimeouts Counter32,
-    casAuthorUnexpectedResponses Counter32,
-    casAuthorServerErrorResponses Counter32,
-    casAuthorIncorrectResponses Counter32,
+    casAuthenTransactionSuccesses Counter,
+    casAuthenTransactionFailures Counter,
+    casAuthorRequests Counter,
+    casAuthorRequestTimeouts Counter,
+    casAuthorUnexpectedResponses Counter,
+    casAuthorServerErrorResponses Counter,
+    casAuthorIncorrectResponses Counter,
     casAuthorResponseTime TimeInterval,
-    casAuthorTransactionSuccesses Counter32,
-    casAuthorTransactionFailures Counter32,
-    casAcctRequests Counter32,
-    casAcctRequestTimeouts Counter32,
-    casAcctUnexpectedResponses Counter32,
-    casAcctServerErrorResponses Counter32,
-    casAcctIncorrectResponses Counter32,
+    casAuthorTransactionSuccesses Counter,
+    casAuthorTransactionFailures Counter,
+    casAcctRequests Counter,
+    casAcctRequestTimeouts Counter,
+    casAcctUnexpectedResponses Counter,
+    casAcctServerErrorResponses Counter,
+    casAcctIncorrectResponses Counter,
     casAcctResponseTime TimeInterval,
-    casAcctTransactionSuccesses Counter32,
-    casAcctTransactionFailures Counter32,
+    casAcctTransactionSuccesses Counter,
+    casAcctTransactionFailures Counter,
     casState INTEGER,
     casCurrentStateDuration TimeInterval,
     casPreviousStateDuration TimeInterval,
     casTotalDeadTime TimeInterval,
-    casDeadCount Counter32
+    casDeadCount Counter
     }
 
 casAuthenRequests OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
         "The number of authentication requests sent to
-         this server since it is made active.  
+         this server since it is made active.
         
          Retransmissions due to request timeouts are
          counted as distinct requests."
     ::= { casStatisticsEntry 1 }
 
 casAuthenRequestTimeouts OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -367,7 +409,7 @@ casAuthenRequestTimeouts OBJECT-TYPE
     ::= { casStatisticsEntry 2 }
 
 casAuthenUnexpectedResponses OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -379,7 +421,7 @@ casAuthenUnexpectedResponses OBJECT-TYPE
     ::= { casStatisticsEntry 3 }
 
 casAuthenServerErrorResponses OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -392,7 +434,7 @@ casAuthenServerErrorResponses OBJECT-TYPE
     ::= { casStatisticsEntry 4 }
 
 casAuthenIncorrectResponses OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -416,7 +458,7 @@ casAuthenResponseTime OBJECT-TYPE
     ::= { casStatisticsEntry 6 }
 
 casAuthenTransactionSuccesses OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -431,7 +473,7 @@ casAuthenTransactionSuccesses OBJECT-TYPE
     ::= { casStatisticsEntry 7 }
 
 casAuthenTransactionFailures OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -446,7 +488,7 @@ casAuthenTransactionFailures OBJECT-TYPE
     ::= { casStatisticsEntry 8 }
 
 casAuthorRequests OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -461,7 +503,7 @@ casAuthorRequests OBJECT-TYPE
     ::= { casStatisticsEntry 9 }
 
 casAuthorRequestTimeouts OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -471,13 +513,13 @@ casAuthorRequestTimeouts OBJECT-TYPE
          A timeout results in a retransmission of the request
          If the maximum number of attempts has been reached,
          no further retransmissions will be attempted.
-         
+        
          This object is not instantiated for protocols which do
          not support a distinct authorization function."
     ::= { casStatisticsEntry 10 }
 
 casAuthorUnexpectedResponses OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -492,7 +534,7 @@ casAuthorUnexpectedResponses OBJECT-TYPE
     ::= { casStatisticsEntry 11 }
 
 casAuthorServerErrorResponses OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -508,7 +550,7 @@ casAuthorServerErrorResponses OBJECT-TYPE
     ::= { casStatisticsEntry 12 }
 
 casAuthorIncorrectResponses OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -538,7 +580,7 @@ casAuthorResponseTime OBJECT-TYPE
     ::= { casStatisticsEntry 14 }
 
 casAuthorTransactionSuccesses OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -556,7 +598,7 @@ casAuthorTransactionSuccesses OBJECT-TYPE
     ::= { casStatisticsEntry 15 }
 
 casAuthorTransactionFailures OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -574,7 +616,7 @@ casAuthorTransactionFailures OBJECT-TYPE
     ::= { casStatisticsEntry 16 }
 
 casAcctRequests OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -586,7 +628,7 @@ casAcctRequests OBJECT-TYPE
     ::= { casStatisticsEntry 17 }
 
 casAcctRequestTimeouts OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -596,11 +638,11 @@ casAcctRequestTimeouts OBJECT-TYPE
          A timeout results in a retransmission of the request
          If the maximum number of attempts has been reached,
          no further retransmissions will be attempted.
-         "
+        "
     ::= { casStatisticsEntry 18 }
 
 casAcctUnexpectedResponses OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -612,7 +654,7 @@ casAcctUnexpectedResponses OBJECT-TYPE
     ::= { casStatisticsEntry 19 }
 
 casAcctServerErrorResponses OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -625,7 +667,7 @@ casAcctServerErrorResponses OBJECT-TYPE
     ::= { casStatisticsEntry 20 }
 
 casAcctIncorrectResponses OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -649,7 +691,7 @@ casAcctResponseTime OBJECT-TYPE
     ::= { casStatisticsEntry 22 }
 
 casAcctTransactionSuccesses OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -664,7 +706,7 @@ casAcctTransactionSuccesses OBJECT-TYPE
     ::= { casStatisticsEntry 23 }
 
 casAcctTransactionFailures OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -688,9 +730,9 @@ casState OBJECT-TYPE
     DESCRIPTION
         "Current state of this server.
         
-             up(1)   - Server responding to requests
+        up(1)  - Server responding to requests
         
-             dead(2) - Server failed to respond
+        dead(2) - Server failed to respond
         
          A server is marked dead if it does not respond after
          maximum retransmissions.
@@ -737,7 +779,7 @@ casTotalDeadTime OBJECT-TYPE
     ::= { casStatisticsEntry 28 }
 
 casDeadCount OBJECT-TYPE
-    SYNTAX Counter32
+    SYNTAX Counter
     ACCESS read-only
     STATUS mandatory
     DESCRIPTION
@@ -789,6 +831,16 @@ casConfigGroup OBJECT IDENTIFIER ::= { casMIBGroups 2 }
 --    casServerStateChangeEnable, casAddress, casAuthenPort, 
 --    casAcctPort, casKey, casPriority, casConfigRowStatus
 
+casServerNotificationGroup OBJECT IDENTIFIER ::= { casMIBGroups 3 }
+-- NOTIFICATION-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    The collection of notifications used for
+--    monitoring AAA server status
+--  notifications
+--    casServerStateChange
+
 casMIBCompliance OBJECT IDENTIFIER ::= { casMIBCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
@@ -802,6 +854,8 @@ casMIBCompliance OBJECT IDENTIFIER ::= { casMIBCompliances 1 }
 --    casConfigGroup
 --   MandGroup
 --    casStatisticsGroup
+--   MandGroup
+--    casServerNotificationGroup
 --   ObjVar
 --    casAddress
 --   ObjVar

@@ -1,4 +1,4 @@
--- MIB file created 07-Sep-2001 14:28:15, by
+-- MIB file created 03-Jul-2003 10:19:01, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-RF-MIB DEFINITIONS ::= BEGIN
@@ -25,7 +25,7 @@ IMPORTS
 ciscoRFMIB OBJECT IDENTIFIER ::= { ciscoMgmt 176 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200107200000Z
+--    200201070000Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -52,6 +52,15 @@ ciscoRFMIB OBJECT IDENTIFIER ::= { ciscoMgmt 176 }
 --    
 --    In the scope of this MIB definition, peer software elements
 --    are redundant and redundant software elements are peers.
+--  RevDate
+--    200201070000Z
+--  RevDescr
+--    Added the following object in cRFStatus:
+--        cRFStatusRFModeCapsTable
+--    Added the following object in cRFCfg:
+--        cRFCfgRedundancyOperMode
+--    Updated description of following object in cRFCfg:
+--        cRFCfgRedundancyMode
 --  RevDate
 --    200107200000Z
 --  RevDescr
@@ -469,6 +478,59 @@ cRFStatusPeerStandByEntryTime OBJECT-TYPE
         standbyHot state. The value will be 0 on system initialization."
     ::= { cRFStatus 10 }
 
+cRFStatusRFModeCapsTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CRFStatusRFModeCapsEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table containing a list of redundancy modes that can be 
+        supported on the device."
+    ::= { cRFStatus 11 }
+
+cRFStatusRFModeCapsEntry OBJECT-TYPE
+    SYNTAX CRFStatusRFModeCapsEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An entry containing the device implementation specific 
+        terminology associated with the redundancy mode that can be
+        supported on the device."
+    INDEX { cRFStatusRFModeCapsMode }
+    ::= { cRFStatusRFModeCapsTable 1 }
+
+CRFStatusRFModeCapsEntry ::= SEQUENCE {
+    cRFStatusRFModeCapsMode RFMode,
+    cRFStatusRFModeCapsModeDescr SnmpAdminString
+    }
+
+cRFStatusRFModeCapsMode OBJECT-TYPE
+    SYNTAX RFMode
+--    Rsyntax INTEGER {
+--        nonRedundant(1),
+--        staticLoadShareNonRedundant(2),
+--        dynamicLoadShareNonRedundant(3),
+--        staticLoadShareRedundant(4),
+--        dynamicLoadShareRedundant(5),
+--        coldStandbyRedundant(6),
+--        warmStandbyRedundant(7),
+--        hotStandbyRedundant(8)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The redundancy mode that can be supported on the device."
+    ::= { cRFStatusRFModeCapsEntry 1 }
+
+cRFStatusRFModeCapsModeDescr OBJECT-TYPE
+    SYNTAX SnmpAdminString
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The description of the device implementation specific
+        terminology associated with its supported redundancy mode."
+    ::= { cRFStatusRFModeCapsEntry 2 }
+
 cRFCfgSplitMode OBJECT-TYPE
     SYNTAX TruthValue
 --    Rsyntax INTEGER {
@@ -678,7 +740,7 @@ cRFCfgRedundancyMode OBJECT-TYPE
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "Indicates the type of redundancy currently in effect."
+        "Indicates the redundancy mode configured on the device."
     ::= { cRFCfg 14 }
 
 cRFCfgRedundancyModeDescr OBJECT-TYPE
@@ -692,6 +754,24 @@ cRFCfgRedundancyModeDescr OBJECT-TYPE
         associated with the current redundancy mode may be presented
         here."
     ::= { cRFCfg 15 }
+
+cRFCfgRedundancyOperMode OBJECT-TYPE
+    SYNTAX RFMode
+--    Rsyntax INTEGER {
+--        nonRedundant(1),
+--        staticLoadShareNonRedundant(2),
+--        dynamicLoadShareNonRedundant(3),
+--        staticLoadShareRedundant(4),
+--        dynamicLoadShareRedundant(5),
+--        coldStandbyRedundant(6),
+--        warmStandbyRedundant(7),
+--        hotStandbyRedundant(8)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "Indicate the operational redundancy mode of the device."
+    ::= { cRFCfg 16 }
 
 cRFHistoryTableMaxLength OBJECT-TYPE
     SYNTAX Gauge(0..50)
@@ -916,6 +996,28 @@ ciscoRFHistoryGroup OBJECT IDENTIFIER ::= { ciscoRFMIBGroups 6 }
 --    cRFHistorySwitchOverReason, cRFHistorySwactTime, 
 --    cRFHistoryColdStarts, cRFHistoryStandByAvailTime, 
 --    cRFHistoryTableMaxLength
+
+ciscoRFConfigRFOperModeGroup OBJECT IDENTIFIER ::= { ciscoRFMIBGroups 7 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    An optional group with a collection of objects providing 
+--    the information of the operational redundancy mode on the
+--    device.
+--  objects
+--    cRFCfgRedundancyOperMode
+
+ciscoRFStatusRFModeCapsGroup OBJECT IDENTIFIER ::= { ciscoRFMIBGroups 8 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    An optional group with a collection of objects 
+--    providing the information of redundancy mode capability 
+--    on the device.
+--  objects
+--    cRFStatusRFModeCapsModeDescr
 
 ciscoRFNotifGroup OBJECT IDENTIFIER ::= { ciscoRFMIBGroups 3 }
 -- NOTIFICATION-GROUP

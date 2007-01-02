@@ -1,4 +1,4 @@
--- MIB file created 15-May-2002 10:40:09, by
+-- MIB file created 06-Jan-2003 19:35:06, by
 --   SMICng version 2.2.11-beta(PRO)(Solaris), January 20, 2001. Enterprise key cisco.com
 
 CISCO-GTP-MIB DEFINITIONS ::= BEGIN
@@ -9,9 +9,7 @@ CISCO-GTP-MIB DEFINITIONS ::= BEGIN
 IMPORTS
     TruthValue
             FROM SNMPv2-TC-v1
---    Unsigned32
---            FROM CISCO-TC
-    InetAddressType, InetAddress
+    InetAddressType, InetAddress, InetPortNumber
             FROM INET-ADDRESS-MIB
     ciscoMgmt
             FROM CISCO-SMI
@@ -25,7 +23,7 @@ IMPORTS
 cGtpMIB OBJECT IDENTIFIER ::= { ciscoMgmt 188 }
 -- MODULE-IDENTITY
 --  LastUpdated
---    200109131535Z
+--    200211091600Z
 --  OrgName
 --    Cisco Systems, Inc.
 --  ContactInfo
@@ -108,6 +106,10 @@ cGtpMIB OBJECT IDENTIFIER ::= { ciscoMgmt 188 }
 --    transferred across the GPRS network during the 
 --    remaining lifetime of an activated PDP context.
 --    
+--    A MAP converting GSN is responsible for converting GTP
+--    messages to and from MAP messages.  This helps in the
+--    communication with HLR.
+--    
 --    Acronyms and terms:
 --    
 --     APN    Access Point Name
@@ -123,6 +125,8 @@ cGtpMIB OBJECT IDENTIFIER ::= { ciscoMgmt 188 }
 --     GSM    Global System for Mobile communication
 --     GSN    GPRS Support Node
 --     G-PDU  GTP PDU 
+--     HLR    Home Location Register
+--     MAP    Mobile Application Protocol
 --     MS     Mobile Station = TE + MT
 --     MT     Mobile Termination
 --     NMS    Network Management System
@@ -136,6 +140,26 @@ cGtpMIB OBJECT IDENTIFIER ::= { ciscoMgmt 188 }
 --     TE     Terminal Equipment
 --     T-PDU  the payload of G-PDU 
 --     
+--  RevDate
+--    200211091600Z
+--  RevDescr
+--    Modified the description of 
+--    cGtpDynamicEchoTimerMinTime and
+--    cGtpDynamicEchoTimerSmoothFactor.
+--    
+--    Added the cGtpPathTable. 
+--    
+--    The following have been deprecated cGtpGSNTable, 
+--    cGtpMIBComplianceRev3, cGtpStatusGroupRev2.
+--    
+--    The following have been obsoleted cGtpT3TunnelTimer,
+--    cGtpMIBComplianceRev2, cGtpConfigurationsGroupRev1,
+--    cGtpStatusGroupRev1.
+--  RevDate
+--    200203081600Z
+--  RevDescr
+--    Added the object cGtpGSNVersion to the cGtpGSNTable.
+--    Deprecated the object cGtpT3TunnelTimer.
 --  RevDate
 --    200109131535Z
 --  RevDescr
@@ -204,6 +228,16 @@ cGtpMIBConformances OBJECT IDENTIFIER ::= { cGtpMIB 3 }
 cGtpMIBCompliances OBJECT IDENTIFIER ::= { cGtpMIBConformances 1 }
 cGtpMIBGroups   OBJECT IDENTIFIER ::= { cGtpMIBConformances 2 }
 
+CGtpVersion ::= INTEGER {
+        version0(1),
+        version1(2)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    This identifies the version of GTP. 
+
 cGtpGSNService OBJECT-TYPE
     SYNTAX OCTET STRING(SIZE(1..2))
         -- BITS are:
@@ -228,14 +262,19 @@ cGtpGSNService OBJECT-TYPE
     ::= { cGtpConfigurations 1 }
 
 cGtpVersion OBJECT-TYPE
-    SYNTAX INTEGER {
-        version0(1),
-        version1(2)
-        }
+    SYNTAX CGtpVersion
+--    Rsyntax INTEGER {
+--        version0(1),
+--        version1(2)
+--        }
     ACCESS read-write
     STATUS mandatory
     DESCRIPTION
-        "The gtp version supported by the GSN."
+        "The highest gtp version supported by the GSN.
+        
+        When the value is,
+            version0 - GTP v0 is supported,
+            version1 - GTP v1 and GTP v0 are supported."
     ::= { cGtpConfigurations 2 }
 
 cGtpT3TunnelTimer OBJECT-TYPE
@@ -243,7 +282,7 @@ cGtpT3TunnelTimer OBJECT-TYPE
 --  Units
 --    seconds
     ACCESS read-write
-    STATUS mandatory
+    STATUS obsolete
     DESCRIPTION
         "When the GSN behaves as SGSN, the T3-TUNNEL timer is used 
          for mobility management. When a roaming MS moves from one 
@@ -344,7 +383,7 @@ cGtpGSNTotalBandwidthResrc OBJECT-TYPE
 --  Units
 --    bits/sec
     ACCESS read-write
-    STATUS deprecated
+    STATUS obsolete
     DESCRIPTION
         "The total amount of bandwidth resource on the GSN,
          this total depends on various factors like system 
@@ -408,8 +447,8 @@ cGtpDynamicEchoTimerMinTime OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This object specifies the minimum time used by the 
-         dynamic echo timer. This object can be retrieved
-         only if cGtpDynamicEchoTimerEnable is set to 'true'."
+         dynamic echo timer. This object should be ignored
+         if cGtpDynamicEchoTimerEnable is set to 'false'."
     DEFVAL { 5 }
     ::= { cGtpConfigurations 13 }
 
@@ -419,8 +458,8 @@ cGtpDynamicEchoTimerSmoothFactor OBJECT-TYPE
     STATUS mandatory
     DESCRIPTION
         "This object specifies the smooth factor by which dynamic 
-         echo timer can be adjusted. This object can be retrieved
-         only if cGtpDynamicEchoTimerEnable is set to 'true'."
+         echo timer can be adjusted. This object should be ignored
+         if cGtpDynamicEchoTimerEnable is set to 'false'."
     DEFVAL { 2 }
     ::= { cGtpConfigurations 14 }
 
@@ -458,7 +497,7 @@ cGtpPremiumQosMeanThroughput OBJECT-TYPE
 --  Units
 --    bytes/sec
     ACCESS read-only
-    STATUS deprecated
+    STATUS obsolete
     DESCRIPTION
         "The sum of the mean throughput for premium class QOS 
          users on the GSN."
@@ -469,7 +508,7 @@ cGtpNormalQosMeanThroughput OBJECT-TYPE
 --  Units
 --    bytes/sec
     ACCESS read-only
-    STATUS deprecated
+    STATUS obsolete
     DESCRIPTION
         "The sum of the mean throughput for normal class QOS 
          users on the GSN."
@@ -480,7 +519,7 @@ cGtpBestEffortQosMeanThroughput OBJECT-TYPE
 --  Units
 --    bytes/sec
     ACCESS read-only
-    STATUS deprecated
+    STATUS obsolete
     DESCRIPTION
         "The sum of the mean throughput for best-effort class 
          QOS users on the GSN. "
@@ -489,7 +528,7 @@ cGtpBestEffortQosMeanThroughput OBJECT-TYPE
 cGtpGSNTable OBJECT-TYPE
     SYNTAX SEQUENCE OF CGtpGSNEntry
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "GSN peer table. The SGSN-GGSN peer relationship is established
           as given in the following series of steps:
@@ -502,15 +541,15 @@ cGtpGSNTable OBJECT-TYPE
           4. The SGSN and GGSN peer maintains path by sending echo 
              request message to each other. If one side fails in echo 
              reply for certain times, the other side will send a 
-             trap to NMS. A SGSN can have multiple GGSN as peers, 
-             while a GGSN can have multiple SGSN peers, depending 
-             on routing path."
+             notification to NMS. A SGSN can have multiple GGSN as 
+             peers, while a GGSN can have multiple SGSN peers, 
+             depending on routing path."
     ::= { cGtpStatus 6 }
 
 cGtpGSNEntry OBJECT-TYPE
     SYNTAX CGtpGSNEntry
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "GSN entry. The entry is created when a path between a GGSN
          and SGSN is setup and the corresponding peer is not yet listed 
@@ -522,7 +561,8 @@ cGtpGSNEntry OBJECT-TYPE
 
 CGtpGSNEntry ::= SEQUENCE {
     cGtpGSNAddressType InetAddressType,
-    cGtpGSNAddress InetAddress
+    cGtpGSNAddress InetAddress,
+    cGtpGSNVersion CGtpVersion
     }
 
 cGtpGSNAddressType OBJECT-TYPE
@@ -537,7 +577,7 @@ cGtpGSNAddressType OBJECT-TYPE
 --        dns(16)
 --        }
     ACCESS not-accessible
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "The type of Internet address by which cGtpGSNAddress
          is reachable."
@@ -547,10 +587,145 @@ cGtpGSNAddress OBJECT-TYPE
     SYNTAX InetAddress
 --    Rsyntax OCTET STRING(SIZE(0..255))
     ACCESS read-only
-    STATUS mandatory
+    STATUS deprecated
     DESCRIPTION
         "Ip address that uniquely identify a GSN node."
     ::= { cGtpGSNEntry 2 }
+
+cGtpGSNVersion OBJECT-TYPE
+    SYNTAX CGtpVersion
+--    Rsyntax INTEGER {
+--        version0(1),
+--        version1(2)
+--        }
+    ACCESS read-only
+    STATUS deprecated
+    DESCRIPTION
+        "This object represents the GTP version supported by the
+        GSN node, identified by cGtpGSNAddressType and cGtpGSNAddress.
+        
+        The value:
+            version0 - represents GTP version0 and
+            version1 - represents GTP version1."
+    ::= { cGtpGSNEntry 3 }
+
+cGtpPathTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF CGtpPathEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table identifies the paths established on a GSN. The
+        path may be established between a GGSN and SGSN or GGSN 
+        and charging gateway or GGSN and MAP converting GSN.
+        
+        The path between GGSN and charging gateway is established
+        when the charging gateway is configured on the GGSN.
+        
+        The path between GGSN and MAP converting GSN is established
+        when the MAP converting GSN is configured on the GGSN.
+        
+        The path between a GGSN and SGSN is established in the 
+        following series of steps:
+        
+        1. When Mobile System (MS) wants service, it sends packets
+           to a SGSN with specific APN.
+        
+        2. SGSN uses the DNS to resolve this APN to the IP address
+           of the GGSN which is the designated as the gateway to
+           this APN.
+        
+        3. SGSN establishes a path to the GGSN using GTP protocol.
+        
+        4. The SGSN and GGSN peer maintains path by sending echo
+           request message to each other. If one side fails in echo
+           reply for certain times, the other side will send a
+           trap to NMS. A SGSN can have multiple GGSN as peers,
+           while a GGSN can have multiple SGSN peers, depending
+           on routing path. Moreover, a GSN can have more than one 
+           path to a peer, each of which will have a unique port."
+    ::= { cGtpStatus 7 }
+
+cGtpPathEntry OBJECT-TYPE
+    SYNTAX CGtpPathEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The entry is created:
+        1. When a path between a GGSN and SGSN is setup.
+        
+        2. Or, when a path between the GGSN and the charging
+           gateway is setup.
+        
+        3. Or, when a path between GGSN and the MAP converting GSN 
+           is setup. 
+        
+        The entry is deleted when the path is released, or echo 
+        test message on the path times out after certain retry number
+        defined as cGtpN3Request."
+    INDEX { cGtpPathAddressType, cGtpPathAddress, cGtpPathPort }
+    ::= { cGtpPathTable 1 }
+
+CGtpPathEntry ::= SEQUENCE {
+    cGtpPathAddressType InetAddressType,
+    cGtpPathAddress InetAddress,
+    cGtpPathPort InetPortNumber,
+    cGtpPathVersion CGtpVersion
+    }
+
+cGtpPathAddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+--    Rsyntax INTEGER {
+--        ?? enum value of zero may cause problems
+--        unknown(0),
+--        ipv4(1),
+--        ipv6(2),
+--        ipv4z(3),
+--        ipv6z(4),
+--        dns(16)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The type of Internet address by which cGtpPathAddress
+        is reachable."
+    ::= { cGtpPathEntry 1 }
+
+cGtpPathAddress OBJECT-TYPE
+    SYNTAX InetAddress
+--    Rsyntax OCTET STRING(SIZE(0..255))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An address that uniquely identifies a remote node to which
+        this path is established."
+    ::= { cGtpPathEntry 2 }
+
+cGtpPathPort OBJECT-TYPE
+    SYNTAX InetPortNumber
+--    Rsyntax Gauge(0..65535)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This object identifies the port on the remote node.
+        The value of zero is invalid."
+    ::= { cGtpPathEntry 3 }
+
+cGtpPathVersion OBJECT-TYPE
+    SYNTAX CGtpVersion
+--    Rsyntax INTEGER {
+--        version0(1),
+--        version1(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object represents the GTP version of the path 
+        identified by cGtpPathEntry.
+        
+        The value:
+            version0 - represents GTP version0 and
+            version1 - represents GTP version1."
+    ::= { cGtpPathEntry 4 }
 
 cGtpPathFailureOccurrences OBJECT-TYPE
     SYNTAX Counter
@@ -569,7 +744,7 @@ cGtpCurrentUsedBandwidth OBJECT-TYPE
 --  Units
 --    bits/sec
     ACCESS read-only
-    STATUS deprecated
+    STATUS obsolete
     DESCRIPTION
         "The current amount of bandwith resource used on the GSN."
     ::= { cGtpStatistics 2 }
@@ -600,7 +775,7 @@ cGtpPathFailedNotification TRAP-TYPE
 cGtpConfigurationsGroup OBJECT IDENTIFIER ::= { cGtpMIBGroups 1 }
 -- OBJECT-GROUP
 --  Status
---    deprecated
+--    obsolete
 --  Descr
 --     A collection of GTP configurations.
 --  objects
@@ -612,7 +787,7 @@ cGtpConfigurationsGroup OBJECT IDENTIFIER ::= { cGtpMIBGroups 1 }
 cGtpStatusGroup OBJECT IDENTIFIER ::= { cGtpMIBGroups 2 }
 -- OBJECT-GROUP
 --  Status
---    deprecated
+--    obsolete
 --  Descr
 --     A collection of GTP Status.
 --  objects
@@ -624,7 +799,7 @@ cGtpStatusGroup OBJECT IDENTIFIER ::= { cGtpMIBGroups 2 }
 cGtpStatisticsGroup OBJECT IDENTIFIER ::= { cGtpMIBGroups 3 }
 -- OBJECT-GROUP
 --  Status
---    deprecated
+--    obsolete
 --  Descr
 --     A collection of GTP statistics .
 --  objects
@@ -634,7 +809,7 @@ cGtpStatisticsGroup OBJECT IDENTIFIER ::= { cGtpMIBGroups 3 }
 cGtpConfigurationsGroupRev1 OBJECT IDENTIFIER ::= { cGtpMIBGroups 4 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    obsolete
 --  Descr
 --     A collection of GTP configurations.
 --  objects
@@ -647,7 +822,7 @@ cGtpConfigurationsGroupRev1 OBJECT IDENTIFIER ::= { cGtpMIBGroups 4 }
 cGtpStatusGroupRev1 OBJECT IDENTIFIER ::= { cGtpMIBGroups 5 }
 -- OBJECT-GROUP
 --  Status
---    mandatory
+--    obsolete
 --  Descr
 --     A collection of GTP Status.
 --  objects
@@ -663,6 +838,40 @@ cGtpStatisticsGroupRev1 OBJECT IDENTIFIER ::= { cGtpMIBGroups 6 }
 --  objects
 --    cGtpPathFailureOccurrences, cGtpTotalDroppedPackets
 
+cGtpConfigurationsGroupRev2 OBJECT IDENTIFIER ::= { cGtpMIBGroups 8 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--     A collection of GTP configurations.
+--  objects
+--    cGtpGSNService, cGtpVersion, cGtpT3ResponseTimer, 
+--    cGtpN3Request, cGtpN3BufferSize, cGtpEchoRequestTimerEnable, 
+--    cGtpEchoRequestTimer, cGtpMaximumPdps, cGtpNotifEnable, 
+--    cGtpDynamicEchoTimerEnable, cGtpDynamicEchoTimerMinTime, 
+--    cGtpDynamicEchoTimerSmoothFactor
+
+cGtpStatusGroupRev2 OBJECT IDENTIFIER ::= { cGtpMIBGroups 9 }
+-- OBJECT-GROUP
+--  Status
+--    deprecated
+--  Descr
+--     A collection of GTP status.  This is deprecated by
+--    cGtpStatusGroupRev3.
+--  objects
+--    cGtpLastNoRespToEchoGSNIpAddrTyp, 
+--    cGtpLastNoRespToEchoGSNIpAddr, cGtpGSNAddress, cGtpGSNVersion
+
+cGtpStatusGroupRev3 OBJECT IDENTIFIER ::= { cGtpMIBGroups 11 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--     A collection of GTP status.
+--  objects
+--    cGtpLastNoRespToEchoGSNIpAddrTyp, 
+--    cGtpLastNoRespToEchoGSNIpAddr, cGtpPathVersion
+
 cGtpNotifGroup OBJECT IDENTIFIER ::= { cGtpMIBGroups 7 }
 -- NOTIFICATION-GROUP
 --  Status
@@ -675,10 +884,10 @@ cGtpNotifGroup OBJECT IDENTIFIER ::= { cGtpMIBGroups 7 }
 cGtpMIBCompliance OBJECT IDENTIFIER ::= { cGtpMIBCompliances 1 }
 -- MODULE-COMPLIANCE
 --  Status
---    deprecated
+--    obsolete
 --  Descr
 --    The compliance statements for entities which
---    implement the CISCO GTP MIB.
+--    implement the CISCO-GTP-MIB.
 --  Module
 --    >>current<<
 --   MandGroup
@@ -695,10 +904,10 @@ cGtpMIBCompliance OBJECT IDENTIFIER ::= { cGtpMIBCompliances 1 }
 cGtpMIBComplianceRev1 OBJECT IDENTIFIER ::= { cGtpMIBCompliances 2 }
 -- MODULE-COMPLIANCE
 --  Status
---    deprecated
+--    obsolete
 --  Descr
 --    The compliance statements for entities which
---    implement the CISCO GTP MIB.
+--    implement the CISCO-GTP-MIB.
 --  Module
 --    >>current<<
 --   MandGroup
@@ -715,10 +924,10 @@ cGtpMIBComplianceRev1 OBJECT IDENTIFIER ::= { cGtpMIBCompliances 2 }
 cGtpMIBComplianceRev2 OBJECT IDENTIFIER ::= { cGtpMIBCompliances 3 }
 -- MODULE-COMPLIANCE
 --  Status
---    mandatory
+--    obsolete
 --  Descr
 --    The compliance statements for entities which
---    implement the CISCO GTP MIB.
+--    implement the CISCO-GTP-MIB.
 --  Module
 --    >>current<<
 --   MandGroup
@@ -733,6 +942,49 @@ cGtpMIBComplianceRev2 OBJECT IDENTIFIER ::= { cGtpMIBCompliances 3 }
 --    cGtpVersion
 --   ObjVar
 --    cGtpGSNAddress
+
+cGtpMIBComplianceRev3 OBJECT IDENTIFIER ::= { cGtpMIBCompliances 4 }
+-- MODULE-COMPLIANCE
+--  Status
+--    deprecated
+--  Descr
+--    The compliance statements for entities which
+--    implement the CISCO-GTP-MIB.  This is deprecated
+--    by cGtpMIBComplianceRev4.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cGtpConfigurationsGroupRev2
+--   MandGroup
+--    cGtpStatusGroupRev2
+--   MandGroup
+--    cGtpStatisticsGroupRev1
+--   MandGroup
+--    cGtpNotifGroup
+--   ObjVar
+--    cGtpVersion
+--   ObjVar
+--    cGtpGSNAddress
+
+cGtpMIBComplianceRev4 OBJECT IDENTIFIER ::= { cGtpMIBCompliances 5 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statements for entities which
+--    implement the CISCO-GTP-MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    cGtpConfigurationsGroupRev2
+--   MandGroup
+--    cGtpStatusGroupRev3
+--   MandGroup
+--    cGtpStatisticsGroupRev1
+--   MandGroup
+--    cGtpNotifGroup
+--   ObjVar
+--    cGtpVersion
 
 
 END
