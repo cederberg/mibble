@@ -3,7 +3,7 @@
 --
 -- May 2002, Sameer Merchant, Mickey Spiegel and Sonal Maheshwari
 --
--- Copyright (c) 2002 by cisco Systems, Inc.
+-- Copyright (c) 2002, 2003 by cisco Systems, Inc.
 -- All rights reserved.
 --
 -- *****************************************************************
@@ -22,7 +22,7 @@ IMPORTS
     ifIndex                                  FROM IF-MIB;
 
 ciscoCdlMIB MODULE-IDENTITY
-    LAST-UPDATED   "200205300000Z" -- 05/30/2002
+    LAST-UPDATED   "200210020000Z" -- 10/02/2002
     ORGANIZATION   "Cisco Systems, Inc."
     CONTACT-INFO   "Cisco Systems
                     Customer Service
@@ -70,6 +70,15 @@ ciscoCdlMIB MODULE-IDENTITY
         APS configuration and monitoring can be done using the
         CISCO-APS-MIB and CISCO-APS-EXT-MIB.
         "
+    REVISION        "200210020000Z" -- 10/02/2002
+    DESCRIPTION
+        "Second version of this MIB module.
+ 
+         The following new counters have been added -
+             coCdlFromCdlNetEthernetCRC
+             coCdlFromCdlNetEthernetCRCOvrflw
+             coCdlFromCdlNetHCEthernetCRC
+         " 
     REVISION       "200205300000Z" -- 05/30/2002
     DESCRIPTION
         "Initial version of this MIB module."
@@ -775,12 +784,15 @@ coCdlFlowTermEntry OBJECT-TYPE
 
 CoCdlFlowTermEntry ::=
     SEQUENCE {
-        coCdlFromCdlNetFlowIdentifier   CoCdlFlowIdentifier,
-        coCdlToCdlNetFlowIdentifier     CoCdlFlowIdentifier,
-        coCdlFromCdlNetFlowDICurrStatus CoCdlFlowDefectIndStatus,
-        coCdlFromCdlNetFlowDILastChange TimeStamp,
-        coCdlToCdlNetFlowDICurrStatus   CoCdlFlowDefectIndStatus,
-        coCdlToCdlNetFlowDILastChange   TimeStamp
+        coCdlFromCdlNetFlowIdentifier       CoCdlFlowIdentifier,
+        coCdlToCdlNetFlowIdentifier         CoCdlFlowIdentifier,
+        coCdlFromCdlNetFlowDICurrStatus     CoCdlFlowDefectIndStatus,
+        coCdlFromCdlNetFlowDILastChange     TimeStamp,
+        coCdlToCdlNetFlowDICurrStatus       CoCdlFlowDefectIndStatus,
+        coCdlToCdlNetFlowDILastChange       TimeStamp,
+        coCdlFromCdlNetEthernetCRC          Counter32,
+        coCdlFromCdlNetEthernetCRCOvrflw    Counter32, 
+        coCdlFromCdlNetHCEthernetCRC        Counter64
     }
 
 coCdlFromCdlNetFlowIdentifier OBJECT-TYPE
@@ -873,6 +885,67 @@ coCdlToCdlNetFlowDILastChange OBJECT-TYPE
         "
     ::= { coCdlFlowTermEntry 6 }
 
+coCdlFromCdlNetEthernetCRC OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object represents the lower word value of the counter
+        that provides a count of Ethernet packets with CRC
+        errors, for an elementary packet stream, at the point where
+        the CDL header is removed. When Ethernet is used as an
+        encapsulation for transport of non-Ethernet protocols, this
+        is the number of Ethernet CRC errors, before the Ethernet
+        encapsulation is removed and the resulting traffic for the
+        underlying protocol is transmitted out this interface.
+
+        NOTE: The object coCdlFromCdlNetEthernetCRCOvrflw contains the
+        higher 32 bits of this counter value. SNMP v2c or v3 managers
+        can use the coCdlFromCdlNetHCEthernetCRC object directly which
+        is a 64 bit counter.
+        "
+    ::= { coCdlFlowTermEntry 7 }
+
+coCdlFromCdlNetEthernetCRCOvrflw OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object represents the higher word value of the counter
+        that provides a count of Ethernet packets with CRC
+        errors, for an elementary packet stream, at the point where
+        the CDL header is removed. When Ethernet is used as an
+        encapsulation for transport of non-Ethernet protocols, this
+        is the number of Ethernet CRC errors, before the Ethernet
+        encapsulation is removed and the resulting traffic for the
+        underlying protocol is transmitted out this interface.
+
+        NOTE: The object coCdlFromCdlNetEthernetCRC contains the
+        lower 32 bits of this counter value. SNMP v2c or v3 managers
+        can use the coCdlFromCdlNetHCEthernetCRC object directly which
+        is a 64 bit counter.
+        "
+    ::= { coCdlFlowTermEntry 8 }
+
+coCdlFromCdlNetHCEthernetCRC OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object provides a count of Ethernet packets with CRC
+        errors, for an elementary packet stream, at the point where
+        the CDL header is removed. When Ethernet is used as an
+        encapsulation for transport of non-Ethernet protocols, this
+        is the number of Ethernet CRC errors, before the Ethernet
+        encapsulation is removed and the resulting traffic for the
+        underlying protocol is transmitted out this interface.
+
+        This is a High Capacity (64 bit) version of the
+        coCdlFromCdlNetEthernetCRC counter. 
+        "
+    ::= { coCdlFlowTermEntry 9 }
+
+
 -- CDL Notifications
 
 
@@ -949,7 +1022,7 @@ coCdlMIBGroups OBJECT IDENTIFIER
     ::= { coCdlMIBConformance 2 }
 
 coCdlMIBCompliance MODULE-COMPLIANCE
-    STATUS      current
+    STATUS      deprecated
     DESCRIPTION
         "The Compliance statement for the Cisco CDL MIB."
     MODULE -- this module
@@ -1060,6 +1133,120 @@ coCdlMIBCompliance MODULE-COMPLIANCE
 
     ::= { coCdlMIBCompliances 1 }
 
+
+coCdlMIBCompliance2 MODULE-COMPLIANCE
+    STATUS      current
+    DESCRIPTION
+        "The Compliance statement for the Cisco CDL MIB."
+    MODULE -- this module
+        MANDATORY-GROUPS { coCdlMIBBaseGroup, coCdlDIAggMandatoryGroup,
+                           coCdlDIAggNotifGroup }
+
+        OBJECT coCdlAdminStatus
+        MIN-ACCESS read-only
+        DESCRIPTION
+            "Write access is required only when the presence of CDL is
+            configurable on an Ethernet interface.
+            "
+
+        OBJECT coCdlDINotifyThrottleInterval
+        MIN-ACCESS read-only
+        DESCRIPTION
+            "Write access is required only when the notify throttle
+            interval is configurable.
+            "
+
+        OBJECT coCdlDefectIndSetSoakInterval
+        MIN-ACCESS read-only
+        DESCRIPTION
+            "Write access is required only when the set soak interval
+            is configurable.
+            "
+
+        OBJECT coCdlDefectIndClearSoakInterval
+        MIN-ACCESS read-only
+        DESCRIPTION
+            "Write access is required only when the clear soak interval
+            is configurable.
+            "
+
+        GROUP coCdlDIConfigGroup
+        DESCRIPTION
+            "This group is required when CDL defect indication behavior
+            is configurable.
+            "
+
+        OBJECT coCdlForceEndOfHop
+        MIN-ACCESS read-only
+        DESCRIPTION
+            "Write access is required only when the node behavior is
+            configurable.
+            "
+
+        GROUP coCdlMIBFlowIdGroup
+        DESCRIPTION
+            "This group is required when the network element supports
+            transport of CDL aggregate packet streams consisting of
+            multiple elementary packet streams.
+            "
+
+        OBJECT coCdlTransmitMaxFlowIdentifier
+        MIN-ACCESS read-only
+        DESCRIPTION
+            "Write access is required only when the maximum transmitted
+            flow identifier value is configurable.
+            "
+
+        OBJECT coCdlReceiveMaxFlowIdentifier
+        MIN-ACCESS read-only
+        DESCRIPTION
+            "Write access is required only when the maximum received
+            flow identifier value is configurable.
+            "
+
+        GROUP coCdlMIBFlowTerm2Group
+        DESCRIPTION
+            "This group is required when the network element supports
+            termination of CDL packet-by-packet multiplexing, i.e.,
+            either the network element supports CDL packet-by-packet
+            multiplexing and can apply/remove the CDL Ethernet
+            encapsulation, or the network element contains interfaces
+            that support packet-by-packet multiplexing as well as
+            interfaces that do not support packet-by-packet
+            multiplexing.
+            "
+
+        OBJECT coCdlToCdlNetFlowIdentifier
+        MIN-ACCESS read-only
+        DESCRIPTION
+            "Write access is required only when the interface supports
+            configuration of the flow identifier value progressed
+            towards the CDL network.
+            "
+
+        OBJECT coCdlFromCdlNetFlowIdentifier
+        MIN-ACCESS read-only
+        DESCRIPTION
+            "Write access is required only when the interface supports
+            configuration of the flow identifier value received from
+            the CDL network.
+            "
+
+        GROUP coCdlDIFlowNotifGroup
+        DESCRIPTION
+            "This group is required when the network element supports
+            termination of CDL packet-by-packet multiplexing, i.e.,
+            either the network element supports CDL packet-by-packet
+            multiplexing and can apply/remove the CDL Ethernet
+            encapsulation, or the network element contains interfaces
+            that support packet-by-packet multiplexing as well as
+            interfaces that do not support packet-by-packet
+            multiplexing.
+            "
+
+    ::= { coCdlMIBCompliances 2 }
+
+
 -- Units of Conformance
 
 coCdlMIBBaseGroup OBJECT-GROUP
@@ -1104,7 +1291,7 @@ coCdlMIBFlowTermGroup OBJECT-GROUP
         coCdlToCdlNetFlowDICurrStatus,
         coCdlToCdlNetFlowDILastChange
     }
-    STATUS      current
+    STATUS      deprecated
     DESCRIPTION
         "A collection of objects to configure and monitor the status of
         elementary packet streams at path terminating interfaces.
@@ -1160,5 +1347,25 @@ coCdlDIFlowNotifGroup NOTIFICATION-GROUP
         "A collection of notifications for CDL flow defect indications.
         "
     ::= { coCdlMIBGroups 7 }
+
+coCdlMIBFlowTerm2Group OBJECT-GROUP
+    OBJECTS {
+        coCdlFromCdlNetFlowIdentifier,
+        coCdlToCdlNetFlowIdentifier,
+        coCdlFromCdlNetFlowDICurrStatus,
+        coCdlFromCdlNetFlowDILastChange,
+        coCdlToCdlNetFlowDICurrStatus,
+        coCdlToCdlNetFlowDILastChange,
+        coCdlFromCdlNetEthernetCRC,
+        coCdlFromCdlNetEthernetCRCOvrflw,
+        coCdlFromCdlNetHCEthernetCRC
+    }
+    STATUS      current
+    DESCRIPTION
+        "A collection of objects to configure and monitor the status of
+        elementary packet streams at path terminating interfaces.
+        "
+    ::= { coCdlMIBGroups 8 }
+
 
 END

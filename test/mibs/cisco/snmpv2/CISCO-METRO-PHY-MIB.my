@@ -3,8 +3,9 @@
 --
 -- Feb 2001, Sonal Maheshwari, Mickey Spiegel
 -- May 2002, Sonal Maheshwari, Mickey Spiegel 
+-- Dec 2002, Arvind Prabhudev, Sonal Maheshwari, Mickey Spiegel
 --
--- Copyright (c) 2001-2002 by cisco Systems, Inc.
+-- Copyright (c) 2001, 2002, 2003, 2004 by cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
 
@@ -13,6 +14,7 @@ CISCO-METRO-PHY-MIB DEFINITIONS ::= BEGIN
 IMPORTS
     Integer32,
     Counter32,
+    Unsigned32,
     Counter64,
     MODULE-IDENTITY,
     OBJECT-TYPE                         FROM SNMPv2-SMI
@@ -25,7 +27,7 @@ IMPORTS
 ;
 
 ciscoMetroPhyMIB MODULE-IDENTITY
-    LAST-UPDATED   "200205140000Z" 
+    LAST-UPDATED   "200411190000Z" 
     ORGANIZATION   "Cisco Systems, Inc."
     CONTACT-INFO   "Cisco Systems
                     Customer Service
@@ -60,6 +62,17 @@ ciscoMetroPhyMIB MODULE-IDENTITY
         objects for section trace monitoring on SONET/SDH
         interfaces. 
         "
+    REVISION   "200411190000Z"
+    DESCRIPTION
+        "cmPhyIfTransType object has been added to cmPhyIfTable.
+         'e1', 't1', 'e3', 't3', 'dvb', 'sdi' and 'its' enumeration 
+         has been added to cmPhyIfProtocol object."
+    REVISION   "200308250000Z"
+    DESCRIPTION
+        "cmPhyIfAutoNegotiation object has been added to cmPhyIfTable."
+    REVISION   "200301080000Z"
+    DESCRIPTION
+        "cmPhyIfTxBufferSize object has been added to cmPhyIfTable."
     REVISION   "200205140000Z"
     DESCRIPTION
         "The third revision of this MIB.
@@ -91,11 +104,54 @@ ciscoMetroPhyMIB MODULE-IDENTITY
 
 -- Textual Conventions
 
+TransmissionType ::= TEXTUAL-CONVENTION
+    STATUS       current
+    DESCRIPTION
+        "An integer value that identifies the physical layer medium
+         used across an interface.
+
+         The value 'unknown' indicates the physical layer medium is not
+         known.
+
+         The value 'copper' indicates the physical layer medium is
+         copper.
+
+         The value 'optical' indicates the physical layer medium is
+         optical."
+      
+    SYNTAX INTEGER {
+         unknown(1),
+         copper(2),
+         optical(3)
+    }
+
 ProtocolType ::= TEXTUAL-CONVENTION
     STATUS       current
     DESCRIPTION
         "An integer value that identifies the protocol used across an
-        interface."
+        interface.
+
+         The value 'e1' indicates an interface that implements the
+         physical layer of E1.
+
+         The value 't1' indicates an interface that implements the
+         physical layer of T1.
+
+         The value 'e3' indicates an interface that implements the
+         physical layer of E3.
+
+         The value 't3' indicates an interface that implements the
+         physical layer of T3.
+         
+         The value 'dvb' indicates an interface that implements the
+         physical layer of DVB.
+         
+         The value 'sdi' indicates an interface that implements the
+         physical layer of SDI.
+        
+         The value 'its' indicates an interface that implements the
+         physical layer of ITS. "
+
     SYNTAX INTEGER {
         other(1),
         unknown(2),
@@ -111,8 +167,25 @@ ProtocolType ::= TEXTUAL-CONVENTION
         sysplexTimerEtr(12),
         sysplexTimerClo(13),
         fastEthernet(14),
-        fddi(15)
+        fddi(15),
+        e1(16),
+        t1(17),
+        e3(18),
+        t3(19),
+        dvb(20),
+        sdi(21),
+        its(22)
     }
+
+TriValue ::= TEXTUAL-CONVENTION
+    STATUS     current
+    DESCRIPTION
+        "A three codepoint value."
+    SYNTAX INTEGER {
+        true(1),
+        false(2),
+        notApplicable(3)
+    }	
 
 -- MIB Object Definitions
 
@@ -164,7 +237,10 @@ CmPhyIfEntry ::= SEQUENCE {
     cmPhyIfLoopback               INTEGER,
     cmPhyIfOFC                    TruthValue,
     cmPhyIfLaserSafetyControl     TruthValue,
-    cmPhyIfForwardLaserControl    TruthValue
+    cmPhyIfForwardLaserControl    TruthValue,
+    cmPhyIfTxBufferSize           Unsigned32,
+    cmPhyIfAutoNegotiation        TriValue,
+    cmPhyIfTransType              TransmissionType
 }
 
 cmPhyIfMode OBJECT-TYPE
@@ -332,7 +408,68 @@ cmPhyIfForwardLaserControl OBJECT-TYPE
         the default value assigned to this object."
     ::= { cmPhyIfEntry 8 }
 
+cmPhyIfTxBufferSize OBJECT-TYPE
+    SYNTAX        Unsigned32 (0..65536)
+    UNITS         "bytes"
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "This object applies when circuit emulation of the client
+        protocol is used. It allows the management client to
+        configure the size of the transmit buffer on the client
+        port. A value of 0 implies that this object does not apply
+        to this interface.
 
+        Controlling the size of the transmit buffer on a client
+        port may be essential in scenarios where packet streams
+        from various client ports are aggregated onto a single
+        trunk port. The latency associated with an elementary
+        stream received on a client port, from the trunk port is
+        influenced by the nature of other elementary streams in
+        the aggregate. For example, a giant packet in one stream
+        will increase latency in processing packets in other
+        elementary streams. The size of the transmit buffer on
+        the client port must be configured proportional to this
+        expected latency. Increasing the buffer size when latency
+        is higher helps in reassembly of fragmented packets before
+        transmitting them to the client device.
+
+        Note that increasing the buffer size results in higher
+        latency even when the elementary packet stream is not
+        subject to high jitters. Refer to the platform specific
+        documentation for guidelines on configuring this buffer
+        size."
+    ::= { cmPhyIfEntry 9 }
+
+cmPhyIfAutoNegotiation OBJECT-TYPE
+    SYNTAX        TriValue
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION
+        "This object allows the management client to enable
+        auto negotiation signaling on the client side interface,
+        by writing a 'true' value to this object. A 'false'
+        value would disable auto negotiation. Setting the value 
+        'notApplicable' to this object will not change the 
+        existing value in this object.
+
+        Auto negotiation is applicable only for a few client
+        protocols such as gigabitEthernet. If the client 
+        interface does not support 'auto negotiation' feature, 
+        then this object has the value of 'notApplicable' and 
+        the value will not be changed via a set operation."
+    ::= { cmPhyIfEntry 10 }
+
+cmPhyIfTransType OBJECT-TYPE
+    SYNTAX        TransmissionType
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "This object is used to identify the physical layer medium used
+         for carrying data. For non-relevant interfaces, this value is
+         'unknown'."
+    ::= { cmPhyIfEntry 11 }
+ 
 --  cmPhyStatistics group
 
 --  This group contains objects for the error 
@@ -626,7 +763,7 @@ cmPhyHCTxEncapFarEndPktErrors OBJECT-TYPE
 -- cmPhySonetSectionTrace group
 
 -- This group provides objects for tracing a SONET section
--- by monitoring the J0 bytes of a reveived SONET or SDH frame.
+-- by monitoring the J0 bytes of a received SONET or SDH frame.
 
 -- SonetSectionTrace table
 
@@ -734,9 +871,8 @@ cmPhyMIBCompliance MODULE-COMPLIANCE
 
     ::= { ciscoMetroPhyMIBCompliances 1 }
 
-
 cmPhyMIBCompliance2 MODULE-COMPLIANCE
-    STATUS   current 
+    STATUS   deprecated 
     DESCRIPTION
         "The compliance statement for platforms that monitor the
         operating status with respect to error
@@ -797,7 +933,251 @@ cmPhyMIBCompliance2 MODULE-COMPLIANCE
 
     ::= { ciscoMetroPhyMIBCompliances 2 }
 
---
+
+cmPhyMIBCompliance3 MODULE-COMPLIANCE
+    STATUS   deprecated
+    DESCRIPTION
+        "The compliance statement for platforms that monitor the
+        operating status with respect to error
+        counters, for the physical layer."
+    MODULE -- this module
+        MANDATORY-GROUPS {
+            cmPhyIf2Group
+        }
+
+        GROUP cmPhyCVRDErrorsGroup
+        DESCRIPTION
+            "Required only for entities that support code violation
+            and running disparity error counters."
+
+        GROUP cmPhyCRCErrorsGroup
+        DESCRIPTION
+            "Required only for entities that support
+            CRC error counters."
+
+        GROUP cmPhyEncapFarEndPktErrorsGroup
+        DESCRIPTION
+            "Required only for entities that support
+            far end ingress error indication counters for Ethernet-
+            encapsulated ESCON streams."
+
+        GROUP cmPhySonetSectionTraceGroup
+        DESCRIPTION
+            "Required for entities that support SONET/SDH section
+             trace."
+
+        GROUP cmPhyIfTxBufferSizeGroup
+        DESCRIPTION
+            "Required for entities that support control of transmit
+             buffer size."
+
+        OBJECT        cmPhyIfMode
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required if only one mode is
+            supported."
+
+        OBJECT        cmPhyIfProtocol
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is required only when 3R mode is supported
+            and multiple protocols are supported on the interface."
+
+        OBJECT        cmPhyIfClockRate
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is required only when 3R mode is supported
+            and multiple clock rates are supported on the interface."
+
+        OBJECT        cmPhyIfMonitor
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        OBJECT        cmPhyIfOFC
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        OBJECT        cmPhyIfTxBufferSize
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required."
+
+    ::= { ciscoMetroPhyMIBCompliances 3 }
+
+
+cmPhyMIBComplianceRev4 MODULE-COMPLIANCE
+    STATUS   deprecated
+    DESCRIPTION
+        "The compliance statement for platforms that monitor the
+        operating status with respect to error
+        counters, for the physical layer."
+    MODULE -- this module
+        MANDATORY-GROUPS {
+            cmPhyIf2Group
+        }
+
+        GROUP cmPhyCVRDErrorsGroup
+        DESCRIPTION
+            "Required only for entities that support code violation
+            and running disparity error counters."
+
+        GROUP cmPhyCRCErrorsGroup
+        DESCRIPTION
+            "Required only for entities that support
+            CRC error counters."
+
+        GROUP cmPhyEncapFarEndPktErrorsGroup
+        DESCRIPTION
+            "Required only for entities that support
+            far end ingress error indication counters for Ethernet-
+            encapsulated ESCON streams."
+
+        GROUP cmPhySonetSectionTraceGroup
+        DESCRIPTION
+            "Required for entities that support SONET/SDH section
+             trace."
+
+        GROUP cmPhyIfTxBufferSizeGroup
+        DESCRIPTION
+            "Required for entities that support control of transmit
+             buffer size."
+
+        GROUP cmPhyIfAutoNegGroup
+        DESCRIPTION
+            "Required for entities that support auto negotiation
+             on the client interface."
+
+        OBJECT        cmPhyIfMode
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required if only one mode is
+            supported."
+
+        OBJECT        cmPhyIfProtocol
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is required only when 3R mode is supported
+            and multiple protocols are supported on the interface."
+
+        OBJECT        cmPhyIfClockRate
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is required only when 3R mode is supported
+            and multiple clock rates are supported on the interface."
+
+        OBJECT        cmPhyIfMonitor
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        OBJECT        cmPhyIfOFC
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        OBJECT        cmPhyIfTxBufferSize
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        OBJECT        cmPhyIfAutoNegotiation
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required."
+
+    ::= { ciscoMetroPhyMIBCompliances 4 }
+
+
+
+cmPhyMIBComplianceRev5 MODULE-COMPLIANCE
+    STATUS   current
+    DESCRIPTION
+        "The compliance statement for platforms that monitor the
+        operating status with respect to error
+        counters, for the physical layer."
+    MODULE -- this module
+        MANDATORY-GROUPS {
+            cmPhyIf2Group
+        }
+
+        GROUP cmPhyCVRDErrorsGroup
+        DESCRIPTION
+            "Required only for entities that support code violation
+            and running disparity error counters."
+
+        GROUP cmPhyCRCErrorsGroup
+        DESCRIPTION
+            "Required only for entities that support
+            CRC error counters."
+
+        GROUP cmPhyEncapFarEndPktErrorsGroup
+        DESCRIPTION
+            "Required only for entities that support
+            far end ingress error indication counters for Ethernet-
+            encapsulated ESCON streams."
+
+        GROUP cmPhySonetSectionTraceGroup
+        DESCRIPTION
+            "Required for entities that support SONET/SDH section
+             trace."
+
+        GROUP cmPhyIfTxBufferSizeGroup
+        DESCRIPTION
+            "Required for entities that support control of transmit
+             buffer size."
+
+        GROUP cmPhyIfAutoNegGroup
+        DESCRIPTION
+            "Required for entities that support auto negotiation
+             on the client interface."
+
+        GROUP cmPhyIfGroupSup1
+        DESCRIPTION
+            "Required for entities that have different transmission 
+             types on the client interface."
+
+        OBJECT        cmPhyIfMode
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required if only one mode is
+            supported."
+
+        OBJECT        cmPhyIfProtocol
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is required only when 3R mode is supported
+            and multiple protocols are supported on the interface."
+
+        OBJECT        cmPhyIfClockRate
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is required only when 3R mode is supported
+            and multiple clock rates are supported on the interface."
+
+        OBJECT        cmPhyIfMonitor
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        OBJECT        cmPhyIfOFC
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        OBJECT        cmPhyIfTxBufferSize
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        OBJECT        cmPhyIfAutoNegotiation
+        MIN-ACCESS    read-only
+        DESCRIPTION
+            "Write access is not required."
+
+    ::= { ciscoMetroPhyMIBCompliances 5 }
+
 
 --
 -- units of conformance
@@ -901,5 +1281,36 @@ cmPhyEncapFarEndPktErrorsGroup OBJECT-GROUP
         far end ingress error indication counters for Ethernet-
         encapsulated ESCON streams."
     ::= { ciscoMetroPhyMIBGroups 7 }
+
+cmPhyIfTxBufferSizeGroup OBJECT-GROUP
+    OBJECTS {
+        cmPhyIfTxBufferSize
+    }
+    STATUS  current
+    DESCRIPTION
+        "The collection of objects used to control size of
+        transmit buffer."
+    ::= { ciscoMetroPhyMIBGroups 8 }
+
+cmPhyIfAutoNegGroup OBJECT-GROUP
+    OBJECTS {
+        cmPhyIfAutoNegotiation
+    }
+    STATUS  current
+    DESCRIPTION
+        "The collection of objects used to control auto
+        negotiation behavior."
+    ::= { ciscoMetroPhyMIBGroups 9 }
+
+cmPhyIfGroupSup1 OBJECT-GROUP
+    OBJECTS {
+        cmPhyIfTransType
+    }
+    STATUS current
+    DESCRIPTION
+        "The object that gives information related to transmission 
+         types on the client interface."
+    ::= { ciscoMetroPhyMIBGroups 10 }
+
 
 END

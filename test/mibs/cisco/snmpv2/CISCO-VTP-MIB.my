@@ -1,9 +1,15 @@
+
 -- *****************************************************************
 -- Cisco VTP MIB
 --
 -- February, 1997 Chris Young
+--    April, 2003  Wen Xu
+--     July, 2003  Wen Xu
+--   August, 2003  Wen Xu
+-- November, 2003  Wen Xu
+-- February, 2004  Wen Xu
 --
--- Copyright (c) 1996-2002 by cisco Systems, Inc.
+-- Copyright (c) 1996-2002, 2003, 2004, 2006 by cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
 
@@ -12,20 +18,25 @@ CISCO-VTP-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
-    Counter32, IpAddress, Gauge32, Integer32
+    Counter32, IpAddress, Gauge32, Integer32, Unsigned32
         FROM SNMPv2-SMI
     TEXTUAL-CONVENTION,
-    RowStatus, DisplayString, DateAndTime, TruthValue, TestAndIncr
+    RowStatus, DisplayString, DateAndTime, TruthValue, 
+    TestAndIncr, TimeStamp
         FROM SNMPv2-TC
     InterfaceIndex, ifIndex, InterfaceIndexOrZero
         FROM IF-MIB
+    OwnerString
+        FROM RMON-MIB
     ciscoMgmt
         FROM CISCO-SMI
+    SnmpAdminString
+        FROM SNMP-FRAMEWORK-MIB
     MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
         FROM SNMPv2-CONF;
 
 ciscoVtpMIB MODULE-IDENTITY
-    LAST-UPDATED "200202280000Z"
+    LAST-UPDATED "200602170000Z"
     ORGANIZATION "Cisco Systems, Inc."
     CONTACT-INFO
             "Cisco Systems
@@ -37,10 +48,61 @@ ciscoVtpMIB MODULE-IDENTITY
 
              Tel: +1 800 553-NETS
 
-             E-mail: cs-wbu@cisco.com"
+             E-mail: cs-wbu@cisco.com, 
+                     cs-lan-switch-snmp@cisco.com"
+
     DESCRIPTION
             "The MIB module for entities implementing the VTP
             protocol and Vlan management."
+    REVISION    "200602170000Z"
+    DESCRIPTION
+            "Removed the OwnerString TEXTUAL-CONVENTION and
+             imported the same from RMON-MIB."
+    REVISION    "200402110000Z"
+    DESCRIPTION
+            "Added 'dynamicGvrp(4)' for the TC VlanTypeExt."
+    REVISION    "200311210000Z"
+    DESCRIPTION
+            "Add vtpInternalVlanGrp to configure internal 
+             VLANs' allocation policy and show the owner 
+             application names." 
+    REVISION    "200308080000Z"
+    DESCRIPTION
+            "Split vtpConfigNotificationsGroup into two groups:
+             vtpConfigNotificationsGroupRev1 and 
+             vtpConfigNotificationsGroup5. Write a new compliance
+             statement to list vtpConfigNotificationsGroupRev1 in
+             instead of vtpConfigNotificationsGroup in the 
+             MANDATORY-GROUPS."
+    REVISION    "200307110000Z"
+    DESCRIPTION
+            "Modify the description of the TC VlanIndex." 
+    REVISION    "200304160000Z"
+    DESCRIPTION
+            "Add support for VTP version 3 features.
+             -- Add enumerators and modify the 'DESCRIPTION' of 6 
+                existing objects: 
+                vtpVersion, managementDomainLocalMode,
+                managementDomainConfigRevNumber, 
+                managementDomainLastUpdater,
+                managementDomainLastChange,  
+                managementDomainVersionInUse.
+             -- Add 3 new groups: vtpAuthGroup, 
+                vtpDiscoverGroup, vtpDatabaseGroup."
+    REVISION    "200204100000Z"
+    DESCRIPTION
+            "-- Add 4 new notifications/traps vtpLocalModeChanged, 
+                vtpVersionInUseChanged, vtpVlanCreated and 
+                vtpVlanDeleted. 
+             -- Add 2 new objects vtpVlanCreatedNotifEnabled and 
+                vtpVlanDeletedNotifEnabled to control the
+                generation of vtpVlanCreated and vtpVlanDeleted.
+             -- Use vtpNotificationsEnabled to control the
+                generation of vtpLocalModeChanged and
+                vtpVersionInUseChanged by grouping them in a
+                new group vtpConfigNotificationsGroup2.  
+             -- Deprecate the object vlanTrunkPortsDot1qTag and
+                its related group. "
     REVISION    "200202280000Z"
     DESCRIPTION
             "Deprecate the object, vlanTrunkPortDot1qTunnel."
@@ -106,7 +168,7 @@ vtpMIBObjects OBJECT IDENTIFIER ::= { ciscoVtpMIB 1 }
 VlanIndex ::= TEXTUAL-CONVENTION
     STATUS       current
     DESCRIPTION
-            "The VLAN-id of a VLAN on ISL trunks.
+            "The VLAN-id of a VLAN on ISL or 802.1q trunks.
 
              Modification of default parameters is allowed.
              Implementations are allowed to restrict
@@ -116,7 +178,12 @@ VlanIndex ::= TEXTUAL-CONVENTION
              VLANs above 1000 are reserved for default VLANs and
              future use. Modification of default parameters is
              allowed. Creation or deletion of VLANs above 1000 is not
-             allowed."
+             allowed.
+
+             For a new object which needs the vlan-id of a VLAN as
+             its SYNTAX, it is suggested to import VlanIndex from
+             Q-BRIDGE-MIB instead of importing this TC here in 
+             CISCO-VTP-MIB."   
     SYNTAX   Integer32 (0..4095)
 
 ManagementDomainIndex ::= TEXTUAL-CONVENTION
@@ -125,21 +192,6 @@ ManagementDomainIndex ::= TEXTUAL-CONVENTION
             "An arbitrary integer-value to uniquely identify a
             management domain on the local system."
     SYNTAX     Integer32 (1..255)
-
-OwnerString ::= TEXTUAL-CONVENTION
-    STATUS       current
-    DESCRIPTION
-            "This data type is used to model an administratively
-            assigned name of the owner of a resource.  This information
-            is taken from the NVT ASCII character set.  It is suggested
-            that this name contain one or more of the following: IP
-            address, management station name, network manager's name,
-            location, or phone number.  In some cases the agent itself
-            will be the owner of an entry.  In these cases, this string
-            shall be set to a string starting with 'monitor'.
-
-            This definition is identical to that contained in RFC 1271."
-    SYNTAX     OCTET STRING
 
 VlanType ::= TEXTUAL-CONVENTION
     STATUS       current
@@ -191,12 +243,18 @@ VlanTypeExt ::= TEXTUAL-CONVENTION
                                  VLAN creation. Once the VLAN is
                                  created, the value of this bit cannot
                                  be modified.
+             dynamicGvrp(4)      A VLAN dynamically created by GVRP
+                                 (GARP VLAN Registration Protocol)
+                                 propagation. The value of this bit 
+                                 cannot be changed.  
             "
+    REFERENCE    "RFC2674."
     SYNTAX     BITS {
                    vtpmanageable(0),
                    internal(1),
                    reserved(2),
-                   rspan(3)
+                   rspan(3), 
+                   dynamicGvrp(4)
                }
 
 --
@@ -206,7 +264,7 @@ VlanTypeExt ::= TEXTUAL-CONVENTION
 vtpStatus   OBJECT IDENTIFIER ::= { vtpMIBObjects 1 }
 
 vtpVersion OBJECT-TYPE
-    SYNTAX     INTEGER { one(1), two(2), none(3) }
+    SYNTAX     INTEGER { one(1), two(2), none(3), three(4) }
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
@@ -235,8 +293,39 @@ vtpNotificationsEnabled OBJECT-TYPE
     STATUS     current
     DESCRIPTION
             "An indication of whether the notifications/traps defined by
-            the vtpConfigNotificationsGroup are enabled."
+            the vtpConfigNotificationsGroup and 
+            vtpConfigNotificationsGroup2 are enabled."
     ::= { vtpStatus 3 }
+
+vtpVlanCreatedNotifEnabled OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+            "An indication of whether the notification should 
+            be generated when a VLAN is created. 
+
+            If the value of this object is 'true' then the
+            vtpVlanCreated notification will be generated.
+
+            If the value of this object is 'false' then the
+            vtpVlanCreated notification will not be generated."
+    ::= { vtpStatus 4 }
+
+vtpVlanDeletedNotifEnabled OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+           "An indication of whether the notification should  
+            be generated when a VLAN is deleted.  
+
+            If the value of this object is 'true' then the
+            vtpVlanDeleted notification will be generated.
+
+            If the value of this object is 'false' then the
+            vtpVlanDeleted notification will not be generated."
+    ::= { vtpStatus 5 }
 
 --
 -- VTP Management Domains
@@ -323,19 +412,25 @@ managementDomainLocalMode OBJECT-TYPE
     MAX-ACCESS read-create
     STATUS     current
     DESCRIPTION
-            "The local VTP mode in this management domain.
+            "The local VTP mode in this management domain when
+            managementDomainVersionInUse is version1(1) or
+            version2(2).
 
-            - 'client' indicates that the local system is acting 
+            If managementDomainVersionInUse is version3(4), this 
+            object has the same value with vtpDatabaseLocalMode 
+            of VLAN database type.
+
+            - 'client' indicates that the local system is acting
               as a VTP client.
 
             - 'server' indicates that the local system is acting
-              as a VTP server. 
+              as a VTP server.
 
-            - 'transparent' indicates that the local system does 
-              not generate or listen to VTP messages, but forwards 
+            - 'transparent' indicates that the local system does
+              not generate or listen to VTP messages, but forwards
               messages. This mode can also be set by the device
               itself when the amount of VLAN information is too
-              large for it to hold in DRAM. 
+              large for it to hold in DRAM.
 
             - 'off' indicates that the local system does not
               generate, listen to or forward any VTP messages."
@@ -346,11 +441,18 @@ managementDomainConfigRevNumber OBJECT-TYPE
     MAX-ACCESS read-only
     STATUS     current
     DESCRIPTION
-            "The current Configuration Revision Number as known by the
-            local device for this management domain.  This value is
-            updated (if necessary) whenever a VTP advertisement is
-            received or generated.  When in the 'no management-domain'
-            state, this value is 0."
+            "The current Configuration Revision Number as known by 
+            the local device for this management domain when 
+            managementDomainVersionInUse is version1(1) or 
+            version2(2).
+ 
+            If managementDomainVersionInUse is version3(4), this 
+            object has the same value with vtpDatabaseRevisionNumber 
+            of VLAN database type.
+
+            This value is updated (if necessary) whenever a VTP
+            advertisement is received or generated. When in the
+            'no management-domain' state, this value is 0."
     ::= { managementDomainEntry 4 }
 
 managementDomainLastUpdater OBJECT-TYPE
@@ -361,8 +463,14 @@ managementDomainLastUpdater OBJECT-TYPE
             "The IP-address (or one of them) of the VTP Server which
             last updated the Configuration Revision Number, as indicated
             in the most recently received VTP advertisement for this
-            management domain.  Before an advertisement has been
-            received, this value is 0.0.0.0."
+            management domain, when managementDomainVersionInUse is
+            version1(1) or version2(2). 
+
+            If managementDomainVersionInUse is version3(4), this object
+            has the value of 0.0.0.0.
+             
+            Before an advertisement has been received, this value is
+            0.0.0.0."
     ::= { managementDomainEntry 5 }
 
 managementDomainLastChange OBJECT-TYPE
@@ -373,7 +481,10 @@ managementDomainLastChange OBJECT-TYPE
             "The time at which the Configuration Revision Number was
             (last) increased to its current value, as indicated in the
             most recently received VTP advertisement for this management
-            domain.
+            domain when managementDomainVersionInUse is not version3(4)
+            or in the most recently received VTP VLAN database 
+            advertisement for this management domain when 
+            managementDomainVersionInUse is version3(4).
 
             The value 0x0000010100000000 indicates that the device which
             last increased the Configuration Revision Number had no idea
@@ -426,17 +537,18 @@ managementDomainPruningState  OBJECT-TYPE
     ::= { managementDomainEntry 10 }
 
 managementDomainVersionInUse OBJECT-TYPE
-    SYNTAX     INTEGER { version1 (1), version2 (2), none(3) }
+    SYNTAX     INTEGER { version1(1), 
+                         version2(2), 
+                         none(3), 
+                         version3(4) }
     MAX-ACCESS read-create
     STATUS     current
     DESCRIPTION
             "The current version of the VTP that is in use by the
-            designated management domain.  This value can only be
-            modified by local/network managment when the value of the
-            corresponding instance of managementDomainLocalMode is
-            'server'. If managementDomainLocalMode is 'server',
-           	this object can only be changed to version1(1) or 
-            version(2)."		         
+            designated management domain. 
+
+            This object can be set to none(3) only when 
+            vtpVersion is none(3)." 
     ::= { managementDomainEntry 11 }
 
 --
@@ -500,7 +612,7 @@ vtpVlanIndex OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS     current
     DESCRIPTION
-            "The VLAN-id of this VLAN on ISL trunks."
+            "The VLAN-id of this VLAN on ISL or 802.1q trunks."
     ::= { vtpVlanEntry 1 }
 
 vtpVlanState  OBJECT-TYPE
@@ -705,6 +817,73 @@ vtpVlanIfIndex OBJECT-TYPE
             this object has the value of zero."
         ::= { vtpVlanEntry 18 }
 
+internalVlanInfo   OBJECT IDENTIFIER ::= { vlanInfo 2 }
+
+vtpInternalVlanAllocPolicy  OBJECT-TYPE
+    SYNTAX     INTEGER { ascending(1), descending(2) }
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+            "The internal VLAN allocation policy.
+
+             'ascending'  - internal VLANs are allocated
+                            starting from a lowwer VLAN ID and 
+                            upwards.
+             'descending' - internal VLANs are allocated
+                            starting from a higher VLAN ID and
+                            downwards."
+    ::= { internalVlanInfo 1 }
+
+vtpInternalVlanTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF VtpInternalVlanEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "This table sparsely augments the 
+             vtpVlanTable (i.e., every row in this 
+             table corresponds to a row in the 
+             vtpVlanTable but not necessarily 
+             vice versa).
+  
+             A vtpInternalVlanTable entry contains 
+             information on an existing internal 
+             VLAN with the bit 'internal' turned on 
+             for the object vtpVlanTypeExt. It is
+             internally created by the device for 
+             a specific application program and 
+             hence owned by the application.
+             It cannot be modified or deleted through 
+             management operations acting upon entries 
+             in the vtpVlanEditTable." 
+    ::= { internalVlanInfo 2 }
+
+vtpInternalVlanEntry OBJECT-TYPE
+    SYNTAX     VtpInternalVlanEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "Information about one current internal 
+             VLAN."
+    INDEX      { managementDomainIndex, vtpVlanIndex }
+    ::= { vtpInternalVlanTable 1 }
+
+VtpInternalVlanEntry ::= SEQUENCE {
+    vtpInternalVlanOwner       SnmpAdminString
+}
+
+vtpInternalVlanOwner OBJECT-TYPE
+    SYNTAX     SnmpAdminString 
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The program name of the internal VLAN's 
+             owner application. This internal VLAN
+             is allocated by the device specifically
+             for this application and no one else
+             could create, modify or delete this 
+             VLAN."
+    ::= { vtpInternalVlanEntry 1 }
+
 -- Modification of Global VLAN Information
 --
 -- To change the global information on current VLANs, including
@@ -734,6 +913,21 @@ vtpVlanIfIndex OBJECT-TYPE
 -- operation allows the results of the apply operation to be retained
 -- until the requesting manager has retrieved them, but for only a
 -- limited amount of time.
+--
+-- When managementDomainVersionInUse is version1(1) or version2(2),
+-- the local device with managementDomainLocalMode as server(2) 
+-- could change the global VLAN configuration by editing the VLAN 
+-- information in the edit buffer and then apply it. However,
+-- when managementDomainVersionInUse is in version3(4), there  
+-- are two different VTP servers, the primary server and the
+-- secondary server. The global VLAN configuration could only
+-- be changed by a primary server for VLAN database. The 
+-- secondary server may still do the 'copy' operation and edit
+-- the VLAN information in the edit buffer. But in order to make
+-- a possibly successful 'apply' operation, the local device must 
+-- be a VLAN database primary server. Otherwise, the 'apply' will 
+-- fail and vtpVlanApplyStatus will be set to the error status 
+-- 'notPrimaryServer'.
 
 vlanEdit   OBJECT IDENTIFIER ::= { vtpMIBObjects 4 }
 
@@ -815,7 +1009,8 @@ vtpVlanApplyStatus OBJECT-TYPE
                          localNVStoreFail(6),
                          remoteNVStoreFail(7),
                          editBufferEmpty(8),
-                         someOtherError(9)
+                         someOtherError(9),
+                         notPrimaryServer(10)
                        }
     MAX-ACCESS read-only
     STATUS     current
@@ -856,7 +1051,12 @@ vtpVlanApplyStatus OBJECT-TYPE
                       Buffer was empty (for this management domain).
 
                someOtherError - the apply failed for some other reason
-                      (e.g., insufficient memory)."
+                      (e.g., insufficient memory).
+
+               notPrimaryServer - the apply failed because the local 
+                      device is not a VTP primary server for VLAN 
+                      database type when managementDomainVersionInUse
+                      is version3(4). " 
     ::= { vtpEditControlEntry 2 }
 
 vtpVlanEditBufferOwner OBJECT-TYPE
@@ -1001,7 +1201,8 @@ vtpVlanEditIndex OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS     current
     DESCRIPTION
-            "The VLAN-id which this VLAN would have on ISL trunks."
+            "The VLAN-id which this VLAN would have on ISL or
+            802.1q trunks."
     ::= { vtpVlanEditEntry 1 }
 
 vtpVlanEditState  OBJECT-TYPE
@@ -2002,17 +2203,551 @@ vlanTrunkPortSetSerialNo OBJECT-TYPE
 vlanTrunkPortsDot1qTag OBJECT-TYPE
     SYNTAX     TruthValue
     MAX-ACCESS read-write
-    STATUS     current
+    STATUS     deprecated
     DESCRIPTION
             "An indication of whether the tagging on all VLANs including
             native VLAN for all 802.1q trunks is enabled.
 
             If this object has a value of true(1) then all VLANs
             including native VLAN are tagged.  If the value is false(2)
-            then all VLANs excluding native VLAN are tagged."
+            then all VLANs excluding native VLAN are tagged.
+
+            This object has been deprecated and is replaced by the
+            object 'cltcDot1qAllTaggedEnabled' in the
+            CISCO-L2-TUNNEL-CONFIG-MIB"
     DEFVAL     { false }
     ::= { vlanTrunkPorts 3 }
 
+
+vtpDiscover OBJECT IDENTIFIER ::= { vtpMIBObjects 7 }
+
+vtpDiscoverTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF VtpDiscoverEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "This table contains information related to the discovery 
+            of the VTP members in the designated management
+            domain. This table is not instantiated when 
+            managementDomainVersionInUse is version1(1), version2(3)
+            or none(3). "
+    ::= { vtpDiscover 1 }
+    
+vtpDiscoverEntry OBJECT-TYPE
+    SYNTAX     VtpDiscoverEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "Information related to the discovery of the 
+            VTP members in one management domain." 
+    INDEX      { managementDomainIndex }
+    ::= { vtpDiscoverTable 1 }
+   
+VtpDiscoverEntry  ::= SEQUENCE {
+    vtpDiscoverAction            INTEGER,
+    vtpDiscoverStatus            INTEGER,
+    vtpLastDiscoverTime          TimeStamp
+}
+
+vtpDiscoverAction OBJECT-TYPE
+    SYNTAX        INTEGER { discover(1),
+                            noOperation(2),
+                            purgeResult(3)
+                          }
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION   "When this object is set to discover(1), all the
+                  entries in vtpDiscoverResultTable for the
+                  corresponding management domain will be removed 
+                  and the local device will begin to discover all
+                  VTP members in the management domain. Upon the
+                  successful completion of discovery, the discovered
+                  result will be stored in the vtpDiscoverResultTable.
+
+                  If vtpDiscoverStatus is inProgress(1), setting 
+                  vtpDiscoverAction to discover(1) will fail. 
+
+                  When this object is set to purgeResult(3), 
+                  all the entries of vtpDiscoverResultTable for 
+                  the corresponding management domain will be
+                  removed from vtpDiscoverResultTable.
+                 
+                  When this object is set to noOperation(2), no
+                  action will be taken. When read, this object
+                  always returns noOperation(2)." 
+    ::= { vtpDiscoverEntry 1 }
+
+vtpDiscoverStatus OBJECT-TYPE
+    SYNTAX     INTEGER { inProgress(1),
+                         succeeded(2),
+                         resourceUnavailable(3),                       
+                         someOtherError(4)
+                       }
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The current status of VTP discovery. 
+
+               inProgress - a discovery is in progress;
+
+               succeeded - the discovery was completed successfully
+                           (this value is also used when 
+                           no discover has been invoked since the
+                           last time the local system restarted);
+
+               resourceUnavailable - the discovery failed because
+                           the required allocation of a resource is
+                           presently unavailable.
+               
+               someOtherError - 'the discovery failed due to a
+                           reason no listed."
+    ::= { vtpDiscoverEntry 2 }
+
+vtpLastDiscoverTime OBJECT-TYPE
+    SYNTAX     TimeStamp
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The value of sysUpTime at which the last discovery 
+            was completed.
+
+            A value of zero indicates that no discovery has been
+            invoked since last time the local system restarted. "
+    ::= { vtpDiscoverEntry 3}
+
+vtpDiscoverResultTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF VtpDiscoverResultEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The table containing information of discovered VTP members
+            in the management domain in which the local system is
+            participating. This table is not instantiated when 
+            managementDomainVersionInUse is version1(1), version2(2) or
+            none(3). "
+    ::= { vtpDiscover 2 }
+    
+vtpDiscoverResultEntry OBJECT-TYPE
+    SYNTAX     VtpDiscoverResultEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "A conceptual row is created for each VTP member which
+            is found through successful discovery."
+    INDEX      { managementDomainIndex, vtpDiscoverResultIndex }
+    ::= { vtpDiscoverResultTable 1 }
+   
+VtpDiscoverResultEntry  ::= SEQUENCE {
+    vtpDiscoverResultIndex                Unsigned32,
+    vtpDiscoverResultDatabaseName         SnmpAdminString,
+    vtpDiscoverResultConflicting          TruthValue,
+    vtpDiscoverResultDeviceId             SnmpAdminString, 
+    vtpDiscoverResultPrimaryServer        SnmpAdminString,
+    vtpDiscoverResultRevNumber            Gauge32,
+    vtpDiscoverResultSystemName           SnmpAdminString
+}
+
+vtpDiscoverResultIndex  OBJECT-TYPE
+    SYNTAX     Unsigned32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION 
+            "A value assigned by the system which identifies
+            a VTP member and the associated database in the 
+            management domain."
+    ::= { vtpDiscoverResultEntry 1 }
+
+vtpDiscoverResultDatabaseName OBJECT-TYPE
+    SYNTAX     SnmpAdminString (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The database name associated with the 
+            discovered VTP member." 
+    ::= { vtpDiscoverResultEntry 2 }
+
+vtpDiscoverResultConflicting OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "Indicates whether this VTP member contains 
+            conflicting information.
+
+            true(1) indicates that this member has conflicting 
+            information of the database type in the management domain.
+             
+            false(2) indicates that there is no conflicting information
+            of the database type in the management domain."
+    ::= { vtpDiscoverResultEntry 3 }
+
+vtpDiscoverResultDeviceId OBJECT-TYPE
+    SYNTAX     SnmpAdminString (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The unique identifier of the device for this VTP member."
+    ::= { vtpDiscoverResultEntry 4 }
+
+vtpDiscoverResultPrimaryServer OBJECT-TYPE
+    SYNTAX     SnmpAdminString (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+           "The unique identifier of the primary server for this VTP 
+            member and the associated database type.
+
+           There are two different VTP servers, the primary server
+           and the secondary server.  When a local device is
+           configured as a server for a certain database type,
+           it becomes secondary server by default. 
+           Primary server is an operational role under which a
+           server can initiate or change the VTP configuration of the
+           database type.
+
+           If this VTP member itself is the primary server, the   
+           value of this object is the same as the value of 
+           vtpDiscoverResultDeviceId of the instance."   
+    ::= { vtpDiscoverResultEntry 5 }
+
+vtpDiscoverResultRevNumber OBJECT-TYPE
+    SYNTAX     Gauge32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+           "The current configuration revision number as known by the
+            VTP member. When the database type is unknown for
+            the VTP member, this value is 0."
+    ::= { vtpDiscoverResultEntry 6 }
+
+vtpDiscoverResultSystemName  OBJECT-TYPE
+    SYNTAX     SnmpAdminString (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "sysName of the VTP member."
+    ::= { vtpDiscoverResultEntry 7 } 
+
+vtpDatabase OBJECT IDENTIFIER ::= { vtpMIBObjects 8 }
+
+vtpDatabaseTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF VtpDatabaseEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "This table contains information of the VTP 
+            databases. It is not instantiated when
+            managementDomainVersionInUse is version1(1), 
+            version2(3) or none(3)."                       
+    ::= { vtpDatabase 1 }
+
+vtpDatabaseEntry OBJECT-TYPE
+    SYNTAX     VtpDatabaseEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "Information about the status of the VTP database
+            in the domain.  Each VTP database type known to the
+            local device type has an entry in this table.
+            An entry is also created for unknown database which is
+            notified through VTP advertisements from other VTP
+            servers."
+    INDEX      { managementDomainIndex, vtpDatabaseIndex }
+    ::= { vtpDatabaseTable 1 }
+   
+VtpDatabaseEntry  ::= SEQUENCE {
+    vtpDatabaseIndex              Unsigned32,
+    vtpDatabaseName               SnmpAdminString,
+    vtpDatabaseLocalMode          INTEGER,
+    vtpDatabaseRevNumber          Gauge32,    
+    vtpDatabasePrimaryServer      TruthValue, 
+    vtpDatabasePrimaryServerId    SnmpAdminString,
+    vtpDatabaseTakeOverPrimary    TruthValue,
+    vtpDatabaseTakeOverPassword   SnmpAdminString
+}
+
+vtpDatabaseIndex OBJECT-TYPE
+    SYNTAX     Unsigned32
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "A value assigned by the system which uniquely identifies
+            a VTP database in the local system."
+    ::= { vtpDatabaseEntry 1 }
+
+vtpDatabaseName OBJECT-TYPE
+    SYNTAX     SnmpAdminString (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The name of the database."
+    ::= { vtpDatabaseEntry 2 }
+
+vtpDatabaseLocalMode OBJECT-TYPE
+    SYNTAX INTEGER { client(1),
+                     server(2),
+                     transparent(3),
+                     off(4) 
+                   }
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+            "The local VTP mode for a particular database type
+            in this administrative domain.
+
+            - 'client' indicates that the local system is acting
+              as a VTP client of the database type.
+
+            - 'server' indicates that the local system is acting
+              as a VTP server of the database type.
+
+            - 'transparent' indicates that the local system does
+              not generate or listen to VTP messages of this 
+              database type, but forwards
+              messages. This mode can also be set by the device
+              itself when the size of database is too large for it
+              to hold in DRAM.
+
+            - 'off' indicates that the local system does not
+              generate, listen to or forward any VTP messages
+              of this database type.
+            
+            The default mode is 'client' for the database type 
+            known to the local device and 'transparent' for the
+            unknown database type. "
+    ::= { vtpDatabaseEntry 3 }
+
+vtpDatabaseRevNumber OBJECT-TYPE
+    SYNTAX     Gauge32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The current configuration revision number as known by the
+            local device for this VTP 3 database type in the management
+            domain.  This value is updated (if necessary) whenever a 
+            VTP advertisement for the database type is received 
+            or generated. When the database type is unknown to the 
+            local device or no VTP advertisement for the database
+            type is received or generated, its value is 0." 
+    ::= { vtpDatabaseEntry 4 }
+
+vtpDatabasePrimaryServer OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "There are two kinds of VTP version 3 servers for a certain
+            database type - the primary server and the secondary server.
+            When a local device is configured as a server for a certain
+            database type, it becomes secondary server by default.
+            Primary server is an operational role under which a
+            server can initiate or change the VTP configuration of the
+            database type.
+          
+            A true(1) value indicates that the local device is the 
+            primary server of the database type in the management
+            domain. A false(2) value indicates that the local device
+            is not the primary server, or the database type is unknown
+            to the local device." 
+::= { vtpDatabaseEntry 5 }
+
+vtpDatabasePrimaryServerId OBJECT-TYPE
+    SYNTAX     SnmpAdminString (SIZE(0..64))
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The unique identifier of the primary server in the 
+            management domain for the database type. 
+
+            If no primary server is discovered for the database
+            type, the object has a value of zero length string."
+::= { vtpDatabaseEntry 6 }
+
+vtpDatabaseTakeOverPrimary   OBJECT-TYPE
+    SYNTAX     TruthValue
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+            "There are two kinds of VTP version 3 servers for a certain
+            database type - the primary server and the secondary server.
+            When a local device is configured as a server for a certain
+            database type, it becomes secondary server by default.
+            Primary server is an operational role under which a
+            server can initiate or change the VTP configuration of the
+            database type.
+
+            Setting this object to a true(1) value will advertise the
+            configuration of this database type to the whole domain.
+
+            In order to successfully setting this object to true(1),
+            the value of vtpDatabaseLocalMode must be server(2). Besides
+            that, when the VTP password is hidden from the configuration
+            file, the password (vtpDatabaseTakeOverPassword) which 
+            matches  the secret key (vtpAuthSecretKey) must be provided
+            in the same data packet. 
+
+            When read, the object always returns false(2)."
+     ::= { vtpDatabaseEntry 7 }
+
+vtpDatabaseTakeOverPassword OBJECT-TYPE
+    SYNTAX     SnmpAdminString (SIZE (0..64))
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+            "When read, this object always returns the value of a 
+             zero-length octet string.
+
+             In the case that the VTP password is hidden from the 
+             configuration and the local device intends
+             to take over the whole domain, this object must be 
+             set to the matching password with the secret key 
+             (vtpAuthSecretKey) in the same data packet as which 
+             the vtpDatabaseTakeOverPrimary is in. In all the 
+             other situations, setting a valid value to this object 
+             has no impact on the system."
+     ::= { vtpDatabaseEntry 8 } 
+   
+vtpAuthentication OBJECT IDENTIFIER ::= { vtpMIBObjects 9 }
+
+vtpAuthenticationTable OBJECT-TYPE
+   SYNTAX     SEQUENCE OF VtpAuthEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "The table contains the authentication information of VTP
+            in which the local system participates.
+
+            The security mechanism of VTP relies on a secret key
+            that is used to alter the MD5 digest of the packets
+            transmitted on the wire.  The secret value is
+            created from a password that may be saved in plain text
+            in the configuration or hidden from the configuration.
+
+            The device creating or modifying the VTP configuration
+            signs it using the MD5 digest generated from the secret
+            key before advertising it. Other devices in the domain
+            receive this configuration use the same secret key
+            to accept it if correctly signed or drop it otherwise.
+
+            The user has the option to hide the password from the
+            configuration. Once the password is hidden, the secret
+            key generated from the password is shown in the 
+            configuration instead, and there is no other way to 
+            show the password in plain text again but clearing 
+            it or resetting it. 
+
+            In an un-trusted area, the password on a device can 
+            be configured without being unveiled. After that,
+            it has to be provided again by setting the same 
+            value to vtpDatabaseTakeOverPassword if the user 
+            wants to take over the whole VTP management domain
+            of the database type.
+
+            When managementDomainVersionInUse is version3(4), the 
+            authentication mechanism is common to all VTP
+            database type."
+    ::= { vtpAuthentication 1 }
+
+vtpAuthEntry OBJECT-TYPE
+    SYNTAX     VtpAuthEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+            "Information about the status of the VTP
+            authentication information in one domain."
+    INDEX      { managementDomainIndex }
+    ::= { vtpAuthenticationTable 1 }
+
+VtpAuthEntry  ::= SEQUENCE {
+    vtpAuthPassword            SnmpAdminString,
+    vtpAuthPasswordType        INTEGER,
+    vtpAuthSecretKey           OCTET STRING
+}
+  
+vtpAuthPassword OBJECT-TYPE
+    SYNTAX     SnmpAdminString (SIZE (0..64))
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+            "By default, this object has a value of a zero-length
+            character string and is considered to be not
+            configured.
+
+            The device uses the password to generate the 
+            secret key. It can be stored in the configuration in 
+            plain text or hidden from the configuration. If a VTP 
+            server intends to modify the database's configuration
+            in the domain but the password was hidden from the
+            configuration, the same password
+            (vtpDatabaseTakeOverPassword) as the hidden one
+            has to be provided.
+
+            When this object is set alone, vtpAuthPasswordType is
+            set to plaintext(1) automatically by the system.
+            Setting this object to a zero length character string
+            resets the password to its default value and the
+            password is considered as not configured.
+
+            This object is not allowed to be set at the same time
+            when  vtpAuthSecretKey is set.
+
+            When the vtpAuthPasswordType is hidden(2), this object 
+            will return a zero-length character string when read."
+    ::= { vtpAuthEntry 1 }
+
+vtpAuthPasswordType OBJECT-TYPE
+    SYNTAX     INTEGER { plaintext(1),
+                         hidden(2)
+                       }
+
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+            "By default this object has the value as plaintext(1) 
+            and the VTP password is stored in the configuration
+            file in plain text.
+
+            Setting this object to hidden(2) will hide the
+            password from the configuration.
+
+            Once this object is set to hidden(2), it cannot
+            be set to plaintext(1) alone. However, it may
+            be set to plaintext(1) at the same time the
+            password is set."
+    ::= { vtpAuthEntry 2 }
+
+vtpAuthSecretKey  OBJECT-TYPE
+    SYNTAX     OCTET STRING (SIZE (0|16))
+    MAX-ACCESS read-write
+    STATUS     current
+    DESCRIPTION
+            "The device creating or modifying the VTP configuration
+            signs it using the MD5 digest generated from the secret
+            key before advertising it. Other devices in the domain
+            receiving this configuration use the same secret key
+            to accept it if it was correctly signed or drop it 
+            otherwise.
+
+            By default, the object has the value as a zero-length
+            string and this value is read only. It is set 
+            to this value automatically when the password 
+            (vtpAuthPassword) is set to a zero-length octet string.
+
+            The secret key can be either generated using
+            the password or configured by the user. Once
+            the secret key is configured by the user, it is
+            stored as a hexadecimal string in the device's
+            configuration and the password is considered to be
+            the secret key's matching password and hidden
+            from the configuration automatically.
+
+            This object is not allowed to be set at the same
+            time when vtpAuthPassword is set.
+
+            The secret key is overwritten by a newly generated
+            secret key when the password is re-configured."
+    ::= { vtpAuthEntry 3 }
+    
 -- VTP notifications
 
 vtpNotifications   OBJECT IDENTIFIER ::= { ciscoVtpMIB 2 }
@@ -2097,30 +2832,6 @@ vtpMtuTooBig NOTIFICATION-TYPE
             vtpNotificationsEnabled has the value 'false'."
     ::= { vtpNotificationsPrefix 4 }
 
-vtpVlanRingNumberConfigConflict NOTIFICATION-TYPE
-    OBJECTS     { vtpVlanIndex, vtpVlanRingNumber,
-                  ifIndex, vtpVlanPortLocalSegment }
-    STATUS      current
-    DESCRIPTION
-            "A VTP ring number configuration conflict notification is
-            generated if, and only at the time when, a device learns of
-            a conflict between:
-
-            a) the ring number (vtpVlanPortLocalSegment) being used on a
-               token ring segment attached to the port identified by
-               ifIndex, and
-
-            b) the VTP-obtained ring number (vtpVlanRingNumber) for the
-               VLAN identified by vtpVlanIndex.
-
-            When such a conflict occurs, the bridge port is put into an
-            administrative down position until the conflict is resolved
-            through local/network management intervention.
-
-            This notification is only applicable to VLANs of type
-            'tokenRing'."
-    ::= { vtpNotificationsPrefix 5 }
-
 vtpVersionOneDeviceDetected NOTIFICATION-TYPE
     OBJECTS     { vlanTrunkPortManagementDomain }
     STATUS      current
@@ -2145,9 +2856,69 @@ vlanTrunkPortDynamicStatusChange  NOTIFICATION-TYPE
             vlanTrunkPortDynamicStatus object has been changed."
     ::= { vtpNotificationsPrefix 7 }
 
+vtpLocalModeChanged NOTIFICATION-TYPE
+    OBJECTS         {managementDomainLocalMode}
+    STATUS          current
+    DESCRIPTION
+            "A vtpLocalModeChanged notification is generated 
+            by a device when the value of the object 
+            managementDomainLocalMode is changed." 
+    ::= { vtpNotificationsPrefix 8 }
+
+vtpVersionInUseChanged NOTIFICATION-TYPE
+    OBJECTS         {managementDomainVersionInUse}
+    STATUS          current
+    DESCRIPTION
+            "A vtpVersionInUseChanged notification is  
+            generated by a device when the value of the  
+            object managementDomainVersionInUse is 
+            changed."
+    ::= { vtpNotificationsPrefix 9 }
+
+
+vtpVlanCreated  NOTIFICATION-TYPE
+    OBJECTS         {vtpVlanName}
+    STATUS          current
+    DESCRIPTION
+            "A vtpVlanCreated notification is generated by a 
+            device when a VLAN is created. "
+    ::= { vtpNotificationsPrefix 10 }
+
+vtpVlanDeleted  NOTIFICATION-TYPE
+    OBJECTS         {vtpVlanName}
+    STATUS          current
+    DESCRIPTION
+            "A vtpVlanDeleted notification is generated by a
+            device when a VLAN is deleted. "
+    ::= { vtpNotificationsPrefix 11 }
+
+vtpVlanRingNumberConflict NOTIFICATION-TYPE
+    OBJECTS     { vtpVlanRingNumber,
+                  ifIndex, vtpVlanPortLocalSegment }
+    STATUS      current
+    DESCRIPTION
+            "A VTP ring number configuration conflict notification is
+            generated if, and only at the time when, a device learns of
+            a conflict between:
+
+            a) the ring number (vtpVlanPortLocalSegment) being used on a
+               token ring segment attached to the port identified by
+               ifIndex, and
+
+            b) the VTP-obtained ring number (vtpVlanRingNumber) for the
+               VLAN identified by vtpVlanIndex.
+
+            When such a conflict occurs, the bridge port is put into an
+            administrative down position until the conflict is resolved
+            through local/network management intervention.
+
+            This notification is only applicable to VLANs of type
+            'tokenRing'."
+    ::= { vtpNotificationsPrefix 12 }
+
 vtpVlanPortLocalSegment OBJECT-TYPE
     SYNTAX     Integer32 (0..65535)
-    MAX-ACCESS read-only
+    MAX-ACCESS accessible-for-notify
     STATUS     current
     DESCRIPTION
             "The ring (segment) number in use on a 802.5 ring.  For
@@ -2752,7 +3523,7 @@ vtpMIBCompliance7 MODULE-COMPLIANCE
     ::= { vtpMIBCompliances 7 }
 
 vtpMIBCompliance8 MODULE-COMPLIANCE
-    STATUS  current
+    STATUS  deprecated
     DESCRIPTION
             "The compliance statement for VTP implementations."
     MODULE  -- this module
@@ -2857,6 +3628,507 @@ vtpMIBCompliance8 MODULE-COMPLIANCE
             one VLAN editing for each 'apply' operation."
 
     ::= { vtpMIBCompliances 8 }
+
+vtpMIBCompliance9 MODULE-COMPLIANCE
+    STATUS  deprecated -- superseded by vtpMIBCompliance10
+    DESCRIPTION
+            "The compliance statement for VTP implementations."
+    MODULE  -- this module
+        MANDATORY-GROUPS { vtpBasicGroup,
+                           vtpVlanInfoGroup,
+                           vtpConfigNotificationsGroup,
+                           vtpStatsGroup,
+                           vtpTrunkPortGroup,
+                           vtpVersion2BasicGroup,
+                           vtpNotificationObjectsGroup
+                         }
+
+        OBJECT       managementDomainRowStatus
+        SYNTAX       INTEGER { active(1)}   -- subset of RowStatus
+        MIN-ACCESS   read-only
+        DESCRIPTION
+             "Write access is not required, and only one
+             of the six enumerated values for the
+             RowStatus textual convention need be
+             supported, specifically: active(1)."
+
+        OBJECT       vlanTrunkPortRowStatus
+        SYNTAX       INTEGER { active(1)}   -- subset of RowStatus
+        MIN-ACCESS   read-only
+        DESCRIPTION
+             "Write access is not required, and only one
+             of the six enumerated values for the
+             RowStatus textual convention need be
+             supported, specifically: active(1)."
+
+        OBJECT       managementDomainName
+        MIN-ACCESS   read-only
+        DESCRIPTION  "This object is read-only if vtpVersion
+                     is none(3)."
+
+        OBJECT       managementDomainLocalMode
+        SYNTAX       INTEGER { client(1), server(2), transparent(3) }
+                                         -- subset of VTP local mode
+        MIN-ACCESS   read-only
+        DESCRIPTION  "This object is read-only if vtpVersion
+                     is none(3). Write access for transparent(3)
+                     is not required."
+
+        OBJECT       managementDomainTftpServer
+        MIN-ACCESS   read-only
+        DESCRIPTION  "This object is read-only if vtpVersion
+                     is none(3)."
+
+        OBJECT       managementDomainTftpPathname
+        MIN-ACCESS   read-only
+        DESCRIPTION  "This object is read-only if vtpVersion
+                     is none(3)."
+
+        OBJECT       managementDomainVersionInUse
+        MIN-ACCESS   read-only
+        DESCRIPTION  "This object is read-only if vtpVersion
+                     is none(3)."
+
+        OBJECT       vlanTrunkPortManagementDomain
+        MIN-ACCESS   read-only
+        DESCRIPTION  "Write access is not required."
+
+        OBJECT       vlanTrunkPortEncapsulationType
+        MIN-ACCESS   read-only
+        DESCRIPTION  "Write access is not required."
+
+        OBJECT       vlanTrunkPortNativeVlan
+        MIN-ACCESS   read-only
+        DESCRIPTION  "Write access is not required."
+
+        GROUP        vtpVlanInfoEditGroup
+        DESCRIPTION
+            "This group must be implemented by VTP Servers.
+            VTP Clients need not implement these objects, and
+            must not allow VLANs to be created, modified, or
+            destroyed using these objects."
+
+        GROUP        vtp4kVlanGroupRev1
+        DESCRIPTION
+            "This group must be implemented by the VTP Servers
+            which support the range of VlanIndex between 1024
+            and 4095."
+
+        OBJECT       vtpVlanEditTypeExt2
+        MIN-ACCESS   read-only
+        DESCRIPTION  "Write access is not required."
+
+        GROUP        vtpVlanIfIndexGroup
+        DESCRIPTION
+             "This group is an optional group containing
+             objects providing information about the mapping
+             of VLAN ID to its corresponding IfIndex."
+
+        GROUP        vtpVlanInfoEditGroup2
+        DESCRIPTION
+            "This group is mandatory for devices which only support
+            one VLAN editing for each 'apply' operation."
+
+        GROUP        vtpVlanNotifEnabledGroup
+        DESCRIPTION
+            "This group is mandatory for devices which support the
+            notifications/traps in vtpConfigNotificationsGroup3. "
+            
+    ::= { vtpMIBCompliances 9 }
+
+vtpMIBCompliance10 MODULE-COMPLIANCE
+    STATUS  deprecated
+    DESCRIPTION
+            "The compliance statement for VTP implementations."
+    MODULE  -- this module
+        MANDATORY-GROUPS { vtpBasicGroup,
+                           vtpVlanInfoGroup,
+                           vtpConfigNotificationsGroup,
+                           vtpStatsGroup,
+                           vtpTrunkPortGroup,
+                           vtpVersion2BasicGroup,
+                           vtpNotificationObjectsGroup
+                         }
+
+        OBJECT       managementDomainRowStatus
+        SYNTAX       INTEGER { active(1)}   -- subset of RowStatus
+        MIN-ACCESS   read-only
+        DESCRIPTION
+             "Write access is not required, and only one
+             of the six enumerated values for the
+             RowStatus textual convention need be
+             supported, specifically: active(1)."
+
+        OBJECT       vlanTrunkPortRowStatus
+        SYNTAX       INTEGER { active(1)}   -- subset of RowStatus
+        MIN-ACCESS   read-only
+        DESCRIPTION
+             "Write access is not required, and only one
+             of the six enumerated values for the
+             RowStatus textual convention need be
+             supported, specifically: active(1)."
+
+        OBJECT       managementDomainName
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3)."
+
+        OBJECT       managementDomainLocalMode
+        SYNTAX       INTEGER { client(1), server(2), transparent(3) }
+                                         -- subset of VTP local mode
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3). "
+
+        OBJECT       managementDomainTftpServer
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3)."
+
+        OBJECT       managementDomainTftpPathname
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3)."
+
+        OBJECT       managementDomainVersionInUse
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3)."
+
+        OBJECT       vlanTrunkPortManagementDomain
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+            "Write access is not required."
+
+        OBJECT       vlanTrunkPortEncapsulationType
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "Write access is not required."
+
+        OBJECT       vlanTrunkPortNativeVlan
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "Write access is not required."
+
+        GROUP        vtpVlanInfoEditGroup
+        DESCRIPTION
+             "This group must be implemented by VTP Servers.
+             VTP Clients need not implement these objects, and
+             must not allow VLANs to be created, modified, or
+             destroyed using these objects."
+
+        GROUP        vtp4kVlanGroupRev1
+        DESCRIPTION
+             "This group must be implemented by the VTP Servers
+             which support the range of VlanIndex between 1024
+             and 4095."
+
+        OBJECT       vtpVlanEditTypeExt2
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "Write access is not required."
+
+        GROUP        vtpVlanIfIndexGroup
+        DESCRIPTION
+             "This group is an optional group containing
+             objects providing information about the mapping
+             of VLAN ID to its corresponding IfIndex."
+
+        GROUP        vtpVlanInfoEditGroup2
+        DESCRIPTION
+             "This group is mandatory for devices which only support
+             one VLAN editing for each 'apply' operation."
+
+        GROUP        vtpVlanNotifEnabledGroup
+        DESCRIPTION
+             "This group is mandatory for devices which support the
+             notifications/traps in vtpConfigNotificationsGroup3. "
+
+        GROUP   vtpDiscoverGroup
+        DESCRIPTION
+             "This group is mandatory for devices which support the
+             VTP discovery."
+
+        GROUP   vtpDatabaseGroup
+        DESCRIPTION
+             "This group is mandatory for devices which support the
+             VTP distribution of different database types." 
+
+        GROUP   vtpAuthGroup
+        DESCRIPTION
+             "This group is mandatory for devices which support 
+             asymmetric keys authentication mechanism for VTP."
+            
+    ::= { vtpMIBCompliances 10 }
+
+vtpMIBCompliance11 MODULE-COMPLIANCE
+    STATUS  deprecated
+    DESCRIPTION
+            "The compliance statement for VTP implementations."
+    MODULE  -- this module
+        MANDATORY-GROUPS { vtpBasicGroup,
+                           vtpVlanInfoGroup,
+                           vtpConfigNotificationsGroupRev1,
+                           vtpStatsGroup,
+                           vtpTrunkPortGroup,
+                           vtpVersion2BasicGroup,
+                           vtpNotificationObjectsGroup
+                         }
+
+        OBJECT       managementDomainRowStatus
+        SYNTAX       INTEGER { active(1)}   -- subset of RowStatus
+        MIN-ACCESS   read-only
+        DESCRIPTION
+             "Write access is not required, and only one
+             of the six enumerated values for the
+             RowStatus textual convention need be
+             supported, specifically: active(1)."
+
+        OBJECT       vlanTrunkPortRowStatus
+        SYNTAX       INTEGER { active(1)}   -- subset of RowStatus
+        MIN-ACCESS   read-only
+        DESCRIPTION
+             "Write access is not required, and only one
+             of the six enumerated values for the
+             RowStatus textual convention need be
+             supported, specifically: active(1)."
+
+        OBJECT       managementDomainName
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3)."
+
+        OBJECT       managementDomainLocalMode
+        SYNTAX       INTEGER { client(1), server(2), transparent(3) }
+                                         -- subset of VTP local mode
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3). "
+
+        OBJECT       managementDomainTftpServer
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3)."
+
+        OBJECT       managementDomainTftpPathname
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3)."
+
+        OBJECT       managementDomainVersionInUse
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3)."
+
+        OBJECT       vlanTrunkPortManagementDomain
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+            "Write access is not required."
+
+        OBJECT       vlanTrunkPortEncapsulationType
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "Write access is not required."
+
+        OBJECT       vlanTrunkPortNativeVlan
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "Write access is not required."
+
+        GROUP        vtpVlanInfoEditGroup
+        DESCRIPTION
+             "This group must be implemented by VTP Servers.
+             VTP Clients need not implement these objects, and
+             must not allow VLANs to be created, modified, or
+             destroyed using these objects."
+
+        GROUP        vtp4kVlanGroupRev1
+        DESCRIPTION
+             "This group must be implemented by the VTP Servers
+             which support the range of VlanIndex between 1024
+             and 4095."
+
+        OBJECT       vtpVlanEditTypeExt2
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "Write access is not required."
+
+        GROUP        vtpVlanIfIndexGroup
+        DESCRIPTION
+             "This group is an optional group containing
+             objects providing information about the mapping
+             of VLAN ID to its corresponding IfIndex."
+
+        GROUP        vtpVlanInfoEditGroup2
+        DESCRIPTION
+             "This group is mandatory for devices which only support
+             one VLAN editing for each 'apply' operation."
+
+        GROUP        vtpVlanNotifEnabledGroup
+        DESCRIPTION
+             "This group is mandatory for devices which support the
+             notifications/traps in vtpConfigNotificationsGroup3. "
+
+        GROUP   vtpDiscoverGroup
+        DESCRIPTION
+             "This group is mandatory for devices which support the
+             VTP discovery."
+
+        GROUP   vtpDatabaseGroup
+        DESCRIPTION
+             "This group is mandatory for devices which support the
+             VTP distribution of different database types." 
+
+        GROUP   vtpAuthGroup
+        DESCRIPTION
+             "This group is mandatory for devices which support 
+             asymmetric keys authentication mechanism for VTP."
+            
+    ::= { vtpMIBCompliances 11 }
+
+vtpMIBCompliance12 MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+            "The compliance statement for VTP implementations."
+    MODULE  -- this module
+        MANDATORY-GROUPS { vtpBasicGroup,
+                           vtpVlanInfoGroup,
+                           vtpConfigNotificationsGroupRev1,
+                           vtpStatsGroup,
+                           vtpTrunkPortGroup,
+                           vtpVersion2BasicGroup,
+                           vtpNotificationObjectsGroup
+                         }
+
+        OBJECT       managementDomainRowStatus
+        SYNTAX       INTEGER { active(1)}   -- subset of RowStatus
+        MIN-ACCESS   read-only
+        DESCRIPTION
+             "Write access is not required, and only one
+             of the six enumerated values for the
+             RowStatus textual convention need be
+             supported, specifically: active(1)."
+
+        OBJECT       vlanTrunkPortRowStatus
+        SYNTAX       INTEGER { active(1)}   -- subset of RowStatus
+        MIN-ACCESS   read-only
+        DESCRIPTION
+             "Write access is not required, and only one
+             of the six enumerated values for the
+             RowStatus textual convention need be
+             supported, specifically: active(1)."
+
+        OBJECT       managementDomainName
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3)."
+
+        OBJECT       managementDomainLocalMode
+        SYNTAX       INTEGER { client(1), server(2), transparent(3) }
+                                         -- subset of VTP local mode
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3). "
+
+        OBJECT       managementDomainTftpServer
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3)."
+
+        OBJECT       managementDomainTftpPathname
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3)."
+
+        OBJECT       managementDomainVersionInUse
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "This object is read-only if vtpVersion
+             is none(3)."
+
+        OBJECT       vlanTrunkPortManagementDomain
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+            "Write access is not required."
+
+        OBJECT       vlanTrunkPortEncapsulationType
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "Write access is not required."
+
+        OBJECT       vlanTrunkPortNativeVlan
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "Write access is not required."
+
+        GROUP        vtpVlanInfoEditGroup
+        DESCRIPTION
+             "This group must be implemented by VTP Servers.
+             VTP Clients need not implement these objects, and
+             must not allow VLANs to be created, modified, or
+             destroyed using these objects."
+
+        GROUP        vtp4kVlanGroupRev1
+        DESCRIPTION
+             "This group must be implemented by the VTP Servers
+             which support the range of VlanIndex between 1024
+             and 4095."
+
+        OBJECT       vtpVlanEditTypeExt2
+        MIN-ACCESS   read-only
+        DESCRIPTION  
+             "Write access is not required."
+
+        GROUP        vtpVlanIfIndexGroup
+        DESCRIPTION
+             "This group is an optional group containing
+             objects providing information about the mapping
+             of VLAN ID to its corresponding IfIndex."
+
+        GROUP        vtpVlanInfoEditGroup2
+        DESCRIPTION
+             "This group is mandatory for devices which only support
+             one VLAN editing for each 'apply' operation."
+
+        GROUP        vtpVlanNotifEnabledGroup
+        DESCRIPTION
+             "This group is mandatory for devices which support the
+             notifications/traps in vtpConfigNotificationsGroup3. "
+
+        GROUP   vtpDiscoverGroup
+        DESCRIPTION
+             "This group is mandatory for devices which support the
+             VTP discovery."
+
+        GROUP   vtpDatabaseGroup
+        DESCRIPTION
+             "This group is mandatory for devices which support the
+             VTP distribution of different database types." 
+
+        GROUP   vtpAuthGroup
+        DESCRIPTION
+             "This group is mandatory for devices which support 
+             asymmetric keys authentication mechanism for VTP."
+
+        GROUP   vtpInternalVlanGrp
+        DESCRIPTION
+             "Implementation of this group is optional."
+            
+    ::= { vtpMIBCompliances 12 }
 
 -- units of conformance
 
@@ -2981,10 +4253,9 @@ vtpVersion2BasicGroup OBJECT-GROUP
                      vtpConfigRevNumberError,
                      vtpServerDisabled,
                      vtpMtuTooBig,
-                     vtpVlanRingNumberConfigConflict,
                      vtpVersionOneDeviceDetected,
                      vlanTrunkPortDynamicStatusChange }
-     STATUS        current
+     STATUS        deprecated
      DESCRIPTION
              "The notifications which a VTP implementation is
              required to implement."
@@ -3068,10 +4339,119 @@ vtpNotificationObjectsGroup OBJECT-GROUP
 
 vtpDot1qTunnelGroup2 OBJECT-GROUP
     OBJECTS { vlanTrunkPortsDot1qTag }
-    STATUS  current
+    STATUS  deprecated
     DESCRIPTION
             "A collection of objects providing information
              for dot1qtunnel feature."
     ::= { vtpMIBGroups 22 }
 
+vtpConfigNotificationsGroup2 NOTIFICATION-GROUP
+     NOTIFICATIONS{  vtpLocalModeChanged,
+                     vtpVersionInUseChanged }
+     STATUS        current
+     DESCRIPTION
+             "The notifications which a VTP implementation is
+             required to implement."
+     ::= { vtpMIBGroups 23 }
+
+vtpVlanNotifEnabledGroup OBJECT-GROUP
+    OBJECTS { vtpVlanCreatedNotifEnabled,
+              vtpVlanDeletedNotifEnabled }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects to indicate whether a
+            certain group of notifications are enabled. "
+    ::= { vtpMIBGroups 24 }
+
+vtpConfigNotificationsGroup3 NOTIFICATION-GROUP
+     NOTIFICATIONS { vtpVlanCreated,
+                     vtpVlanDeleted }
+     STATUS        current
+     DESCRIPTION
+             "The notifications implemented by a device which 
+             supports these features. "
+     ::= { vtpMIBGroups 25 }
+
+vtpConfigNotificationsGroup4 NOTIFICATION-GROUP
+     NOTIFICATIONS { vtpVlanRingNumberConflict }
+     STATUS        current
+     DESCRIPTION
+             "The notifications implemented by a device which
+             supports these features. "
+     ::= { vtpMIBGroups 26 }
+
+vtpDiscoverGroup OBJECT-GROUP
+    OBJECTS { vtpDiscoverAction,
+              vtpDiscoverStatus,
+              vtpLastDiscoverTime,
+              vtpDiscoverResultIndex,
+              vtpDiscoverResultDatabaseName,
+              vtpDiscoverResultConflicting,
+              vtpDiscoverResultDeviceId,
+              vtpDiscoverResultPrimaryServer,
+              vtpDiscoverResultRevNumber,
+              vtpDiscoverResultSystemName }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects providing information of 
+            VTP discovery."
+    ::= { vtpMIBGroups 27 }
+
+vtpDatabaseGroup OBJECT-GROUP
+   OBJECTS {  vtpDatabaseName,
+              vtpDatabaseLocalMode,
+              vtpDatabaseRevNumber,
+              vtpDatabasePrimaryServer,
+              vtpDatabasePrimaryServerId,
+              vtpDatabaseTakeOverPrimary,
+              vtpDatabaseTakeOverPassword }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects providing information of
+            VTP databases. " 
+    ::= { vtpMIBGroups 28 }
+
+vtpAuthGroup OBJECT-GROUP
+    OBJECTS { vtpAuthPassword,
+              vtpAuthPasswordType,
+              vtpAuthSecretKey }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects providing information of
+            VTP authentication mechanism. "
+    ::= { vtpMIBGroups 29 }
+
+vtpConfigNotificationsGroupRev1 NOTIFICATION-GROUP
+     NOTIFICATIONS { vtpConfigDigestError,
+                     vtpConfigRevNumberError,
+                     vtpVersionOneDeviceDetected,
+                     vlanTrunkPortDynamicStatusChange }
+     STATUS        current
+     DESCRIPTION
+             "The notifications which a VTP implementation is
+             required to implement."
+     ::= { vtpMIBGroups 30 }
+
+vtpConfigNotificationsGroup5 NOTIFICATION-GROUP
+     NOTIFICATIONS { vtpServerDisabled,
+                     vtpMtuTooBig }
+     STATUS        current
+     DESCRIPTION
+             "The additional notifications that may be 
+             related to a VTP implementation."
+     ::= { vtpMIBGroups 31 }
+
+vtpInternalVlanGrp OBJECT-GROUP
+    OBJECTS { vtpInternalVlanAllocPolicy,
+              vtpInternalVlanOwner
+              }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects providing information of
+            internal VLANs. "
+    ::= { vtpMIBGroups 32 } 
+
 END
+
+
+ 

@@ -4,6 +4,7 @@
 --   (RF) subsystem.
 --
 -- August 2000, Timothy Kurnik and Bo Berry
+-- December 2001, Liwei Wang 
 --
 -- Copyright (c) 2000, 2001 by Cisco Systems, Inc.
 -- All rights reserved.
@@ -37,7 +38,7 @@ IMPORTS
             FROM RFC1213-MIB;
 
 ciscoRFMIB MODULE-IDENTITY
-    LAST-UPDATED "200107200000Z" -- July 20, 2001
+    LAST-UPDATED "200201070000Z" 
     ORGANIZATION "Cisco Systems, Inc."
     CONTACT-INFO
         "Cisco Systems Customer Service
@@ -63,6 +64,15 @@ ciscoRFMIB MODULE-IDENTITY
 
         In the scope of this MIB definition, peer software elements
         are redundant and redundant software elements are peers."
+
+    REVISION    "200201070000Z" 
+    DESCRIPTION
+        "Added the following object in cRFStatus:
+            cRFStatusRFModeCapsTable
+        Added the following object in cRFCfg:
+            cRFCfgRedundancyOperMode
+        Updated description of following object in cRFCfg:
+            cRFCfgRedundancyMode"
 	
     REVISION	"200107200000Z" -- July 20, 2001	
     DESCRIPTION
@@ -549,6 +559,53 @@ cRFStatusPeerStandByEntryTime OBJECT-TYPE
 	standbyHot state. The value will be 0 on system initialization." 
     ::= { cRFStatus 10 }		
 
+-- Redundancy mode capability table
+
+cRFStatusRFModeCapsTable OBJECT-TYPE
+    SYNTAX        SEQUENCE OF CRFStatusRFModeCapsEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "This table containing a list of redundancy modes that can be 
+        supported on the device."
+    ::= { cRFStatus 11 }
+
+cRFStatusRFModeCapsEntry OBJECT-TYPE
+    SYNTAX        CRFStatusRFModeCapsEntry 
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "An entry containing the device implementation specific 
+        terminology associated with the redundancy mode that can be
+        supported on the device."
+    INDEX { cRFStatusRFModeCapsMode }
+    ::= { cRFStatusRFModeCapsTable 1 }
+
+CRFStatusRFModeCapsEntry ::=
+    SEQUENCE {
+            cRFStatusRFModeCapsMode
+                    RFMode,
+            cRFStatusRFModeCapsModeDescr
+                    SnmpAdminString
+    }
+
+cRFStatusRFModeCapsMode OBJECT-TYPE
+    SYNTAX        RFMode
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "The redundancy mode that can be supported on the device."
+        ::= { cRFStatusRFModeCapsEntry 1 }
+
+cRFStatusRFModeCapsModeDescr OBJECT-TYPE
+    SYNTAX        SnmpAdminString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "The description of the device implementation specific
+        terminology associated with its supported redundancy mode."
+        ::= { cRFStatusRFModeCapsEntry 2 }
+
 --
 -- Configuration sub-group definitions
 --
@@ -726,7 +783,7 @@ cRFCfgRedundancyMode OBJECT-TYPE
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
-        "Indicates the type of redundancy currently in effect."
+        "Indicates the redundancy mode configured on the device."
     ::= { cRFCfg 14 }
 
 cRFCfgRedundancyModeDescr OBJECT-TYPE
@@ -739,6 +796,14 @@ cRFCfgRedundancyModeDescr OBJECT-TYPE
         associated with the current redundancy mode may be presented
         here."
     ::= { cRFCfg 15 }
+
+cRFCfgRedundancyOperMode OBJECT-TYPE
+    SYNTAX     RFMode
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+        "Indicate the operational redundancy mode of the device."
+    ::= { cRFCfg 16 }
 
 --
 -- History sub-group definitions
@@ -1057,4 +1122,26 @@ ciscoRFHistoryGroup OBJECT-GROUP
 	"The collection of RF History objects."
 	::= { ciscoRFMIBGroups 6 }
 		
+ciscoRFConfigRFOperModeGroup OBJECT-GROUP
+    OBJECTS {
+        cRFCfgRedundancyOperMode
+    }
+    STATUS current 
+    DESCRIPTION
+        "An optional group with a collection of objects providing 
+        the information of the operational redundancy mode on the
+        device."
+    ::= { ciscoRFMIBGroups 7 }
+
+ciscoRFStatusRFModeCapsGroup OBJECT-GROUP
+    OBJECTS {
+        cRFStatusRFModeCapsModeDescr
+    }
+    STATUS current
+    DESCRIPTION
+        "An optional group with a collection of objects 
+        providing the information of redundancy mode capability 
+        on the device."
+    ::= { ciscoRFMIBGroups 8 }
+
 END

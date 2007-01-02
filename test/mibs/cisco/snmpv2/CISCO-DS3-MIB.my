@@ -7,7 +7,9 @@
 --
 -- October  2000, Subra Hegde
 --
--- Copyright (c) 1999-2000 by cisco Systems, Inc.
+-- August   2001, Ramakumara Kariyappa
+--
+-- Copyright (c) 1999-2002 by cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
  
@@ -16,17 +18,17 @@ CISCO-DS3-MIB DEFINITIONS ::= BEGIN
 IMPORTS
     MODULE-IDENTITY,
     OBJECT-TYPE,
-    Counter32
+    Counter32,
+    Unsigned32
     			FROM SNMPv2-SMI
     DisplayString       FROM SNMPv2-TC
-    Unsigned32          FROM CISCO-TC
     MODULE-COMPLIANCE,
     OBJECT-GROUP        FROM SNMPv2-CONF
     ifIndex             FROM IF-MIB
     ciscoMgmt           FROM CISCO-SMI;
  
 ciscoDs3MIB MODULE-IDENTITY
-    LAST-UPDATED   "200010100000Z"
+    LAST-UPDATED   "200205210000Z"
     ORGANIZATION   "Cisco Systems, Inc."
     CONTACT-INFO
                    "Cisco Systems
@@ -39,6 +41,20 @@ ciscoDs3MIB MODULE-IDENTITY
     DESCRIPTION
         "The MIB module to describe DS3 line objects. This is
          an extension to the standard DS3 MIB(RFC 2496)."
+
+    REVISION "200205210000Z"
+    DESCRIPTION
+        "1. Added enumeration notApplicable(3) to following objects:
+             cds3LineAIScBitsCheck, cds3LineOOFCriteria.
+
+         2. Imported Unsigned32 from SNMPv2-SMI instead of
+            CISCO-TC."
+
+    REVISION "200108310000Z"
+    DESCRIPTION
+        "Following enumerations are added to cds3LineType object:
+         ds3cbitfrmronly, ds3m23frmronly, e3g832frmronly and 
+         e3g751frmronly."
     REVISION "200010100000Z"
     DESCRIPTION
         "Following enumerations are added to cds3LineType object:
@@ -115,7 +131,11 @@ cds3LineType OBJECT-TYPE
                 dsx3CbitParity(11),
                 dsx3ClearChannel(12),
                 e3Framed(13),
-                e3Plcp(14)
+                e3Plcp(14),
+                ds3cbitfrmronly(15),
+                ds3m23frmronly(16),
+                e3g832frmronly(17),
+                e3g751frmronly(18)
         }
         MAX-ACCESS read-write
         STATUS     current 
@@ -138,14 +158,18 @@ cds3LineType OBJECT-TYPE
               dsx3SYNTRAN      : Refer ANSI T1.107-1988 [9]
               dsx3CbitParity   : Refer ANSI T1.107-1988 [9]
               dsx3ClearChannel : Refer ANSI T1.107-1988 [9]
+              ds3cbitfrmronly  : Indicates C-BIT FRAMER-ONLY mode
+              ds3m23frmronly   : Indicates M23 FRAMER-ONLY mode
 
 	    Following values are applicable to E3 interfaces only.
 
-              e3g832adm  : Indicates G.832 ADM mode 
-              e3g751adm  : Indicates G.751 ADM mode 
-              e3g751plcp : Indicates G.751 PLCP mode
-              e3Framed   : Refer CCITT G.751 [12]
-              e3Plcp     : Refer ETSI T/NA(91)19 [14]."
+              e3g832adm      : Indicates G.832 ADM mode 
+              e3g751adm      : Indicates G.751 ADM mode 
+              e3g751plcp     : Indicates G.751 PLCP mode
+              e3Framed       : Refer CCITT G.751 [12]
+              e3Plcp         : Refer ETSI T/NA(91)19 [14]
+              e3g832frmronly : Indicates G.832 FRAMER-ONLY mode
+              e3g751frmronly : Indicates G.751 FRAMER-ONLY mode."
         REFERENCE
            "ANSI T1.107, ANSI T1.102, CCITT G.751, ETSI T/NA(91)18"
         ::= { cds3ConfigEntry 1 }
@@ -153,7 +177,8 @@ cds3LineType OBJECT-TYPE
 cds3LineAIScBitsCheck OBJECT-TYPE
     SYNTAX  INTEGER {
             check(1),
-            ignore(2)
+            ignore(2),
+            notApplicable(3)
             }
     MAX-ACCESS read-write
     STATUS     current
@@ -162,7 +187,10 @@ cds3LineAIScBitsCheck OBJECT-TYPE
          is declared when '1010...'b is found and C-Bits are all zero.  
          When ignore(2) is set, an AIS condition is declared when the  
          '1010...'b is detected irrespective of the state of the C-Bits.
-         Does not apply to the E3 interface."
+         Does not apply to the E3 interface.
+         The value notApplicable(3) is used in case of the interfaces 
+         where this object is not applicable. The notApplicable(3) 
+         is not allowed in write operation."
     REFERENCE
          "RFC2496"   
     ::= { cds3ConfigEntry 2 }
@@ -189,7 +217,8 @@ cds3LineRcvFEACValidation OBJECT-TYPE
 cds3LineOOFCriteria OBJECT-TYPE
     SYNTAX  INTEGER {
             bits3Of8(1),
-            bits3Of16(2)
+            bits3Of16(2),
+            notApplicable(3)
             }
     MAX-ACCESS read-write
     STATUS     current
@@ -201,7 +230,10 @@ cds3LineOOFCriteria OBJECT-TYPE
          to be in error.
          OOF is declared when errors are detected in  the framing
          octets for four consecutive frames.
-         This object does not apply to E3 interface."
+         This object does not apply to E3 interface.
+         The value notApplicable(3) is used in case of the interfaces 
+         where this object is not applicable. The notApplicable(3) 
+         is not allowed in write operation."
     DEFVAL {bits3Of8}
     ::= { cds3ConfigEntry 4 }
 
@@ -1993,3 +2025,5 @@ ciscoDs3Previous24HrGroup OBJECT-GROUP
            "A collection DS3/E3 related previous 24 hour counters."
         ::= { ciscoDs3MIBGroups 6 }
 END
+
+

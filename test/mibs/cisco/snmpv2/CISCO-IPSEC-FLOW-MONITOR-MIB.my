@@ -1,11 +1,9 @@
--- * $Source$
--- *********
 -- *------------------------------------------------------------------
 -- * CISCO-IPSEC-FLOW-MONITOR-MIB.my:  IPSec Flow Monitoring MIB.
 -- *
 -- * April 2000, S Ramakrishnan
 -- *
--- * Copyright (c) 2000 by Cisco Systems, Inc.
+-- * Copyright (c) 2000, 2004 by Cisco Systems, Inc.
 -- * All rights reserved.
 -- *
 -- *------------------------------------------------------------------
@@ -22,21 +20,36 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
   -- (I-D).
 
    IMPORTS
-      MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
-      Counter32, Counter64, Gauge32, Integer32
-        FROM SNMPv2-SMI
-      TEXTUAL-CONVENTION, DisplayString, TimeStamp,
-      TimeInterval, TruthValue
-        FROM SNMPv2-TC
-      MODULE-COMPLIANCE, OBJECT-GROUP
-        FROM SNMPv2-CONF
-      Unsigned32
-        FROM CISCO-TC
-      ciscoMgmt FROM CISCO-SMI;
+      MODULE-IDENTITY, 
+      OBJECT-TYPE, 
+      NOTIFICATION-TYPE,
+      Counter32, 
+      Counter64, 
+      Gauge32, 
+      Integer32, 
+      Unsigned32            
+          FROM SNMPv2-SMI
 
+      TEXTUAL-CONVENTION, 
+      DisplayString, 
+      TimeStamp,
+      TimeInterval, 
+      TruthValue            
+          FROM SNMPv2-TC
+
+      MODULE-COMPLIANCE, 
+      OBJECT-GROUP, 
+      NOTIFICATION-GROUP    
+          FROM SNMPv2-CONF
+
+      cmgwIndex             
+          FROM CISCO-MEDIA-GATEWAY-MIB
+
+      ciscoMgmt             
+          FROM CISCO-SMI;
 
    ciscoIpSecFlowMonitorMIB MODULE-IDENTITY
-      LAST-UPDATED "200010131800Z"
+      LAST-UPDATED "200410120000Z"
       ORGANIZATION "Tivoli Systems and Cisco Systems"
       CONTACT-INFO
          "Tivoli Systems
@@ -111,6 +124,14 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
  For a detailed discussion, please refer to the IETF
  draft draft-ietf-ipsec-flow-monitoring-mib-00.txt.
       "
+
+        REVISION "200410120000Z"
+        DESCRIPTION
+                "Added two table for media gateway stats 
+                 information:
+                     cikePhase1GWStatsTable (phase-1 IKE)
+                     cipSecPhase2GWStatsTable (phase-2 IPsec)
+                "
 
         REVISION "200010131800Z"
         DESCRIPTION
@@ -566,7 +587,7 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
       MAX-ACCESS read-only
       STATUS current
       DESCRIPTION
-         "The total number of system capcity failures 
+         "The total number of system capacity failures 
          which occurred during processing of all current 
          and previously active IPsec Phase-1 IKE Tunnels."
       ::= { cikeGlobalStats 22 }
@@ -777,6 +798,7 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
             "Each entry contains the attributes associated with
              an active IPsec Phase-1 IKE Tunnel."
       INDEX { cikeTunIndex }
+
       ::= { cikeTunnelTable 1}
 
    CikeTunnelEntry ::= SEQUENCE {
@@ -990,7 +1012,7 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
       MAX-ACCESS read-only
       STATUS current
       DESCRIPTION
-         "The security assoication refresh threshold in seconds."
+         "The security association refresh threshold in seconds."
       ::= { cikeTunnelEntry 17 }
 
    cikeTunTotalRefreshes OBJECT-TYPE
@@ -1306,6 +1328,352 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
           (cipSecTunIndex in the cipSecTunnelTable) for this
           IPsec Phase-1 IKE Peer Association."
       ::= { cikePeerCorrEntry 7 }
+
+
+-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--
+--    cikePhase1GWStatsTable
+--
+--    Gateway Phase-1 IKE stats information
+--
+-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   cikePhase1GWStatsTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF CikePhase1GWStatsEntry
+      MAX-ACCESS not-accessible
+      STATUS current
+      DESCRIPTION
+         "Phase-1 IKE stats information is included in this table.
+          Each entry is related to a specific gateway which is 
+          identified by 'cmgwIndex'."
+     ::= { cipSecPhaseOne 5 }
+
+   cikePhase1GWStatsEntry OBJECT-TYPE
+      SYNTAX CikePhase1GWStatsEntry
+      MAX-ACCESS not-accessible
+      STATUS current
+      DESCRIPTION
+         "Each entry contains the attributes of an Phase-1 IKE stats
+          information for the related gateway.
+
+          There is only one entry for each gateway. The entry 
+          is created when a gateway up and cannot be deleted.
+         "
+      INDEX { cmgwIndex }
+      ::= { cikePhase1GWStatsTable 1}
+
+   CikePhase1GWStatsEntry ::= SEQUENCE {
+      cikePhase1GWActiveTunnels         Gauge32,
+      cikePhase1GWPreviousTunnels       Counter32,
+      cikePhase1GWInOctets              Counter32,
+      cikePhase1GWInPkts                Counter32,
+      cikePhase1GWInDropPkts            Counter32,
+      cikePhase1GWInNotifys             Counter32,
+      cikePhase1GWInP2Exchgs            Counter32,
+      cikePhase1GWInP2ExchgInvalids     Counter32,
+      cikePhase1GWInP2ExchgRejects      Counter32,
+      cikePhase1GWInP2SaDelRequests     Counter32,
+      cikePhase1GWOutOctets             Counter32,
+      cikePhase1GWOutPkts               Counter32,
+      cikePhase1GWOutDropPkts           Counter32,
+      cikePhase1GWOutNotifys            Counter32,
+      cikePhase1GWOutP2Exchgs           Counter32,
+      cikePhase1GWOutP2ExchgInvalids    Counter32,
+      cikePhase1GWOutP2ExchgRejects     Counter32,
+      cikePhase1GWOutP2SaDelRequests    Counter32,
+      cikePhase1GWInitTunnels           Counter32,
+      cikePhase1GWInitTunnelFails       Counter32,
+      cikePhase1GWRespTunnelFails       Counter32,
+      cikePhase1GWSysCapFails           Counter32,
+      cikePhase1GWAuthFails             Counter32,
+      cikePhase1GWDecryptFails          Counter32,
+      cikePhase1GWHashValidFails        Counter32,
+      cikePhase1GWNoSaFails             Counter32
+   }
+
+   cikePhase1GWActiveTunnels OBJECT-TYPE
+      SYNTAX Gauge32
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The number of currently active IPsec 
+          Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 1 }
+
+   cikePhase1GWPreviousTunnels OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "SAs"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of previously active 
+          IPsec Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 2 }
+
+   cikePhase1GWInOctets OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Octets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of octets received by all currently
+          and previously active IPsec Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 3 }
+
+   cikePhase1GWInPkts OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Packets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of packets received by all 
+          currently and previously active IPsec 
+          Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 4 }
+
+   cikePhase1GWInDropPkts OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Packets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of packets which were 
+          dropped during receive processing by all 
+          currently and previously
+          active IPsec Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 5 }
+
+   cikePhase1GWInNotifys OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Notification Payloads"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of notifys received by 
+          all currently and previously active IPsec 
+          Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 6 }
+
+   cikePhase1GWInP2Exchgs OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "SA Payloads"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of IPsec Phase-2 exchanges 
+          received by all currently and previously 
+          active IPsec Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 7 }
+
+   cikePhase1GWInP2ExchgInvalids OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "SA Payloads"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of IPsec Phase-2 exchanges 
+          which were received and found to be invalid 
+          by all currently and previously active IPsec 
+          Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 8 }
+
+   cikePhase1GWInP2ExchgRejects OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "SA Payloads"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of IPsec Phase-2 exchanges 
+          which were received and rejected by all 
+          currently and previously active IPsec Phase-1 
+          IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 9 }
+
+   cikePhase1GWInP2SaDelRequests OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Notification Payloads"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of IPsec Phase-2 'Security 
+          Association' delete requests received by all 
+          currently and previously active and IPsec 
+          Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 10 }
+
+   cikePhase1GWOutOctets OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Octets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of octets sent by all currently
+          and previously active and IPsec Phase-1 
+          IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 11 }
+
+   cikePhase1GWOutPkts OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Packets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of packets sent by all currently
+          and previously active and IPsec Phase-1 
+          Tunnels."
+      ::= { cikePhase1GWStatsEntry 12 }
+
+   cikePhase1GWOutDropPkts OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Packets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of packets which were dropped 
+          during send processing by all currently 
+          and previously
+          active IPsec Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 13 }
+
+   cikePhase1GWOutNotifys OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Notification Payloads"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of notifys sent by all currently
+          and previously active IPsec Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 14 }
+
+   cikePhase1GWOutP2Exchgs OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "SA Payloads"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of IPsec Phase-2 exchanges 
+          which were sent by all currently and previously 
+          active IPsec Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 15 }
+
+   cikePhase1GWOutP2ExchgInvalids OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "SA Payloads"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of IPsec Phase-2 exchanges 
+          which were sent and found to be invalid by 
+          all currently and previously active IPsec Phase-1 
+          Tunnels."
+      ::= { cikePhase1GWStatsEntry 16 }
+
+   cikePhase1GWOutP2ExchgRejects OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "SA Payloads"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of IPsec Phase-2 exchanges 
+          which were sent and rejected by all currently and
+          previously active IPsec Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 17 }
+
+   cikePhase1GWOutP2SaDelRequests OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Notification Payloads"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of IPsec Phase-2 SA
+          delete requests sent by all currently and 
+          previously active IPsec Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 18 }
+
+   cikePhase1GWInitTunnels OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "SAs"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of IPsec Phase-1 IKE 
+          Tunnels which were locally initiated."
+      ::= { cikePhase1GWStatsEntry 19 }
+
+   cikePhase1GWInitTunnelFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "SAs"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of IPsec Phase-1 IKE Tunnels 
+          which were locally initiated and failed to activate."
+      ::= { cikePhase1GWStatsEntry 20 }
+
+   cikePhase1GWRespTunnelFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "SAs"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of IPsec Phase-1 IKE Tunnels 
+          which were remotely initiated and failed to activate."
+      ::= { cikePhase1GWStatsEntry 21 }
+
+   cikePhase1GWSysCapFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Failures"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of system capacity failures 
+          which occurred during processing of all current 
+          and previously active IPsec Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 22 }
+
+   cikePhase1GWAuthFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Failures"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of authentications which ended
+          in failure by all current and previous IPsec Phase-1
+          IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 23 }
+
+   cikePhase1GWDecryptFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Failures"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of decryptions which ended
+          in failure by all current and previous IPsec Phase-1
+          IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 24 }
+
+   cikePhase1GWHashValidFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Failures"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of hash validations which ended
+          in failure by all current and previous IPsec Phase-1
+          IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 25 }
+
+   cikePhase1GWNoSaFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Failures"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of non-existent 'Security Association'
+          failures occurred during processing of current and 
+          previous IPsec Phase-1 IKE Tunnels."
+      ::= { cikePhase1GWStatsEntry 26 }
 
 -- +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 -- IPsec Phase-2 Group
@@ -1658,7 +2026,7 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
       STATUS current
       DESCRIPTION
          "The total number of non-existent 
-         Security Assocication in failures which occurred 
+         Security Association in failures which occurred 
          during processing of all current
           and previous IPsec Phase-2 Tunnels."
       ::= { cipSecGlobalStats 29 }
@@ -1931,7 +2299,7 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
       STATUS current
       DESCRIPTION
          "The authentication algorithm used by the inbound
-          ecapsulation security protocol (ESP) security 
+          encapsulation security protocol (ESP) security 
           association of the IPsec Phase-2 Tunnel."
       ::= { cipSecTunnelEntry 19 }
 
@@ -2583,6 +2951,366 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
       ::= { cipSecSpiEntry 5 }
 
 -- +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--
+--    cipSecPhase2GWStatsTable
+--
+--    Gateway Phase-2 IPsec stats information
+
+-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   cipSecPhase2GWStatsTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF CipSecPhase2GWStatsEntry
+      MAX-ACCESS not-accessible
+      STATUS current
+      DESCRIPTION
+         "Phase-2 IPsec stats information is included in this table.
+          Each entry is related to a specific gateway which is 
+          identified by 'cmgwIndex'"
+     ::= { cipSecPhaseTwo 5 }
+
+   cipSecPhase2GWStatsEntry OBJECT-TYPE
+      SYNTAX CipSecPhase2GWStatsEntry
+      MAX-ACCESS not-accessible
+      STATUS current
+      DESCRIPTION
+         "Each entry contains the attributes of an Phase-2 IPsec stats
+          information for the related gateway.
+
+          There is only one entry for each gateway. The entry 
+          is created when a gateway up and cannot be deleted.
+         "
+      INDEX { cmgwIndex }
+      ::= { cipSecPhase2GWStatsTable 1}
+
+   CipSecPhase2GWStatsEntry ::= SEQUENCE {
+      cipSecPhase2GWActiveTunnels          Gauge32,
+      cipSecPhase2GWPreviousTunnels        Counter32,
+      cipSecPhase2GWInOctets               Counter32,
+      cipSecPhase2GWInOctWraps             Counter32,
+      cipSecPhase2GWInDecompOctets         Counter32,
+      cipSecPhase2GWInDecompOctWraps       Counter32,
+      cipSecPhase2GWInPkts                 Counter32,
+      cipSecPhase2GWInDrops                Counter32,
+      cipSecPhase2GWInReplayDrops          Counter32,
+      cipSecPhase2GWInAuths                Counter32,
+      cipSecPhase2GWInAuthFails            Counter32,
+      cipSecPhase2GWInDecrypts             Counter32,
+      cipSecPhase2GWInDecryptFails         Counter32,
+      cipSecPhase2GWOutOctets              Counter32,
+      cipSecPhase2GWOutOctWraps            Counter32,
+      cipSecPhase2GWOutUncompOctets        Counter32,
+      cipSecPhase2GWOutUncompOctWraps      Counter32,
+      cipSecPhase2GWOutPkts                Counter32,
+      cipSecPhase2GWOutDrops               Counter32,
+      cipSecPhase2GWOutAuths               Counter32,
+      cipSecPhase2GWOutAuthFails           Counter32,
+      cipSecPhase2GWOutEncrypts            Counter32,
+      cipSecPhase2GWOutEncryptFails        Counter32,
+      cipSecPhase2GWProtocolUseFails       Counter32,
+      cipSecPhase2GWNoSaFails              Counter32,
+      cipSecPhase2GWSysCapFails            Counter32
+   }
+
+   cipSecPhase2GWActiveTunnels OBJECT-TYPE
+      SYNTAX Gauge32
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of currently active 
+         IPsec Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 1 }
+
+   cipSecPhase2GWPreviousTunnels OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Phase-2 Tunnels"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of previously active 
+         IPsec Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 2 }
+
+   cipSecPhase2GWInOctets OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Octets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of octets received by all 
+          current and previous IPsec Phase-2 Tunnels. 
+          This value is accumulated BEFORE determining 
+          whether or not the packet should be decompressed. 
+          See also cipSecGlobalInOctWraps for the number
+          of times this counter has wrapped."
+      ::= { cipSecPhase2GWStatsEntry 3 }
+
+   cipSecPhase2GWInOctWraps OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Integral units"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The number of times the global octets received
+          counter (cipSecGlobalInOctets) has wrapped."
+      ::= { cipSecPhase2GWStatsEntry 4 }
+
+   cipSecPhase2GWInDecompOctets OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Octets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of decompressed octets received 
+          by all current and previous IPsec Phase-2 Tunnels.  
+          This value is accumulated AFTER the packet is 
+          decompressed. If compression is not being used, 
+          this value will match the value of cipSecGlobalInOctets. 
+          See also cipSecGlobalInDecompOctWraps
+          for the number of times this counter has wrapped."
+      ::= { cipSecPhase2GWStatsEntry 5 }
+
+   cipSecPhase2GWInDecompOctWraps OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Integral units"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The number of times the global decompressed 
+          octets received counter (cipSecGlobalInDecompOctets) 
+          has wrapped."
+      ::= { cipSecPhase2GWStatsEntry 6 }
+
+   cipSecPhase2GWInPkts OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Packets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of packets received 
+          by all current and previous IPsec Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 7 }
+
+   cipSecPhase2GWInDrops OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Packets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of packets dropped 
+          during receive processing by all current and previous 
+          IPsec Phase-2 Tunnels. This count does NOT include 
+          packets dropped due to Anti-Replay processing."
+      ::= { cipSecPhase2GWStatsEntry 8 }
+
+   cipSecPhase2GWInReplayDrops OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Packets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of packets dropped during 
+          receive processing due to Anti-Replay 
+          processing by all current and previous IPsec
+          Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 9 }
+
+   cipSecPhase2GWInAuths OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Events"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of inbound authentication's 
+          performed by all current and previous IPsec 
+          Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 10 }
+
+   cipSecPhase2GWInAuthFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Failures"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of inbound authentication's 
+          which ended in failure by all current and previous 
+          IPsec Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 11 }
+
+   cipSecPhase2GWInDecrypts OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Packets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of inbound decryption's 
+          performed by all current and previous IPsec 
+          Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 12 }
+
+   cipSecPhase2GWInDecryptFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Packets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of inbound decryption's 
+          which ended in failure by all current and 
+          previous IPsec Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 13 }
+
+   cipSecPhase2GWOutOctets OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Octets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of octets sent by all 
+          current and previous IPsec Phase-2 Tunnels.  
+          This value is accumulated AFTER determining 
+          whether or not the packet should be compressed.  
+          See also cipSecGlobalOutOctWraps for the
+          number of times this counter has wrapped."
+      ::= { cipSecPhase2GWStatsEntry 14 }
+
+   cipSecPhase2GWOutOctWraps OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Integral units"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The number of times the global octets sent counter
+          (cipSecGlobalOutOctets) has wrapped."
+      ::= { cipSecPhase2GWStatsEntry 15 }
+
+   cipSecPhase2GWOutUncompOctets OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Octets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of uncompressed octets sent 
+          by all current and previous IPsec Phase-2 Tunnels.  
+          This value is accumulated BEFORE the packet is 
+          compressed. If compression is not being used, this 
+          value will match the value of cipSecGlobalOutOctets. 
+          See also cipSecGlobalOutDecompOctWraps for the number 
+          of times this counter has wrapped."
+      ::= { cipSecPhase2GWStatsEntry 16 }
+
+   cipSecPhase2GWOutUncompOctWraps OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Integral units"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The number of times the global uncompressed 
+         octets sent counter (cipSecGlobalOutUncompOctets) 
+         has wrapped."
+      ::= { cipSecPhase2GWStatsEntry 17 }
+
+   cipSecPhase2GWOutPkts OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Packets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of packets sent by all 
+          current and previous IPsec Phase-2 
+          Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 18 }
+
+   cipSecPhase2GWOutDrops OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Packets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of packets dropped during send 
+          processing by all current and previous IPsec 
+          Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 19 }
+
+   cipSecPhase2GWOutAuths OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Events"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of outbound authentication's 
+          performed by all current and previous IPsec 
+          Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 20 }
+
+   cipSecPhase2GWOutAuthFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Failures"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of outbound authentication's 
+          which ended in failure
+          by all current and previous IPsec Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 21 }
+
+   cipSecPhase2GWOutEncrypts OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Packets"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of outbound encryption's performed
+          by all current and previous IPsec Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 22 }
+
+   cipSecPhase2GWOutEncryptFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Failures"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of outbound encryption's 
+          which ended in failure by all current and 
+          previous IPsec Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 23 }
+
+   cipSecPhase2GWProtocolUseFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Failures"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of protocol use failures 
+          which occurred during processing of all current 
+          and previously active IPsec Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 24 }
+
+   cipSecPhase2GWNoSaFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Failures"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of non-existent 
+          Security Association in failures which occurred 
+          during processing of all current
+          and previous IPsec Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 25 }
+
+   cipSecPhase2GWSysCapFails OBJECT-TYPE
+      SYNTAX Counter32
+      UNITS "Failures"
+      MAX-ACCESS read-only
+      STATUS current
+      DESCRIPTION
+         "The total number of system capacity failures 
+          which occurred during processing of all current 
+          and previously active IPsec Phase-2 Tunnels."
+      ::= { cipSecPhase2GWStatsEntry 26 }
+
+
+
+
+-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 -- The IPsec History Group
 --
 -- This group consists of a:
@@ -2770,7 +3498,7 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
       STATUS current
       DESCRIPTION
          "The type of local peer identity.  The local peer 
-         may be indentified by:
+         may be identified by:
           1. an IP address, or
           2. a host name."
       ::= { cikeTunnelHistEntry 4 }
@@ -2806,7 +3534,7 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
       STATUS current
       DESCRIPTION
          "The type of remote peer identity.  The remote 
-         peer may be indentified by:
+         peer may be identified by:
           1. an IP address, or
           2. a host name."
       ::= { cikeTunnelHistEntry 7 }
@@ -3436,7 +4164,7 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
       STATUS current
       DESCRIPTION
          "The authentication algorithm used by the inbound
-          ecapsulation security protocol (ESP) 
+          encapsulation security protocol (ESP) 
           security association of the IPsec Phase-2 Tunnel."
       ::= { cipSecTunnelHistEntry 23 }
 
@@ -4116,7 +4844,7 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
       STATUS current
       DESCRIPTION
          "The type of local peer identity.  The local peer 
-         may be indentified by:
+         may be identified by:
           1. an IP address, or
           2. a host name."
       ::= { cikeFailEntry 4 }
@@ -4627,6 +5355,31 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
 -- Compliance Statements
 -- +++++++++++++++++++++++++++++++++++++++++++++++++++++++
    cipSecMIBCompliance       MODULE-COMPLIANCE
+      STATUS      deprecated
+      DESCRIPTION
+        "The compliance statement for SNMP entities
+         the IP Security Protocol.
+         This has been replaced by cipSecMIBComplianceRev1."
+
+      MODULE -- this module
+        MANDATORY-GROUPS  { cipSecLevelsGroup,
+                            cipSecPhaseOneGroup,
+                            cipSecPhaseTwoGroup
+                          }
+
+        OBJECT   cikeTunStatus
+        MIN-ACCESS read-only
+        DESCRIPTION
+          "Write access is not required."
+
+        OBJECT   cipSecTunStatus
+        MIN-ACCESS read-only
+        DESCRIPTION
+          "Write access is not required."
+
+        ::= { cipSecMIBCompliances 1 }
+
+   cipSecMIBComplianceRev1       MODULE-COMPLIANCE
       STATUS      current
       DESCRIPTION
         "The compliance statement for SNMP entities
@@ -4648,7 +5401,13 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
         DESCRIPTION
           "Write access is not required."
 
-        ::= { cipSecMIBCompliances 1 }
+        GROUP    cipSecGWStatsGroup
+        DESCRIPTION
+          "Implementation of this group is for the 
+           gateway supporting IPSec statistics 
+           information."
+
+        ::= { cipSecMIBCompliances 2 }
 
 -- +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 -- Units of Conformance
@@ -5051,26 +5810,95 @@ CISCO-IPSEC-FLOW-MONITOR-MIB DEFINITIONS ::= BEGIN
          "This group of objects controls the sending of IPsec TRAPs."
       ::= { cipSecMIBGroups 6 }
 
---   cipSecNotificationGroup    NOTIFICATION-GROUP
---      NOTIFICATIONS {
---                      cikeTunnelStart,
---                      cikeTunnelStop,
---                      cikeSysFailure,
---                      cikeCertCrlFailure,
---                      cikeProtocolFailure,
---                      cikeNoSa,
---                      cipSecTunnelStart,
---                      cipSecTunnelStop,
---                      cipSecSysFailure,
---                      cipSecSetUpFailure,
---                      cipSecEarlyTunTerm,
---                      cipSecProtocolFailure,
---                      cipSecNoSa
---                    }
---      STATUS current
---      DESCRIPTION
---         "This group contains the notifications for the IPsec MIB."
---      ::= { cipSecMIBGroups 7 }
+   cipSecNotificationGroup    NOTIFICATION-GROUP
+      NOTIFICATIONS {
+                      cikeTunnelStart,
+                      cikeTunnelStop,
+                      cikeSysFailure,
+                      cikeCertCrlFailure,
+                      cikeProtocolFailure,
+                      cikeNoSa,
+                      cipSecTunnelStart,
+                      cipSecTunnelStop,
+                      cipSecSysFailure,
+                      cipSecSetUpFailure,
+                      cipSecEarlyTunTerm,
+                      cipSecProtocolFailure,
+                      cipSecNoSa
+                    }
+      STATUS current
+      DESCRIPTION
+         "This group contains the notifications for the IPsec MIB."
+      ::= { cipSecMIBGroups 7 }
 
+
+   cipSecGWStatsGroup    OBJECT-GROUP
+      OBJECTS {
+--
+-- Phase1 IKE GW stats
+--
+                cikePhase1GWActiveTunnels,
+                cikePhase1GWPreviousTunnels,
+                cikePhase1GWInOctets,
+                cikePhase1GWInPkts,
+                cikePhase1GWInDropPkts,
+                cikePhase1GWInNotifys,
+                cikePhase1GWInP2Exchgs,
+                cikePhase1GWInP2ExchgInvalids,
+                cikePhase1GWInP2ExchgRejects,
+                cikePhase1GWInP2SaDelRequests,
+                cikePhase1GWOutOctets,
+                cikePhase1GWOutPkts,
+                cikePhase1GWOutDropPkts,
+                cikePhase1GWOutNotifys,
+                cikePhase1GWOutP2Exchgs,
+                cikePhase1GWOutP2ExchgInvalids,
+                cikePhase1GWOutP2ExchgRejects,
+                cikePhase1GWOutP2SaDelRequests,
+                cikePhase1GWInitTunnels,
+                cikePhase1GWInitTunnelFails,
+                cikePhase1GWRespTunnelFails,
+                cikePhase1GWSysCapFails,
+                cikePhase1GWAuthFails,
+                cikePhase1GWDecryptFails,
+                cikePhase1GWHashValidFails,
+                cikePhase1GWNoSaFails,
+--
+-- Phase2 IPsec GW stats
+--
+                cipSecPhase2GWActiveTunnels,
+                cipSecPhase2GWPreviousTunnels,
+                cipSecPhase2GWInOctets,
+                cipSecPhase2GWInOctWraps,
+                cipSecPhase2GWInDecompOctets,
+                cipSecPhase2GWInDecompOctWraps,
+                cipSecPhase2GWInPkts,
+                cipSecPhase2GWInDrops,
+                cipSecPhase2GWInReplayDrops,
+                cipSecPhase2GWInAuths,
+                cipSecPhase2GWInAuthFails,
+                cipSecPhase2GWInDecrypts,
+                cipSecPhase2GWInDecryptFails,
+                cipSecPhase2GWOutOctets,
+                cipSecPhase2GWOutOctWraps,
+                cipSecPhase2GWOutUncompOctets,
+                cipSecPhase2GWOutUncompOctWraps,
+                cipSecPhase2GWOutPkts,
+                cipSecPhase2GWOutDrops,
+                cipSecPhase2GWOutAuths,
+                cipSecPhase2GWOutAuthFails,
+                cipSecPhase2GWOutEncrypts,
+                cipSecPhase2GWOutEncryptFails,
+                cipSecPhase2GWProtocolUseFails,
+                cipSecPhase2GWNoSaFails,
+                cipSecPhase2GWSysCapFails
+                }
+      STATUS current
+      DESCRIPTION
+         ""
+      ::= { cipSecMIBGroups 8 }
 
 END
+
+
+

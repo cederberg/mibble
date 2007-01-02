@@ -14,7 +14,7 @@ IMPORTS
 
 
 ons15501MIB MODULE-IDENTITY
-    LAST-UPDATED "200203181230Z"
+    LAST-UPDATED "200208291600Z"
     ORGANIZATION "Cisco Systems, Inc."
     CONTACT-INFO
 	    "	Cisco Systems
@@ -30,6 +30,18 @@ ons15501MIB MODULE-IDENTITY
     DESCRIPTION
 	"The MIB definitions for ONS-15501 Optical 
 	 Amplifier."
+    REVISION      "200208291600Z"
+    DESCRIPTION
+	"The MIB definition for software release 4.0 of
+	 ONS15501. This release adds support for the AC model.
+	 Changes to the MIB include
+	  1. The power supply status attributes (2 new attributes)
+	  2. New OIDs for AC chassis and AC power supplies and system
+	  3. Object groups have been modified
+	  4. Conformance statements changed
+	  5. ons15501SysSwDownload expanded to support abort
+	  6. Definitions added for ons15501SysDateAndTime object
+	"
     REVISION      "200203181230Z"
     DESCRIPTION
 	"The first release for the MIB."
@@ -51,15 +63,31 @@ ons15501MIBConformance OBJECT IDENTIFIER ::= { ons15501MIB 6 }
 
 --	value returned for sysObjectID
 ons15501OIDSystem	OBJECT IDENTIFIER ::= { ons15501OIDs 1 }
+ons15501OIDSystemAC	OBJECT IDENTIFIER ::= { ons15501OIDs 3 }
 
 
 --	value returned for entPhysicalVendorType
 ons15501OIDEntity	OBJECT IDENTIFIER ::= { ons15501OIDs 2 }
 
+-- The chassis OID is applicable to ONS15501 DC 
 ons15501OIDChasiss	OBJECT IDENTIFIER ::= { ons15501OIDEntity 1 }
+
 ons15501OIDInPort	OBJECT IDENTIFIER ::= { ons15501OIDEntity 2 }
 ons15501OIDOutPort	OBJECT IDENTIFIER ::= { ons15501OIDEntity 3 }
+
+-- The power supply OID is applicable to ONS15501 DC 
 ons15501OIDPowerSupply	OBJECT IDENTIFIER ::= { ons15501OIDEntity 4 }
+
+-- ons15501OIDChassisAC is applicable to ONS15501 AC 
+ons15501OIDChassisAC	OBJECT IDENTIFIER ::= { ons15501OIDEntity 5 }
+
+-- The power supply OID is applicable to ONS15501 AC 
+ons15501OIDPowerSupplyAC	OBJECT IDENTIFIER
+    ::= { ons15501OIDEntity 6 }
+
+-- From version 4.0 onwards the power supply is modeled as 
+-- two different physical entities
+
 
 
 -- Textual Conventions
@@ -274,18 +302,27 @@ ons15501SysSwDownload OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-	    "Used to provide the information for
-	     downloading a new image to one of the flashes
-		NOTE: read on this attribute returns the last t/ftp command,
-		      without login/password.
-	     The string syntax is
+     "Used to control the image download to the flash banks.
+	NOTE: Read on this attribute returns the last t/ftp command,
+	      without login/password.
+	      For s/w release 4.0 and above, the value read back
+	      includes the Kilo-Bytes downloaded for last download
+	      command.
+	      It is the size of file downloaded (in KB), if the
+	      download has completed. If a download is in progress
+	      this value would correspond to Kilo-Bytes successfully 
+	      downloaded so far.
 
-	<mode>:<srvr-IP>:[<login>:<pass>:<path>]<fName>:<flashNo>[:passive]
+      For set the string syntax is one of the following
+      a. abort
+	    - Aborts the current download
+      b. ftp:<svr-IP>:<login>:<pass>:<path>:<fName>:<flash#>[:passive]
+	    - Download image using ftp
+      c. tftp:<srvr-IP>:<fName>:<flashNo>
+	    - Download image using tftp
 
-    where <mode>    - is `ftp` or `tftp`
-			  '<login>:<pass>:<path>:' not provided for tftp
-			  ':passive' not applicable for tftp.
-	  <srvr-IP> - is t/ftp server name
+      where 
+	  <svr-IP>  - is t/ftp server name
 
 	  <login>   - is login to be used for ftp (default anonymous)
 
@@ -301,11 +338,12 @@ ons15501SysSwDownload OBJECT-TYPE
 			there are no defaults for this command.
 			For TFTP Path information is part of the filename
 
-	  <flashNo> - which flash has to be burnt [1|2|3]
+	  <flash#>  - which flash has to be burnt [1|2|3]
 			NOTE: Burn to active bank fails
 
-	  passive   - if `passive` is specified, ftp is done using passive mode
-			(provided for FTP download across firewall).
+	  passive   - if `passive` is specified, ftp is done using
+		      passive mode (provided for FTP download across
+		      firewall).
 
 	  NOTE: None of the fields should contain ':' within them, as
 		    it is used as field separator."
@@ -572,6 +610,20 @@ ons15501SysAlarmStatus OBJECT-TYPE
     DESCRIPTION
 	    "Provides the highest severity alarm currently active."
     ::= { ons15501Sys 24 }
+
+ons15501SysDateAndTime OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+	    "The date and time of the System.
+	     The write will not succeed if the administrative
+	     state for NTP (ons15501NTPAdminStatus)
+	     is 'enabled'.
+	     Setting this attribute will autmatically change
+	     values for ons15501TrapLogEntryDateAndTime and
+	     ons15501ActAlarmDateAndTime."
+    ::= { ons15501Sys 25 }
 
 
 
@@ -1107,6 +1159,23 @@ ons15501DevAmbTempTrigger OBJECT-TYPE
     ::= { ons15501Attr 16 }
 
 
+ons15501PowerSupply1Status OBJECT-TYPE
+    SYNTAX      Ons15501AlarmStatus 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	    "Gives the status of power supply one."
+    ::= { ons15501Attr 17 }
+
+
+ons15501PowerSupply2Status OBJECT-TYPE
+    SYNTAX      Ons15501AlarmStatus 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+	    "Gives the status of power supply two."
+    ::= { ons15501Attr 18 }
+
 
 
 -- conformance information and compliance statements
@@ -1121,7 +1190,7 @@ ons15501MIBGroups
 
 
 ons15501FinalCompliance MODULE-COMPLIANCE
-    STATUS  current
+    STATUS  deprecated  -- superceded by ons15501Rel4Compliance
     DESCRIPTION
 	    "The compliance statement for final release ONS15501."
     MODULE  
@@ -1132,6 +1201,27 @@ ons15501FinalCompliance MODULE-COMPLIANCE
 			   ons15501TrapDescriptionGroup,
 			   ons15501FinalNotificationsGroup }
     ::= { ons15501MIBCompliances 1 }
+
+ons15501Rel4Compliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+	    "The compliance statement for 4.0 release ONS15501."
+    MODULE  
+	MANDATORY-GROUPS { ons15501SysInfoGroup2,
+			   ons15501CoreAttrGroup,
+			   ons15501TrapLogGroup,
+			   ons15501ActiveAlarmGroup,
+			   ons15501TrapDescriptionGroup,
+			   ons15501FinalNotificationsGroup }
+	GROUP  ons15501PowerSupplyStatusGroup
+	  DESCRIPTION
+	    "The status of power supply is available only for
+	     software version 4.0 and above."
+	GROUP  ons15501PowerSupplyLevelGroup
+	  DESCRIPTION
+	    "The level of power supply is available only for
+	     the DC series of ONS15501."
+    ::= { ons15501MIBCompliances 2 }
 
 
 ons15501SysInfoGroup OBJECT-GROUP
@@ -1161,7 +1251,7 @@ ons15501SysInfoGroup OBJECT-GROUP
 	      ons15501ActiveSoftwareVer,
 	      ons15501SysDeviceManagerList
 	    }
-    STATUS  current
+    STATUS  deprecated -- superceded by ons15501SysInfoGroup2
     DESCRIPTION
 	    "The basic group defines objects which are common to all
 	     Embedded Linux product series of Synchronous equipment."
@@ -1231,7 +1321,7 @@ ons15501FinalAttrGroup OBJECT-GROUP
 	      ons15501LaserStatus,
 	      ons15501GainTrigger
 	    }
-    STATUS  current
+    STATUS  deprecated -- superceded by ons15501CoreAttrGroup
     DESCRIPTION
 	    "The ons15501 group of attributes models the parameters
 	     in the EDFA." 
@@ -1245,6 +1335,91 @@ ons15501FinalNotificationsGroup NOTIFICATION-GROUP
 	    "The notification that carries all the exception 
 	     information."
     ::= { ons15501MIBGroups 6 }
+
+
+ons15501CoreAttrGroup OBJECT-GROUP
+    OBJECTS { 
+	      ons15501InputOpticalPower,
+	      ons15501InputOpticalPowerMean,
+	      ons15501InputOpticalPowerTrigger, 
+	      ons15501OutputOpticalPower,
+	      ons15501OutputSignalPower,
+	      ons15501OutputSignalPowerMean,
+	      ons15501OutputSignalPowerTrigger,
+	      ons15501ConfigOpticalGain,
+	      ons15501OpticalPowerGain, 
+	      ons15501DevAmbTemp,
+	      ons15501DevAmbTempMean,
+	      ons15501DevAmbTempTrigger,
+	      ons15501LaserStatus,
+	      ons15501GainTrigger
+	    }
+    STATUS  current
+    DESCRIPTION
+	    "The ons15501 group of attributes models the parameters
+	     in the EDFA. The power supply related attributes are
+	     not part of this group." 
+    ::= { ons15501MIBGroups 7 }
+
+
+ons15501PowerSupplyStatusGroup OBJECT-GROUP
+    OBJECTS {
+	      ons15501PowerSupply1Status, 
+	      ons15501PowerSupply2Status 
+	    }
+    STATUS  current
+    DESCRIPTION
+	    "The ons15501 group of attributes models the status
+	     of power supplies. The support for status was introduced
+	     in version 4.0."
+    ::= { ons15501MIBGroups 8 }
+
+ons15501PowerSupplyLevelGroup OBJECT-GROUP
+    OBJECTS {
+	      ons15501PowerSupply1Level, 
+	      ons15501PowerSupply2Level
+	    }
+    STATUS  current
+    DESCRIPTION
+	    "The ons15501 group of attributes provides the
+	     voltage level of power supplies. It is available only
+	     for DC series of ONS15501."
+    ::= { ons15501MIBGroups 9 }
+
+
+ons15501SysInfoGroup2 OBJECT-GROUP
+    OBJECTS {
+	      ons15501SysDevFlash1Image,
+	      ons15501SysDevFlash2Image,
+	      ons15501SysDevFlash3Image, 
+	      ons15501SysSwDownload,
+	      ons15501SysSwDownloadStatus,
+	      ons15501SysConfiguredImage,
+	      ons15501SysDevActiveImage,
+	      ons15501SysAlarmStatus, 
+	      ons15501PrimaryNTP, 
+	      ons15501SecondaryNTP, 
+	      ons15501NTPAdminStatus,
+	      ons15501NTPOperationalStatus,
+	      ons15501CLEICode, 
+	      ons15501InRemoteInfoUpdateTime,
+	      ons15501InRemoteChassisName,
+	      ons15501InRemotePortName,
+	      ons15501InRemoteAgentIpAddr,
+	      ons15501OutRemoteInfoUpdateTime,
+	      ons15501OutRemoteChassisName,
+	      ons15501OutRemotePortName,
+	      ons15501OutRemoteAgentIpAddr,
+	      ons15501LastConfigChangeTime,
+	      ons15501ActiveSoftwareVer,
+	      ons15501SysDeviceManagerList,
+	      ons15501SysDateAndTime
+	    }
+    STATUS  current
+    DESCRIPTION
+	    "The basic group defines objects which are common to all
+	     Embedded Linux product series of Synchronous equipment."
+    ::= { ons15501MIBGroups 10 }
 
 
 END

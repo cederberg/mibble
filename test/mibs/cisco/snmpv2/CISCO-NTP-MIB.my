@@ -3,7 +3,7 @@
 --
 -- February 2000, Vinod B C
 --
--- Copyright (c) 2000, 2002 by cisco Systems, Inc.
+-- Copyright (c) 2000, 2002, 2003 by cisco Systems, Inc.
 -- All rights reserved.
 --
 -- *****************************************************************
@@ -13,19 +13,19 @@ CISCO-NTP-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
         MODULE-IDENTITY, OBJECT-TYPE, Integer32,
-	IpAddress, Gauge32
+	IpAddress, Gauge32, Unsigned32
                 FROM SNMPv2-SMI
         TEXTUAL-CONVENTION, TruthValue, RowStatus
                 FROM SNMPv2-TC
         MODULE-COMPLIANCE, OBJECT-GROUP
                 FROM SNMPv2-CONF
-        Unsigned32
-                FROM CISCO-TC
+        InetAddress, InetAddressType
+                FROM INET-ADDRESS-MIB
         ciscoMgmt
                 FROM CISCO-SMI;
 
 ciscoNtpMIB MODULE-IDENTITY
-        LAST-UPDATED  "200202200000Z"
+        LAST-UPDATED  "200407230000Z"
         ORGANIZATION  "Cisco Systems, Inc."
         CONTACT-INFO
                 "       Cisco Systems
@@ -136,6 +136,20 @@ ciscoNtpMIB MODULE-IDENTITY
                 2. Peer: Refers to an instantiation of the NTP
                         protocol on a remote processor connected by
                         a network path from the local host."
+        REVISION     "200407230000Z"
+        DESCRIPTION
+                "Added cntpPeersPeerName and cntpPeersPeerType
+                 objects to cntpPeerVarTable."
+        REVISION     "200307290000Z"
+        DESCRIPTION
+                "Added cntpPeersPrefPeer object to 
+                 cntpPeersVarTable."
+        REVISION     "200307070000Z"
+        DESCRIPTION
+                "ciscoNtpPeersGroup is deprecated by
+                ciscoNtpPeersGroupRev1.
+                ciscoNtpMIBCompliance is deprecated by
+                ciscoNtpMIBComplianceRev1."
         REVISION     "200202200000Z"
         DESCRIPTION
                 "cntpPeersUpdateTime is deprecated by
@@ -440,11 +454,12 @@ cntpPeersVarEntry OBJECT-TYPE
 
                 Entries can also be created by the management station
                 by setting values for the following objects:
-                cntpPeersPeerAddress, cntpPeersHostAddress and
+                cntpPeersPeerAddress or cntpPeersPeerName, 
+                cntpPeersHostAddress and
                 cntpPeersMode and making the cntpPeersEntryStatus as
                 active(1).  At the least, the management station has
-                to set a value for cntpPeersPeerAddress to make the
-                row active."
+                to set a value for cntpPeersPeerAddress or
+                cntpPeersPeerName to make the row active."
         INDEX       { cntpPeersAssocId }
         ::= { cntpPeersVarTable 1 }
 
@@ -469,14 +484,17 @@ CntpPeersVarEntry ::= SEQUENCE {
         cntpPeersReceiveTime        NTPTimeStamp,
         cntpPeersTransmitTime       NTPTimeStamp,
         cntpPeersUpdateTime         Integer32,
-        cntpPeersUpdateTimeRev1     Unsigned32,
         cntpPeersReach              Integer32,
         cntpPeersTimer              Integer32,
         cntpPeersOffset             NTPSignedTimeValue,
         cntpPeersDelay              NTPSignedTimeValue,
         cntpPeersDispersion         NTPUnsignedTimeValue,
         cntpPeersFilterValidEntries Gauge32,
-        cntpPeersEntryStatus        RowStatus
+        cntpPeersEntryStatus        RowStatus,
+        cntpPeersUpdateTimeRev1     Unsigned32,
+        cntpPeersPrefPeer           TruthValue,
+        cntpPeersPeerType           InetAddressType,
+        cntpPeersPeerName           InetAddress
         }
  
 cntpPeersAssocId OBJECT-TYPE
@@ -506,8 +524,9 @@ cntpPeersPeerAddress OBJECT-TYPE
         STATUS      current
         DESCRIPTION
                 "The IP address of the peer.  When creating a new
-                association, a value for this object should be set
-                before the row is made active."
+                association, a value should be set either for this
+                object or the corresponding instance of 
+                cntpPeersPeerName, before the row is made active."
         ::= { cntpPeersVarEntry 3 }
 
 cntpPeersPeerPort OBJECT-TYPE
@@ -516,7 +535,7 @@ cntpPeersPeerPort OBJECT-TYPE
         STATUS      current
         DESCRIPTION
                 "The UDP port number on which the peer receives NTP
-                mesages."
+                messages."
         ::= { cntpPeersVarEntry 4 }
 
 cntpPeersHostAddress OBJECT-TYPE
@@ -557,7 +576,7 @@ cntpPeersMode OBJECT-TYPE
         STATUS      current
         DESCRIPTION
                 "The association mode of the NTP server, with values
-                coded as followw,
+                coded as follows,
                 0, unspecified
                 1, symmetric active - A host operating in this mode
                         sends periodic messages regardless of the
@@ -732,17 +751,6 @@ cntpPeersUpdateTime OBJECT-TYPE
                 integer part of the NTPTimestamp."
         ::= { cntpPeersVarEntry 20 }
 
-cntpPeersUpdateTimeRev1 OBJECT-TYPE
-        SYNTAX      Unsigned32
-        MAX-ACCESS  read-only
-        STATUS      current
-        DESCRIPTION
-                "The local time, when the most recent NTP message was
-                received from the peer that was used to calculate the
-                skew dispersion.  This represents only the 32-bit
-                integer part of the NTPTimestamp."
-        ::= { cntpPeersVarEntry 28 }
-
 cntpPeersReach OBJECT-TYPE
         SYNTAX      Integer32 (0..255)
         MAX-ACCESS  read-only
@@ -839,10 +847,61 @@ cntpPeersEntryStatus OBJECT-TYPE
         DESCRIPTION
                 "The status object for this row. When a management
                 station is creating a new row, it should set the
-                value for cntpPeersPeerAddress atleast, before the row
-                can be made active(1)."
+                value for cntpPeersPeerAddress at least, before the
+                row can be made active(1)."
         ::= { cntpPeersVarEntry 27 }
 
+cntpPeersUpdateTimeRev1 OBJECT-TYPE
+        SYNTAX      Unsigned32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+                "The local time, when the most recent NTP message was
+                received from the peer that was used to calculate the
+                skew dispersion.  This represents only the 32-bit
+                integer part of the NTPTimestamp."
+        ::= { cntpPeersVarEntry 28 }
+
+cntpPeersPrefPeer OBJECT-TYPE
+        SYNTAX      TruthValue
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+                "This object specifies whether this peer is the
+                 preferred one over the others. By default, when
+                 the value of this object is 'false', NTP chooses 
+                 the peer with which to synchronize the time on 
+                 the local system. If this object is set
+                 to 'true', NTP will choose the corresponding
+                 peer to synchronize the time with. If multiple
+                 entries have this object set to 'true', NTP will
+                 choose the first one to be set. This object is
+                 a means to override the selection of the peer by
+                 NTP."
+        DEFVAL { false }
+        ::= { cntpPeersVarEntry 29 }
+
+cntpPeersPeerType OBJECT-TYPE
+        SYNTAX      InetAddressType
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+                "Represents the type of the corresponding instance 
+                 of cntpPeersPeerName object."
+        DEFVAL { ipv4 }
+        ::= { cntpPeersVarEntry 30 }
+
+cntpPeersPeerName OBJECT-TYPE
+        SYNTAX      InetAddress
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+                "The address of the peer. When creating a new
+                 association, a value must be set for either this
+                 object or the corresponding instance of
+                 cntpPeersPeerAddress object, before the row
+                 is made active."
+        ::= { cntpPeersVarEntry 31 }
 --
 -- Filter Group
 --
@@ -967,7 +1026,8 @@ ciscoNtpMIBGroups      OBJECT IDENTIFIER
 -- Compliance Statement
 
 ciscoNtpMIBCompliance MODULE-COMPLIANCE
-        STATUS      current
+        STATUS      deprecated
+                    -- superceded by ciscoNtpMIBComplianceRev1
         DESCRIPTION
                 "The compliance statement for Cisco agents which
                 implement the Cisco NTP MIB."
@@ -982,6 +1042,69 @@ ciscoNtpMIBCompliance MODULE-COMPLIANCE
                         Section 4 are implemented by the agent."
 
         ::= { ciscoNtpMIBCompliances 1 }
+
+ciscoNtpMIBComplianceRev1 MODULE-COMPLIANCE
+        STATUS      deprecated
+                  -- superceded by ciscoNtpMIBComplianceRev2
+        DESCRIPTION
+                "The compliance statement for Cisco agents which
+                implement the Cisco NTP MIB."
+        MODULE -- this module
+                MANDATORY-GROUPS { ciscoNtpSysGroup,
+                                   ciscoNtpPeersGroupRev1 }
+
+                GROUP ciscoNtpFilterGroup
+                DESCRIPTION
+                        "This group is required only if the
+                        clock-filer algorithms defined in RFC-1305,
+                        Section 4 are implemented by the agent."
+
+        ::= { ciscoNtpMIBCompliances 2 }
+
+ciscoNtpMIBComplianceRev2 MODULE-COMPLIANCE
+        STATUS      deprecated
+                 -- superceded by ciscoNtpMIBComplianceRev3 
+        DESCRIPTION
+                "The compliance statement for Cisco agents which
+                implement the Cisco NTP MIB."
+        MODULE -- this module
+                MANDATORY-GROUPS { ciscoNtpSysGroup,
+                                   ciscoNtpPeersGroupRev1 }
+
+                GROUP ciscoNtpFilterGroup
+                DESCRIPTION
+                        "This group is required only if the
+                        clock-filer algorithms defined in RFC-1305,
+                        Section 4 are implemented by the agent."
+
+                GROUP ciscoNtpPeerExtGroup
+                DESCRIPTION
+                        "This group is mandatory for agents that
+                         support extended NTP configuration."
+
+        ::= { ciscoNtpMIBCompliances 3 }
+
+ciscoNtpMIBComplianceRev3 MODULE-COMPLIANCE
+        STATUS      current
+        DESCRIPTION
+                "The compliance statement for Cisco agents which
+                implement the Cisco NTP MIB."
+        MODULE -- this module
+                MANDATORY-GROUPS { ciscoNtpSysGroup,
+                                   ciscoNtpPeersGroupRev2 }
+
+                GROUP ciscoNtpFilterGroup
+                DESCRIPTION
+                        "This group is required only if the
+                        clock-filer algorithms defined in RFC-1305,
+                        Section 4 are implemented by the agent."
+
+                GROUP ciscoNtpPeerExtGroup
+                DESCRIPTION
+                        "This group is mandatory for agents that
+                         support extended NTP configuration."
+
+        ::= { ciscoNtpMIBCompliances 4 }
 
 -- Units of Conformance:
 
@@ -1024,7 +1147,6 @@ ciscoNtpPeersGroup OBJECT-GROUP
                 cntpPeersReceiveTime,
                 cntpPeersTransmitTime,
                 cntpPeersUpdateTime,
-                cntpPeersUpdateTimeRev1,
                 cntpPeersReach,
                 cntpPeersTimer,
                 cntpPeersOffset,
@@ -1033,7 +1155,7 @@ ciscoNtpPeersGroup OBJECT-GROUP
                 cntpPeersFilterValidEntries,
                 cntpPeersEntryStatus
         }
-        STATUS      current
+        STATUS      deprecated -- superceded by ciscoNtpPeersGroupRev1
         DESCRIPTION
                 "The NTP peer variables."
         ::= { ciscoNtpMIBGroups 2 }
@@ -1048,5 +1170,84 @@ ciscoNtpFilterGroup OBJECT-GROUP
         DESCRIPTION
                 "The NTP clock-filter variables."
         ::= { ciscoNtpMIBGroups 3 }
+
+ciscoNtpPeersGroupRev1 OBJECT-GROUP
+        OBJECTS {
+                cntpPeersConfigured,
+                cntpPeersPeerAddress,
+                cntpPeersPeerPort,
+                cntpPeersHostAddress,
+                cntpPeersHostPort,
+                cntpPeersLeap,
+                cntpPeersMode,
+                cntpPeersStratum,
+                cntpPeersPeerPoll,
+                cntpPeersHostPoll,
+                cntpPeersPrecision,
+                cntpPeersRootDelay,
+                cntpPeersRootDispersion,
+                cntpPeersRefId,
+                cntpPeersRefTime,
+                cntpPeersOrgTime,
+                cntpPeersReceiveTime,
+                cntpPeersTransmitTime,
+                cntpPeersUpdateTimeRev1,
+                cntpPeersReach,
+                cntpPeersTimer,
+                cntpPeersOffset,
+                cntpPeersDelay,
+                cntpPeersDispersion,
+                cntpPeersFilterValidEntries,
+                cntpPeersEntryStatus
+        }
+        STATUS      deprecated
+        DESCRIPTION
+                "The NTP peer variables."
+        ::= { ciscoNtpMIBGroups 4 }
+
+ciscoNtpPeerExtGroup OBJECT-GROUP
+        OBJECTS {
+                cntpPeersPrefPeer
+        }
+        STATUS      current
+        DESCRIPTION
+                "The extended set of NTP peer variable(s)."
+        ::= { ciscoNtpMIBGroups 5 }
+
+ciscoNtpPeersGroupRev2 OBJECT-GROUP
+        OBJECTS {
+                cntpPeersConfigured,
+                cntpPeersPeerAddress,
+                cntpPeersPeerPort,
+                cntpPeersHostAddress,
+                cntpPeersHostPort,
+                cntpPeersLeap,
+                cntpPeersMode,
+                cntpPeersStratum,
+                cntpPeersPeerPoll,
+                cntpPeersHostPoll,
+                cntpPeersPrecision,
+                cntpPeersRootDelay,
+                cntpPeersRootDispersion,
+                cntpPeersRefId,
+                cntpPeersRefTime,
+                cntpPeersOrgTime,
+                cntpPeersReceiveTime,
+                cntpPeersTransmitTime,
+                cntpPeersUpdateTimeRev1,
+                cntpPeersReach,
+                cntpPeersTimer,
+                cntpPeersOffset,
+                cntpPeersDelay,
+                cntpPeersDispersion,
+                cntpPeersFilterValidEntries,
+                cntpPeersEntryStatus,
+                cntpPeersPeerName,
+                cntpPeersPeerType
+        }
+        STATUS      current
+        DESCRIPTION
+                "The NTP peer variables."
+        ::= { ciscoNtpMIBGroups 6 }
 
 END

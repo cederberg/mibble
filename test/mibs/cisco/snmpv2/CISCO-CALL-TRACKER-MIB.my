@@ -1,9 +1,9 @@
--- *****************************************************************
+ -- *****************************************************************
 -- CISCO-CALL-TRACKER-MIB.my: Call Progress and Status Tracking MIB
 --
 -- March 2000, Ed Richardson
 --
--- Copyright (c) 2000 by cisco Systems, Inc.
+-- Copyright (c) 2000, 2004 by cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
 --
@@ -17,28 +17,26 @@ IMPORTS
         OBJECT-TYPE,
         IpAddress,
         Gauge32,
-        Integer32
+        Integer32,
+        Unsigned32
                 FROM SNMPv2-SMI
         MODULE-COMPLIANCE,
-        OBJECT-GROUP
+        OBJECT-GROUP,
+        NOTIFICATION-GROUP
                 FROM SNMPv2-CONF
         DisplayString,
         TimeStamp,
         TruthValue,
         TEXTUAL-CONVENTION
                 FROM SNMPv2-TC
-        Unsigned32
-                FROM CISCO-TC
         ciscoMgmt
                 FROM CISCO-SMI
--- If DIAL-CONTROL-MIB not available, comment the following two
--- lines and use AbsoluteCounter32 definition below.
         AbsoluteCounter32
                 FROM DIAL-CONTROL-MIB;
  
  
 ciscoCallTrackerMIB MODULE-IDENTITY
-        LAST-UPDATED    "200006070000Z"
+        LAST-UPDATED    "200504120000Z"
         ORGANIZATION    "Cisco Systems, Inc."
         CONTACT-INFO
                 "       Cisco Systems
@@ -65,6 +63,21 @@ ciscoCallTrackerMIB MODULE-IDENTITY
                  data terminal (e.g., Personal Computer) to a
                  data network (e.g., Internet).
                 "
+        REVISION        "200504120000Z"
+        DESCRIPTION
+                "[1] CctCallCategory - added syncData
+                 [2] CctCallCategory - added lapb-ta
+                 [3] Added new textual convention CctCallSigType
+                 [4] Added cctActiveCallSignalingType to cctActiveTable
+                 [5] Added cctHistoryCallSignalingType to
+                     cctHistoryTable
+                "
+        REVISION        "200402020000Z"
+        DESCRIPTION
+                "Included mgcpData in CctCallCategory."
+        REVISION        "200002100000Z"
+        DESCRIPTION
+                "Initial version of this MIB."
         ::= { ciscoMgmt 163 }
 
 
@@ -134,10 +147,16 @@ CctCallCategory ::= TEXTUAL-CONVENTION
              other       - None of the following
              modem       - Modem call
              isdn-sync   - ISDN sync digital call
+                           Now mapped to syncData
              v110        - V110 Call
              v120        - V120 Call
              cas-digital - Channel Associated Signaling
                            (CAS) 56k data call
+             mgcpData    - MGCP data call
+                           Now mapped to syncData
+             syncData    - Sync digital data call for any 
+                           call control
+             lapb-ta     - LAPB or LAPB-TA call
             "
         SYNTAX      INTEGER {
             none         (1),
@@ -146,25 +165,32 @@ CctCallCategory ::= TEXTUAL-CONVENTION
             isdnSync     (4),
             v110         (5),
             v120         (6),
-            casDigital   (7)
+            casDigital   (7),
+            mgcpData     (8),
+            syncData     (9),
+            lapb-ta      (10)
         }
 
-
-
--- Import AbsoluteCounter32 textual convention from
--- DIAL-CONTROL-MIB or uncomment this definition.
-
---AbsoluteCounter32 ::= TEXTUAL-CONVENTION
---        STATUS      current
---        DESCRIPTION
---            "Represents a Counter32-like value that starts at
---             zero, does not decrease, and does not wrap.
 --
---             Should the counter overflow, it locks at the
---             maximum value of 4,294,967,295.
---            "
---        SYNTAX      Gauge32
+--  Call Signaling Type textual convention
+--
+CctCallSigType ::= TEXTUAL-CONVENTION
+        STATUS      current
+        DESCRIPTION
+            "Represents supported signaling types for a call.
 
+             Unknown    - Signaling origin of call type unknown.
+             External   - Signaling origin of call type by external 
+                          agent e.g. MGCP, H.248
+             Q931       - Signaling origin of call type by Q.931/ISDN
+             Autodetect - Signaling of call type by automatic detection 
+            "
+        SYNTAX      INTEGER {
+            unknown      (1),
+            external     (2),
+            q931         (3),
+            autoDetect   (4)
+        }
 
 
 -- Call Tracker MIB objects definitions
@@ -305,7 +331,8 @@ CctActiveEntry ::=
             cctActiveMpBundleId              Unsigned32,
             cctActiveChargedUnits            AbsoluteCounter32,
             cctActiveReceiveBytes            AbsoluteCounter32,
-            cctActiveTransmitBytes           AbsoluteCounter32
+            cctActiveTransmitBytes           AbsoluteCounter32,
+            cctActiveCallSignalingType       CctCallSigType
         }
 
 
@@ -755,6 +782,16 @@ cctActiveTransmitBytes OBJECT-TYPE
         ::= { cctActiveEntry 27 }
 
 
+cctActiveCallSignalingType OBJECT-TYPE
+        SYNTAX     CctCallSigType
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+            "Signaling type used to setup the call.
+            "
+        ::= { cctActiveEntry 28 }
+
+
 
 -- *****************************************************************
 -- Call Tracker History Group
@@ -883,7 +920,7 @@ cctHistoryEntry OBJECT-TYPE
              longer than cctHistoryTableRetainTimer minutes.
 
              An entry is also removed if the table is full and a new
-             entry needs to be created to accomondate a terminated
+             entry needs to be created to accommodate a terminated
              call. The oldest entry in the table will be deleted.
             "
         INDEX       { cctHistoryIndex }
@@ -921,7 +958,8 @@ CctHistoryEntry ::=
             cctHistoryReceiveBytes              Gauge32,
             cctHistoryTransmitBytes             Gauge32,
             cctHistoryDisconnectTime            TimeStamp,
-            cctHistoryDisconnectReasonText      DisplayString
+            cctHistoryDisconnectReasonText      DisplayString,
+            cctHistoryCallSignalingType         CctCallSigType
         }
 
 cctHistoryIndex OBJECT-TYPE
@@ -1407,6 +1445,15 @@ cctHistoryDisconnectReasonText OBJECT-TYPE
         ::= { cctHistoryEntry 31 }
 
 
+cctHistoryCallSignalingType OBJECT-TYPE
+        SYNTAX     CctCallSigType
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+            "Signaling type used to setup the call.
+            "
+        ::= { cctHistoryEntry 32 }
+
 
 
 -- *****************************************************************
@@ -1480,7 +1527,7 @@ cctMIBGroups      OBJECT IDENTIFIER ::=
 -- compliance statements
 
 cctMIBCompliance MODULE-COMPLIANCE
-        STATUS      current
+        STATUS      deprecated -- superceded by cctMIBComplianceRev1
         DESCRIPTION
             "The compliance statement for entities which
              implement the CISCO CALL TRACKER MIB"
@@ -1490,13 +1537,28 @@ cctMIBCompliance MODULE-COMPLIANCE
               cctGeneralGroup,
               cctActiveGroup,
               cctHistoryGroup,
-              cctNotificationConfigGroup
--- If NOTIFICATION-GROUP does not compile, comment out the line below
---              cctNotificationGroup
+              cctNotificationConfigGroup,
+              cctNotificationGroup
             }
 
         ::= { cctMIBCompliances 1 }
 
+cctMIBComplianceRev1 MODULE-COMPLIANCE
+        STATUS      current
+        DESCRIPTION
+            "The compliance statement for entities which
+             implement the CISCO CALL TRACKER MIB"
+        MODULE      -- this module
+        MANDATORY-GROUPS
+            {
+              cctGeneralGroup,
+              cctActiveGroupRev1,
+              cctHistoryGroupRev1,
+              cctNotificationConfigGroup,
+              cctNotificationGroup
+            }
+
+        ::= { cctMIBCompliances 2 }
 
 -- units of conformance
 
@@ -1543,7 +1605,7 @@ cctActiveGroup OBJECT-GROUP
             cctActiveReceiveBytes,
             cctActiveTransmitBytes
         }
-        STATUS      current
+        STATUS      deprecated -- superceded by cctActiveGroupRev1
         DESCRIPTION
             "A collection of objects providing the
              active call information.
@@ -1588,7 +1650,7 @@ cctHistoryGroup OBJECT-GROUP
             cctHistoryDisconnectTime,
             cctHistoryDisconnectReasonText
         }
-        STATUS      current
+        STATUS      deprecated -- superceded by cctHistoryGroupRev1
         DESCRIPTION
             "A collection of objects providing the
              historical call information.
@@ -1606,20 +1668,102 @@ cctNotificationConfigGroup OBJECT-GROUP
             "
         ::= { cctMIBGroups 4 }
 
--- If NOTIFICATION-GROUP does not compile, comment out all the lines
--- for cctNotificationGroup
---
---cctNotificationGroup NOTIFICATION-GROUP
---        NOTIFICATIONS {
---            cctCallSetupNotification,
---            cctCallTerminateNotification
---        }
---        STATUS current
---        DESCRIPTION
---            "The collection of notifications used for
---             call status changes.
---            "
---        ::= { cctMIBGroups 5 }
+cctNotificationGroup NOTIFICATION-GROUP
+        NOTIFICATIONS {
+            cctCallSetupNotification,
+            cctCallTerminateNotification
+        }
+        STATUS current
+        DESCRIPTION
+            "The collection of notifications used for
+             call status changes.
+            "
+        ::= { cctMIBGroups 5 }
+
+cctActiveGroupRev1 OBJECT-GROUP
+        OBJECTS {
+            cctActiveTableNumberEntries,
+            cctActiveTableHighWaterMark,
+            cctActiveSetupTime,
+            cctActiveOrigin,
+            cctActiveConnectionTime,
+            cctActivePhysicalLayerReadyTime,
+            cctActiveServiceUpTime,
+            cctActiveServiceType,
+            cctActiveUserValidationTime,
+            cctActiveUserId,
+            cctActiveUserIpAddr,
+            cctActiveUserSubnetMask,
+            cctActiveAccountingSessionId,
+            cctActiveCallCategory,
+            cctActiveInitialRxRate,
+            cctActiveInitialTxRate,
+            cctActiveResourceSlot,
+            cctActiveResourcePort,
+            cctActiveEntrySlot,
+            cctActiveEntryPort,
+            cctActiveEntryDs1,
+            cctActiveEntryChannel,
+            cctActiveCalledPartyId,
+            cctActiveCallingPartyId,
+            cctActiveMpBundleId,
+            cctActiveChargedUnits,
+            cctActiveReceiveBytes,
+            cctActiveTransmitBytes,
+            cctActiveCallSignalingType
+        }
+        STATUS      current
+        DESCRIPTION
+            "A collection of objects providing the
+             active call information.
+            "
+        ::= { cctMIBGroups 6 }
+
+cctHistoryGroupRev1 OBJECT-GROUP
+        OBJECTS {
+            cctHistoryTableEntriesLimit,
+            cctHistoryTableMaxEntries,
+            cctHistoryTableRetainTimer,
+            cctHistoryTableNumberEntries,
+            cctHistoryTableHighWaterMark,
+            cctHistoryTableNewestIndex,
+            cctHistoryCallId,
+            cctHistorySetupTime,
+            cctHistoryOrigin,
+            cctHistoryConnectionTime,
+            cctHistoryPhysicalLayerReadyTime,
+            cctHistoryServiceUpTime,
+            cctHistoryServiceType,
+            cctHistoryUserValidationTime,
+            cctHistoryUserId,
+            cctHistoryUserIpAddr,
+            cctHistoryUserSubnetMask,
+            cctHistoryAccountingSessionId,
+            cctHistoryCallCategory,
+            cctHistoryInitialRxRate,
+            cctHistoryInitialTxRate,
+            cctHistoryResourceSlot,
+            cctHistoryResourcePort,
+            cctHistoryEntrySlot,
+            cctHistoryEntryPort,
+            cctHistoryEntryDs1,
+            cctHistoryEntryChannel,
+            cctHistoryCalledPartyId,
+            cctHistoryCallingPartyId,
+            cctHistoryMpBundleId,
+            cctHistoryChargedUnits,
+            cctHistoryReceiveBytes,
+            cctHistoryTransmitBytes,
+            cctHistoryDisconnectTime,
+            cctHistoryDisconnectReasonText,
+            cctHistoryCallSignalingType
+        }
+        STATUS      current
+        DESCRIPTION
+            "A collection of objects providing the
+             historical call information.
+            "
+        ::= { cctMIBGroups 7 }
 
 END
 

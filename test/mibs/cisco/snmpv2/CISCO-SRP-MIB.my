@@ -3,7 +3,7 @@
 --
 -- April 2000, Stan Jedrysiak
 --
--- Copyright (c) 2000-2001 by cisco Systems, Inc.
+-- Copyright (c) 2000-2005 by cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
 
@@ -15,10 +15,9 @@ IMPORTS
         NOTIFICATION-TYPE,
         Integer32,
         Counter32,
-        Counter64
-                FROM SNMPv2-SMI
+        Counter64,
         Unsigned32
-                FROM CISCO-TC         
+                FROM SNMPv2-SMI
         MacAddress,
         TruthValue,
         TimeStamp,
@@ -26,18 +25,16 @@ IMPORTS
         TEXTUAL-CONVENTION
                 FROM SNMPv2-TC         
         ifIndex
-                FROM RFC1213-MIB
+                FROM IF-MIB
         ciscoExperiment
                 FROM CISCO-SMI
-        CounterBasedGauge64
-                FROM HCNUM-TC
         MODULE-COMPLIANCE,
         OBJECT-GROUP,
         NOTIFICATION-GROUP
-                FROM SNMPv2-CONF;          -- RFC1904
+                FROM SNMPv2-CONF;
 
 ciscosrpMIB  MODULE-IDENTITY
-        LAST-UPDATED        "200103280000Z"
+        LAST-UPDATED        "200512190000Z"
         ORGANIZATION        "Cisco Systems, Inc."
         CONTACT-INFO
                 "       Cisco Systems
@@ -53,6 +50,16 @@ ciscosrpMIB  MODULE-IDENTITY
         DESCRIPTION
                "The MIB module to describe objects for Spatial Reuse
                 Protocol (SRP) interface layer."
+        REVISION        "200512190000Z"
+        DESCRIPTION
+                "Updated the mib to import, Unsigned32 from SNMPv2-SMI 
+                 instead of CISCO-TC and ifIndex from IF-MIB instead
+                 of RFC1213-MIB.
+                 Modified the PerfCurrentCount64 and PerfIntervalCount64
+                 as per the HCPerfCurrentCount and HCPerfIntervalCount TCs
+                 in RFC3705. Replaced the use of CounterBasedGauge64 with
+                 PerfCurrentCount64 or PerfIntervalCount64.
+                 Added a new compliance including all the groups."
         REVISION        "200103280000Z"
         DESCRIPTION
                  "Second version of this MIB module.
@@ -144,53 +151,89 @@ IpsMode ::= TEXTUAL-CONVENTION
 PerfCurrentCount64 ::= TEXTUAL-CONVENTION
      STATUS  current
      DESCRIPTION
-              "A counter associated with a
-               performance measurement in a current 15
-               minute measurement interval. The value
-               of this counter starts from zero and is
-               increased when associated events occur,
-               until the end of the 15 minute interval.
-               At that time the value of the counter is
-               stored in the first 15 minute history
-               interval, and the CurrentCount is
-               restarted at zero. In the
-               case where the agent has no valid data
-               available for the current interval the
-               corresponding object instance is not
-               available and upon a retrieval request
-               a corresponding error message shall be
-               returned to indicate that this instance
-               does not exist (for example, a noSuchInstance
-               for SNMPv2 GET operation)."
-     SYNTAX  CounterBasedGauge64
+            "A gauge associated with a performance measurement in a
+            current 15 minute measurement interval.  The value of an
+            object with an HCPerfCurrentCount syntax starts from zero
+            and is increased when associated events occur, until the
+            end of the 15 minute interval.  At that time the value of
+            the gauge is stored in the first 15 minute history
+            interval, and the gauge is restarted at zero.  In the case
+            where the agent has no valid data available for the
+            current interval, the corresponding object instance is not
+            available and upon a retrieval request a corresponding
+            error message shall be returned to indicate that this
+            instance does not exist.
+
+            This count represents a non-negative integer, which
+            may increase or decrease, but shall never exceed 2^64-1
+            (18446744073709551615 decimal), nor fall below 0.  The
+            value of an object with HCPerfCurrentCount syntax
+            assumes its maximum value whenever the underlying count
+            exceeds 2^64-1.  If the underlying count subsequently
+            decreases below 2^64-1 (due, e.g., to a retroactive
+            adjustment as a result of entering or exiting unavailable
+            time), then the object's value also decreases.
+
+            Note that this TC is not strictly supported in SMIv2,
+            because the 'always increasing' and 'counter wrap'
+            semantics associated with the Counter64 base type are not
+            preserved.  It is possible that management applications
+            which rely solely upon the (Counter64) ASN.1 tag to
+            determine object semantics will mistakenly operate upon
+            objects of this type as they would for Counter64 objects.
+
+            This textual convention represents a limited and short-
+            term solution, and may be deprecated as a long term
+            solution is defined and deployed to replace it."
+     SYNTAX  Counter64
 
 PerfIntervalCount64 ::= TEXTUAL-CONVENTION
      STATUS  current
      DESCRIPTION
-              "A counter associated with a
-               performance measurement in a previous
-               15 minute measurement interval. In the
-               case where the agent has no valid data
-               available for a particular interval the
-               corresponding object instance is not
-               available and upon a retrieval request
-               a corresponding error message shall be
-               returned to indicate that this instance
-               does not exist (for example, a noSuchInstance
-               for SNMPv2 GET operation).
-               In a system supporting
-               a history of n intervals with
-               IntervalCount(1) and IntervalCount(n) the
-               most and least recent intervals
-               respectively, the following applies at
-               the end of a 15 minute interval:
-               - discard the value of IntervalCount(n)
-               - the value of IntervalCount(i) becomes that
-                 of IntervalCount(i-1) for n >= i > 1
-               - the value of IntervalCount(1) becomes that
-                 of CurrentCount
-               - the TotalCount, if supported, is adjusted."
-     SYNTAX  CounterBasedGauge64
+            "A gauge associated with a performance measurement in
+            a previous 15 minute measurement interval.  In the case
+            where the agent has no valid data available for a
+            particular interval, the corresponding object instance is
+            not available and upon a retrieval request a corresponding
+            error message shall be returned to indicate that this
+            instance does not exist.
+
+            Let X be an object with HCPerfIntervalCount syntax
+            Let Y be an object with HCPerfCurrentCount syntax.
+            Let Z be an object with HCPerfTotalCount syntax.
+            Then, in a system supporting a history of n intervals with
+            X(1) and X(n) the most and least recent intervals
+            respectively, the following applies at the end of a 15
+            minute interval:
+
+               - discard the value of X(n)
+               - the value of X(i) becomes that of X(i-1)
+                 for n >= i > 1
+               - the value of X(1) becomes that of Y.
+               - the value of Z, if supported, is adjusted.
+
+            This count represents a non-negative integer, which
+            may increase or decrease, but shall never exceed 2^64-1
+            (18446744073709551615 decimal), nor fall below 0.  The
+            value of an object with HCPerfIntervalCount syntax
+            assumes its maximum value whenever the underlying count
+            exceeds 2^64-1.  If the underlying count subsequently
+            decreases below 2^64-1 (due, e.g., to a retroactive
+            adjustment as a result of entering or exiting unavailable
+            time), then the value of the object also decreases.
+
+            Note that this TC is not strictly supported in SMIv2,
+            because the 'always increasing' and 'counter wrap'
+            semantics associated with the Counter64 base type are not
+            preserved.  It is possible that management applications
+            which rely solely upon the (Counter64) ASN.1 tag to
+            determine object semantics will mistakenly operate upon
+            objects of this type as they would for Counter64 objects.
+
+            This textual convention represents a limited and short-
+            term solution, and may be deprecated as a long term
+            solution is defined and deployed to replace it."
+     SYNTAX  Counter64
 
 
 srpMAC          OBJECT IDENTIFIER ::= { ciscosrpMIB 1 }
@@ -378,8 +421,8 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
           The minimum value of n is 4.
           The default of n is 32.
           The maximum value of n is 96.
-          The value will be <n> unless the measurement was
-          (re-)started within the last (<n>*15) minutes, in which
+          The value will be  unless the measurement was
+          (re-)started within the last (*15) minutes, in which
           case the value will be the number of complete 15
           minute intervals for which the agent has at least
           some data. In certain cases (e.g., in the case
@@ -886,40 +929,40 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
                    InterfaceSide,
 -- Rx PhysLayer LowPri counters 
            srpRingCurUcastLowPriPktsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurUcastLowPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurMcastLowPriPktsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurMcastLowPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
 -- Rx PhysLayer High Priority counters  
            srpRingCurUcastHighPriPktsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurUcastHighPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurMcastHighPriPktsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurMcastHighPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
 -- Tx PhysLayer LowPri counters 
            srpRingCurUcastLowPriPktsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurUcastLowPriOctetsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurMcastLowPriPktsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurMcastLowPriOctetsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
 -- Tx PhysLayer High Priority counters 
            srpRingCurUcastHighPriPktsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurUcastHighPriOctetsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurMcastHighPriPktsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurMcastHighPriOctetsOut
-                   CounterBasedGauge64
+                   PerfCurrentCount64
 
        }
 
@@ -935,7 +978,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
 -- Rx PhysLayer: Indicate the amount of traffic
 -- received from the PhysLayer medium. 
    srpRingCurUcastLowPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -946,7 +989,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 2 }
 
    srpRingCurUcastLowPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64   
+       SYNTAX  PerfCurrentCount64   
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -957,7 +1000,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 3 }
 
    srpRingCurMcastLowPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -968,7 +1011,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 4 }
 
    srpRingCurMcastLowPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -980,7 +1023,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 5 }
    
    srpRingCurUcastHighPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -991,7 +1034,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 6 }
 
    srpRingCurUcastHighPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1002,7 +1045,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 7 }
 
    srpRingCurMcastHighPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1013,7 +1056,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 8 }
 
    srpRingCurMcastHighPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1028,7 +1071,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
 --  to the PhysLayer medium.
 
    srpRingCurUcastLowPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1038,7 +1081,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 10 }
 
    srpRingCurUcastLowPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1048,7 +1091,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 11 }
 
    srpRingCurMcastLowPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1058,7 +1101,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 12 }
 
    srpRingCurMcastLowPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1068,7 +1111,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 13 }
    
    srpRingCurUcastHighPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1078,7 +1121,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 14 }
 
    srpRingCurUcastHighPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1088,7 +1131,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 15 }
 
    srpRingCurMcastHighPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1098,7 +1141,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersCurrentEntry 16 }
 
    srpRingCurMcastHighPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1147,40 +1190,40 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
                    Counter32,
 -- Rx PhysLayer LowPri counters 
            srpRingIntUcastLowPriPktsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpRingIntUcastLowPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpRingIntMcastLowPriPktsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpRingIntMcastLowPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
 -- Rx PhysLayer High Priority counters  
            srpRingIntUcastHighPriPktsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpRingIntUcastHighPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpRingIntMcastHighPriPktsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpRingIntMcastHighPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
 -- Tx PhysLayer LowPri counters 
            srpRingIntUcastLowPriPktsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpRingIntUcastLowPriOctetsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpRingIntMcastLowPriPktsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpRingIntMcastLowPriOctetsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
 -- Tx PhysLayer High Priority counters 
            srpRingIntUcastHighPriPktsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpRingIntUcastHighPriOctetsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpRingIntMcastHighPriPktsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpRingIntMcastHighPriOctetsOut
-                   CounterBasedGauge64
+                   PerfIntervalCount64
        }
 
    srpRingIntInterfaceSide OBJECT-TYPE
@@ -1214,7 +1257,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        DESCRIPTION
          "The counter counts the number of
           transition from unwrap to wrap state
-          for the last <N> intervals described by
+          for the last  intervals described by
           the srpRingIntNumber variable."
        ::= { srpRingCountersIntervalEntry 3 }
 
@@ -1224,7 +1267,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
 -- Rx PhysLayer: Indicate the amount of traffic
 -- received from the PhysLayer medium. 
    srpRingIntUcastLowPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1235,7 +1278,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 4 }
 
    srpRingIntUcastLowPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1246,7 +1289,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 5 }
 
    srpRingIntMcastLowPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1257,7 +1300,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 6 }
 
    srpRingIntMcastLowPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only 
        STATUS  current
        DESCRIPTION
@@ -1268,7 +1311,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 7 }
    
    srpRingIntUcastHighPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1279,7 +1322,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 8 }
 
    srpRingIntUcastHighPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1290,7 +1333,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 9 }
 
    srpRingIntMcastHighPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1301,7 +1344,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 10 }
 
    srpRingIntMcastHighPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1315,7 +1358,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
 -- Tx PhysLayer: Indicate the amount of traffic
 -- going to the PhysLayer medium.
    srpRingIntUcastLowPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1325,7 +1368,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 12 }
 
    srpRingIntUcastLowPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1335,7 +1378,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 13 }
 
    srpRingIntMcastLowPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1345,7 +1388,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 14 }
 
    srpRingIntMcastLowPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1355,7 +1398,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 15 }
    
    srpRingIntUcastHighPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1365,7 +1408,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 16 }
 
    srpRingIntUcastHighPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1375,7 +1418,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 17 }
 
    srpRingIntMcastHighPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1385,7 +1428,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpRingCountersIntervalEntry 18 }
 
    srpRingIntMcastHighPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1429,40 +1472,40 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
                   InterfaceSide,
 -- Rx Higher Layer Low Priority counters 
            srpHostCurUcastLowPriPktsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurUcastLowPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurMcastLowPriPktsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurMcastLowPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
 -- Rx Higher Layer High Priority counters 
            srpHostCurUcastHighPriPktsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurUcastHighPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurMcastHighPriPktsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurMcastHighPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
 -- Tx Higher Layer Low Priority counters 
            srpHostCurUcastLowPriPktsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurUcastLowPriOctetsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurMcastLowPriPktsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurMcastLowPriOctetsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
 -- Tx Higher Layer High Priority counters 
            srpHostCurUcastHighPriPktsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurUcastHighPriOctetsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurMcastHighPriPktsOut
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurMcastHighPriOctetsOut
-                   CounterBasedGauge64
+                   PerfCurrentCount64
 
        }
 
@@ -1477,7 +1520,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
 
 -- Rx Higher Layer Low Priority counters 
    srpHostCurUcastLowPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1487,7 +1530,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersCurrentEntry 2 }
 
    srpHostCurUcastLowPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1497,7 +1540,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersCurrentEntry 3 }
 
    srpHostCurMcastLowPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1507,7 +1550,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersCurrentEntry 4 }
 
    srpHostCurMcastLowPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1518,7 +1561,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
  
 -- Rx Higher Layer High Priority counters  
    srpHostCurUcastHighPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1528,7 +1571,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersCurrentEntry 6 }
 
    srpHostCurUcastHighPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1538,7 +1581,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersCurrentEntry 7 }
 
    srpHostCurMcastHighPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1548,7 +1591,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersCurrentEntry 8 }
 
    srpHostCurMcastHighPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1562,7 +1605,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
 -- traffic going to the Higher Layer.
 -- Tx Host Total counters 
    srpHostCurUcastLowPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1572,7 +1615,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersCurrentEntry 10 }
 
    srpHostCurUcastLowPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1582,7 +1625,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersCurrentEntry 11 }
 
    srpHostCurMcastLowPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1592,7 +1635,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersCurrentEntry 12 }
 
    srpHostCurMcastLowPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1603,7 +1646,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
  
 -- Tx Host High Priority counters  
    srpHostCurUcastHighPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1613,7 +1656,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersCurrentEntry 14 }
 
    srpHostCurUcastHighPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1623,7 +1666,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersCurrentEntry 15 }
 
    srpHostCurMcastHighPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1633,7 +1676,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersCurrentEntry 16 }
 
    srpHostCurMcastHighPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfCurrentCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1678,40 +1721,40 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
                    Integer32,
 -- Rx Higher Layer Low Priority counters 
            srpHostIntUcastLowPriPktsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntUcastLowPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntMcastLowPriPktsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntMcastLowPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
 -- Rx Higher Layer High Priority counters 
            srpHostIntUcastHighPriPktsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntUcastHighPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntMcastHighPriPktsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntMcastHighPriOctetsIn
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
 -- Tx Higher Layer Total counters 
            srpHostIntUcastLowPriPktsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntUcastLowPriOctetsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntMcastLowPriPktsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntMcastLowPriOctetsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
 -- Tx Higher Layer High Priority counters 
            srpHostIntUcastHighPriPktsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntUcastHighPriOctetsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntMcastHighPriPktsOut
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntMcastHighPriOctetsOut
-                   CounterBasedGauge64 
+                   PerfIntervalCount64 
        }
 
    srpHostIntInterfaceSide OBJECT-TYPE
@@ -1738,7 +1781,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
 
 -- Rx Higher Layer Low Priority counters
    srpHostIntUcastLowPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1748,7 +1791,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 3 }
 
    srpHostIntUcastLowPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1758,7 +1801,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 4 }
 
    srpHostIntMcastLowPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1768,7 +1811,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 5 }
 
    srpHostIntMcastLowPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1778,7 +1821,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 6 }
   
    srpHostIntUcastHighPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1788,7 +1831,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 7 }
 
    srpHostIntUcastHighPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1798,7 +1841,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 8 }
 
    srpHostIntMcastHighPriPktsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1808,7 +1851,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 9 }
 
    srpHostIntMcastHighPriOctetsIn OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1821,7 +1864,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
 
 -- Tx Higher Layer Low Priority counters 
    srpHostIntUcastLowPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1831,7 +1874,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 11 }
 
    srpHostIntUcastLowPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1841,7 +1884,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 12 }
 
    srpHostIntMcastLowPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1851,7 +1894,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 13 }
 
    srpHostIntMcastLowPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1861,7 +1904,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 14 }
   
    srpHostIntUcastHighPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1871,7 +1914,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 15 }
 
    srpHostIntUcastHighPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1881,7 +1924,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 16 }
 
    srpHostIntMcastHighPriPktsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1891,7 +1934,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpHostCountersIntervalEntry 17 }
 
    srpHostIntMcastHighPriOctetsOut OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64 
+       SYNTAX  PerfIntervalCount64 
        MAX-ACCESS  read-only
        STATUS  current
        DESCRIPTION
@@ -1931,24 +1974,24 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
                    InterfaceSide,
 -- Rx PhysLayer Errors counters 
            srpRingCurRxErrorsDataParity
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurRxErrorsShortPackets
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurRxErrorsGiantPackets
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurRxErrorsSideBadPackets
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpRingCurRxErrorsCRC
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
 -- Rx Host Errors counters 
            srpHostCurRxErrorsDataParity
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurRxErrorsShortPackets
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurRxErrorsGiantPackets
-                   CounterBasedGauge64,
+                   PerfCurrentCount64,
            srpHostCurRxErrorsSideBadPackets
-                   CounterBasedGauge64
+                   PerfCurrentCount64
        }
 
 
@@ -1964,7 +2007,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
 
 
    srpRingCurRxErrorsDataParity OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -1975,7 +2018,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersCurrentEntry 2 }
 
    srpRingCurRxErrorsShortPackets OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -1987,7 +2030,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersCurrentEntry 3 }
 
    srpRingCurRxErrorsGiantPackets OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2000,7 +2043,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersCurrentEntry 4 }
 
    srpRingCurRxErrorsSideBadPackets OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2013,7 +2056,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersCurrentEntry 5 }
 
    srpRingCurRxErrorsCRC OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2025,7 +2068,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
 
 -- Rx Host Errors counters 
    srpHostCurRxErrorsDataParity OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2036,7 +2079,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersCurrentEntry 7 }
 
    srpHostCurRxErrorsShortPackets OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2047,7 +2090,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersCurrentEntry 8 }
 
    srpHostCurRxErrorsGiantPackets OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2058,7 +2101,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersCurrentEntry 9 }
 
    srpHostCurRxErrorsSideBadPackets OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfCurrentCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2104,24 +2147,24 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
                    Integer32,
 -- Rx PhysLayer Errors counters 
           srpRingIntRxErrorsDataParity
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
           srpRingIntRxErrorsShortPackets
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
           srpRingIntRxErrorsGiantPackets
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
           srpRingIntRxErrorsSideBadPackets
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
           srpRingIntRxErrorsCRC
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
 -- Rx Host Errors counters 
            srpHostIntRxErrorsDataParity
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntRxErrorsShortPackets
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntRxErrorsGiantPackets
-                   CounterBasedGauge64,
+                   PerfIntervalCount64,
            srpHostIntRxErrorsSideBadPackets
-                   CounterBasedGauge64
+                   PerfIntervalCount64
        }
 
 
@@ -2148,7 +2191,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersIntervalEntry 2 }
 
   srpRingIntRxErrorsDataParity OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2159,7 +2202,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersIntervalEntry 3 }
 
   srpRingIntRxErrorsShortPackets OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2170,7 +2213,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersIntervalEntry 4 }
 
   srpRingIntRxErrorsGiantPackets OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2181,7 +2224,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersIntervalEntry 5 }
 
   srpRingIntRxErrorsSideBadPackets OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2192,7 +2235,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersIntervalEntry 6 }
 
   srpRingIntRxErrorsCRC OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2204,7 +2247,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
 
 -- Rx Host Errors counters 
    srpHostIntRxErrorsDataParity OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2215,7 +2258,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersIntervalEntry 8 }
 
    srpHostIntRxErrorsShortPackets OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2226,7 +2269,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersIntervalEntry 9 }
 
    srpHostIntRxErrorsGiantPackets OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2237,7 +2280,7 @@ srpCompliances OBJECT IDENTIFIER ::= { srpConformance 2 }
        ::= { srpErrorsCountersIntervalEntry 10 }
 
    srpHostIntRxErrorsSideBadPackets OBJECT-TYPE
-       SYNTAX  CounterBasedGauge64
+       SYNTAX  PerfIntervalCount64
        MAX-ACCESS  read-only
        STATUS  deprecated
        DESCRIPTION
@@ -2879,6 +2922,45 @@ srpCompliance MODULE-COMPLIANCE
                 srpIfGroup,
                 srpMACSideGroup,
                 srpRingTopologyMapGroup }
+
+    GROUP       srpRingCountersCurrentGroup
+    DESCRIPTION "This group is optional."
+
+    GROUP       srpRingCountersIntervalGroup
+    DESCRIPTION "This group is optional."
+
+    GROUP       srpHostCountersCurrentGroup
+    DESCRIPTION "This group is optional."
+
+    GROUP       srpHostCountersIntervalGroup
+    DESCRIPTION "This group is optional."
+
+    GROUP       srpErrCntCurrGroup
+    DESCRIPTION "This group is optional."
+
+    GROUP       srpErrCntIntGroup
+    DESCRIPTION "This group is optional."
+
+    GROUP       srpNotificationsGroup
+    DESCRIPTION "This group is optional."
+
     ::= { srpCompliances 1 }
 
+srpComplianceOld MODULE-COMPLIANCE
+    STATUS      deprecated
+    DESCRIPTION
+        "A compliance statement whose only purpose is to list
+        explicitly the deprecated groups."
+    MODULE  -- this module
+
+    GROUP       srpMACCountersGroup
+    DESCRIPTION "This group is deprecated."
+
+    GROUP       srpErrorsCountersCurrentGroup
+    DESCRIPTION "This group is deprecated."
+
+    GROUP       srpErrorsCountersIntervalGroup
+    DESCRIPTION "This group is deprecated."
+
+    ::= { srpCompliances 2 }
 END

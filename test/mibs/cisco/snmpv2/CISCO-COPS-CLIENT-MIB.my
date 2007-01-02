@@ -3,7 +3,7 @@
 --
 -- April, 1999 Thomas Wu
 --
--- Copyright (c) 1999-2000 by cisco Systems, Inc.
+-- Copyright (c) 1999-2000, 2005 by cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
 
@@ -11,10 +11,11 @@
 CISCO-COPS-CLIENT-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-    MODULE-IDENTITY, 
-    OBJECT-TYPE
+    MODULE-IDENTITY,
+    OBJECT-TYPE,
+    Unsigned32
         FROM SNMPv2-SMI
-  
+
     MODULE-COMPLIANCE,
     OBJECT-GROUP
         FROM SNMPv2-CONF
@@ -25,18 +26,15 @@ IMPORTS
     TruthValue
         FROM SNMPv2-TC
 
-    ifIndex   
+    ifIndex
         FROM IF-MIB
-
-    Unsigned32
-        FROM CISCO-TC
 
     ciscoMgmt
         FROM CISCO-SMI
     ;
 
 ciscoCopsClientMIB MODULE-IDENTITY
-    LAST-UPDATED    "200006110000Z"
+    LAST-UPDATED    "200511140000Z"
     ORGANIZATION    "Cisco Systems Inc. "
     CONTACT-INFO
         "Cisco Systems
@@ -60,6 +58,12 @@ ciscoCopsClientMIB MODULE-IDENTITY
         exchange policy information between a policy server (Policy
         Decision Point or PDP) and its clients (Policy Enforcement Points
         or PEPs)."
+    REVISION    "200511140000Z"
+    DESCRIPTION
+            "Updated the imports such that Unsigned32 is imported from 
+            SNMPv2-SMI instead of CISCO-TC. Changed the syntax of the 
+            textual conventions CopsRole, CopsRoleCombination, 
+            CopsDomainName from DisplayString to OCTET STRING."
     REVISION    "200006110000Z"
     DESCRIPTION
             "Added support for optional role configuration."
@@ -80,7 +84,7 @@ CopsRole ::= TEXTUAL-CONVENTION
         assigned to interfaces, such that an interface takes on the
         policies indirectly as the policies of the roles assigned to
         that interface."
-    SYNTAX  DisplayString (SIZE (1..31))
+    SYNTAX  OCTET STRING (SIZE (1..31))
 
 CopsRoleCombination ::= TEXTUAL-CONVENTION
     STATUS  current
@@ -93,7 +97,7 @@ CopsRoleCombination ::= TEXTUAL-CONVENTION
         the policies of the roles assigned to that interface.
         When one or more roles assigned to an interface, that set of
         roles is known as a role-combination."
-    SYNTAX  DisplayString (SIZE (0..255))
+    SYNTAX  OCTET STRING (SIZE (0..255))
 
 CopsDomainName ::= TEXTUAL-CONVENTION
     STATUS  current
@@ -103,7 +107,7 @@ CopsDomainName ::= TEXTUAL-CONVENTION
         The COPS domain which a COPS client type belongs to.
         This is so that a COPS server supporting multiple domains
         can push the correct set of domain policies to a device."
-    SYNTAX  DisplayString (SIZE (0..31))
+    SYNTAX  OCTET STRING (SIZE (0..31))
 
 CopsClientType ::= TEXTUAL-CONVENTION
     STATUS  current
@@ -189,7 +193,7 @@ ccopsServerConfigEntry  OBJECT-TYPE
             is created and deleted by using ccopsServerConfigStatus.
 
             An entry may not exist in the active state unless all
-            objects in the entry have an appropriate value. 
+            objects in the entry have an appropriate value.
 
             Each client type can have its own COPS servers.
             By creating, deleting or modifying an entry in this table,
@@ -242,7 +246,7 @@ ccopsServerConfigPriority OBJECT-TYPE
             The COPS client will attempt to contact COPS servers for
             the appropriate Client-Type in the order of their
             priority values.  COPS servers designated by the COPS
-            protocol PDP-Redirect mechanism are always used in 
+            protocol PDP-Redirect mechanism are always used in
             preference to any entries in this table.
 
             When ccopsServerMax mib object is not zero, the valid
@@ -286,10 +290,9 @@ ccopsServerConfigStatus  OBJECT-TYPE
             objects in the entry have an appropriate value.
 
             Once a row becomes active, value in any other column within
-            such row cannot be modified except by setting 
+            such row cannot be modified except by setting
             ccopsServerConfigStatus to notInService(2) for such row."
         ::= { ccopsServerConfigEntry 5 }
-
 
 ccopsInitialTimeout  OBJECT-TYPE
         SYNTAX     Unsigned32 (0..65535)
@@ -332,7 +335,7 @@ ccopsTimeoutMax OBJECT-TYPE
         DESCRIPTION
             "The maximum retry time-out that the COPS client allows.
             On every consecutive failure to connect to all COPS servers,
-            the COPS client increases the retry time-out up to 
+            the COPS client increases the retry time-out up to
             ccopsTimeoutMax."
         DEFVAL { 300 }
         ::= { ccopsGlobalObjects 7 }
@@ -395,7 +398,7 @@ ccopsDomainName OBJECT-TYPE
 
             Changing the COPS domain name while qosPolicySource is cops(2)
             will result in requesting new policies from the cops server and
-            configuring the device with those new policies.  The value of 
+            configuring the device with those new policies.  The value of
             ccopsDomainName is ignored if qosPolicySource is local(1)."
         REFERENCE
             "Reference CISCO-QOS-MIB, qosPolicySource."
@@ -460,7 +463,7 @@ ccopsRoleStatus    OBJECT-TYPE
             An entry may not exist in the active state unless all
             objects in the entry have an appropriate value.
             Once a row becomes active, value in any other column within
-            such row cannot be modified except by setting 
+            such row cannot be modified except by setting
             ccopsRoleStatus to notInService(2) for such row.
 
             Deleting a row results in removing this ccopsRoleName from all
@@ -566,7 +569,7 @@ ccopsMIBCompliance MODULE-COMPLIANCE
    STATUS deprecated
    DESCRIPTION
             "The compliance statement for the  CISCO-COPS-CLIENT-MIB."
-   MODULE        
+   MODULE
        MANDATORY-GROUPS { ccopsGlobalGroup }
 
    ::= { ccopsMIBCompliances 1 }
@@ -575,14 +578,13 @@ ccopsMIBComplianceRev2 MODULE-COMPLIANCE
    STATUS current
    DESCRIPTION
             "The compliance statement for the CISCO-COPS-CLIENT-MIB."
-   MODULE        
+   MODULE
        MANDATORY-GROUPS { ccopsGlobalGroupRev2 }
 
        GROUP        ccopsRoleGroup
        DESCRIPTION
            "This group is mandatory in agents for which the value of
            ccopsRoleConfigSupported is 'true'."
-
 
    ::= { ccopsMIBCompliances 2 }
 
@@ -638,8 +640,11 @@ ccopsRoleGroup OBJECT-GROUP
         }
         STATUS current
         DESCRIPTION
-            "A collection of objects which allow an agent to require 
+            "A collection of objects which allow an agent to require
             a limited set of allowed roles be specified, and to reject
             any role-combination containing any other role."
         ::= { ccopsMIBGroups 3 }
 END
+
+ 
+

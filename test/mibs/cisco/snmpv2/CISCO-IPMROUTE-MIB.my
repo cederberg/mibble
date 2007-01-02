@@ -3,7 +3,7 @@
 --
 -- August 1995, Dino Farinacci/Anke Dosedal
 --
--- Copyright (c) 1995-1996, 1999, 2001 by cisco Systems, Inc.
+-- Copyright (c) 1995-2005 by cisco Systems, Inc.
 -- All rights reserved.
 --
 -- *****************************************************************
@@ -20,6 +20,8 @@ IMPORTS
 	OBJECT-TYPE,
 	Integer32,
 	Gauge32,
+        Unsigned32,
+        Counter32,
         IpAddress,
         NOTIFICATION-TYPE,
         TimeTicks,
@@ -36,16 +38,14 @@ IMPORTS
 	ipMRouteEntry, 
         ipMRouteNextHopEntry,
         ipMRouteInterfaceEntry
-		FROM IPMROUTE-MIB
-        Unsigned32
-                FROM CISCO-TC
+		FROM IPMROUTE-STD-MIB
         CounterBasedGauge64
                 FROM HCNUM-TC
 	ciscoExperiment                  
 		FROM CISCO-SMI;
 
 ciscoIpMRouteMIB MODULE-IDENTITY
-    LAST-UPDATED "200012220000Z"
+    LAST-UPDATED "200503070000Z"
     ORGANIZATION "ciscoSytems"
     CONTACT-INFO
             " cisco Systems, Inc.
@@ -56,6 +56,13 @@ ciscoIpMRouteMIB MODULE-IDENTITY
             "The MIB module for management of IP Multicast routing,
             but independent of the specific multicast routing protocol
             in use."
+    REVISION              "200503070000Z"
+    DESCRIPTION
+            "Add 32-bit and 64-bit per interface packet counters.
+            These apply to all interfaces, including Point-To-Point
+            types, unlike ifInMulticastPkts etc which only apply to
+            interfaces with multicast at that layer. Also fix import
+            of Unsigned32."
     REVISION              "200012220000Z"
     DESCRIPTION
             "Add ciscoIpMRouteNumberOfEntries. Also add 64-bit
@@ -558,7 +565,11 @@ ciscoIpMRouteInterfaceEntry OBJECT-TYPE
 
 CiscoIpMRouteInterfaceEntry ::= SEQUENCE {
     ciscoIpMRouteIfInMcastOctets     Counter64,
-    ciscoIpMRouteIfOutMcastOctets    Counter64
+    ciscoIpMRouteIfOutMcastOctets    Counter64,
+    ciscoIpMRouteIfInMcastPkts       Counter32,
+    ciscoIpMRouteIfHCInMcastPkts     Counter64,
+    ciscoIpMRouteIfOutMcastPkts      Counter32,
+    ciscoIpMRouteIfHCOutMcastPkts    Counter64
 }
 
 ciscoIpMRouteIfInMcastOctets OBJECT-TYPE
@@ -580,6 +591,44 @@ ciscoIpMRouteIfOutMcastOctets OBJECT-TYPE
             sent on the interface. This object is a 64-bit version of
             ipMRouteInterfaceOutMcastOctets."
     ::= { ciscoIpMRouteInterfaceEntry 2 }
+
+ciscoIpMRouteIfInMcastPkts OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The number of multicast packets that have arrived on the
+            interface."
+    ::= { ciscoIpMRouteInterfaceEntry 3 }
+
+ciscoIpMRouteIfHCInMcastPkts OBJECT-TYPE
+    SYNTAX     Counter64
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The number of multicast packets that have arrived on the
+            interface. This object is a 64-bit version of
+            ciscoIpMRouteIfInMcastPkts"
+    ::= { ciscoIpMRouteInterfaceEntry 4 }
+
+ciscoIpMRouteIfOutMcastPkts OBJECT-TYPE
+    SYNTAX     Counter32
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The number of multicast packets that have been sent on
+            the interface."
+    ::= { ciscoIpMRouteInterfaceEntry 5 }
+
+ciscoIpMRouteIfHCOutMcastPkts OBJECT-TYPE
+    SYNTAX     Counter64
+    MAX-ACCESS read-only
+    STATUS     current
+    DESCRIPTION
+            "The number of multicast packets that have been sent on
+            the interface. This object is a 64-bit version of
+            ciscoIpMRouteIfOutMcastPkts"
+    ::= { ciscoIpMRouteInterfaceEntry 6 }
 
 ciscoIpMRouteNotifications OBJECT IDENTIFIER ::= { ciscoIpMRouteMIB 3 }
 
@@ -643,15 +692,26 @@ ciscoIpMRouteMIBComplianceV11R01 MODULE-COMPLIANCE
 	::= { ciscoIpMRouteMIBCompliances 2 }
 
 ciscoIpMRouteMIBComplianceV12R00S MODULE-COMPLIANCE
-        STATUS  current
+        STATUS  deprecated
         DESCRIPTION
                 "The compliance statement for the cisco IP Multicast
-                MIB."
+                MIB. Superseded by ciscoIpMRouteMIBComplianceV12R28S"
         MODULE  -- this module
                 MANDATORY-GROUPS { ciscoIpMRouteMIBGroupV12R00S }
 
         ::= { ciscoIpMRouteMIBCompliances 3 }
 
+ciscoIpMRouteMIBComplianceV12R28S MODULE-COMPLIANCE
+        STATUS  current
+        DESCRIPTION
+                "The compliance statement for the cisco IP Multicast
+                MIB."
+        MODULE  -- this module
+                MANDATORY-GROUPS { ciscoIpMRouteMIBGroupV12R28S,
+                                   ciscoIpMRouteMIBIfGroup
+                                 }
+
+        ::= { ciscoIpMRouteMIBCompliances 4 }
 -- units of conformance
 
 ciscoIpMRouteMIBGroup OBJECT-GROUP
@@ -748,10 +808,11 @@ ciscoIpMRouteMIBGroupV12R00S OBJECT-GROUP
               ciscoIpMRouteIfInMcastOctets,
               ciscoIpMRouteIfOutMcastOctets
             }
-    STATUS  current
+    STATUS  deprecated
     DESCRIPTION
             "A collection of objects to support management of IP
-            Multicast routing."
+            Multicast routing. Superseded by
+            ciscoIpMRouteMIBGroupV12R28S"
     ::= { ciscoIpMRouteMIBGroups 4 }
 
 ciscoIpMRouteMIBNotifGroup NOTIFICATION-GROUP
@@ -761,4 +822,49 @@ ciscoIpMRouteMIBNotifGroup NOTIFICATION-GROUP
                   "The collection of IPMroute related notifications."
         ::= { ciscoIpMRouteMIBGroups 5 }
 
+ciscoIpMRouteMIBGroupV12R28S OBJECT-GROUP
+    OBJECTS {
+              ciscoIpMRouteNumberOfEntries,
+              ciscoIpMRoutePruneFlag,
+              ciscoIpMRouteSparseFlag,
+              ciscoIpMRouteConnectedFlag,
+              ciscoIpMRouteLocalFlag,
+              ciscoIpMRouteRegisterFlag,
+              ciscoIpMRouteRpFlag,
+              ciscoIpMRouteSptFlag,
+              ciscoIpMRouteMetricPreference,
+              ciscoIpMRouteLastUsed,
+              ciscoIpMRouteInLimit2,
+              ciscoIpMRouteJoinFlag,
+              ciscoIpMRouteMsdpFlag,
+              ciscoIpMRouteProxyJoinFlag,
+              ciscoIpMRoutePkts,
+              ciscoIpMRouteDifferentInIfPkts,
+              ciscoIpMRouteOctets,
+              ciscoIpMRouteBps2,
+              ciscoIpMRouteMetric2,
+              ciscoIpMRouteNextHopOutLimit,
+              ciscoIpMRouteNextHopMacHdr,
+              ciscoIpMRouteNextHopPkts
+            }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects to support management of IP
+            Multicast routing."
+    ::= { ciscoIpMRouteMIBGroups 6 }
+
+ciscoIpMRouteMIBIfGroup OBJECT-GROUP
+    OBJECTS {
+              ciscoIpMRouteIfInMcastOctets,
+              ciscoIpMRouteIfOutMcastOctets,
+              ciscoIpMRouteIfInMcastPkts,
+              ciscoIpMRouteIfHCInMcastPkts,
+              ciscoIpMRouteIfOutMcastPkts,
+              ciscoIpMRouteIfHCOutMcastPkts
+            }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects to support management of IP
+            Multicast routing on an interface."
+    ::= { ciscoIpMRouteMIBGroups 7 }
 END

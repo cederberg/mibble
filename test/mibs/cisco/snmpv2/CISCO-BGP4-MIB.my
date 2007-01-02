@@ -3,7 +3,7 @@
 --
 -- June 2001, Ravindra Rathi
 --
--- Copyright (c) 2001 by Cisco Systems, Inc.
+-- Copyright (c) 2001, 2003 by Cisco Systems, Inc.
 -- All rights reserved.
 -- 
 -- *****************************************************************
@@ -13,22 +13,31 @@ CISCO-BGP4-MIB DEFINITIONS ::=BEGIN
 IMPORTS
         MODULE-IDENTITY,
         OBJECT-TYPE,
-        Unsigned32
+        NOTIFICATION-TYPE,
+        Unsigned32, Gauge32, Counter32
                 FROM SNMPv2-SMI
         TruthValue,
         TEXTUAL-CONVENTION
                 FROM SNMPv2-TC
         MODULE-COMPLIANCE,
-        OBJECT-GROUP
+        OBJECT-GROUP,
+        NOTIFICATION-GROUP
                 FROM SNMPv2-CONF
         ciscoMgmt
                 FROM CISCO-SMI
         InetAddressType,
         InetAddress
-                FROM INET-ADDRESS-MIB;
-        
+                FROM INET-ADDRESS-MIB
+        SnmpAdminString
+                FROM SNMP-FRAMEWORK-MIB
+        bgpPeerEntry,
+        bgpPeerRemoteAddr,
+        bgpPeerLastError,
+        bgpPeerState
+                FROM BGP4-MIB;
+         
 ciscoBgp4MIB MODULE-IDENTITY
-        LAST-UPDATED    "200108130000Z"
+        LAST-UPDATED    "200302240000Z"
         ORGANIZATION    "Cisco Systems, Inc."
         CONTACT-INFO
                 "       Cisco Systems
@@ -84,7 +93,29 @@ ciscoBgp4MIB MODULE-IDENTITY
                 Network Layer Reachability Information(NLRI)
                    A variable length field present in UPDATE messages
                    which contains a list of Network Layer address 
-                   prefixes." 
+                   prefixes. 
+
+                Address Family Identifier(AFI) 
+                   Primary identifier to indicate the type of the 
+                   Network Layer Reachability Information(NLRI) being 
+                   carried.
+
+                Subsequent Address Family Identifier(SAFI) 
+                   Secondary identifier to indicate the type of the 
+                   Network Layer Reachability Information(NLRI) being 
+                   carried."
+        REVISION        "200302240000Z"
+        DESCRIPTION
+                "+Added cbgpPeerCapsTable
+                 +Added cbgpPeerAddrFamilyTable
+                 +Added cbgpPeerAddrFamilyPrefixTable
+                 +Added notification event cbgpBackwardTransition
+                 +Added notification event cbgpPrefixThresholdExceeded
+                 +Added notification event cbgpPrefixThresholdClear"
+        REVISION        "200212190000Z"
+        DESCRIPTION
+                "+Added cbgpPeerPrefixTable
+                 +Added notification event cbgpFsmStateChange" 
         REVISION        "200108130000Z"
         DESCRIPTION
                 "Initial version of the MIB module." 
@@ -92,7 +123,8 @@ ciscoBgp4MIB MODULE-IDENTITY
 
    ciscoBgp4MIBObjects
                 OBJECT IDENTIFIER ::= { ciscoBgp4MIB 1 }
-   cbgpRoute    OBJECT IDENTIFIER ::= { ciscoBgp4MIBObjects 1 }
+   cbgpRoute         OBJECT IDENTIFIER ::= { ciscoBgp4MIBObjects 1 }
+   cbgpPeer         OBJECT IDENTIFIER ::= { ciscoBgp4MIBObjects 2 }
 
     -- Textual convention
 
@@ -214,7 +246,9 @@ ciscoBgp4MIB MODULE-IDENTITY
         STATUS     current
         DESCRIPTION
                 "Represents Address Family Identifier(AFI) of the 
-                Network Layer protocol associated with the route."
+                Network Layer protocol associated with the route.
+                An implementation is only required to support IPv4
+                unicast and VPNv4 (Value - 1) address families."
         ::= { cbgpRouteEntry 1 }
     
     cbgpRouteSafi OBJECT-TYPE
@@ -224,7 +258,9 @@ ciscoBgp4MIB MODULE-IDENTITY
         DESCRIPTION
                 "Represents Subsequent Address Family Identifier(SAFI)
                 of the route. It gives additional information about
-                the type of the route."
+                the type of the route. An implementation is only 
+                required to support IPv4 unicast(Value - 1) and VPNv4(
+                Value - 128) address families."
         ::= { cbgpRouteEntry 2 }
     
     cbgpRoutePeerType OBJECT-TYPE
@@ -233,7 +269,8 @@ ciscoBgp4MIB MODULE-IDENTITY
         STATUS     current
         DESCRIPTION
                 "Represents the type of Network Layer address stored
-                in cbgpRoutePeer."
+                in cbgpRoutePeer. An implementation is only required
+                to support IPv4 address type(Value - 1)."
         ::= { cbgpRouteEntry 3 }
 
     cbgpRoutePeer OBJECT-TYPE
@@ -242,7 +279,8 @@ ciscoBgp4MIB MODULE-IDENTITY
         STATUS     current
         DESCRIPTION
                 "The Network Layer address of the peer where the route
-                information was learned."
+                information was learned. An implementation is only 
+                required to support an IPv4 peer."
         ::= { cbgpRouteEntry 4 }
 
     cbgpRouteAddrPrefix OBJECT-TYPE
@@ -253,7 +291,7 @@ ciscoBgp4MIB MODULE-IDENTITY
                 "A Network Address prefix in the Network Layer 
                 Reachability Information field of BGP UPDATE message.
                 This object is a Network Address containing the prefix
-                with length specified by cbgpRouteAddrPrefixLen.  Any
+                with length specified by cbgpRouteAddrPrefixLen. Any
                 bits beyond the length specified by
                 cbgpRouteAddrPrefixLen are zeroed." 
         ::= { cbgpRouteEntry 5 }
@@ -436,7 +474,534 @@ ciscoBgp4MIB MODULE-IDENTITY
                 section 4.3"
         ::= { cbgpRouteEntry 19 }
 
-    
+    -- BGP Peer table.
+
+    cbgpPeerTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF CbgpPeerEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "BGP peer table.  This table contains,
+                one entry per BGP peer, information about
+                the connections with BGP peers."
+        ::= { cbgpPeer  1 }
+
+    cbgpPeerEntry OBJECT-TYPE
+        SYNTAX     CbgpPeerEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "Entry containing information about the
+                connection with a BGP peer."
+        AUGMENTS { bgpPeerEntry }
+        ::= { cbgpPeerTable 1 }
+
+    CbgpPeerEntry ::= SEQUENCE {
+        cbgpPeerPrefixAccepted    Counter32,
+        cbgpPeerPrefixDenied      Counter32,
+        cbgpPeerPrefixLimit       Unsigned32,
+        cbgpPeerPrefixAdvertised  Counter32,
+        cbgpPeerPrefixSuppressed  Counter32,
+        cbgpPeerPrefixWithdrawn   Counter32,
+        cbgpPeerLastErrorTxt      SnmpAdminString,
+        cbgpPeerPrevState         INTEGER
+        }
+  
+    cbgpPeerPrefixAccepted  OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      deprecated
+        DESCRIPTION
+                "Number of Route prefixes received on this connnection,
+                 which are accepted after applying filters. Possible
+                 filters are route maps, prefix lists, distributed
+                 lists, etc."
+        ::= { cbgpPeerEntry 1 } 
+
+
+    cbgpPeerPrefixDenied  OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      deprecated
+        DESCRIPTION
+                "Counter which gets incremented when a route prefix
+                 received on this connection is denied  or when a route
+                 prefix is denied during soft reset of this connection
+                 if 'soft-reconfiguration' is on . This object is 
+                 initialized to zero when the peer is  configured or
+                 the router is rebooted"
+        ::= { cbgpPeerEntry 2 }
+
+    cbgpPeerPrefixLimit  OBJECT-TYPE
+        SYNTAX      Unsigned32 (1..4294967295)
+        MAX-ACCESS  read-write
+        STATUS      deprecated
+        DESCRIPTION
+                "Max number of route prefixes accepted on this 
+                 connection"
+        ::= { cbgpPeerEntry 3 }
+
+    cbgpPeerPrefixAdvertised  OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      deprecated
+        DESCRIPTION
+                "Counter which gets incremented when a route prefix
+                 is advertised on this connection. This object is
+                 initialized to zero when the peer is configured or 
+                 the router is rebooted"
+        ::= { cbgpPeerEntry 4 }
+
+    cbgpPeerPrefixSuppressed  OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      deprecated
+        DESCRIPTION
+                "Counter which gets incremented when a route prefix
+                 is suppressed from being sent on this connection. This 
+                 object is initialized to zero when the peer is 
+                 configured or the router is rebooted"
+        ::= { cbgpPeerEntry 5 }
+
+    cbgpPeerPrefixWithdrawn  OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      deprecated
+        DESCRIPTION
+                "Counter which gets incremented when a route prefix
+                 is withdrawn on this connection. This object is
+                 initialized to zero when the peer is configured or
+                 the router is rebooted"
+
+        ::= { cbgpPeerEntry 6 }
+
+    cbgpPeerLastErrorTxt OBJECT-TYPE
+        SYNTAX     SnmpAdminString
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "Implementation specific error description for
+                 bgpPeerLastErrorReceived."
+        ::= { cbgpPeerEntry 7 }
+
+    cbgpPeerPrevState OBJECT-TYPE
+        SYNTAX     INTEGER {
+                             none(0),
+                             idle(1),
+                             connect(2),
+                             active(3),
+                             opensent(4),
+                             openconfirm(5),
+                             established(6)
+                             }
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The BGP peer connection previous state."
+        REFERENCE
+                "Section 8, RFC 1771, A Border Gateway Protocol 4 
+                 (BGP-4)."
+        ::= { cbgpPeerEntry 8 }
+
+    --
+    -- Peer capabilities
+    --
+    cbgpPeerCapsTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF CbgpPeerCapsEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "This table contains the capabilities that are
+                 supported by a peer. Capabilities of a peer are 
+                 received during BGP connection establishment.
+                 Values corresponding to each received capability
+                 are stored in this table. When a new capability 
+                 is received, this table is updated with a new 
+                 entry. When an existing capability is not received 
+                 during the latest connection establishment, the 
+                 corresponding entry is deleted from the table."
+        REFERENCE
+                "RFC 2842, Capabilities Advertisement with
+                 BGP-4.
+
+                 RFC2818, Route Refresh Capability for BGP-4.
+
+                 RFC2858, Multiprotocol Extensions for BGP-4.
+
+                 draft-ietf-idr-restart-05.txt, Graceful Restart
+                 Mechanism for BGP"
+        ::= { cbgpPeer 2 }
+
+    cbgpPeerCapsEntry OBJECT-TYPE
+        SYNTAX     CbgpPeerCapsEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "Each entry represents a capability received from a
+                 peer with a particular code and an index. When a 
+                 capability is received multiple times with different
+                 values during a BGP connection establishment, 
+                 corresponding entries are differentiated with indices."
+        INDEX {
+            bgpPeerRemoteAddr,
+            cbgpPeerCapCode,
+            cbgpPeerCapIndex
+        }
+        ::= { cbgpPeerCapsTable 1 }
+
+
+    CbgpPeerCapsEntry ::= SEQUENCE {
+        cbgpPeerCapCode     INTEGER,
+        cbgpPeerCapIndex    Unsigned32,
+        cbgpPeerCapValue    OCTET STRING
+    }
+
+    cbgpPeerCapCode OBJECT-TYPE
+        SYNTAX     INTEGER {
+                             multiProtocol(1),
+                             routeRefresh(2),
+                             gracefulRestart(64),
+                             routeRefreshOld(128)
+                             }
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The BGP Capability Advertisement Capability Code."
+        REFERENCE
+                "RFC 2842, Capabilities Advertisement with
+                 BGP-4.
+
+                 RFC2818, Route Refresh Capability for BGP-4.
+
+                 RFC2858, Multiprotocol Extensions for BGP-4.
+
+                 draft-ietf-idr-restart-05.txt, Graceful Restart
+                 Mechanism for BGP"
+        ::= { cbgpPeerCapsEntry 1 }
+
+    cbgpPeerCapIndex OBJECT-TYPE
+        SYNTAX     Unsigned32 (1..128)
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "Multiple instances of a given capability may be
+                 sent by a BGP speaker.  This variable is used
+                 to index them."
+        ::= { cbgpPeerCapsEntry 2 }
+
+    cbgpPeerCapValue OBJECT-TYPE
+        SYNTAX     OCTET STRING (SIZE(0..255))
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The value of the announced capability. This
+                 MIB object value is organized as given below,
+                     Capability : Route Refresh Capability
+                                  Null string
+                     Capability : Multiprotocol Extensions
+                       +----------------------------------+
+                       | AFI(16 bits)                     |
+                       +----------------------------------+
+                       | SAFI (8 bits)                    |
+                       +----------------------------------+
+                     Capability : Graceful Restart
+                       +----------------------------------+
+                       | Restart Flags (4 bits)           |
+                       +----------------------------------+
+                       | Restart Time in seconds (12 bits)|
+                       +----------------------------------+
+                       | AFI(16 bits)                     |
+                       +----------------------------------+
+                       | SAFI (8 bits)                    |
+                       +----------------------------------+
+                       | Flags for Address Family (8 bits)|
+                       +----------------------------------+
+                       | ...                              |
+                       +----------------------------------+
+                       | AFI(16 bits)                     |
+                       +----------------------------------+
+                       | SAFI (8 bits)                    |
+                       +----------------------------------+
+                       | Flags for Address Family (8 bits)|
+                       +----------------------------------+"
+        REFERENCE
+                "RFC 2842, Capabilities Advertisement with
+                 BGP-4.
+
+                 RFC2818, Route Refresh Capability for BGP-4.
+
+                 RFC2858, Multiprotocol Extensions for BGP-4.
+
+                 draft-ietf-idr-restart-05.txt, Graceful Restart
+                 Mechanism for BGP"
+        ::= { cbgpPeerCapsEntry 3 }
+
+   --
+   --  BGP Peer Address Family table
+   --
+   cbgpPeerAddrFamilyTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF CbgpPeerAddrFamilyEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "This table contains information related to 
+                 address families supported by a peer. Supported
+                 address families of a peer are known during BGP 
+                 connection establishment. When a new supported 
+                 address family is known, this table is updated 
+                 with a new entry. When an address family is not 
+                 supported any more, corresponding entry is deleted 
+                 from the table."
+        ::= { cbgpPeer 3 }
+
+    cbgpPeerAddrFamilyEntry OBJECT-TYPE
+        SYNTAX     CbgpPeerAddrFamilyEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "An entry is identified by an AFI/SAFI pair and
+                 peer address. It contains names associated with
+                 an address family."
+        INDEX {
+           bgpPeerRemoteAddr,
+           cbgpPeerAddrFamilyAfi,
+           cbgpPeerAddrFamilySafi
+        }
+        ::= { cbgpPeerAddrFamilyTable 1 }
+
+    CbgpPeerAddrFamilyEntry ::= SEQUENCE {
+        cbgpPeerAddrFamilyAfi     InetAddressType,
+        cbgpPeerAddrFamilySafi    CbgpSafi,
+        cbgpPeerAddrFamilyName    SnmpAdminString
+    }
+
+    cbgpPeerAddrFamilyAfi OBJECT-TYPE
+        SYNTAX     InetAddressType
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The AFI index of the entry. An implementation
+                is only required to support IPv4 unicast and 
+                VPNv4 (Value - 1) address families."
+        ::= { cbgpPeerAddrFamilyEntry 1 }
+   
+    cbgpPeerAddrFamilySafi OBJECT-TYPE
+        SYNTAX     CbgpSafi
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The SAFI index of the entry. An implementation
+                is only required to support IPv4 unicast(Value 
+                - 1) and VPNv4( Value - 128) address families."
+        REFERENCE
+                "RFC-2858: Multiprotocol Extensions for BGP-4,
+                 RFC-2547: BGP/MPLS VPNs" 
+        ::= { cbgpPeerAddrFamilyEntry  2 }
+
+    cbgpPeerAddrFamilyName OBJECT-TYPE
+        SYNTAX     SnmpAdminString
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "Implementation specific Address Family name."
+        ::= { cbgpPeerAddrFamilyEntry  3 }
+
+    --
+    --  BGP Address Family Peer Prefix table
+    --
+
+    cbgpPeerAddrFamilyPrefixTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF CbgpPeerAddrFamilyPrefixEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "This table contains prefix related information 
+                 related to address families supported by a peer. 
+                 Supported address families of a peer are known 
+                 during BGP connection establishment. When a new 
+                 supported address family is known, this table 
+                 is updated with a new entry. When an address 
+                 family is not supported any more, corresponding 
+                 entry is deleted from the table."
+                ::= { cbgpPeer 4 }
+
+    cbgpPeerAddrFamilyPrefixEntry OBJECT-TYPE
+        SYNTAX     CbgpPeerAddrFamilyPrefixEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "An entry is identified by an AFI/SAFI pair and
+                 peer address. It contains information associated 
+                 with route prefixes belonging to an address family."
+        INDEX {
+           bgpPeerRemoteAddr,
+           cbgpPeerAddrFamilyAfi,
+           cbgpPeerAddrFamilySafi
+        }
+        ::= { cbgpPeerAddrFamilyPrefixTable 1 }
+
+    CbgpPeerAddrFamilyPrefixEntry ::= SEQUENCE {
+        cbgpPeerAcceptedPrefixes        Counter32,
+        cbgpPeerDeniedPrefixes          Gauge32,
+        cbgpPeerPrefixAdminLimit        Unsigned32,
+        cbgpPeerPrefixThreshold         Unsigned32,
+        cbgpPeerPrefixClearThreshold    Unsigned32,
+        cbgpPeerAdvertisedPrefixes      Gauge32,
+        cbgpPeerSuppressedPrefixes      Gauge32,
+        cbgpPeerWithdrawnPrefixes       Gauge32
+        }
+
+    cbgpPeerAcceptedPrefixes  OBJECT-TYPE
+        SYNTAX      Counter32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+                "Number of accepted route prefixes on this connection,
+                 which belong to an address family."
+        ::= { cbgpPeerAddrFamilyPrefixEntry 1 }
+
+    cbgpPeerDeniedPrefixes  OBJECT-TYPE
+        SYNTAX      Gauge32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+                "This counter is incremented when a route prefix, which
+                 belongs to an address family, received on this 
+                 connection is denied. It is initialized to zero when 
+                 the connection is undergone a hard reset."
+        ::= { cbgpPeerAddrFamilyPrefixEntry 2 }
+
+    cbgpPeerPrefixAdminLimit  OBJECT-TYPE
+        SYNTAX      Unsigned32 (1..4294967295)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+                "Max number of route prefixes accepted for an address
+                 family on this connection."
+        ::= { cbgpPeerAddrFamilyPrefixEntry 3 }
+
+    cbgpPeerPrefixThreshold  OBJECT-TYPE
+        SYNTAX      Unsigned32 (1..100)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+                "Prefix threshold value (%) for an address family
+                 on this connection at which warning message stating
+                 the prefix count is crossed the threshold or 
+                 corresponding SNMP notification is generated."
+        ::= { cbgpPeerAddrFamilyPrefixEntry 4 }
+
+    cbgpPeerPrefixClearThreshold OBJECT-TYPE
+        SYNTAX      Unsigned32 (1..100)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+                "Prefix threshold value (%) for an address family
+                 on this connection at which SNMP clear notification
+                 is generated if prefix threshold notification is
+                 already generated."
+        ::= { cbgpPeerAddrFamilyPrefixEntry 5 }
+
+    cbgpPeerAdvertisedPrefixes  OBJECT-TYPE
+        SYNTAX      Gauge32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+                "This counter is incremented when a route prefix,
+                 which belongs to an address family is advertised
+                 on this connection. It is initialized to zero when 
+                 the connection is undergone a hard reset."
+        ::= { cbgpPeerAddrFamilyPrefixEntry 6 }
+
+    cbgpPeerSuppressedPrefixes  OBJECT-TYPE
+        SYNTAX      Gauge32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+                "This counter is incremented when a route prefix,
+                 which belongs to an address family is suppressed
+                 from being sent on this connection. It is 
+                 initialized to zero when the connection is undergone
+                 a hard reset."
+        ::= { cbgpPeerAddrFamilyPrefixEntry 7 }
+
+    cbgpPeerWithdrawnPrefixes  OBJECT-TYPE
+        SYNTAX      Gauge32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+                "This counter is incremented when a route prefix,
+                 which belongs to an address family, is withdrawn on
+                 this connection. It is initialized to zero when the
+                 connection is undergone a hard reset."
+        ::= { cbgpPeerAddrFamilyPrefixEntry 8 }
+
+    -- Notifications
+
+    ciscoBgp4NotifyPrefix     OBJECT IDENTIFIER ::= { ciscoBgp4MIB 0 }
+
+    cbgpFsmStateChange NOTIFICATION-TYPE
+         OBJECTS { bgpPeerLastError,
+                   bgpPeerState,
+                   cbgpPeerLastErrorTxt,
+                   cbgpPeerPrevState
+         }
+         STATUS  current
+         DESCRIPTION
+                 "The BGP cbgpFsmStateChange notification is generated
+                  for every BGP FSM state change. The bgpPeerRemoteAddr
+                  value is attached to the notification object ID."
+         ::= { ciscoBgp4NotifyPrefix 1 }
+
+    cbgpBackwardTransition NOTIFICATION-TYPE
+        OBJECTS { bgpPeerLastError,
+                  bgpPeerState,
+                  cbgpPeerLastErrorTxt,
+                  cbgpPeerPrevState
+        }
+        STATUS  current
+        DESCRIPTION
+               "The cbgpBackwardTransition Event is generated when the
+                BGP FSM moves from a higher numbered state to a lower
+                numbered state. The bgpPeerRemoteAddr value is attached
+                to the notification object ID."
+        ::= { ciscoBgp4NotifyPrefix 2 }
+
+    cbgpPrefixThresholdExceeded NOTIFICATION-TYPE
+        OBJECTS { cbgpPeerPrefixAdminLimit,
+                  cbgpPeerPrefixThreshold
+        }
+        STATUS  current
+        DESCRIPTION
+                "The cbgpPrfefixMaxThresholdExceeded notification is
+                 generated when prefix count exceeds the configured
+                 warning threshold on a session for an address
+                 family. The bgpPeerRemoteAddr, cbgpPeerAddrFamilyAfi
+                 and cbgpPeerAddrFamilySafi values are attached to the
+                 notification object ID."
+        ::= { ciscoBgp4NotifyPrefix 3 }
+
+    cbgpPrefixThresholdClear NOTIFICATION-TYPE
+        OBJECTS { cbgpPeerPrefixAdminLimit,
+                  cbgpPeerPrefixClearThreshold
+        }
+        STATUS  current
+        DESCRIPTION
+               "The cbgpPrefixThresholdClear notification is
+                generated when prefix count drops below the configured
+                clear threshold on a session for an address family once
+                cbgpPrefixThresholdExceeded is generated. This won't
+                be generated if the peer session goes down after the
+                generation of cbgpPrefixThresholdExceeded.
+                The bgpPeerRemoteAddr, cbgpPeerAddrFamilyAfi and
+                cbgpPeerAddrFamilySafi values are attached to the
+                notification object ID."
+        ::= { ciscoBgp4NotifyPrefix 4 }
+
+
+    -- ciscoBgp4NotificationPrefix is deprecated.
+    -- Do not define any objects and/or notifications
+    -- under this OID.
     ciscoBgp4NotificationPrefix     
                 OBJECT IDENTIFIER ::= { ciscoBgp4MIB 2 }
 
@@ -452,13 +1017,77 @@ ciscoBgp4MIB MODULE-IDENTITY
     -- compliance statements
 
     ciscoBgp4MIBCompliance MODULE-COMPLIANCE
-        STATUS current
+        STATUS deprecated
         DESCRIPTION
                 "The compliance statement for entities which implement
                  the Cisco BGP4 MIB"
         MODULE  -- this module     
             MANDATORY-GROUPS  { ciscoBgp4RouteGroup }
         ::= { ciscoBgp4MIBCompliances 1 }
+
+    ciscoBgp4MIBComplianceRev1 MODULE-COMPLIANCE
+        STATUS deprecated
+        DESCRIPTION
+                "The compliance statement for entities which implement
+                 the Cisco BGP4 MIB"
+        MODULE  -- this module     
+            MANDATORY-GROUPS  { ciscoBgp4RouteGroup, 
+                                ciscoBgp4PeerGroup, 
+                                ciscoBgp4NotificationsGroup }
+
+            OBJECT   cbgpRouteAggregatorAddrType
+            SYNTAX   INTEGER { ipv4(1) }
+            DESCRIPTION
+                "An implementation is only required to support
+                IPv4 address type for aggregator address."
+
+            OBJECT   cbgpRouteAggregatorAddr
+            SYNTAX   InetAddress (SIZE (4))
+            DESCRIPTION
+                "An implementation is only required to support
+                IPv4 address type for aggregator address."
+
+            OBJECT   cbgpPeerPrefixLimit
+            SYNTAX   Unsigned32 (1..4294967295)
+            MIN-ACCESS  read-only
+            DESCRIPTION
+               "SET operation is not supported on this object"
+
+        ::= { ciscoBgp4MIBCompliances 2 }
+
+    ciscoBgp4MIBComplianceRev2 MODULE-COMPLIANCE
+        STATUS current
+        DESCRIPTION
+                "The compliance statement for entities which implement
+                 the Cisco BGP4 MIB"
+        MODULE  -- this module
+            MANDATORY-GROUPS  { ciscoBgp4RouteGroup,
+                                ciscoBgp4PeerGroup1,
+                                ciscoBgp4NotificationsGroup1 }
+
+            OBJECT   cbgpRouteAggregatorAddrType
+            SYNTAX   INTEGER { ipv4(1) }
+            DESCRIPTION
+                "An implementation is only required to support
+                IPv4 address type."
+
+            OBJECT   cbgpRouteAggregatorAddr
+            SYNTAX   OCTET STRING (SIZE (0..4))
+            DESCRIPTION
+                "An implementation is only required to support
+                IPv4 address type."
+
+            OBJECT   cbgpPeerPrefixAdminLimit
+            MIN-ACCESS  read-only
+            DESCRIPTION
+                    "SET operation is not supported on this object"
+
+            OBJECT   cbgpPeerPrefixThreshold
+            MIN-ACCESS  read-only
+            DESCRIPTION
+                    "SET operation is not supported on this object"
+
+        ::= { ciscoBgp4MIBCompliances 3 }
 
     -- Units of conformance
 
@@ -468,7 +1097,7 @@ ciscoBgp4MIB MODULE-IDENTITY
                     cbgpRouteNextHop,
                     cbgpRouteMedPresent,          
                     cbgpRouteMultiExitDisc,
-                    cbgpRouteLocalPrefPresent,   
+                    cbgpRouteLocalPrefPresent, 
                     cbgpRouteLocalPref,       
                     cbgpRouteAtomicAggregate, 
                     cbgpRouteAggregatorAS,    
@@ -477,10 +1106,64 @@ ciscoBgp4MIB MODULE-IDENTITY
                     cbgpRouteBest,            
                     cbgpRouteUnknownAttr         
                   }        
-        STATUS    current
+        STATUS   current 
         DESCRIPTION
                 "A collection of objects providing information 
                 about routes received by BGP speaker."  
         ::= { ciscoBgp4MIBGroups 1 }
 
+    ciscoBgp4PeerGroup OBJECT-GROUP
+        OBJECTS   { 
+                    cbgpPeerPrefixAccepted, 
+                    cbgpPeerPrefixDenied,    
+                    cbgpPeerPrefixLimit,
+                    cbgpPeerPrefixAdvertised,  
+                    cbgpPeerPrefixSuppressed,            
+                    cbgpPeerPrefixWithdrawn
+                    }        
+        STATUS    deprecated
+        DESCRIPTION
+                "A collection of objects providing information 
+                about routes received by BGP speaker."  
+        ::= { ciscoBgp4MIBGroups 2 }
+
+    ciscoBgp4NotificationsGroup NOTIFICATION-GROUP
+        NOTIFICATIONS { cbgpFsmStateChange }
+        STATUS     deprecated
+        DESCRIPTION
+                "The collection of  notifications related to BGP."
+        ::= { ciscoBgp4MIBGroups 3 }
+
+    ciscoBgp4PeerGroup1 OBJECT-GROUP
+        OBJECTS   {
+                    cbgpPeerPrevState,
+                    cbgpPeerLastErrorTxt,
+                    cbgpPeerCapValue,
+                    cbgpPeerAddrFamilyName,
+                    cbgpPeerAcceptedPrefixes,
+                    cbgpPeerDeniedPrefixes,
+                    cbgpPeerPrefixAdminLimit,
+                    cbgpPeerPrefixThreshold,
+                    cbgpPeerPrefixClearThreshold,
+                    cbgpPeerAdvertisedPrefixes,
+                    cbgpPeerSuppressedPrefixes,
+                    cbgpPeerWithdrawnPrefixes
+                    }
+        STATUS    current
+        DESCRIPTION
+                "A collection of objects providing information
+                about a BGP peer."
+        ::= { ciscoBgp4MIBGroups 4 }
+
+    ciscoBgp4NotificationsGroup1 NOTIFICATION-GROUP
+        NOTIFICATIONS {
+                      cbgpFsmStateChange,
+                      cbgpBackwardTransition,
+                      cbgpPrefixThresholdExceeded,
+                      cbgpPrefixThresholdClear
+                      }
+        STATUS      current
+        DESCRIPTION
+                "The collection of  notifications related to BGP."
+        ::= { ciscoBgp4MIBGroups 5 }
 END

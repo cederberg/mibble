@@ -1,3 +1,14 @@
+-- *****************************************************************
+-- CISCO-UDLDP-MIB.my
+--
+-- Nov. 1998, Padma Pullela
+--
+--
+-- Copyright (c) 1998, 2000, 2002, 2003 by cisco Systems, Inc.
+-- All rights reserved.
+-- *****************************************************************
+--
+
 CISCO-UDLDP-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
@@ -13,7 +24,7 @@ IMPORTS
                 FROM CISCO-SMI;
 
 ciscoUdldpMIB MODULE-IDENTITY
-        LAST-UPDATED        "200004100000Z"
+        LAST-UPDATED        "200302210000Z"
         ORGANIZATION        "Cisco Systems, Inc."
         CONTACT-INFO
                 "       Cisco Systems
@@ -30,6 +41,24 @@ ciscoUdldpMIB MODULE-IDENTITY
         DESCRIPTION
                   "Cisco Uni Direction Link Detection Protocol
                    MIB"
+
+        REVISION    "200302210000Z" 
+        DESCRIPTION 
+                    "Changed enumerated integer labels in the 
+                     cudldpInterfaceOperStatus object from 
+                     'bidirectional' to 'biDirectional' and 
+                     'notapplicable' to 'notApplicable'."
+
+        REVISION    "200210100000Z" 
+        DESCRIPTION
+                    "Added cudldpGlobalMode, cudldpInterfaceAdminMode
+                     and cudldpInterfaceOperMode objects. 
+                     Removed default values for 
+                     cudldpGlobalEnable, cudldpHelloInterval
+                     and udldpInterfaceEnable. Deprecated 
+                     cudldpGlobalEnable and cudldpInterfaceEnable
+                     cudldpInterfaceAggressiveMode objects."
+
 
         REVISION    "200004100000Z" 
         DESCRIPTION
@@ -53,12 +82,13 @@ cudldpInterface      OBJECT IDENTIFIER ::=  { ciscoUdldpMIBObjects 2 }
 cudldpGlobalEnable OBJECT-TYPE
      SYNTAX      TruthValue 
      MAX-ACCESS  read-write
-     STATUS      current
+     STATUS      deprecated
      DESCRIPTION
                     "This variable is used to 
                      enable(true)/disable(false) Uni Direction 
-                     Link Detection Protocol on the device"
-        DEFVAL { true } 
+                     Link Detection Protocol on the device. 
+                     cudldpGlobalEnable is deprecated  and
+                     replaced with cudldpGlobalMode."
         ::= { cudldpGlobal 1 }
 
 cudldpHelloInterval OBJECT-TYPE
@@ -71,8 +101,29 @@ cudldpHelloInterval OBJECT-TYPE
                      sends a hello packet to all of its neighbors at
                      steady state when the link has been identified as
                      bidirectional."
-        DEFVAL { 60 }
         ::= { cudldpGlobal 2 }
+
+cudldpGlobalMode OBJECT-TYPE
+     SYNTAX      INTEGER {
+                          enable(1),
+                          disable(2),
+                          aggressive(3)
+                 } 
+     MAX-ACCESS  read-write
+     STATUS      current
+     DESCRIPTION
+                "Indicates the mode of UDLDP feature on the device.
+                 enable -- Uni Direction Link Detection Protocol is 
+                           enabled on the device.
+
+                 disable -- Uni Directional Link Detection Protocol is
+                            disabled on the device.
+
+                 aggresive -- Uni Directional Link Detection protocol
+                              is enabled in aggressive mode on the
+                              device."
+        ::= { cudldpGlobal 3 }
+
 
 -- cudldpInterface
 
@@ -99,26 +150,29 @@ cudldpInterfaceEntry OBJECT-TYPE
 CudldpInterfaceEntry ::= SEQUENCE {
       cudldpInterfaceEnable         TruthValue,
       cudldpInterfaceOperStatus     INTEGER,
-      cudldpInterfaceAggressiveMode TruthValue
+      cudldpInterfaceAggressiveMode TruthValue,
+      cudldpInterfaceAdminMode      INTEGER,
+      cudldpInterfaceOperMode       INTEGER
 }
 cudldpInterfaceEnable  OBJECT-TYPE
         SYNTAX        TruthValue
         MAX-ACCESS    read-write
-        STATUS        current
+        STATUS        deprecated
         DESCRIPTION
                 "This variable is used to enable UDLDP on this 
                  interface.  If cudldpGlobalEnable is set to 
-                 'false' then this variable has no effect"
-        DEFVAL { true } 
-::= { cudldpInterfaceEntry 1}
+                 'false' then this variable has no effect.
+                  cudldpInterfaceEnable is deprecated  and
+                  replaced with cudldpInterfaceAdminMode."
+        ::= { cudldpInterfaceEntry 1}
 
 
 cudldpInterfaceOperStatus OBJECT-TYPE
         SYNTAX        INTEGER {
                                 shutdown(1), 
                                 indeterminant(2),
-                                bidirectional(3), 
-                                notapplicable(4)
+                                biDirectional(3), 
+                                notApplicable(4)
                               }
         MAX-ACCESS    read-only
         STATUS        current
@@ -131,17 +185,18 @@ cudldpInterfaceOperStatus OBJECT-TYPE
                  'indeterminant' - Uni-Direction Link Detection  
                                    protocol has not collected enough
                                    information to determine if the 
-                                      link is bidirectional or not.
-                 'bi-directional' - A bidirectional link has been 
+                                   link is bi directional or not.
+                 'biDirectional' - A bi directional link has been 
                                     detected.
-                 'not-applicable' - Uni-Direction Link Detection 
-                                    Protocol is disabled. 
+                 'notApplicable' - Uni-Direction Link Detection 
+                                   Protocol is disabled. 
                 "
-::= { cudldpInterfaceEntry 2}
+        ::= { cudldpInterfaceEntry 2}
+
 cudldpInterfaceAggressiveMode OBJECT-TYPE
         SYNTAX        TruthValue 
         MAX-ACCESS    read-write
-        STATUS        current
+        STATUS        deprecated
         DESCRIPTION
                   "An indication of whether the UDLDP aggressive mode 
                    is enabled on this interface. If the 
@@ -158,9 +213,54 @@ cudldpInterfaceAggressiveMode OBJECT-TYPE
                    Therefore, this mode is recommended 
                    only for links that don't use hubs, media converters 
                    or similar devices, and where the unexpected loss of 
-                   the port's neighbor is not an admissible condition."
-        DEFVAL { false } 
+                   the port's neighbor is not an admissible condition.
+                   cudldpInterfaceAggressiveMode is deprecated  and
+                   replaced with cudldpInterfaceAdminMode."
         ::= { cudldpInterfaceEntry 3}
+
+cudldpInterfaceAdminMode  OBJECT-TYPE
+        SYNTAX        INTEGER {
+                          enable(1),
+                          disable(2),
+                          aggressive(3),
+                          default(4)
+                      }
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION
+                "Indicates the Administartive mode of Uni Direction 
+                 Link Detection Protocol Feature configured on this 
+                 interface.
+                 
+                 enable -- Uni Direction Link Detection Protocol is 
+                           enabled on this interface.
+
+                 disable -- Uni Direction Link Detection Protocol is
+                            disabled on this interface.
+
+                 aggressive -- Uni Direction Link Detection protocol
+                              is enabled in aggressive mode on this
+                              interface.
+
+                 default -- Whether the Uni Directiona Link Detection 
+                            protocol is enabled or not on this interface
+                            depends on the object value of 
+                            cudldpGlobalMode."
+        ::= { cudldpInterfaceEntry 4}
+
+cudldpInterfaceOperMode  OBJECT-TYPE
+        SYNTAX        INTEGER {
+                          enable(1),
+                          disable(2),
+                          aggressive(3)
+                       }
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "Indicates the operational mode of Uni Direction Link 
+                 Detection Protocol Feature on this interface."
+        ::= { cudldpInterfaceEntry 5}
+
 
 -- Conformance
 
@@ -183,7 +283,7 @@ ciscoUdldpMIBCompliance MODULE-COMPLIANCE
         ::= { ciscoUdldpMIBCompliances 1 }
 
 ciscoUdldpMIBComplianceRev1 MODULE-COMPLIANCE
-        STATUS  current
+        STATUS  deprecated
         DESCRIPTION
                 "The compliance statement for the CISCO-UDLDP-MIB."
         MODULE  -- this module
@@ -196,6 +296,30 @@ ciscoUdldpMIBComplianceRev1 MODULE-COMPLIANCE
 
         ::= { ciscoUdldpMIBCompliances 2 }
 
+ciscoUdldpMIBComplianceRev2 MODULE-COMPLIANCE
+        STATUS  current
+        DESCRIPTION
+                "The compliance statement for the CISCO-UDLDP-MIB."
+        MODULE  -- this module
+        MANDATORY-GROUPS { ciscoUdldpMIBGroup2  }
+   
+        OBJECT  cudldpGlobalMode
+        SYNTAX INTEGER { enable(1), disable(2) }
+        DESCRIPTION
+              "The support of the value 'aggressive' is not 
+               required if the global aggressive mode feature is 
+               not supported on the device."
+
+        OBJECT  cudldpInterfaceAdminMode
+        SYNTAX INTEGER { enable(1), disable(2) }
+        DESCRIPTION
+              "The support of the values 'aggressive' and/or 
+               'default' is not required if the per interface 
+               'aggressive' and/or 'default' mode feature
+               is not supported on the device."
+
+        ::= { ciscoUdldpMIBCompliances 3 }
+
 -- Units of Conformance
 
 ciscoUdldpMIBGroup OBJECT-GROUP
@@ -204,7 +328,7 @@ ciscoUdldpMIBGroup OBJECT-GROUP
                cudldpInterfaceEnable,
                cudldpInterfaceOperStatus
               }
-      STATUS  current
+      STATUS  deprecated
       DESCRIPTION
               "A collection of objects for use with the  Uni Direction 
                Link Detection Protocol."
@@ -215,9 +339,23 @@ ciscoUdldpAggreModeOptionalGroup OBJECT-GROUP
                cudldpInterfaceAggressiveMode,
                cudldpHelloInterval
               }
-      STATUS  current
+      STATUS  deprecated
       DESCRIPTION
               " A collection of optional objects providing UDLDP 
                 aggressive mode configuration information." 
         ::= { ciscoUdldpMIBGroups 2 }
+
+ciscoUdldpMIBGroup2 OBJECT-GROUP
+      OBJECTS {
+               cudldpGlobalMode,
+               cudldpInterfaceAdminMode,
+               cudldpInterfaceOperMode,
+               cudldpHelloInterval,
+               cudldpInterfaceOperStatus
+              }
+      STATUS  current
+      DESCRIPTION
+              "A collection of objects providing Uni Direction
+               Link Detection Protocol information."
+        ::= { ciscoUdldpMIBGroups 3 }
 END

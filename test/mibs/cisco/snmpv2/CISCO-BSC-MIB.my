@@ -3,44 +3,42 @@
 --
 -- Mar 1995, Sandy Logie
 --
--- Copyright (c) 1995-1997 by cisco Systems, Inc.
+-- Copyright (c) 1995-1997, 2004 by cisco Systems, Inc.
 -- Prepared by Metaplex
 -- All rights reserved.
 -- 
--- *****************************************************************
--- Original source document:  None
 
 
 CISCO-BSC-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-	MODULE-IDENTITY, OBJECT-TYPE, Counter32, Integer32
-		FROM SNMPv2-SMI
-	MODULE-COMPLIANCE, OBJECT-GROUP
-		FROM SNMPv2-CONF
-	ifIndex
-		FROM IF-MIB 
-	TruthValue
-		FROM SNMPv2-TC 
-	ciscoMgmt
-		FROM CISCO-SMI;
+        MODULE-IDENTITY, OBJECT-TYPE, Counter32, Integer32
+                FROM SNMPv2-SMI
+        MODULE-COMPLIANCE, OBJECT-GROUP
+                FROM SNMPv2-CONF
+        ifIndex
+                FROM IF-MIB 
+        TruthValue
+                FROM SNMPv2-TC 
+        ciscoMgmt
+                FROM CISCO-SMI;
 
 
 ciscoBscMIB MODULE-IDENTITY
-	LAST-UPDATED	"9701250000Z"
-	ORGANIZATION	"Cisco Systems, Inc."
-	CONTACT-INFO
-		"	Cisco Systems
-			Customer Service
+        LAST-UPDATED    "200408250000Z"
+        ORGANIZATION    "Cisco Systems, Inc."
+        CONTACT-INFO
+                "       Cisco Systems
+                        Customer Service
 
-		Postal: 170 W. Tasman Drive
-			San Jose, CA 95134
-			USA
+                Postal: 170 W. Tasman Drive
+                        San Jose, CA 95134
+                        USA
 
-		   Tel: +1 800 553-NETS
-		E-mail: cs-bisync@cisco.com"
-	DESCRIPTION
-		"The MIB module for BSC.
+                   Tel: +1 800 553-NETS
+                E-mail: cs-bisync@cisco.com"
+        DESCRIPTION
+                "The MIB module for BSC.
 
    Overview of BSC MIB
   
@@ -53,25 +51,32 @@ ciscoBscMIB MODULE-IDENTITY
     2) BSC Control Units (stations on a port)
   
    The BSC ports are identified by the interface index, and additional 
-   information about this interface can be obtained from the Cisco Serial 
-   Interface MIB.  
-   The BSC Control Units are identified by the Control Unit address; this 
-   is the address used by BSTUN to route the BSC traffic - it is therefore 
-   equivalent to the bstunRouteStationAddress in the bstunRouteTable MIB.
+   information about this interface can be obtained from the Cisco 
+   Serial Interface MIB.  
+   The BSC Control Units are identified by the Control Unit address; 
+   this is the address used by BSTUN to route the BSC traffic - it is
+   therefore equivalent to the bstunRouteStationAddress in the 
+   bstunRouteTable MIB.
             "
-	REVISION	"9701250000Z"
-	DESCRIPTION
-		"Added support for BSTUN over Frame-relay,
+        REVISION        "200408250000Z"
+        DESCRIPTION
+                "Added 'generic' value to the bscPortRole object for
+                 BSC generic support."
+
+        REVISION        "9701250000Z"
+        DESCRIPTION
+               "Added support for BSTUN over Frame-relay,
                 Extended address and 3780 dial-in."
-	REVISION	"9508210000Z"
-	DESCRIPTION
-		"Minor cleanups to pacify mib compiler."
+
+        REVISION         "9508210000Z"
+        DESCRIPTION
+               "Minor cleanups to pacify mib compiler."
     ::= { ciscoMgmt 36 }  
 
-bscObjects	OBJECT IDENTIFIER ::= { ciscoBscMIB 1}
-bscPorts	OBJECT IDENTIFIER ::= { bscObjects 1}
-bscControlUnits	OBJECT IDENTIFIER ::= { bscObjects 2}
-bscExtAddresses	OBJECT IDENTIFIER ::= { bscObjects 3}
+bscObjects      OBJECT IDENTIFIER ::= { ciscoBscMIB 1}
+bscPorts        OBJECT IDENTIFIER ::= { bscObjects 1}
+bscControlUnits OBJECT IDENTIFIER ::= { bscObjects 2}
+bscExtAddresses OBJECT IDENTIFIER ::= { bscObjects 3}
 
 -- *********************************************************************
 -- * Bsc Port Table
@@ -82,8 +87,8 @@ bscPortTable OBJECT-TYPE
     MAX-ACCESS not-accessible
     STATUS current
     DESCRIPTION
-        "A list of port (serial interfaces) which have been configured to 
-         support a BSC BSTUN group."
+        "A list of port (serial interfaces) which have been configured 
+         to support a BSC BSTUN group."
     ::= { bscPorts 1 }
 
 bscPortEntry OBJECT-TYPE
@@ -132,18 +137,21 @@ bscPortRole OBJECT-TYPE
         primary(1),
         secondary(2),
         contention(3),
-        dialContention(4) 
+        dialContention(4),
+        generic(5) 
     }
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
         "The router's DLC role to the attached node.
-        (If the bscPortRole is primary, this implies that
-        the port is connected to a remote secondary device.)
-        If this object does not have the value 'contention'
+        If the bscPortRole is primary, this implies that
+        the port is connected to a remote secondary device.
+        If the role is generic, this indicates that the port 
+        will be running framed bisynchronous frames with an unknown 
+        protocol. If this object does not have the value 'contention'
         then bscPortVirtualAddress will not be instantiated.
         If this object does not have the value 'dialContention'
-        then bscPortContentionDialTimeout will not be instantiated"
+        then bscPortContentionDialTimeout will not be instantiated."
     ::= { bscPortEntry 1 }
 
 
@@ -378,8 +386,8 @@ bscCUAddress OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-	"This value is the poll address of the
-	 BSC Control Unit.  This address must be unique
+        "This value is the poll address of the
+         BSC Control Unit.  This address must be unique
          within a BSTUN Group."
     ::= { bscCUEntry 1 }
 
@@ -388,8 +396,8 @@ bscCUState OBJECT-TYPE
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
-        "State of the BSC Control Unit; when active this indicates that the 
-         remote Control Unit is polling or responding to polls."
+        "State of the BSC Control Unit; when active this indicates that
+         the remote Control Unit is polling or responding to polls."
     ::= { bscCUEntry 2 }
 
 bscCUBytesSent OBJECT-TYPE
@@ -502,9 +510,10 @@ bscExtAddressTable OBJECT-TYPE
     MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
-              "List of all addresses configured by the bsc extended-address 
-               command. This applies only to interfaces with an ifType of 
-               'bsc'. The address entries must be unique per interface."
+              "List of all addresses configured by the bsc
+               extended-address command. This applies only to interfaces
+               with an ifType of 'bsc'. The address entries must be
+               unique per interface."
     ::= { bscExtAddresses 1 }
 
 bscExtAddressEntry OBJECT-TYPE
@@ -560,8 +569,8 @@ bscMibCompliance    MODULE-COMPLIANCE
         MODULE  -- this module
                 MANDATORY-GROUPS {
                         bscPortsGroup,
-			bscControlUnitsGroup
-		}
+                        bscControlUnitsGroup
+                }
          ::= { bscMibCompliances 1 }
          
 bscMibComplianceRev1    MODULE-COMPLIANCE
@@ -572,9 +581,9 @@ bscMibComplianceRev1    MODULE-COMPLIANCE
         MODULE  -- this module
                 MANDATORY-GROUPS {
                         bscPortsGroupRev1,
-			bscControlUnitsGroup,
+                        bscControlUnitsGroup,
                         bscExtAddressGroup
-		}
+                }
          ::= { bscMibCompliances 2 }
 
 bscPortsGroup OBJECT-GROUP

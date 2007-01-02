@@ -3,12 +3,10 @@
 --
 -- November 1997, Cliff L. Sojourner
 --
--- Copyright (c) 1996-1997, 1998 by cisco Systems, Inc.
+-- Copyright (c) 1998, 2002 by cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
 --
- 
-
 CISCO-ENTITY-SENSOR-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
@@ -18,7 +16,8 @@ IMPORTS
     Integer32
         FROM SNMPv2-SMI
     MODULE-COMPLIANCE, 
-    OBJECT-GROUP
+    OBJECT-GROUP,
+    NOTIFICATION-GROUP
         FROM SNMPv2-CONF
     TEXTUAL-CONVENTION, 
     TimeStamp,
@@ -29,8 +28,8 @@ IMPORTS
     ciscoMgmt
         FROM CISCO-SMI;
 
-entitySensorMIB MODULE-IDENTITY
-        LAST-UPDATED "9812102112Z"
+ciscoEntitySensorMIB MODULE-IDENTITY
+        LAST-UPDATED "200509080000Z"
         ORGANIZATION "Cisco Systems, Inc."
         CONTACT-INFO
          "Postal: Cisco Systems, Inc.
@@ -45,16 +44,35 @@ entitySensorMIB MODULE-IDENTITY
             "The CISCO-ENTITY-SENSOR-MIB is used to monitor 
             the values of sensors in the Entity-MIB (RFC 2037) 
             entPhysicalTable."
+        REVISION       "200509080000Z"
+        DESCRIPTION
+            "Change the module descriptor name from entitySensorMIB
+             to ciscoEntitySensorMIB since ENTITY-SENSOR-MIB also
+             uses the same name and there is a conflict."
+        REVISION       "200301070000Z"
+        DESCRIPTION
+            "[1] Add dBm(14) in SensorDataType."
+
+        REVISION       "200210160000Z"
+        DESCRIPTION
+            "[1] Add critical(30) in CSensorThresholdSeverity.
+             [2] Change to MAX-ACCESS read-write for 3 objects.
+             [3] Add entitySensorMIBComplianceV02."
+
+        REVISION        "200006200000Z"
+        DESCRIPTION
+            "Initial version of this MIB module."
+
         ::= { ciscoMgmt 91 }
 
 entitySensorMIBObjects
-        OBJECT IDENTIFIER ::= { entitySensorMIB 1 }
+        OBJECT IDENTIFIER ::= { ciscoEntitySensorMIB 1 }
 
 entitySensorMIBNotificationPrefix
-        OBJECT IDENTIFIER ::= { entitySensorMIB 2 }
+        OBJECT IDENTIFIER ::= { ciscoEntitySensorMIB 2 }
 
 entitySensorMIBConformance
-        OBJECT IDENTIFIER ::= { entitySensorMIB 3 }
+        OBJECT IDENTIFIER ::= { ciscoEntitySensorMIB 3 }
 
 -- textual conventions
 
@@ -76,6 +94,7 @@ SensorDataType ::= TEXTUAL-CONVENTION
         cmm(11),:        cubic meters per minute (airflow)
         truthvalue(12):  value takes { true(1), false(2) }
         specialEnum(13): value takes user defined enumerated values
+        dBm(14):         dB relative to 1mW of power
         "
     SYNTAX INTEGER {
         other(1),
@@ -90,7 +109,8 @@ SensorDataType ::= TEXTUAL-CONVENTION
         rpm(10),
         cmm(11),
         truthvalue(12),
-        specialEnum(13)
+        specialEnum(13),
+        dBm(14)
     }
 
 SensorDataScale ::= TEXTUAL-CONVENTION
@@ -133,19 +153,21 @@ SensorPrecision ::= TEXTUAL-CONVENTION
         correctly indicated.
 
         For example, a temperature sensor that can measure 0o to 
-        100o C in 0.1o increments, +/- 0.05o, would have a SensorPrecision
-        of 1, a SensorDataScale of units(0), and a SensorValue ranging from 
-        0 to 1000.  The SensorValue would be interpreted as (degrees C * 10).
+        100o C in 0.1o increments, +/- 0.05o, would have a 
+        SensorPrecision of 1, a SensorDataScale of units(0), and a 
+        SensorValue ranging from 0 to 1000.  
+        The SensorValue would be interpreted as (degrees C * 10).
 
-        If that temperature sensor's precision were 0.1o but its accuracy
-        were only +/- 0.5o, then the SensorPrecision would be 0.  The SensorValue 
-        would be interpreted as degrees C.
+        If that temperature sensor's precision were 0.1o but its 
+        accuracy were only +/- 0.5o, then the SensorPrecision would 
+        be 0. The SensorValue would be interpreted as degrees C.
 
-        Another example: a fan rotation speed sensor that measures RPM from 
-        0 to 10,000 in 100 RPM increments, with an accuracy of +50/-37 RPM,
-        would have a SensorPrecision of -2, a SensorDataScale of units(9), and
-        and a SensorValue ranging from 0 to 10000.  The 10s and 1s digits of 
-        SensorValue would always be 0.
+        Another example: a fan rotation speed sensor that measures RPM 
+        from 0 to 10,000 in 100 RPM increments, with an accuracy of 
+        +50/-37 RPM, would have a SensorPrecision of -2, a 
+        SensorDataScale of units(9), and a SensorValue ranging from 0 
+        to 10000. The 10s and 1s digits of SensorValue would always 
+        be 0.
         "
     SYNTAX INTEGER (-8..9)
 
@@ -229,15 +251,18 @@ SensorThresholdSeverity ::= TEXTUAL-CONVENTION
     DESCRIPTION
         "sensor threshold severity.  Valid values are:
 
-        other(1): a severity other than those listed below.
-        minor(10): Minor Problem threshold.
-        major(20): Major Problem threshold.
-
-        "
+        other(1)    : a severity other than those listed below.
+        minor(10)   : Minor Problem threshold.
+        major(20)   : Major Problem threshold.
+        critical(30): Critical problem threshold. A system might shut
+                      down the sensor associated FRU automatically if
+                      the sensor value reach the critical problem
+                      threshold."
     SYNTAX INTEGER {
         other(1),
         minor(10),
-        major(20)
+        major(20),
+        critical(30)
     }
 
 SensorThresholdRelation ::= TEXTUAL-CONVENTION
@@ -251,8 +276,8 @@ SensorThresholdRelation ::= TEXTUAL-CONVENTION
                             the threshold value
         greaterThan(3):     if the sensor value is greater than 
                             the threshold value
-        greaterOrEqual(4):  if the sensor value is greater than or equal to 
-                            the threshold value
+        greaterOrEqual(4):  if the sensor value is greater than or equal
+                            to the threshold value
         equalTo(5):         if the sensor value is equal to
                             the threshold value
         notEqualTo(6):      if the sensor value is not equal to
@@ -449,14 +474,14 @@ entSensorThresholdIndex OBJECT-TYPE
     STATUS        current 
     DESCRIPTION
         "An index that uniquely identifies an entry
-        in the entSensorThreshold table. This index
+        in the entSensorThresholdTable. This index
         permits the same sensor to have several 
         different thresholds."
     ::= { entSensorThresholdEntry 1 }
 
 entSensorThresholdSeverity OBJECT-TYPE
     SYNTAX        SensorThresholdSeverity 
-    MAX-ACCESS    read-only
+    MAX-ACCESS    read-write
     STATUS        current 
     DESCRIPTION
         "This variable indicates the severity of this threshold."
@@ -464,7 +489,7 @@ entSensorThresholdSeverity OBJECT-TYPE
 
 entSensorThresholdRelation OBJECT-TYPE
     SYNTAX        SensorThresholdRelation 
-    MAX-ACCESS    read-only
+    MAX-ACCESS    read-write
     STATUS        current 
     DESCRIPTION
         "This variable indicates the relation between sensor value 
@@ -482,7 +507,7 @@ entSensorThresholdRelation OBJECT-TYPE
             then
                 if (entSensorThresholdNotificationEnable == true)) 
                 then
-                    raise_alarm(entSensorThresholdAlarmOID);
+                    raise_alarm(sensor's entPhysicalIndex);
                 endif
             endif
         endif
@@ -492,7 +517,7 @@ entSensorThresholdRelation OBJECT-TYPE
 
 entSensorThresholdValue OBJECT-TYPE
     SYNTAX        SensorValue 
-    MAX-ACCESS    read-only
+    MAX-ACCESS    read-write
     STATUS        current 
     DESCRIPTION
         "This variable indicates the value of the threshold.
@@ -541,6 +566,7 @@ entSensorThresholdNotificationEnable OBJECT-TYPE
         "
     ::= { entSensorThresholdEntry 6 }
 
+
 --
 -- notifications
 --
@@ -580,6 +606,21 @@ entitySensorMIBGroups
 --
 
 entitySensorMIBComplianceV01 MODULE-COMPLIANCE
+    STATUS  deprecated 
+    DESCRIPTION
+        "An Entity-MIB implementation that lists
+        sensors in its entPhysicalTable must implement
+        this group."
+    MODULE  -- this module
+    MANDATORY-GROUPS {
+        entitySensorValueGroup,
+        entitySensorThresholdGroup,
+        entitySensorThresholdNotificationGroup
+    }
+    ::= { entitySensorMIBCompliances 1 }
+
+
+entitySensorMIBComplianceV02 MODULE-COMPLIANCE
     STATUS  current
     DESCRIPTION
         "An Entity-MIB implementation that lists 
@@ -587,11 +628,34 @@ entitySensorMIBComplianceV01 MODULE-COMPLIANCE
         this group."
     MODULE  -- this module
     MANDATORY-GROUPS { 
-        entitySensorValueGroup
-        , entitySensorThresholdGroup
---      , entitySensorThresholdNotificationGroup 
+        entitySensorThresholdGroup
     }
-    ::= { entitySensorMIBCompliances 1 }
+    GROUP entitySensorValueGroup
+    DESCRIPTION
+        "This group is mandatory for the systems which don't
+         support IETF version of ENTITY-SENSOR-MIB."
+
+    GROUP entitySensorThresholdNotificationGroup
+    DESCRIPTION
+        "This group is mandatory for the systems which support
+         entitySensorValueGroup group."
+ 
+    OBJECT entSensorThresholdSeverity
+    MIN-ACCESS  read-only
+    DESCRIPTION
+        " Write access is not required."
+ 
+    OBJECT  entSensorThresholdRelation
+    MIN-ACCESS  read-only
+    DESCRIPTION
+        " Write access is not required."
+ 
+    OBJECT  entSensorThresholdValue
+    MIN-ACCESS  read-only
+    DESCRIPTION
+        " Write access is not required."
+
+    ::= { entitySensorMIBCompliances 2 }
 
 --
 -- units of conformance
@@ -630,13 +694,14 @@ entitySensorThresholdGroup OBJECT-GROUP
         sensors."
     ::= { entitySensorMIBGroups 2 }
 
---
--- entitySensorThresholdNotificationGroup NOTIFICATION-GROUP
---    NOTIFICATIONS { entSensorThresholdNotification }
---    STATUS current
---    DESCRIPTION
---        "the collection of notifications used for
---        monitoring sensor threshold activity."
---    ::= { entitySensorMIBGroups 3 } 
+
+entitySensorThresholdNotificationGroup NOTIFICATION-GROUP
+   NOTIFICATIONS { entSensorThresholdNotification }
+   STATUS current
+   DESCRIPTION
+       "the collection of notifications used for
+       monitoring sensor threshold activity."
+   ::= { entitySensorMIBGroups 3 } 
+
 
 END

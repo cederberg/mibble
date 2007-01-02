@@ -4,7 +4,7 @@
 -- Nov 1994, Derek Bolton
 -- Jan 1995, Sandy Logie
 --
--- Copyright (c) 1995-1997, 2001 by cisco Systems, Inc.
+-- Copyright (c) 1995-1997, 2001, 2003 by cisco Systems, Inc.
 -- Prepared by Metaplex
 -- All rights reserved.
 -- 
@@ -26,7 +26,7 @@ IMPORTS
 		FROM CISCO-SMI;
 
 ciscoBstunMIB MODULE-IDENTITY
-	LAST-UPDATED 	"200106190000Z"
+	LAST-UPDATED 	"200302100000Z"
 	ORGANIZATION 	"Cisco Systems, Inc."
 	CONTACT-INFO
 		"       Cisco Systems
@@ -80,6 +80,9 @@ ciscoBstunMIB MODULE-IDENTITY
       packet and byte counters.
             
             "
+        REVISION        "200302100000Z"
+	DESCRIPTION
+		"Added Asynchronous POS to IP conversion support"
         REVISION        "200106190000Z"
 	DESCRIPTION
 		"Added Bisync to IP conversion peer support"
@@ -195,7 +198,10 @@ bstunProtocolType OBJECT-TYPE
                 adplex(4),
                 diebold(5),
                 asyncGeneric(6),
-                mdi(7)
+                mdi(7),
+                mosec(8),
+                gddb(9),
+                apos(10)
         }
     MAX-ACCESS read-only
     STATUS current
@@ -390,7 +396,9 @@ BstunRouteEntry ::=
          bstunRouteBIPForeignPort
             Integer32,
          bstunRouteBIPDeviceStatus
-            BITS
+            BITS,
+         bstunRouteAPIPHeaderVersion
+            INTEGER
     }
 
 
@@ -416,15 +424,16 @@ bstunRouteStationAddress OBJECT-TYPE
 
 bstunRouteType OBJECT-TYPE
     SYNTAX INTEGER { none(1), ip(2), serial(3), serialDirect(4), 
-                     serialFrameRelay(5), serialLLC2(6), bip(7) }
+                     serialFrameRelay(5), serialLLC2(6), bip(7), 
+                     apip(8) }
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
         "The type of identification of the remote partner.
          If ip then the value is in bstunRouteIP; if serial or
-         serialDirect then the value is in bstunRouteSerial; if bip 
-         then the value is in bstunRouteIP, bstunRouteBIPLocalPort 
-         and bstunRouteBIPForeignPort."
+         serialDirect then the value is in bstunRouteSerial; if 
+         bip or apip then the value is in bstunRouteIP, 
+         bstunRouteBIPLocalPort and bstunRouteBIPForeignPort."
     ::= { bstunRouteEntry 3 }
 
 bstunRouteIP OBJECT-TYPE
@@ -607,6 +616,23 @@ bstunRouteBIPDeviceStatus OBJECT-TYPE
                      Bit 11, if set, indicates that the bisync device is
                              reporting  a busy condition."
     ::= { bstunRouteEntry 18 }
+
+bstunRouteAPIPHeaderVersion OBJECT-TYPE
+    SYNTAX INTEGER {v0(1), v1(2), v2(3)}
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+	"Specifies the tunneling header format to use for APIP:
+		v0, if set, indicates a 2 byte encapsulation header. 
+		    The length of the header is included in the size of 
+		    the sent packet.
+		v1, if set, indicates a 2 byte encapsulation header. 
+		    The length of the header is excluded from the size of 
+		    the sent packet.
+		v2, if set, indicates a 4 byte encapsulation header. 
+		    The length of the header is excluded from the size of 
+		    the sent packet."
+   ::= { bstunRouteEntry 19 }
 -- *************************************************************************
 -- * BSTUN notifications               
 -- *************************************************************************
@@ -672,7 +698,7 @@ bstunMibCompliance    MODULE-COMPLIANCE
          ::= { bstunMibCompliances 1 }
 
 bstunMibComplianceRev1    MODULE-COMPLIANCE
-        STATUS deprecated
+        STATUS obsolete
         DESCRIPTION
                 "The compliance statement for all Cisco systems that 
                 implement  BSTUN functions."
@@ -686,7 +712,7 @@ bstunMibComplianceRev1    MODULE-COMPLIANCE
          ::= { bstunMibCompliances 2 }
 
 bstunMibComplianceRev2    MODULE-COMPLIANCE
-        STATUS current
+        STATUS deprecated
         DESCRIPTION
                 "The compliance statement for all Cisco systems that 
                 implement  BSTUN functions."
@@ -699,6 +725,33 @@ bstunMibComplianceRev2    MODULE-COMPLIANCE
                         bstunNotificationGroupRev1
 		}
          ::= { bstunMibCompliances 3 }
+         
+bstunMibComplianceRev3    MODULE-COMPLIANCE
+        STATUS current
+        DESCRIPTION
+                "The compliance statement for all Cisco systems that 
+                implement  BSTUN functions."
+        MODULE  -- this module
+                MANDATORY-GROUPS {
+                        bstunGlobalGroupRev1,
+			bstunGroupGroup,
+                        bstunPortGroup,
+                        bstunRouteGroupRev1,
+                        bstunNotificationGroupRev1
+		}
+                GROUP bstunRouteBipGroup
+                DESCRIPTION
+                        "This group is mandatory when implementing
+                        the bip route type."
+                GROUP bstunRoutePortsGroup
+                DESCRIPTION
+                        "This group is mandatory when implementing
+                        the bip or apip route types."
+                GROUP bstunRouteApipGroup
+                DESCRIPTION
+                        "This group is mandatory when implementing
+                        the apip route type."
+         ::= { bstunMibCompliances 4 }
          
 bstunGlobalGroup OBJECT-GROUP
         OBJECTS {
@@ -780,7 +833,7 @@ bstunRouteGroupRev1 OBJECT-GROUP
                 bstunRouteRSAP,
                 bstunLLC2Priority
         }
-        STATUS deprecated
+        STATUS current
         DESCRIPTION
                 "A collection of objects providing information about
                  BSTUN defined routes."
@@ -805,7 +858,7 @@ bstunRouteGroupRev2 OBJECT-GROUP
                 bstunRouteBIPForeignPort,
                 bstunRouteBIPDeviceStatus
         }
-        STATUS current
+        STATUS deprecated
         DESCRIPTION
                 "A collection of objects providing information about
                  BSTUN defined routes."
@@ -828,6 +881,40 @@ bstunNotificationGroupRev1 NOTIFICATION-GROUP
 	STATUS current
 	DESCRIPTION
 		"A collection of notifications. "
-	::= { bstunMibGroups 9 } 
+	::= { bstunMibGroups 9 }
+
+bstunRouteBipGroup OBJECT-GROUP
+        OBJECTS {
+                bstunRouteBIPPassive,
+                bstunRouteBIPDeviceStatus
+        }
+        STATUS current
+        DESCRIPTION
+                "A objects providing information about
+                 BSTUN defined routes for BIP protocol."
+        ::= { bstunMibGroups 10}
+
+bstunRoutePortsGroup OBJECT-GROUP
+        OBJECTS {
+                bstunRouteBIPLocalPort,
+                bstunRouteBIPForeignPort
+        }
+        STATUS current
+        DESCRIPTION
+                "A objects providing port number informaton information 
+                 about BSTUN defined routes for BIP and APIP protocols."
+        ::= { bstunMibGroups 11}
+
+ 
+bstunRouteApipGroup OBJECT-GROUP
+        OBJECTS {
+                bstunRouteAPIPHeaderVersion
+        }
+        STATUS current
+        DESCRIPTION
+                "A objects providing information about
+                 BSTUN defined routes for APIP protocol."
+        ::= { bstunMibGroups 12}
 
 END
+

@@ -4,8 +4,10 @@
 -- August 1997, Bob Stewart
 -- June 2001, Thai Dang
 -- August 2001, A S Kiran Koushik
+-- April 2002, David L. Battle
+-- Jun 2002, Kapil Kataria
 --
--- Copyright (c) 1997, 1998, 2001 by cisco Systems, Inc.
+-- Copyright (c) 1997, 1998, 2001, 2002 by cisco Systems, Inc.
 -- All rights reserved.
 -- 
 -- *****************************************************************
@@ -15,16 +17,16 @@ CISCO-BULK-FILE-MIB DEFINITIONS ::= BEGIN
 IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE,
     NOTIFICATION-TYPE, zeroDotZero,
-    Counter32, Gauge32                        FROM SNMPv2-SMI
-    Unsigned32                                FROM CISCO-TC
+    Counter32, Gauge32, Unsigned32            FROM SNMPv2-SMI
     RowStatus, DisplayString,
     TruthValue,
     TimeStamp                                FROM SNMPv2-TC
-    MODULE-COMPLIANCE, OBJECT-GROUP        FROM SNMPv2-CONF
+    MODULE-COMPLIANCE, OBJECT-GROUP,
+    NOTIFICATION-GROUP                       FROM SNMPv2-CONF
     ciscoMgmt                                FROM CISCO-SMI;
  
 ciscoBulkFileMIB MODULE-IDENTITY
-    LAST-UPDATED "200108220000Z"
+    LAST-UPDATED "200206100000Z"
     ORGANIZATION "Cisco Systems, Inc."
     CONTACT-INFO "Cisco Systems
                   Customer Service
@@ -39,6 +41,16 @@ ciscoBulkFileMIB MODULE-IDENTITY
     DESCRIPTION
         "The MIB module for creating and deleting bulk files of
         SNMP data for file transfer."
+
+    REVISION  "200206100000Z"
+    DESCRIPTION
+        "Added enum 'forcedCreate' for object 'cbfDefineFileNow'
+         for forced creation of configuration files."
+
+    REVISION  "200205150000Z"
+    DESCRIPTION
+        "Added default values for all read-write objects in table to
+         simplify creation of table rows."
 
     REVISION  "200108220000Z"
     DESCRIPTION
@@ -405,7 +417,7 @@ cbfDefineFileIndex OBJECT-TYPE
     ::= { cbfDefineFileEntry 1 }
 
 cbfDefineFileName OBJECT-TYPE
-    SYNTAX      DisplayString (SIZE (1..255))
+    SYNTAX      DisplayString (SIZE (0..255))
     MAX-ACCESS  read-create
     STATUS      current
     DESCRIPTION
@@ -413,6 +425,7 @@ cbfDefineFileName OBJECT-TYPE
 
         Explicit device or path choices in the value of this object
         override cbfDefineFileStorage."
+    DEFVAL { "" }
     ::= { cbfDefineFileEntry 2 }
 
 cbfDefineFileStorage OBJECT-TYPE
@@ -460,14 +473,21 @@ cbfDefineFileNow OBJECT-TYPE
     SYNTAX      INTEGER { notActive(1), 
                           ready(2), 
                           create(3), 
-                          running(4) }
+                          running(4),
+                          forcedCreate(5) }
     MAX-ACCESS  read-create
     STATUS      current
     DESCRIPTION
-        "The control to cause file creation.  The only value that can
-        be set is 'create' and that can be set only when the value is
-        'ready'.  Setting it to 'create' begins a file creation
-        and creates a corresponding entry in cbfStatusFileTable.
+        "The control to cause file creation.  The only values that can
+        be set are 'create' and 'forcedCreate'. These can be set only 
+        when the value is 'ready'.  Setting it to 'create' begins a 
+        file creation and creates a corresponding entry in 
+        cbfStatusFileTable. The system may choose to use an already 
+        existing copy of the file instead of creating a new one. This
+        may happen if there has been no configuration change on the 
+        system and a request to recreate the file is received. 
+        Setting this object to 'forcedCreate' forces the system to 
+        create a new copy of the file.
 
         The value is 'notActve' as long as cbfDefineFileEntryStatus or
         any corresponding cbfDefineObjectEntryStatus is not active.
@@ -589,6 +609,7 @@ cbfDefineObjectID OBJECT-TYPE
         If cbfDefineObjectClass is 'lexicalTable' or 'leastCpuTable'
         this must be the OID of the table-defining SEQUENCE OF
         registration point."
+    DEFVAL { zeroDotZero }
     ::= { cbfDefineObjectEntry 3 }
 
 cbfDefineObjectEntryStatus OBJECT-TYPE
@@ -892,7 +913,8 @@ ciscoBulkFileMIBCompliance MODULE-COMPLIANCE
         MODULE        -- this module
                 MANDATORY-GROUPS { 
                         ciscoBulkFileDefineGroup,
-                        ciscoBulkFileStatusGroup
+                        ciscoBulkFileStatusGroup,
+                        ciscoBulkFileNotiGroup
                 }
         ::= { ciscoBulkFileMIBCompliances 1 }
 
@@ -905,7 +927,8 @@ ciscoBulkFileMIBComplianceRev1 MODULE-COMPLIANCE
         MODULE        -- this module
                 MANDATORY-GROUPS { 
                         ciscoBulkFileDefineGroupRev1,
-                        ciscoBulkFileStatusGroup
+                        ciscoBulkFileStatusGroup,
+                        ciscoBulkFileNotiGroup
                 }
         ::= { ciscoBulkFileMIBCompliances 2 }
 
@@ -926,6 +949,7 @@ ciscoBulkFileDefineGroup OBJECT-GROUP
                 cbfDefineFileFormat,
                 cbfDefineFileNow,
                 cbfDefineFileEntryStatus,
+                cbfDefineFileNotifyOnCompletion,
 
                 cbfDefineObjectClass,
                 cbfDefineObjectID,
@@ -935,6 +959,30 @@ ciscoBulkFileDefineGroup OBJECT-GROUP
         DESCRIPTION
                 "Bulk file definition management."
         ::= { ciscoBulkFileMIBGroups 1 }
+ciscoBulkFileStatusGroup OBJECT-GROUP
+        OBJECTS {
+                cbfStatusMaxFiles,
+                cbfStatusFiles,
+                cbfStatusHighFiles,
+                cbfStatusFilesBumped,
+                cbfStatusFileState,
+                cbfStatusFileCompletionTime,
+                cbfStatusFileEntryStatus
+        }
+        STATUS current
+        DESCRIPTION
+                "Bulk file status management."
+        ::= { ciscoBulkFileMIBGroups 2 }
+
+ciscoBulkFileNotiGroup NOTIFICATION-GROUP
+       NOTIFICATIONS {
+               cbfDefineFileCompletion 
+       } 
+        STATUS current
+        DESCRIPTION
+                "A collection of notification objects for supporting
+                Bulk file notification management."
+       ::= { ciscoBulkFileMIBGroups 3 }
 
 ciscoBulkFileDefineGroupRev1 OBJECT-GROUP
         OBJECTS {
@@ -963,22 +1011,11 @@ ciscoBulkFileDefineGroupRev1 OBJECT-GROUP
         STATUS current
         DESCRIPTION
                 "Bulk file definition management."
-        ::= { ciscoBulkFileMIBGroups 3 }
+        ::= { ciscoBulkFileMIBGroups 4 }
 
-ciscoBulkFileStatusGroup OBJECT-GROUP
-        OBJECTS {
-                cbfStatusMaxFiles,
-                cbfStatusFiles,
-                cbfStatusHighFiles,
-                cbfStatusFilesBumped,
-                cbfStatusFileState,
-                cbfStatusFileCompletionTime,
-                cbfStatusFileEntryStatus
-        }
-        STATUS current
-        DESCRIPTION
-                "Bulk file status management."
-        ::= { ciscoBulkFileMIBGroups 2 }
+
 
 END
+
+
 

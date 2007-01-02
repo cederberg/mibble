@@ -4,6 +4,7 @@ IMPORTS
     MODULE-IDENTITY,
     OBJECT-TYPE,
     Counter64,
+    Unsigned32,
     IpAddress
         FROM SNMPv2-SMI
 
@@ -17,16 +18,13 @@ IMPORTS
     TruthValue
         FROM SNMPv2-TC
 
-    Unsigned32
-        FROM CISCO-TC
-
 
     ciscoPibToMib
         FROM CISCO-SMI
     ;
 
 ciscoQosPIBMIB MODULE-IDENTITY
-    LAST-UPDATED "200006160000Z"
+    LAST-UPDATED "200405030000Z"
     ORGANIZATION "Cisco Systems Inc."
     CONTACT-INFO
         "Cisco Systems
@@ -41,6 +39,20 @@ ciscoQosPIBMIB MODULE-IDENTITY
         E-mail: cs-wbu@cisco.com"
     DESCRIPTION
             "The Cisco QOS Policy PIB for provisioning QOS policy."
+    REVISION    "200405030000Z"
+    DESCRIPTION
+            "Add new enum value in QosInterfaceQueueType
+             textual convention for 1p3q8t queue type."
+    REVISION    "200302210000Z"
+    DESCRIPTION
+            "Add new enum values in QosInterfaceQueueType
+             textual convention to indicate queue types
+             containing priority queue. Add new enum value
+             in ThresholdSetRange textual convention for
+             zero threshold."
+    REVISION    "200205020000Z"
+    DESCRIPTION
+            "Fix the SYNTAX of Role and RoleCombination."
     REVISION    "200006160000Z"
     DESCRIPTION
             "Added QosInterfaceTypeCapabilities textual convention."
@@ -98,7 +110,7 @@ ThresholdSetRange ::= TEXTUAL-CONVENTION
         WRED comprises two parameters; within the range of the two
         parameters packets are randomly dropped."
     SYNTAX INTEGER {
-        oneT(1), twoT(2), fourT(4), eightT(8)
+        zeroT(0), oneT(1), twoT(2), fourT(4), eightT(8)
         }
 
 -- Percentage for thresholds, etc.
@@ -126,7 +138,9 @@ QosInterfaceQueueType ::= TEXTUAL-CONVENTION
         fourQ1t(13),    fourQ2t(14),    fourQ4t(15),     fourQ8t(16),
         eightQ1t(17),   eightQ2t(18),   eightQ4t(19),    eightQ8t(20),
         sixteenQ1t(21), sixteenQ2t(22), sixteenQ4t(23),
-        sixtyfourQ1t(24), sixtyfourQ2t(25), sixtyfourQ4t(26)
+        sixtyfourQ1t(24), sixtyfourQ2t(25), sixtyfourQ4t(26),
+        oneP1Q0t(27),   oneP1Q4t(28),   oneP1Q8t(29),    oneP2Q1t(30),
+        oneP2Q2t(31),   oneP3Q1t(32),   oneP7Q8t(33),    oneP3Q8t(34)
     }
 
 QosInterfaceTypeCapabilities ::= TEXTUAL-CONVENTION
@@ -134,29 +148,28 @@ QosInterfaceTypeCapabilities ::= TEXTUAL-CONVENTION
     DESCRIPTION
         "An enumeration of interface capabilities.  Used by the PDP to
         select policies and configuration to push to the PEP."
-    SYNTAX OCTET STRING (SIZE(4))
---    SYNTAX BITS {
---        unspecified (0),
---
---        Classification support
---        inputL2Classification (1), inputIpClassification (2),
---        outputL2Classification (3), outputIpClassification (4),
---        inputPortClassification (19), outputPortClassification (20),
---
---        Policing support
---        inputUflowPolicing (5), inputAggregatePolicing (6),
---        outputUflowPolicing (7), outputAggregatePolicing (8),
---        policeByMarkingDown (9), policeByDropping (10),
---        inputUflowShaping (21), inputAggregateShaping (22),
---        outputUflowShaping (23), outputAggregateShaping (24),
---
---        Supported scheduling mechanisms
---        fifo (11), wrr (12), wfq (13), cq (14), pq (15), cbwfq (16),
---        pqWrr (25), pqCbwfq (26),
---
---        Supported congestion control mechanisms
---        tailDrop (17), wred (18)
---  }
+    SYNTAX BITS {
+        unspecified (0),
+
+        -- Classification support
+        inputL2Classification (1), inputIpClassification (2),
+        outputL2Classification (3), outputIpClassification (4),
+        inputPortClassification (19), outputPortClassification (20),
+
+        -- Policing support
+        inputUflowPolicing (5), inputAggregatePolicing (6),
+        outputUflowPolicing (7), outputAggregatePolicing (8),
+        policeByMarkingDown (9), policeByDropping (10),
+        inputUflowShaping (21), inputAggregateShaping (22),
+        outputUflowShaping (23), outputAggregateShaping (24),
+
+        -- Supported scheduling mechanisms
+        fifo (11), wrr (12), wfq (13), cq (14), pq (15), cbwfq (16),
+        pqWrr (25), pqCbwfq (26),
+
+        -- Supported congestion control mechanisms
+        tailDrop (17), wred (18)
+  }
 
 -- Role
 --
@@ -169,7 +182,7 @@ QosInterfaceTypeCapabilities ::= TEXTUAL-CONVENTION
 --     DESCRIPTION
 --         "A display string where valid letters are a-z, A-Z, 0-9,
 --         ., - and _.  Name can not start with an '_'.
---     SYNTAX DisplayString (SIZE (1..31))
+--     SYNTAX OCTET STRING (SIZE (1..31))
 
 -- Role Combination
 --
@@ -179,7 +192,7 @@ RoleCombination ::= TEXTUAL-CONVENTION
         "A Display string consisting of a set of roles concatenated
         with a '+' character where the roles are in lexicographic
         order from minimum to maximum."
-    SYNTAX DisplayString  (SIZE (0..255))
+    SYNTAX OCTET STRING (SIZE (0..255))
 
 -- Policy Instance Index
 --
@@ -324,8 +337,7 @@ QosDeviceAttributeEntry ::= SEQUENCE {
         qosDevicePrimaryPdp      IpAddress,
         qosDeviceSecondaryPdp    IpAddress,
         qosDeviceMaxMessageSize  Unsigned32,
-        qosDeviceCapabilities OCTET STRING (SIZE(1))
---        qosDeviceCapabilities    BITS
+        qosDeviceCapabilities    BITS
     }
 
 qosDeviceAttributeId OBJECT-TYPE
@@ -379,13 +391,12 @@ qosDeviceMaxMessageSize OBJECT-TYPE
     ::= { qosDeviceAttributeEntry 5 }
 
 qosDeviceCapabilities OBJECT-TYPE
-    SYNTAX OCTET STRING (SIZE(1))
---    SYNTAX BITS {
---        unspecified (0),
---
---        QoS labels supported
---        layer2Cos (1), ipPrecedence (2), dscp (3)
---        }
+    SYNTAX BITS {
+        unspecified (0),
+
+        -- QoS labels supported
+        layer2Cos (1), ipPrecedence (2), dscp (3)
+        }
     MAX-ACCESS read-only
     STATUS current
     DESCRIPTION
@@ -435,7 +446,7 @@ qosInterfaceQueueType OBJECT-TYPE
     STATUS current
     DESCRIPTION
         "The interface type in terms of number of queues and
-        thresholds"
+        thresholds."
     ::= { qosInterfaceTypeEntry 2 }
 
 qosInterfaceTypeRoles OBJECT-TYPE
@@ -444,7 +455,7 @@ qosInterfaceTypeRoles OBJECT-TYPE
     STATUS current
     DESCRIPTION
         "A combination of roles on at least one interface of type
-        qosInterfaceType"
+        qosInterfaceType."
     ::= { qosInterfaceTypeEntry 3 }
 
 qosInterfaceTypeCapabilities OBJECT-TYPE
@@ -475,7 +486,7 @@ qosDiffServMappingTable OBJECT-TYPE
         first time, all 64 entries of the table must be
         specified. Thereafter, instances may be modified (with a
         delete and install in a single decision) but not deleted
-        unless all instances are deleted"
+        unless all instances are deleted."
     ::= { qosDomainConfig 1 }
 
 qosDiffServMappingEntry OBJECT-TYPE
@@ -531,7 +542,7 @@ qosCosToDscpTable OBJECT-TYPE
         the first time, all 8 entries of the table must be
         specified. Thereafter, instances may be modified (with a
         delete and install in a single decision) but not deleted
-        unless all instances are deleted"
+        unless all instances are deleted."
     ::= { qosDomainConfig 2 }
 
 qosCosToDscpEntry OBJECT-TYPE
@@ -1247,7 +1258,7 @@ qosIpAclAggregateId OBJECT-TYPE
         to.  It must correspond to the integer index of an instance of
         class qosAggregateTable or be zero.  If zero, the microflow
         does not belong to any aggregate and is not policed as part of
-        any aggregate.."
+        any aggregate."
     ::= { qosIpAclActionEntry 9 }
 
 --
@@ -1390,7 +1401,7 @@ qosIfDropRoles OBJECT-TYPE
     STATUS current
     DESCRIPTION
         "The combination of roles the interface must have for this
-        policy instance to apply to that interface"
+        policy instance to apply to that interface."
     ::= { qosIfDropPreferenceEntry 2 }
 
 qosIfDropPreference OBJECT-TYPE

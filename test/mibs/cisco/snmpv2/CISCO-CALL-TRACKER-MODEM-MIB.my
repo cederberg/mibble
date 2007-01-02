@@ -3,7 +3,7 @@
 --                                  Tracking MIB
 --
 --
--- Copyright (c) 1996-2000 by cisco Systems, Inc.
+-- Copyright (c) 1996-2005 by cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
 
@@ -14,7 +14,8 @@ IMPORTS
         OBJECT-TYPE,
         Counter32,
         Gauge32,
-        Integer32
+        Integer32,
+        Unsigned32
                 FROM SNMPv2-SMI
         MODULE-COMPLIANCE,
         OBJECT-GROUP
@@ -22,8 +23,6 @@ IMPORTS
         DisplayString,
         TEXTUAL-CONVENTION
                 FROM SNMPv2-TC
-        Unsigned32
-                FROM CISCO-TC
         ciscoMgmt
                 FROM CISCO-SMI
         cctActiveCallId,
@@ -32,7 +31,7 @@ IMPORTS
  
  
 ciscoCallTrackerModemMIB MODULE-IDENTITY
-        LAST-UPDATED    "200006070000Z"
+        LAST-UPDATED    "200512060000Z"
         ORGANIZATION    "Cisco Systems, Inc."
         CONTACT-INFO
                 "       Cisco Systems
@@ -52,6 +51,18 @@ ciscoCallTrackerModemMIB MODULE-IDENTITY
                  This module extends tables defined in the MIB module
                  ciscoCallTrackerMIB in CISCO-CALL-TRACKER-MIB.
                 "
+        REVISION  "200512060000Z"
+        DESCRIPTION
+                "Updated the imports such that Unsigned32 is imported 
+                 from SNMPv2-SMI instead of CISCO-TC. Re-ordered the 
+                 objects cctmActiveLocalDownRateShifts, 
+                 cctmActiveRemoteUpRateShifts under CctmActiveEntry, 
+                 and cctmHistoryLocalDownRateShifts and 
+                 cctmHistoryRemoteUpRateShifts under CctmHistoryEntry 
+                 to match the order in which they are defined."
+        REVISION  "200112140000Z"
+        DESCRIPTION
+                "Initial version of this mib."
        ::= { ciscoMgmt 165 }
 
 
@@ -154,14 +165,20 @@ CctmDataCompression ::= TEXTUAL-CONVENTION
             v42bisTx     - V.42bis in transmit direction only
             v42bisRx     - V.42bis in receive direction only
             v42bisBoth   - V.42bis in receive and transmit directions
-            mnp5         -
+            mnp5         - 
+            v44Tx        - V.44 in transmit direction only
+            v44Rx        - V.44 in receive direction only
+            v44Both      - V.44 in receive and transmit directions
            "
         SYNTAX      INTEGER {
             none              (1),
             v42bisTx          (2),
             v42bisRx          (3),
             v42bisBoth        (4),
-            mnp5              (5)
+            mnp5              (5),
+            v44Tx             (6),
+            v44Rx             (7),
+            v44Both           (8)
         }
 
 
@@ -238,17 +255,15 @@ CctmActiveEntry ::=
             cctmActiveModulation               CctmModulation,
             cctmActiveAttemptedECProtocol      CctmECProtocol,
             cctmActiveECProtocol               CctmECProtocol,
--- If BITS doesn't compile replace with OCTET STRING
---            cctmActiveSupportedDC              BITS,
-            cctmActiveSupportedDC              OCTET STRING,
+            cctmActiveSupportedDC              BITS,
             cctmActiveDataCompression          CctmDataCompression,
             cctmActiveRxHighWatermark          Gauge32,
             cctmActiveRxLowWatermark           Gauge32,
             cctmActiveTxHighWatermark          Gauge32,
             cctmActiveTxLowWatermark           Gauge32,
             cctmActiveLocalUpRateShifts        Counter32,
-            cctmActiveRemoteUpRateShifts       Counter32,
             cctmActiveLocalDownRateShifts      Counter32,
+            cctmActiveRemoteUpRateShifts       Counter32,
             cctmActiveRemoteDownRateShifts     Counter32,
             cctmActiveRateShiftFailures        Counter32,
             cctmActiveLocalRetrains            Counter32,
@@ -392,14 +407,14 @@ cctmActiveECProtocol OBJECT-TYPE
             "
         ::= { cctmActiveEntry 9 }
 
--- If BITS doesn't compile replace with OCTET STRING
 cctmActiveSupportedDC  OBJECT-TYPE
---        SYNTAX      BITS {
---                      mnp5(0),
---                      v42bisRx(1),
---                      v42bisTx(2)
---                    }
-        SYNTAX OCTET STRING(SIZE(1))
+        SYNTAX      BITS {
+                      mnp5(0),
+                      v42bisRx(1),
+                      v42bisTx(2),
+                      v44Rx(3),
+                      v44Tx(4)
+                    }
         MAX-ACCESS read-only
         STATUS     current
         DESCRIPTION
@@ -732,17 +747,15 @@ CctmHistoryEntry ::=
             cctmHistoryFinalModulation         CctmModulation,
             cctmHistoryAttemptedECProtocol     CctmECProtocol,
             cctmHistoryECProtocol              CctmECProtocol,
--- If BITS doesn't compile replace with OCTET STRING
---            cctmHistorySupportedDC             BITS,
-            cctmHistorySupportedDC             OCTET STRING,
+            cctmHistorySupportedDC             BITS,
             cctmHistoryDataCompression         CctmDataCompression,
             cctmHistoryRxHighWatermark         Gauge32,
             cctmHistoryRxLowWatermark          Gauge32,
             cctmHistoryTxHighWatermark         Gauge32,
             cctmHistoryTxLowWatermark          Gauge32,
             cctmHistoryLocalUpRateShifts       Counter32,
-            cctmHistoryRemoteUpRateShifts      Counter32,
             cctmHistoryLocalDownRateShifts     Counter32,
+            cctmHistoryRemoteUpRateShifts      Counter32,
             cctmHistoryRemoteDownRateShifts    Counter32,
             cctmHistoryRateShiftFailures       Counter32,
             cctmHistoryLocalRetrains           Counter32,
@@ -875,14 +888,14 @@ cctmHistoryECProtocol OBJECT-TYPE
             "
         ::= { cctmHistoryEntry 9 }
 
--- If BITS doesn't compile replace with OCTET STRING
 cctmHistorySupportedDC  OBJECT-TYPE
---        SYNTAX      BITS {
---                      mnp5(0),
---                      v42bisRx(1),
---                      v42bisTx(2)
---                    }
-        SYNTAX OCTET STRING(SIZE(1))
+        SYNTAX      BITS {
+                      mnp5(0),
+                      v42bisRx(1),
+                      v42bisTx(2),
+                      v44Rx(3),
+                      v44Tx(4)
+                    }
         MAX-ACCESS read-only
         STATUS     current
         DESCRIPTION
@@ -1569,4 +1582,3 @@ cctmXHistoryGroup OBJECT-GROUP
         ::= { cctmMIBGroups 4 }
 
 END
-

@@ -1,3 +1,5 @@
+
+
 -- *****************************************************************
 -- CISCO-NDE-MIB.my 
 --
@@ -13,15 +15,14 @@ CISCO-NDE-MIB DEFINITIONS ::= BEGIN
 IMPORTS
     MODULE-IDENTITY,
     OBJECT-TYPE,
-    Integer32
+    Integer32,
+    Unsigned32
         FROM SNMPv2-SMI
     MODULE-COMPLIANCE,
     OBJECT-GROUP
         FROM SNMPv2-CONF
     ciscoMgmt
         FROM CISCO-SMI
-    Unsigned32
-        FROM CISCO-TC
     InetAddressType,
     InetAddress
         FROM INET-ADDRESS-MIB
@@ -29,7 +30,7 @@ IMPORTS
         FROM SNMPv2-TC;
 
 ciscoNDEMIB MODULE-IDENTITY
-    LAST-UPDATED        "200108080000Z"
+    LAST-UPDATED        "200603010000Z"
     ORGANIZATION        "Cisco Systems, Inc."
     CONTACT-INFO
        "Cisco Systems
@@ -57,6 +58,16 @@ ciscoNDEMIB MODULE-IDENTITY
         Collector (NDC) captures, filters, aggregates, and stores the
         data from multiple NetFlow enabled devices. NDCs provide fast,
         scalable, and economical Netflow data."
+    
+    REVISION        "200603010000Z"
+    DESCRIPTION
+        "Moved cndeCollectorStatus and cndeCollectorAddress from
+         OBJECT clause to DESCRIPTION clause of MODULE COMPLIANCE."
+    
+    REVISION        "200512060000Z"
+    DESCRIPTION
+        "Imported Unsigned32 from SNMPv2-SMI instead of CISCO-TC"
+
     REVISION        "200108080000Z"
     DESCRIPTION
         "Initial version of this MIB module."
@@ -148,16 +159,14 @@ cndeCollectorStatus OBJECT-TYPE
     MAX-ACCESS read-create
     STATUS     current
     DESCRIPTION
-        "The status object used to manage the rows in this table.
-        The only way to create an entry is by setting createAndGo(4).
-        The only way way to delete an entry is by setting destroy(6)."
+        "The status object used to manage the rows in this table."
    ::= { cndeCollectorEntry 4 }
 
--- Notifications
-
+-- An obsolete OID subtree
 cndeMIBNotifications   OBJECT IDENTIFIER ::= { ciscoNDEMIB 2 }
 
--- no notifications defined
+-- An OID subtree for notifications, if and when any need to be defined
+cndeMIBNotifs          OBJECT IDENTIFIER ::= { ciscoNDEMIB 0 }
 
 -- Conformance and Compliance
 
@@ -171,22 +180,40 @@ cndeMIBCompliance MODULE-COMPLIANCE
      STATUS       current
      DESCRIPTION
          "The compliance statement for the CISCO-NDE-MIB.
+     
+         Objects used in an INDEX clause normally have a MAX-ACCESS
+         of 'not-accessible', and the SMIv2 does not allow
+         'not-accessible' objects to be included in a GROUP clause.
+         Consequently, a minimum syntax cannot be specified for them
+         in an OBJECT clause.  So, the following minimum compliance
+         is specified within this DESCRIPTION clause:
           
-         OBJECT cndeCollectorAddressType
-         SYNTAX InetAddressType { ipv4(1) }
-         DESCRIPTION
-             An implementation is only required to support IPv4
-             addresses.
+        
+         --OBJECT cndeCollectorAddressType
+         --SYNTAX InetAddressType { ipv4(1) }
+         --DESCRIPTION
+         --    An implementation is only required to support IPv4
+         --    addresses.
+         
+         --OBJECT cndeCollectorAddress
+         --SYNTAX InetAddress { SIZE(4) }
+         --DESCRIPTION
+         --    An implementation is only required to support IPv4
+         --    addresses.
+         "
 
-         OBJECT cndeCollectorAddress
-         SYNTAX InetAddress (SIZE(4))
-         DESCRIPTION
-             An implementation is only required to support IPv4
-             addresses."
      MODULE  -- this module
      MANDATORY-GROUPS { 
                       cndeCollectorConfigurationGroup
                       }
+     
+     OBJECT cndeCollectorStatus
+     SYNTAX   -- a subset of RowStatus 
+              INTEGER { active(1), createAndGo(4), destroy(6) }
+     DESCRIPTION
+            "Support for 'createAndWait' is not required."
+
+                
      ::= { cndeMIBCompliances 1 }
 
 -- Units of Conformance
@@ -195,11 +222,14 @@ cndeCollectorConfigurationGroup OBJECT-GROUP
        OBJECTS {
             cndeMaxCollectors,
             cndeCollectorStatus
+                              
        }
        STATUS current
        DESCRIPTION
            "A collection of objects for configuring the Netflow Data
-           Export Collectors and ports."
+            Export Collectors and ports."
        ::= { cndeMIBGroups 1 }
 
 END
+ 
+ 

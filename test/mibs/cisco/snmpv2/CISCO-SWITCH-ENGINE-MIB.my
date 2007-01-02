@@ -4,8 +4,12 @@
 -- February 2000, Steven To 
 -- July 2000, Edward Pham 
 -- February 2002, Edward Pham
+-- February 2003, Edward Pham
+-- May 2003, Jayakumar Kadirvelu
+-- August 2003, Edward Pham
 --
--- Copyright (c) 2000-2001, 2002 by cisco Systems, Inc.
+-- Copyright (c) 2000-2001, 2002, 2003, 2004, 2005 
+-- by cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
 
@@ -13,26 +17,32 @@ CISCO-SWITCH-ENGINE-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE,
-    Gauge32, Counter32, Counter64, IpAddress, Integer32
+    Gauge32, Counter32, Counter64, IpAddress, Integer32,
+    Unsigned32
         FROM SNMPv2-SMI
-    ifIndex, OwnerString 
+    ifIndex, OwnerString, InterfaceIndexOrZero 
         FROM IF-MIB
-    CiscoNetworkProtocol, Unsigned32
+    CiscoNetworkProtocol, CiscoPort
         FROM CISCO-TC
     ciscoMgmt
         FROM CISCO-SMI
     VlanIndex
         FROM CISCO-VTP-MIB
+    InetAddressType,
+    InetAddress
+        FROM INET-ADDRESS-MIB
     entPhysicalIndex
         FROM ENTITY-MIB
     TEXTUAL-CONVENTION, DisplayString, RowStatus, TimeInterval, 
                               MacAddress, TruthValue, TimeStamp
         FROM SNMPv2-TC
+    SnmpAdminString
+        FROM SNMP-FRAMEWORK-MIB
     MODULE-COMPLIANCE, OBJECT-GROUP
         FROM SNMPv2-CONF;
 
 ciscoSwitchEngineMIB MODULE-IDENTITY
-  LAST-UPDATED "200202070000Z" 
+  LAST-UPDATED "200504120000Z" 
   ORGANIZATION "Cisco Systems Inc. "
   CONTACT-INFO
             "Cisco Systems        
@@ -44,7 +54,7 @@ ciscoSwitchEngineMIB MODULE-IDENTITY
 
              Tel: +1 800 553-NETS
 
-             E-mail: cs-wbu@cisco.com"
+             E-mail: cs-lan-switch-snmp@cisco.com"
   DESCRIPTION
   "This MIB module defines management objects for Cisco Layer 2/3
    switches. These devices may either have a single (central) switching
@@ -69,6 +79,66 @@ ciscoSwitchEngineMIB MODULE-IDENTITY
    Layer 2 forwarding. However, they can also learn 'flows' through
    other physically-separate (external) Cisco routers that are
    connected to the switch-engine through the network."
+  REVISION     "200504120000Z"
+  DESCRIPTION
+       "Add new enumerations to cseFlowIPFlowMask object.
+        Add ingressInterfaceMapping and egressInterfaceMapping
+        enumerations to cseTcamResourceType object."
+  REVISION     "200411150000Z"
+  DESCRIPTION
+       "Add cseMetUsageGroup."
+  REVISION     "200406090000Z"
+  DESCRIPTION
+       "Add the following Groups:
+        cseNetflowASInfoExportGroup
+        cseNetflowPerVlanIfGroup"
+  REVISION     "200311070000Z"
+  DESCRIPTION
+       "Add cseErrorStatsLCTable."
+  REVISION     "200308200000Z"
+  DESCRIPTION
+      "Add the following tables to support forwarding information base:
+       cseCefFibTable,
+       cseCefAdjacencyTable.
+
+       Add the following table to support TCAM (Ternary Content
+       Addressable Memory) resource usage:
+       cseTcamUsageTable.
+
+       Add default value for the following objects:
+       cseFlowQuerySource,
+       cseFlowQuerySourceMask,
+       cseFlowQueryDestination,
+       cseFlowQueryDestinationMask,
+       cseFlowQueryOwner."
+  REVISION     "200306100000Z"
+  DESCRIPTION
+       "Deprecated the objects:
+        cseNetflowLSExportHost,
+        cseNetflowLSExportTransportNumber"
+  REVISION     "200305060000Z"
+  DESCRIPTION
+       "Added the object cseFlowQuerySkipNFlows"
+  REVISION     "200302210000Z"
+  DESCRIPTION
+       "Added the following objects and table: 
+        cseFlowLongAgingTime, 
+        cseNetFlowIfIndexEnable,
+        cseFlowStatsTable,
+        cseFlowExcludeTable.
+        Modified the description of the following objects:
+        cseL2IpPkts,
+        cseL2IpxPkts,
+        cseL2AssignedProtoPkts,
+        cseL2OtherProtoPkts,
+        cseL2HCIpPkts,
+        cseL2HCIpxPkts,
+        cseL2HCAssignedProtoPkts,
+        cseL2HCOtherProtoPkts." 
+  REVISION     "200208050000Z"
+  DESCRIPTION
+       "Added the following objects: cseFlowIPFlowMask,
+        cseFlowIPXFlowMask, cseProtocolFilterEnable."
   REVISION     "200202070000Z"
   DESCRIPTION
        "Added the objects in cseBridgedFlowStatsCtrlTable and 
@@ -133,7 +203,7 @@ ciscoSwitchEngineMIB MODULE-IDENTITY
 
 -- Overview of MIB Objects:
 --
--- Defines 7 groups of objects.
+-- Defines 9 groups of objects.
 --
 -- 1. cseL2Objects: Contains mainly Layer 2 statistics maintained by the
 --    switching engine hardware.
@@ -176,6 +246,18 @@ ciscoSwitchEngineMIB MODULE-IDENTITY
 --    - a MIB table to perform actions of purging IP
 --      multicast flows in switch engine caches.
 --
+-- 8. cseCef: CEF (Cisco Express Forwarding) group. It contains:
+--    - tables provide information on IP forwarding database
+--      and statistics.
+--
+-- 9. cseTcamUsage: Contains
+--    - table provides resource usage information on TCAM (Ternary
+--      Content Addressable Memory) in the device.
+--
+-- 10. cseMet: MET group. It contains:
+--    - table provides resource usage information on MET (Multicast
+--      Expansion Table) in the device.
+
 
 cseMIBObjects OBJECT IDENTIFIER   ::= { ciscoSwitchEngineMIB 1 }
 
@@ -187,6 +269,9 @@ cseL3Objects      OBJECT IDENTIFIER    ::= { cseMIBObjects 4 }
 cseProtocolFilter OBJECT IDENTIFIER    ::= { cseMIBObjects 5 }
 cseUcastCache     OBJECT IDENTIFIER    ::= { cseMIBObjects 6 }
 cseMcastCache     OBJECT IDENTIFIER    ::= { cseMIBObjects 7 }
+cseCef            OBJECT IDENTIFIER    ::= { cseMIBObjects 8 }
+cseTcamUsage      OBJECT IDENTIFIER    ::= { cseMIBObjects 9 }
+cseMet            OBJECT IDENTIFIER    ::= { cseMIBObjects 10 }
 
 CiscoGauge64 ::= TEXTUAL-CONVENTION
     STATUS       current
@@ -327,9 +412,7 @@ cseL2IpPkts OBJECT-TYPE
     DESCRIPTION
       "Number of packets belonging to the IP family received by this 
        switching engine from all sources.  This value includes L3 
-       switched packets.
-       Incremented only when the applicable protocol filter
-       feature is in effect."
+       switched packets."
     ::= { cseL2StatsEntry 7 }
 
 cseL2IpxPkts OBJECT-TYPE
@@ -339,9 +422,7 @@ cseL2IpxPkts OBJECT-TYPE
     DESCRIPTION
       "Number of packets belonging to the IPX family received by this 
        switching engine from all sources.  This value includes L3 
-       switched packets. 
-       Incremented only when the applicable protocol filter feature
-       is in effect."
+       switched packets." 
     ::= { cseL2StatsEntry 8 }
 
 cseL2AssignedProtoPkts OBJECT-TYPE
@@ -352,9 +433,7 @@ cseL2AssignedProtoPkts OBJECT-TYPE
       "Number of packets belonging to an assigned group of network 
        protocols (typically AppleTalk, DecNet and Vines) received 
        by this switching engine from all sources. 
-       This value includes L3 switched packets.
-       Incremented only when the applicable protocol filter feature
-       is in effect."
+       This value includes L3 switched packets."
     ::= { cseL2StatsEntry 9 }
 
 cseL2OtherProtoPkts OBJECT-TYPE
@@ -364,9 +443,7 @@ cseL2OtherProtoPkts OBJECT-TYPE
     DESCRIPTION
       "Number of packets belonging to all other protocol families, 
        received by this switching engine from all sources. 
-       This value includes L3 switched packets. 
-       Incremented only when the applicable protocol filter feature
-       is in effect."
+       This value includes L3 switched packets." 
     ::= { cseL2StatsEntry 10 }
 
 -- High Capacity extensions for cseL2StatsTable.
@@ -459,9 +536,7 @@ cseL2HCIpPkts OBJECT-TYPE
     DESCRIPTION
       "Number of packets belonging to the IP family received by this 
        switching engine from all sources.  This value includes 
-       L3 switched packets.
-       Incremented only when the applicable protocol filter
-       feature is in effect."
+       L3 switched packets."
     ::= { cseL2StatsHCEntry 6 }
 
 cseL2HCOverflowIpxPkts OBJECT-TYPE
@@ -480,9 +555,7 @@ cseL2HCIpxPkts OBJECT-TYPE
     DESCRIPTION
       "Number of packets belonging to the IPX family received by this 
        switching engine from all sources.  
-       This value includes L3 switched packets.
-       Incremented only when the applicable protocol filter feature
-       is in effect."
+       This value includes L3 switched packets."
     ::= { cseL2StatsHCEntry 8 }
 
 cseL2HCOverflowAssignedProtoPkts OBJECT-TYPE
@@ -502,9 +575,7 @@ cseL2HCAssignedProtoPkts OBJECT-TYPE
       "Number of packets belonging to an assigned group of network
        protocols (typically AppleTalk, DecNet and Vines) received 
        by this switching engine from all sources.
-       This value includes L3 switched packets. 
-       Incremented only when the applicable protocol filter feature
-       is in effect."
+       This value includes L3 switched packets." 
     ::= { cseL2StatsHCEntry 10 }
 
 cseL2HCOverflowOtherProtoPkts OBJECT-TYPE
@@ -523,8 +594,7 @@ cseL2HCOtherProtoPkts OBJECT-TYPE
     DESCRIPTION
         "Number of packets belonging to all other protocol families,
         received by this switching engine from all sources.  This value 
-        includes L3 switched packets. Incremented only when the
-        applicable protocol filter feature is in effect."
+        includes L3 switched packets."
     ::= { cseL2StatsHCEntry 12 }
 
 -- Flow group of objects
@@ -850,7 +920,8 @@ CseFlowQueryEntry ::= SEQUENCE {
         cseFlowQueryResultAvgIdle     TimeInterval,
         cseFlowQueryStatus            RowStatus,
         cseFlowQueryCreateTime        TimeStamp,
-        cseFlowQueryTotalFlows        Unsigned32
+        cseFlowQueryTotalFlows        Unsigned32,
+        cseFlowQuerySkipNFlows        Integer32
 }
 
 cseFlowQueryIndex OBJECT-TYPE
@@ -976,6 +1047,7 @@ cseFlowQuerySource OBJECT-TYPE
        value of this object cannot be modified when the 
        corresponding instance of 
        cseFlowQueryStatus is 'active'."
+    DEFVAL { '000000000000'H }
     ::= { cseFlowQueryEntry 4 }
  
 cseFlowQuerySourceMask OBJECT-TYPE
@@ -987,6 +1059,7 @@ cseFlowQuerySourceMask OBJECT-TYPE
        instance of cseFlowQuerySource. The value of this object
        cannot be modified  when the corresponding instance of 
        cseFlowQueryStatus is 'active'."
+    DEFVAL  { 'FFFFFFFFFFFF'H }
     ::= { cseFlowQueryEntry 5 }
 
  
@@ -998,6 +1071,7 @@ cseFlowQueryDestination OBJECT-TYPE
       "The destination network address and port (if applicable). 
        The value of this object cannot be modified when the
        corresponding instance of cseFlowQueryStatus is 'active'."
+    DEFVAL { '000000000000'H }
     ::= { cseFlowQueryEntry 6 }
  
 cseFlowQueryDestinationMask OBJECT-TYPE
@@ -1009,6 +1083,7 @@ cseFlowQueryDestinationMask OBJECT-TYPE
        instance of cseFlowQueryDestination. The value of this object 
        cannot be modified when the corresponding instance of 
        cseFlowQueryStatus is 'active'."
+    DEFVAL  { 'FFFFFFFFFFFF'H }
     ::= { cseFlowQueryEntry 7 }
  
 cseFlowQueryRouterIndex     OBJECT-TYPE
@@ -1030,6 +1105,7 @@ cseFlowQueryOwner OBJECT-TYPE
     DESCRIPTION
       "The manager entity that configured this entry and is therefore 
        using the resources assigned to it."
+    DEFVAL { "" }
     ::= { cseFlowQueryEntry 9 }
 
 cseFlowQueryResultingRows OBJECT-TYPE
@@ -1126,6 +1202,30 @@ cseFlowQueryTotalFlows OBJECT-TYPE
     DESCRIPTION
         "The total number of L3 flows matching the query criterion."
     ::= { cseFlowQueryEntry 17 }
+
+cseFlowQuerySkipNFlows OBJECT-TYPE
+    SYNTAX      Integer32 (0..2147483647)
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "The number of searched flows to be skipped before storing
+        any L3 flows in cseFlowDataTable.
+
+        This object can be used along with cseFloQueryTotalFlows
+        object to skip previously found flows by setting the variable
+        equal to the number of the associated rows in
+        cseFlowDataTable, and only query the remaining flows
+        in the table.
+
+        Note that due to the dynamical nature of the L3 flows, the
+        queried flows may be missed or repeated by setting this object.
+
+        The value of this object cannot be modified
+        when the corresponding instance of cseFlowQueryStatus
+        is 'active'."
+    DEFVAL      { 0 }
+    ::= { cseFlowQueryEntry 18 }
+
 
 
 -- The Unicast Flow query results data table 
@@ -2005,6 +2105,175 @@ cseFlowBridgedFlowStatsEnable OBJECT-TYPE
     DEFVAL { false }
     ::= { cseBridgedFlowStatsCtrlEntry 2 }
 
+cseFlowIPFlowMask   OBJECT-TYPE
+    SYNTAX    INTEGER { 
+                        dstOnly(1),
+                        srcDst(2),
+                        fullFlow(3),
+                        srcOnly(4),
+                        intDstSrc(5),
+                        intFull(6),
+                        null(7)
+                      } 
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+      "Indicates the flow mask for IP flows.
+ 
+      If dstOnly(1) is used, it enables flows based on Layer 3
+      destination addresses only.
+ 
+      If srcDst(2) is used, it enables flows based on both Layer 3
+      source and destination addresses only.
+ 
+      If fullFlow(3) is used, it enables flows based on Layer 4 port 
+      numbers in addition to source and destination addresses.
+
+      If srcOnly(4) is used, it enables flows based on Layer 3
+      source addresses only.
+
+      If intDstSrc(5) is used, it enables flows based on source
+      interface in addition to source and destination addresses. 
+
+      If intFull(6) is used, it enables flows based on source 
+      interface in addition to Layer 4 port numbers, source and 
+      destination addresses.
+
+      If null(7) is used, no flow will be enabled."
+    ::= { cseFlow 22 }
+
+cseFlowIPXFlowMask   OBJECT-TYPE
+    SYNTAX    INTEGER { 
+                        dstOnly(1),
+                        srcDst(2)
+                      } 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+      "Indicates the flow mask for IPX flows.
+
+      If dstOnly(1) is used, it enables flows based on Layer 3
+      destination addresses only.
+ 
+      If srcDst(2) is used, it enables flows based on both Layer 3
+      source and destination addresses only."
+    ::= { cseFlow 23 }
+
+cseFlowLongAgingTime OBJECT-TYPE
+    SYNTAX      Unsigned32
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The administrative long aging time for the established
+        flow entries. Setting to value of 0 turns off long aging."
+    ::= { cseFlow 24 }
+
+
+--
+--  The protocol exclude table 
+--
+
+cseFlowExcludeTable OBJECT-TYPE
+        SYNTAX       SEQUENCE OF CseFlowExcludeEntry
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION
+          "A table controls the flow creation based on protocol
+          and port number. If a packet matches the protocol and
+          port number specified in this table entries, a flow
+          entry will not be established."
+        ::= { cseFlow 25 }
+ 
+cseFlowExcludeEntry OBJECT-TYPE
+        SYNTAX       CseFlowExcludeEntry 
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION
+          "A row instance contains the configuration to enable or
+          disable the establishment of flow entry for matching
+          traffic." 
+        INDEX { cseFlowExcludePort }
+        ::= { cseFlowExcludeTable 1 }
+
+CseFlowExcludeEntry ::= SEQUENCE {
+        cseFlowExcludePort            CiscoPort,
+        cseFlowExcludeProtocol        INTEGER,
+        cseFlowExcludeStatus          RowStatus      
+}
+ 
+cseFlowExcludePort    OBJECT-TYPE
+    SYNTAX      CiscoPort 
+    MAX-ACCESS  not-accessible 
+    STATUS      current
+    DESCRIPTION
+        "Indicates the TCP or UDP port number that matching
+        traffic will be excluded from flow establishment.
+        The value of 0 is not allowed."  
+    ::= { cseFlowExcludeEntry 1 }
+
+cseFlowExcludeProtocol OBJECT-TYPE
+    SYNTAX      INTEGER {
+                    udp(1),
+                    tcp(2),
+                    both(3)
+                }
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "Indicates the protocol that matching traffic will be
+         excluded from flow establishment." 
+    ::= { cseFlowExcludeEntry 2 }
+
+cseFlowExcludeStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "The status of this conceptual row. New rows are created
+         using 'createAndGo' and deleted using 'destroy'.
+ 
+         Once 'active' this object may be set to only 'destroy'.
+         cseFlowExcludeProtocol may be modified at any time (even
+         while the row is active)."  
+    ::= { cseFlowExcludeEntry 3 }
+
+--
+-- The flow statistics table 
+-- 
+cseFlowStatsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CseFlowStatsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+      "A table containing flow statistics information on each switching 
+       engine."
+    ::= { cseFlow 26 }
+ 
+cseFlowStatsEntry OBJECT-TYPE
+    SYNTAX      CseFlowStatsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+      "A conceptual row of cseFlowStatsTable, containing flow 
+       statistics maintained by a switching engine entity
+       (identified by entPhysicalIndex). Each switching engine
+       managed by this MIB module has an entry in this table."
+    INDEX  { entPhysicalIndex }
+    ::= { cseFlowStatsTable 1 }
+
+CseFlowStatsEntry ::= SEQUENCE {
+        cseFlowTotalFlows           Gauge32
+}
+
+cseFlowTotalFlows   OBJECT-TYPE
+    SYNTAX      Gauge32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+      "Indicates the total number of flow entries installed in
+       this switching engine." 
+    ::= { cseFlowStatsEntry 1 }
 
 -- Optional NetFlow Lan Switching group
 
@@ -2019,7 +2288,7 @@ cseNetflowLSExportStatus  OBJECT-TYPE
 cseNetflowLSExportHost  OBJECT-TYPE
     SYNTAX      DisplayString
     MAX-ACCESS  read-write
-    STATUS      current
+    STATUS      deprecated
     DESCRIPTION
       "Network(IP) address in dotted decimal format or the DNS hostname 
        of the host to which Netflow LAN switching statistics are 
@@ -2029,7 +2298,7 @@ cseNetflowLSExportHost  OBJECT-TYPE
 cseNetflowLSExportTransportNumber  OBJECT-TYPE
     SYNTAX      Unsigned32
     MAX-ACCESS  read-write
-    STATUS      current
+    STATUS      deprecated
     DESCRIPTION
       "The transport(UDP) port number to be used for the Netflow LAN 
        switching statistics being exported."
@@ -2127,7 +2396,7 @@ cseNetflowLSFilterSupport OBJECT-TYPE
           "Indicates whether this device supports single filter or
            multiple filters.
 
-           single   - use objects in cseNDESingleFilterGroup to
+           single   - use objects in cseNDESingleFilterGroupRev1 to
                       configure NDE filtering paramaters.
 
            multiple - use objects in cseNDEMultipleFiltersGroup to
@@ -2276,6 +2545,112 @@ cseNetflowLSFilterStatus OBJECT-TYPE
            modified except by deleting and creating the row."
      ::= { cseNetflowLSFilterEntry 8 }
 
+cseNetFlowIfIndexEnable OBJECT-TYPE
+     SYNTAX     BITS {
+                  destIfIndex(0),
+                  srcIfIndex(1)
+                }
+     MAX-ACCESS read-write
+     STATUS     current
+     DESCRIPTION
+         "Indicates whether ifIndex reporting in NDE (Netflow
+          Data Export) is enabled.
+
+          if bit destIfIndex(0) is on, destination ifIndex reporting
+          in NDE is enabled.
+
+          if bit srcIfIndex(1) is on, source ifIndex reporting in NDE
+          is enabled." 
+     ::= { cseNetflowLS 13 }
+
+cseNetflowASInfoExportCtrl OBJECT-TYPE
+     SYNTAX     INTEGER { disable(1),
+                          originate(2),
+                          peer(3)
+                        }
+     MAX-ACCESS read-write
+     STATUS     current
+     DESCRIPTION
+         "Indicates whether export of Autonomous System(AS) number
+          information, in the NDE records, is enabled.
+
+          disable   - Disables the export of AS number information.
+
+          originate - Enables the export of origination AS numbers of
+                      source and destination IP addresses.
+
+          peer      - Enables the export of peer AS numbers of
+                      source and destination IP addresses.
+         "
+     ::= { cseNetflowLS 14 }
+
+cseNetflowPerVlanIfGlobalEnable OBJECT-TYPE
+     SYNTAX     TruthValue
+     MAX-ACCESS read-write
+     STATUS     current
+     DESCRIPTION
+         "Indicates whether 'creation of Netflow entries per
+          VLAN interface' feature is enabled at the device level. 
+
+          If this object is set to 'false',
+          netflow entries will be created for all VLANs.
+
+          If this object is set to 'true', creation of netflow   
+          entries can be controlled by cseNetflowPerVlanIfCtrlTable."
+     ::= { cseNetflowLS 15 }
+
+cseNetflowPerVlanIfCtrlTable OBJECT-TYPE
+        SYNTAX       SEQUENCE OF CseNetflowPerVlanIfCtrlEntry
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION
+          "A table to control netflow entry creation for each VLAN.
+           When a VLAN is created, a corresponding entry is added 
+           to this table."
+     ::= { cseNetflowLS 16 }
+
+cseNetflowPerVlanIfCtrlEntry OBJECT-TYPE
+        SYNTAX       CseNetflowPerVlanIfCtrlEntry
+        MAX-ACCESS   not-accessible
+        STATUS       current
+        DESCRIPTION
+          "An entry containing the configuration to enable or
+           disable netflow entry creation for each VLAN."
+        INDEX { cseNetflowPerVlanIfCtrlVlan }
+        ::= { cseNetflowPerVlanIfCtrlTable 1 }
+
+CseNetflowPerVlanIfCtrlEntry ::= SEQUENCE {
+        cseNetflowPerVlanIfCtrlVlan                  VlanIndex,
+        cseNetflowPerVlanIfEnable                    TruthValue 
+}
+
+cseNetflowPerVlanIfCtrlVlan OBJECT-TYPE
+    SYNTAX      VlanIndex
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Indicates the VLAN number on which creation of netflow 
+         entries is configured."
+    ::= { cseNetflowPerVlanIfCtrlEntry 1 }
+
+cseNetflowPerVlanIfEnable OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Specifies whether creation of netflow entries is enabled
+         on this VLAN.
+
+         If this object is set to 'true', the system will create 
+         netflow entries for this VLAN.
+
+         If this object is set to 'false', the system will not create
+         any netflow entries for this VLAN.
+
+         When the value of cseNetflowPerVlanIfGlobalEnable is 'false',
+         this object will not take effect." 
+    ::= { cseNetflowPerVlanIfCtrlEntry 2 } 
+ 
 -- L3 switching statistics
 
 cseL3StatsTable OBJECT-TYPE
@@ -2307,7 +2682,7 @@ CseL3StatsEntry ::= SEQUENCE {
         cseL3ActiveFlows           Gauge32,
         cseL3FlowLearnFailures     Counter32,
         cseL3IntFlowInvalids       Counter32,
-        cseL3ExtFlowInvalids       Counter32 
+        cseL3ExtFlowInvalids       Counter32
 }
 
 cseL3SwitchedTotalPkts OBJECT-TYPE
@@ -2667,7 +3042,86 @@ cseIpxTooShortErrors OBJECT-TYPE
         "Indicates the number of IPX length too short errors." 
     ::= { cseErrorStatsEntry 5 }
 
+--
+--  L3 error counters table.
+-- 
+cseErrorStatsLCTable OBJECT-TYPE
+    SYNTAX     SEQUENCE OF CseErrorStatsLCEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+        "A table of IP and IPX error counters per switch engine."
+    ::= { cseL3Objects 6 }
+
+cseErrorStatsLCEntry OBJECT-TYPE
+    SYNTAX     CseErrorStatsLCEntry
+    MAX-ACCESS not-accessible
+    STATUS     current
+    DESCRIPTION
+        "A row instance represents layer-3 IP and IPX error counters
+        on a switching engine."
+    INDEX { entPhysicalIndex }
+    ::= { cseErrorStatsLCTable 1 }
+
+CseErrorStatsLCEntry ::= SEQUENCE {
+    cseLCIpPlenErrors        Counter32,
+    cseLCIpTooShortErrors    Counter32,
+    cseLCIpCheckSumErrors    Counter32,
+    cseLCIpxPlenErrors       Counter32,
+    cseLCIpxTooShortErrors   Counter32
+}
+
+cseLCIpPlenErrors OBJECT-TYPE
+    SYNTAX      Counter32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the number of IP length against physical length
+        errors." 
+    ::= { cseErrorStatsLCEntry 1 }
+
+cseLCIpTooShortErrors OBJECT-TYPE
+    SYNTAX      Counter32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the number of IP length too short errors." 
+    ::= { cseErrorStatsLCEntry 2 }
+
+cseLCIpCheckSumErrors OBJECT-TYPE
+    SYNTAX      Counter32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the number of IP checksum errors." 
+    ::= { cseErrorStatsLCEntry 3 }
+
+cseLCIpxPlenErrors OBJECT-TYPE
+    SYNTAX      Counter32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the number of IPX length against physical length
+        errors." 
+    ::= { cseErrorStatsLCEntry 4 }
+
+cseLCIpxTooShortErrors OBJECT-TYPE
+    SYNTAX      Counter32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the number of IPX length too short errors." 
+    ::= { cseErrorStatsLCEntry 5 }
+
 -- Protocol Filter capability
+
+cseProtocolFilterEnable OBJECT-TYPE
+    SYNTAX      TruthValue 
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Indicates if protocol filtering is enabled in the device."
+    ::= { cseProtocolFilter 1 }
 
 cseProtocolFilterPortTable OBJECT-TYPE
     SYNTAX     SEQUENCE OF CseProtocolFilterPortEntry
@@ -3137,6 +3591,503 @@ cseMcastCacheStatus OBJECT-TYPE
         be modified, except by setting it to 'notInService' first,
         or deleting and re-creating it."
     ::= { cseMcastCacheEntry 8 }
+
+--
+--  cseCef Group 
+--
+
+--
+-- The cseCefFibTable
+--
+cseCefFibTable    OBJECT-TYPE
+    SYNTAX        SEQUENCE OF CseCefFibEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "This table contains the information stored in the device's 
+         forwarding information base (FIB). 
+
+         FIB is a forwarding scheme that utilizes matching pattern
+         to provide optimized lookup for efficient packet forwarding.
+         It contains a forwarding table which consist of matching
+         criteria for incoming traffic as well as information to
+         forward traffic that matched defined criteria." 
+    ::= { cseCef 1 }
+
+cseCefFibEntry    OBJECT-TYPE
+    SYNTAX        CseCefFibEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "Each row contains the IP address type, the final destination
+         IP address, the final destination IP address mask as well as
+         the FIB entry type."
+    INDEX { cseCefFibIndex }
+    ::= { cseCefFibTable 1 }
+
+CseCefFibEntry ::= SEQUENCE {
+    cseCefFibIndex           Unsigned32, 
+    cseCefFibAddrType        InetAddressType,
+    cseCefFibDestIp          InetAddress,
+    cseCefFibDestIpMask      InetAddress,
+    cseCefFibType            INTEGER
+}
+
+cseCefFibIndex     OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The index of this table entry."
+    ::= { cseCefFibEntry 1 }
+
+cseCefFibAddrType  OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The type of IP address denoted in cseCefFibDestIp and
+         cseCefFibDestIpMask object." 
+    ::= { cseCefFibEntry 2 }
+
+cseCefFibDestIp    OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The destination IP address specified in IP packet header."
+    ::= { cseCefFibEntry 3 }
+
+cseCefFibDestIpMask  OBJECT-TYPE
+    SYNTAX        InetAddress
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "The specified destination IP address mask."
+    ::= { cseCefFibEntry 4 }
+
+cseCefFibType        OBJECT-TYPE
+    SYNTAX        INTEGER {
+                      other(1),
+                      resolved(2),
+                      bridge(3),
+                      drop(4),
+                      connected(5),
+                      receive(6),
+                      wildcard(7),
+                      tunnel(8),
+                      default(9)
+                  } 
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Indicates the FIB entry type.
+         
+         other(1) indicates that this FIB entry type is none
+         of the following.
+         
+         resolved(2) indicates that IP traffic matched the
+         destination prefix of this entry is associated with a
+         valid next-hop address. 
+ 
+         bridge(3) indicates that IP traffic matched the destination
+         prefix of this entry will be forwarded using Layer 2
+         look up result. 
+
+         drop(4) indicates that IP traffic matched the destination
+         prefix of this entry will be dropped.
+
+         connected(5) indicates that IP traffic matched the destination
+         prefix of this entry is associated with a connected network. 
+
+         receive(6) indicates that IP traffic matched the destination
+         prefix of this entry will be sent to a router interface.
+
+         wildcard(7) indicates this FIB entry will match all traffic. 
+
+         tunnel(8) indicates this FIB entry applied to tunneling
+         traffic. 
+
+         default(9) indicates that IP traffic matched the destination
+         prefix of this entry will be forwarded using a default route." 
+    ::= { cseCefFibEntry 5 }
+
+--
+-- The cseCefAdjacencyTable
+--
+
+cseCefAdjacencyTable    OBJECT-TYPE
+    SYNTAX        SEQUENCE OF CseCefAdjacencyEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "This table contains information stored in the device's 
+         adjacency table. Entry in this table is linked to entry
+         of cseCefFibTable by its cseCefFibIndex object." 
+    ::= { cseCef 3 }
+
+cseCefAdjacencyEntry    OBJECT-TYPE
+    SYNTAX        CseCefAdjacencyEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "Each row contains next hop IP address, next-hop Ethernet
+         address, adjacency type, and number of bytes and packets
+         transmitted to each adjacency entry. Next hop encapsulation
+         type and MTU value are also available if supported by the
+         device."  
+    INDEX { cseCefFibIndex, cseCefAdjacencyIndex }
+    ::= { cseCefAdjacencyTable 1 }
+
+CseCefAdjacencyEntry ::= SEQUENCE {
+    cseCefAdjacencyIndex           Unsigned32, 
+    cseCefAdjacencyAddrType        InetAddressType,
+    cseCefAdjacencyNextHopIp       InetAddress,
+    cseCefAdjacencyNextHopMac      MacAddress,
+    cseCefAdjacencyNextHopIfIndex  InterfaceIndexOrZero, 
+    cseCefAdjacencyType            INTEGER,
+    cseCefAdjacencyPkts            Counter64,
+    cseCefAdjacencyOctets          Counter64,
+    cseCefAdjacencyEncap           INTEGER,
+    cseCefAdjacencyMTU             Unsigned32
+}
+
+cseCefAdjacencyIndex     OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The adjacency index of this table entry."
+    ::= { cseCefAdjacencyEntry 1 }
+
+cseCefAdjacencyAddrType  OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The type of IP address denoted in cseCefAdjacencyNextHopIp
+         object." 
+    ::= { cseCefAdjacencyEntry 2 }
+
+cseCefAdjacencyNextHopIp    OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The next hop IP address."
+    ::= { cseCefAdjacencyEntry 3 }
+
+cseCefAdjacencyNextHopMac  OBJECT-TYPE
+    SYNTAX        MacAddress  
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "The next hop Ethernet address." 
+    ::= { cseCefAdjacencyEntry 4 }
+
+cseCefAdjacencyNextHopIfIndex    OBJECT-TYPE
+    SYNTAX      InterfaceIndexOrZero 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the next hop interface ifIndex." 
+    ::= { cseCefAdjacencyEntry 5 }
+
+cseCefAdjacencyType        OBJECT-TYPE
+    SYNTAX        INTEGER {
+                      other(1),
+                      punt(2),
+                      glean(3),
+                      drop(4),
+                      null(5),
+                      noRewrite(6),
+                      forceDrop(7),
+                      connect(8),
+                      unresolved(9),
+                      loopback(10),
+                      tunnel(11)
+                  } 
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "Indicates this adjacency entry type.
+        
+         other(1) indicates the adjacency entry type is none of
+         the following.
+
+         punt(2) indicates entry that sends traffic to the router.
+
+         glean(3) indicates entry that needs to be gleaned for incoming
+         traffic.
+
+         drop(4) indicates entry that drops packets.
+
+         null(5) indicates entry that drops packets destined 
+         for the Null0 interface.
+
+         noRewrite(6) indicates entry that sends traffic to the router
+         when rewrite information is incomplete. 
+
+         forceDrop(7) indicates entry that drop packets due to ARP
+         throttling. 
+
+         connect(8) indicates entry that contains complete rewrite
+         information.
+
+         unresolved(9) indicates entry that next hop traffic is 
+         unresolved. 
+
+         loopback(10) indicates entry that drops packets destined 
+         for loopback interface.
+
+         tunnel(11) indicates entry that next hop traffic is 
+         through a tunnel."
+    ::= { cseCefAdjacencyEntry 6 }
+
+cseCefAdjacencyPkts   OBJECT-TYPE
+     SYNTAX        Counter64
+     MAX-ACCESS    read-only
+     STATUS        current
+     DESCRIPTION
+         "Indicates the number of Layer 3 packets transmitted to 
+          this adjacency entry."
+     ::= { cseCefAdjacencyEntry 7 }
+
+cseCefAdjacencyOctets   OBJECT-TYPE
+     SYNTAX        Counter64
+     MAX-ACCESS    read-only
+     STATUS        current
+     DESCRIPTION
+         "Indicates the number of Layer 3 octets transmitted to 
+          this adjacency entry."
+     ::= { cseCefAdjacencyEntry 8 }
+
+cseCefAdjacencyEncap    OBJECT-TYPE
+    SYNTAX      INTEGER {
+                   arpa(1),
+                   raw(2),
+                   sap(3),
+                   snap(4)
+                } 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the next hop destination encapsulation type.
+
+         arpa(1) indicates that next hop destination used ARPA
+         encapsulation type to forward packets.
+
+         raw(2) indicates that next hop destination used RAW
+         encapsulation type to forward packets.
+
+         sap(3) indicates that next hop destination used SAP 
+         encapsulation type to forward packets.
+
+         snap(4) indicates that next hop destination used SNAP
+         encapsulation type to forward packets." 
+    ::= { cseCefAdjacencyEntry 9 }
+
+cseCefAdjacencyMTU    OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Indicates the next hop destination MTU value." 
+    ::= { cseCefAdjacencyEntry 10 }
+
+--
+--  cseTcamUsage group
+--
+
+--
+-- The cseTcamUsageTable 
+--
+
+cseTcamUsageTable    OBJECT-TYPE
+    SYNTAX        SEQUENCE OF CseTcamUsageEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "This table contains the resource usage of TCAM (Ternary
+         Content Addressable Memory) in the device.  Not all the
+         resource types denoted by cseTcamResourceType object
+         are supported. If that is the case, the corresponding row
+         for that type will not be instantiated in this table."
+    ::= { cseTcamUsage 1 }
+
+cseTcamUsageEntry    OBJECT-TYPE
+    SYNTAX        CseTcamUsageEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "Each row contains a short description of the resource type,
+        the total amount of TCAM allocated for that type as well
+        as the amount of allocated resource has been used up."  
+    INDEX { entPhysicalIndex, cseTcamResourceType }
+    ::= { cseTcamUsageTable 1 }
+
+CseTcamUsageEntry ::= SEQUENCE {
+    cseTcamResourceType     INTEGER,
+    cseTcamResourceDescr    SnmpAdminString,
+    cseTcamResourceUsed     Unsigned32,
+    cseTcamResourceTotal    Unsigned32 
+}
+
+cseTcamResourceType        OBJECT-TYPE
+    SYNTAX        INTEGER {
+                      aclStorageMask(1),
+                      aclStorageValue(2),
+                      aclDynamicStorageMask(3),
+                      aclDynamicStorageValue(4),
+                      qosStorageMask(5),
+                      qosStorageValue(6),
+                      qosDynamicStorageMask(7),
+                      qosDynamicStorageValue(8),
+                      l4PortOperator(9),
+                      interfaceMapping(10),
+                      ingressInterfaceMapping(11),
+                      egressInterfaceMapping(12)
+                   } 
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "The resource type which take up TCAM space.
+
+         aclStorageMask(1) indicates that TCAM space is allocated
+         to store ACL masks.
+
+         aclStorageValue(2) indicates that TCAM space is allocated
+         to store ACL value.
+
+         aclDynamicStorageMask(3) indicates that TCAM space is
+         allocated to dynamically store ACL masks.
+
+         aclDynamicStorageValue(4) indicates that TCAM space is
+         allocated to dynamically store ACL values.
+
+         qosStorageMask(5) indicates that TCAM space is allocated
+         to store QoS masks.
+
+         qosStorageValue(6) indicates that TCAM space is allocated
+         to store QoS value.
+
+         qosDynamicStorageMask(7) indicates that TCAM space is
+         allocated to dynamically store QoS masks.
+
+         qosDynamicStorageValue(8) indicates that TCAM space is
+         allocated to dynamically store QoS values.
+
+         l4PortOperator(9) indicates that TCAM space is allocated
+         for layer 4 port operators purpose.
+
+         interfaceMapping(10) indicates that TCAM space is allocated
+         for interface mapping purpose.
+       
+         ingressInterfaceMapping(11) indicates that TCAM space is
+         allocated for ingress interface mapping purpose.
+
+         egressInterfaceMapping(12) indicates that TCAM space is
+         allocated for egress interface mapping purpose." 
+    ::= { cseTcamUsageEntry 1 }
+
+cseTcamResourceDescr     OBJECT-TYPE
+    SYNTAX        SnmpAdminString 
+    MAX-ACCESS    read-only 
+    STATUS        current
+    DESCRIPTION
+        "The short description of the resource type." 
+    ::= { cseTcamUsageEntry 2 }
+
+cseTcamResourceUsed     OBJECT-TYPE
+    SYNTAX        Unsigned32 
+    MAX-ACCESS    read-only 
+    STATUS        current
+    DESCRIPTION
+        "The amount of TCAM resource has been used up for this resource
+        type." 
+    ::= { cseTcamUsageEntry 3 }
+
+cseTcamResourceTotal     OBJECT-TYPE
+    SYNTAX        Unsigned32 
+    MAX-ACCESS    read-only 
+    STATUS        current
+    DESCRIPTION
+        "The total amount of TCAM resource is allocated for this
+        resource type." 
+    ::= { cseTcamUsageEntry 4 }
+
+
+--
+--  cseMet group
+--
+
+--
+-- The cseMetUsageTable 
+--
+
+cseMetUsageTable    OBJECT-TYPE
+    SYNTAX        SEQUENCE OF CseMetUsageEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "This table contains the resource usage of MET (Multicast
+         Expansion Table) in the device."
+    ::= { cseMet 1 }
+
+cseMetUsageEntry    OBJECT-TYPE
+    SYNTAX        CseMetUsageEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "Each row contains the total number of entries in each MET,
+         the number of free entries in unallocated as well as
+         allocated space of the MET. Each row represents MET data 
+         maintained by each module (identified by its entPhysicalIndex)
+         which is capable of this feature."   
+    INDEX { entPhysicalIndex, cseMetIndex }
+    ::= { cseMetUsageTable 1 }
+
+CseMetUsageEntry ::= SEQUENCE {
+    cseMetIndex                        Unsigned32, 
+    cseMetTotalEntries                 Unsigned32,
+    cseMetUnallocatedSpcFreeEntries    Unsigned32,
+    cseMetAllocatedSpcFreeEntries      Unsigned32
+}
+
+cseMetIndex       OBJECT-TYPE
+    SYNTAX        Unsigned32 
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+        "A value uniquely identifies a MET in a module."
+    ::= { cseMetUsageEntry 1 }
+
+cseMetTotalEntries     OBJECT-TYPE
+    SYNTAX        Unsigned32 
+    MAX-ACCESS    read-only 
+    STATUS        current
+    DESCRIPTION
+        "The total number of entries in this MET."
+    ::= { cseMetUsageEntry 2 }
+
+cseMetUnallocatedSpcFreeEntries OBJECT-TYPE
+    SYNTAX        Unsigned32 
+    MAX-ACCESS    read-only 
+    STATUS        current
+    DESCRIPTION
+        "The number of free entries reside in unallocated
+         space of this MET." 
+    ::= { cseMetUsageEntry 3 }
+
+cseMetAllocatedSpcFreeEntries   OBJECT-TYPE
+    SYNTAX        Unsigned32 
+    MAX-ACCESS    read-only 
+    STATUS        current
+    DESCRIPTION
+        "The number of free entries reside in allocated 
+        space of this MET." 
+    ::= { cseMetUsageEntry 4 }
+ 
  
 -- Notifications
 
@@ -3373,7 +4324,7 @@ cseMIBCompliance4 MODULE-COMPLIANCE
         ::= { cseMIBCompliances 4 }
 
 cseMIBCompliance5 MODULE-COMPLIANCE
-        STATUS current
+        STATUS deprecated
         DESCRIPTION
           "The compliance statement for
            the CISCO-SWITCH-ENGINE-MIB MIB."
@@ -3456,7 +4407,99 @@ cseMIBCompliance5 MODULE-COMPLIANCE
         DESCRIPTION 
         "Implementation of this group is optional."
  
-        ::= { cseMIBCompliances 5 }        
+        ::= { cseMIBCompliances 5 }     
+
+cseMIBCompliance6 MODULE-COMPLIANCE
+        STATUS current
+        DESCRIPTION
+          "The compliance statement for
+           the CISCO-SWITCH-ENGINE-MIB MIB."
+        MODULE
+        MANDATORY-GROUPS { cseStatisticsGroup }
+
+        GROUP  cseRouterGroup
+        DESCRIPTION
+        "This group is mandatory only for those switches which
+         support layer 3 switching in the system."
+
+        GROUP  cseVlanStatisticsGroup
+        DESCRIPTION
+        "This group is mandatory only for those switches which
+         can provide per-vlan statistics."
+
+        GROUP  cseFlowMgmtGroupRev1
+        DESCRIPTION
+        "This group is mandatory only for those switches which
+         support layer 3 switching in the system."
+
+        GROUP  cseFlowMcastMgmtGroup
+        DESCRIPTION
+        "This group is mandatory only for those switches which
+         support layer 3 IP multicast switching in the system."
+
+        GROUP  cseUcastCachePurgeGroup
+        DESCRIPTION
+        "This group is mandatory only for those switches which
+         supports IP/IPX unicast flow cache purging in the system."
+
+        GROUP  cseMcastCachePurgeGroup
+        DESCRIPTION
+        "This group is mandatory only for those switches which
+         supports IP multicast flow cache purging in the system."
+
+        GROUP  cseFlowMgmtOperStatusGroup
+        DESCRIPTION
+        "This group is mandatory only for those switches which
+         support operating status on aging time for flows used
+         in L3 switching."
+
+        GROUP  cse4kVlanGroup
+        DESCRIPTION
+        "This group must be implemented by the devices which
+         support the range of VlanIndex between 1024 and 4095 "
+
+        GROUP cseNDEMandatoryGroup
+        DESCRIPTION
+        "This group is mandatory for those switched which
+         support Netflow Data Export"
+
+        GROUP cseNDESingleFilterGroupRev1
+        DESCRIPTION
+        "This group is mandatory in agents for which the value of
+         cseNetflowLSFilterSupport is single."
+   
+        GROUP cseNDEMultipleFiltersGroup
+        DESCRIPTION
+        "This group is mandatory in agents for which the value of
+         cseNetflowLSFilterSupport is multiple."
+
+        OBJECT cseNetflowLSFilterSelection
+        MIN-ACCESS read-only
+        DESCRIPTION
+        "Write access is not required, for systems which 
+         support just one include and one exclude filter."
+
+        OBJECT cseNetflowLSFilterStatus
+        MIN-ACCESS read-only
+        DESCRIPTION
+        "Write access is not required, for systems which 
+         support just one include and one exclude filter"
+
+        GROUP cseProtocolFilterGroup
+        DESCRIPTION
+        "Implementation of this group is optional."
+
+        GROUP cseStatisticsGroup2
+        DESCRIPTION 
+        "Implementation of this group is optional."
+        
+        GROUP cseFlowMgmtExtGroup2
+        DESCRIPTION
+        "This group is mandatory only for those switches which
+         support layer 3 switching in the system."
+         
+        ::= { cseMIBCompliances 6 }     
+
 -- units of conformance
 
 cseStatisticsGroup OBJECT-GROUP
@@ -3679,7 +4722,7 @@ cseNDESingleFilterGroup OBJECT-GROUP
               cseNetflowLSExportDataProtocol,
               cseNetflowLSExportDataFilterSelection
            }
-    STATUS  current
+    STATUS  deprecated
     DESCRIPTION
       "A collection of objects providing information on the Netflow LAN
        switching Data Export feature, with a single host and a
@@ -3788,5 +4831,166 @@ cseVlanStatisticsExtGroup OBJECT-GROUP
       "A collection of objects providing additional per-vlan switch
        engine statistics, if supported."
     ::= { cseMIBGroups 19 }
+
+cseProtocolFilterExtGroup OBJECT-GROUP
+    OBJECTS { cseProtocolFilterEnable }
+    STATUS  current
+    DESCRIPTION
+      "A collection of objects providing additional information on the
+       Protocol filter feature, if supported."
+    ::= { cseMIBGroups 20 }
+
+cseFlowMgmtExtGroup OBJECT-GROUP
+    OBJECTS { cseFlowIPFlowMask, cseFlowIPXFlowMask}
+    STATUS  current
+    DESCRIPTION
+      "A collection of objects providing additional information on the
+       L3 flow switching in the switching engine."
+    ::= { cseMIBGroups 21 }
+
+cseFlowMgmtExtGroup1 OBJECT-GROUP
+    OBJECTS { 
+         cseFlowLongAgingTime,
+         cseFlowExcludeProtocol,
+         cseFlowExcludeStatus
+    }
+    STATUS  current
+    DESCRIPTION
+      "A collection of objects providing additional information on the
+       L3 flow switching in the switching engine."
+    ::= { cseMIBGroups 22 }
+
+cseNDEReportGroup OBJECT-GROUP
+     OBJECTS { cseNetFlowIfIndexEnable }
+     STATUS  current
+     DESCRIPTION
+       "A collection of objects providing the configuration
+        on NDE ifIndex report feature."
+     ::= { cseMIBGroups 23 }
+
+cseStatisticsFlowGroup OBJECT-GROUP
+    OBJECTS  { cseFlowTotalFlows  }
+    STATUS  current
+    DESCRIPTION
+      "A collection of object providing switch engine statistics
+      on total number of installed flows."
+    ::= { cseMIBGroups 24 }
+
+cseFlowMgmtExtGroup2 OBJECT-GROUP
+    OBJECTS { cseFlowQuerySkipNFlows }
+    STATUS  current
+    DESCRIPTION
+      "A collection of objects providing additional information on the
+       L3 flow switching in the switching engine."
+    ::= { cseMIBGroups 25 }
+
+cseNDESingleFilterGroupRev1 OBJECT-GROUP
+    OBJECTS { cseNetflowLSExportDataSource, 
+              cseNetflowLSExportDataSourceMask,
+              cseNetflowLSExportDataDest,
+              cseNetflowLSExportDataDestMask,
+              cseNetflowLSExportDataProtocol,
+              cseNetflowLSExportDataFilterSelection
+           }
+    STATUS  current
+    DESCRIPTION
+      "A collection of objects providing information on the Netflow LAN
+       switching Data Export feature, with a single filter support." 
+    ::= { cseMIBGroups 26 }
+
+cseCefFibAdjacencyGroup OBJECT-GROUP
+    OBJECTS  {
+         cseCefFibAddrType,
+         cseCefFibDestIp,
+         cseCefFibDestIpMask,
+         cseCefFibType,
+         cseCefAdjacencyAddrType,
+         cseCefAdjacencyNextHopIp,
+         cseCefAdjacencyNextHopMac,
+         cseCefAdjacencyNextHopIfIndex,
+         cseCefAdjacencyType,
+         cseCefAdjacencyPkts,
+         cseCefAdjacencyOctets
+    }
+    STATUS  current
+    DESCRIPTION
+      "A collection of objects providing FIB and adjacency
+       information available in the device."
+    ::= { cseMIBGroups 27 }
+
+cseCefAdjacencyEncapGroup OBJECT-GROUP
+    OBJECTS { cseCefAdjacencyEncap }
+    STATUS  current
+    DESCRIPTION
+      "A collection of object providing adjacency next hop 
+       encapsulation information available in the device."
+    ::= { cseMIBGroups 28 }
+
+cseCefAdjacencyMTUGroup OBJECT-GROUP
+    OBJECTS { cseCefAdjacencyMTU }
+    STATUS  current
+    DESCRIPTION
+      "A collection of object providing adjacency next hop
+       MTU information available in the device."
+    ::= { cseMIBGroups 29 }
+
+cseTcamUsageGroup OBJECT-GROUP
+    OBJECTS {
+      cseTcamResourceDescr,
+      cseTcamResourceUsed,
+      cseTcamResourceTotal
+    }
+    STATUS current
+    DESCRIPTION
+        "A collection of objects providing the resource usage
+        information on TCAM available in the device."
+    ::= { cseMIBGroups 30 }
+
+cseL3ErrorsLCGroup  OBJECT-GROUP
+    OBJECTS {
+      cseLCIpPlenErrors,
+      cseLCIpTooShortErrors,
+      cseLCIpCheckSumErrors,
+      cseLCIpxPlenErrors,
+      cseLCIpxTooShortErrors
+    }
+    STATUS current
+    DESCRIPTION
+        "A collection of objects providing the IP and IPX error 
+        statistics."
+    ::= { cseMIBGroups 31 }
+
+cseNetflowASInfoExportGroup OBJECT-GROUP
+    OBJECTS {
+      cseNetflowASInfoExportCtrl
+    }
+    STATUS current
+    DESCRIPTION
+        "A collection of object providing AS number information
+         export control."
+    ::= { cseMIBGroups 32 }
+
+cseNetflowPerVlanIfGroup OBJECT-GROUP
+    OBJECTS {
+      cseNetflowPerVlanIfGlobalEnable,
+      cseNetflowPerVlanIfEnable
+    }
+    STATUS current
+    DESCRIPTION
+        "A collection of objects providing control of netflow entry 
+         creation per vlan."
+    ::= { cseMIBGroups 33 }
+
+cseMetUsageGroup OBJECT-GROUP
+    OBJECTS {
+      cseMetTotalEntries,
+      cseMetUnallocatedSpcFreeEntries,
+      cseMetAllocatedSpcFreeEntries 
+    }
+    STATUS current
+    DESCRIPTION
+        "A collection of objects providing MET utilization 
+         information." 
+    ::= { cseMIBGroups 34 }
 
 END

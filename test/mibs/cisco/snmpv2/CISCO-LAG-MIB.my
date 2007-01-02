@@ -1,8 +1,8 @@
-
+  
 CISCO-LAG-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE
+    MODULE-IDENTITY, OBJECT-TYPE, Unsigned32
         FROM SNMPv2-SMI
 
     MODULE-COMPLIANCE, OBJECT-GROUP
@@ -14,14 +14,14 @@ IMPORTS
     ciscoMgmt
         FROM CISCO-SMI
 
-    dot3adAggPortEntry
+    dot3adAggPortEntry, dot3adAggPortListEntry
         FROM IEEE8023-LAG-MIB
 
     ifIndex
         FROM IF-MIB;
 
 ciscoLagMIB MODULE-IDENTITY
-    LAST-UPDATED "200201020000Z"
+    LAST-UPDATED "200606210000Z"
     ORGANIZATION "Cisco Systems, Inc."
     CONTACT-INFO
         "         Cisco Systems
@@ -33,7 +33,8 @@ ciscoLagMIB MODULE-IDENTITY
 
              Tel: +1 800 553-NETS
 
-          E-mail:  cs-etherchan@cisco.com"
+          E-mail:  cs-etherchan@cisco.com
+                   cs-lan-switch-snmp@cisco.com"
 
     DESCRIPTION
         "Cisco Link Aggregation module for managing IEEE Std
@@ -42,7 +43,18 @@ ciscoLagMIB MODULE-IDENTITY
          This MIB provides Link Aggregation information that are
          either excluded by IEEE Std 802.3ad (IEEE8023-LAG-MIB)
          or specific to Cisco products."
-
+    REVISION     "200606210000Z"     
+    DESCRIPTION  
+        "Added clagAggMaxAggregatorsGroup and modified the
+         description of clagAggPortListPorts." 
+    REVISION     "200406110000Z"     
+    DESCRIPTION  
+        "Added clagAggPortListTable." 
+    REVISION     "200212130000Z"     
+    DESCRIPTION  
+        "Added a new value vlanIpPort(4) in TEXTUAL-CONVENTION
+         ClagDistributionProtocol.
+         Added a new object clagAggDistributionMplsProtocol."
     REVISION     "200201020000Z"
     DESCRIPTION
         "Modified Description of clagAggDistributionProtocol."
@@ -64,19 +76,21 @@ ClagDistributionProtocol ::= TEXTUAL-CONVENTION
     STATUS      current
     DESCRIPTION
         "An enumerated type for all the supported load balancing 
-         protocols to distribute traffic across multiple links.  
-         The protocol can be mac, ip and port used on the LACP 
-         interface to distribute outgoing data frames among its 
-         component interfaces.
-
+         algorithms used on the LACP interface to distribute 
+         outgoing data frames among its component interaces, such 
+         as IP address.  
+         
          ip(1)               IP address
          mac(2)              MAC address 
-         port(3)             port number"
+         port(3)             port number
+         vlanIpPort(4)       vlan number, IP address and
+                         port number"
 
     SYNTAX      INTEGER {
                     ip(1),
                     mac(2),
-                    port(3)
+                    port(3),
+                    vlanIpPort(4)   
                 }
 
 ClagDistributionAddressMode ::= TEXTUAL-CONVENTION
@@ -98,6 +112,24 @@ ClagDistributionAddressMode ::= TEXTUAL-CONVENTION
                     destination(2),
                     both(3)
                 }
+
+ClagDistributionMplsProtocol ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "An enumerated type for all the supported load balancing 
+         algorithms used on the LACP interface to distribute 
+         outgoing MPLS (Multi-Protocol Label Switching) data 
+         frames among its component interfaces, such as 
+         MPLS label.
+
+         label(1)            MPLS label
+         labelIp(2)          MPLS label or IP address" 
+         
+    SYNTAX      INTEGER {
+                    label(1),
+                    labelIp(2)
+                }
+        
 
 ClagAggregationProtocol ::= TEXTUAL-CONVENTION
     STATUS      current
@@ -150,6 +182,7 @@ ClagPortAdminStatus ::= TEXTUAL-CONVENTION
 clagGlobalConfigObjects OBJECT IDENTIFIER ::= { clagMIBObjects 1 }
 clagAgg OBJECT IDENTIFIER ::= { clagMIBObjects 2 }
 clagAggPort OBJECT IDENTIFIER ::= { clagMIBObjects 3 }
+clagAggPortList OBJECT IDENTIFIER ::= { clagMIBObjects 4 }
 
 -- -------------------------------------------------------------
 
@@ -161,10 +194,9 @@ clagAggDistributionProtocol OBJECT-TYPE
     MAX-ACCESS  read-write
     STATUS      current
     DESCRIPTION
-        "This object controls the type of protocol (mac, or ip)
-         address or port number used on this LACP interface to
-         distribute outgoing data frames among its component
-         interfaces."
+        "This object controls the load balancing algorithms
+         used on this LACP interface to distribute outgoing data
+         frames among its component interfaces."
 
     ::= { clagGlobalConfigObjects 1 }
 
@@ -176,6 +208,30 @@ clagAggDistributionAddressMode OBJECT-TYPE
         "The load balancing address mode for the device."
 
     ::= { clagGlobalConfigObjects 2 }
+
+clagAggDistributionMplsProtocol OBJECT-TYPE
+    SYNTAX      ClagDistributionMplsProtocol
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object controls the load balancing algorithms
+         used on this LACP interface to distribute outgoing MPLS
+         data frames among its component interfaces.
+         
+         This object is only instantiated on platforms which 
+         support aggregation load balancing for MPLS packets."
+
+    ::= { clagGlobalConfigObjects 3 }
+
+clagAggMaxAggregators OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the maximum number of aggregators 
+         supported by the device."
+    ::= { clagGlobalConfigObjects 4 }
+
 
 -- -------------------------------------------------------------
 -- The Aggregation Protocol Table
@@ -241,7 +297,6 @@ clagAggPortTable  OBJECT-TYPE
          aggregation port that is associated with this system.
          This table contains additional objects for the
          dot3adAggPortTable."
-
     REFERENCE
         "IEEE 802.3 Subclause 30.7.2"
     ::= { clagAggPort 1 }
@@ -270,6 +325,59 @@ clagAggPortAdminStatus OBJECT-TYPE
          aggregation port."
     ::= { clagAggPortEntry 1 }
 
+
+-- -------------------------------------------------------------
+-- The Port List Table
+-- -------------------------------------------------------------
+clagAggPortListTable  OBJECT-TYPE
+    SYNTAX      SEQUENCE OF ClagAggPortListEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table augments the dot3adAggPortListTable and
+         provides the complete list of ports associated with
+         each Aggregator." 
+    REFERENCE
+        "IEEE 802.3 Subclause 30.7.1.1.30"
+    ::= { clagAggPortList 1 }
+
+clagAggPortListEntry  OBJECT-TYPE
+    SYNTAX      ClagAggPortListEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of the ports associated with a given Aggregator."
+    AUGMENTS    { dot3adAggPortListEntry }
+    ::= { clagAggPortListTable 1 }
+
+ClagAggPortListEntry ::=
+    SEQUENCE {
+        clagAggPortListPorts          OCTET STRING
+    }
+
+clagAggPortListPorts OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(2..256)) 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object contains a list of ports currently associated
+         with this Aggregator in the format of
+         '[number_of_ports][dot1dBasePort1][dot1dBasePort2]...'
+
+         where
+         [number_of_ports] is of size 2 octet and indicates
+         the number of ports contains in this object. It
+         also indicates the number of dot1dBasePort field
+         following this field. 
+
+         [dot1dBasePort'n'] is the value of dot1dBasePort of 
+         the 'n' port associated with this Aggregation
+         and has size of 2 octets where n is up to
+         [number_of_ports]."  
+    REFERENCE
+        "IEEE 802.3 Subclause 30.7.1.1.30"
+    ::= { clagAggPortListEntry 1 }
+
 -- -------------------------------------------------------------
 
 -- -------------------------------------------------------------
@@ -294,7 +402,7 @@ clagMIBGroups      OBJECT IDENTIFIER ::= { clagMIBConformance 2 }
 -- Compliance
 -- -------------------------------------------------------------
 clagMIBCompliance MODULE-COMPLIANCE
-    STATUS      current
+    STATUS      deprecated
     DESCRIPTION
         "The compliance statement for entities which implement
         the Cisco Link Aggregation MIB"
@@ -320,6 +428,125 @@ clagMIBCompliance MODULE-COMPLIANCE
             "This group is mandatory for the devices which 
              supported aggregation load balancing."
     ::= { clagMIBCompliances 1 }
+
+clagMIBCompliance2 MODULE-COMPLIANCE
+    STATUS      deprecated 
+    DESCRIPTION
+        "The compliance statement for entities which implement
+        the Cisco Link Aggregation MIB"
+
+    MODULE           -- this module
+        MANDATORY-GROUPS {
+            clagAggProtocolGroup,
+            clagAggPortGroup
+        }
+
+        OBJECT      clagAggProtocolType
+        MIN-ACCESS  read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        OBJECT      clagAggPortAdminStatus
+        MIN-ACCESS  read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        GROUP      clagAggDistributionGroup
+        DESCRIPTION
+            "This group is mandatory for the devices which 
+             supported aggregation load balancing."
+    
+        GROUP      clagAggDistributionMplsGroup
+        DESCRIPTION
+            "This group is mandatory for the devices which 
+             supported aggregation load balancing for MPLS
+             packets."
+    ::= { clagMIBCompliances 2 }
+
+clagMIBCompliance3 MODULE-COMPLIANCE
+    STATUS      deprecated
+    DESCRIPTION
+        "The compliance statement for entities which implement
+        the Cisco Link Aggregation MIB"
+
+    MODULE           -- this module
+        MANDATORY-GROUPS {
+            clagAggProtocolGroup,
+            clagAggPortGroup
+        }
+
+        OBJECT      clagAggProtocolType
+        MIN-ACCESS  read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        OBJECT      clagAggPortAdminStatus
+        MIN-ACCESS  read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        GROUP      clagAggDistributionGroup
+        DESCRIPTION
+            "This group is mandatory for the devices which 
+             supported aggregation load balancing."
+    
+        GROUP      clagAggDistributionMplsGroup
+        DESCRIPTION
+            "This group is mandatory for the devices which 
+             supported aggregation load balancing for MPLS
+             packets."
+
+        GROUP      clagAggPortListGroup
+        DESCRIPTION
+            "This group is mandatory for the devices which 
+             supports dot1dBasePort value greater than 2048." 
+    ::= { clagMIBCompliances 3 }
+
+clagMIBCompliance4 MODULE-COMPLIANCE
+    STATUS      current
+    DESCRIPTION
+        "The compliance statement for entities which implement
+        the Cisco Link Aggregation MIB"
+
+    MODULE           -- this module
+        MANDATORY-GROUPS {
+            clagAggProtocolGroup,
+            clagAggPortGroup
+        }
+
+        OBJECT      clagAggProtocolType
+        MIN-ACCESS  read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        OBJECT      clagAggPortAdminStatus
+        MIN-ACCESS  read-only
+        DESCRIPTION
+            "Write access is not required."
+
+        GROUP      clagAggDistributionGroup
+        DESCRIPTION
+            "This group is mandatory for the devices which 
+             supported aggregation load balancing."
+    
+        GROUP      clagAggDistributionMplsGroup
+        DESCRIPTION
+            "This group is mandatory for the devices which 
+             supported aggregation load balancing for MPLS
+             packets."
+
+        GROUP      clagAggPortListGroup
+        DESCRIPTION
+            "This group is mandatory for the devices which 
+             supports dot1dBasePort value greater than 2048." 
+ 
+        GROUP      clagAggMaxAggregatorsGroup
+        DESCRIPTION
+            "This group is mandatory for the devices which
+             provides the information about the maximum number
+             of aggregators supported by the device." 
+
+    ::= { clagMIBCompliances 4 }
 
 -- -------------------------------------------------------------
 -- Units of Conformance
@@ -359,4 +586,47 @@ clagAggDistributionGroup OBJECT-GROUP
          information for an aggregator.  These are additional to
          the IEEE Std 802.3ad MIB."
     ::= { clagMIBGroups 3 }
+
+clagAggDistributionMplsGroup OBJECT-GROUP
+    OBJECTS {
+        clagAggDistributionMplsProtocol
+    }
+    STATUS current
+    DESCRIPTION
+        "A collection of objects that provide the load balancing 
+         information for an aggregator for MPLS packets.  
+         These are additional to the IEEE Std 802.3ad MIB."
+    ::= { clagMIBGroups 4 } 
+
+clagAggPortListGroup OBJECT-GROUP
+    OBJECTS {
+        clagAggPortListPorts
+    }
+    STATUS current
+    DESCRIPTION
+        "A collection of object that provides information about
+         ports in an aggregation." 
+    ::= { clagMIBGroups 5 } 
+
+clagAggMaxAggregatorsGroup OBJECT-GROUP
+    OBJECTS {
+        clagAggMaxAggregators
+    }
+    STATUS current
+    DESCRIPTION
+        "A collection of object that provides information about
+         the maximum number of aggregators supported by the 
+         device."
+    ::= { clagMIBGroups 6 }
+
 END
+     
+  
+ 
+ 
+
+     
+  
+ 
+ 
+

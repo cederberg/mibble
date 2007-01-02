@@ -3,7 +3,7 @@
 --
 -- December 2001, Shekhar Acharya, John Linton
 --
--- Copyright (c) 2001-2002 by Cisco Systems, Inc.
+-- Copyright (c) 2001-2002, 2003, 2004 by Cisco Systems, Inc.
 -- All rights reserved.
 -- *****************************************************************
 CISCO-ITP-XUA-MIB DEFINITIONS ::= BEGIN
@@ -15,7 +15,8 @@ IMPORTS
         NOTIFICATION-TYPE,
         OBJECT-TYPE,
         TimeTicks,
-        Unsigned32
+        Unsigned32,
+        Counter64
                 FROM SNMPv2-SMI
                 
         InetAddressType, 
@@ -23,6 +24,7 @@ IMPORTS
         InetPortNumber
              FROM INET-ADDRESS-MIB
 
+        CItpTcNetworkName,        
         CItpTcPointCode,
         CItpTcSubSystemNumber,
         CItpTcServiceIndicator,
@@ -47,7 +49,7 @@ IMPORTS
                 FROM CISCO-SMI;
 
 ciscoItpXuaMIB MODULE-IDENTITY
-        LAST-UPDATED    "200204150000Z"
+        LAST-UPDATED    "200406140000Z"
         ORGANIZATION    "Cisco Systems, Inc."
         CONTACT-INFO
                 "       Cisco Systems, Inc
@@ -84,11 +86,14 @@ ciscoItpXuaMIB MODULE-IDENTITY
                    M3UA/SUA (XUA) Instance Table
                    M3UA/SUA (XUA) Instance Local IP Table
                    Signaling Gateway Mate Table
+                   Signaling Gateway Mate Remote IP Table
                    Application Server Process (ASP) Table
                    Application Server Process (ASP) Remote IP Table
                    Application Server Process (ASP) Statistics Table
                    Application Server (AS) Table
                    ASP-AS Table
+                   ASRoute Table
+                   ASRouteAs Table
 
                  Abbreviations:
                  AS    - Application Server
@@ -125,6 +130,8 @@ ciscoItpXuaMIB MODULE-IDENTITY
                  SCON1 - Signaling link CONgestion level 1
                  SCON2 - Signaling link CONgestion level 2
                  SCON3 - Signaling link CONgestion level 3
+                 SG    - Signaling Gateway
+                 SGM   - Signaling Gateway Mate
                  SGMP  - Signaling Gateway Mated Protocol
                  SCTP  - Stream Transmission Protocol(RFC 2960)
                  SI    - Signaling Indicator
@@ -132,7 +139,9 @@ ciscoItpXuaMIB MODULE-IDENTITY
                  SNMM  - Signaling Network Management Message
                  SSN   - Subsystem Number for SCCP
                  SUA   - SCCP User Adaptation
+                 TUP   - Telephone User Part
                  TT    - Title Translation
+                 VIP   - Versatile Interface Processor
                  XUA   - M3UA, SUA or SGMP
 
                  Brief description:
@@ -184,6 +193,46 @@ ciscoItpXuaMIB MODULE-IDENTITY
                  route the SS7 message to its mate which can properly
                  route that SS7 message."
 
+        REVISION        "200406140000Z"
+        DESCRIPTION
+                "Added the following textual convention:
+                    CItpXuaRouteState
+                 Added the following table:
+                    cItpXuaASRouteTable
+                    cItpXuaASRouteAsTable
+                 Added the following objects:
+                    cItpXuaAspAsWeight,
+                    cItpXuaAsNetworkAppear,
+                    cItpXuaAsCongLevel."
+
+        REVISION        "200308270000Z"
+        DESCRIPTION
+                "Deprecated the following object(s):
+                    cItpXuaAspAssocId
+                 Added the following objects:
+                    cItpXuaInstOffload
+                    cItpXuaInstOffloadSlot
+                    cItpXuaAsNetworkName
+                    cItpXuaAspAssocIdU32
+                 Modified the description of cItpXuaAsRkParameters
+                 to include TUP Service Indicator."
+
+        REVISION        "200302190000Z"
+        DESCRIPTION
+                "Added the following sub-table:
+                    cItpXuaSgmRemoteIpTable
+                 Added the following objects:
+                    cItpXuaSgmCongLevel
+                    cItpXuaAspCongLevel
+                 Added the following notifications:
+                    ciscoItpXuaAspCongChange
+                    ciscoItpXuaSgmCongChange.
+                 Modified the following Textual Conventions:
+                    CItpXuaAsState
+                    CItpXuaAspState.
+                 Added 'undefined(5)' to CItpXuaTrafMode textual
+                 convention."
+
         REVISION        "200204150000Z"
         DESCRIPTION
                 "Initial version of this MIB module."
@@ -205,6 +254,9 @@ cItpXuaAs            OBJECT IDENTIFIER ::= { ciscoItpXuaMIBObjects 8 }
 cItpXuaAspAs         OBJECT IDENTIFIER ::= { ciscoItpXuaMIBObjects 9 }
 cItpXuaMIBNotifObjects  OBJECT IDENTIFIER ::=
         { ciscoItpXuaMIBObjects 10 }
+cItpXuaSgmRemoteIp   OBJECT IDENTIFIER ::= { ciscoItpXuaMIBObjects 11}
+cItpXuaASRoute       OBJECT IDENTIFIER ::= { ciscoItpXuaMIBObjects 12}
+cItpXuaASRouteAs     OBJECT IDENTIFIER ::= { ciscoItpXuaMIBObjects 13}
 
 -- ********************************************************************
 -- *                                                                  *
@@ -241,18 +293,23 @@ CItpXuaTrafMode ::= TEXTUAL-CONVENTION
                    shares in the traffic distribution with any other
                    currently active ASPs based on ASP bindings.
 
-                'loadRndRobin' : In loadshare roundrobin mode, an
+                'loadRndRobin' : In loadshare round-robin mode, an
                    ASP shares in the traffic distribution with any
                    other currently active ASPs using a roundrobin
-                   algorithm."
+                   algorithm.
+
+                'undefined' : The traffic mode is not defined.
+                   The first ASP that becomes active will define
+                   the traffic mode."
         REFERENCE
-                "3.7.1 ASP Active in M3UA draft and 3.9.11 Traffic Mode
+                "3.7.1 ASP Active in RFC 3332 and 3.9.11 Traffic Mode
                  Type in SUA draft."
         SYNTAX INTEGER {
                 overRide(1),
                 loadBind(2),
                 loadRndRobin(3),
-                broadcast(4)
+                broadcast(4),
+                undefined(5)
         }
 
 CItpXuaAsState ::= TEXTUAL-CONVENTION
@@ -278,14 +335,18 @@ CItpXuaAsState ::= TEXTUAL-CONVENTION
                             active ASP serving the AS. Depending on
                             the recovery timer and an ASP becoming
                             active this AS moves to active, inactive,
-                            or down state."
+                            or down state.
+
+                'undefined' : The AS state is not known or undefined."
+
         REFERENCE
                 "4.3.2 AS States in M3UA/SUA draft."
         SYNTAX INTEGER {
                 down(1),
                 inactive(2),
                 active(3),
-                pending(4)
+                pending(4),
+                undefined(5)
         }
 
 CItpXuaAspState ::= TEXTUAL-CONVENTION
@@ -304,13 +365,39 @@ CItpXuaAspState ::= TEXTUAL-CONVENTION
                              which the ASP is inactive.
 
                 'active' : The remote peer at the ASP is available and 
-                           application traffic is active."
+                           application traffic is active.
+
+                'undefined' : The state of the remote peer at the ASP
+                              is not known or undefined."
         REFERENCE
                 "4.3.1 ASP States in M3UA/SUA draft."
         SYNTAX INTEGER {
                 down(1),
                 inactive(2),
-                active(3)
+                active(3),
+                undefined(4)
+        }
+
+CItpXuaRouteState ::= TEXTUAL-CONVENTION
+        STATUS          current
+        DESCRIPTION
+                "The possible ASRoute states
+                'unknown' : The state of the ASRoute is unknown.
+
+                'avail' : The ASRoute is available for routing data.
+
+                'restr' : The ASRoute is restricted due to congestion.
+
+                'unavail' : The ASRoute is not available for data.
+
+                'deleted' : The ASRoute is deleted."
+
+        SYNTAX INTEGER {
+                unknown(1),
+                avail(2),
+                restr(3),
+                unavail(4),
+                deleted(5)
         }
 
 --  *************************************************************
@@ -371,10 +458,14 @@ cItpXuaStateChangeNotifEnabled  OBJECT-TYPE
                 "The State notification truth value.
                 'true'  Indicates that the notification generation
                         is enabled for ASP state changes, AS state
-                        changes and SG Mate state changes.
+                        changes, SG Mate state changes, ASP Congestion
+                        Level change and SG Mate Congestion Level
+                        change.
                 'false' Indicates that the notification generation
-                        is disabled for ASP state change, AS state
-                        and SG Mate state change."
+                        is disabled for ASP state change, AS state,
+                        SG Mate state change, ASP Congestion
+                        Level change and SG Mate Congestion Level
+                        change."
         DEFVAL { false }
         ::= { cItpXuaScalars 5 }
 
@@ -403,6 +494,11 @@ cItpXuaInstTable        OBJECT-TYPE
 
                  There can only be one instance of SGMP.
 
+                 M3UA or SUA instances can be offloaded to a VIP
+                 on a 7500 platform. When an instance is offloaded,
+                 all ASPs that belong to that instance are also
+                 offloaded.
+
                  Entries are added to this table via 
                  cItpXuaInstRowStatus in accordance with the 
                  RowStatus convention."
@@ -422,9 +518,11 @@ cItpXuaInstTableEntry   OBJECT-TYPE
 CItpXuaInstTableEntry  ::= SEQUENCE {
         cItpXuaInstPort                     InetPortNumber,
         cItpXuaInstProtocol                 CItpXuaProtocol,
-	cItpXuaInstShut                     TruthValue,
+        cItpXuaInstShut                     TruthValue,
         cItpXuaInstActiveASPs               Gauge32,
-        cItpXuaInstRowStatus                RowStatus
+        cItpXuaInstRowStatus                RowStatus,
+        cItpXuaInstOffload                  TruthValue,
+        cItpXuaInstOffloadSlot              Unsigned32
 }
 
 cItpXuaInstPort         OBJECT-TYPE
@@ -474,7 +572,33 @@ cItpXuaInstRowStatus    OBJECT-TYPE
                  create or delete the row entry in cItpXuaInstTable  
                  following the RowStatus textual convention."
         ::= { cItpXuaInstTableEntry 5 }
-        
+
+cItpXuaInstOffload      OBJECT-TYPE
+        SYNTAX          TruthValue
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION
+                "The XUA Instance Offload truth value.
+                'true'  Indicates that the XUA Instance has been
+                        offloaded to a VIP in the slot specified by
+                        cItpXuaInstOffloadSlot object.
+                'false' Indicates that the XUA Instance is
+                        not offloaded."
+        DEFVAL { false }
+        ::= { cItpXuaInstTableEntry 6 }
+
+cItpXuaInstOffloadSlot   OBJECT-TYPE
+        SYNTAX           Unsigned32 (0..16)
+        MAX-ACCESS       read-create
+        STATUS           current
+        DESCRIPTION
+                "When the XUA instance is offloaded to a VIP (i.e.
+                 cItpXuaInstOffload is true), this object specifies
+                 the slot number for the VIP. Otherwise, this object
+                 is not defined."
+        DEFVAL { 0 }
+        ::= { cItpXuaInstTableEntry 7 }
+
 --  *************************************************************
 --  *                                                           *
 --  * XUA Instance Local IP sub-table                           *
@@ -524,9 +648,9 @@ cItpXuaInstAddrNum       OBJECT-TYPE
         MAX-ACCESS       not-accessible
         STATUS           current
         DESCRIPTION
-                "This object specifies the index for the XUA
-                 instance's IP address. The SCTP port number
-                 cItpXuaInstPort specifies the XUA instance."
+                "This object specifies the index for one of local
+                 IP addresses for the XUA instance which is identified
+                 by cItpXuaInstPort."
         ::= { cItpXuaInstLocalIpTableEntry 1 }
 
 cItpXuaInstLocalIpType  OBJECT-TYPE
@@ -601,7 +725,8 @@ CItpXuaSgmTableEntry  ::= SEQUENCE {
         cItpXuaSgmQosClass                  CItpTcQos,
         cItpXuaSgmPassive                   TruthValue,
         cItpXuaSgmState                     CItpXuaAspState,
-        cItpXuaSgmRowStatus                 RowStatus
+        cItpXuaSgmRowStatus                 RowStatus,
+        cItpXuaSgmCongLevel                 Unsigned32
 }
 
 cItpXuaSgmName          OBJECT-TYPE
@@ -713,7 +838,102 @@ cItpXuaSgmRowStatus     OBJECT-TYPE
                  create or delete the row entry in cItpXuaSgmTable
                  following the RowStatus textual convention."
         ::= { cItpXuaSgmTableEntry 12 }
-         
+
+cItpXuaSgmCongLevel     OBJECT-TYPE
+        SYNTAX          Unsigned32 (0..7)
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The current congestion level for the SG Mate. A zero
+                 value indicates that the SG Mate is not congested.
+                 The higher numbers indicate the higher levels of
+                 congestion. The congestion level is determined from
+                 the SCTP congestion indication and the SCON level
+                 received from the SG Mate."
+        ::= { cItpXuaSgmTableEntry 13 }
+
+--  *************************************************************
+--  *                                                           *
+--  * Signaling Gateway Mate (SGM) Remote IP sub-table          *
+--  *                                                           *
+--  *************************************************************
+
+cItpXuaSgmRemoteIpTable OBJECT-TYPE
+        SYNTAX          SEQUENCE OF CItpXuaSgmRemoteIpTableEntry 
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+                "A table of Remote IP addresses for the Signaling  
+                 Gateway Mate (SGM).
+
+                 For a given SGM, there can be multiple remote
+                 IP addresses which are used for the multi-homing
+                 feature of the SCTP associations.
+                 
+                 Entries are added to this table via 
+                 cItpXuaSgmRemoteIpRowStatus in accordance with 
+                 the RowStatus convention."
+        ::= { cItpXuaSgmRemoteIp  1 }
+
+cItpXuaSgmRemoteIpTableEntry OBJECT-TYPE
+        SYNTAX               CItpXuaSgmRemoteIpTableEntry
+        MAX-ACCESS           not-accessible
+        STATUS               current
+        DESCRIPTION
+                "A list of Remote IP addresses for the Signaling  
+                 Gateway Mate."
+        INDEX   {
+                cItpXuaSgmName,         -- SGM Name, shared index
+                cItpXuaSgmAddrNum       -- IP Address number
+        }
+        ::= { cItpXuaSgmRemoteIpTable  1 }
+
+CItpXuaSgmRemoteIpTableEntry  ::= SEQUENCE {
+        cItpXuaSgmAddrNum                   Unsigned32,
+        cItpXuaSgmRemoteIpType              InetAddressType,
+        cItpXuaSgmRemoteIpAddr              InetAddress,
+        cItpXuaSgmRemoteIpRowStatus         RowStatus
+        }
+
+cItpXuaSgmAddrNum        OBJECT-TYPE
+        SYNTAX           Unsigned32 (1..65535)
+        MAX-ACCESS       not-accessible
+        STATUS           current
+        DESCRIPTION
+                "This object specifies the index for the SGM's
+                 remote IP address. The SGM Name in cItpXuaSgmName
+                 specifies the SGM."
+        ::= { cItpXuaSgmRemoteIpTableEntry 1 }
+
+cItpXuaSgmRemoteIpType  OBJECT-TYPE
+        SYNTAX          InetAddressType
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION
+                "This object contains the type of the remote IP address
+                 used to create the association supporting this SGM."
+        ::= { cItpXuaSgmRemoteIpTableEntry 2 }
+
+cItpXuaSgmRemoteIpAddr  OBJECT-TYPE
+        SYNTAX          InetAddress
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION
+                "This object contains the remote IP address used to
+                 create the association supporting this SGM."
+        ::= { cItpXuaSgmRemoteIpTableEntry 3 }
+
+cItpXuaSgmRemoteIpRowStatus OBJECT-TYPE
+        SYNTAX              RowStatus
+        MAX-ACCESS          read-create
+        STATUS              current
+        DESCRIPTION
+                "The object is used by a management station to 
+                 create or delete the row entry in
+                 cItpXuaSgmRemoteIpTable following the RowStatus
+                 textual convention."
+        ::= { cItpXuaSgmRemoteIpTableEntry 4 }
+                   
 --  *************************************************************
 --  *                                                           *
 --  * Application Server Process (ASP) Table                    *
@@ -744,16 +964,18 @@ cItpXuaAspTableEntry    OBJECT-TYPE
         ::= { cItpXuaAspTable  1 }
 
 CItpXuaAspTableEntry  ::= SEQUENCE {
-	cItpXuaAspName                      CItpTcXuaName,
+        cItpXuaAspName                      CItpTcXuaName,
         cItpXuaAspAssocId                   Unsigned32,
         cItpXuaAspLocalPort                 InetPortNumber,
         cItpXuaAspRemotePort                InetPortNumber,
         cItpXuaAspProtocol                  CItpXuaProtocol,
         cItpXuaAspShut                      TruthValue,
         cItpXuaAspBlocked                   TruthValue,
-	cItpXuaAspQosClass                  CItpTcQos,
+        cItpXuaAspQosClass                  CItpTcQos,
         cItpXuaAspIdentifier                Unsigned32,
-        cItpXuaAspRowStatus                 RowStatus
+        cItpXuaAspRowStatus                 RowStatus,
+        cItpXuaAspCongLevel                 Unsigned32,
+        cItpXuaAspAssocIdU32                Unsigned32
 }
 
 cItpXuaAspName          OBJECT-TYPE
@@ -767,12 +989,11 @@ cItpXuaAspName          OBJECT-TYPE
 cItpXuaAspAssocId       OBJECT-TYPE
         SYNTAX          Unsigned32  (0..65535)
         MAX-ACCESS      read-only
-        STATUS          current
+        STATUS          deprecated
         DESCRIPTION
-                "This is the association identifier defined in
-                 the Stream Control Transmission Protocol(SCTP)
-                 MIB. A value greater than zero indicates a valid
-                 association and zero indicates no association."
+                "Association Identifiers can be greater than 
+                 65,535.  This object has been replaced by 
+                 cItpXuaAspAssocIdU32."
         ::= { cItpXuaAspTableEntry 2 }
 
 cItpXuaAspLocalPort     OBJECT-TYPE
@@ -796,7 +1017,7 @@ cItpXuaAspRemotePort    OBJECT-TYPE
                  number used to create the association supporting this
                  link. The value zero means any non-zero remote port is
                  acceptable. The actual remote port can be determined
-                 from SCTP association in cItpXuaAspAssocId."
+                 from SCTP association in cItpXuaAspAssocIdU32."
         ::= { cItpXuaAspTableEntry 4 }
 
 cItpXuaAspProtocol      OBJECT-TYPE
@@ -869,7 +1090,34 @@ cItpXuaAspRowStatus     OBJECT-TYPE
                  create or delete the row entry in cItpXuaAspTable
                  following the RowStatus textual convention."
         ::= { cItpXuaAspTableEntry 11 }
+
+cItpXuaAspCongLevel     OBJECT-TYPE
+        SYNTAX          Unsigned32 (0..7)
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The current congestion level for this ASP. A zero
+                 value indicates that the ASP is not congested. The
+                 higher numbers indicate the higher levels of
+                 congestion. The congestion level is determined from
+                 the SCTP congestion indication and the SCON level
+                 received from the ASP."
+        REFERENCE
+                "3.4.4 Signalling Congestion (SCON) in M3UA
+                 RFC 3332 and 3.10.24 Congestion Level SUA draft."
+        ::= { cItpXuaAspTableEntry 12 }
          
+cItpXuaAspAssocIdU32    OBJECT-TYPE
+        SYNTAX          Unsigned32
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "This is the association identifier defined in
+                 the Stream Control Transmission Protocol(SCTP)
+                 MIB. A value greater than zero indicates a valid
+                 association and zero indicates no association."
+        ::= { cItpXuaAspTableEntry 13 }
+        
 --  *************************************************************
 --  *                                                           *
 --  * Application Server Process (ASP) Remote IP sub-table      *
@@ -1388,6 +1636,7 @@ cItpXuaAspSCON3sSent    OBJECT-TYPE
                  of M3UA/SUA draft."
         ::= { cItpXuaAspStatsTableEntry 31 }
 
+
 --  *************************************************************
 --  *                                                           *
 --  * Application Server (AS) Table                             *
@@ -1439,7 +1688,10 @@ CItpXuaAsTableEntry  ::= SEQUENCE {
         cItpXuaAsRkCicMax                  Unsigned32,
         cItpXuaAsPktsFromMtp3              Counter32,
         cItpXuaAsPktsToASPsOfAs            Counter32,
-        cItpXuaAsRowStatus                 RowStatus
+        cItpXuaAsRowStatus                 RowStatus,
+        cItpXuaAsNetworkName               CItpTcNetworkName,
+        cItpXuaAsNetworkAppear             Unsigned32,
+        cItpXuaAsCongLevel                 Unsigned32
 }
 
 cItpXuaAsName           OBJECT-TYPE
@@ -1617,7 +1869,8 @@ cItpXuaAsRkParameters   OBJECT-TYPE
                    dpc + si + ssn
                    dpc + si + ssn + opc
 
-                 When si equals 5 (ISUP), the following is allowed:
+                 When si equals 4 (TUP) or 5 (ISUP), the following
+                 is allowed:
                    dpc + si
                    dpc + si + opc
                    dpc + si + cic
@@ -1747,7 +2000,61 @@ cItpXuaAsRowStatus      OBJECT-TYPE
                  create or delete the row entry in cItpXuaAsTable 
                  following the RowStatus textual convention."
         ::= { cItpXuaAsTableEntry 22 }
-         
+        
+cItpXuaAsNetworkName    OBJECT-TYPE
+    SYNTAX              CItpTcNetworkName
+    MAX-ACCESS          read-only
+    STATUS              current
+    DESCRIPTION
+            "The network name is used to indicate the network
+             in which this signalling point is participating.
+             One or more instances of signalling points can 
+             exist in the same physical device.  This identifier
+             will be used to correlate instances of signalling 
+             points by network.
+             When multiple instance support is not enabled the 
+             network name will default to the null string.
+             
+             An octet string specified by an administrator that
+             must be in human-readable form.  The names must conform
+             to the allowed characters that can be specified via 
+             Command Line Interface(CLI).  The names cannot contain
+             control character and should not contain leading or 
+             trailing white space."
+        ::= { cItpXuaAsTableEntry 23 }
+
+cItpXuaAsNetworkAppear  OBJECT-TYPE
+        SYNTAX          Unsigned32
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION
+                "The Network Appearance is a local reference shared by
+                 SG and AS that together with a point code uniquely
+                 identifies an SS7 node by indicating the specific SS7
+                 network it belongs to. It can be used to distinguish
+                 between signaling traffic associated with different
+                 networks being sent between the SG and the ASP over
+                 a common SCTP association. An example scenario is
+                 where an SG appears as an element in multiple
+                 separate national SS7 networks and the same point
+                 code value may be reused in different networks."
+        REFERENCE
+                "1.2 Terminology section in RFC 3332 and SUA draft 16"
+        ::= { cItpXuaAsTableEntry 24 }
+
+cItpXuaAsCongLevel      OBJECT-TYPE
+        SYNTAX          Unsigned32 (0..7)
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The current congestion level for the AS. A zero
+                 value indicates that the AS is not congested.
+                 The higher numbers indicate the higher levels of
+                 congestion. The congestion level is determined from
+                 the congestion levels of the ASPs that belong to
+                 this AS."
+        ::= { cItpXuaAsTableEntry 25 }
+
 --  *************************************************************
 --  *                                                           *
 --  * M3UA/SUA - ASP-AS Table                                   *
@@ -1786,7 +2093,8 @@ CItpXuaAspAsTableEntry  ::= SEQUENCE {
         cItpXuaAspAsName                   CItpTcXuaName,
         cItpXuaAspAsState                  CItpXuaAspState,
         cItpXuaAspAsActiveTS               TimeTicks,
-        cItpXuaAspAsRowStatus              RowStatus
+        cItpXuaAspAsRowStatus              RowStatus,
+        cItpXuaAspAsWeight                 Unsigned32
 }
 
 cItpXuaAspAsName        OBJECT-TYPE
@@ -1829,6 +2137,403 @@ cItpXuaAspAsRowStatus   OBJECT-TYPE
                  following the RowStatus textual convention."
         ::= { cItpXuaAspAsTableEntry 4}
          
+cItpXuaAspAsWeight      OBJECT-TYPE
+        SYNTAX          Unsigned32 (0..10)
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION
+                "When cItpXuaAsTrafMode specifies 'loadRndRobind',
+                 this object specifies the weight which is used in
+                 Weighted Round Robin algorithm. The default is 1.
+                 When the weight is 0, this particular ASP is 
+                 selected only when there are no other active ASPs
+                 with a non-zero weight."
+        DEFVAL { 1 }
+        ::= { cItpXuaAspAsTableEntry 5 }
+
+--  *************************************************************
+--  *                                                           *
+--  * ASRoute Table                                             *
+--  *                                                           *
+--  *************************************************************
+
+cItpXuaASRouteTable     OBJECT-TYPE
+        SYNTAX          SEQUENCE OF CItpXuaASRouteTableEntry 
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+                "A table of routes for remote point-codes using
+                 ASs defined on this ITP node.
+
+                 Entries are added to this table via 
+                 cItpXuaASRouteRowStatus in accordance with 
+                 the RowStatus convention."
+        ::= { cItpXuaASRoute  1 }
+
+cItpXuaASRouteTableEntry     OBJECT-TYPE
+        SYNTAX               CItpXuaASRouteTableEntry
+        MAX-ACCESS           not-accessible
+        STATUS               current
+        DESCRIPTION
+                "A list of routes for remote point-codes using    
+                 ASs."
+        INDEX   {
+                cItpXuaAsrName      -- ASRoute Name
+        }
+        ::= { cItpXuaASRouteTable  1 }
+
+CItpXuaASRouteTableEntry     ::= SEQUENCE {
+        cItpXuaAsrName                      CItpTcXuaName,
+        cItpXuaAsrNetwork                   CItpTcNetworkName,
+        cItpXuaAsrProtocol                  CItpXuaProtocol,
+        cItpXuaAsrRoutingContext            Unsigned32,
+        cItpXuaAsrDpc                       CItpTcPointCode,
+        cItpXuaAsrShut                      TruthValue,
+        cItpXuaAsrSgmateState               CItpXuaRouteState,
+        cItpXuaAsrSgmatePriority            Unsigned32,
+        cItpXuaAsrOutbPktsRcvd              Counter32,
+        cItpXuaAsrOutbByteRcvd              Counter64,
+        cItpXuaAsrOutbPktsSent              Counter32,
+        cItpXuaAsrOutbByteSent              Counter64,
+        cItpXuaAsrSgmateDunaRcvd            Counter32,
+        cItpXuaAsrSgmateDavaRcvd            Counter32,
+        cItpXuaAsrSgmateDrstRcvd            Counter32,
+        cItpXuaAsrRowStatus                 RowStatus
+        }
+
+cItpXuaAsrName          OBJECT-TYPE
+        SYNTAX          CItpTcXuaName    
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+           "The ASRoute name. This name has only local 
+            significance."
+        ::= { cItpXuaASRouteTableEntry  1 }
+
+cItpXuaAsrNetwork       OBJECT-TYPE
+        SYNTAX          CItpTcNetworkName
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The network name is used to indicate the network
+                 in which this signalling point is participating.
+                 One or more instances of signalling points can 
+                 exist in the same physical device.  This identifier
+                 will be used to correlate instances of signalling 
+                 points by network.
+                 When multiple instance support is not enabled the 
+                 network name will default to the null string.
+             
+                 An octet string specified by an administrator that
+                 must be in human-readable form.  The names must conform
+                 to the allowed characters that can be specified via 
+                 Command Line Interface(CLI).  The names cannot contain
+                 control character and should not contain leading or 
+                 trailing white space."
+        ::= { cItpXuaASRouteTableEntry 2 }
+
+cItpXuaAsrProtocol      OBJECT-TYPE
+        SYNTAX          CItpXuaProtocol       
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION
+                "The protocol used by this ASRoute."
+        ::= { cItpXuaASRouteTableEntry 3 }
+
+cItpXuaAsrRoutingContext OBJECT-TYPE
+        SYNTAX          Unsigned32 (0..4294967295)
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "An AS may be configured to serve more than one
+                 ASRoute. In this case, the Routing Context parameter
+                 is exchanged between the SG and the ASP, identifying
+                 the relevant AS. The Routing Context uniquely
+                 identifies the range of traffic associated with a
+                 particular AS, which the ASP is configured to
+                 receive."
+        ::= { cItpXuaASRouteTableEntry 4 }
+
+cItpXuaAsrDpc           OBJECT-TYPE
+        SYNTAX          CItpTcPointCode
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION
+                "The Destination Point Code (DPC) in the routing
+                 key for the ASRoute."
+        ::= { cItpXuaASRouteTableEntry 5 }
+
+cItpXuaAsrShut          OBJECT-TYPE
+        SYNTAX          TruthValue
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION
+                "The ASRoute Shut truth value.
+                'true'  Indicates that the ASRoute has been shutdown
+                        by an administrative action.
+                'false' Indicates that the ASRoute is not shutdown."
+        DEFVAL { false }
+        ::= { cItpXuaASRouteTableEntry 6 }
+
+cItpXuaAsrSgmateState   OBJECT-TYPE
+        SYNTAX          CItpXuaRouteState
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The ASRoute state on the mated Signalling Gateway.
+                 This object provides the status of an ASRoute as
+                 provided by the Signalling Gateway Mated  Protocol.
+                 This object can be used by the NMS to assist in
+                 problem determination.  
+                 
+                 Each Signaling Gateway Mated pair should have 
+                 same definitions.  This allows the NMS
+                 examine the status ASRoute from the perspective of
+                 each Signalling Gateway.  If the definitions are
+                 different on the mated pairs the NMS will be unable
+                 to determine the relationships between the ASRoutes
+                 and mated pairs."
+        ::= { cItpXuaASRouteTableEntry 7 }
+
+cItpXuaAsrSgmatePriority OBJECT-TYPE
+        SYNTAX          Unsigned32 (0..9)
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The ASRoute priority on the mated Signalling
+                 Gateway."
+        ::= { cItpXuaASRouteTableEntry 8 }
+
+cItpXuaAsrOutbPktsRcvd  OBJECT-TYPE
+        SYNTAX          Counter32
+        UNITS           "packets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of outbound data packets received from
+                 MTP3."
+        ::= { cItpXuaASRouteTableEntry 9 }
+
+cItpXuaAsrOutbByteRcvd  OBJECT-TYPE
+        SYNTAX          Counter64
+        UNITS           "Octets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of outbound data byte received from
+                 MTP3."
+        ::= { cItpXuaASRouteTableEntry 10 }
+
+cItpXuaAsrOutbPktsSent  OBJECT-TYPE
+        SYNTAX          Counter32
+        UNITS           "packets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of outbound data packets sent to this 
+                 ASroute."
+        ::= { cItpXuaASRouteTableEntry 11 }
+
+cItpXuaAsrOutbByteSent  OBJECT-TYPE
+        SYNTAX          Counter64
+        UNITS           "Octets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of outbound data byte sent to this 
+                 ASRoute."
+        ::= { cItpXuaASRouteTableEntry 12 }
+
+cItpXuaAsrSgmateDunaRcvd OBJECT-TYPE
+        SYNTAX          Counter32
+        UNITS           "packets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of Destination Unavailable (DUNA)
+                 messages received by the SG Mate."
+        ::= { cItpXuaASRouteTableEntry 13 }
+
+cItpXuaAsrSgmateDavaRcvd OBJECT-TYPE
+        SYNTAX          Counter32
+        UNITS           "packets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of Destination Available (DAVA)
+                 messages received by the SG Mate."
+        ::= { cItpXuaASRouteTableEntry 14 }
+
+cItpXuaAsrSgmateDrstRcvd OBJECT-TYPE
+        SYNTAX          Counter32
+        UNITS           "packets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of Destination Restricted (DRST)
+                 messages received by the SG Mate."
+        ::= { cItpXuaASRouteTableEntry 15 }
+
+cItpXuaAsrRowStatus     OBJECT-TYPE
+        SYNTAX          RowStatus
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION
+                "The object is used by a management station to 
+                 create or delete the row entry in cItpXuaASRouteTable
+                 following the RowStatus textual convention."
+        ::= { cItpXuaASRouteTableEntry 16 }
+
+--  *************************************************************
+--  *                                                           *
+--  * ASRoute-AS Table (sub-table)                              *
+--  *                                                           *
+--  *************************************************************
+
+cItpXuaASRouteAsTable   OBJECT-TYPE
+        SYNTAX          SEQUENCE OF CItpXuaASRouteAsTableEntry 
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+                "A table of routes for remote point-codes using
+                 ASs defined on this ITP node.
+
+                 Entries are added to this table via 
+                 cItpXuaASRouteRowStatus in accordance with 
+                 the RowStatus convention."
+        ::= { cItpXuaASRouteAs  1 }
+
+cItpXuaASRouteAsTableEntry   OBJECT-TYPE
+        SYNTAX               CItpXuaASRouteAsTableEntry
+        MAX-ACCESS           not-accessible
+        STATUS               current
+        DESCRIPTION
+                "A list of ASs for ASRoute."
+        INDEX   {
+                cItpXuaAsrName,         -- ASRoute Name
+                cItpXuaAsrAsName        -- AS name    
+        }
+        ::= { cItpXuaASRouteAsTable  1 }
+
+CItpXuaASRouteAsTableEntry   ::= SEQUENCE {
+        cItpXuaAsrAsName                    CItpTcXuaName,
+        cItpXuaAsrAsPriority                Unsigned32,
+        cItpXuaAsrAsState                   CItpXuaRouteState,
+        cItpXuaAsrAsOutbPktsRcvd            Counter32,
+        cItpXuaAsrAsOutbByteRcvd            Counter64,
+        cItpXuaAsrAsOutbPktsSent            Counter32,
+        cItpXuaAsrAsOutbByteSent            Counter64,
+        cItpXuaAsrAsDunaRcvd                Counter32,
+        cItpXuaAsrAsDavaRcvd                Counter32,
+        cItpXuaAsrAsDrstRcvd                Counter32,
+        cItpXuaAsrAsRowStatus               RowStatus
+        }
+
+cItpXuaAsrAsName        OBJECT-TYPE
+        SYNTAX          CItpTcXuaName    
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+                "The Application Server name."
+        ::= { cItpXuaASRouteAsTableEntry  1 }
+
+cItpXuaAsrAsPriority    OBJECT-TYPE
+        SYNTAX          Unsigned32 (0..9)
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The priority of this AS in the ASRoute."
+        ::= { cItpXuaASRouteAsTableEntry 2 }
+
+cItpXuaAsrAsState       OBJECT-TYPE
+        SYNTAX          CItpXuaRouteState
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The AS state in the ASRoute."
+        ::= { cItpXuaASRouteAsTableEntry 3 }
+
+cItpXuaAsrAsOutbPktsRcvd OBJECT-TYPE
+        SYNTAX          Counter32
+        UNITS           "packets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of outbound data packets received from
+                 MTP3 for this AS."
+        ::= { cItpXuaASRouteAsTableEntry 4 }
+
+cItpXuaAsrAsOutbByteRcvd OBJECT-TYPE
+        SYNTAX          Counter64
+        UNITS           "Octets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of outbound data byte received from
+                 MTP3 for this AS."
+        ::= { cItpXuaASRouteAsTableEntry 5 }
+
+cItpXuaAsrAsOutbPktsSent OBJECT-TYPE
+        SYNTAX          Counter32
+        UNITS           "packets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of outbound data packets sent to this 
+                 AS in the ASroute."
+        ::= { cItpXuaASRouteAsTableEntry 6 }
+
+cItpXuaAsrAsOutbByteSent OBJECT-TYPE
+        SYNTAX          Counter64
+        UNITS           "Octets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of outbound data byte sent to this 
+                 AS in the ASRoute."
+        ::= { cItpXuaASRouteAsTableEntry 7 }
+
+cItpXuaAsrAsDunaRcvd    OBJECT-TYPE
+        SYNTAX          Counter32
+        UNITS           "packets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of Destination Unavailable (DUNA)
+                 messages received by this AS in the ASRoute."
+        ::= { cItpXuaASRouteAsTableEntry 8 }
+
+cItpXuaAsrAsDavaRcvd    OBJECT-TYPE
+        SYNTAX          Counter32
+        UNITS           "packets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of Destination Available (DAVA)
+                 messages received by this AS in the ASRoute."
+        ::= { cItpXuaASRouteAsTableEntry 9 }
+
+cItpXuaAsrAsDrstRcvd    OBJECT-TYPE
+        SYNTAX          Counter32
+        UNITS           "packets"
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+                "The number of Destination Restricted (DRST)
+                 messages received by this AS in the ASRoute."
+        ::= { cItpXuaASRouteAsTableEntry 10 }
+
+cItpXuaAsrAsRowStatus   OBJECT-TYPE
+        SYNTAX          RowStatus
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION
+                "The object is used by a management station to 
+                 create or delete the row entry in
+                 cItpXuaASRouteAsTable following the RowStatus
+                 textual convention."
+        ::= { cItpXuaASRouteAsTableEntry 11 }
+
 --  *************************************************************
 --  *                                                           *
 --  * Notification Objects                                      *
@@ -1912,6 +2617,34 @@ ciscoItpXuaAsStateChange NOTIFICATION-TYPE
                  indicates the new state for the AS."
         ::= { ciscoItpXuaMIBNotifs 3 }
 
+ciscoItpXuaAspCongChange NOTIFICATION-TYPE
+        OBJECTS {
+                cItpSpCLLICode,
+                cItpXuaAspDisplayName,
+                cItpXuaAspCongLevel
+        }
+        STATUS  current
+        DESCRIPTION
+                "The notification generated when an ASP changes
+                 to a new congestion level. The value of
+                 cItpXuaAspCongLevel indicates the new congetion
+                 level for the ASP."
+        ::= { ciscoItpXuaMIBNotifs 4 }
+
+ciscoItpXuaSgmCongChange NOTIFICATION-TYPE
+        OBJECTS {
+                cItpSpCLLICode,
+                cItpXuaSgmDisplayName,
+                cItpXuaSgmCongLevel
+        }
+        STATUS  current
+        DESCRIPTION
+                "The notification generated when an SG Mate changes
+                 to a new congestion level. The value of
+                 cItpXuaSgmCongLevel indicates the new congetion
+                 level for the SG Mate."
+        ::= { ciscoItpXuaMIBNotifs 5 }
+
 --  *************************************************************
 --  *                                                           *
 --  *  Conformance Information                                  *
@@ -1925,7 +2658,7 @@ ciscoItpXuaMIBGroups      OBJECT IDENTIFIER
 -- Compliance
 
 ciscoItpXuaMIBCompliance MODULE-COMPLIANCE
-        STATUS current
+        STATUS deprecated -- superceded by ciscoItpXuaMIBComplianceRev1
         DESCRIPTION
                 "The compliance statement for entities which
                  implement the Cisco ITP XUA MIB"
@@ -1943,6 +2676,79 @@ ciscoItpXuaMIBCompliance MODULE-COMPLIANCE
                         ciscoItpXuaNotificationsGroup
                 }
         ::= { ciscoItpXuaMIBCompliances 1 }
+
+ciscoItpXuaMIBComplianceRev1 MODULE-COMPLIANCE
+        STATUS deprecated -- superceded by ciscoItpXuaMIBComplianceRev2
+        DESCRIPTION
+                "The compliance statement for entities which
+                 implement the Cisco ITP XUA MIB"
+        MODULE -- this module
+                MANDATORY-GROUPS {
+                        ciscoItpXuaScalarsGroup,
+                        ciscoItpXuaInstGroup,
+                        ciscoItpXuaInstLocalIpGroup,
+                        ciscoItpXuaSgmGroupRev1,
+                        ciscoItpXuaAspGroupRev1,
+                        ciscoItpXuaAspRemoteIpGroup,
+                        ciscoItpXuaAsGroup,
+                        ciscoItpXuaAspAsGroup,
+                        ciscoItpXuaNotifObjectsGroup,
+                        ciscoItpXuaNotifGroupRev1,
+                        ciscoItpXuaSgmRemoteIpGroup
+                }
+        ::= { ciscoItpXuaMIBCompliances 2 }
+
+ciscoItpXuaMIBComplianceRev2 MODULE-COMPLIANCE
+        STATUS deprecated -- superceded by ciscoItpXuaMIBComplianceRev3
+        DESCRIPTION
+                "The compliance statement for entities which
+                 implement the Cisco ITP XUA MIB"
+        MODULE -- this module
+                MANDATORY-GROUPS {
+                        ciscoItpXuaScalarsGroup,
+                        ciscoItpXuaInstLocalIpGroup,
+                        ciscoItpXuaSgmGroupRev1,
+                        ciscoItpXuaAspRemoteIpGroup,
+                        ciscoItpXuaAspAsGroup,
+                        ciscoItpXuaNotifObjectsGroup,
+                        ciscoItpXuaNotifGroupRev1,
+                        ciscoItpXuaSgmRemoteIpGroup,
+                        ciscoItpXuaInstGroupRev2,
+                        ciscoItpXuaAspGroupRev2,
+                        ciscoItpXuaAsGroupRev2
+                }
+        GROUP ciscoItpXuaAspStatsGroup
+        DESCRIPTION
+                "A group of objects to provide optional statistics
+                 on Application Server Processes."
+        ::= { ciscoItpXuaMIBCompliances 3 }
+
+ciscoItpXuaMIBComplianceRev3 MODULE-COMPLIANCE
+        STATUS current
+        DESCRIPTION
+                "The compliance statement for entities which
+                 implement the Cisco ITP XUA MIB"
+        MODULE -- this module
+                MANDATORY-GROUPS {
+                        ciscoItpXuaScalarsGroup,
+                        ciscoItpXuaInstLocalIpGroup,
+                        ciscoItpXuaSgmGroupRev1,
+                        ciscoItpXuaAspRemoteIpGroup,
+                        ciscoItpXuaAspAsGroupRev3,
+                        ciscoItpXuaNotifObjectsGroup,
+                        ciscoItpXuaNotifGroupRev1,
+                        ciscoItpXuaSgmRemoteIpGroup,
+                        ciscoItpXuaInstGroupRev2,
+                        ciscoItpXuaAspGroupRev2,
+                        ciscoItpXuaAsGroupRev3,
+                        ciscoItpXuaAsrGroup,
+                        ciscoItpXuaAsrAsGroup
+                }
+        GROUP ciscoItpXuaAspStatsGroup
+        DESCRIPTION
+                "A group of objects to provide optional statistics
+                 on Application Server Processes."
+        ::= { ciscoItpXuaMIBCompliances 4 }
 
 -- Units of Conformance
 
@@ -1966,7 +2772,7 @@ ciscoItpXuaInstGroup OBJECT-GROUP
                 cItpXuaInstActiveASPs,
                 cItpXuaInstRowStatus
         }
-        STATUS current
+        STATUS deprecated -- superceded by ciscoItpXuaInstGroupRev2
         DESCRIPTION
                 "M3UA/SUA Instance objects."
         ::= { ciscoItpXuaMIBGroups 2 }
@@ -1995,7 +2801,7 @@ ciscoItpXuaSgmGroup OBJECT-GROUP
                 cItpXuaSgmState,
                 cItpXuaSgmRowStatus
         }
-        STATUS current
+        STATUS deprecated -- superceded by ciscoItpXuaSgmGroupRev1
         DESCRIPTION
                 "SG Mate objects."
         ::= { ciscoItpXuaMIBGroups 4 }
@@ -2012,7 +2818,7 @@ ciscoItpXuaAspGroup OBJECT-GROUP
                 cItpXuaAspIdentifier,
                 cItpXuaAspRowStatus
         }
-        STATUS current
+        STATUS deprecated -- superceded by ciscoItpXuaAspGroupRev1
         DESCRIPTION
                 "M3UA/SUA ASP objects."
         ::= { ciscoItpXuaMIBGroups 5 }
@@ -2091,7 +2897,7 @@ ciscoItpXuaAsGroup OBJECT-GROUP
                 cItpXuaAsPktsToASPsOfAs,
                 cItpXuaAsRowStatus
         }
-        STATUS current
+        STATUS deprecated -- replaced by ciscoItpXuaAsGroup
         DESCRIPTION
                 "M3UA/SUA AS objects."
         ::= { ciscoItpXuaMIBGroups 8 }
@@ -2102,7 +2908,7 @@ ciscoItpXuaAspAsGroup OBJECT-GROUP
                 cItpXuaAspAsActiveTS,
                 cItpXuaAspAsRowStatus
         }
-        STATUS current
+        STATUS deprecated -- superceded by ciscoItpXuaAspAsGroupRev3
         DESCRIPTION
                 "M3UA/SUA ASP-AS objects."
         ::= { ciscoItpXuaMIBGroups 9 }
@@ -2113,7 +2919,7 @@ ciscoItpXuaNotifObjectsGroup OBJECT-GROUP
                 cItpXuaAspDisplayName,
                 cItpXuaAsDisplayName
         }                      
-        STATUS current
+        STATUS current 
         DESCRIPTION
                 "M3UA/SUA notification objects."
         ::= { ciscoItpXuaMIBGroups 10 }
@@ -2124,9 +2930,215 @@ ciscoItpXuaNotificationsGroup NOTIFICATION-GROUP
                   ciscoItpXuaSgmStateChange,
                   ciscoItpXuaAsStateChange
         }                      
-        STATUS current
+        STATUS deprecated -- superceded by ciscoItpXuaNotifGroupRev1
         DESCRIPTION
                 "M3UA/SUA notifications."
         ::= { ciscoItpXuaMIBGroups 11 }
+
+ciscoItpXuaSgmGroupRev1 OBJECT-GROUP
+        OBJECTS {
+                cItpXuaSgmAssocId,
+                cItpXuaSgmLocalPort,
+                cItpXuaSgmRemotePort,
+                cItpXuaSgmShut,
+                cItpXuaSgmActiveTS,
+                cItpXuaSgmQosClass,
+                cItpXuaSgmPassive,
+                cItpXuaSgmState,
+                cItpXuaSgmRowStatus,
+                cItpXuaSgmCongLevel
+        }
+        STATUS current
+        DESCRIPTION
+                "SG Mate objects."
+        ::= { ciscoItpXuaMIBGroups 12 }
+
+ciscoItpXuaAspGroupRev1 OBJECT-GROUP
+        OBJECTS {
+                cItpXuaAspAssocId,
+                cItpXuaAspLocalPort,
+                cItpXuaAspRemotePort,
+                cItpXuaAspProtocol,
+                cItpXuaAspShut,
+                cItpXuaAspBlocked,
+                cItpXuaAspQosClass,
+                cItpXuaAspIdentifier,
+                cItpXuaAspRowStatus,
+                cItpXuaAspCongLevel
+        }
+        STATUS deprecated -- replaced by ciscoItpXuaAspGroupRev2
+        DESCRIPTION
+                "M3UA/SUA ASP objects."
+        ::= { ciscoItpXuaMIBGroups 13 }
+
+ciscoItpXuaNotifGroupRev1 NOTIFICATION-GROUP
+        NOTIFICATIONS {
+                  ciscoItpXuaAspStateChange,
+                  ciscoItpXuaSgmStateChange,
+                  ciscoItpXuaAsStateChange,
+                  ciscoItpXuaAspCongChange,
+                  ciscoItpXuaSgmCongChange
+        }                      
+        STATUS current
+        DESCRIPTION
+                "M3UA/SUA notifications."
+        ::= { ciscoItpXuaMIBGroups 14 }
+
+ciscoItpXuaSgmRemoteIpGroup OBJECT-GROUP
+        OBJECTS {
+                cItpXuaSgmRemoteIpType,
+                cItpXuaSgmRemoteIpAddr,
+                cItpXuaSgmRemoteIpRowStatus
+        }
+        STATUS current
+        DESCRIPTION
+                "Remote IP address for the Signaling Gateway Mate."
+        ::= { ciscoItpXuaMIBGroups 15 }
+
+ciscoItpXuaInstGroupRev2 OBJECT-GROUP
+        OBJECTS {
+                cItpXuaInstProtocol,
+                cItpXuaInstShut,
+                cItpXuaInstActiveASPs,
+                cItpXuaInstRowStatus,
+                cItpXuaInstOffload,
+                cItpXuaInstOffloadSlot
+        }
+        STATUS current
+        DESCRIPTION
+                "M3UA/SUA Instance objects."
+        ::= { ciscoItpXuaMIBGroups 16 }
+        
+ciscoItpXuaAspGroupRev2 OBJECT-GROUP
+        OBJECTS {
+                cItpXuaAspLocalPort,
+                cItpXuaAspRemotePort,
+                cItpXuaAspProtocol,
+                cItpXuaAspShut,
+                cItpXuaAspBlocked,
+                cItpXuaAspQosClass,
+                cItpXuaAspIdentifier,
+                cItpXuaAspRowStatus,
+                cItpXuaAspCongLevel,
+                cItpXuaAspAssocIdU32
+        }
+        STATUS current
+        DESCRIPTION  "M3UA/SUA ASP objects."
+        ::= { ciscoItpXuaMIBGroups 17 }
+        
+ciscoItpXuaAsGroupRev2 OBJECT-GROUP
+        OBJECTS {
+                cItpXuaAsProtocol,
+                cItpXuaAsShut,
+                cItpXuaAsState,
+                cItpXuaAsStateOnSgMate,
+                cItpXuaAsActiveTS,
+                cItpXuaAsQosClass,
+                cItpXuaAsTrafMode,
+                cItpXuaAsRerouting,
+                cItpXuaAsRoutingContext,
+                cItpXuaAsRkParameters,
+                cItpXuaAsRkDpc,
+                cItpXuaAsRkOpc,
+                cItpXuaAsRkOpcMask,
+                cItpXuaAsRkSi,
+                cItpXuaAsRkSsn,
+                cItpXuaAsRkGtt,
+                cItpXuaAsRkCicMin,
+                cItpXuaAsRkCicMax,
+                cItpXuaAsPktsFromMtp3,
+                cItpXuaAsPktsToASPsOfAs,
+                cItpXuaAsRowStatus,
+                cItpXuaAsNetworkName
+        }
+        STATUS deprecated -- superceded by ciscoItpXuaAsGroupRev3
+        DESCRIPTION
+                "M3UA/SUA AS objects."
+        ::= { ciscoItpXuaMIBGroups 18}
+
+ciscoItpXuaAsGroupRev3 OBJECT-GROUP
+        OBJECTS {
+                cItpXuaAsProtocol,
+                cItpXuaAsShut,
+                cItpXuaAsState,
+                cItpXuaAsStateOnSgMate,
+                cItpXuaAsActiveTS,
+                cItpXuaAsQosClass,
+                cItpXuaAsTrafMode,
+                cItpXuaAsRerouting,
+                cItpXuaAsRoutingContext,
+                cItpXuaAsRkParameters,
+                cItpXuaAsRkDpc,
+                cItpXuaAsRkOpc,
+                cItpXuaAsRkOpcMask,
+                cItpXuaAsRkSi,
+                cItpXuaAsRkSsn,
+                cItpXuaAsRkGtt,
+                cItpXuaAsRkCicMin,
+                cItpXuaAsRkCicMax,
+                cItpXuaAsPktsFromMtp3,
+                cItpXuaAsPktsToASPsOfAs,
+                cItpXuaAsRowStatus,
+                cItpXuaAsNetworkName,
+                cItpXuaAsNetworkAppear,
+                cItpXuaAsCongLevel
+        }
+        STATUS current
+        DESCRIPTION
+                "M3UA/SUA AS objects."
+        ::= { ciscoItpXuaMIBGroups 19}
+
+ciscoItpXuaAspAsGroupRev3 OBJECT-GROUP
+        OBJECTS {
+                cItpXuaAspAsState,
+                cItpXuaAspAsActiveTS,
+                cItpXuaAspAsRowStatus,
+                cItpXuaAspAsWeight
+        }
+        STATUS current
+        DESCRIPTION
+                "M3UA/SUA ASP-AS objects."
+        ::= { ciscoItpXuaMIBGroups 20}
+
+ciscoItpXuaAsrGroup  OBJECT-GROUP
+        OBJECTS {
+                cItpXuaAsrNetwork,
+                cItpXuaAsrProtocol,
+                cItpXuaAsrRoutingContext,
+                cItpXuaAsrDpc,
+                cItpXuaAsrShut,
+                cItpXuaAsrSgmateState,
+                cItpXuaAsrSgmatePriority,
+                cItpXuaAsrOutbPktsRcvd,
+                cItpXuaAsrOutbByteRcvd,
+                cItpXuaAsrOutbPktsSent,
+                cItpXuaAsrOutbByteSent,
+                cItpXuaAsrSgmateDunaRcvd,
+                cItpXuaAsrSgmateDavaRcvd,
+                cItpXuaAsrSgmateDrstRcvd,
+                cItpXuaAsrRowStatus
+        }
+        STATUS current
+        DESCRIPTION
+                "ASRoute objects."
+        ::= { ciscoItpXuaMIBGroups 21}
+
+ciscoItpXuaAsrAsGroup OBJECT-GROUP
+        OBJECTS {
+                cItpXuaAsrAsPriority,
+                cItpXuaAsrAsState,
+                cItpXuaAsrAsOutbPktsRcvd,
+                cItpXuaAsrAsOutbByteRcvd,
+                cItpXuaAsrAsOutbPktsSent,
+                cItpXuaAsrAsOutbByteSent,
+                cItpXuaAsrAsDunaRcvd,
+                cItpXuaAsrAsDavaRcvd,
+                cItpXuaAsrAsDrstRcvd,
+                cItpXuaAsrAsRowStatus
+        }
+        STATUS current
+        DESCRIPTION
+                "ASRoute-AS objects."
+        ::= { ciscoItpXuaMIBGroups 22}
 
 END
