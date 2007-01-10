@@ -28,6 +28,8 @@ import net.percederberg.mibble.MibException;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
+import net.percederberg.mibble.value.NumberValue;
+import net.percederberg.mibble.value.StringValue;
 
 /**
  * A MIB type size constraint.
@@ -102,8 +104,9 @@ public class SizeConstraint implements Constraint {
 
     /**
      * Checks if the specified value is compatible with this
-     * constraint. This method will always return false, as no values
-     * can be compatible with a size constraint.
+     * constraint. Only octet string values can be compatible with a
+     * size constraint, and only if the string length is compatible
+     * with the value range in the size constraint.
      *
      * @param value          the value to check
      *
@@ -111,6 +114,12 @@ public class SizeConstraint implements Constraint {
      *         false otherwise
      */
     public boolean isCompatible(MibValue value) {
+        Integer  size;
+
+        if (value instanceof StringValue) {
+            size = new Integer(value.toString().length());
+            return values.isCompatible(new NumberValue(size));
+        }
         return false;
     }
 
