@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2007 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -69,7 +69,7 @@ import net.percederberg.mibble.type.Constraint;
  *    }</pre>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.9
  * @since    2.0
  */
 public abstract class MibType {
@@ -94,6 +94,11 @@ public abstract class MibType {
      * symbol when resolving this type.
      */
     private MibTypeSymbol reference = null;
+
+    /**
+     * The type comment.
+     */
+    private String comment = null;
 
     /**
      * Creates a new MIB type instance.
@@ -433,6 +438,29 @@ public abstract class MibType {
      */
     public void setReferenceSymbol(MibTypeSymbol symbol) {
         this.reference = symbol;
+    }
+
+    /**
+     * Returns the type comment.
+     *
+     * @return the type comment, or
+     *         null if no comment was set
+     *
+     * @since 2.9
+     */
+    public String getComment() {
+        return comment;
+    }
+
+    /**
+     * Sets the type comment.
+     *
+     * @param comment        the type comment
+     *
+     * @since 2.9
+     */
+    void setComment(String comment) {
+        this.comment = comment;
     }
 
     /**

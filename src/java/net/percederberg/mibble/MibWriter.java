@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2005-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2005-2007 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -65,7 +65,7 @@ import net.percederberg.mibble.value.StringValue;
  * translation).
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.9
  * @since    2.6
  */
 public class MibWriter {
@@ -137,7 +137,7 @@ public class MibWriter {
         Collection  coll;
         Iterator    iter;
 
-        printComment(mib.getHeaderComment(), "");
+        printComment(mib.getHeaderComment(), "", true);
         if (mib.getHeaderComment() != null) {
             os.println();
         }
@@ -162,7 +162,7 @@ public class MibWriter {
             printSymbol((MibSymbol) iter.next(), mib.getSmiVersion());
         }
         os.println("END");
-        printComment(mib.getFooterComment(), "");
+        printComment(mib.getFooterComment(), "", true);
         os.flush();
     }
 
@@ -172,11 +172,25 @@ public class MibWriter {
      *
      * @param comment        the string to print
      * @param indent         the indentation to use
+     * @param header         the header comment flag
      */
-    private void printComment(String comment, String indent) {
+    private void printComment(String comment, String indent, boolean header) {
+        int  pos;
+
         if (comment != null) {
-            printIndent(indent + "-- ", comment);
-            os.println();
+            if (header) {
+                printIndent(indent + "-- ", comment);
+                os.println();
+            } else if (comment.indexOf("\n") >= 0) {
+                pos = comment.indexOf("\n");
+                os.print(" -- ");
+                os.print(comment.substring(0, pos));
+                os.println();
+                printIndent(indent + " -- ", comment.substring(pos + 1));
+            } else {
+                os.print(" -- ");
+                os.print(comment);
+            }
         }
     }
 
@@ -215,7 +229,7 @@ public class MibWriter {
      * @param smiVersion     the SMI version to use
      */
     private void printSymbol(MibSymbol sym, int smiVersion) {
-        printComment(sym.getComment(), "");
+        printComment(sym.getComment(), "", true);
         if (sym instanceof MibTypeSymbol) {
             os.print(sym.getName());
             os.print(" ::= ");
@@ -261,7 +275,6 @@ public class MibWriter {
         } else if (type instanceof SequenceType) {            
             seqType = (SequenceType) type;
             os.println("SEQUENCE {");
-            os.print(indent + "    ");
             printTypeElements(seqType.getAllElements(),
                               indent + "    ",
                               smiVersion);
@@ -312,6 +325,7 @@ public class MibWriter {
         } else {
             os.print("-- ERROR: type definition unknown");
         }
+        printComment(type.getComment(), indent, false);
     }
 
     /**
@@ -337,6 +351,10 @@ public class MibWriter {
         for (int i = 0; i < list.size(); i++) {
             rev = (SnmpRevision) list.get(i);
             os.println();
+            if (rev.getComment() != null) {
+                os.println();
+                printComment(rev.getComment(), "    ", true);
+            }
             os.print("    REVISION        ");
             printValue(rev.getValue());
             os.println();
@@ -565,6 +583,7 @@ public class MibWriter {
         for (int i = 0; i < type.getModules().size(); i++) {
             module = (SnmpModule) type.getModules().get(i);
             os.println();
+            printComment(module.getComment(), "    ", true);
             os.print("    MODULE          ");
             if (module.getModule() == null) {
                 os.print("-- this module");
@@ -638,6 +657,7 @@ public class MibWriter {
     private void printModuleCompliance(SnmpCompliance comp,
                                        int smiVersion) {
 
+        printComment(comp.getComment(), "    ", true);
         if (comp.isGroup()) {
             os.print("    GROUP           ");
             printReferenceEntry(comp.getValue());
@@ -752,8 +772,9 @@ public class MibWriter {
         for (i = 0; i < elems.length; i++) {
             if (i > 0) {
                 os.println(",");
-                os.print(indent);
             }
+            printComment(elems[i].getComment(), indent, true);
+            os.print(indent);
             os.print(elems[i].getName());
             for (int j = elems[i].getName().length(); j < column; j++) {
                 os.print(" ");
@@ -823,7 +844,7 @@ public class MibWriter {
             if (i > 0) {
                 os.println(",");
             }
-            printComment(symbols[i].getComment(), indent);
+            printComment(symbols[i].getComment(), indent, true);
             os.print(indent);
             os.print(symbols[i].getName());
             os.print("(");

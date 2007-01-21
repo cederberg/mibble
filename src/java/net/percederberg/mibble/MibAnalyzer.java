@@ -279,8 +279,10 @@ class MibAnalyzer extends Asn1Analyzer {
      * @return the node to add to the parse tree
      */
     protected Node exitStart(Production node) {
+        String  comment = MibAnalyzerUtil.getCommentsFooter(node);
+
         if (currentMib != null) {
-            currentMib.setFooterComment(MibAnalyzerUtil.getCommentsAfter(node));
+            currentMib.setFooterComment(comment);
         }
         return null;
     }
@@ -311,7 +313,7 @@ class MibAnalyzer extends Asn1Analyzer {
         throws ParseException {
 
         currentMib.setName(getStringValue(getChildAt(node, 0), 0));
-        currentMib.setHeaderComment(MibAnalyzerUtil.getCommentsBefore(node));
+        currentMib.setHeaderComment(MibAnalyzerUtil.getComments(node));
         mibs.add(currentMib);
         return node;
     }
@@ -486,7 +488,7 @@ class MibAnalyzer extends Asn1Analyzer {
         symbol = new MibMacroSymbol(getLocation(node),
                                     currentMib,
                                     name);
-        symbol.setComment(MibAnalyzerUtil.getCommentsBefore(node));
+        symbol.setComment(MibAnalyzerUtil.getComments(node));
 
         return null;
     }
@@ -541,7 +543,7 @@ class MibAnalyzer extends Asn1Analyzer {
                                    currentMib,
                                    name,
                                    type);
-        symbol.setComment(MibAnalyzerUtil.getCommentsBefore(node));
+        symbol.setComment(MibAnalyzerUtil.getComments(node));
 
         return null;
     }
@@ -1027,8 +1029,9 @@ class MibAnalyzer extends Asn1Analyzer {
                 child.getStartLine(),
                 child.getStartColumn());
         }
-        type = (MibType) getValue(child, 0);
-        node.addValue(new ElementType(name, type));
+        type = new ElementType(name, (MibType) getValue(child, 0));
+        type.setComment(MibAnalyzerUtil.getComments(node));
+        node.addValue(type);
         return node;
     }
 
@@ -1070,23 +1073,12 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitNamedNumberList(Production node) {
         MibValueSymbol  symbol;
         Node            child;
-        Token           comment;
-        boolean         allowBefore = true;
 
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             if (child.getId() == Asn1Constants.NAMED_NUMBER) {
                 symbol = (MibValueSymbol) child.getValue(0);
-                comment = MibAnalyzerUtil.getCommentTokenSameLine(child);
-                if (comment != null) {
-                    allowBefore = false;
-                    comment = comment.getPreviousToken();
-                    symbol.setComment(MibAnalyzerUtil.getCommentsAfter(comment));
-                } else if (allowBefore) {
-                    symbol.setComment(MibAnalyzerUtil.getCommentsBefore(child));
-                } else {
-                    allowBefore = true;
-                }
+                symbol.setComment(MibAnalyzerUtil.getComments(child));
             }
         }
         node.addValue(getChildValues(node));
@@ -1410,7 +1402,7 @@ class MibAnalyzer extends Asn1Analyzer {
                                     name,
                                     type,
                                     value);
-        symbol.setComment(MibAnalyzerUtil.getCommentsBefore(node));
+        symbol.setComment(MibAnalyzerUtil.getComments(node));
 
         return null;
     }
@@ -1970,6 +1962,7 @@ class MibAnalyzer extends Asn1Analyzer {
                 if (syntax instanceof MibContext) {
                     popContext();
                 }
+                syntax.setComment(MibAnalyzerUtil.getComments(child));
                 break;
             case Asn1Constants.SNMP_UNITS_PART:
                 units = getStringValue(child, 0);
@@ -2136,6 +2129,7 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             case Asn1Constants.SNMP_SYNTAX_PART:
                 syntax = (MibType) getValue(child, 0);
+                syntax.setComment(MibAnalyzerUtil.getComments(child));
                 break;
             }
         }
@@ -2361,12 +2355,15 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitSnmpRevisionPart(Production node)
         throws ParseException {
 
-        MibValue  value;
-        String    desc;
+        SnmpRevision  rev;
+        MibValue      value;
+        String        desc;
 
         value = (MibValue) getValue(getChildAt(node, 1), 0);
         desc = getStringValue(getChildAt(node, 3), 0);
-        node.addValue(new SnmpRevision(value, desc));
+        rev = new SnmpRevision(value, desc);
+        rev.setComment(MibAnalyzerUtil.getComments(node));
+        node.addValue(rev);
         return node;
     }
 
@@ -2655,16 +2652,21 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitSnmpModulePart(Production node)
         throws ParseException {
 
-        String     module = null;
+        SnmpModule module;
+        String     name = null;
         ArrayList  groups = new ArrayList();
         ArrayList  modules = new ArrayList();
+        String     comment = null;
         Node       child;
 
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
             switch (child.getId()) {
+            case Asn1Constants.MODULE:
+                comment = MibAnalyzerUtil.getComments(child);
+                break;
             case Asn1Constants.SNMP_MODULE_IMPORT:
-                module = getStringValue(child, 0);
+                name = getStringValue(child, 0);
                 popContext();
                 break;
             case Asn1Constants.SNMP_MANDATORY_PART:
@@ -2675,7 +2677,9 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             }
         }
-        node.addValue(new SnmpModule(module, groups, modules));
+        module = new SnmpModule(name, groups, modules);
+        module.setComment(comment);
+        node.addValue(module);
         return node;
     }
 
@@ -2747,12 +2751,15 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitComplianceGroup(Production node)
         throws ParseException {
 
-        MibValue  value;
-        String    desc;
+        SnmpCompliance  comp;
+        MibValue        value;
+        String          desc;
 
         value = (MibValue) getValue(getChildAt(node, 1), 0);
         desc = getStringValue(getChildAt(node, 2), 0);
-        node.addValue(new SnmpCompliance(true, value, null, null, null, desc));
+        comp = new SnmpCompliance(true, value, null, null, null, desc);
+        comp.setComment(MibAnalyzerUtil.getComments(node));
+        node.addValue(comp);
         return node;
     }
 
@@ -2768,12 +2775,13 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitComplianceObject(Production node)
         throws ParseException {
 
-        MibValue    value = null;
-        MibType     syntax = null;
-        MibType     write = null;
-        SnmpAccess  access = null;
-        String      desc = null;
-        Node        child;
+        SnmpCompliance  comp;
+        MibValue        value = null;
+        MibType         syntax = null;
+        MibType         write = null;
+        SnmpAccess      access = null;
+        String          desc = null;
+        Node            child;
 
         for (int i = 0; i < node.getChildCount(); i++) {
             child = node.getChildAt(i);
@@ -2783,9 +2791,11 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             case Asn1Constants.SNMP_SYNTAX_PART:
                 syntax = (MibType) getValue(child, 0);
+                syntax.setComment(MibAnalyzerUtil.getComments(child));
                 break;
             case Asn1Constants.SNMP_WRITE_SYNTAX_PART:
                 write = (MibType) getValue(child, 0);
+                write.setComment(MibAnalyzerUtil.getComments(child));
                 break;
             case Asn1Constants.SNMP_ACCESS_PART:
                 access = (SnmpAccess) getValue(child, 0);
@@ -2795,12 +2805,9 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             }
         }
-        node.addValue(new SnmpCompliance(false,
-                                         value,
-                                         syntax,
-                                         write,
-                                         access,
-                                         desc));
+        comp = new SnmpCompliance(false, value, syntax, write, access, desc);
+        comp.setComment(MibAnalyzerUtil.getComments(node));
+        node.addValue(comp);
         return node;
     }
 
@@ -2924,9 +2931,11 @@ class MibAnalyzer extends Asn1Analyzer {
                 if (syntax instanceof MibContext) {
                     popContext();
                 }
+                syntax.setComment(MibAnalyzerUtil.getComments(child));
                 break;
             case Asn1Constants.SNMP_WRITE_SYNTAX_PART:
                 write = (MibType) getValue(child, 0);
+                write.setComment(MibAnalyzerUtil.getComments(child));
                 break;
             case Asn1Constants.SNMP_ACCESS_PART:
                 access = (SnmpAccess) getValue(child, 0);

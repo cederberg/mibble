@@ -21,6 +21,8 @@
 
 package net.percederberg.mibble;
 
+import java.util.HashMap;
+
 import net.percederberg.grammatica.parser.Node;
 import net.percederberg.grammatica.parser.Production;
 import net.percederberg.grammatica.parser.Token;
@@ -34,6 +36,14 @@ import net.percederberg.mibble.asn1.Asn1Constants;
  * @since    2.9
  */
 class MibAnalyzerUtil {
+
+    /**
+     * An internal hash map containing all the used comment tokens.
+     * When a comment string is returned by the getComments() method,
+     * the corresponding tokens will be added to this hash map and
+     * not returned on subsequent calls.
+     */
+    private static HashMap commentTokens = new HashMap();
 
     /**
      * Checks if a node corresponds to a bit value. This method is
@@ -63,6 +73,64 @@ class MibAnalyzerUtil {
     }
 
     /**
+     * Returns all the comments associated with a specified node. If
+     * there are multiple comment lines, these will be concatenated
+     * into a single string. This method handles comments before,
+     * inside and after (starting on the same line) as the specified
+     * node. It also updates the comment token cache to avoid
+     * returning the same comments twice.
+     *
+     * @param node           the production or token node
+     *
+     * @return the comment string, or
+     *         null if no comments were found
+     */
+    static String getComments(Node node) {
+        String  comment = "";
+        String  str;
+        Token   token;
+
+        str = getCommentsBefore(node);
+        if (str != null) {
+            comment = str;
+        }
+        str = getCommentsInside(node);
+        if (str != null) {
+            if (comment.length() > 0) {
+                comment += "\n\n";
+            }
+            comment += str;
+        }
+        token = getCommentTokenSameLine(node);
+        if (token != null) {
+            if (comment.length() > 0) {
+                comment += "\n\n";
+            }
+            token = token.getPreviousToken();
+            comment += getCommentsAfter(token);
+        }
+        return comment.length() <= 0 ? null : comment;
+    }
+
+    /**
+     * Returns all the footer comments after the specified node. This
+     * method also clears the comment cache and should be called
+     * exactly once after each MIB file parsed, in order to free
+     * memory used by the comment token cache.
+     *
+     * @param node           the production or token node
+     *
+     * @return the comment string, or
+     *         null if no comments were found
+     */
+    static String getCommentsFooter(Node node) {
+        String  comment = getCommentsAfter(node);
+
+        commentTokens.clear();
+        return comment;
+    }
+
+    /**
      * Returns all the comments before the specified node. If
      * there are multiple comment lines possibly separated by
      * whitespace, they will be concatenated into one string.
@@ -72,7 +140,7 @@ class MibAnalyzerUtil {
      * @return the comment string, or
      *         null if no comments were found
      */
-    static String getCommentsBefore(Node node) {
+    private static String getCommentsBefore(Node node) {
         Token   token = getFirstToken(node);
         String  comment = "";
 
@@ -82,7 +150,10 @@ class MibAnalyzerUtil {
         while (token != null) {
             if (token.getId() == Asn1Constants.WHITESPACE) {
                 comment = getLineBreaks(token.getImage()) + comment;
-            } else if (token.getId() == Asn1Constants.COMMENT) {
+            } else if (token.getId() == Asn1Constants.COMMENT &&
+                       !commentTokens.containsKey(token)) {
+
+                commentTokens.put(token, null);
                 comment = token.getImage().substring(2).trim() + comment;
             } else {
                 break;
@@ -103,7 +174,7 @@ class MibAnalyzerUtil {
      * @return the comment string, or
      *         null if no comments were found
      */
-    static String getCommentsAfter(Node node) {
+    private static String getCommentsAfter(Node node) {
         Token   token = getLastToken(node);
         String  comment = "";
 
@@ -113,10 +184,41 @@ class MibAnalyzerUtil {
         while (token != null) {
             if (token.getId() == Asn1Constants.WHITESPACE) {
                 comment += getLineBreaks(token.getImage());
-            } else if (token.getId() == Asn1Constants.COMMENT) {
+            } else if (token.getId() == Asn1Constants.COMMENT &&
+                       !commentTokens.containsKey(token)) {
+
+                commentTokens.put(token, null);
                 comment += token.getImage().substring(2).trim();
             } else {
                 break;
+            }
+            token = token.getNextToken();
+        }
+        comment = comment.trim();
+        return comment.length() <= 0 ? null : comment;
+    }
+
+    /**
+     * Returns all the unhandled comments inside the specified node.
+     * Note that only comment tokens not present in the token cache
+     * will be returned by this method.
+     *
+     * @param node           the production or token node
+     *
+     * @return the comment string, or
+     *         null if no comments were found
+     */
+    private static String getCommentsInside(Node node) {
+        Token   token = getFirstToken(node);
+        Token   last = getLastToken(node);
+        String  comment = "";
+
+        while (token != null && token != last) {
+            if (token.getId() == Asn1Constants.COMMENT &&
+                !commentTokens.containsKey(token)) {
+
+                commentTokens.put(token, null);
+                comment += token.getImage().substring(2).trim() + "\n";
             }
             token = token.getNextToken();
         }
@@ -131,7 +233,7 @@ class MibAnalyzerUtil {
      *
      * @return the first comment token on the same line
      */
-    static Token getCommentTokenSameLine(Node node) {
+    private static Token getCommentTokenSameLine(Node node) {
         Token  last = getLastToken(node);
         Token  token;
 

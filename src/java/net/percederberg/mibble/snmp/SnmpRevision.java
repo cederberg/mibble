@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2007 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -32,7 +32,7 @@ import net.percederberg.mibble.MibValue;
  * @see SnmpModuleIdentity
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.9
  * @since    2.0
  */
 public class SnmpRevision {
@@ -46,6 +46,11 @@ public class SnmpRevision {
      * The revision description.
      */
     private String description;
+
+    /**
+     * The revision comment.
+     */
+    private String comment = null;
 
     /**
      * Creates a new SNMP module identity revision.
@@ -108,6 +113,29 @@ public class SnmpRevision {
      */
     public String getUnformattedDescription() {
         return description;
+    }
+
+    /**
+     * Returns the revision comment.
+     *
+     * @return the revision comment, or
+     *         null if no comment was set
+     *
+     * @since 2.9
+     */
+    public String getComment() {
+        return comment;
+    }
+
+    /**
+     * Sets the revision comment.
+     *
+     * @param comment        the revision comment
+     *
+     * @since 2.9
+     */
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
     /**

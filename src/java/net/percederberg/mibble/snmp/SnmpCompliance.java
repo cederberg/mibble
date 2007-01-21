@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2007 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -33,7 +33,7 @@ import net.percederberg.mibble.MibValue;
  * @see SnmpModule
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.9
  * @since    2.0
  */
 public class SnmpCompliance {
@@ -67,6 +67,11 @@ public class SnmpCompliance {
      * The compliance description.
      */
     private String description;
+
+    /**
+     * The compliance comment.
+     */
+    private String comment = null;
 
     /**
      * Creates a new SNMP module compliance declaration.
@@ -207,6 +212,29 @@ public class SnmpCompliance {
      */
     public String getUnformattedDescription() {
         return description;
+    }
+
+    /**
+     * Returns the compliance comment.
+     *
+     * @return the compliance comment, or
+     *         null if no comment was set
+     *
+     * @since 2.9
+     */
+    public String getComment() {
+        return comment;
+    }
+
+    /**
+     * Sets the compliance comment.
+     *
+     * @param comment        the compliance comment
+     *
+     * @since 2.9
+     */
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
     /**
