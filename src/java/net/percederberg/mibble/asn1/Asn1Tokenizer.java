@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  * 
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2008 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.asn1;
@@ -33,7 +33,7 @@ import net.percederberg.grammatica.parser.Tokenizer;
  * A character stream tokenizer.
  * 
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.9
  */
 public class Asn1Tokenizer extends Tokenizer {
 
@@ -699,7 +699,7 @@ public class Asn1Tokenizer extends Tokenizer {
         pattern = new TokenPattern(Asn1Constants.COMMENT,
                                    "COMMENT",
                                    TokenPattern.REGEXP_TYPE,
-                                   "--[^\\n\\r]*");
+                                   "--([^\\n\\r])*?(--|[\\n\\r])");
         pattern.setIgnore();
         addPattern(pattern);
     }
