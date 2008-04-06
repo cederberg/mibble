@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2005-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2005-2008 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
@@ -30,7 +30,7 @@ import net.percederberg.mibble.MibValue;
  * A hexadecimal numeric MIB value.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.9
  * @since    2.6
  */
 public class HexNumberValue extends NumberValue {
@@ -38,15 +38,29 @@ public class HexNumberValue extends NumberValue {
     /**
      * The minimum number of hexadecimal characters to print.
      */
-    private int minLength = -1;
+    private int minLength;
+
+    /**
+     * Creates a new hexadecimal number value. A default minimum
+     * print length of one (1) will be used.
+     *
+     * @param value          the number value
+     */
+    public HexNumberValue(Number value) {
+        this(value, 1);
+    }
 
     /**
      * Creates a new hexadecimal number value.
      *
      * @param value          the number value
+     * @param minLength      the minimum print length
+     *
+     * @since 2.9
      */
-    public HexNumberValue(Number value) {
+    public HexNumberValue(Number value, int minLength) {
         super(value);
+        this.minLength = minLength;
     }
 
     /**
@@ -65,7 +79,11 @@ public class HexNumberValue extends NumberValue {
      * @return the basic MIB value
      */
     public MibValue initialize(MibLoaderLog log, MibType type) {
-        minLength = getMinimumLength(type, 2);
+        int bytes = minLength / 2 + ((minLength % 2 > 0) ? 1 : 0);
+        int length = getByteSize(type, bytes) * 2;
+        if (length > minLength) {
+            minLength = length;
+        }
         return this;
     }
 

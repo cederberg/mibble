@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2005-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2005-2008 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
@@ -31,7 +31,7 @@ import net.percederberg.mibble.MibValue;
  * A binary numeric MIB value.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.9
  * @since    2.6
  */
 public class BinaryNumberValue extends NumberValue {
@@ -39,15 +39,29 @@ public class BinaryNumberValue extends NumberValue {
     /**
      * The minimum number of bits to print.
      */
-    private int minLength = -1;
+    private int minLength;
+
+    /**
+     * Creates a new binary number value. A default minimum print
+     * length of one (1) will be used.
+     *
+     * @param value          the number value
+     */
+    public BinaryNumberValue(Number value) {
+        this(value, 1);
+    }
 
     /**
      * Creates a new binary number value.
      *
      * @param value          the number value
+     * @param minLength      the minimum print length
+     *
+     * @since 2.9
      */
-    public BinaryNumberValue(Number value) {
+    public BinaryNumberValue(Number value, int minLength) {
         super(value);
+        this.minLength = minLength;
     }
 
     /**
@@ -66,7 +80,11 @@ public class BinaryNumberValue extends NumberValue {
      * @return the basic MIB value
      */
     public MibValue initialize(MibLoaderLog log, MibType type) {
-        minLength = getMinimumLength(type, 8);
+        int bytes = minLength / 8 + ((minLength % 8 > 0) ? 1 : 0);
+        int length = getByteSize(type, bytes) * 8;
+        if (length > minLength) {
+            minLength = length;
+        }
         return this;
     }
 

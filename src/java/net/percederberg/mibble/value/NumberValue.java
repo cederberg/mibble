@@ -16,31 +16,26 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2008 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
 
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
-import net.percederberg.mibble.type.CompoundConstraint;
 import net.percederberg.mibble.type.Constraint;
-import net.percederberg.mibble.type.IntegerType;
 import net.percederberg.mibble.type.SizeConstraint;
 import net.percederberg.mibble.type.StringType;
-import net.percederberg.mibble.type.ValueConstraint;
-import net.percederberg.mibble.type.ValueRangeConstraint;
 
 /**
  * A numeric MIB value.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.9
  * @since    2.0
  */
 public class NumberValue extends MibValue {
@@ -188,63 +183,30 @@ public class NumberValue extends MibValue {
     }
 
     /**
-     * Returns the minimum number of characters for the ASCII representation
-     * of the number value.
+     * Returns the number of bytes required by the specified type and
+     * initial value size. If the type has no size requirement
+     * specified, a value of one (1) will always be returned. If the
+     * type size constraint allows for zero length, a zero might also
+     * be returned.
      *
      * @param type           the MIB value type
-     * @param byteLength     the length of a printed byte
+     * @param initialBytes   the initial number of bytes used
      *
-     * @return the minimum number of characters required
+     * @return the number of bytes required
      */
-    protected int getMinimumLength(MibType type, int byteLength) {
+    protected int getByteSize(MibType type, int initialBytes) {
         Constraint  c = null;
-        int         minLength;
+        int         res = -1;
 
-        if (type instanceof IntegerType) {
-            c = ((IntegerType) type).getConstraint();
-        } else if (type instanceof StringType) {
+        if (type instanceof StringType) {
             c = ((StringType) type).getConstraint();
         }
-        minLength = getByteSize(c) * byteLength;
-        if (minLength < 0) {
-            minLength = 1;
+        if (c instanceof SizeConstraint) {
+            res = ((SizeConstraint) c).nextValue(initialBytes);
         }
-        return minLength;
-    }
-
-    /**
-     * Returns the minimum size in bytes required by the specified constraint.
-     *
-     * @param c              the constraint
-     *
-     * @return the minimum number of bytes required, or
-     *         -1 if not possible to determine
-     */
-    private int getByteSize(Constraint c) {
-        ArrayList  list;
-        MibValue   value;
-        int        size;
-
-        if (c instanceof CompoundConstraint) {
-            list = ((CompoundConstraint) c).getConstraintList();
-            for (int i = 0; i < list.size(); i++) {
-                size = getByteSize((Constraint) list.get(i));
-                if (size >= 0) {
-                    return size;
-                }
-            }
-        } else if (c instanceof SizeConstraint) {
-            c = (Constraint) ((SizeConstraint) c).getValues().get(0);
-            value = null;
-            if (c instanceof ValueConstraint) {
-                value = ((ValueConstraint) c).getValue();
-            } else if (c instanceof ValueRangeConstraint) {
-                value = ((ValueRangeConstraint) c).getLowerBound();
-            }
-            if (value != null && value.toObject() instanceof Number) {
-                return ((Number) value.toObject()).intValue();
-            }
+        if (res < 0) {
+            res = 1;
         }
-        return -1;
+        return res;
     }
 }

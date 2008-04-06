@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2008 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -36,7 +36,7 @@ import net.percederberg.mibble.value.StringValue;
  * range in a set of value constraints.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.9
  * @since    2.0
  */
 public class ValueRangeConstraint implements Constraint {
@@ -147,6 +147,31 @@ public class ValueRangeConstraint implements Constraint {
     public boolean isCompatible(MibValue value) {
         return (lower == null || isLessThan(strictLower, lower, value))
             && (upper == null || isLessThan(strictUpper, value, upper));
+    }
+
+    /**
+     * Checks if the specified value is compatible with this
+     * constraint.
+     *
+     * @param value          the value to check
+     *
+     * @return true if the value is compatible, or
+     *         false otherwise
+     *
+     * @since 2.9
+     */
+    public boolean isCompatible(Number value) {
+        Number  low = null;
+        Number  high = null;
+
+        if (lower instanceof NumberValue) {
+            low = (Number) lower.toObject();
+        }
+        if (upper instanceof NumberValue) {
+            high = (Number) upper.toObject();
+        }
+        return (low == null || isLessThan(strictLower, low, value))
+            && (high == null || isLessThan(strictUpper, value, high));
     }
 
     /**

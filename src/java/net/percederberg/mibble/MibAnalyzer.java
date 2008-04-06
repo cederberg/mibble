@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2007 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2008 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -182,6 +182,7 @@ class MibAnalyzer extends Asn1Analyzer {
             value = new BigInteger(str, 2);
         }
         node.addValue(value);
+        node.addValue(str);
         return node;
     }
 
@@ -209,6 +210,7 @@ class MibAnalyzer extends Asn1Analyzer {
             value = new BigInteger(str, 16);
         }
         node.addValue(value);
+        node.addValue(str);
         return node;
     }
 
@@ -1569,10 +1571,14 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitBinaryValue(Production node)
         throws ParseException {
 
+        Node    child;
         Number  number;
+        String  text;
 
-        number = (Number) getValue(getChildAt(node, 0), 0);
-        node.addValue(new BinaryNumberValue(number));
+        child = getChildAt(node, 0);
+        number = (Number) child.getValue(0);
+        text = (String) child.getValue(1);
+        node.addValue(new BinaryNumberValue(number, text.length()));
         return node;
     }
 
@@ -1588,10 +1594,14 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitHexadecimalValue(Production node)
         throws ParseException {
 
+        Node    child;
         Number  number;
+        String  text;
 
-        number = (Number) getValue(getChildAt(node, 0), 0);
-        node.addValue(new HexNumberValue(number));
+        child = getChildAt(node, 0);
+        number = (Number) child.getValue(0);
+        text = (String) child.getValue(1);
+        node.addValue(new HexNumberValue(number, text.length()));
         return node;
     }
 

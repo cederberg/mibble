@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2008 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -35,7 +35,7 @@ import net.percederberg.mibble.value.StringValue;
  * A MIB type size constraint.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.9
  * @since    2.0
  */
 public class SizeConstraint implements Constraint {
@@ -138,6 +138,41 @@ public class SizeConstraint implements Constraint {
             list.add(values);
             return list;
         }
+    }
+
+    /**
+     * Returns the next compatible size constraint value from a start
+     * value. The values will be enumerated from lower values to
+     * higher.
+     *
+     * @param start          the initial start value
+     *
+     * @return the next compatible value, or
+     *         -1 if no such value exists
+     *
+     * @since 2.9
+     */
+    public int nextValue(int start) {
+        ArrayList   list = getValues();
+        Constraint  c;
+        Object      obj = null;
+ 
+        // TODO: the constraint list should be sorted
+        for (int i = 0; i < list.size(); i++) {
+            c = (Constraint) list.get(i);
+            if (c instanceof ValueConstraint) {
+                obj = ((ValueConstraint) c).getValue().toObject();
+            } else if (c instanceof ValueRangeConstraint) {
+                if (((ValueRangeConstraint) c).isCompatible(new Integer(start))) {
+                    return start;
+                }
+                obj = ((ValueRangeConstraint) c).getLowerBound().toObject();
+            }
+            if (obj instanceof Number && start <= ((Number) obj).intValue()) {
+                return ((Number) obj).intValue();
+            }
+        }
+        return -1;
     }
 
     /**
