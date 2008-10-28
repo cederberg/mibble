@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # MibbleBrowser.sh: Runs the Mibble MIB browser
 #

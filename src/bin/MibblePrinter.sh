@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # MibblePrinter.sh: Runs the Mibble MIB printer
 #

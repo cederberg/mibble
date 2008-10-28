@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # MibbleValidator.sh: Runs the Mibble MIB validator
 #
