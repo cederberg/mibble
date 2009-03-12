@@ -1,39 +1,39 @@
 /*
  * Asn1Parser.java
- * 
+ *
  * THIS FILE HAS BEEN GENERATED AUTOMATICALLY. DO NOT EDIT!
- * 
+ *
  * This work is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2 of the License,
  * or (at your option) any later version.
- * 
+ *
  * This work is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
- * 
- * Copyright (c) 2004-2008 Per Cederberg. All rights reserved.
+ *
+ * Copyright (c) 2004-2009 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.asn1;
 
 import java.io.Reader;
 
-import net.percederberg.grammatica.parser.Analyzer;
 import net.percederberg.grammatica.parser.ParserCreationException;
 import net.percederberg.grammatica.parser.ProductionPattern;
 import net.percederberg.grammatica.parser.ProductionPatternAlternative;
 import net.percederberg.grammatica.parser.RecursiveDescentParser;
+import net.percederberg.grammatica.parser.Tokenizer;
 
 /**
  * A token stream parser.
- * 
+ *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.9
  */
@@ -75,37 +75,54 @@ public class Asn1Parser extends RecursiveDescentParser {
     private static final int SUBPRODUCTION_7 = 3007;
 
     /**
-     * Creates a new parser.
-     * 
+     * Creates a new parser with a default analyzer.
+     *
      * @param in             the input stream to read from
-     * 
+     *
      * @throws ParserCreationException if the parser couldn't be
      *             initialized correctly
      */
     public Asn1Parser(Reader in) throws ParserCreationException {
-        super(new Asn1Tokenizer(in));
+        super(in);
         createPatterns();
     }
 
     /**
      * Creates a new parser.
-     * 
+     *
      * @param in             the input stream to read from
      * @param analyzer       the analyzer to use while parsing
-     * 
+     *
      * @throws ParserCreationException if the parser couldn't be
      *             initialized correctly
      */
-    public Asn1Parser(Reader in, Analyzer analyzer)
+    public Asn1Parser(Reader in, Asn1Analyzer analyzer)
         throws ParserCreationException {
 
-        super(new Asn1Tokenizer(in), analyzer);
+        super(in, analyzer);
         createPatterns();
     }
 
     /**
+     * Creates a new tokenizer for this parser. Can be overridden by a
+     * subclass to provide a custom implementation.
+     *
+     * @param in             the input stream to read from
+     *
+     * @return the tokenizer created
+     *
+     * @throws ParserCreationException if the tokenizer couldn't be
+     *             initialized correctly
+     */
+    protected Tokenizer newTokenizer(Reader in)
+        throws ParserCreationException {
+
+        return new Asn1Tokenizer(in);
+    }
+
+    /**
      * Initializes the parser by creating all the production patterns.
-     * 
+     *
      * @throws ParserCreationException if the parser couldn't be
      *             initialized correctly
      */
@@ -1527,7 +1544,7 @@ public class Asn1Parser extends RecursiveDescentParser {
 
         pattern = new ProductionPattern(SUBPRODUCTION_1,
                                         "Subproduction1");
-        pattern.setSyntetic(true);
+        pattern.setSynthetic(true);
         alt = new ProductionPatternAlternative();
         alt.addToken(Asn1Constants.COMMA, 1, 1);
         alt.addProduction(Asn1Constants.SYMBOL, 1, 1);
@@ -1536,7 +1553,7 @@ public class Asn1Parser extends RecursiveDescentParser {
 
         pattern = new ProductionPattern(SUBPRODUCTION_2,
                                         "Subproduction2");
-        pattern.setSyntetic(true);
+        pattern.setSynthetic(true);
         alt = new ProductionPatternAlternative();
         alt.addToken(Asn1Constants.COMMA, 1, 1);
         alt.addProduction(Asn1Constants.ELEMENT_TYPE, 1, 1);
@@ -1545,7 +1562,7 @@ public class Asn1Parser extends RecursiveDescentParser {
 
         pattern = new ProductionPattern(SUBPRODUCTION_3,
                                         "Subproduction3");
-        pattern.setSyntetic(true);
+        pattern.setSynthetic(true);
         alt = new ProductionPatternAlternative();
         alt.addToken(Asn1Constants.COMMA, 1, 1);
         alt.addProduction(Asn1Constants.NAMED_NUMBER, 1, 1);
@@ -1554,7 +1571,7 @@ public class Asn1Parser extends RecursiveDescentParser {
 
         pattern = new ProductionPattern(SUBPRODUCTION_4,
                                         "Subproduction4");
-        pattern.setSyntetic(true);
+        pattern.setSynthetic(true);
         alt = new ProductionPatternAlternative();
         alt.addToken(Asn1Constants.VERTICAL_BAR, 1, 1);
         alt.addProduction(Asn1Constants.CONSTRAINT, 1, 1);
@@ -1563,7 +1580,7 @@ public class Asn1Parser extends RecursiveDescentParser {
 
         pattern = new ProductionPattern(SUBPRODUCTION_5,
                                         "Subproduction5");
-        pattern.setSyntetic(true);
+        pattern.setSynthetic(true);
         alt = new ProductionPatternAlternative();
         alt.addToken(Asn1Constants.VERTICAL_BAR, 1, 1);
         alt.addProduction(Asn1Constants.VALUE_CONSTRAINT, 1, 1);
@@ -1572,7 +1589,7 @@ public class Asn1Parser extends RecursiveDescentParser {
 
         pattern = new ProductionPattern(SUBPRODUCTION_6,
                                         "Subproduction6");
-        pattern.setSyntetic(true);
+        pattern.setSynthetic(true);
         alt = new ProductionPatternAlternative();
         alt.addToken(Asn1Constants.COMMA, 1, 1);
         alt.addProduction(Asn1Constants.INDEX_VALUE, 1, 1);
@@ -1581,7 +1598,7 @@ public class Asn1Parser extends RecursiveDescentParser {
 
         pattern = new ProductionPattern(SUBPRODUCTION_7,
                                         "Subproduction7");
-        pattern.setSyntetic(true);
+        pattern.setSynthetic(true);
         alt = new ProductionPatternAlternative();
         alt.addToken(Asn1Constants.COMMA, 1, 1);
         alt.addProduction(Asn1Constants.VALUE, 1, 1);

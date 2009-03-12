@@ -1,24 +1,24 @@
 /*
  * Asn1Tokenizer.java
- * 
+ *
  * THIS FILE HAS BEEN GENERATED AUTOMATICALLY. DO NOT EDIT!
- * 
+ *
  * This work is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2 of the License,
  * or (at your option) any later version.
- * 
+ *
  * This work is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
- * 
- * Copyright (c) 2004-2008 Per Cederberg. All rights reserved.
+ *
+ * Copyright (c) 2004-2009 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.asn1;
@@ -31,7 +31,7 @@ import net.percederberg.grammatica.parser.Tokenizer;
 
 /**
  * A character stream tokenizer.
- * 
+ *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.9
  */
@@ -39,20 +39,20 @@ public class Asn1Tokenizer extends Tokenizer {
 
     /**
      * Creates a new tokenizer for the specified input stream.
-     * 
+     *
      * @param input          the input stream to read
-     * 
+     *
      * @throws ParserCreationException if the tokenizer couldn't be
      *             initialized correctly
      */
     public Asn1Tokenizer(Reader input) throws ParserCreationException {
-        super(input);
+        super(input, false);
         createPatterns();
     }
 
     /**
      * Initializes the tokenizer by creating all the token patterns.
-     * 
+     *
      * @throws ParserCreationException if the tokenizer couldn't be
      *             initialized correctly
      */
@@ -674,7 +674,7 @@ public class Asn1Tokenizer extends Tokenizer {
         pattern = new TokenPattern(Asn1Constants.QUOTED_STRING,
                                    "QUOTED_STRING",
                                    TokenPattern.REGEXP_TYPE,
-                                   "\"([^\"]|\"\")*+\"");
+                                   "\"([^\"]|\"\")*\"");
         addPattern(pattern);
 
         pattern = new TokenPattern(Asn1Constants.IDENTIFIER_STRING,
@@ -699,7 +699,7 @@ public class Asn1Tokenizer extends Tokenizer {
         pattern = new TokenPattern(Asn1Constants.COMMENT,
                                    "COMMENT",
                                    TokenPattern.REGEXP_TYPE,
-                                   "--([^\\n\\r])*?(--|[\\n\\r])");
+                                   "--([^\\n\\r-]|-[^\\n\\r-])*(--|-?[\\n\\r])");
         pattern.setIgnore();
         addPattern(pattern);
     }

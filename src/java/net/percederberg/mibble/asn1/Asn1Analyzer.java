@@ -1,24 +1,24 @@
 /*
  * Asn1Analyzer.java
- * 
+ *
  * THIS FILE HAS BEEN GENERATED AUTOMATICALLY. DO NOT EDIT!
- * 
+ *
  * This work is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published
  * by the Free Software Foundation; either version 2 of the License,
  * or (at your option) any later version.
- * 
+ *
  * This work is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
- * 
- * Copyright (c) 2004-2008 Per Cederberg. All rights reserved.
+ *
+ * Copyright (c) 2004-2009 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.asn1;
@@ -31,7 +31,7 @@ import net.percederberg.grammatica.parser.Token;
 
 /**
  * A class providing callback methods for the parser.
- * 
+ *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @version  2.9
  */
@@ -39,9 +39,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enter(Node node) throws ParseException {
@@ -744,12 +744,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exit(Node node) throws ParseException {
@@ -1222,10 +1222,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void child(Production node, Node child)
@@ -1615,9 +1615,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDot(Token node) throws ParseException {
@@ -1625,12 +1625,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDot(Token node) throws ParseException {
@@ -1639,9 +1639,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDoubleDot(Token node) throws ParseException {
@@ -1649,12 +1649,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDoubleDot(Token node) throws ParseException {
@@ -1663,9 +1663,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterTripleDot(Token node) throws ParseException {
@@ -1673,12 +1673,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitTripleDot(Token node) throws ParseException {
@@ -1687,9 +1687,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterComma(Token node) throws ParseException {
@@ -1697,12 +1697,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitComma(Token node) throws ParseException {
@@ -1711,9 +1711,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSemiColon(Token node) throws ParseException {
@@ -1721,12 +1721,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSemiColon(Token node) throws ParseException {
@@ -1735,9 +1735,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterLeftParen(Token node) throws ParseException {
@@ -1745,12 +1745,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitLeftParen(Token node) throws ParseException {
@@ -1759,9 +1759,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterRightParen(Token node) throws ParseException {
@@ -1769,12 +1769,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitRightParen(Token node) throws ParseException {
@@ -1783,9 +1783,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterLeftBrace(Token node) throws ParseException {
@@ -1793,12 +1793,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitLeftBrace(Token node) throws ParseException {
@@ -1807,9 +1807,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterRightBrace(Token node) throws ParseException {
@@ -1817,12 +1817,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitRightBrace(Token node) throws ParseException {
@@ -1831,9 +1831,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterLeftBracket(Token node) throws ParseException {
@@ -1841,12 +1841,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitLeftBracket(Token node) throws ParseException {
@@ -1855,9 +1855,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterRightBracket(Token node) throws ParseException {
@@ -1865,12 +1865,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitRightBracket(Token node) throws ParseException {
@@ -1879,9 +1879,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterMinus(Token node) throws ParseException {
@@ -1889,12 +1889,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitMinus(Token node) throws ParseException {
@@ -1903,9 +1903,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterLessThan(Token node) throws ParseException {
@@ -1913,12 +1913,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitLessThan(Token node) throws ParseException {
@@ -1927,9 +1927,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterVerticalBar(Token node) throws ParseException {
@@ -1937,12 +1937,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitVerticalBar(Token node) throws ParseException {
@@ -1951,9 +1951,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDefinition(Token node) throws ParseException {
@@ -1961,12 +1961,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDefinition(Token node) throws ParseException {
@@ -1975,9 +1975,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDefinitions(Token node) throws ParseException {
@@ -1985,12 +1985,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDefinitions(Token node) throws ParseException {
@@ -1999,9 +1999,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterExplicit(Token node) throws ParseException {
@@ -2009,12 +2009,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitExplicit(Token node) throws ParseException {
@@ -2023,9 +2023,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterImplicit(Token node) throws ParseException {
@@ -2033,12 +2033,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitImplicit(Token node) throws ParseException {
@@ -2047,9 +2047,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterTags(Token node) throws ParseException {
@@ -2057,12 +2057,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitTags(Token node) throws ParseException {
@@ -2071,9 +2071,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBegin(Token node) throws ParseException {
@@ -2081,12 +2081,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBegin(Token node) throws ParseException {
@@ -2095,9 +2095,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterEnd(Token node) throws ParseException {
@@ -2105,12 +2105,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitEnd(Token node) throws ParseException {
@@ -2119,9 +2119,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterExports(Token node) throws ParseException {
@@ -2129,12 +2129,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitExports(Token node) throws ParseException {
@@ -2143,9 +2143,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterImports(Token node) throws ParseException {
@@ -2153,12 +2153,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitImports(Token node) throws ParseException {
@@ -2167,9 +2167,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterFrom(Token node) throws ParseException {
@@ -2177,12 +2177,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitFrom(Token node) throws ParseException {
@@ -2191,9 +2191,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterMacro(Token node) throws ParseException {
@@ -2201,12 +2201,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitMacro(Token node) throws ParseException {
@@ -2215,9 +2215,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterInteger(Token node) throws ParseException {
@@ -2225,12 +2225,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitInteger(Token node) throws ParseException {
@@ -2239,9 +2239,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterReal(Token node) throws ParseException {
@@ -2249,12 +2249,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitReal(Token node) throws ParseException {
@@ -2263,9 +2263,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBoolean(Token node) throws ParseException {
@@ -2273,12 +2273,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBoolean(Token node) throws ParseException {
@@ -2287,9 +2287,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNull(Token node) throws ParseException {
@@ -2297,12 +2297,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNull(Token node) throws ParseException {
@@ -2311,9 +2311,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBit(Token node) throws ParseException {
@@ -2321,12 +2321,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBit(Token node) throws ParseException {
@@ -2335,9 +2335,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterOctet(Token node) throws ParseException {
@@ -2345,12 +2345,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitOctet(Token node) throws ParseException {
@@ -2359,9 +2359,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterString(Token node) throws ParseException {
@@ -2369,12 +2369,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitString(Token node) throws ParseException {
@@ -2383,9 +2383,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterEnumerated(Token node) throws ParseException {
@@ -2393,12 +2393,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitEnumerated(Token node) throws ParseException {
@@ -2407,9 +2407,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSequence(Token node) throws ParseException {
@@ -2417,12 +2417,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSequence(Token node) throws ParseException {
@@ -2431,9 +2431,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSet(Token node) throws ParseException {
@@ -2441,12 +2441,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSet(Token node) throws ParseException {
@@ -2455,9 +2455,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterOf(Token node) throws ParseException {
@@ -2465,12 +2465,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitOf(Token node) throws ParseException {
@@ -2479,9 +2479,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterChoice(Token node) throws ParseException {
@@ -2489,12 +2489,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitChoice(Token node) throws ParseException {
@@ -2503,9 +2503,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterUniversal(Token node) throws ParseException {
@@ -2513,12 +2513,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitUniversal(Token node) throws ParseException {
@@ -2527,9 +2527,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterApplication(Token node) throws ParseException {
@@ -2537,12 +2537,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitApplication(Token node) throws ParseException {
@@ -2551,9 +2551,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterPrivate(Token node) throws ParseException {
@@ -2561,12 +2561,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitPrivate(Token node) throws ParseException {
@@ -2575,9 +2575,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterAny(Token node) throws ParseException {
@@ -2585,12 +2585,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitAny(Token node) throws ParseException {
@@ -2599,9 +2599,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDefined(Token node) throws ParseException {
@@ -2609,12 +2609,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDefined(Token node) throws ParseException {
@@ -2623,9 +2623,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBy(Token node) throws ParseException {
@@ -2633,12 +2633,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBy(Token node) throws ParseException {
@@ -2647,9 +2647,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterObject(Token node) throws ParseException {
@@ -2657,12 +2657,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitObject(Token node) throws ParseException {
@@ -2671,9 +2671,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterIdentifier(Token node) throws ParseException {
@@ -2681,12 +2681,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitIdentifier(Token node) throws ParseException {
@@ -2695,9 +2695,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterIncludes(Token node) throws ParseException {
@@ -2705,12 +2705,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitIncludes(Token node) throws ParseException {
@@ -2719,9 +2719,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterMin(Token node) throws ParseException {
@@ -2729,12 +2729,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitMin(Token node) throws ParseException {
@@ -2743,9 +2743,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterMax(Token node) throws ParseException {
@@ -2753,12 +2753,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitMax(Token node) throws ParseException {
@@ -2767,9 +2767,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSize(Token node) throws ParseException {
@@ -2777,12 +2777,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSize(Token node) throws ParseException {
@@ -2791,9 +2791,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterWith(Token node) throws ParseException {
@@ -2801,12 +2801,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitWith(Token node) throws ParseException {
@@ -2815,9 +2815,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterComponent(Token node) throws ParseException {
@@ -2825,12 +2825,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitComponent(Token node) throws ParseException {
@@ -2839,9 +2839,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterComponents(Token node) throws ParseException {
@@ -2849,12 +2849,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitComponents(Token node) throws ParseException {
@@ -2863,9 +2863,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterPresent(Token node) throws ParseException {
@@ -2873,12 +2873,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitPresent(Token node) throws ParseException {
@@ -2887,9 +2887,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterAbsent(Token node) throws ParseException {
@@ -2897,12 +2897,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitAbsent(Token node) throws ParseException {
@@ -2911,9 +2911,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterOptional(Token node) throws ParseException {
@@ -2921,12 +2921,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitOptional(Token node) throws ParseException {
@@ -2935,9 +2935,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDefault(Token node) throws ParseException {
@@ -2945,12 +2945,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDefault(Token node) throws ParseException {
@@ -2959,9 +2959,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterTrue(Token node) throws ParseException {
@@ -2969,12 +2969,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitTrue(Token node) throws ParseException {
@@ -2983,9 +2983,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterFalse(Token node) throws ParseException {
@@ -2993,12 +2993,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitFalse(Token node) throws ParseException {
@@ -3007,9 +3007,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterPlusInfinity(Token node) throws ParseException {
@@ -3017,12 +3017,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitPlusInfinity(Token node) throws ParseException {
@@ -3031,9 +3031,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterMinusInfinity(Token node)
@@ -3042,12 +3042,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitMinusInfinity(Token node) throws ParseException {
@@ -3056,9 +3056,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterModuleIdentity(Token node)
@@ -3067,12 +3067,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitModuleIdentity(Token node)
@@ -3083,9 +3083,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterObjectIdentity(Token node)
@@ -3094,12 +3094,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitObjectIdentity(Token node)
@@ -3110,9 +3110,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterObjectType(Token node) throws ParseException {
@@ -3120,12 +3120,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitObjectType(Token node) throws ParseException {
@@ -3134,9 +3134,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNotificationType(Token node)
@@ -3145,12 +3145,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNotificationType(Token node)
@@ -3161,9 +3161,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterTrapType(Token node) throws ParseException {
@@ -3171,12 +3171,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitTrapType(Token node) throws ParseException {
@@ -3185,9 +3185,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterTextualConvention(Token node)
@@ -3196,12 +3196,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitTextualConvention(Token node)
@@ -3212,9 +3212,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterObjectGroup(Token node) throws ParseException {
@@ -3222,12 +3222,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitObjectGroup(Token node) throws ParseException {
@@ -3236,9 +3236,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNotificationGroup(Token node)
@@ -3247,12 +3247,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNotificationGroup(Token node)
@@ -3263,9 +3263,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterModuleCompliance(Token node)
@@ -3274,12 +3274,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitModuleCompliance(Token node)
@@ -3290,9 +3290,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterAgentCapabilities(Token node)
@@ -3301,12 +3301,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitAgentCapabilities(Token node)
@@ -3317,9 +3317,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterLastUpdated(Token node) throws ParseException {
@@ -3327,12 +3327,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitLastUpdated(Token node) throws ParseException {
@@ -3341,9 +3341,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterOrganization(Token node) throws ParseException {
@@ -3351,12 +3351,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitOrganization(Token node) throws ParseException {
@@ -3365,9 +3365,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterContactInfo(Token node) throws ParseException {
@@ -3375,12 +3375,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitContactInfo(Token node) throws ParseException {
@@ -3389,9 +3389,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDescription(Token node) throws ParseException {
@@ -3399,12 +3399,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDescription(Token node) throws ParseException {
@@ -3413,9 +3413,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterRevision(Token node) throws ParseException {
@@ -3423,12 +3423,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitRevision(Token node) throws ParseException {
@@ -3437,9 +3437,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterStatus(Token node) throws ParseException {
@@ -3447,12 +3447,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitStatus(Token node) throws ParseException {
@@ -3461,9 +3461,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterReference(Token node) throws ParseException {
@@ -3471,12 +3471,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitReference(Token node) throws ParseException {
@@ -3485,9 +3485,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSyntax(Token node) throws ParseException {
@@ -3495,12 +3495,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSyntax(Token node) throws ParseException {
@@ -3509,9 +3509,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBits(Token node) throws ParseException {
@@ -3519,12 +3519,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBits(Token node) throws ParseException {
@@ -3533,9 +3533,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterUnits(Token node) throws ParseException {
@@ -3543,12 +3543,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitUnits(Token node) throws ParseException {
@@ -3557,9 +3557,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterAccess(Token node) throws ParseException {
@@ -3567,12 +3567,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitAccess(Token node) throws ParseException {
@@ -3581,9 +3581,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterMaxAccess(Token node) throws ParseException {
@@ -3591,12 +3591,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitMaxAccess(Token node) throws ParseException {
@@ -3605,9 +3605,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterMinAccess(Token node) throws ParseException {
@@ -3615,12 +3615,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitMinAccess(Token node) throws ParseException {
@@ -3629,9 +3629,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterIndex(Token node) throws ParseException {
@@ -3639,12 +3639,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitIndex(Token node) throws ParseException {
@@ -3653,9 +3653,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterAugments(Token node) throws ParseException {
@@ -3663,12 +3663,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitAugments(Token node) throws ParseException {
@@ -3677,9 +3677,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterImplied(Token node) throws ParseException {
@@ -3687,12 +3687,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitImplied(Token node) throws ParseException {
@@ -3701,9 +3701,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDefval(Token node) throws ParseException {
@@ -3711,12 +3711,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDefval(Token node) throws ParseException {
@@ -3725,9 +3725,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterObjects(Token node) throws ParseException {
@@ -3735,12 +3735,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitObjects(Token node) throws ParseException {
@@ -3749,9 +3749,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterEnterprise(Token node) throws ParseException {
@@ -3759,12 +3759,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitEnterprise(Token node) throws ParseException {
@@ -3773,9 +3773,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterVariables(Token node) throws ParseException {
@@ -3783,12 +3783,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitVariables(Token node) throws ParseException {
@@ -3797,9 +3797,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDisplayHint(Token node) throws ParseException {
@@ -3807,12 +3807,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDisplayHint(Token node) throws ParseException {
@@ -3821,9 +3821,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNotifications(Token node)
@@ -3832,12 +3832,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNotifications(Token node) throws ParseException {
@@ -3846,9 +3846,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterModule(Token node) throws ParseException {
@@ -3856,12 +3856,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitModule(Token node) throws ParseException {
@@ -3870,9 +3870,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterMandatoryGroups(Token node)
@@ -3881,12 +3881,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitMandatoryGroups(Token node)
@@ -3897,9 +3897,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterGroup(Token node) throws ParseException {
@@ -3907,12 +3907,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitGroup(Token node) throws ParseException {
@@ -3921,9 +3921,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterWriteSyntax(Token node) throws ParseException {
@@ -3931,12 +3931,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitWriteSyntax(Token node) throws ParseException {
@@ -3945,9 +3945,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterProductRelease(Token node)
@@ -3956,12 +3956,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitProductRelease(Token node)
@@ -3972,9 +3972,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSupports(Token node) throws ParseException {
@@ -3982,12 +3982,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSupports(Token node) throws ParseException {
@@ -3996,9 +3996,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterVariation(Token node) throws ParseException {
@@ -4006,12 +4006,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitVariation(Token node) throws ParseException {
@@ -4020,9 +4020,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterCreationRequires(Token node)
@@ -4031,12 +4031,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitCreationRequires(Token node)
@@ -4047,9 +4047,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBinaryString(Token node) throws ParseException {
@@ -4057,12 +4057,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBinaryString(Token node) throws ParseException {
@@ -4071,9 +4071,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterHexadecimalString(Token node)
@@ -4082,12 +4082,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitHexadecimalString(Token node)
@@ -4098,9 +4098,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterQuotedString(Token node) throws ParseException {
@@ -4108,12 +4108,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitQuotedString(Token node) throws ParseException {
@@ -4122,9 +4122,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterIdentifierString(Token node)
@@ -4133,12 +4133,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitIdentifierString(Token node)
@@ -4149,9 +4149,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNumberString(Token node) throws ParseException {
@@ -4159,12 +4159,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNumberString(Token node) throws ParseException {
@@ -4173,9 +4173,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterStart(Production node) throws ParseException {
@@ -4183,12 +4183,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitStart(Production node) throws ParseException {
@@ -4197,10 +4197,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childStart(Production node, Node child)
@@ -4211,9 +4211,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterModuleDefinition(Production node)
@@ -4222,12 +4222,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitModuleDefinition(Production node)
@@ -4238,10 +4238,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childModuleDefinition(Production node, Node child)
@@ -4252,9 +4252,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterModuleIdentifier(Production node)
@@ -4263,12 +4263,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitModuleIdentifier(Production node)
@@ -4279,10 +4279,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childModuleIdentifier(Production node, Node child)
@@ -4293,9 +4293,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterModuleReference(Production node)
@@ -4304,12 +4304,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitModuleReference(Production node)
@@ -4320,10 +4320,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childModuleReference(Production node, Node child)
@@ -4334,9 +4334,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterTagDefault(Production node)
@@ -4345,12 +4345,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitTagDefault(Production node)
@@ -4361,10 +4361,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childTagDefault(Production node, Node child)
@@ -4375,9 +4375,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterModuleBody(Production node)
@@ -4386,12 +4386,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitModuleBody(Production node)
@@ -4402,10 +4402,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childModuleBody(Production node, Node child)
@@ -4416,9 +4416,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterExportList(Production node)
@@ -4427,12 +4427,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitExportList(Production node)
@@ -4443,10 +4443,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childExportList(Production node, Node child)
@@ -4457,9 +4457,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterImportList(Production node)
@@ -4468,12 +4468,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitImportList(Production node)
@@ -4484,10 +4484,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childImportList(Production node, Node child)
@@ -4498,9 +4498,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSymbolsFromModule(Production node)
@@ -4509,12 +4509,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSymbolsFromModule(Production node)
@@ -4525,10 +4525,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSymbolsFromModule(Production node, Node child)
@@ -4539,9 +4539,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSymbolList(Production node)
@@ -4550,12 +4550,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSymbolList(Production node)
@@ -4566,10 +4566,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSymbolList(Production node, Node child)
@@ -4580,9 +4580,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSymbol(Production node) throws ParseException {
@@ -4590,12 +4590,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSymbol(Production node) throws ParseException {
@@ -4604,10 +4604,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSymbol(Production node, Node child)
@@ -4618,9 +4618,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterAssignmentList(Production node)
@@ -4629,12 +4629,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitAssignmentList(Production node)
@@ -4645,10 +4645,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childAssignmentList(Production node, Node child)
@@ -4659,9 +4659,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterAssignment(Production node)
@@ -4670,12 +4670,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitAssignment(Production node)
@@ -4686,10 +4686,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childAssignment(Production node, Node child)
@@ -4700,9 +4700,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterMacroDefinition(Production node)
@@ -4711,12 +4711,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitMacroDefinition(Production node)
@@ -4727,10 +4727,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childMacroDefinition(Production node, Node child)
@@ -4741,9 +4741,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterMacroReference(Production node)
@@ -4752,12 +4752,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitMacroReference(Production node)
@@ -4768,10 +4768,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childMacroReference(Production node, Node child)
@@ -4782,9 +4782,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterMacroBody(Production node)
@@ -4793,12 +4793,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitMacroBody(Production node)
@@ -4809,10 +4809,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childMacroBody(Production node, Node child)
@@ -4823,9 +4823,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterMacroBodyElement(Production node)
@@ -4834,12 +4834,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitMacroBodyElement(Production node)
@@ -4850,10 +4850,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childMacroBodyElement(Production node, Node child)
@@ -4864,9 +4864,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterTypeAssignment(Production node)
@@ -4875,12 +4875,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitTypeAssignment(Production node)
@@ -4891,10 +4891,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childTypeAssignment(Production node, Node child)
@@ -4905,9 +4905,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterType(Production node) throws ParseException {
@@ -4915,12 +4915,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitType(Production node) throws ParseException {
@@ -4929,10 +4929,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childType(Production node, Node child)
@@ -4943,9 +4943,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDefinedType(Production node)
@@ -4954,12 +4954,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDefinedType(Production node)
@@ -4970,10 +4970,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childDefinedType(Production node, Node child)
@@ -4984,9 +4984,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBuiltinType(Production node)
@@ -4995,12 +4995,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBuiltinType(Production node)
@@ -5011,10 +5011,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childBuiltinType(Production node, Node child)
@@ -5025,9 +5025,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNullType(Production node)
@@ -5036,12 +5036,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNullType(Production node) throws ParseException {
@@ -5050,10 +5050,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childNullType(Production node, Node child)
@@ -5064,9 +5064,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBooleanType(Production node)
@@ -5075,12 +5075,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBooleanType(Production node)
@@ -5091,10 +5091,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childBooleanType(Production node, Node child)
@@ -5105,9 +5105,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterRealType(Production node)
@@ -5116,12 +5116,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitRealType(Production node) throws ParseException {
@@ -5130,10 +5130,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childRealType(Production node, Node child)
@@ -5144,9 +5144,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterIntegerType(Production node)
@@ -5155,12 +5155,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitIntegerType(Production node)
@@ -5171,10 +5171,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childIntegerType(Production node, Node child)
@@ -5185,9 +5185,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterObjectIdentifierType(Production node)
@@ -5196,12 +5196,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitObjectIdentifierType(Production node)
@@ -5212,10 +5212,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childObjectIdentifierType(Production node, Node child)
@@ -5226,9 +5226,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterStringType(Production node)
@@ -5237,12 +5237,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitStringType(Production node)
@@ -5253,10 +5253,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childStringType(Production node, Node child)
@@ -5267,9 +5267,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBitStringType(Production node)
@@ -5278,12 +5278,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBitStringType(Production node)
@@ -5294,10 +5294,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childBitStringType(Production node, Node child)
@@ -5308,9 +5308,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBitsType(Production node)
@@ -5319,12 +5319,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBitsType(Production node) throws ParseException {
@@ -5333,10 +5333,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childBitsType(Production node, Node child)
@@ -5347,9 +5347,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSequenceType(Production node)
@@ -5358,12 +5358,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSequenceType(Production node)
@@ -5374,10 +5374,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSequenceType(Production node, Node child)
@@ -5388,9 +5388,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSequenceOfType(Production node)
@@ -5399,12 +5399,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSequenceOfType(Production node)
@@ -5415,10 +5415,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSequenceOfType(Production node, Node child)
@@ -5429,9 +5429,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSetType(Production node) throws ParseException {
@@ -5439,12 +5439,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSetType(Production node) throws ParseException {
@@ -5453,10 +5453,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSetType(Production node, Node child)
@@ -5467,9 +5467,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSetOfType(Production node)
@@ -5478,12 +5478,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSetOfType(Production node)
@@ -5494,10 +5494,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSetOfType(Production node, Node child)
@@ -5508,9 +5508,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterChoiceType(Production node)
@@ -5519,12 +5519,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitChoiceType(Production node)
@@ -5535,10 +5535,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childChoiceType(Production node, Node child)
@@ -5549,9 +5549,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterEnumeratedType(Production node)
@@ -5560,12 +5560,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitEnumeratedType(Production node)
@@ -5576,10 +5576,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childEnumeratedType(Production node, Node child)
@@ -5590,9 +5590,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSelectionType(Production node)
@@ -5601,12 +5601,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSelectionType(Production node)
@@ -5617,10 +5617,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSelectionType(Production node, Node child)
@@ -5631,9 +5631,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterTaggedType(Production node)
@@ -5642,12 +5642,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitTaggedType(Production node)
@@ -5658,10 +5658,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childTaggedType(Production node, Node child)
@@ -5672,9 +5672,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterTag(Production node) throws ParseException {
@@ -5682,12 +5682,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitTag(Production node) throws ParseException {
@@ -5696,10 +5696,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childTag(Production node, Node child)
@@ -5710,9 +5710,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterClass(Production node) throws ParseException {
@@ -5720,12 +5720,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitClass(Production node) throws ParseException {
@@ -5734,10 +5734,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childClass(Production node, Node child)
@@ -5748,9 +5748,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterExplicitOrImplicitTag(Production node)
@@ -5759,12 +5759,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitExplicitOrImplicitTag(Production node)
@@ -5775,10 +5775,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childExplicitOrImplicitTag(Production node, Node child)
@@ -5789,9 +5789,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterAnyType(Production node) throws ParseException {
@@ -5799,12 +5799,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitAnyType(Production node) throws ParseException {
@@ -5813,10 +5813,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childAnyType(Production node, Node child)
@@ -5827,9 +5827,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterElementTypeList(Production node)
@@ -5838,12 +5838,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitElementTypeList(Production node)
@@ -5854,10 +5854,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childElementTypeList(Production node, Node child)
@@ -5868,9 +5868,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterElementType(Production node)
@@ -5879,12 +5879,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitElementType(Production node)
@@ -5895,10 +5895,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childElementType(Production node, Node child)
@@ -5909,9 +5909,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterOptionalOrDefaultElement(Production node)
@@ -5920,12 +5920,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitOptionalOrDefaultElement(Production node)
@@ -5936,10 +5936,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childOptionalOrDefaultElement(Production node, Node child)
@@ -5950,9 +5950,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterValueOrConstraintList(Production node)
@@ -5961,12 +5961,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitValueOrConstraintList(Production node)
@@ -5977,10 +5977,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childValueOrConstraintList(Production node, Node child)
@@ -5991,9 +5991,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNamedNumberList(Production node)
@@ -6002,12 +6002,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNamedNumberList(Production node)
@@ -6018,10 +6018,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childNamedNumberList(Production node, Node child)
@@ -6032,9 +6032,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNamedNumber(Production node)
@@ -6043,12 +6043,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNamedNumber(Production node)
@@ -6059,10 +6059,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childNamedNumber(Production node, Node child)
@@ -6073,9 +6073,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNumber(Production node) throws ParseException {
@@ -6083,12 +6083,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNumber(Production node) throws ParseException {
@@ -6097,10 +6097,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childNumber(Production node, Node child)
@@ -6111,9 +6111,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterConstraintList(Production node)
@@ -6122,12 +6122,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitConstraintList(Production node)
@@ -6138,10 +6138,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childConstraintList(Production node, Node child)
@@ -6152,9 +6152,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterConstraint(Production node)
@@ -6163,12 +6163,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitConstraint(Production node)
@@ -6179,10 +6179,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childConstraint(Production node, Node child)
@@ -6193,9 +6193,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterValueConstraintList(Production node)
@@ -6204,12 +6204,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitValueConstraintList(Production node)
@@ -6220,10 +6220,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childValueConstraintList(Production node, Node child)
@@ -6234,9 +6234,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterValueConstraint(Production node)
@@ -6245,12 +6245,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitValueConstraint(Production node)
@@ -6261,10 +6261,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childValueConstraint(Production node, Node child)
@@ -6275,9 +6275,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterValueRange(Production node)
@@ -6286,12 +6286,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitValueRange(Production node)
@@ -6302,10 +6302,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childValueRange(Production node, Node child)
@@ -6316,9 +6316,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterLowerEndPoint(Production node)
@@ -6327,12 +6327,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitLowerEndPoint(Production node)
@@ -6343,10 +6343,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childLowerEndPoint(Production node, Node child)
@@ -6357,9 +6357,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterUpperEndPoint(Production node)
@@ -6368,12 +6368,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitUpperEndPoint(Production node)
@@ -6384,10 +6384,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childUpperEndPoint(Production node, Node child)
@@ -6398,9 +6398,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSizeConstraint(Production node)
@@ -6409,12 +6409,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSizeConstraint(Production node)
@@ -6425,10 +6425,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSizeConstraint(Production node, Node child)
@@ -6439,9 +6439,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterAlphabetConstraint(Production node)
@@ -6450,12 +6450,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitAlphabetConstraint(Production node)
@@ -6466,10 +6466,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childAlphabetConstraint(Production node, Node child)
@@ -6480,9 +6480,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterContainedTypeConstraint(Production node)
@@ -6491,12 +6491,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitContainedTypeConstraint(Production node)
@@ -6507,10 +6507,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childContainedTypeConstraint(Production node, Node child)
@@ -6521,9 +6521,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterInnerTypeConstraint(Production node)
@@ -6532,12 +6532,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitInnerTypeConstraint(Production node)
@@ -6548,10 +6548,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childInnerTypeConstraint(Production node, Node child)
@@ -6562,9 +6562,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterComponentsList(Production node)
@@ -6573,12 +6573,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitComponentsList(Production node)
@@ -6589,10 +6589,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childComponentsList(Production node, Node child)
@@ -6603,9 +6603,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterComponentsListTail(Production node)
@@ -6614,12 +6614,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitComponentsListTail(Production node)
@@ -6630,10 +6630,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childComponentsListTail(Production node, Node child)
@@ -6644,9 +6644,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterComponentConstraint(Production node)
@@ -6655,12 +6655,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitComponentConstraint(Production node)
@@ -6671,10 +6671,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childComponentConstraint(Production node, Node child)
@@ -6685,9 +6685,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterComponentValuePresence(Production node)
@@ -6696,12 +6696,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitComponentValuePresence(Production node)
@@ -6712,10 +6712,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childComponentValuePresence(Production node, Node child)
@@ -6726,9 +6726,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterComponentPresence(Production node)
@@ -6737,12 +6737,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitComponentPresence(Production node)
@@ -6753,10 +6753,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childComponentPresence(Production node, Node child)
@@ -6767,9 +6767,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterValueAssignment(Production node)
@@ -6778,12 +6778,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitValueAssignment(Production node)
@@ -6794,10 +6794,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childValueAssignment(Production node, Node child)
@@ -6808,9 +6808,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterValue(Production node) throws ParseException {
@@ -6818,12 +6818,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitValue(Production node) throws ParseException {
@@ -6832,10 +6832,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childValue(Production node, Node child)
@@ -6846,9 +6846,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDefinedValue(Production node)
@@ -6857,12 +6857,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDefinedValue(Production node)
@@ -6873,10 +6873,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childDefinedValue(Production node, Node child)
@@ -6887,9 +6887,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBuiltinValue(Production node)
@@ -6898,12 +6898,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBuiltinValue(Production node)
@@ -6914,10 +6914,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childBuiltinValue(Production node, Node child)
@@ -6928,9 +6928,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNullValue(Production node)
@@ -6939,12 +6939,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNullValue(Production node)
@@ -6955,10 +6955,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childNullValue(Production node, Node child)
@@ -6969,9 +6969,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBooleanValue(Production node)
@@ -6980,12 +6980,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBooleanValue(Production node)
@@ -6996,10 +6996,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childBooleanValue(Production node, Node child)
@@ -7010,9 +7010,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSpecialRealValue(Production node)
@@ -7021,12 +7021,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSpecialRealValue(Production node)
@@ -7037,10 +7037,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSpecialRealValue(Production node, Node child)
@@ -7051,9 +7051,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNumberValue(Production node)
@@ -7062,12 +7062,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNumberValue(Production node)
@@ -7078,10 +7078,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childNumberValue(Production node, Node child)
@@ -7092,9 +7092,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBinaryValue(Production node)
@@ -7103,12 +7103,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBinaryValue(Production node)
@@ -7119,10 +7119,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childBinaryValue(Production node, Node child)
@@ -7133,9 +7133,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterHexadecimalValue(Production node)
@@ -7144,12 +7144,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitHexadecimalValue(Production node)
@@ -7160,10 +7160,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childHexadecimalValue(Production node, Node child)
@@ -7174,9 +7174,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterStringValue(Production node)
@@ -7185,12 +7185,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitStringValue(Production node)
@@ -7201,10 +7201,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childStringValue(Production node, Node child)
@@ -7215,9 +7215,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBitOrObjectIdentifierValue(Production node)
@@ -7226,12 +7226,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBitOrObjectIdentifierValue(Production node)
@@ -7242,10 +7242,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childBitOrObjectIdentifierValue(Production node, Node child)
@@ -7256,9 +7256,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterBitValue(Production node)
@@ -7267,12 +7267,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitBitValue(Production node) throws ParseException {
@@ -7281,10 +7281,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childBitValue(Production node, Node child)
@@ -7295,9 +7295,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterObjectIdentifierValue(Production node)
@@ -7306,12 +7306,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitObjectIdentifierValue(Production node)
@@ -7322,10 +7322,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childObjectIdentifierValue(Production node, Node child)
@@ -7336,9 +7336,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNameValueList(Production node)
@@ -7347,12 +7347,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNameValueList(Production node)
@@ -7363,10 +7363,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childNameValueList(Production node, Node child)
@@ -7377,9 +7377,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNameValueComponent(Production node)
@@ -7388,12 +7388,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNameValueComponent(Production node)
@@ -7404,10 +7404,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childNameValueComponent(Production node, Node child)
@@ -7418,9 +7418,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNameOrNumber(Production node)
@@ -7429,12 +7429,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNameOrNumber(Production node)
@@ -7445,10 +7445,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childNameOrNumber(Production node, Node child)
@@ -7459,9 +7459,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterNameAndNumber(Production node)
@@ -7470,12 +7470,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitNameAndNumber(Production node)
@@ -7486,10 +7486,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childNameAndNumber(Production node, Node child)
@@ -7500,9 +7500,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDefinedMacroType(Production node)
@@ -7511,12 +7511,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDefinedMacroType(Production node)
@@ -7527,10 +7527,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childDefinedMacroType(Production node, Node child)
@@ -7541,9 +7541,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterDefinedMacroName(Production node)
@@ -7552,12 +7552,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitDefinedMacroName(Production node)
@@ -7568,10 +7568,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childDefinedMacroName(Production node, Node child)
@@ -7582,9 +7582,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpModuleIdentityMacroType(Production node)
@@ -7593,12 +7593,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpModuleIdentityMacroType(Production node)
@@ -7609,10 +7609,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpModuleIdentityMacroType(Production node, Node child)
@@ -7623,9 +7623,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpObjectIdentityMacroType(Production node)
@@ -7634,12 +7634,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpObjectIdentityMacroType(Production node)
@@ -7650,10 +7650,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpObjectIdentityMacroType(Production node, Node child)
@@ -7664,9 +7664,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpObjectTypeMacroType(Production node)
@@ -7675,12 +7675,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpObjectTypeMacroType(Production node)
@@ -7691,10 +7691,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpObjectTypeMacroType(Production node, Node child)
@@ -7705,9 +7705,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpNotificationTypeMacroType(Production node)
@@ -7716,12 +7716,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpNotificationTypeMacroType(Production node)
@@ -7732,10 +7732,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpNotificationTypeMacroType(Production node, Node child)
@@ -7746,9 +7746,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpTrapTypeMacroType(Production node)
@@ -7757,12 +7757,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpTrapTypeMacroType(Production node)
@@ -7773,10 +7773,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpTrapTypeMacroType(Production node, Node child)
@@ -7787,9 +7787,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpTextualConventionMacroType(Production node)
@@ -7798,12 +7798,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpTextualConventionMacroType(Production node)
@@ -7814,10 +7814,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpTextualConventionMacroType(Production node, Node child)
@@ -7828,9 +7828,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpObjectGroupMacroType(Production node)
@@ -7839,12 +7839,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpObjectGroupMacroType(Production node)
@@ -7855,10 +7855,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpObjectGroupMacroType(Production node, Node child)
@@ -7869,9 +7869,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpNotificationGroupMacroType(Production node)
@@ -7880,12 +7880,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpNotificationGroupMacroType(Production node)
@@ -7896,10 +7896,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpNotificationGroupMacroType(Production node, Node child)
@@ -7910,9 +7910,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpModuleComplianceMacroType(Production node)
@@ -7921,12 +7921,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpModuleComplianceMacroType(Production node)
@@ -7937,10 +7937,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpModuleComplianceMacroType(Production node, Node child)
@@ -7951,9 +7951,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpAgentCapabilitiesMacroType(Production node)
@@ -7962,12 +7962,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpAgentCapabilitiesMacroType(Production node)
@@ -7978,10 +7978,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpAgentCapabilitiesMacroType(Production node, Node child)
@@ -7992,9 +7992,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpUpdatePart(Production node)
@@ -8003,12 +8003,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpUpdatePart(Production node)
@@ -8019,10 +8019,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpUpdatePart(Production node, Node child)
@@ -8033,9 +8033,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpOrganizationPart(Production node)
@@ -8044,12 +8044,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpOrganizationPart(Production node)
@@ -8060,10 +8060,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpOrganizationPart(Production node, Node child)
@@ -8074,9 +8074,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpContactPart(Production node)
@@ -8085,12 +8085,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpContactPart(Production node)
@@ -8101,10 +8101,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpContactPart(Production node, Node child)
@@ -8115,9 +8115,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpDescrPart(Production node)
@@ -8126,12 +8126,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpDescrPart(Production node)
@@ -8142,10 +8142,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpDescrPart(Production node, Node child)
@@ -8156,9 +8156,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpRevisionPart(Production node)
@@ -8167,12 +8167,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpRevisionPart(Production node)
@@ -8183,10 +8183,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpRevisionPart(Production node, Node child)
@@ -8197,9 +8197,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpStatusPart(Production node)
@@ -8208,12 +8208,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpStatusPart(Production node)
@@ -8224,10 +8224,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpStatusPart(Production node, Node child)
@@ -8238,9 +8238,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpReferPart(Production node)
@@ -8249,12 +8249,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpReferPart(Production node)
@@ -8265,10 +8265,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpReferPart(Production node, Node child)
@@ -8279,9 +8279,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpSyntaxPart(Production node)
@@ -8290,12 +8290,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpSyntaxPart(Production node)
@@ -8306,10 +8306,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpSyntaxPart(Production node, Node child)
@@ -8320,9 +8320,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpUnitsPart(Production node)
@@ -8331,12 +8331,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpUnitsPart(Production node)
@@ -8347,10 +8347,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpUnitsPart(Production node, Node child)
@@ -8361,9 +8361,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpAccessPart(Production node)
@@ -8372,12 +8372,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpAccessPart(Production node)
@@ -8388,10 +8388,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpAccessPart(Production node, Node child)
@@ -8402,9 +8402,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpIndexPart(Production node)
@@ -8413,12 +8413,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpIndexPart(Production node)
@@ -8429,10 +8429,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpIndexPart(Production node, Node child)
@@ -8443,9 +8443,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterIndexValueList(Production node)
@@ -8454,12 +8454,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitIndexValueList(Production node)
@@ -8470,10 +8470,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childIndexValueList(Production node, Node child)
@@ -8484,9 +8484,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterIndexValue(Production node)
@@ -8495,12 +8495,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitIndexValue(Production node)
@@ -8511,10 +8511,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childIndexValue(Production node, Node child)
@@ -8525,9 +8525,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterIndexType(Production node)
@@ -8536,12 +8536,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitIndexType(Production node)
@@ -8552,10 +8552,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childIndexType(Production node, Node child)
@@ -8566,9 +8566,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpDefValPart(Production node)
@@ -8577,12 +8577,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpDefValPart(Production node)
@@ -8593,10 +8593,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpDefValPart(Production node, Node child)
@@ -8607,9 +8607,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpObjectsPart(Production node)
@@ -8618,12 +8618,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpObjectsPart(Production node)
@@ -8634,10 +8634,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpObjectsPart(Production node, Node child)
@@ -8648,9 +8648,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterValueList(Production node)
@@ -8659,12 +8659,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitValueList(Production node)
@@ -8675,10 +8675,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childValueList(Production node, Node child)
@@ -8689,9 +8689,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpEnterprisePart(Production node)
@@ -8700,12 +8700,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpEnterprisePart(Production node)
@@ -8716,10 +8716,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpEnterprisePart(Production node, Node child)
@@ -8730,9 +8730,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpVarPart(Production node)
@@ -8741,12 +8741,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpVarPart(Production node)
@@ -8757,10 +8757,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpVarPart(Production node, Node child)
@@ -8771,9 +8771,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpDisplayPart(Production node)
@@ -8782,12 +8782,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpDisplayPart(Production node)
@@ -8798,10 +8798,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpDisplayPart(Production node, Node child)
@@ -8812,9 +8812,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpNotificationsPart(Production node)
@@ -8823,12 +8823,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpNotificationsPart(Production node)
@@ -8839,10 +8839,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpNotificationsPart(Production node, Node child)
@@ -8853,9 +8853,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpModulePart(Production node)
@@ -8864,12 +8864,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpModulePart(Production node)
@@ -8880,10 +8880,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpModulePart(Production node, Node child)
@@ -8894,9 +8894,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpModuleImport(Production node)
@@ -8905,12 +8905,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpModuleImport(Production node)
@@ -8921,10 +8921,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpModuleImport(Production node, Node child)
@@ -8935,9 +8935,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpMandatoryPart(Production node)
@@ -8946,12 +8946,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpMandatoryPart(Production node)
@@ -8962,10 +8962,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpMandatoryPart(Production node, Node child)
@@ -8976,9 +8976,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpCompliancePart(Production node)
@@ -8987,12 +8987,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpCompliancePart(Production node)
@@ -9003,10 +9003,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpCompliancePart(Production node, Node child)
@@ -9017,9 +9017,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterComplianceGroup(Production node)
@@ -9028,12 +9028,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitComplianceGroup(Production node)
@@ -9044,10 +9044,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childComplianceGroup(Production node, Node child)
@@ -9058,9 +9058,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterComplianceObject(Production node)
@@ -9069,12 +9069,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitComplianceObject(Production node)
@@ -9085,10 +9085,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childComplianceObject(Production node, Node child)
@@ -9099,9 +9099,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpWriteSyntaxPart(Production node)
@@ -9110,12 +9110,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpWriteSyntaxPart(Production node)
@@ -9126,10 +9126,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpWriteSyntaxPart(Production node, Node child)
@@ -9140,9 +9140,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpProductReleasePart(Production node)
@@ -9151,12 +9151,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpProductReleasePart(Production node)
@@ -9167,10 +9167,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpProductReleasePart(Production node, Node child)
@@ -9181,9 +9181,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpModuleSupportPart(Production node)
@@ -9192,12 +9192,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpModuleSupportPart(Production node)
@@ -9208,10 +9208,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpModuleSupportPart(Production node, Node child)
@@ -9222,9 +9222,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpVariationPart(Production node)
@@ -9233,12 +9233,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpVariationPart(Production node)
@@ -9249,10 +9249,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpVariationPart(Production node, Node child)
@@ -9263,9 +9263,9 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when entering a parse tree node.
-     * 
+     *
      * @param node           the node being entered
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void enterSnmpCreationPart(Production node)
@@ -9274,12 +9274,12 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when exiting a parse tree node.
-     * 
+     *
      * @param node           the node being exited
-     * 
+     *
      * @return the node to add to the parse tree, or
      *         null if no parse tree should be created
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected Node exitSnmpCreationPart(Production node)
@@ -9290,10 +9290,10 @@ public abstract class Asn1Analyzer extends Analyzer {
 
     /**
      * Called when adding a child to a parse tree node.
-     * 
+     *
      * @param node           the parent node
      * @param child          the child node, or null
-     * 
+     *
      * @throws ParseException if the node analysis discovered errors
      */
     protected void childSnmpCreationPart(Production node, Node child)
