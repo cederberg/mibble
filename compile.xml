@@ -17,10 +17,10 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
   USA
 
-  Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+  Copyright (c) 2004-2009 Per Cederberg. All rights reserved.
 -->
 
-<project name="mibble" default="all" basedir=".">
+<project name="mibble" default="all">
 
 <!-- 
 
@@ -53,37 +53,34 @@
 
 
 <!-- INITIALIZATION -->
+  <property name="build.name" value="${ant.project.name}" />
+  <property name="build.title" value="Mibble" />
+  <property name="build.java.package" value="net.percederberg.mibble" />
+  <tstamp>
+    <format property="build.printdate" pattern="yyyy-MM-dd" />
+  </tstamp>
+  <property name="build.version" value="${DSTAMP}" />
+  <property name="build.date" value="${DSTAMP}" />
   <path id="project.class.path">
-    <fileset dir="lib"
-             includes="*.jar" />
+    <fileset dir="lib" includes="*.jar" />
   </path>
-
-  <target name="init">
-    <tstamp>
-      <format property="build.printdate"
-              pattern="yyyy-MM-dd" />
-    </tstamp>
-    <property name="build.date" value="${DSTAMP}" />
-    <property name="build.name" value="mibble" />
-    <property name="build.version" value="${DSTAMP}" />
-  </target>
 
 
 <!-- TOP-LEVEL TARGETS -->
-  <target name="all"
+  <target name="all" description="Performs a full rebuild, including tests"
           depends="compile,test,doc" />
 
-  <target name="minimal"
+  <target name="minimal" description="Performs a minimal rebuild, excluding tests"
           depends="compile,doc" />
 
-  <target name="compile"
-          depends="init,compile-clean,compile-java,compile-scripts" />
+  <target name="compile" description="Compiles the source code"
+          depends="compile-clean,compile-codegen,compile-java,compile-scripts" />
 
-  <target name="test"
+  <target name="test" description="Runs the validation tests"
           depends="compile,test-validator" />
 
-  <target name="doc"
-          depends="init,doc-clean,doc-text,doc-html,doc-java" />
+  <target name="doc" description="Generates the documentation"
+          depends="doc-clean,doc-text,doc-html,doc-java" />
 
 
 <!-- COMPILATION TARGETS -->
@@ -91,8 +88,7 @@
     <delete quiet="true">
       <fileset dir="bin" />
       <fileset dir="classes" />
-      <fileset dir="lib"
-               includes="mibble*.jar" />
+      <fileset dir="lib" includes="${build.name}*.jar" />
     </delete>
     <mkdir dir="bin" />
     <mkdir dir="classes" />
@@ -100,28 +96,32 @@
   </target>
 
   <target name="compile-codegen">
-    <taskdef name="grammatica"
-             classname="net.percederberg.grammatica.ant.GrammaticaTask"
-             classpathref="project.class.path" />
+    <taskdef resource="ant-grammatica.properties" classpathref="project.class.path" />
     <grammatica grammar="src/grammar/asn1.grammar">
       <java dir="src/java"
-            package="net.percederberg.mibble.asn1"
+            package="${build.java.package}.asn1"
             public="true" />
     </grammatica>
   </target>
 
   <target name="compile-java" 
           depends="compile-java-optimized,compile-java-debug">
+    <unjar src="lib/grammatica-1.5.jar" dest="classes">
+      <patternset>
+        <include name="net/percederberg/grammatica/parser/**/*.class" />
+      </patternset>
+    </unjar>
     <jar jarfile="lib/${build.name}-parser-${build.version}.jar">
-      <fileset dir="."
-               includes="README.txt" />
-      <fileset dir="."
-               includes="LICENSE.txt" />
+      <manifest>
+        <attribute name="Main-Class" value="${build.java.package}.MibbleBrowser" />
+      	<attribute name="Class-Path" value="${build.name}-mibs-${build.version}.jar" />
+      </manifest>
+      <fileset dir="." includes="README.txt" />
+      <fileset dir="." includes="LICENSE.txt" />
       <fileset dir="classes" />
     </jar>
     <jar jarfile="lib/${build.name}-mibs-${build.version}.jar">
-      <zipfileset dir="src/mibs"
-                  prefix="mibs" />
+      <zipfileset dir="src/mibs" prefix="mibs" />
     </jar>
   </target>
 
@@ -129,8 +129,8 @@
     <javac srcdir="src/java"
            destdir="classes"
            classpathref="project.class.path"
-           source="1.2"
-           target="1.2"
+           source="1.4"
+           target="1.4"
            debug="off"
            optimize="on"
            deprecation="on" />
@@ -140,8 +140,8 @@
     <javac srcdir="src/java"
            destdir="classes"
            classpathref="project.class.path"
-           source="1.2"
-           target="1.2"
+           source="1.4"
+           target="1.4"
            debug="on"
            deprecation="on" />
   </target>
@@ -160,15 +160,11 @@
 
 <!-- TEST TARGETS -->
   <target name="test-validator">
-    <apply executable="java"
-           relative="true"
-           parallel="true"
-           failonerror="true">
-      <arg line="-cp lib/${build.name}-parser-${build.version}.jar:lib/${build.name}-mibs-${build.version}.jar:lib/grammatica-bin-1.4.jar" />
-      <arg value="net.percederberg.mibble.MibbleValidator" />
-      <fileset dir="."
-               includes="src/mibs/**" />
-    </apply>
+    <java classname="${build.java.package}.MibbleValidator"
+    	  classpath="lib/${build.name}-parser-${build.version}.jar"
+          failonerror="true">
+      <arg value="src/mibs" />
+    </java>
   </target>
 
 
@@ -207,8 +203,8 @@
   </target>
 
   <target name="doc-java">
-    <javadoc packagenames="net.percederberg.mibble.*"
-             excludepackagenames="net.percederberg.mibble.asn1.*,net.percederberg.mibble.browser.*"
+    <javadoc packagenames="${build.java.package}.*"
+             excludepackagenames="${build.java.package}.asn1.*,${build.java.package}.browser.*"
              sourcepath="src/java"
              destdir="doc/api"
              classpath="classes"
@@ -216,7 +212,7 @@
              version="false"
              use="true"
              author="false"
-             windowtitle="Mibble ${build.version} Documentation"
+             windowtitle="${build.title} ${build.version} Documentation"
              failonerror="true" />
   </target>
 
