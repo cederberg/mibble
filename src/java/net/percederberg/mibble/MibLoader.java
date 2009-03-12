@@ -736,7 +736,12 @@ public class MibLoader {
      * A MIB input source. This class encapsulates the two different
      * ways of loacating a MIB file, either through a file or a URL.
      */
-    private class MibSource {
+    private static class MibSource {
+
+        /**
+         * The singleton ASN.1 parser used by all MIB sources.
+         */
+        private static Asn1Parser parser = null;
 
         /**
          * The MIB file. This variable is only set if the MIB is read
@@ -872,7 +877,6 @@ public class MibLoader {
         public ArrayList parseMib(MibLoader loader, MibLoaderLog log)
             throws IOException, MibLoaderException {
 
-            Asn1Parser   parser;
             MibAnalyzer  analyzer;
             String       msg;
 
@@ -888,8 +892,12 @@ public class MibLoader {
             // Parse input stream
             try {
                 analyzer = new MibAnalyzer(file, loader, log);
-                parser = new Asn1Parser(input, analyzer);
-                parser.getTokenizer().setUseTokenList(true);
+                if (parser == null) {
+                    parser = new Asn1Parser(input, analyzer);
+                    parser.getTokenizer().setUseTokenList(true);
+                } else {
+                    parser.reset(input, analyzer);
+                }
                 parser.parse();
                 return analyzer.getMibs();
             } catch (ParserCreationException e) {
@@ -911,7 +919,7 @@ public class MibLoader {
      * extension on the file will be disregarded, but the name
      * comparison is made in a case-sensitive way.
      */
-    private class MibFileFilter implements FilenameFilter {
+    private static class MibFileFilter implements FilenameFilter {
 
         /**
          * The base MIB name.
