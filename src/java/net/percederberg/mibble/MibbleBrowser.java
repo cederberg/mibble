@@ -24,6 +24,7 @@ package net.percederberg.mibble;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.prefs.Preferences;
 
 import javax.swing.UIManager;
 
@@ -58,11 +59,14 @@ public class MibbleBrowser {
         "    well as the text below:\n";
 
     /**
-     * The list of loaded MIB names.
+     * The preferences for this application.
      */
-    // TODO: ultimately remove this list of MIB names, use a
-    //       MibLoader instead
-    private ArrayList loadedMibs;
+    private Preferences prefs;
+
+    /**
+     * The MIB loader to use.
+     */
+    private MibLoader loader = new MibLoader();
 
     /**
      * The application main entry point.
@@ -70,9 +74,25 @@ public class MibbleBrowser {
      * @param args           the command-line parameters
      */
     public static void main(String args[]) {
-        MibbleBrowser  browser = new MibbleBrowser();
-        BrowserFrame   frame;
-        String         str;
+        new MibbleBrowser().start(args);
+    }
+
+    /**
+     * Creates a new browser application.
+     */
+    public MibbleBrowser() {
+        prefs = Preferences.userNodeForPackage(getClass());
+    }
+
+    /**
+     * Starts this application.
+     *
+     * @param args           the command-line arguments
+     */
+    public void start(String[] args) {
+        BrowserFrame  frame;
+        ArrayList     list;
+        String        str;
 
         // Check command-line arguments
         for (int i = 0; i < args.length; i++) {
@@ -89,18 +109,22 @@ public class MibbleBrowser {
         } catch (Exception e) {
             printInternalError(e);
         }
-        frame = new BrowserFrame(browser);
+        frame = new BrowserFrame(this);
         frame.setVisible(true);
 
-        // Load default MIBs
+        // Load command-line & preference MIBs
+        frame.setBlocked(true);
+        list = getFilePrefs();
+        for (int i = 0; i < list.size(); i++) {
+            frame.loadMib(list.get(i).toString());
+        }
         if (args.length > 0) {
-            frame.setBlocked(true);
             for (int i = 0; i < args.length; i++) {
                 frame.loadMib(args[i]);
             }
-            frame.refreshTree();
-            frame.setBlocked(false);
         }
+        frame.refreshTree();
+        frame.setBlocked(false);
     }
 
     /**
@@ -108,7 +132,7 @@ public class MibbleBrowser {
      *
      * @param error          an optional error message, or null
      */
-    private static void printHelp(String error) {
+    private void printHelp(String error) {
         System.err.println(COMMAND_HELP);
         System.err.println();
         if (error != null) {
@@ -124,7 +148,7 @@ public class MibbleBrowser {
      *
      * @param e              the exception to be reported
      */
-    private static void printInternalError(Exception e) {
+    private void printInternalError(Exception e) {
         System.err.println(INTERNAL_ERROR);
         e.printStackTrace();
     }
@@ -134,16 +158,9 @@ public class MibbleBrowser {
      *
      * @param message        the error message
      */
-    private static void printError(String message) {
+    private void printError(String message) {
         System.err.print("Error: ");
         System.err.println(message);
-    }
-
-    /**
-     * Creates a new browser application.
-     */
-    public MibbleBrowser() {
-        loadedMibs = new ArrayList();
     }
 
     /**
@@ -160,23 +177,26 @@ public class MibbleBrowser {
         throws IOException, MibLoaderException {
 
         MibTreeBuilder  mb = MibTreeBuilder.getInstance();
+        File            file = new File(src);
         Mib             mib = null;
 
         // TODO: handle URLs
 
-        // Loading the specified file
-        mib = mb.loadMib(new File(src));
-
-        // Check for already loaded MIB
-        for (int i = 0; i < loadedMibs.size(); i++) {
-            if (mib.getName().equals(loadedMibs.get(i))) {
-                return;
-            }
+        // Check for previously loaded file
+        if (loader.getMib(file) != null) {
+            return;
         }
 
-        // Add MIB to tree model
+        // Loading the specified file
+        if (!loader.hasDir(file.getParentFile())) {
+            loader.removeAllDirs();
+            loader.addDir(file.getParentFile());
+        }
+        mib = loader.load(file);
+
+        // Add MIB to tree & preference store
         mb.addMib(mib);
-        loadedMibs.add(mib.getName());
+        addFilePref(file);
     }
 
     /**
@@ -185,13 +205,16 @@ public class MibbleBrowser {
      * @param name           the MIB name
      */
     public void unloadMib(String name) {
-        for (int i = 0; i < loadedMibs.size(); i++) {
-            if (name.equals(loadedMibs.get(i))) {
-                if (MibTreeBuilder.getInstance().unloadMib(name)) {
-                    loadedMibs.remove(i);
-                }
-                return;
+        Mib  mib = loader.getMib(name);
+
+        if (mib != null) {
+            removeFilePref(mib.getFile());
+            try {
+                loader.unload(name);
+            } catch (MibLoaderException ignore) {
+                // MIB loader unloading is best-attempt only
             }
+            MibTreeBuilder.getInstance().unloadMib(name);
         }
     }
 
@@ -201,7 +224,62 @@ public class MibbleBrowser {
      * @since 2.9
      */
     public void unloadAllMibs() {
-        loadedMibs.clear();
+        removeFilePrefs();
+        loader.unloadAll();
         MibTreeBuilder.getInstance().unloadAllMibs();
+    }
+
+    /**
+     * Adds a specified MIB file preference.
+     *
+     * @param file           the MIB file to add
+     */
+    private void addFilePref(File file) {
+        ArrayList  list = getFilePrefs();
+
+        if (!list.contains(file.getAbsolutePath())) {
+            prefs.put("file" + list.size(), file.getAbsolutePath());
+        }
+    }
+
+    /**
+     * Removes a specified MIB file preference.
+     *
+     * @param file           the MIB file to remove
+     */
+    private void removeFilePref(File file) {
+        ArrayList  list = getFilePrefs();
+
+        removeFilePrefs();
+        list.remove(file.getAbsolutePath());
+        for (int i = 0; i < list.size(); i++) {
+            prefs.put("file" + i, list.get(i).toString());
+        }
+    }
+
+    /**
+     * Returns the application MIB file preferences.
+     *
+     * @return the list of MIB files to load
+     */
+    private ArrayList getFilePrefs() {
+        ArrayList  list = new ArrayList();
+
+        for (int i = 0; i < 1000; i++) {
+            String str = prefs.get("file" + i, null);
+            if (str != null) {
+                list.add(str);
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Removes all application MIB file preferences.
+     */
+    private void removeFilePrefs() {
+        for (int i = 0; i < 1000; i++) {
+            prefs.remove("file" + i);
+        }
     }
 }

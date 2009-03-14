@@ -22,8 +22,6 @@
 package net.percederberg.mibble.browser;
 
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -36,8 +34,6 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import net.percederberg.mibble.Mib;
-import net.percederberg.mibble.MibLoader;
-import net.percederberg.mibble.MibLoaderException;
 import net.percederberg.mibble.MibSymbol;
 import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.MibValueSymbol;
@@ -58,11 +54,6 @@ public class MibTreeBuilder {
      * The single class instance.
      */
     private static MibTreeBuilder instance = null;
-
-    /**
-     * The MIB loader to use.
-     */
-    private MibLoader loader = new MibLoader();
 
     /**
      * The root tree component. This acts as a placeholder for
@@ -118,28 +109,6 @@ public class MibTreeBuilder {
      */
     public MibNode getNode(MibSymbol symbol) {
         return (MibNode) nodes.get(symbol);
-    }
-
-    /**
-     * Loads a MIB file.
-     *
-     * @param file           the file to load
-     *
-     * @return the MIB file loaded
-     *
-     * @throws IOException if the MIB file couldn't be found in the
-     *             MIB search path
-     * @throws MibLoaderException if the MIB file couldn't be loaded
-     *             correctly
-     */
-    public Mib loadMib(File file)
-        throws IOException, MibLoaderException {
-
-        if (!loader.hasDir(file.getParentFile())) {
-            loader.removeAllDirs();
-            loader.addDir(file.getParentFile());
-        }
-        return loader.load(file);
     }
 
     /**
@@ -261,11 +230,6 @@ public class MibTreeBuilder {
         MibNode root = (MibNode) model.getRoot();
         Enumeration e = root.preorderEnumeration();
 
-        try {
-            loader.unload(mibName);
-        } catch (MibLoaderException ignore) {
-            // MIB loader unloading is best-attempt only
-        }
         while (e.hasMoreElements()) {
             tempNode = (MibNode) e.nextElement();
             if (tempNode.getValue() == null &&
@@ -285,7 +249,6 @@ public class MibTreeBuilder {
      * @since 2.9
      */
     public void unloadAllMibs() {
-        loader.unloadAll();
         nodes.clear();
         ((MibNode) mibTree.getModel().getRoot()).removeAllChildren();
     }
