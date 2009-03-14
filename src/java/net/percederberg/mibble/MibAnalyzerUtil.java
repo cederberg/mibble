@@ -21,6 +21,7 @@
 
 package net.percederberg.mibble;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import net.percederberg.grammatica.parser.Node;
@@ -141,27 +142,32 @@ class MibAnalyzerUtil {
      *         null if no comments were found
      */
     private static String getCommentsBefore(Node node) {
-        Token   token = getFirstToken(node);
-        String  comment = "";
+        Token         token = getFirstToken(node);
+        ArrayList     comments = new ArrayList();
+        StringBuffer  buffer = new StringBuffer();
+        String        res = "";
 
         if (token != null) {
             token = token.getPreviousToken();
         }
         while (token != null) {
             if (token.getId() == Asn1Constants.WHITESPACE) {
-                comment = getLineBreaks(token.getImage()) + comment;
+                comments.add(getLineBreaks(token.getImage()));
             } else if (token.getId() == Asn1Constants.COMMENT &&
                        !commentTokens.containsKey(token)) {
 
                 commentTokens.put(token, null);
-                comment = token.getImage().substring(2).trim() + comment;
+                comments.add(token.getImage().substring(2).trim());
             } else {
                 break;
             }
             token = token.getPreviousToken();
         }
-        comment = comment.trim();
-        return comment.length() <= 0 ? null : comment;
+        for (int i = comments.size() - 1; i >= 0; i--) {
+            buffer.append(comments.get(i));
+        }
+        res = buffer.toString().trim();
+        return res.length() <= 0 ? null : res;
     }
 
     /**
@@ -175,27 +181,28 @@ class MibAnalyzerUtil {
      *         null if no comments were found
      */
     private static String getCommentsAfter(Node node) {
-        Token   token = getLastToken(node);
-        String  comment = "";
+        Token         token = getLastToken(node);
+        StringBuffer  comment = new StringBuffer();
+        String        res;
 
         if (token != null) {
             token = token.getNextToken();
         }
         while (token != null) {
             if (token.getId() == Asn1Constants.WHITESPACE) {
-                comment += getLineBreaks(token.getImage());
+                comment.append(getLineBreaks(token.getImage()));
             } else if (token.getId() == Asn1Constants.COMMENT &&
                        !commentTokens.containsKey(token)) {
 
                 commentTokens.put(token, null);
-                comment += token.getImage().substring(2).trim();
+                comment.append(token.getImage().substring(2).trim());
             } else {
                 break;
             }
             token = token.getNextToken();
         }
-        comment = comment.trim();
-        return comment.length() <= 0 ? null : comment;
+        res = comment.toString().trim();
+        return res.length() <= 0 ? null : res;
     }
 
     /**
@@ -209,21 +216,23 @@ class MibAnalyzerUtil {
      *         null if no comments were found
      */
     private static String getCommentsInside(Node node) {
-        Token   token = getFirstToken(node);
-        Token   last = getLastToken(node);
-        String  comment = "";
+        Token         token = getFirstToken(node);
+        Token         last = getLastToken(node);
+        StringBuffer  comment = new StringBuffer();
+        String        res;
 
         while (token != null && token != last) {
             if (token.getId() == Asn1Constants.COMMENT &&
                 !commentTokens.containsKey(token)) {
 
                 commentTokens.put(token, null);
-                comment += token.getImage().substring(2).trim() + "\n";
+                comment.append(token.getImage().substring(2).trim());
+                comment.append("\n");
             }
             token = token.getNextToken();
         }
-        comment = comment.trim();
-        return comment.length() <= 0 ? null : comment;
+        res = comment.toString().trim();
+        return res.length() <= 0 ? null : res;
     }
 
     /**
@@ -266,16 +275,14 @@ class MibAnalyzerUtil {
      *
      * @param node           the production or token node
      *
-     * @return the first token in the production
+     * @return the first token in the production, or
+     *         null if none was found
      */
     private static Token getFirstToken(Node node) {
-        if (node instanceof Production) {
-            return getFirstToken(node.getChildAt(0));
-        } else if (node instanceof Token) {
-            return (Token) node;
-        } else {
-            return null;
+        while (node instanceof Production) {
+            node = node.getChildAt(0);
         }
+        return (Token) node;
     }
 
     /**
@@ -283,16 +290,14 @@ class MibAnalyzerUtil {
      *
      * @param node           the production or token node
      *
-     * @return the last token in the production
+     * @return the last token in the production, or
+     *         null if none was found
      */
     private static Token getLastToken(Node node) {
-        if (node instanceof Production) {
-            return getLastToken(node.getChildAt(node.getChildCount() - 1));
-        } else if (node instanceof Token) {
-            return (Token) node;
-        } else {
-            return null;
+        while (node instanceof Production) {
+            node = node.getChildAt(node.getChildCount() - 1);
         }
+        return (Token) node;
     }
 
     /**
