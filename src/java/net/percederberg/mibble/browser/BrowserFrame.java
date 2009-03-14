@@ -312,7 +312,7 @@ public class BrowserFrame extends JFrame {
         File[]      files;
 
         dialog.setDirectory(currentDir.getAbsolutePath());
-        dialog.show();
+        dialog.setVisible(true);
         file = dialog.getFile();
         if (file != null) {
             files = new File[] { new File(dialog.getDirectory(), file) };
