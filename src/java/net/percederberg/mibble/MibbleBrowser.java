@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2009 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -34,7 +34,7 @@ import net.percederberg.mibble.browser.MibTreeBuilder;
  * A program for browsing MIB files in a GUI.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.9
  * @since    2.3
  */
 public class MibbleBrowser {
@@ -193,5 +193,15 @@ public class MibbleBrowser {
                 return;
             }
         }
+    }
+
+    /**
+     * Unloads all loaded MIB files.
+     *
+     * @since 2.9
+     */
+    public void unloadAllMibs() {
+        loadedMibs.clear();
+        MibTreeBuilder.getInstance().unloadAllMibs();
     }
 }

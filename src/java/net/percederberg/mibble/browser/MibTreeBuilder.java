@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2009 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.browser;
@@ -49,7 +49,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  *
  * @author   Watsh Rajneesh
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.9
  * @since    2.3
  */
 public class MibTreeBuilder {
@@ -58,6 +58,11 @@ public class MibTreeBuilder {
      * The single class instance.
      */
     private static MibTreeBuilder instance = null;
+
+    /**
+     * The MIB loader to use.
+     */
+    private MibLoader loader = new MibLoader();
 
     /**
      * The root tree component. This acts as a placeholder for
@@ -130,9 +135,10 @@ public class MibTreeBuilder {
     public Mib loadMib(File file)
         throws IOException, MibLoaderException {
 
-        MibLoader  loader = new MibLoader();
-
-        loader.addDir(file.getParentFile());
+        if (!loader.hasDir(file.getParentFile())) {
+            loader.removeAllDirs();
+            loader.addDir(file.getParentFile());
+        }
         return loader.load(file);
     }
 
@@ -255,6 +261,11 @@ public class MibTreeBuilder {
         MibNode root = (MibNode) model.getRoot();
         Enumeration e = root.preorderEnumeration();
 
+        try {
+            loader.unload(mibName);
+        } catch (MibLoaderException ignore) {
+            // MIB loader unloading is best-attempt only
+        }
         while (e.hasMoreElements()) {
             tempNode = (MibNode) e.nextElement();
             if (tempNode.getValue() == null &&
@@ -266,6 +277,17 @@ public class MibTreeBuilder {
             }
         }
         return false;
+    }
+
+    /**
+     * Unloads all loaded MIB files.
+     *
+     * @since 2.9
+     */
+    public void unloadAllMibs() {
+        loader.unloadAll();
+        nodes.clear();
+        ((MibNode) mibTree.getModel().getRoot()).removeAllChildren();
     }
 
     /**

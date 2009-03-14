@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2009 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.browser;
@@ -60,7 +60,7 @@ import net.percederberg.mibble.MibbleBrowser;
  * The main MIB browser application window (frame).
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.9
  * @since    2.5
  */
 public class BrowserFrame extends JFrame {
@@ -216,6 +216,13 @@ public class BrowserFrame extends JFrame {
             }
         });
         menu.add(item);
+        item = new JMenuItem("Unload All");
+        item.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                unloadAllMibs();
+            }
+        });
+        menu.add(item);
         menu.addSeparator();
         item = new JMenuItem("Exit");
         item.addActionListener(new ActionListener() {
@@ -362,6 +369,14 @@ public class BrowserFrame extends JFrame {
             node = (MibNode) node.getParent();
         }
         browser.unloadMib(node.getName());
+        refreshTree();
+    }
+
+    /**
+     * Unloads all MIB files currently loaded.
+     */
+    protected void unloadAllMibs() {
+        browser.unloadAllMibs();
         refreshTree();
     }
 

@@ -110,13 +110,16 @@ public class MibbleValidator {
             System.out.print(": Reading " + src + "... ");
             System.out.flush();
             try {
-                loader.reset();
-                loader.removeAllDirs();
+                loader.unloadAll();
                 if (src instanceof URL) {
+                    loader.removeAllDirs();
                     mib = loader.load((URL) src);
                 } else {
                     file = (File) src;
-                    loader.addDir(file.getParentFile());
+                    if (!loader.hasDir(file.getParentFile())) {
+                        loader.removeAllDirs();
+                        loader.addDir(file.getParentFile());
+                    }
                     mib = loader.load(file);
                 }
                 System.out.println("[OK]");

@@ -291,7 +291,15 @@ public class MibLoader {
     /**
      * Resets this loader. This means that all references to previuos
      * MIB files will be removed, forcing a reload of any imported
-     * MIB.
+     * MIB.<p>
+     *
+     * Note that this is not the same operation as unloadAll, since
+     * the MIB files previously loaded will be unaffected by this
+     * this method (i.e. they remain possible to use). If the purpose
+     * is to free all memory used by the loaded MIB files, use the
+     * unloadAll() method instead.
+     *
+     * @see #unloadAll()
      */
     public void reset() {
         mibs.clear();
@@ -617,6 +625,29 @@ public class MibLoader {
             mib = (Mib) mibs.remove(pos);
             mib.clear();
         }
+    }
+
+    /**
+     * Unloads all MIBs loaded by this loaded (since the last reset).
+     * This method attempts to free all the memory used by the MIBs,
+     * as it clears both the loader and internal MIB references to
+     * the data structures (thereby allowing the garbage collector to
+     * recover the memory used if no other references exist). Note
+     * that no previous MIBs returned by this loader should be
+     * accessed after this method has been called.<p>
+     *
+     * In order to just reset the MIB loader to force re-loading of
+     * MIB files, use the reset() method instead which will leave the
+     * MIBs unaffected.
+     *
+     * @see #reset()
+     * @since 2.9
+     */
+    public void unloadAll() {
+        for (int i = 0; i < mibs.size(); i++) {
+            ((Mib) mibs.get(i)).clear();
+        }
+        reset();
     }
 
     /**
