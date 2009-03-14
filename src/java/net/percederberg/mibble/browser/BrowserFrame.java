@@ -22,6 +22,7 @@
 package net.percederberg.mibble.browser;
 
 import java.awt.Dimension;
+import java.awt.FileDialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -36,7 +37,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -306,22 +306,20 @@ public class BrowserFrame extends JFrame {
      * Opens the load MIB dialog.
      */
     protected void loadMib() {
-        JFileChooser  dialog = new JFileChooser();
-        Loader        loader;
-        File[]        files;
-        int           result;
+        FileDialog  dialog = new FileDialog(this, "Select MIB File");
+        Loader      loader;
+        String      file;
+        File[]      files;
 
-        dialog.setCurrentDirectory(currentDir);
-        dialog.setMultiSelectionEnabled(true);
-        result = dialog.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            files = dialog.getSelectedFiles();
-            if (files.length > 0) {
-                currentDir = files[0].getParentFile();
-                descriptionArea.setText("");
-                loader = new Loader(files);
-                loader.start();
-            }
+        dialog.setDirectory(currentDir.getAbsolutePath());
+        dialog.show();
+        file = dialog.getFile();
+        if (file != null) {
+            files = new File[] { new File(dialog.getDirectory(), file) };
+            currentDir = files[0].getParentFile();
+            descriptionArea.setText("");
+            loader = new Loader(files);
+            loader.start();
         }
     }
 
