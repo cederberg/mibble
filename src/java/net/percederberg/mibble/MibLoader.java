@@ -21,10 +21,8 @@
 
 package net.percederberg.mibble;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -71,11 +69,12 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
 public class MibLoader {
 
     /**
-     * The MIB file search path. This is a list of directories to
-     * search for MIB files. If a MIB isn't found among these
-     * directories, the resource directories will be attempted.
+     * The MIB file directory caches. This is also a list of the MIB
+     * file search path, as each directory on the path has its own
+     * cache. If a MIB isn't found among these directories, the
+     * resource directories will be attempted.
      */
-    private ArrayList dirs = new ArrayList();
+    private ArrayList dirCaches = new ArrayList();
 
     /**
      * The MIB file resource directories. This is a list of Java class
@@ -124,10 +123,18 @@ public class MibLoader {
      * @since 2.9
      */
     public boolean hasDir(File dir) {
+        MibDirectoryCache  cache;
+
         if (!dir.isDirectory()) {
             dir = dir.getParentFile();
         }
-        return dirs.contains(dir);
+        for (int i = 0; i < dirCaches.size(); i++) {
+            cache = (MibDirectoryCache) dirCaches.get(i);
+            if (cache.getDir().equals(dir)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -140,7 +147,14 @@ public class MibLoader {
      * @since 2.9
      */
     public File[] getDirs() {
-        return (File[]) dirs.toArray(new File[dirs.size()]);
+        File[]             res = new File[dirCaches.size()];
+        MibDirectoryCache  cache;
+
+        for (int i = 0; i < dirCaches.size(); i++) {
+            cache = (MibDirectoryCache) dirCaches.get(i);
+            res[i] = cache.getDir();
+        }
+        return res;
     }
 
     /**
@@ -154,7 +168,7 @@ public class MibLoader {
             dir = new File(".");
         }
         if (!hasDir(dir)) {
-            dirs.add(dir);
+            dirCaches.add(new MibDirectoryCache(dir));
         }
     }
 
@@ -197,14 +211,21 @@ public class MibLoader {
      * @param dir            the directory to remove
      */
     public void removeDir(File dir) {
-        dirs.remove(dir);
+        MibDirectoryCache  cache;
+
+        for (int i = 0; i < dirCaches.size(); i++) {
+            cache = (MibDirectoryCache) dirCaches.get(i);
+            if (cache.getDir().equals(dir)) {
+                dirCaches.remove(i--);
+            }
+        }
     }
 
     /**
      * Removes all directories from the MIB search path.
      */
     public void removeAllDirs() {
-        dirs.clear();
+        dirCaches.clear();
     }
 
     /**
@@ -751,18 +772,17 @@ public class MibLoader {
      *         null if no MIB was found
      */
     private MibSource locate(String name) {
-        ClassLoader  loader = getClass().getClassLoader();
-        File         dir;
-        File[]       files;
-        URL          url;
-        int          i;
-        int          j;
+        ClassLoader        loader = getClass().getClassLoader();
+        MibDirectoryCache  cache;
+        File               file;
+        URL                url;
+        int                i;
 
-        for (i = 0; i < dirs.size(); i++) {
-            dir = (File) dirs.get(i);
-            files = dir.listFiles(new MibFileFilter(name));
-            if (files != null && files.length > 0) {
-                return new MibSource(files[0]);
+        for (i = 0; i < dirCaches.size(); i++) {
+            cache = (MibDirectoryCache) dirCaches.get(i);
+            file = cache.findByName(name);
+            if (file != null) {
+                return new MibSource(file);
             }
         }
         for (i = 0; i < resources.size(); i++) {
@@ -771,67 +791,14 @@ public class MibLoader {
                 return new MibSource(name, url);
             }
         }
-        for (i = 0; i < dirs.size(); i++) {
-            dir = (File) dirs.get(i);
-            files = dir.listFiles();
-            for (j = 0; files != null && j < files.length; j++) {
-                if (isNamedMib(files[j], name)) {
-                    return new MibSource(files[j]);
-                }
+        for (i = 0; i < dirCaches.size(); i++) {
+            cache = (MibDirectoryCache) dirCaches.get(i);
+            file = cache.findByContent(name);
+            if (file != null) {
+                return new MibSource(file);
             }
         }
         return null;
-    }
-
-    /**
-     * Checks if a file contains a specified MIB. The file will be
-     * opened and the first non-comment line will be interpreted as
-     * the starting of a MIB. The MIB name will then be compared to
-     * the specified name in case sensitive manner.
-     *
-     * @param file           the file to check
-     * @param name           the MIB name to search for
-     *
-     * @return true if the file seems to contain the MIB, or
-     *         false otherwise
-     *
-     * @since 2.4
-     */
-    private boolean isNamedMib(File file, String name) {
-        BufferedReader  in = null;
-        String          str;
-
-        if (!file.canRead() || !file.isFile()) {
-            return false;
-        }
-        try {
-            in = new BufferedReader(new FileReader(file));
-            while (true) {
-                str = in.readLine();
-                if (str == null) {
-                    break;
-                }
-                str = str.trim();
-                if (!str.equals("") && !str.startsWith("--")) {
-                    return str.equals(name)
-                        || str.startsWith(name + " ")
-                        || str.startsWith(name + "\t");
-                }
-            }
-        } catch (FileNotFoundException ignore) {
-            // Do nothing
-        } catch (IOException ignore) {
-            // Do nothing
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException ignore) {
-                    // Do nothing
-                }
-            }
-        }
-        return false;
     }
 
     /**
@@ -1013,45 +980,6 @@ public class MibLoader {
             } finally {
                 analyzer.reset();
             }
-        }
-    }
-
-
-    /**
-     * A MIB file name filter. This filter compares a file name with
-     * a MIB name, accepting only files with the MIB name. Any
-     * extension on the file will be disregarded, but the name
-     * comparison is made in a case-sensitive way.
-     */
-    private static class MibFileFilter implements FilenameFilter {
-
-        /**
-         * The base MIB name.
-         */
-        private String basename;
-
-        /**
-         * Creates a new MIB file filter.
-         *
-         * @param name           the MIB name to filter with
-         */
-        public MibFileFilter(String name) {
-            this.basename = name.toUpperCase();
-        }
-
-        /**
-         * Checks if a file name matches the MIB name.
-         *
-         * @param dir            the file directory
-         * @param name           the file name
-         *
-         * @return true if the file name matches, or
-         *         false otherwise
-         */
-        public boolean accept(File dir, String name) {
-            name = name.toUpperCase();
-            return name.equals(basename)
-                || name.startsWith(basename + ".");
         }
     }
 }
