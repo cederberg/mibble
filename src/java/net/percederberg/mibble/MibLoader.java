@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2009 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -65,7 +65,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * concurrently in multiple threads.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.9
  * @since    2.0
  */
 public class MibLoader {
@@ -112,6 +112,38 @@ public class MibLoader {
     }
 
     /**
+     * Checks if a directory is in the MIB search path. If a file is
+     * specified instead of a directory, this method checks if the
+     * parent directory is in the MIB search path.
+     *
+     * @param dir            the directory or file to check
+     *
+     * @return true if the directory is in the MIB search path, or
+     *         false otherwise
+     *
+     * @since 2.9
+     */
+    public boolean hasDir(File dir) {
+        if (!dir.isDirectory()) {
+            dir = dir.getParentFile();
+        }
+        return dirs.contains(dir);
+    }
+
+    /**
+     * Returns all the directories in the MIB search path. If a tree
+     * of directories has been added, all the individual directories
+     * will be returned by this method.
+     *
+     * @return the directories in the MIB search path
+     *
+     * @since 2.9
+     */
+    public File[] getDirs() {
+        return (File[]) dirs.toArray(new File[dirs.size()]);
+    }
+
+    /**
      * Adds a directory to the MIB search path. If the directory
      * specified is null, the current working directory will be added.
      *
@@ -121,7 +153,7 @@ public class MibLoader {
         if (dir == null) {
             dir = new File(".");
         }
-        if (!dirs.contains(dir)) {
+        if (!hasDir(dir)) {
             dirs.add(dir);
         }
     }
@@ -176,18 +208,57 @@ public class MibLoader {
     }
 
     /**
+     * Checks if a directory is in the MIB resource path. The
+     * resource search path is used for searching for MIB files with
+     * the ClassLoader (i.e. MIB files on the Java classpath) and is
+     * a secondary alternative to the directory search path. Note
+     * that the MIB files stored as resources must have the EXACT MIB
+     * name, i.e. no file extensions can be used and name casing is
+     * important.
+     *
+     * @param dir            the directory to check
+     *
+     * @return true if the directory is in the MIB resource path, or
+     *         false otherwise
+     *
+     * @since 2.9
+     */
+    public boolean hasResourceDir(String dir) {
+        return resources.contains(dir);
+    }
+
+    /**
+     * Returns all the directories in the MIB resource path. The
+     * resource search path is used for searching for MIB files with
+     * the ClassLoader (i.e. MIB files on the Java classpath) and is
+     * a secondary alternative to the directory search path. Note
+     * that the MIB files stored as resources must have the EXACT MIB
+     * name, i.e. no file extensions can be used and name casing is
+     * important.
+     *
+     * @return the directories in the MIB resource path
+     *
+     * @since 2.9
+     */
+    public String[] getResourceDirs() {
+        return (String[]) resources.toArray(new String[resources.size()]);
+    }
+
+    /**
      * Adds a directory to the MIB resource search path. The resource
-     * search path can be used to load MIB files as resources via the
-     * ClassLoader. Note the MIB files stored as resources must have
-     * the EXACT MIB name, i.e. no file extensions can be used and
-     * name casing is important.
+     * search path is used for searching for MIB files with the
+     * ClassLoader (i.e. MIB files on the Java classpath) and is a
+     * secondary alternative to the directory search path. Note that
+     * the MIB files stored as resources must have the EXACT MIB
+     * name, i.e. no file extensions can be used and name casing is
+     * important.
      *
      * @param dir            the resource directory to add
      *
      * @since 2.3
      */
     public void addResourceDir(String dir) {
-        if (!resources.contains(dir)) {
+        if (!hasResourceDir(dir)) {
             resources.add(dir);
         }
     }
