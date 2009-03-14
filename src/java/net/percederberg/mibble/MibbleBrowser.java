@@ -115,13 +115,15 @@ public class MibbleBrowser {
         // Load command-line & preference MIBs
         frame.setBlocked(true);
         list = getFilePrefs();
+        for (int i = 0; i < args.length; i++) {
+            list.add(args[i]);
+        }
         for (int i = 0; i < list.size(); i++) {
             frame.loadMib(list.get(i).toString());
         }
-        if (args.length > 0) {
-            for (int i = 0; i < args.length; i++) {
-                frame.loadMib(args[i]);
-            }
+        if (list.size() <= 0) {
+            frame.loadMib("RFC1213-MIB");
+            frame.loadMib("HOST-RESOURCES-MIB");
         }
         frame.refreshTree();
         frame.setBlocked(false);
@@ -173,30 +175,25 @@ public class MibbleBrowser {
      * @throws MibLoaderException if the MIB file couldn't be loaded
      *             correctly
      */
-    public void loadMib(String src)
-        throws IOException, MibLoaderException {
-
+    public void loadMib(String src) throws IOException, MibLoaderException {
         MibTreeBuilder  mb = MibTreeBuilder.getInstance();
         File            file = new File(src);
         Mib             mib = null;
 
-        // TODO: handle URLs
-
-        // Check for previously loaded file
-        if (loader.getMib(file) != null) {
-            return;
+        if (file.exists()) {
+            if (loader.getMib(file) != null) {
+                return;
+            }
+            if (!loader.hasDir(file.getParentFile())) {
+                loader.removeAllDirs();
+                loader.addDir(file.getParentFile());
+            }
+            mib = loader.load(file);
+            addFilePref(file);
+        } else {
+            mib = loader.load(src);
         }
-
-        // Loading the specified file
-        if (!loader.hasDir(file.getParentFile())) {
-            loader.removeAllDirs();
-            loader.addDir(file.getParentFile());
-        }
-        mib = loader.load(file);
-
-        // Add MIB to tree & preference store
         mb.addMib(mib);
-        addFilePref(file);
     }
 
     /**
