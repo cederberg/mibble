@@ -992,8 +992,8 @@ public class MibLoader {
             }
 
             // Parse input stream
+            analyzer = new MibAnalyzer(file, loader, log);
             try {
-                analyzer = new MibAnalyzer(file, loader, log);
                 if (parser == null) {
                     parser = new Asn1Parser(input, analyzer);
                     parser.getTokenizer().setUseTokenList(true);
@@ -1010,6 +1010,8 @@ public class MibLoader {
             } catch (ParserLogException e) {
                 log.addAll(file, e);
                 throw new MibLoaderException(log);
+            } finally {
+                analyzer.reset();
             }
         }
     }

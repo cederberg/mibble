@@ -150,6 +150,18 @@ class MibAnalyzer extends Asn1Analyzer {
     }
 
     /**
+     * Resets this analyzer. This method is mostly used to release
+     * all references to parsed data.
+     */
+    public void reset() {
+        mibs = new ArrayList();
+        currentMib = null;
+        baseContext = null;
+        contextStack.clear();
+        implicitTags = true;
+    }
+
+    /**
      * Returns the list of MIB modules found during analysis.
      *  
      * @return a list of MIB modules
