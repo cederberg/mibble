@@ -28,6 +28,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Properties;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -66,21 +67,25 @@ public class AboutDialog extends JDialog {
      * Creates new about dialog.
      *
      * @param parent         the parent frame
+     * @param buildInfo      the application build information
      */
-    public AboutDialog(JFrame parent) {
+    public AboutDialog(JFrame parent, Properties buildInfo) {
         super(parent, true);
-        initialize();
+        initialize(buildInfo);
         setLocationRelativeTo(parent);
     }
 
     /**
      * Initializes the dialog components.
+     *
+     * @param buildInfo      the application build information
      */
-    private void initialize() {
+    private void initialize(Properties buildInfo) {
         JLabel              label;
         JTextArea           textArea;
         JButton             button;
         GridBagConstraints  c;
+        String              str;
 
         // Set dialog title
         setTitle("About Mibble MIB Browser");
@@ -96,41 +101,55 @@ public class AboutDialog extends JDialog {
         c = new GridBagConstraints();
         c.gridwidth = 2;
         c.anchor = GridBagConstraints.CENTER;
-        c.insets = new Insets(20, 10, 10, 10);
+        c.insets = new Insets(20, 15, 5, 15);
         getContentPane().add(label, c);
 
-        // Add acknowledgements text
-        label = new JLabel("Acknowledgements:");
+        // Add version text
+        str = "Version " + buildInfo.getProperty("build.version", "N/A") +
+              " (built on " + buildInfo.getProperty("build.date", "N/A") + ")";
+        label = new JLabel(str);
+        label.setFont(Font.decode("sans bold 12"));
         c = new GridBagConstraints();
         c.gridy = 1;
         c.gridwidth = 2;
-        c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(0, 10, 0, 10);
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, 15, 20, 15);
         getContentPane().add(label, c);
-        textArea = new JTextArea(ACKNOWLEDGEMENTS);
-        textArea.setEditable(false);
+
+        // Add acknowledgments text
+        label = new JLabel("Acknowledgments:");
+        label.setFont(label.getFont().deriveFont(Font.BOLD));
         c = new GridBagConstraints();
         c.gridy = 2;
         c.gridwidth = 2;
         c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(0, 10, 0, 10);
-        getContentPane().add(textArea, c);
-
-        // Add acknowledgements text
-        label = new JLabel("Copyright & License:");
+        c.insets = new Insets(0, 15, 0, 15);
+        getContentPane().add(label, c);
+        textArea = new JTextArea(ACKNOWLEDGEMENTS);
+        textArea.setEditable(false);
         c = new GridBagConstraints();
         c.gridy = 3;
         c.gridwidth = 2;
         c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(10, 10, 0, 10);
-        getContentPane().add(label, c);
-        textArea = new JTextArea(COPYRIGHT);
-        textArea.setEditable(false);
+        c.insets = new Insets(0, 15, 0, 15);
+        getContentPane().add(textArea, c);
+
+        // Add copyright text
+        label = new JLabel("Copyright & License:");
+        label.setFont(label.getFont().deriveFont(Font.BOLD));
         c = new GridBagConstraints();
         c.gridy = 4;
         c.gridwidth = 2;
         c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(0, 10, 0, 10);
+        c.insets = new Insets(10, 15, 0, 15);
+        getContentPane().add(label, c);
+        textArea = new JTextArea(COPYRIGHT);
+        textArea.setEditable(false);
+        c = new GridBagConstraints();
+        c.gridy = 5;
+        c.gridwidth = 2;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(0, 15, 0, 15);
         getContentPane().add(textArea, c);
 
         // Add license button
@@ -141,10 +160,10 @@ public class AboutDialog extends JDialog {
             }
         });
         c = new GridBagConstraints();
-        c.gridy = 5;
+        c.gridy = 6;
         c.anchor = GridBagConstraints.CENTER;
         c.weightx = 1.0d;
-        c.insets = new Insets(20, 10, 10, 10);
+        c.insets = new Insets(20, 15, 10, 15);
         getContentPane().add(button, c);
 
         // Add close button
@@ -156,10 +175,10 @@ public class AboutDialog extends JDialog {
         });
         c = new GridBagConstraints();
         c.gridx = 1;
-        c.gridy = 5;
+        c.gridy = 6;
         c.anchor = GridBagConstraints.CENTER;
         c.weightx = 1.0d;
-        c.insets = new Insets(20, 10, 10, 10);
+        c.insets = new Insets(20, 15, 10, 15);
         getContentPane().add(button, c);
 
         // Layout components

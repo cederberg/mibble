@@ -24,6 +24,7 @@ package net.percederberg.mibble;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Properties;
 import java.util.prefs.Preferences;
 
 import javax.swing.UIManager;
@@ -57,6 +58,11 @@ public class MibbleBrowser {
         "    this error to the maintainers (see the web site for\n" +
         "    instructions). Be sure to include the version number, as\n" +
         "    well as the text below:\n";
+
+    /**
+     * The application build information properties.
+     */
+    private Properties buildInfo;
 
     /**
      * The preferences for this application.
@@ -102,10 +108,18 @@ public class MibbleBrowser {
             }
         }
 
+        // Load application build information
+        buildInfo = new Properties();
+        try {
+            buildInfo.load(getClass().getResourceAsStream("build.properties"));
+        } catch (IOException ignore) {
+            buildInfo.setProperty("build.title", "Mibble");
+        }
+
         // Open browser frame
         try {
             str = "com.apple.mrj.application.apple.menu.about.name";
-            System.setProperty(str, "Mibble");
+            System.setProperty(str, buildInfo.getProperty("build.title"));
             str = UIManager.getSystemLookAndFeelClassName();
             UIManager.setLookAndFeel(str);
         } catch (Exception e) {
@@ -165,6 +179,15 @@ public class MibbleBrowser {
     private void printError(String message) {
         System.err.print("Error: ");
         System.err.println(message);
+    }
+
+    /**
+     * Returns the application build information.
+     *
+     * @return the application build information
+     */
+    public Properties getBuildInfo() {
+        return buildInfo;
     }
 
     /**

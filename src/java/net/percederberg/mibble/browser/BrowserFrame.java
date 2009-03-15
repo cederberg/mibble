@@ -515,7 +515,7 @@ public class BrowserFrame extends JFrame {
      * Shows the about dialog.
      */
     protected void showAbout() {
-        AboutDialog  dialog = new AboutDialog(this);
+        AboutDialog  dialog = new AboutDialog(this, browser.getBuildInfo());
 
         dialog.setVisible(true);
     }
