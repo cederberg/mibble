@@ -126,20 +126,24 @@ public class BrowserFrame extends JFrame {
      * @param browser        the browser application
      */
     public BrowserFrame(MibbleBrowser browser) {
-        String  dir;
+        String   dir;
+        boolean  isMac;
 
         this.browser = browser;
         dir = System.getProperty("user.dir");
         if (dir != null) {
             currentDir = new File(dir);
         }
-        initialize();
+        isMac = System.getProperty("mrj.version") != null;
+        initialize(isMac);
     }
 
     /**
      * Initializes the frame components.
+     *
+     * @param isMac          the Mac OS X interface flag
      */
-    private void initialize() {
+    private void initialize(boolean isMac) {
         Rectangle           bounds = new Rectangle();
         Dimension           size;
         JSplitPane          horizontalSplitPane = new JSplitPane();
@@ -156,7 +160,7 @@ public class BrowserFrame extends JFrame {
         bounds.y = (size.height - bounds.height) / 2;
         setBounds(bounds);
         setMenuBar(menuBar);
-        initializeMenu();
+        initializeMenu(isMac);
         getContentPane().setLayout(new GridBagLayout());
 
         // Add horizontal split pane
@@ -196,8 +200,10 @@ public class BrowserFrame extends JFrame {
 
     /**
      * Initializes the frame menu.
+     *
+     * @param isMac          the Mac OS X interface flag
      */
-    private void initializeMenu() {
+    private void initializeMenu(boolean isMac) {
         Menu              menu;
         MenuItem          item;
         CheckboxMenuItem  checkBox;
@@ -225,14 +231,16 @@ public class BrowserFrame extends JFrame {
             }
         });
         menu.add(item);
-        menu.addSeparator();
-        item = new MenuItem("Exit");
-        item.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
-        });
-        menu.add(item);
+        if (!isMac) {
+            menu.addSeparator();
+            item = new MenuItem("Exit");
+            item.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    quit();
+                }
+            });
+            menu.add(item);
+        }
         menuBar.add(menu);
 
         // Create SNMP menu
@@ -278,14 +286,21 @@ public class BrowserFrame extends JFrame {
             }
         });
         menu.add(item);
-        item = new MenuItem("About...");
-        item.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                showAbout();
-            }
-        });
-        menu.add(item);
+        if (!isMac) {
+            item = new MenuItem("About...");
+            item.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    showAbout();
+                }
+            });
+            menu.add(item);
+        }
         menuBar.add(menu);
+
+        // Fix Mac OS specific menus
+        if (isMac) {
+            new MacUIHelper(this);
+        }
     }
 
     /**
@@ -484,6 +499,13 @@ public class BrowserFrame extends JFrame {
         LicenseDialog  dialog = new LicenseDialog(this);
 
         dialog.setVisible(true);
+    }
+
+    /**
+     * Quits this application.
+     */
+    protected void quit() {
+        System.exit(0);
     }
 
     /**

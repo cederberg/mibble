@@ -104,6 +104,8 @@ public class MibbleBrowser {
 
         // Open browser frame
         try {
+            str = "com.apple.mrj.application.apple.menu.about.name";
+            System.setProperty(str, "Mibble");
             str = UIManager.getSystemLookAndFeelClassName();
             UIManager.setLookAndFeel(str);
         } catch (Exception e) {
