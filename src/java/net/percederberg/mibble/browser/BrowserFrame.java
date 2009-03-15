@@ -30,12 +30,14 @@ import java.awt.Insets;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
+import java.awt.MenuShortcut;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -204,14 +206,14 @@ public class BrowserFrame extends JFrame {
 
         // Create file menu
         menu = new Menu("File");
-        item = new MenuItem("Load MIB...");
+        item = new MenuItem("Load MIB...", new MenuShortcut(KeyEvent.VK_O));
         item.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 loadMib();
             }
         });
         menu.add(item);
-        item = new MenuItem("Unload MIB");
+        item = new MenuItem("Unload MIB", new MenuShortcut(KeyEvent.VK_W));
         item.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 unloadMib();
@@ -227,7 +229,7 @@ public class BrowserFrame extends JFrame {
         menu.add(item);
         if (!MacUIHelper.IS_MAC_OS) {
             menu.addSeparator();
-            item = new MenuItem("Exit");
+            item = new MenuItem("Exit", new MenuShortcut(KeyEvent.VK_Q));
             item.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     quit();
