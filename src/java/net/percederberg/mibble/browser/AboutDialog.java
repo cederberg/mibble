@@ -108,12 +108,12 @@ public class AboutDialog extends JDialog {
         str = "Version " + buildInfo.getProperty("build.version", "N/A") +
               " (built on " + buildInfo.getProperty("build.date", "N/A") + ")";
         label = new JLabel(str);
-        label.setFont(Font.decode("sans bold 12"));
+        label.setFont(label.getFont().deriveFont(Font.BOLD));
         c = new GridBagConstraints();
         c.gridy = 1;
         c.gridwidth = 2;
         c.anchor = GridBagConstraints.CENTER;
-        c.insets = new Insets(0, 15, 20, 15);
+        c.insets = new Insets(0, 15, 15, 15);
         getContentPane().add(label, c);
 
         // Add acknowledgments text
