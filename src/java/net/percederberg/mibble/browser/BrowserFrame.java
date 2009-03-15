@@ -21,27 +21,29 @@
 
 package net.percederberg.mibble.browser;
 
+import java.awt.CheckboxMenuItem;
 import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Menu;
+import java.awt.MenuBar;
+import java.awt.MenuItem;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -73,25 +75,25 @@ public class BrowserFrame extends JFrame {
     /**
      * The menu bar.
      */
-    private JMenuBar menuBar = new JMenuBar();
+    private MenuBar menuBar = new MenuBar();
 
     /**
      * The SNMP version 1 menu item.
      */
-    private JCheckBoxMenuItem snmpV1Item =
-        new JCheckBoxMenuItem("SNMP version 1");
+    private CheckboxMenuItem snmpV1Item =
+        new CheckboxMenuItem("SNMP version 1");
 
     /**
      * The SNMP version 2c menu item.
      */
-    private JCheckBoxMenuItem snmpV2Item =
-        new JCheckBoxMenuItem("SNMP version 2c");
+    private CheckboxMenuItem snmpV2Item =
+        new CheckboxMenuItem("SNMP version 2c");
 
     /**
      * The SNMP version 3 menu item.
      */
-    private JCheckBoxMenuItem snmpV3Item =
-        new JCheckBoxMenuItem("SNMP version 3");
+    private CheckboxMenuItem snmpV3Item =
+        new CheckboxMenuItem("SNMP version 3");
 
     /**
      * The description text area.
@@ -153,7 +155,7 @@ public class BrowserFrame extends JFrame {
         bounds.x = (size.width - bounds.width) / 2;
         bounds.y = (size.height - bounds.height) / 2;
         setBounds(bounds);
-        setJMenuBar(menuBar);
+        setMenuBar(menuBar);
         initializeMenu();
         getContentPane().setLayout(new GridBagLayout());
 
@@ -196,27 +198,27 @@ public class BrowserFrame extends JFrame {
      * Initializes the frame menu.
      */
     private void initializeMenu() {
-        JMenu              menu;
-        JMenuItem          item;
-        JCheckBoxMenuItem  checkBox;
+        Menu              menu;
+        MenuItem          item;
+        CheckboxMenuItem  checkBox;
 
         // Create file menu
-        menu = new JMenu("File");
-        item = new JMenuItem("Load MIB...");
+        menu = new Menu("File");
+        item = new MenuItem("Load MIB...");
         item.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 loadMib();
             }
         });
         menu.add(item);
-        item = new JMenuItem("Unload MIB");
+        item = new MenuItem("Unload MIB");
         item.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 unloadMib();
             }
         });
         menu.add(item);
-        item = new JMenuItem("Unload All");
+        item = new MenuItem("Unload All");
         item.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 unloadAllMibs();
@@ -224,7 +226,7 @@ public class BrowserFrame extends JFrame {
         });
         menu.add(item);
         menu.addSeparator();
-        item = new JMenuItem("Exit");
+        item = new MenuItem("Exit");
         item.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 System.exit(0);
@@ -234,51 +236,49 @@ public class BrowserFrame extends JFrame {
         menuBar.add(menu);
 
         // Create SNMP menu
-        menu = new JMenu("SNMP");
-        snmpV1Item.setSelected(true);
-        snmpV1Item.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+        menu = new Menu("SNMP");
+        snmpV1Item.setState(true);
+        snmpV1Item.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
                 setSnmpVersion(1);
             }
         });
         menu.add(snmpV1Item);
-        snmpV2Item.setSelected(false);
-        snmpV2Item.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+        snmpV2Item.setState(false);
+        snmpV2Item.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
                 setSnmpVersion(2);
             }
         });
         menu.add(snmpV2Item);
-        snmpV3Item.setSelected(false);
-        snmpV3Item.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+        snmpV3Item.setState(false);
+        snmpV3Item.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
                 setSnmpVersion(3);
             }
         });
         menu.add(snmpV3Item);
         menu.addSeparator();
-        checkBox = new JCheckBoxMenuItem("Show result in tree");
-        checkBox.setSelected(true);
-        checkBox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                JCheckBoxMenuItem  src = (JCheckBoxMenuItem) e.getSource();
-
-                setSnmpFeedback(src.isSelected());
+        checkBox = new CheckboxMenuItem("Show result in tree");
+        checkBox.setState(true);
+        checkBox.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                setSnmpFeedback(e.getStateChange() == ItemEvent.SELECTED);
             }
         });
         menu.add(checkBox);
         menuBar.add(menu);
 
         // Create help menu
-        menu = new JMenu("Help");
-        item = new JMenuItem("License...");
+        menu = new Menu("Help");
+        item = new MenuItem("License...");
         item.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 showLicense();
             }
         });
         menu.add(item);
-        item = new JMenuItem("About...");
+        item = new MenuItem("About...");
         item.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 showAbout();
@@ -392,15 +392,15 @@ public class BrowserFrame extends JFrame {
      * @param version        the new version number
      */
     public void setSnmpVersion(int version) {
-        snmpV1Item.setSelected(false);
-        snmpV2Item.setSelected(false);
-        snmpV3Item.setSelected(false);
+        snmpV1Item.setState(false);
+        snmpV2Item.setState(false);
+        snmpV3Item.setState(false);
         if (version == 1) {
-            snmpV1Item.setSelected(true);
+            snmpV1Item.setState(true);
         } else if (version == 2) {
-            snmpV2Item.setSelected(true);
+            snmpV2Item.setState(true);
         } else if (version == 3) {
-            snmpV3Item.setSelected(true);
+            snmpV3Item.setState(true);
         }
         snmpPanel.setVersion(version);
     }
