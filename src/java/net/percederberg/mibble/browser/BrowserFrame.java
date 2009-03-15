@@ -22,16 +22,19 @@
 package net.percederberg.mibble.browser;
 
 import java.awt.CheckboxMenuItem;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.KeyboardFocusManager;
 import java.awt.Menu;
 import java.awt.MenuBar;
 import java.awt.MenuItem;
 import java.awt.MenuShortcut;
 import java.awt.Rectangle;
+import java.awt.TextComponent;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -53,6 +56,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.JTextComponent;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
@@ -237,6 +242,33 @@ public class BrowserFrame extends JFrame {
             });
             menu.add(item);
         }
+        menuBar.add(menu);
+
+        // Create Edit menu
+        menu = new Menu("Edit");
+        item = new MenuItem("Cut", new MenuShortcut(KeyEvent.VK_X));
+        item.addActionListener(new DefaultEditorKit.CutAction());
+        menu.add(item);
+        item = new MenuItem("Copy", new MenuShortcut(KeyEvent.VK_C));
+        item.addActionListener(new DefaultEditorKit.CopyAction());
+        menu.add(item);
+        item = new MenuItem("Paste", new MenuShortcut(KeyEvent.VK_V));
+        item.addActionListener(new DefaultEditorKit.PasteAction());
+        menu.add(item);
+        item = new MenuItem("Select All", new MenuShortcut(KeyEvent.VK_A));
+        item.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                KeyboardFocusManager kfm =
+                    KeyboardFocusManager.getCurrentKeyboardFocusManager();
+                Component comp = kfm.getFocusOwner();
+                if (comp instanceof TextComponent) {
+                    ((TextComponent) comp).selectAll();
+                } else if (comp instanceof JTextComponent) {
+                    ((JTextComponent) comp).selectAll();
+                }
+            }
+        });
+        menu.add(item);
         menuBar.add(menu);
 
         // Create SNMP menu
