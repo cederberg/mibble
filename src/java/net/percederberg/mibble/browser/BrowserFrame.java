@@ -127,23 +127,19 @@ public class BrowserFrame extends JFrame {
      */
     public BrowserFrame(MibbleBrowser browser) {
         String   dir;
-        boolean  isMac;
 
         this.browser = browser;
         dir = System.getProperty("user.dir");
         if (dir != null) {
             currentDir = new File(dir);
         }
-        isMac = System.getProperty("mrj.version") != null;
-        initialize(isMac);
+        initialize();
     }
 
     /**
      * Initializes the frame components.
-     *
-     * @param isMac          the Mac OS X interface flag
      */
-    private void initialize(boolean isMac) {
+    private void initialize() {
         Rectangle           bounds = new Rectangle();
         Dimension           size;
         JSplitPane          horizontalSplitPane = new JSplitPane();
@@ -160,7 +156,7 @@ public class BrowserFrame extends JFrame {
         bounds.y = (size.height - bounds.height) / 2;
         setBounds(bounds);
         setMenuBar(menuBar);
-        initializeMenu(isMac);
+        initializeMenu();
         getContentPane().setLayout(new GridBagLayout());
 
         // Add horizontal split pane
@@ -200,10 +196,8 @@ public class BrowserFrame extends JFrame {
 
     /**
      * Initializes the frame menu.
-     *
-     * @param isMac          the Mac OS X interface flag
      */
-    private void initializeMenu(boolean isMac) {
+    private void initializeMenu() {
         Menu              menu;
         MenuItem          item;
         CheckboxMenuItem  checkBox;
@@ -231,7 +225,7 @@ public class BrowserFrame extends JFrame {
             }
         });
         menu.add(item);
-        if (!isMac) {
+        if (!MacUIHelper.IS_MAC_OS) {
             menu.addSeparator();
             item = new MenuItem("Exit");
             item.addActionListener(new ActionListener() {
@@ -286,7 +280,7 @@ public class BrowserFrame extends JFrame {
             }
         });
         menu.add(item);
-        if (!isMac) {
+        if (!MacUIHelper.IS_MAC_OS) {
             item = new MenuItem("About...");
             item.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
@@ -298,7 +292,7 @@ public class BrowserFrame extends JFrame {
         menuBar.add(menu);
 
         // Fix Mac OS specific menus
-        if (isMac) {
+        if (MacUIHelper.IS_MAC_OS) {
             new MacUIHelper(this);
         }
     }
