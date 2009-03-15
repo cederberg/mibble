@@ -1,18 +1,20 @@
 #!/bin/bash
-#
-# setenv.sh: Sets the Mibble environment variables
-#
 
-# Set MIBBLE_HOME variable
-if [[ -z "$MIBBLE_HOME" ]] ; then
-    DIR=`dirname "$0"`
-    if [[ "$DIR" = "." ]] ; then
+# Locate application directory
+if [[ "$MIBBLE_HOME" == "" ]] ; then
+    MIBBLE_HOME=`dirname $0`
+    if [[ "$MIBBLE_HOME" == "." ]] ; then
         MIBBLE_HOME=".."
     else
-        MIBBLE_HOME=`dirname "$DIR"`
+        MIBBLE_HOME=`dirname $MIBBLE_HOME`
     fi
-    export MIBBLE_HOME
 fi
+if [[ "$MIBBLE_HOME" == "" ]] ; then
+    echo "ERROR: Failed to find base application directory." >&2
+    exit 1
+fi
+export MIBBLE_HOME
+cd $MIBBLE_HOME
 
 # Outputs the Java version for the specified directory
 function java_version {
@@ -43,7 +45,9 @@ function is_java_dir {
 
 # Setup JAVA_HOME variable
 if is_java_dir $JAVA_HOME ; then
-    :
+        JAVA=$JAVA_HOME/bin/java
+elif [[ `which java` != "" ]] ; then
+    JAVA=`which java`
 else
     JAVA_HOME=
     for JAVA_EXE in `locate bin/java | grep java$ | xargs echo` ; do
@@ -55,12 +59,13 @@ else
             JAVA_HOME=
         fi
     done
+    if [[ "$JAVA_HOME" == "" ]] ; then
+        echo "ERROR: Failed to find java version 1.4 or higher." >&2
+        exit 1
+    fi
+    JAVA=$JAVA_HOME/bin/java
 fi
-if [[ "$JAVA_HOME" == "" ]] ; then
-    echo "ERROR: Failed to find java version 1.4 or higher." >&2
-    exit 1
-fi
-export JAVA_HOME
+export JAVA
 
 # Set CLASSPATH variable
 if [[ ! -x "$MIBBLE_HOME/lib" ]] ; then
@@ -76,6 +81,6 @@ export CLASSPATH
 # Display variables
 echo "Using environment variables:"
 echo "  MIBBLE_HOME = $MIBBLE_HOME"
-echo "  JAVA_HOME   = $JAVA_HOME"
+echo "  JAVA        = $JAVA"
 echo "  CLASSPATH   = $CLASSPATH"
 echo
