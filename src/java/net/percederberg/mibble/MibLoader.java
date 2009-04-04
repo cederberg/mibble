@@ -978,6 +978,11 @@ public class MibLoader {
                 log.addAll(file, e);
                 throw new MibLoaderException(log);
             } finally {
+                try {
+                    input.close();
+                } catch (Throwable ignore) {
+                    // Errors on close are ignored
+                }
                 analyzer.reset();
             }
         }
