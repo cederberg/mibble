@@ -94,7 +94,7 @@ public abstract class SnmpType extends MibType {
     /**
      * Removes the specified number of leading spaces from a string.
      * All tab characters in the string will be converted to spaces
-     * before processing. If the string contains fewer than the
+     * before processing. If the string contains fewer than the
      * specified number of leading spaces, all will be removed. If
      * the indentation count is less than zero (0), all leading
      * spaces in the input string will be removed.
