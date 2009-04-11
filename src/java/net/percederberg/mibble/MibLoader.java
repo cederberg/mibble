@@ -125,7 +125,9 @@ public class MibLoader {
     public boolean hasDir(File dir) {
         MibDirectoryCache  cache;
 
-        if (!dir.isDirectory()) {
+        if (dir == null) {
+            dir = new File(".");
+        } else if (!dir.isDirectory()) {
             dir = dir.getParentFile();
         }
         for (int i = 0; i < dirCaches.size(); i++) {
