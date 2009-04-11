@@ -399,7 +399,26 @@ class MibAnalyzer extends Asn1Analyzer {
         ArrayList   imports = getChildValues(node);
         MibImport   imp;
         MibContext  current = loader.getDefaultContext();
+        boolean     addMissingSmi = true;
 
+        for (int i = 0; i < imports.size(); i++) {
+            imp = (MibImport) imports.get(i);
+            if (imp.getName().startsWith("RFC1065-SMI") ||
+                imp.getName().startsWith("RFC1155-SMI") ||
+                imp.getName().startsWith("SNMPv2-SMI")) {
+
+                addMissingSmi = false;
+            }
+        }
+        if (addMissingSmi) {
+            // TODO: Ugly hack that adds a "hidden" SNMPv1 SMI as the last
+            //       import, but without any named symbols (triggering
+            //       warnings for each symbol used).
+            imp = new MibImport(loader, getLocation(node), "RFC1155-SMI", new ArrayList());
+            loader.scheduleLoad(imp.getName());
+            currentMib.addImport(imp);
+            imports.add(imp);
+        }
         for (int i = imports.size() - 1; i >= 0; i--) {
             imp = (MibImport) imports.get(i);
             current = new CompoundContext(imp, current);
