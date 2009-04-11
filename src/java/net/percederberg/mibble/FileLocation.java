@@ -122,7 +122,10 @@ public class FileLocation {
         }
         try {
             input = new BufferedReader(new FileReader(file));
-            while ((ch = input.read()) >= 0 && count < line) {
+            // Only count line-feed characters in files with invalid line
+            // termination sequences. The default readLine() method doesn't
+            // quite do the right thing in those cases... (bug #16252)
+            while (count < line && (ch = input.read()) >= 0) {
                 if (ch == '\n') {
                     count++;
                 }
