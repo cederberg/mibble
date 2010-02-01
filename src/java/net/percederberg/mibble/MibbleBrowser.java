@@ -138,7 +138,10 @@ public class MibbleBrowser {
             frame.loadMib(list.get(i).toString());
         }
         if (list.size() <= 0) {
+            frame.loadMib("RFC1155-SMI");
             frame.loadMib("RFC1213-MIB");
+            frame.loadMib("SNMPv2-SMI");
+            frame.loadMib("SNMPv2-TC");
             frame.loadMib("HOST-RESOURCES-MIB");
         }
         frame.refreshTree();
