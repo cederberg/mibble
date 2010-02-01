@@ -217,9 +217,10 @@ public class MibbleBrowser {
                 loader.addDir(file.getParentFile());
             }
             mib = loader.load(file);
-            addFilePref(file);
+            addFilePref(file.getAbsolutePath());
         } else {
             mib = loader.load(src);
+            addFilePref(src);
         }
         mb.addMib(mib);
     }
@@ -230,10 +231,15 @@ public class MibbleBrowser {
      * @param name           the MIB name
      */
     public void unloadMib(String name) {
-        Mib  mib = loader.getMib(name);
+        Mib   mib = loader.getMib(name);
+        File  file;
 
         if (mib != null) {
-            removeFilePref(mib.getFile());
+            file = mib.getFile();
+            removeFilePref(file.getAbsolutePath());
+            if (!file.exists()) {
+                removeFilePref(mib.getName());
+            }
             try {
                 loader.unload(name);
             } catch (MibLoaderException ignore) {
@@ -255,28 +261,30 @@ public class MibbleBrowser {
     }
 
     /**
-     * Adds a specified MIB file preference.
+     * Adds a specified MIB file preference. The file may be either a built-in
+     * MIB name or an absolute MIB file path.
      *
-     * @param file           the MIB file to add
+     * @param file           the MIB file or name to add
      */
-    private void addFilePref(File file) {
+    private void addFilePref(String file) {
         ArrayList  list = getFilePrefs();
 
-        if (!list.contains(file.getAbsolutePath())) {
-            prefs.put("file" + list.size(), file.getAbsolutePath());
+        if (!list.contains(file)) {
+            prefs.put("file" + list.size(), file);
         }
     }
 
     /**
-     * Removes a specified MIB file preference.
+     * Removes a specified MIB file preference. The file may be either a
+     * built-in MIB name or an absolute MIB file path.
      *
-     * @param file           the MIB file to remove
+     * @param file           the MIB file or name to remove
      */
-    private void removeFilePref(File file) {
+    private void removeFilePref(String file) {
         ArrayList  list = getFilePrefs();
 
         removeFilePrefs();
-        list.remove(file.getAbsolutePath());
+        list.remove(file);
         for (int i = 0; i < list.size(); i++) {
             prefs.put("file" + i, list.get(i).toString());
         }
