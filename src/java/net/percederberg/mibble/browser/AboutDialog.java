@@ -50,7 +50,8 @@ public class AboutDialog extends JDialog {
      */
     private static final String ACKNOWLEDGEMENTS =
         "Written by Watsh Rajneesh & Per Cederberg.\n" +
-        "Thanks to Charles F. Schatz for a similar effort.\n" +
+        "Thanks to Charles F. Schatz, and to Tex Clayton\n" +
+        "at Dartware, LLC for valuable additions.\n" +
         "This software uses the Westhawk SNMP Stack.\n" +
         "See http://snmp.westhawk.co.uk/ for info.";
 
