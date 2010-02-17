@@ -40,7 +40,7 @@ import javax.swing.JTextArea;
  * The MIB browser about dialog.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.10
  * @since    2.3
  */
 public class AboutDialog extends JDialog {
@@ -51,7 +51,7 @@ public class AboutDialog extends JDialog {
     private static final String ACKNOWLEDGEMENTS =
         "Written by Watsh Rajneesh & Per Cederberg.\n" +
         "Thanks to Charles F. Schatz, and to Tex Clayton\n" +
-        "at Dartware, LLC for valuable additions.\n" +
+        "at Dartware LLC, for valuable additions.\n" +
         "This software uses the Westhawk SNMP Stack.\n" +
         "See http://snmp.westhawk.co.uk/ for info.";
 
