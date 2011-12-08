@@ -10,6 +10,7 @@
                 version="1.0">
 
   <!-- ### INPUT PARAMETERS ### -->
+  <xsl:param name="year" select="'2011'" />
   <xsl:param name="date" select="'UNDEFINED'" />
   <xsl:param name="version" select="'UNDEFINED'" />
 
@@ -53,7 +54,9 @@ Mibble </xsl:text>
     <xsl:text>). See http://www.mibble.org/ for more
 information.
 
-Copyright (c) 2002-2005 Per Cederberg. Permission is granted to copy
+Copyright (c) 2002-</xsl:text>
+    <xsl:value-of select="$year" />
+    <xsl:text> Per Cederberg. Permission is granted to copy
 this document verbatim in any medium, provided that this copyright
 notice is left intact.</xsl:text>
     &newline;
@@ -139,6 +142,15 @@ notice is left intact.</xsl:text>
       <xsl:when test="@bug != ''">
         <xsl:text>[Bug #</xsl:text>
         <xsl:value-of select="@bug" />
+        <xsl:if test="string-length($text) &gt; 0">
+          <xsl:text> - </xsl:text>
+          <xsl:value-of select="$text" />
+        </xsl:if>
+        <xsl:text>]</xsl:text>
+      </xsl:when>
+      <xsl:when test="@issue != ''">
+        <xsl:text>[Issue #</xsl:text>
+        <xsl:value-of select="@issue" />
         <xsl:if test="string-length($text) &gt; 0">
           <xsl:text> - </xsl:text>
           <xsl:value-of select="$text" />

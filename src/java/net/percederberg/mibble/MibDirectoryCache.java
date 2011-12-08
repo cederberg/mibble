@@ -111,7 +111,7 @@ class MibDirectoryCache {
         Matcher  m;
 
         nameCache = new HashMap();
-        for (int i = 0; i < files.length; i++) {
+        for (int i = 0; files != null && i < files.length; i++) {
             name = files[i].getName();
             m = NAME.matcher(name);
             if (m.lookingAt() && files[i].isFile()) {

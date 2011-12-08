@@ -169,7 +169,7 @@ public class MibLoader {
         if (dir == null) {
             dir = new File(".");
         }
-        if (!hasDir(dir)) {
+        if (!hasDir(dir) && dir.isDirectory()) {
             dirCaches.add(new MibDirectoryCache(dir));
         }
     }
