@@ -11,6 +11,7 @@
                 version="1.0">
 
   <!-- ### INPUT PARAMETERS ### -->
+  <xsl:param name="year" select="'2011'" />
   <xsl:param name="date" select="'UNDEFINED'" />
   <xsl:param name="version" select="'UNDEFINED'" />
   <xsl:param name="style" select="''" />
@@ -82,7 +83,9 @@
       </p>
       &newline;&newline;&indent;&indent;
       <p class="footer">
-        <xsl:text disable-output-escaping="yes">Copyright &amp;copy; 2002-2005 Per Cederberg. Permission
+        <xsl:text disable-output-escaping="yes">Copyright &amp;copy; 2002-</xsl:text>
+        <xsl:value-of select="$year" />
+        <xsl:text disable-output-escaping="yes"> Per Cederberg. Permission
     is granted to copy this document verbatim in any medium, provided
     that this copyright notice is left intact.</xsl:text>
       </p>
