@@ -165,6 +165,20 @@
           </xsl:if>
         </a>
       </xsl:when>
+      <xsl:when test="@issue != ''">
+        <a>
+          <xsl:attribute name="href">
+            <xsl:text>http://github.com/cederberg/mibble/issues/</xsl:text>
+            <xsl:value-of select="@issue" />
+          </xsl:attribute>
+          <xsl:text>Issue #</xsl:text>
+          <xsl:value-of select="@issue" />
+          <xsl:if test="string-length($text) &gt; 0">
+            <xsl:text> - </xsl:text>
+            <xsl:value-of select="$text" />
+          </xsl:if>
+        </a>
+      </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="$text" />
         <xsl:text> [UNDEFINED REFERENCE]</xsl:text>
