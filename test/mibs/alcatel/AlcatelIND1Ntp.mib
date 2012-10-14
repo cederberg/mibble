@@ -1,0 +1,1626 @@
+ALCATEL-IND1-NTP-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+  MODULE-IDENTITY, OBJECT-TYPE, IpAddress, Counter32
+FROM SNMPv2-SMI
+  DisplayString, RowStatus
+FROM SNMPv2-TC
+  InetAddress, InetAddressType
+FROM INET-ADDRESS-MIB
+  softentIND1Ntp
+FROM ALCATEL-IND1-BASE;
+
+alcatelIND1NTPMIB MODULE-IDENTITY
+    LAST-UPDATED "200208210000Z"
+    ORGANIZATION "Alcatel - Architects Of An Internet World"
+    CONTACT-INFO
+        "Please consult with Customer Service to insure the most appropriate
+         version of this document is used with the products in question:
+
+        Alcatel Internetworking, Incorporated
+        (Division 1, Formerly XYLAN Corporation)
+        26801 West Agoura Road
+        Agoura Hills, CA  91301-5122
+        United States Of America
+
+        Telephone:             North America  +1 800 995 2696
+                               Latin America  +1 877 919 9526
+                               Europe         +31 23 556 0100
+                               Asia           +65 394 7933
+                               All Other      +1 818 878 4507
+
+        Electronic Mail:         support@ind.alcatel.com
+        World Wide Web:          http://www.ind.alcatel.com
+        File Transfer Protocol:  ftp://ftp.ind.alcatel.com/pub/products/mibs"
+
+    DESCRIPTION
+        "This module describes an authoritative enterprise-specific Simple
+         Network Management Protocol (SNMP) Management Information Base (MIB):
+
+             Propietary NTP MIB definitions
+
+         The right to make changes in specification and other information
+         contained in this document without prior notice is reserved.
+
+         No liability shall be assumed for any incidental, indirect, special,
+         or consequential damages whatsoever arising from or related to this
+         document or the information contained herein.
+
+         Vendors, end-users, and other interested parties are granted
+         non-exclusive license to use this specification in connection with
+         management of the products for which it is intended to be used.
+
+           Copyright (C) 1995-2002 Alcatel Internetworking, Incorporated
+                       ALL RIGHTS RESERVED WORLDWIDE"
+
+    REVISION      "200208210000Z"
+    DESCRIPTION
+        "The latest version of this MIB Module."
+
+    ::= { softentIND1Ntp 1 }
+
+alcatelIND1NTPMIBObjects OBJECT IDENTIFIER ::= { alcatelIND1NTPMIB 1 }
+
+
+-- ************************************************************************
+--  NTP Global Configuration
+-- ************************************************************************
+
+     alaNtpConfig         OBJECT IDENTIFIER ::= { alcatelIND1NTPMIBObjects 1 }
+     alaNtpInfo           OBJECT IDENTIFIER ::= { alcatelIND1NTPMIBObjects 2 }
+     alaNtpStats          OBJECT IDENTIFIER ::= { alcatelIND1NTPMIBObjects 3 }
+     alaNtpStatsStat      OBJECT IDENTIFIER ::= { alcatelIND1NTPMIBObjects 4 }
+     alaNtpStatsLoop      OBJECT IDENTIFIER ::= { alcatelIND1NTPMIBObjects 5 }
+     alaNtpStatsIo        OBJECT IDENTIFIER ::= { alcatelIND1NTPMIBObjects 6 }
+     alaNtpAccess         OBJECT IDENTIFIER ::= { alcatelIND1NTPMIBObjects 7 }
+     alaNtpLocalInfo      OBJECT IDENTIFIER ::= { alcatelIND1NTPMIBObjects 8 }
+
+--
+--
+
+-- NTP configuration
+
+alaNtpEnable OBJECT-TYPE
+  SYNTAX        INTEGER{
+                  enable(1),
+                  disable(2)
+                }
+  MAX-ACCESS    read-write
+  STATUS        current
+  DESCRIPTION   "Enables/disables NTP server."
+  ::= {alaNtpConfig 1}
+
+alaNtpMonitorEnable OBJECT-TYPE
+  SYNTAX        INTEGER{
+                  enable(1),
+                  disable(2)
+                }
+  MAX-ACCESS    read-write
+  STATUS        current
+  DESCRIPTION   "Enables/disables NTP monitor."
+  ::= {alaNtpConfig 2}
+
+
+-- NTP Peer Table
+
+alaNtpPeerTable OBJECT-TYPE
+  SYNTAX        SEQUENCE OF NtpPeerEntry
+  MAX-ACCESS    not-accessible
+  STATUS        current
+  DESCRIPTION   "Table containing the synchronization host this
+    switch will be associated with."
+  ::= {alaNtpConfig 3}
+
+alaNtpPeerEntry OBJECT-TYPE
+  SYNTAX        NtpPeerEntry
+  MAX-ACCESS    not-accessible
+  STATUS        current
+  DESCRIPTION   "Each entry corresponds to a synchronization host."
+  INDEX       {   alaNtpPeerAddressType, alaNtpPeerAddress   }
+  ::= {alaNtpPeerTable 1}
+
+NtpPeerEntry ::= SEQUENCE {
+                alaNtpPeerAddressType
+                   InetAddressType,
+                alaNtpPeerAddress
+                   InetAddress,
+                alaNtpPeerIpAddress
+                   IpAddress,
+                alaNtpPeerType
+                   INTEGER,
+                alaNtpPeerAuth
+                   INTEGER,
+                alaNtpPeerVersion
+                   INTEGER,
+                alaNtpPeerMinpoll
+                   INTEGER,
+                alaNtpPeerPrefer
+                   INTEGER,
+                alaNtpPeerAdmin
+                   RowStatus,
+                alaNtpPeerName
+                   DisplayString
+                }
+
+alaNtpPeerAddressType OBJECT-TYPE
+      SYNTAX        InetAddressType
+      MAX-ACCESS    not-accessible
+      STATUS        current
+      DESCRIPTION   "The InetAddress type of the synchronization host.
+                    InetAddressIPv4 (1) is the only type currently
+                    supported."
+      ::={ alaNtpPeerEntry 1 }
+
+alaNtpPeerAddress OBJECT-TYPE
+      SYNTAX        InetAddress
+      MAX-ACCESS    not-accessible
+      STATUS        current
+      DESCRIPTION   "The InetAddress of the synchronization host."
+      ::={ alaNtpPeerEntry 2 }
+
+alaNtpPeerIpAddress OBJECT-TYPE
+      SYNTAX        IpAddress
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION   "The IP address of the synchronization host derrived
+                    from the InetAddress."
+      ::={ alaNtpPeerEntry 3 }
+
+alaNtpPeerType OBJECT-TYPE
+      SYNTAX        INTEGER  {
+                      active(1),
+                      client(3),
+                      broadcast(5)
+                    }
+      MAX-ACCESS    read-write
+      STATUS        current
+      DESCRIPTION   "Type of synchronization host that will communicate
+          with this switch."
+      ::= { alaNtpPeerEntry 4 }
+
+alaNtpPeerAuth OBJECT-TYPE
+      SYNTAX        INTEGER
+      MAX-ACCESS    read-write
+      STATUS        current
+      DESCRIPTION   "The authorization keyid for the remote host."
+      ::= { alaNtpPeerEntry 5 }
+
+alaNtpPeerVersion OBJECT-TYPE
+      SYNTAX        INTEGER
+      MAX-ACCESS    read-write
+      STATUS        current
+      DESCRIPTION   "The NTP version to communicate with the remote host."
+      ::= { alaNtpPeerEntry 6 }
+
+alaNtpPeerMinpoll OBJECT-TYPE
+      SYNTAX        INTEGER
+      MAX-ACCESS    read-write
+      STATUS        current
+      DESCRIPTION   "The minimum poll duration to the remote host.  This
+                    value is a power of 2 seconds when the poll will occur.
+                    For example, 4 (2 to the power 4) is 16 seconds."
+      ::= { alaNtpPeerEntry 7 }
+
+alaNtpPeerPrefer OBJECT-TYPE
+      SYNTAX        INTEGER {
+                      prefer (1),
+                      no-prefer(2)
+                    }
+      MAX-ACCESS    read-write
+      STATUS        current
+      DESCRIPTION   "Marks the host as a preferred connection."
+      ::= { alaNtpPeerEntry 8 }
+
+alaNtpPeerAdmin OBJECT-TYPE
+      SYNTAX        RowStatus
+      MAX-ACCESS    read-write
+      STATUS        current
+      DESCRIPTION   "Used in accordance to installation and removal conventions
+                    for conceptual rows.  The RowStatus values that are
+                    supported are the following:
+                      active(1) - The row is active and valid.
+                      createAndGo(4) - The row will be created and activated.
+                      destroy(6) - The row will be destroyed."
+      ::={ alaNtpPeerEntry 9 }
+
+alaNtpPeerName OBJECT-TYPE
+      SYNTAX        DisplayString
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION   "The DNS name for the peer association derrived from
+                    the InetAddress."
+      ::={ alaNtpPeerEntry 10 }
+
+
+--
+
+alaNtpAuthDelay OBJECT-TYPE
+    SYNTAX        INTEGER
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION   "This field sets a specified time interval
+                  that is added to timestamps included in
+                  requests to the server that required
+                  authentication. Typically this delay is
+                  needed in cases of long delay paths, or servers
+                  whose clocks are unsynchronized. Value is
+                  in milli-seconds"
+    ::={ alaNtpConfig 4 }
+
+alaNtpKeysFile OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION   "Name of the file which has the authorization keys."
+    ::={ alaNtpConfig 5 }
+
+alaNtpConfigReqKeyId OBJECT-TYPE
+    SYNTAX        INTEGER
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION   "Request messages ask for information from the NTP
+                  entity such as timestamp information, statistics, etc.
+                  This changes the authentication key identifier for
+                  request messages sent from the switch to another NTP
+                  entity."
+    ::={ alaNtpConfig 6 }
+
+alaNtpConfigCtlKeyId OBJECT-TYPE
+    SYNTAX        INTEGER
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION   "Control messages attempt to change the configuration
+                  of the NTP entity in some fashion.  This changes
+                  the authentication key identifier for control messages
+                  sent from the switch to another NTP entity."
+    ::={ alaNtpConfig 7 }
+
+alaNtpConfigCfgKeyId OBJECT-TYPE
+    SYNTAX        INTEGER
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION   "Configuration messages changes information on the
+                  NTP entity."
+    ::={ alaNtpConfig 8 }
+
+alaNtpPrecision OBJECT-TYPE
+    SYNTAX        INTEGER( -20..-1 )
+    MAX-ACCESS    read-write
+    STATUS        current
+    DESCRIPTION   "This sets the server's advertised precision."
+    ::={ alaNtpConfig 9 }
+
+
+
+-- NTP Information
+
+alaNtpPeerListTable OBJECT-TYPE
+    SYNTAX        SEQUENCE OF NtpPeerListEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION   "Used to display a brief list of all NTP associations
+                  related to this switch (servers, peers, etc.)."
+    ::= {alaNtpInfo 1}
+
+alaNtpPeerListEntry OBJECT-TYPE
+    SYNTAX        NtpPeerListEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION   "Each entry corresponds to one association."
+    INDEX   {  alaNtpPeerListAddressType, alaNtpPeerListAddress  }
+    ::= {alaNtpPeerListTable 1}
+
+NtpPeerListEntry ::= SEQUENCE {
+    alaNtpPeerListAddressType
+       InetAddressType,
+    alaNtpPeerListAddress
+       InetAddress,
+    alaNtpPeerListIpAddress
+       IpAddress,
+    alaNtpPeerListLocal
+       IpAddress,
+    alaNtpPeerListStratum
+       INTEGER,
+    alaNtpPeerListPoll
+       INTEGER,
+    alaNtpPeerListReach
+       INTEGER,
+    alaNtpPeerListDelay
+       DisplayString,
+    alaNtpPeerListOffset
+       DisplayString,
+    alaNtpPeerListDispersion
+       DisplayString,
+    alaNtpPeerListSynced
+       INTEGER,
+    alaNtpPeerListName
+       DisplayString
+    }
+
+alaNtpPeerListAddressType OBJECT-TYPE
+        SYNTAX        InetAddressType
+        MAX-ACCESS    not-accessible
+        STATUS        current
+        DESCRIPTION   "The InetAddress type of the synchronization host.
+                      InetAddressIPv4 (1) is the only type currently
+                      supported."
+        ::={ alaNtpPeerListEntry 1 }
+
+alaNtpPeerListAddress OBJECT-TYPE
+        SYNTAX        InetAddress
+        MAX-ACCESS    not-accessible
+        STATUS        current
+        DESCRIPTION   "The InetAddress of the association."
+        ::={ alaNtpPeerListEntry 2 }
+
+alaNtpPeerListIpAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The IP address of the association."
+        ::={ alaNtpPeerListEntry 3 }
+
+alaNtpPeerListLocal OBJECT-TYPE
+        SYNTAX        IpAddress
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The local interface address assigned by
+                      NTP to the remote association. If this address is
+                      0.0.0.0, then the local address has yet to be
+                      determined."
+        ::={ alaNtpPeerListEntry 4 }
+
+alaNtpPeerListStratum OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The stratum level of the remote peer. If this
+                      number is 16, the remote peer has not been
+                      synchronized."
+        ::={ alaNtpPeerListEntry 5 }
+
+alaNtpPeerListPoll OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The polling interval, in seconds."
+        ::={ alaNtpPeerListEntry 6 }
+
+alaNtpPeerListReach OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The reachability register of the remote
+                      association, in octal format. This number is
+                      determined by the NTP algorithm."
+        ::={ alaNtpPeerListEntry 7 }
+
+alaNtpPeerListDelay OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The currently estimated delay of this remote
+                      association, in seconds. This time is determined
+                      by the NTP algorithm."
+        ::={ alaNtpPeerListEntry 8 }
+
+alaNtpPeerListOffset OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The currently estimated offset of this remote
+                      association, in seconds. This time is determined
+                      by the NTP algorithm."
+        ::={ alaNtpPeerListEntry 9 }
+
+alaNtpPeerListDispersion OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The currently estimated dispersion of this remote
+                      association, in seconds. This time is determined
+                      by the NTP algorithm."
+        ::={ alaNtpPeerListEntry 10 }
+
+alaNtpPeerListSynced OBJECT-TYPE
+        SYNTAX        INTEGER{
+          synchornized(1),
+          not-synchronized(2)
+        }
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "Indicates that NTP is synchronized with this
+                      entity."
+        ::={ alaNtpPeerListEntry 11 }
+
+alaNtpPeerListName OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The DNS name for the peer association,"
+        ::={ alaNtpPeerListEntry 12 }
+
+--
+
+
+
+-- alaNtpLocalInfo 
+--     "Used to display information about the local
+--     switch's implementation of NTP."
+
+alaNtpInfoPeer OBJECT-TYPE
+    SYNTAX        IpAddress
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "The IP address of the remote association."
+    ::={ alaNtpLocalInfo 1 }
+
+alaNtpInfoMode OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "The peer mode of this remote association."
+    ::={ alaNtpLocalInfo 2 }
+
+alaNtpInfoLeapIndicator OBJECT-TYPE
+    SYNTAX        INTEGER
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "The status of leap second insertion for
+                  this association."
+    ::={ alaNtpLocalInfo 3 }
+
+alaNtpInfoStratum OBJECT-TYPE
+    SYNTAX        INTEGER
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "The stratum level of the remote peer.
+                  If this number is 16, the remote peer has not
+                  been synchronized."
+    ::={ alaNtpLocalInfo 4 }
+
+alaNtpInfoPrecision OBJECT-TYPE
+    SYNTAX        INTEGER( -20..-4 )
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "The advertised precision of the switch.
+                    It will be a number between -4 and -20."
+    ::={ alaNtpLocalInfo 5 }
+
+alaNtpInfoDistance OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "This is a signed fixed-point number indicating
+                    the total roundtrip delay to the primary reference
+                    source at the root of the synchronization subnet,
+                    in seconds."
+    ::={ alaNtpLocalInfo 6 }
+
+alaNtpInfoDispersion OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "This is a signed fixed-point number indicating
+                    the maximum error relative to the primary reference
+                    source at the root of the synchronization subnet,
+                    in seconds."
+    ::={ alaNtpLocalInfo 7 }
+
+alaNtpInfoReferenceId OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "This is a 32-bit code identifying the particular
+                    reference clock.  Can be an IP address."
+    ::={ alaNtpLocalInfo 8 }
+
+alaNtpInfoReferenceTime OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "This is the local time at which the local clock
+                    was last set or corrected."
+    ::={ alaNtpLocalInfo 9 }
+
+alaNtpInfoFrequency OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "A number determining the local clocks frequency
+                  in relation to a reference clock's Pulse per
+                  Second (PPS). If the clock is running in perfect
+                  synchronization, this number should be 1. Otherwise,
+                  it will be slightly lower or higher in order to
+                  compensate for the time differ-ence."
+    ::={ alaNtpLocalInfo 10 }
+
+alaNtpInfoStability OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "The stability of the clock in relation to a
+                  reference clock's Pulse per Second (PPS)."
+    ::={ alaNtpLocalInfo 11 }
+
+alaNtpInfoBroadcastDelay OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "The broadcast delay, in seconds, of this association."
+    ::={ alaNtpLocalInfo 12 }
+
+alaNtpInfoAuthDelay OBJECT-TYPE
+    SYNTAX        DisplayString
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION   "The authentication delay, in seconds, of this
+                    association."
+    ::={ alaNtpLocalInfo 13 }
+
+
+-- ************************************************************************
+--  Peer Show Table
+-- ************************************************************************
+alaNtpPeerShowTable OBJECT-TYPE
+    SYNTAX        SEQUENCE OF NtpPeerShowEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION   "Used to display a brief list of all NTP associations
+                  related to this switch (servers, peers, etc.)."
+    ::= {alaNtpInfo 3}
+
+alaNtpPeerShowEntry OBJECT-TYPE
+      SYNTAX        NtpPeerShowEntry
+      MAX-ACCESS    not-accessible
+      STATUS        current
+      DESCRIPTION   "Each entry corresponds to one association."
+      INDEX       { alaNtpPeerShowRemoteAddressType, 
+                    alaNtpPeerShowRemoteAddress }
+      ::= {alaNtpPeerShowTable 1}
+
+NtpPeerShowEntry ::= SEQUENCE {
+        alaNtpPeerShowRemoteAddressType
+          InetAddressType,
+        alaNtpPeerShowRemoteAddress
+          InetAddress,
+        alaNtpPeerShowRemoteIpAddress
+          IpAddress,
+        alaNtpPeerShowLocal
+          IpAddress,
+        alaNtpPeerShowHmode
+          DisplayString,
+        alaNtpPeerShowPmode
+          DisplayString,
+        alaNtpPeerShowStratum
+          INTEGER,
+        alaNtpPeerShowPrecision
+          INTEGER,
+        alaNtpPeerShowLeapIndicator
+          INTEGER,
+        alaNtpPeerShowReferenceId
+          DisplayString,
+        alaNtpPeerShowRootDistance
+          DisplayString,
+        alaNtpPeerShowRootDispersion
+          DisplayString,
+        alaNtpPeerShowPpoll
+          INTEGER,
+        alaNtpPeerShowHpoll
+          INTEGER,
+        alaNtpPeerShowKeyid
+          INTEGER,
+        alaNtpPeerShowVersion
+          INTEGER,
+        alaNtpPeerShowAssociation
+          INTEGER,
+        alaNtpPeerShowValid
+          INTEGER,
+        alaNtpPeerShowReach
+          INTEGER,
+        alaNtpPeerShowUnreach
+          INTEGER,
+        alaNtpPeerShowFlash
+          INTEGER,
+        alaNtpPeerShowBroadcastOffset
+          DisplayString,
+        alaNtpPeerShowTTL
+          INTEGER,
+        alaNtpPeerShowTimer
+          INTEGER,
+        alaNtpPeerShowFlags
+          INTEGER,
+        alaNtpPeerShowReferenceTime
+          DisplayString,
+        alaNtpPeerShowOriginateTime
+          DisplayString,
+        alaNtpPeerShowReceiveTime
+          DisplayString,
+        alaNtpPeerShowTransmitTime
+          DisplayString,
+        alaNtpPeerShowOffset
+          DisplayString,
+        alaNtpPeerShowDelay
+          DisplayString,
+        alaNtpPeerShowDispersion
+          DisplayString,
+        alaNtpPeerShowName
+          DisplayString
+        }
+
+alaNtpPeerShowRemoteAddressType OBJECT-TYPE
+        SYNTAX        InetAddressType
+        MAX-ACCESS    not-accessible
+        STATUS        current
+        DESCRIPTION   "The InetAddress type of the synchronization host.
+                      InetAddressIPv4 (1) is the only type currently
+                      supported."
+        ::={ alaNtpPeerShowEntry 1 }
+
+alaNtpPeerShowRemoteAddress OBJECT-TYPE
+        SYNTAX        InetAddress
+        MAX-ACCESS    not-accessible
+        STATUS        current
+        DESCRIPTION   "The InetAddress of the remote association."
+        ::={ alaNtpPeerShowEntry 2 }
+
+alaNtpPeerShowRemoteIpAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The IP address of the remote association."
+        ::={ alaNtpPeerShowEntry 3 }
+
+
+alaNtpPeerShowLocal OBJECT-TYPE
+        SYNTAX        IpAddress
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The local interface address assigned by NTP to the
+                      remote associations."
+        ::={ alaNtpPeerShowEntry 4 }
+
+alaNtpPeerShowHmode OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The host mode of this remote association."
+        ::={ alaNtpPeerShowEntry 5 }
+
+alaNtpPeerShowPmode OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The peer mode of this remote association."
+        ::={ alaNtpPeerShowEntry 6 }
+
+alaNtpPeerShowStratum OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The stratum level of the remote peer."
+        ::={ alaNtpPeerShowEntry 7 }
+
+alaNtpPeerShowPrecision OBJECT-TYPE
+        SYNTAX        INTEGER(-20..-4)
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The advertised precision of this association,
+                      which is a number from -4 to -20."
+        ::={ alaNtpPeerShowEntry 8 }
+
+alaNtpPeerShowLeapIndicator OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The status of leap second insertion for
+                      this association."
+        ::={ alaNtpPeerShowEntry 9 }
+
+alaNtpPeerShowReferenceId OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The status of leap second insertion for
+                      this association.  Normally an IP address."
+        ::={ alaNtpPeerShowEntry 10 }
+
+alaNtpPeerShowRootDistance OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "This is a signed fixed-point number indicating
+      the total roundtrip delay to the primary reference
+      source at the root of the synchronization subnet,
+      in seconds."
+        ::={ alaNtpPeerShowEntry 11 }
+
+alaNtpPeerShowRootDispersion OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "This is a signed fixed-point number indicating
+      the maximum error relative to the primary reference
+      source at the root of the synchronization subnet,
+      in seconds."
+        ::={ alaNtpPeerShowEntry 12 }
+
+alaNtpPeerShowPpoll OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The poll time for this association when it is a peer."
+        ::={ alaNtpPeerShowEntry 13 }
+
+alaNtpPeerShowHpoll OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The poll time for this association when it is a host."
+        ::={ alaNtpPeerShowEntry 14 }
+
+alaNtpPeerShowKeyid OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "This is an integer identifying the cryptographic
+                      key used to generate the message authentication code."
+        ::={ alaNtpPeerShowEntry 15 }
+
+alaNtpPeerShowVersion OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "What version of NTP this association is using."
+        ::={ alaNtpPeerShowEntry 16 }
+
+alaNtpPeerShowAssociation OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of seconds since this NTP entity was
+      associated with the switch."
+        ::={ alaNtpPeerShowEntry 17 }
+
+alaNtpPeerShowValid OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "This is an integer counter indicating the valid
+                      samples remaining in the filter register."
+        ::={ alaNtpPeerShowEntry 18 }
+
+alaNtpPeerShowReach OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "This is a shift register used to determine the
+                      reachability status of this peer."
+        ::={ alaNtpPeerShowEntry 19 }
+
+alaNtpPeerShowUnreach OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of times this NTP entity was unreachable."
+        ::={ alaNtpPeerShowEntry 20 }
+
+alaNtpPeerShowFlash OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "These reveal the state at the last grumble from the
+                      peer and are most handy for diagnosing problems."
+        ::={ alaNtpPeerShowEntry 21 }
+
+alaNtpPeerShowBroadcastOffset OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The broadcast delay."
+        ::={ alaNtpPeerShowEntry 22 }
+
+alaNtpPeerShowTTL OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "This fields displays the Time-to-Live (TTL) time
+      in seconds and the mode (unicast, multicast, or
+      broadcast) of NTP messages sent to a broadcast address."
+        ::={ alaNtpPeerShowEntry 23 }
+
+alaNtpPeerShowTimer OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The time to next poll."
+        ::={ alaNtpPeerShowEntry 24 }
+
+alaNtpPeerShowFlags OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "This counter lists what flags have been configured
+                        for this NTP entity.
+                        0x01 - Configured
+                        0x02 - System Peer
+                        0x10 - Preferred
+                        0x20 - Authentable."
+        ::={ alaNtpPeerShowEntry 25 }
+
+alaNtpPeerShowReferenceTime OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "This is the local time, in timestamp format, when
+                      the local clock was last updated."
+        ::={ alaNtpPeerShowEntry 26 }
+
+alaNtpPeerShowOriginateTime OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "This is the local time, in timestamp format, of
+                      the peer when its latest NTP message was sent."
+        ::={ alaNtpPeerShowEntry 27 }
+
+alaNtpPeerShowReceiveTime OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "This is the local time, in timestamp format, when
+                      the latest NTP message from the peer arrived."
+        ::={ alaNtpPeerShowEntry 28 }
+
+alaNtpPeerShowTransmitTime OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "This is the local time, in timestamp format, at
+                      which the last NTP message was sent from this
+                      association."
+        ::={ alaNtpPeerShowEntry 29 }
+
+alaNtpPeerShowOffset OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The currently estimated offset of this remote
+                      association, in seconds."
+        ::={ alaNtpPeerShowEntry 30 }
+
+alaNtpPeerShowDelay OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The currently estimated delay of this remote
+                      association, in seconds."
+        ::={ alaNtpPeerShowEntry 31 }
+
+alaNtpPeerShowDispersion OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The currently estimated dispersion of this remote
+                      association, in seconds."
+        ::={ alaNtpPeerShowEntry 32 }
+
+alaNtpPeerShowName OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The DNS name for the peer association,"
+        ::={ alaNtpPeerShowEntry 33 }
+
+
+
+-- NTP statistics
+
+-- alaNtpStatsStat 
+--     "The local server statistics."
+
+alaNtpStatsStatUptime OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of seconds the local NTP server has
+                      been associated with the switch."
+        ::={ alaNtpStatsStat 1 }
+
+alaNtpStatsStatReset OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of seconds since the last time the
+                      local NTP server has been restarted."
+        ::={ alaNtpStatsStat 2 }
+
+alaNtpStatsStatBadStratum OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of NTP packets received that had a
+                      corrupted stratum bit in the data of the packet."
+        ::={ alaNtpStatsStat 3 }
+
+alaNtpStatsStatOldVersion OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of NTP packets received that were
+                      of an older version of NTP (either version 1 or 2)."
+        ::={ alaNtpStatsStat 4 }
+
+alaNtpStatsStatNewVersion OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of NTP packets received that were
+                      version 3 of NTP."
+        ::={ alaNtpStatsStat 5 }
+
+alaNtpStatsStatUnknownVersion OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of NTP packets received that the
+                      version was unknown (most likely due to packet
+                      corruption)."
+        ::={ alaNtpStatsStat 6 }
+
+alaNtpStatsStatBadLength OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of NTP packets received that did not
+                      fit the NTP packet structure (most likely due to
+                      packet corruption)."
+        ::={ alaNtpStatsStat 7 }
+
+alaNtpStatsStatProcessed OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The total number of NTP packets processed."
+        ::={ alaNtpStatsStat 8 }
+
+alaNtpStatsStatBadAuth OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of NTP packets rejected because they
+                      did not meet authentication standards."
+        ::={ alaNtpStatsStat 9 }
+
+alaNtpStatsStatLimitRejects OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of NTP packets rejected because they
+                      did not meet authentication standards."
+        ::={ alaNtpStatsStat 10 }
+
+alaNtpStatsPeerTable OBJECT-TYPE
+  SYNTAX        SEQUENCE OF NtpStatsPeerEntry
+  MAX-ACCESS    not-accessible
+  STATUS        current
+  DESCRIPTION   "Table containing the synchronization host statistics."
+  ::= {alaNtpStats 2}
+
+alaNtpStatsPeerEntry OBJECT-TYPE
+  SYNTAX        NtpStatsPeerEntry
+  MAX-ACCESS    not-accessible
+  STATUS        current
+  DESCRIPTION   "Each entry corresponds to a synchronization host."
+  INDEX       { alaNtpStatsPeerAddressType, alaNtpStatsPeerAddress }
+  ::= {alaNtpStatsPeerTable 1}
+
+NtpStatsPeerEntry ::= SEQUENCE {
+                alaNtpStatsPeerAddressType
+                   InetAddressType,
+                alaNtpStatsPeerAddress
+                   InetAddress,
+                alaNtpStatsPeerIpAddress
+                   IpAddress,
+                alaNtpStatsPeerLocal
+                   IpAddress,
+                alaNtpStatsPeerLastRcv
+                   Counter32,
+                alaNtpStatsPeerNextSend
+                   Counter32,
+                alaNtpStatsPeerReachChange
+                   Counter32,
+                alaNtpStatsPeerPacketsSent
+                   Counter32,
+                alaNtpStatsPeerPacketsRcvd
+                   Counter32,
+                alaNtpStatsPeerBadAuth
+                   Counter32,
+                alaNtpStatsPeerBogusOrigin
+                   Counter32,
+                alaNtpStatsPeerDuplicate
+                   Counter32,
+                alaNtpStatsPeerBadDispersion
+                   Counter32,
+                alaNtpStatsPeerBadRefTime
+                   Counter32,
+                alaNtpStatsPeerCandidateOrder
+                   Counter32,
+                alaNtpStatsPeerReset
+                   INTEGER,
+                alaNtpStatsPeerName
+                   DisplayString
+                }
+
+alaNtpStatsPeerAddressType OBJECT-TYPE
+        SYNTAX        InetAddressType
+        MAX-ACCESS    not-accessible
+        STATUS        current
+        DESCRIPTION   "The InetAddress type of the synchronization host.
+                      InetAddressIPv4 (1) is the only type currently
+                      supported."
+        ::={ alaNtpStatsPeerEntry 1 }
+
+alaNtpStatsPeerAddress OBJECT-TYPE
+        SYNTAX        InetAddress
+        MAX-ACCESS    not-accessible
+        STATUS        current
+        DESCRIPTION   "The InetAddress of the synchronization host."
+        ::={ alaNtpStatsPeerEntry 2 }
+
+alaNtpStatsPeerIpAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The IP address of the synchronization host."
+        ::={ alaNtpStatsPeerEntry 3 }
+
+alaNtpStatsPeerLocal OBJECT-TYPE
+        SYNTAX        IpAddress
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The local interface address assigned by
+                      NTP to the remote association."
+        ::={ alaNtpStatsPeerEntry 4 }
+
+alaNtpStatsPeerLastRcv OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The time since the last packet was received."
+        ::= { alaNtpStatsPeerEntry 5 }
+
+alaNtpStatsPeerNextSend OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The time until the next packet is to be sent."
+        ::= { alaNtpStatsPeerEntry 6 }
+
+alaNtpStatsPeerReachChange OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The time that the peer has been reachable."
+        ::= { alaNtpStatsPeerEntry 7 }
+
+alaNtpStatsPeerPacketsSent OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of packets that have been sent."
+        ::= { alaNtpStatsPeerEntry 8 }
+
+alaNtpStatsPeerPacketsRcvd OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of packets that have been received."
+        ::= { alaNtpStatsPeerEntry 9 }
+
+alaNtpStatsPeerBadAuth OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of packets received with bad
+      authentication."
+        ::= { alaNtpStatsPeerEntry 10 }
+
+alaNtpStatsPeerBogusOrigin OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of bogus packets."
+        ::= { alaNtpStatsPeerEntry 11 }
+
+alaNtpStatsPeerDuplicate OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of duplicated packets received."
+        ::= { alaNtpStatsPeerEntry 12 }
+
+alaNtpStatsPeerBadDispersion OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number bad dispersions."
+        ::= { alaNtpStatsPeerEntry 13 }
+
+alaNtpStatsPeerBadRefTime OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of bad reference times received."
+        ::= { alaNtpStatsPeerEntry 14 }
+
+alaNtpStatsPeerCandidateOrder OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The order of synchronization candidates."
+        ::= { alaNtpStatsPeerEntry 15 }
+
+alaNtpStatsPeerReset OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION   "Resets the statistics for the peer."
+        ::= { alaNtpStatsPeerEntry 16 }
+
+alaNtpStatsPeerName OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The DNS name for the peer association,"
+        ::={ alaNtpStatsPeerEntry 17 }
+
+
+--
+
+-- alaNtpStatsLoop 
+--     "The loop filter is used to control and correct
+--      the phase of timestamps as processed by the local
+--      clock. The loop filter examines timestamps sent to
+--      and from the local clock and can adjust them to
+--      account for natural wander and jitter."
+
+alaNtpStatsLoopOffset OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The currently estimated offset of this remote
+                      association, in seconds. This counter indicates
+                      the offset of the peer clock relative to the local
+                      clock."
+        ::={ alaNtpStatsLoop 1 }
+
+alaNtpStatsLoopFrequency OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "A number determining the local clocks frequency
+                      in relation to a reference clocks Pulse per Second
+                      (PPS). If the clock is running in perfect
+                      synchronization, this number should be 1. Otherwise,
+                      it will be slightly lower or higher in order to
+                      compensate for the time discrepancy between the
+                      reference clock and the local clock."
+        ::={ alaNtpStatsLoop 2 }
+
+alaNtpStatsLoopPollAdjust OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "Determines the peer polling time."
+        ::={ alaNtpStatsLoop 3 }
+
+alaNtpStatsLoopWatchdog OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "Makes sure that NTP timer continues to run."
+        ::={ alaNtpStatsLoop 4 }
+
+
+--
+
+-- alaNtpStatsIo
+--    "General statistics on received and transmitted
+--     NTP packets for this switch."
+
+alaNtpStatsIoReset OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of seconds since the last restart of NTP."
+        ::={ alaNtpStatsIo 1 }
+
+alaNtpStatsIoRcvBuffers OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of switch receive buffers currently being
+      used by this NTP entity."
+        ::={ alaNtpStatsIo 2 }
+
+alaNtpStatsIoFreeRcvBuffers OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of free receive buffers."
+        ::={ alaNtpStatsIo 3 }
+
+alaNtpStatsIoUsedRcvBuffers OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of receive buffers currently being used."
+        ::={ alaNtpStatsIo 4 }
+
+alaNtpStatsIoRefills OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of times we added packets."
+        ::={ alaNtpStatsIo 5 }
+
+alaNtpStatsIoDroppedPackets OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of packets dropped."
+        ::={ alaNtpStatsIo 6 }
+
+alaNtpStatsIoIgnoredPackets OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of packets ignored."
+        ::={ alaNtpStatsIo 7 }
+
+alaNtpStatsIoRcvPackets OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The total number of NTP packets received by the
+      switch."
+        ::={ alaNtpStatsIo 8 }
+
+alaNtpStatsIoSentPackets OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The total number of NTP packets sent by the switch."
+        ::={ alaNtpStatsIo 9 }
+
+alaNtpStatsIoNotSentPackets OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of NTP packets generated but not sent
+       due to restrictions."
+        ::={ alaNtpStatsIo 10 }
+
+alaNtpStatsIoInterrupts OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of times NTP information was interrupted
+      in the process of transmitting or receiving."
+        ::={ alaNtpStatsIo 11 }
+
+alaNtpStatsIoInterruptsRcv OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of packets received by the interrupt
+      handler."
+        ::={ alaNtpStatsIo 12 }
+
+alaNtpStatsReset OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION   "Resets the statistics counters for the following
+                      subsystems:
+                      0x01  - all peers
+                      0x02  - i/o
+                      0x04  - system
+                      0x08  - memory
+                      0x10  - timer
+                      0x20  - authentication
+                      0x40  - control"
+        ::={ alaNtpStats 5 }
+
+alaNtpStatsMonitorTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF NtpStatsMonitorEntry
+        MAX-ACCESS    not-accessible
+        STATUS        current
+        DESCRIPTION   "Table containing the association monitoring list."
+        ::= {alaNtpStats 6}
+
+alaNtpStatsMonitorEntry OBJECT-TYPE
+        SYNTAX        NtpStatsMonitorEntry
+        MAX-ACCESS    not-accessible
+        STATUS        current
+        DESCRIPTION   "Each entry corresponds to a synchronization host."
+        INDEX       { alaNtpStatsMonitorIndex  }
+        ::= {alaNtpStatsMonitorTable 1}
+
+NtpStatsMonitorEntry ::= SEQUENCE {
+      alaNtpStatsMonitorIndex
+         Counter32,
+      alaNtpStatsMonitorAddress
+         IpAddress,
+      alaNtpStatsMonitorPort
+         INTEGER,
+      alaNtpStatsMonitorLocalAddress
+         IpAddress,
+      alaNtpStatsMonitorCount
+         Counter32,
+      alaNtpStatsMonitorMode
+         DisplayString,
+      alaNtpStatsMonitorVersion
+         INTEGER,
+      alaNtpStatsMonitorDrop
+         Counter32,
+      alaNtpStatsMonitorLast
+         Counter32,
+      alaNtpStatsMonitorFirst
+         Counter32,
+      alaNtpStatsMonitorName
+         DisplayString
+    }
+
+alaNtpStatsMonitorIndex OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    not-accessible
+        STATUS        current
+        DESCRIPTION   "Table index."
+        ::={ alaNtpStatsMonitorEntry 1 }
+
+alaNtpStatsMonitorAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The IP address of the remote association."
+        ::={ alaNtpStatsMonitorEntry 2 }
+
+alaNtpStatsMonitorPort OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The IP port number of the association."
+        ::={ alaNtpStatsMonitorEntry 3 }
+
+alaNtpStatsMonitorLocalAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The local IP address of the association."
+        ::={ alaNtpStatsMonitorEntry 4 }
+
+alaNtpStatsMonitorCount OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of NTP packets received from
+                      this association."
+        ::={ alaNtpStatsMonitorEntry 5 }
+
+alaNtpStatsMonitorMode OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The mode the NTP association uses in relation
+                      to the switch."
+        ::={ alaNtpStatsMonitorEntry 6 }
+
+alaNtpStatsMonitorVersion OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The version of NTP the association is using."
+        ::={ alaNtpStatsMonitorEntry 7 }
+
+alaNtpStatsMonitorDrop OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of NTP packets received from this
+                      association that were dropped."
+        ::={ alaNtpStatsMonitorEntry 8 }
+
+alaNtpStatsMonitorLast OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of seconds since the last NTP message
+                      has been received from this association."
+        ::={ alaNtpStatsMonitorEntry 9 }
+
+alaNtpStatsMonitorFirst OBJECT-TYPE
+        SYNTAX        Counter32
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The number of seconds since the first NTP message
+                      has been received from this association."
+        ::={ alaNtpStatsMonitorEntry 10 }
+
+alaNtpStatsMonitorName OBJECT-TYPE
+        SYNTAX        DisplayString
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "The DNS name for the peer association,"
+        ::={ alaNtpStatsMonitorEntry 11 }
+
+
+-- NTP Admin control
+
+
+-- NTP Access control
+
+alaNtpAccessKeyIdTable OBJECT-TYPE
+      SYNTAX        SEQUENCE OF NtpAccessKeyIdEntry
+      MAX-ACCESS    not-accessible
+      STATUS        current
+      DESCRIPTION   "Table containing the trusted keys."
+      ::={ alaNtpAccess 1 }
+
+alaNtpAccessKeyIdEntry OBJECT-TYPE
+      SYNTAX        NtpAccessKeyIdEntry
+      MAX-ACCESS    not-accessible
+      STATUS        current
+      DESCRIPTION   "Entry of a trusted key."
+      INDEX { alaNtpAccessKeyIdKeyId }
+      ::={ alaNtpAccessKeyIdTable 1 }
+
+NtpAccessKeyIdEntry ::= SEQUENCE {
+    alaNtpAccessKeyIdKeyId
+      INTEGER,
+    alaNtpAccessKeyIdTrust
+      INTEGER
+    }
+
+alaNtpAccessKeyIdKeyId OBJECT-TYPE
+      SYNTAX        INTEGER
+      MAX-ACCESS    not-accessible
+      STATUS        current
+      DESCRIPTION   "Keyid of the key in the key file."
+      ::={ alaNtpAccessKeyIdEntry 1 }
+
+alaNtpAccessKeyIdTrust OBJECT-TYPE
+      SYNTAX        INTEGER {
+                      trusted(1),
+                      untrusted(2)
+                    }
+      MAX-ACCESS    read-write
+      STATUS        current
+      DESCRIPTION   "The current state of trust of the table entry."
+      ::={ alaNtpAccessKeyIdEntry 2 }
+
+
+
+alaNtpAccessRestrictedTable OBJECT-TYPE
+    SYNTAX        SEQUENCE OF NtpAccessRestrictedEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION   "Table containing the restricted addresses."
+    ::={ alaNtpAccess 2 }
+
+alaNtpAccessRestrictedEntry OBJECT-TYPE
+    SYNTAX        NtpAccessRestrictedEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION   "Entry of a restricted address."
+    INDEX {
+      alaNtpAccessRestrictedIpAddress,
+      alaNtpAccessRestrictedMask
+    }
+    ::={ alaNtpAccessRestrictedTable 1 }
+
+NtpAccessRestrictedEntry ::= SEQUENCE {
+      alaNtpAccessRestrictedIpAddress
+        IpAddress,
+      alaNtpAccessRestrictedMask
+        IpAddress,
+      alaNtpAccessRestrictedRestrictions
+        INTEGER,
+      alaNtpAccessRestrictedCount
+        INTEGER,
+      alaNtpAccessRestrictedRowStatus
+        RowStatus
+    }
+
+alaNtpAccessRestrictedIpAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+        MAX-ACCESS    not-accessible
+        STATUS        current
+        DESCRIPTION   "IP address to restrict."
+        ::={ alaNtpAccessRestrictedEntry 1 }
+
+
+alaNtpAccessRestrictedMask OBJECT-TYPE
+        SYNTAX        IpAddress
+        MAX-ACCESS    not-accessible
+        STATUS        current
+        DESCRIPTION   "IP mask to restrict."
+        ::={ alaNtpAccessRestrictedEntry 2 }
+
+alaNtpAccessRestrictedRestrictions OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION   "A mask indicating the restrictions to apply
+                      to the entry.
+                      0x0001 - ignore, Ignore all packets from hosts.
+                      0x0002 - noquery, Ignore all NTP information
+                        queries and configuration requests
+                        from the source.
+                      0x0004 - nomodify, Ignore all NTP information
+                        queries and configuration requests
+                        that attempt to modify the state of the server.
+                      0x0008 - notrap, Decline to provide control message
+                        trap service to matching hosts.
+                      0x0010 - lowpriotrap, Declare traps set by matching
+                        hosts to be low priority.
+                      0x0020 - noserve, Ignore NTP packets other than
+                        information queries and config-uration requests.
+                      0x0040 - nopeer, Provide stateless time service to
+                        polling hosts, but do not allocate peer
+                        memory resources to these hosts even if
+                        they otherwise might be considered useful
+                        as future synchronization partners.
+                      0x0080 - notrust, Treat these hosts normally in other
+                        respects, but never use them as synchronization
+                        sources.
+                      0x0100 - limited, These hosts are subject to a
+                        limitation of the number of clients from the
+                        same net."
+        ::={ alaNtpAccessRestrictedEntry 3 }
+
+alaNtpAccessRestrictedCount OBJECT-TYPE
+        SYNTAX        INTEGER
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   "Number of packets matched."
+        ::={ alaNtpAccessRestrictedEntry 4 }
+
+alaNtpAccessRestrictedRowStatus OBJECT-TYPE
+        SYNTAX        RowStatus
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION   "Used in accordance to installation and removal conventions
+                      for conceptual rows.  The RowStatus values that are
+                      supported are the following:
+                        active(1) - The row is active and valid.
+                        createAndGo(4) - The row will be created and activated.
+                        destroy(6) - The row will be destroyed."
+        ::={ alaNtpAccessRestrictedEntry 5 }
+
+alaNtpAccessRereadKeyFile OBJECT-TYPE
+        SYNTAX        INTEGER{
+                      reload(1),
+                      in-progress(2),
+                      successful(3),
+                      error(4)
+                      }
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION   "Reloads the keyfile containing all currently
+                      existing keys into the alaNtpAccessKeyIdTable in the
+                      switch's memory. Reading this object will yield one of
+                      the three following values:
+                          in-progress(2),
+                          successful(3),
+                          failed(4)
+                      A value of in-progress means that table reload procedure
+                      is in-progress and not yet complete.  A sucessful reply
+                      means the last attempted keyfile load completed successfully.
+                      A failed response indicates the last attempt to reload failed.
+                      Writing a value of 1 to this object initiates a reload of the
+                      table."
+        ::={ alaNtpAccess 3 }
+
+END

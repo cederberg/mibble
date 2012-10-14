@@ -1,0 +1,678 @@
+        -- Version 1.6, modified 02/12/98
+
+        NCRBSC-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+            Counter
+                FROM RFC1155-SMI
+            OBJECT-TYPE
+                FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                    codex OBJECT IDENTIFIER ::= { enterprises 449 }
+       cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                  cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+      cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+    cdx6500CfgProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 1 }
+cdx6500PCTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 1 }
+cdx6500PCTNCRBSCDeviceGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 7 }
+
+        cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+   cdx6500StatProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 1 }
+cdx6500PSTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 1 }
+
+        -- Textual conventions
+
+        DisplayString ::= OCTET STRING
+
+
+        -- The NCRBSC group contains the configuration parameters,
+        -- statistics, and control objects used by the NCRBSC
+        -- ports and devices.
+
+        -- NCRBSC Port Configuration Table
+
+        cdx6500PPCTNCRBisyncTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPCTNCRBisyncEntry
+            ACCESS  not-accessible
+            STATUS  mandatory
+            DESCRIPTION
+                    "A table of NCRBSC Port configuration entries."
+        ::= { cdx6500PCTPortProtocolGroup 17 }
+
+        cdx6500PPCTNCRBisyncEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPCTNCRBisyncEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A NCRBSC Configuration Table entry. Each entry
+                 contains the configuration parameters for a single
+                 NCRBSC port. "
+            INDEX { cdx6500NCRBSCCfgPortNumber }
+        ::= { cdx6500PPCTNCRBisyncTable 1 }
+
+        Cdx6500PPCTNCRBisyncEntry ::=
+            SEQUENCE {
+                cdx6500NCRBSCCfgPortNumber
+                    INTEGER,
+                cdx6500NCRBSCCfgPADType
+                    INTEGER,
+                cdx6500NCRBSCCfgClockSource
+                    INTEGER,
+                cdx6500NCRBSCCfgClockSpeed
+                    INTEGER,
+                cdx6500NCRBSCCfgContention 
+                    INTEGER,
+                cdx6500NCRBSCCfgNumDevices
+                    INTEGER,
+                cdx6500NCRBSCCfgServTimer
+                    INTEGER,
+                cdx6500NCRBSCCfgErrThreshCount
+                    INTEGER,
+                cdx6500NCRBSCCfgRetranTimeout
+                    INTEGER,
+                cdx6500NCRBSCCfgInterBuffTimeout
+                    INTEGER,
+                cdx6500NCRBSCCfgPortSubAddr
+                    DisplayString,
+                cdx6500NCRBSCCfgPortOptions
+                    DisplayString,
+                cdx6500NCRBSCCfgRestrictConnDest
+                    DisplayString,
+                cdx6500NCRBSCCfgBillRec
+                    INTEGER
+                }
+
+        cdx6500NCRBSCCfgPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The NCRBSC port number described by this entry."
+        ::= { cdx6500PPCTNCRBisyncEntry 1 }
+
+        cdx6500NCRBSCCfgPADType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    tpad       (0),
+                    hpad       (1),
+                    newvalTpad (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates whether the port is functioning as a
+                 Terminal PAD (TPAD) or a Host PAD (HPAD).
+                 newvalTpad : same functionality as 'tpad', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500PPCTNCRBisyncEntry 2 }
+
+        cdx6500NCRBSCCfgClockSource OBJECT-TYPE
+            SYNTAX INTEGER {
+                    int       (0),
+                    ext       (1),
+                    newvalInt (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "int - internal clock source.
+                 ext - external clock source.
+                 newvalInt - same functionality as 'int', new
+                       enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PPCTNCRBisyncEntry 3 }
+
+        cdx6500NCRBSCCfgClockSpeed OBJECT-TYPE
+            SYNTAX INTEGER (1200..19200)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the speed of the port in bits per second,
+                 when using internal clocking."
+        ::= { cdx6500PPCTNCRBisyncEntry 4 }
+
+        cdx6500NCRBSCCfgContention OBJECT-TYPE
+            SYNTAX INTEGER {
+                    hdx       (0),
+                    fdx       (1),
+                    newvalHdx (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates whether Half Duplex (hdx) or
+                 Full Duplex (fdx) modem signals are being generated. 
+                 Full Duplex indicates communication is occuring
+                 in both directions simultaneously between devices.
+                 Half Duplex indicates transmission is occuring
+                 in both directions, but only in one direction
+                 at a time.
+                 newvalHdx - same functionality as 'hdx', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500PPCTNCRBisyncEntry 5 }
+
+        cdx6500NCRBSCCfgNumDevices OBJECT-TYPE
+            SYNTAX INTEGER (1..32)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                    "Specifies the number of physical devices on this line."
+        ::= { cdx6500PPCTNCRBisyncEntry 6 }
+
+        cdx6500NCRBSCCfgServTimer OBJECT-TYPE
+            SYNTAX INTEGER (1..60)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The Service Timer specifies the interval of time in
+                 seconds between periodic servicing. Such servicing
+                 includes intervals between the time the PAD will
+                 attempt to poll devices that previously failed to
+                 respond and intervals between failures in attempts
+                 to establish a connection from a device configured
+                 for Autocall."
+        ::= { cdx6500PPCTNCRBisyncEntry 7 }
+
+        cdx6500NCRBSCCfgErrThreshCount OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates number of consecutive errors that can occur
+                 before a device is considered down."
+        ::= { cdx6500PPCTNCRBisyncEntry 8 }
+
+        cdx6500NCRBSCCfgRetranTimeout OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the amount of time in TENTHS OF A SECOND before a
+                 retransmission of the previously sent protocol sequence is
+                 attempted. The effective range is 0.1 - 25.5 seconds.
+                 The MINIMUM acceptable values are dependent on the speed 
+                 configured as follows (speed - responsetimeout): 
+                 1200 - 12, 2400 - 6, 4800 - 3,9600 - 2, 19200 - 2"
+        ::= { cdx6500PPCTNCRBisyncEntry 10 }
+
+        cdx6500NCRBSCCfgInterBuffTimeout OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the maximum amount of time in seconds the PAD
+                 will wait for the end of a multi-packet message from the
+                 network. If this time limit is exceeded, the PAD will
+                 abort the entire message and request retransmission."
+        ::= { cdx6500PPCTNCRBisyncEntry 11 }
+
+        cdx6500NCRBSCCfgPortSubAddr OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..3))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "0 - 3 Decimal digits
+                 Calls addressed to this node and with this subaddress
+                 will be routed to this port."
+        ::= { cdx6500PPCTNCRBisyncEntry 12 }
+
+        cdx6500NCRBSCCfgPortOptions OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Select options on this NCRBSC port as follows:
+                 NONE - no option specified
+                 ORG  - Controllers on this port will originate the calls
+                 ACK  - DSP End-to-End Acknowledgements are to be used
+                 Any combination of above specified by summing 
+                 (e.g. ORG+ACK)."
+        ::= { cdx6500PPCTNCRBisyncEntry 13 }
+
+        cdx6500NCRBSCCfgRestrictConnDest OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(1..32))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "1 - 32 Decimal digits or a single blank
+                 All calls originating from this port will be routed to
+                 the destination specified in this parameter, irrespective
+                 of route selection table entries.  For example, to route
+                 calls to port 1, use P1. To route calls to port 2,
+                 station 4, use P2S4. 
+                 Blank this field to disable this function."
+        ::= { cdx6500PPCTNCRBisyncEntry 14 }
+
+        cdx6500NCRBSCCfgBillRec OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off       (0),
+                    on        (1),
+                    newvalOff (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This controls whether billing (accounting) records will
+                 be created for calls on this Device.
+                 newvalOff : same functionality as 'off', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500PPCTNCRBisyncEntry 15 }
+
+        -- NCRBSC Device Configuration Table
+
+        cdx6500PBCTNCRBSCDeviceTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PBCTNCRBSCDeviceEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A table of NCRBSC device configuration entries."
+        ::= { cdx6500PCTNCRBSCDeviceGroup 1 }
+
+        cdx6500PBCTNCRBSCDeviceEntry OBJECT-TYPE
+            SYNTAX Cdx6500PBCTNCRBSCDeviceEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A NCRBSC Configuration Table entry. Each entry
+                 contains the configuration parameters for a single
+                 NCRBSC device."
+            INDEX { cdx6500ncrbscDevPortNumber, cdx6500ncrbscDevEntry }
+        ::= { cdx6500PBCTNCRBSCDeviceTable 1 }
+
+        Cdx6500PBCTNCRBSCDeviceEntry ::=
+            SEQUENCE {
+                cdx6500ncrbscDevPortNumber
+                    INTEGER,
+                cdx6500ncrbscDevEntry
+                    INTEGER,
+                cdx6500ncrbscDestControlUnitAddr
+                    DisplayString,
+                cdx6500ncrbscBSCControlUnitAddr
+                    DisplayString,
+                cdx6500ncrbscAutocallMnemonic
+                    DisplayString,
+                cdx6500ncrbscDeviceEnabled
+                    INTEGER
+                }
+
+        cdx6500ncrbscDevPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The NCRBSC port accessing this device"
+        ::= { cdx6500PBCTNCRBSCDeviceEntry 1 }
+
+        cdx6500ncrbscDevEntry OBJECT-TYPE
+            SYNTAX INTEGER (1..32)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The unique number for this specific port."
+        ::= { cdx6500PBCTNCRBSCDeviceEntry 2 }
+
+        cdx6500ncrbscBSCControlUnitAddr OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..3))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "0-2 Hex digits, 
+                 This is the Poll address of the Control Unit that supports
+                 this device. It consists of two hexadecimal digits. Valid
+                 ranges depend on device Character Set as follows:
+                 EBCDIC: 40,C1,C2,C3,C4,C5,C6,C7,C8,C9,4A,4B,4C,4D,4E,4F,
+                         50,D1,D2,D3,D4,D5,D6,D7,D8,D9,5A,5B,5C,5D,5E,5F
+
+                 ASCII : 20,41,42,43,44,45,46,47,48,49,5B,2E,3C,28,2B,21,
+                         26,4A,4B,4C,4D,4E,4F,50,51,52,5D,24,2A,29,3B,5E"
+        ::= { cdx6500PBCTNCRBSCDeviceEntry 3 }
+
+
+        cdx6500ncrbscDestControlUnitAddr OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..3))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "0-3 Hex digits, 
+                 Specifies control unit address on remote PAD. Used with
+                 Connection Request Mode = 2 or 3"
+        ::= { cdx6500PBCTNCRBSCDeviceEntry 4 }
+
+        cdx6500ncrbscAutocallMnemonic OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "0-2 Hex digits, 
+                 This mnemonic name is used if this device is configured
+                 for AUTO or FAST calling."
+        ::= { cdx6500PBCTNCRBSCDeviceEntry 5 }
+
+        cdx6500ncrbscDeviceEnabled OBJECT-TYPE
+            SYNTAX INTEGER {
+                    no       (0),
+                    yes      (1),
+                    newvalNo (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is used to enable or disable the operation 
+                 of this controller device.
+                 yes - Enable device.
+                 no  - Disable device.
+                 newvalNo - same functionality as 'no', new enumeration
+                       added for RFC1155 compatibility."
+        ::= { cdx6500PBCTNCRBSCDeviceEntry 6 }
+
+
+        -- NCRBSC Port Statistics
+
+
+        cdx6500PPSTNCRBisyncTable  OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500ncrbscPortStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A table of NCRBSC port statistics entries."
+        ::= { cdx6500PSTPortProtocolGroup 17 }
+
+        cdx6500ncrbscPortStatEntry OBJECT-TYPE
+            SYNTAX Cdx6500ncrbscPortStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A NCRBSC Port Statistic Table entry. Each entry
+                 contains the statistics for a single NCRBSC port."
+            INDEX { cdx6500ncrbscStatPortNumber }
+        ::= { cdx6500PPSTNCRBisyncTable 1 }
+
+        Cdx6500ncrbscPortStatEntry ::=
+            SEQUENCE {
+                cdx6500ncrbscStatPortNumber
+                    INTEGER,
+                cdx6500ncrbscPortStatus
+                    INTEGER,
+                cdx6500ncrbscPortState
+                    DisplayString,
+                cdx6500ncrbscPortSpeed
+                    INTEGER,
+                cdx6500ncrbscPortUtilIn
+                    INTEGER,
+                cdx6500ncrbscPortUtilOut
+                    INTEGER,
+                cdx6500ncrbscInMsgs
+                    Counter,
+                cdx6500ncrbscOutMsgs
+                    Counter,
+                cdx6500ncrbscInChars
+                    Counter,
+                cdx6500ncrbscOutChars
+                    Counter,
+                cdx6500ncrbscCharRateIn
+                    INTEGER,
+                cdx6500ncrbscCharRateOut
+                    INTEGER,
+                cdx6500ncrbscCrcBccErrs
+                    Counter,
+                cdx6500ncrbscRviRx 
+                    INTEGER,
+                cdx6500ncrbscRviTx 
+                    INTEGER,
+                cdx6500ncrbscWackRx 
+                    INTEGER,
+                cdx6500ncrbscNconvRxMax 
+                    INTEGER,
+                cdx6500ncrbscNconvTxMax 
+                    INTEGER,
+                cdx6500ncrbscNgroupRxMax 
+                    INTEGER,
+                cdx6500ncrbscNgroupTxMax 
+                    INTEGER,
+                cdx6500ncrbscLongRespTime 
+                    INTEGER,
+                cdx6500ncrbscAverageRespTime
+                    INTEGER,
+                cdx6500ncrbscRviForce 
+                    INTEGER
+                }
+
+        cdx6500ncrbscStatPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The NCRBSC port number described by this entry."
+        ::= { cdx6500ncrbscPortStatEntry 1 }
+
+        cdx6500ncrbscPortStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    busyOut        (2),
+                    up             (3),
+                    down           (4),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port Status indicates whether or not the port
+                 is switched on and is ready for operation. This value
+                 may be one of :
+                 up       - Port is up and running.
+                 down     - port is down.
+                 disabled - port has been disabled.
+                 enabled  - port has been enabled, but is not yet Up
+                 busyOut  - port has been set to be disabled as soon as
+                            last active session is disestablished. No
+                            new sessions will be established.
+                 newvalDisabled - same functionality as 'disabled',
+                            new enumeration added for RFC1155 compatibility."
+        ::= { cdx6500ncrbscPortStatEntry 2 }
+
+        cdx6500ncrbscPortState OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(4..10))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port State indicates what the port is actually in the
+                 process of doing. This value may be one of :
+                 INACTIVE   - H/TPAD port inactive entered during boot.
+                 WTPOLSERVE - TPAD is waiting for response to a poll.
+                 WTSELRESP  - TPAD is waiting for the response to a select.
+                 WTDATARESP - H/TPAD is waiting for data to be acknowledged.
+                 DATA       - H/TPAD is in the process of sending/receiving
+                              data.
+                 SEL/POL    - TPAD is about to select or poll a
+                              controller. This is the most common state
+                              for a TPAD.
+                 SELECT     - TPAD is about to select a device.
+                 POLL       - TPAD is about to poll a device.
+                 WTENQRESP  - H/TPAD is waiting for a NAK response to
+                              an ENQ sent.
+                 IDLE       - HPAD is waiting for the host to send commands.
+                              This is the most common state of the HPAD.
+                 WTEOT      - HPAD is waiting for an expected EOT from the
+                              host.
+                 FLUSHINGDATA - HPAD encountered an error in the message
+                              received from the host. As a result, 
+                              the data is being flushed.
+                 WTLCM      - HPAD received a read/modify and is waiting for
+                              the response from the TPAD."
+        ::= { cdx6500ncrbscPortStatEntry 3 }
+
+        cdx6500ncrbscPortSpeed OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the speed of the port if clock is internal. If
+                 clock is external, this is the detected clock speed. If
+                 Port Speed is 0, clock is external, but clocking is not
+                 being received from attatched device."
+        ::= { cdx6500ncrbscPortStatEntry 4 }
+
+        cdx6500ncrbscPortUtilIn OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Percentage of port input bandwidth in use."
+        ::= { cdx6500ncrbscPortStatEntry 5 }
+
+        cdx6500ncrbscPortUtilOut OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Percentage of Port output bandwidth in use."
+        ::= { cdx6500ncrbscPortStatEntry 6 }
+
+        cdx6500ncrbscInMsgs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of message received since last node, port, or
+                 statistics reset."
+        ::= { cdx6500ncrbscPortStatEntry 7 }
+
+        cdx6500ncrbscOutMsgs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of message sent since last node, port, or
+                 statistics reset."
+        ::= { cdx6500ncrbscPortStatEntry 8 }
+
+        cdx6500ncrbscInChars OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received since last node, port, or
+                 statistics reset."
+        ::= { cdx6500ncrbscPortStatEntry 9 }
+
+        cdx6500ncrbscOutChars OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters sent since last node, port, or
+                 statistics reset."
+        ::= { cdx6500ncrbscPortStatEntry 10 }
+
+        cdx6500ncrbscCharRateIn OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received per second."
+        ::= { cdx6500ncrbscPortStatEntry 11 }
+
+        cdx6500ncrbscCharRateOut OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters sent per second."
+        ::= { cdx6500ncrbscPortStatEntry 12 }
+
+        cdx6500ncrbscCrcBccErrs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of CRC errors since last node, port, or
+                 statistics reset."
+        ::= { cdx6500ncrbscPortStatEntry 13 }
+
+        cdx6500ncrbscRviRx OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Accumulator, received RVI."
+        ::= { cdx6500ncrbscPortStatEntry 14 }
+
+        cdx6500ncrbscRviTx OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Accumulator, transmitted RVI."
+        ::= { cdx6500ncrbscPortStatEntry 15 }
+
+        cdx6500ncrbscWackRx OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Accumulator, recevied WACK."
+        ::= { cdx6500ncrbscPortStatEntry 16 }
+
+        cdx6500ncrbscNconvRxMax OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of conversation messages received
+                 from device within a poll or select."
+        ::= { cdx6500ncrbscPortStatEntry 17 }
+
+        cdx6500ncrbscNconvTxMax OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of conversation messages sent to
+                 device within a poll or select."
+        ::= { cdx6500ncrbscPortStatEntry 18 }
+
+        cdx6500ncrbscNgroupRxMax OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of grouping messages received
+                 from device within a poll or select."
+        ::= { cdx6500ncrbscPortStatEntry 19 }
+
+        cdx6500ncrbscNgroupTxMax OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of grouping messages sent to
+                 device within a poll or select."
+        ::= { cdx6500ncrbscPortStatEntry 20 }
+
+        cdx6500ncrbscLongRespTime OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Longest response time"
+        ::= { cdx6500ncrbscPortStatEntry 21 }
+
+        cdx6500ncrbscAverageRespTime OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average response time "
+        ::= { cdx6500ncrbscPortStatEntry 22 }
+
+        cdx6500ncrbscRviForce OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of RVI's sent to device from the polling algorithm."
+        ::= { cdx6500ncrbscPortStatEntry 23 }
+
+        END

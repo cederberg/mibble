@@ -1,0 +1,431 @@
+XYLAN-ASCONFIG-MIB DEFINITIONS ::= BEGIN
+
+	--  RCSID information
+
+	--  $RCSfile$
+	--  $Revision$
+	--  $Date$
+	--  $Author$
+
+
+	--  xylan-ascfg.mib
+	--  Revision: 1.01
+	--  Date: February 4, 1999
+
+	--  Alcatel Internetworking, Inc.
+	--  26801 W. Agoura Road
+	--  Calabasas, CA 91301
+	--  (818) 880-3500
+	--  support@ind.alcatel.com
+
+	--  This module provides authoritative definitions for Alcatel Internetworking, Inc.
+	--  enterprise-specific health MIB.
+
+	--  This module will be extended, as needed.
+
+
+	--  Alcatel Internetworking, Inc. reserves the right to make changes in 
+	--  specification and other information contained in this document 
+	--  without prior notice.  The reader should consult Alcatel Internetworking, Inc.
+	--  to determine whether any such changes have been made.
+	--  Current MIBs are available from the following URLs:
+	--		ftp://ftp.ind.alcatel.com/pub/products/mibs
+	--		http://www.ind.alcatel.com
+
+	--  In no event shall Alcatel Internetworking, Inc. be liable for any incidental, 
+	--  indirect, special, or consequential damages whatsoever (including 
+	--  but not limited to lost profits) arising out of or related to this
+	--  document or the information contained in it, even if Alcatel Internetworking,
+	--  Inc. has been advised of, known, or should have known, the 
+	--  possibility of such damages.
+
+	--  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+	--  parties a non-exclusive license to use this Specification in connection
+	--  with the management of Alcatel Internetworking, Inc. products.
+
+	--  Copyright (C) 1994, Alcatel Internetworking, Inc. All Rights Reserved
+
+
+	IMPORTS
+		OBJECT-TYPE
+			FROM RFC-1212
+                DisplayString 
+                        FROM RFC1213-MIB
+		xylanAscCArch
+			FROM XYLAN-BASE-MIB
+			;
+
+
+	--  This MIB module uses the extended OBJECT-TYPE macro as defined
+	--  RFC 1212 (but known in the epilog files under RFC1213-SMI...)
+
+
+	AscSnapshotAction ::= INTEGER {
+	    excludeFromSnapshot(1),
+	    includeInSnapshot(2)
+	}
+
+
+
+	--  groups within the ASCII configuration mib
+
+	ascfgControl		OBJECT IDENTIFIER ::= { xylanAscCArch 1 }
+
+
+	--  ascfgControl group. This group contains the ASCII Configuration
+	--  control information.
+
+          ascfgInputFileName OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (0..15))
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The name of the configuration file to be
+                      read by the device.  The file specified 
+		      should be present on the device."
+              ::= { ascfgControl 1 }
+
+
+          ascfgAction OBJECT-TYPE
+              SYNTAX  INTEGER { 
+			  noneAvail(1),
+			  checkSyntax(2),
+			  checkSyntaxAndApply(3)
+		      }
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "Determines whether or not configuration
+		      values in ascfgInputFile will be applied
+		      to current device configuration. A value of 
+		      checkSyntax causes ascfgInputFile to be
+		      checked for syntax, with no changes to the
+		      device configuration.  A value of checkSyntaxAndApply
+		      also causes ascfgInputFile to be checked for
+		      syntax.  In addition, all commands free of 
+		      syntax errors are applied to device configuration.  
+		      Setting this object causes ascfgInputFile
+		      to be processed in the manner specified."
+              ::= { ascfgControl 2 }
+
+          ascfgErrorFileName OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (0..255))
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "The name of the file which contains the
+		      error messages is automatically generated                      by the device."
+              ::= { ascfgControl 3 }
+
+          ascfgStatus OBJECT-TYPE
+              SYNTAX  INTEGER { 
+			  noneAvail(1),
+			  inProgress(2),
+			  completeNoErrors(3),
+			  completeErrors(4)
+		      }
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Status of current (if in progress) or
+		      most recent application of ASCII configuration 
+		      data to the device."
+              ::= { ascfgControl 4 }
+
+          ascfgErrors OBJECT-TYPE
+              SYNTAX  INTEGER
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "Number of errors found in most recent 
+		      application of ASCII configuration file 
+		      to the device.  This object is meaningful
+		      only in cases where ascfgStatus has a value
+		      of completeErrors."
+              ::= { ascfgControl 5 }
+
+          ascfgTimerFileName OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (0..25))
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The name of the configuration file to be
+                      read later by the device.  The file specified 
+		      should be present on the device."
+              ::= { ascfgControl 6 }
+
+          ascfgTimerFileTime OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (0..16))
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The (local)time when the configuration
+		      file will read by the device.  
+                      The following formats are valid:
+                          YY/MM/DD hh:mm
+
+                             MM/DD hh:mm - uses current year if
+					   after current date and time,
+					   next year otherwise.
+
+                                   hh:mm - uses today's date if later
+					   than current time,
+					   tommorow's date otherwise.
+                      where
+                        YY - year   (0-38,99)
+                        MM - month  (1-12)
+                        DD - day    (1-31)
+                        hh - hour   (0-23)
+                        mm - minute (0-59)"
+              ::= { ascfgControl 7 }
+
+          ascfgTimerFileStatus OBJECT-TYPE
+              SYNTAX  INTEGER {  idle(1),
+				 pending(2),
+				 inprogress(3)
+                              }
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "The current status of the ASCII configuration timer."
+              ::= { ascfgControl 8 }
+
+          ascfgTimerClear OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "A set of this object causes the ASCII
+		       configuration timer to be cleared."
+              ::= { ascfgControl 9 }
+
+          ascfgSnapshotFileName OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (0..25))
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The name of the configuration snapshot 
+		       file to be produced by the device.  The                        file specified should not be present on
+		       the device."
+              ::= { ascfgControl 10 }
+
+          ascfgSnapshotInitiate OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "A set of this object causes a configuration
+		       snapshot to be generated by the device,
+		       provided that object ascfgSnapshotFileName
+		       has been set."
+              ::= { ascfgControl 11 }
+
+          ascfgSnapshotIpSelect OBJECT-TYPE
+              SYNTAX  AscSnapshotAction 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The value of this object determines whether
+		       or not IP configuration data is included
+		       in the snapshot to be generated by the device.
+		       Default is excludeFromSnapshot."
+              ::= { ascfgControl 12 }
+
+          ascfgSnapshotIpxSelect OBJECT-TYPE
+              SYNTAX  AscSnapshotAction 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The value of this object determines whether
+		       or not IPX configuration data is included
+		       in the snapshot to be generated by the device.
+		       Default is excludeFromSnapshot."
+              ::= { ascfgControl 13 }
+
+          ascfgSnapshotSystemSelect OBJECT-TYPE
+              SYNTAX  AscSnapshotAction 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The value of this object determines whether
+		       or not system configuration data is included
+		       in the snapshot to be generated by the device.
+		       Default is excludeFromSnapshot."
+              ::= { ascfgControl 14 }
+
+          ascfgSnapshotSnmpSelect OBJECT-TYPE
+              SYNTAX  AscSnapshotAction 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The value of this object determines whether
+		       or not SNMP configuration data is included
+		       in the snapshot to be generated by the device.
+		       Default is excludeFromSnapshot."
+              ::= { ascfgControl 15 }
+
+          ascfgSnapshotAtmSelect OBJECT-TYPE
+              SYNTAX  AscSnapshotAction 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The value of this object determines whether
+		       or not ATM configuration data is included
+		       in the snapshot to be generated by the device.
+		       Default is excludeFromSnapshot."
+              ::= { ascfgControl 16 }
+
+--          ascfgSnapshotGroupSelect OBJECT-TYPE
+--              SYNTAX  AscSnapshotAction 
+--              ACCESS  read-write
+--              STATUS  deprecated
+--              DESCRIPTION
+--                      "The value of this object determines whether
+--		       or not group configuration data is included
+--		       in the snapshot to be generated by the device.
+--		       Default is excludeFromSnapshot."
+--              ::= { ascfgControl 17 }
+
+          ascfgSnapshotVlanSelect OBJECT-TYPE
+              SYNTAX  AscSnapshotAction 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The value of this object determines whether
+		       or not group/VLAN configuration data is included
+		       in the snapshot to be generated by the device.
+		       Default is excludeFromSnapshot."
+              ::= { ascfgControl 18 }
+
+          ascfgSnapshotInterfaceSelect OBJECT-TYPE
+              SYNTAX  AscSnapshotAction 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The value of this object determines whether
+		       or not interface configuration data is included
+		       in the snapshot to be generated by the device.
+		       Default is excludeFromSnapshot."
+              ::= { ascfgControl 19 }
+
+          ascfgSnapshotBrdgSelect OBJECT-TYPE
+              SYNTAX  AscSnapshotAction 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The value of this object determines whether
+		       or not bridging configuration data is included
+		       in the snapshot to be generated by the device.
+		       Default is excludeFromSnapshot."
+              ::= { ascfgControl 20 }
+
+          ascfgSnapshotAllSelect OBJECT-TYPE
+              SYNTAX  AscSnapshotAction 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The value of this object determines whether
+		       or not all configuration data is included
+		       in the snapshot to be generated by the device.
+		       Setting this object is equivalent to setting 
+		       all the individual snapshot select objects 
+		       to the same value.  Default is excludeFromSnapshot."
+              ::= { ascfgControl 21 }
+
+          ascfgSnapshotSelectSummary OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "This object is a bit mask which represents
+		       the current state of the snapshot select
+		       objects.  Each selection object is represented
+		       by a single bit.  The mapping between selection
+		       objects and mask bits is as follows:
+		       IP          0x001
+		       IPX         0x002
+		       SYSTEM      0x004
+		       SNMP        0x008
+		       ATM         0x010
+		       VLAN        0x040
+		       INTERFACE   0x080
+		       BRIDGING    0x100
+		       ALL         0xffffffff."
+              ::= { ascfgControl 22 }
+
+
+          ascfgCommandStr OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (0..255))
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "This object is to be interpreted as a text-based
+		      configuration command and executed."
+              ::= { ascfgControl 23 }
+
+
+          ascfgCommandStatus OBJECT-TYPE
+              SYNTAX  INTEGER      {  
+			  failure(1),
+			  success(2)
+                       }
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                      "This object contains the completion status
+                       of ascfgCommandStr as a text-based configuration
+		       command."
+              ::= { ascfgControl 24 }
+
+          ascfgSaveConfiguration OBJECT-TYPE
+              SYNTAX  INTEGER 
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "This object triggers the process of
+                       saving the configuration info to
+                       the cache. It is applicable
+                       when the device is in the cache-only mode."
+              ::= { ascfgControl 25 }
+
+          ascfgConfigurationFileName OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (0..25))
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "The name of the ASCII configuration file to be
+                      used by the device to boot.
+                      *  If a NULL string is passed, that signifies
+                         the switch will be booted up using the conventional
+                         mpm.cnf file in the flash;
+                      ** If a non-NULL string is passed in, and the file is
+                         present on the device, then the switch/device will
+                         booted up in the cache-only mode, *and* the
+                         specified will be used to boot up the device."
+              ::= { ascfgControl 26 }
+
+          ascfgCacheOnly OBJECT-TYPE
+              SYNTAX  INTEGER      {
+                          true(1),
+                          false(2)
+                       }
+              ACCESS  read-write
+              STATUS  mandatory
+              DESCRIPTION
+                      "This object is the flag for the device
+                       to toggle its configuration mode. When it
+                       is set to TRUE, all the subsequent configuration
+                       info is stored in the cache only;  when is
+                       set to FALSE, the device will sync up the
+                       cache and the flash, and subsequent config info
+                       is stored in both."
+              ::= { ascfgControl 27 }
+
+
+	  --
+	  --
+	  --
+	  -- So much for the ASCII Configuration MIB
+
+          END
+

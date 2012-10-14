@@ -1,0 +1,296 @@
+        -- Version 1.6, modified 02/12/98
+
+        T1E1-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+            OBJECT-TYPE
+                FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                      codex OBJECT IDENTIFIER ::= { enterprises 449 }
+         cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                    cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+      cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+    cdx6500CfgProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 1 }
+cdx6500PCTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 1 }
+    cdx6500PCTT1E1PortTable OBJECT IDENTIFIER ::= { cdx6500PCTPortProtocolGroup 24 }
+          cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+   cdx6500StatProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 1 }
+cdx6500PSTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 1 }
+    cdx6500PSTT1E1PortTable OBJECT IDENTIFIER ::= { cdx6500PSTPortProtocolGroup 25 }
+
+        -- Textual Conventions
+
+        DisplayString ::= OCTET STRING
+        
+        PhysicalPortNumber ::= INTEGER (49..50)
+
+        VirtualPortNumber ::= INTEGER (100..255)
+
+        -- The T1E1 Virtual Port mapping Table
+
+        cdx6500VPCTT1E1PortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500VPCTT1E1PortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains the T1/E1 Virtual Port Mapping
+                 Table parameters."
+        ::= { cdx6500PCTT1E1PortTable 3 }
+
+        cdx6500VPCTT1E1PortEntry OBJECT-TYPE
+            SYNTAX Cdx6500VPCTT1E1PortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A Virtual T1/E1 Port Mapping Table Entry.Each entry 
+                 contains the configuration parameters for a single T1/E1
+                 virtual port."
+            INDEX { cdx6500VPCTT1E1CfgIndex }
+        ::= { cdx6500VPCTT1E1PortTable 1 }
+
+        Cdx6500VPCTT1E1PortEntry ::=
+            SEQUENCE {
+                cdx6500VPCTT1E1CfgPortNumber
+                    INTEGER,
+                cdx6500VPCTT1E1CfgPortType
+                    INTEGER,
+                cdx6500VPCTT1E1CfgPhyPortNumber
+                    INTEGER,
+                cdx6500VPCTT1E1CfgTimeSlotNumber
+                    INTEGER,
+                cdx6500VPCTT1E1CfgDS0Rate
+                    INTEGER,
+                cdx6500VPCTT1E1CfgAggregateType
+                    INTEGER,
+                cdx6500VPCTT1E1CfgSOPortNumber
+                    INTEGER,
+                cdx6500VPCTT1E1CfgBChannel
+                    INTEGER,
+                cdx6500VPCTT1E1CfgLocalSubscriberAddress
+                    DisplayString,
+                cdx6500VPCTT1E1CfgNetSpecCall
+                    INTEGER,
+                cdx6500VPCTT1E1CfgPartyNumberType
+                    INTEGER,
+                cdx6500VPCTT1E1CfgPartyNumberPlan
+                    INTEGER,
+                cdx6500VPCTT1E1CfgIndex
+                    INTEGER
+                }
+
+        cdx6500VPCTT1E1CfgPortNumber OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is a T1/E1 virtual port number this channel is 
+                 associated with. A value of 0 implies that this parameter 
+                 was skipped during configuration."
+        ::= { cdx6500VPCTT1E1PortEntry 1 }
+
+        cdx6500VPCTT1E1CfgPortType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    voice         (1),
+                    data          (2),
+                    switchedVoice (3),
+                    switchedData  (4),
+                    bypassVoice   (5),
+                    bypassData    (6),
+                    nc            (100)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the type of virtual port.
+                 voice          : The virtual voice port operates on a 
+                                  configured DS0.
+                 data           : The virtual data port operates on a 
+                                  configured DS0.
+                 switchedVoice  : The virtual voice port operates on a 
+                                  DS0 determined by the ISDN/QSIG D Channel.
+                 switchedData   : The virtual data port operates on a DS0
+                                  determined by the ISDN/QSIG D Channel.
+                 nc             : Skipped during configuration."
+        ::= { cdx6500VPCTT1E1PortEntry 2 }
+
+        cdx6500VPCTT1E1CfgPhyPortNumber OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the E1 or T1 port number this channel is 
+                 associated with. A value of 0 implies that this parameter 
+                 was skipped during configuration."
+        ::= { cdx6500VPCTT1E1PortEntry 3 }
+
+        cdx6500VPCTT1E1CfgTimeSlotNumber OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time slot assignment for the logical channel.
+                 T1 ports have time slots in the range (1..24) while E1 
+                 ports have time slots in the range (1..31).
+                 In addition, Time Slot 16 is not allowed (invalid) for
+                 E1 ports. A value of 0 implies that this parameter was 
+                 skipped during configuration."
+        ::= { cdx6500VPCTT1E1PortEntry 4 }
+
+        cdx6500VPCTT1E1CfgDS0Rate OBJECT-TYPE
+            SYNTAX INTEGER {
+                    ds056k (1),
+                    ds064k (2),
+                    nc     (100)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the number of valid data bits within each 
+                 DS0 for this port.
+                 ds056k    :  7 bits of the DS0 contains data information, the
+                              8th bit is used for 1's density.
+                 ds064k    :  All 8 bits of the DS0 contain data information.
+                              DS0 Rate for ports configured with port type `voice' is 
+                              always 64K, while for ports configured with port type `data', 
+                              it is 56K or 64K, the default being 56K.
+                 nc       : Skipped during configuration."
+        ::= { cdx6500VPCTT1E1PortEntry 5 }
+
+        cdx6500VPCTT1E1CfgAggregateType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    t1e1 (1),
+                    so   (2),
+                    nc   (100)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Selects the type of physical interface for the Virtual Port.
+                 t1e1 : The physical interface is a T1 or E1 card.
+                 so   : The physical interface is a SO card.
+                 nc   : Skipped during configuration."
+        ::= { cdx6500VPCTT1E1PortEntry 6 }
+
+        cdx6500VPCTT1E1CfgSOPortNumber OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the port number of the SO interface this virtual 
+                 port is associated with. A value of 0 implies that this 
+                 parameter was skipped during configuration."
+        ::= { cdx6500VPCTT1E1PortEntry 7 }
+
+        cdx6500VPCTT1E1CfgBChannel OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the B-channel on the SO interface this virtual
+                 port is associated with. A value of 0 implies that this 
+                 parameter was skipped during configuration."
+        ::= { cdx6500VPCTT1E1PortEntry 8 }
+
+        cdx6500VPCTT1E1CfgLocalSubscriberAddress OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..20))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the Local Subscriber Address for this virtual port.
+                 For Incoming Call:
+                 The Called Party number received by the aggregate interface 
+                 is compared to this parameter.
+                 For Outgoing Call:
+                 This will be passed as the outgoing Calling Party number.
+                 Enter a trailing asterisk(*) as a wild-card. 
+                 Use the space bar to blank the parameter. 
+                 1 to 20 characters (valid characters are 0 through 9,
+                  '-', ',', '/', '(', ')', and '*'). 
+                 The characters '-', ',', '(', ')', and '/' are allowed only 
+                 for ease of reading."
+        ::= { cdx6500VPCTT1E1PortEntry 9 }
+
+        cdx6500VPCTT1E1CfgNetSpecCall OBJECT-TYPE
+            SYNTAX INTEGER {
+                    none       (1),
+                    attSdn     (2),
+                    attMc800   (3),
+                    attMc      (4),
+                    ntFx       (5),
+                    ntTieTrunk (6),
+                    attAccunet (7),
+                    attInt800  (9),
+                    attMq      (17),
+                    nc         (100)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Select the network specific call-by-call feature.
+                 none         : No network-specific facility.
+                 attSdn       : AT&T Software Defined Network
+                                or Northern Tel Private Net.
+                 attMc800     : AT&T Megacom800 or Northern Tel InWats.
+                 attMc        : AT&T Megcom or Northern Tel OutWats.
+                 ntFx         : Northern Tel Foreign Exchange.
+                 ntTieTrunk   : Northern Tel Tie Trunk.
+                 attAccunet   : AT&T Accunet.
+                 attInt800    : AT&T International 800 Service.
+                 attMq        : AT&T MultiQuest or NT TRO call.
+                 nc           : Skipped during configuration."
+        ::= { cdx6500VPCTT1E1PortEntry 10 }
+
+        cdx6500VPCTT1E1CfgPartyNumberType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    unknown       (1),
+                    international (2),
+                    national      (3),
+                    subscriber    (5),
+                    abbreviated   (7),
+                    nc            (100)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the Calling/Called party Number Type as defined 
+                 by ITU-T.
+                 unknown       : Unknown number type.
+                 international : International number.
+                 national      : National number.
+                 subscriber    : Subscriber number.
+                 abbreviated   : Abbreviated number.
+                 nc            : Skipped during configuration."
+        ::= { cdx6500VPCTT1E1PortEntry 11 }
+
+        cdx6500VPCTT1E1CfgPartyNumberPlan OBJECT-TYPE
+            SYNTAX INTEGER {
+                    unknown   (1),
+                    isdn      (2),
+                    telephony (3),
+                    private   (10),
+                    nc        (100)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the Calling/Called party Numbering Plan as 
+                 defined by ITU-T.
+                 unknown   : Unknown numbering plan.
+                 isdn      : Recommendation E.164/E.163.
+                 telephony : Telephony numbering plan.
+                 private   : Private numbering plan.
+                 nc        : Skipped during configuration."
+        ::= { cdx6500VPCTT1E1PortEntry 12 }
+
+        cdx6500VPCTT1E1CfgIndex OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the entry number in the Virtual Port Mapping Table."
+        ::= { cdx6500VPCTT1E1PortEntry 13 }
+
+        END

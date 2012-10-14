@@ -1,0 +1,296 @@
+ 
+     XYLAN-ASA-MIB DEFINITIONS ::= BEGIN
+
+     --  xylan-asa.mib
+     --  Revision: 0.00
+     --  Date: April 13, 2000
+
+     --  Alcatel Internetworking, Inc.
+     --  26801 W. Agoura Road
+     --  Calabasas, CA 91301
+     --  (818) 880-3500
+     --  support@ind.alcatel.com
+
+     --  This module provides authoritative definitions for Alcatel Internetworking, Inc.
+     --  enterprise-specific ASA(Authenticated VLAN) MIB.
+
+     --  This module will be extended, as needed.
+
+
+     --  Alcatel Internetworking, Inc. reserves the right to make changes in 
+     --  specification and other information contained in this document 
+     --  without prior notice.  The reader should consult Alcatel Internetworking,
+     --  Inc. to determine whether any such changes have been made.
+     --  Current MIBs are availible from the following URLs:
+     --			ftp://ftp.ind.alcatel.com/pub/products/mibs
+     --			http://www.ind.alcatel.com
+
+     --  In no event shall Alcatel Internetworking, Inc. be liable for any incidental, 
+     --  indirect, special, or consequential damages whatsoever (including 
+     --  but not limited to lost profits) arising out of or related to this
+     --  document or the information contained in it, even if Alcatel Internetworking,
+     --  Inc. has been advised of, known, or should have known, the 
+     --  possibility of such damages.
+     --  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+     --  parties a non-exclusive license to use this Specification in connection
+     --  with the management of Alcatel Internetworking, Inc. products.
+
+     --  Copyright (C) 1997, Alcatel Internetworking, Inc. All Rights Reserved.
+
+     
+     	IMPORTS
+		OBJECT-TYPE
+			FROM RFC-1212
+		DisplayString 
+			FROM RFC1213-MIB
+		IpAddress 
+			FROM RFC1155-SMI
+	        xylanASAArch
+			FROM XYLAN-BASE-MIB 
+			;
+-- Xylan Authenticated VLANs MIb *****************************
+
+xylanASAConfig  OBJECT IDENTIFIER ::= { xylanASAArch 1 }
+
+
+-- LDAP Server Table *************************
+
+xylanASALdapUserId OBJECT-TYPE
+                SYNTAX  DisplayString
+                ACCESS  read-write
+                STATUS  mandatory
+                DESCRIPTION
+                "LDAP server super user id."
+                ::= { xylanASAConfig 1 }
+
+xylanASALdapUserPassword OBJECT-TYPE
+                SYNTAX  DisplayString
+                ACCESS  write-only
+                STATUS  mandatory
+                DESCRIPTION
+                "LDAP server super user password."
+                ::= { xylanASAConfig 2 }
+
+xylanASALdapSearchBase OBJECT-TYPE
+                SYNTAX  DisplayString
+                ACCESS  read-write
+                STATUS  mandatory
+                DESCRIPTION
+                "LDAP server search base."
+                ::= { xylanASAConfig 3 }
+
+xylanASALdapChain OBJECT-TYPE
+                SYNTAX  DisplayString
+                ACCESS  read-write
+                STATUS  mandatory
+                DESCRIPTION
+                "LDAP server chain."
+                ::= { xylanASAConfig 4 }
+
+xylanASALdapType OBJECT-TYPE
+                SYNTAX  INTEGER {
+                                generic-schema (1),
+                                netscape-directory-server (2),
+                                novell-NDS (3),
+                                sun-directory-services(4)
+                                }
+                ACCESS  read-write
+                STATUS  mandatory
+                DESCRIPTION
+                "LDAP server type.
+                        1 - Generic Schema
+                        2 - Netscape Directory Server
+                        3 - Novell NDS
+                        4 - Sun Directory Services"
+                ::= { xylanASAConfig 5 }
+
+xylanASALdapRetry OBJECT-TYPE
+                SYNTAX  INTEGER (1..100)
+                ACCESS  read-write
+                STATUS  mandatory
+                DESCRIPTION
+                "LDAP server retry times."
+                ::= { xylanASAConfig 6 }
+
+xylanASALdapResponseTime OBJECT-TYPE
+                SYNTAX  INTEGER (1..90)
+                ACCESS  read-write
+                STATUS  mandatory
+                DESCRIPTION
+                "LDAP server response time in seconds."
+                ::= { xylanASAConfig 7 }
+
+xylanASALdapAcctStatus OBJECT-TYPE
+                SYNTAX  INTEGER {
+                                on (1),
+                                off (2)
+                                }
+                ACCESS  read-write
+                STATUS  mandatory
+                DESCRIPTION
+                "LDAP accounting status:
+                        1 - on
+                        2 - off"
+                ::= { xylanASAConfig 8 }
+
+xylanASALdapLoginFailId OBJECT-TYPE
+                SYNTAX  DisplayString
+                ACCESS  read-write
+                STATUS  mandatory
+                DESCRIPTION
+                "LDAP server login fail id."
+                ::= { xylanASAConfig 9 }
+
+-- LDAP Server Table *************************
+
+-- ASA RADIUS Server Table *******************
+
+xylanASARadiusServers OBJECT-TYPE
+        SYNTAX  SEQUENCE OF XylanASARadiusEnt
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION "Listing of Configured ASA Radius Authentication Servers by group."
+        ::= { xylanASAConfig 10 }
+ 
+xylanASAradiusentry OBJECT-TYPE
+        SYNTAX   XylanASARadiusEnt
+        ACCESS   not-accessible
+        STATUS   mandatory
+        DESCRIPTION "Individual ASA Radius Authentication Server Entry."
+        INDEX  { 
+                   xylanASARadiusAddress
+               }
+        ::= { xylanASARadiusServers 1 }
+ 
+XylanASARadiusEnt ::=
+        SEQUENCE {
+                xylanASARadiusAddress  IpAddress,
+                xylanASARadiusPriority INTEGER,
+                xylanASARadiusPort     INTEGER,
+                xylanASARadiusSecret   DisplayString,
+                xylanASARadiusAdminState INTEGER
+                 }
+ 
+xylanASARadiusAddress OBJECT-TYPE
+                SYNTAX  IpAddress
+                ACCESS  read-write
+                STATUS  mandatory
+                DESCRIPTION
+                "ASA Radius Server IP address."
+                ::= { xylanASAradiusentry 1 }
+ 
+xylanASARadiusPriority OBJECT-TYPE
+                SYNTAX INTEGER (1..255)
+                ACCESS read-write
+                STATUS mandatory
+                DESCRIPTION "The radius servers priority in the list of
+                             configured servers, 1 being the highest."
+                ::= { xylanASAradiusentry 2 }
+ 
+xylanASARadiusPort OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-write
+                STATUS mandatory
+                DESCRIPTION "The radius server remote UDP port number"
+                ::= { xylanASAradiusentry 3 }
+ 
+xylanASARadiusSecret OBJECT-TYPE
+                SYNTAX DisplayString
+                ACCESS write-only
+                STATUS mandatory
+                DESCRIPTION "The radius servers secret."
+                ::= { xylanASAradiusentry 4 }
+ 
+xylanASARadiusAdminState OBJECT-TYPE
+                SYNTAX INTEGER {
+                                active (1),
+                                delete (2)
+                               }
+                ACCESS read-write
+                STATUS mandatory
+                DESCRIPTION "The current status of this server, active (1)
+                             or delete(2) to tell SNMP to delete this entry"
+                ::= { xylanASAradiusentry 5 }
+ 
+-- ASA Radius Server Table *********************
+
+-- ASA Radius Accounting Server Table *************************
+ 
+xylanASARadiusAcctServers OBJECT-TYPE
+	SYNTAX  SEQUENCE OF XylanASARadiusAcctEnt
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION "Listing of Configured ASA Radius Accounting Servers by group."
+	::= { xylanASAConfig 11 }
+ 
+xylanASAradiusacctentry OBJECT-TYPE
+	SYNTAX   XylanASARadiusAcctEnt
+	ACCESS   not-accessible
+	STATUS   mandatory
+	DESCRIPTION "Individual ASA Radius Accounting Server Entry."
+	INDEX {
+		xylanASARadiusAcctAddress
+	      }
+	::= { xylanASARadiusAcctServers 1 }
+ 
+XylanASARadiusAcctEnt ::=
+        SEQUENCE {
+                xylanASARadiusAcctAddress  IpAddress,
+                xylanASARadiusAcctPri     INTEGER,
+                xylanASARadiusAcctPort    INTEGER,
+                xylanASARadiusAcctSecret DisplayString,
+                xylanASARadiusAcctAdminState INTEGER
+                 }
+ 
+xylanASARadiusAcctAddress OBJECT-TYPE
+                SYNTAX  IpAddress
+                ACCESS  read-write
+                STATUS  mandatory
+                DESCRIPTION
+                "ASA Radius Accounting Server IP address."
+                ::= { xylanASAradiusacctentry 1 }
+ 
+xylanASARadiusAcctPri OBJECT-TYPE
+                SYNTAX INTEGER (1..255)
+                ACCESS read-write
+                STATUS mandatory
+                DESCRIPTION "The server priority in the list, one being the
+                             highest."
+                ::= { xylanASAradiusacctentry 2 }
+ 
+xylanASARadiusAcctPort OBJECT-TYPE
+                SYNTAX INTEGER
+                ACCESS read-write
+                STATUS mandatory
+                DESCRIPTION "The radius acct server remote UDP port number"
+                ::= { xylanASAradiusacctentry 3 }
+ 
+xylanASARadiusAcctSecret OBJECT-TYPE
+                SYNTAX DisplayString
+                ACCESS write-only
+                STATUS mandatory
+                DESCRIPTION "The radius acct servers secret."
+                ::= { xylanASAradiusacctentry 4 }
+
+xylanASARadiusAcctAdminState OBJECT-TYPE
+                SYNTAX INTEGER {
+                                active (1),
+                                delete (2)
+                               }
+                ACCESS read-write
+                STATUS mandatory
+                DESCRIPTION "The current status of this server, active (1)
+                             or delete(2) to tell SNMP to delete this entry"
+                ::= { xylanASAradiusacctentry 5 }
+ 
+-- ASA Radius Accounting Server Table *********************
+
+xylanASAACEClearSecret OBJECT-TYPE
+                SYNTAX INTEGER (1..255)
+                ACCESS write-only
+                STATUS mandatory
+                DESCRIPTION "Clear the ACE/Agent node secret."
+        ::= { xylanASAConfig 20 }
+
+
+END

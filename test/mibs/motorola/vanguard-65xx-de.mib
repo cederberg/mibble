@@ -1,0 +1,257 @@
+        -- Version 1.2, modified 11/18/98
+
+        DE-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+            OBJECT-TYPE
+                FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                      codex OBJECT IDENTIFIER ::= { enterprises 449 }
+         cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                    cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+      cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+     cdx6500CfgGeneralGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 2 }
+
+          cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+ cdx6500StatOtherStatsGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 2 }
+
+            cdx6500Controls OBJECT IDENTIFIER ::= { cdx6500 4 }
+
+        -- Textual Conventions
+
+        DisplayString ::= OCTET STRING
+        -- This data type is used to model textual information taken
+        -- from the NVT ASCII character set.  By convention, objects
+        -- with this syntax are declared as having SIZE (0..255)
+
+        cdx6500StatEncryption OBJECT IDENTIFIER ::= { cdx6500StatOtherStatsGroup 12 }
+
+        statEncryptionGeneral OBJECT IDENTIFIER ::= { cdx6500StatEncryption 1 }
+
+        deDataEncryptionHardwareStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                up (1),
+                down (2)
+                }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Displays the current status/existence of DE hardware.
+                 up: Data encryption hardware is installed and operational.
+                 down: Data encryption hardware is non functional."
+            ::=  { statEncryptionGeneral 1 }
+
+        deMaxChannelAvailable OBJECT-TYPE
+            SYNTAX INTEGER (10..500)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of DE Channels supported by the Data Encryption
+                 hardware installed on the node."
+            ::=  { statEncryptionGeneral 2 }
+
+        deMaxChannelConfigured OBJECT-TYPE
+            SYNTAX INTEGER (0..500)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of DE Channels configured for use.
+                 This parameter is used to control the amount of RAM that
+                 gets allocated for Data Encryption during node initialization."
+            ::=  { statEncryptionGeneral 3 }
+
+        deChannelsInUse OBJECT-TYPE
+            SYNTAX INTEGER (0..500)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of DE Channels that are assigned and are
+                 currently in use by the calls."
+            ::=  { statEncryptionGeneral 4 }
+           
+        deMaxSimultaneousChannelsUsed OBJECT-TYPE
+            SYNTAX INTEGER (0..500)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of data encryption channels
+                 in use simultaneously since the last stats reset."
+            ::=  { statEncryptionGeneral 5 }
+           
+        deCurrentEncryptionQueueLength OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current number of frames in the queue, waiting to
+                 be encrypted or decrypted"
+            ::=  { statEncryptionGeneral 6 }
+           
+        deMaxEncryptionQueueDepth OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of frames that were in the queue since
+                 the last stats reset."
+            ::=  { statEncryptionGeneral 7 }
+           
+        deTimeLastStatisticsReset OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time when the node restarted or the stats reset by CTP/SNMP Manager
+                 command."
+            ::=  { statEncryptionGeneral 8 }
+
+        statEncryptionChannelTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF StatEncryptionChannelEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Detail Encryption Statistics Table"
+        ::= { cdx6500StatEncryption 2}
+
+        statEncryptionChannelEntry OBJECT-TYPE
+            SYNTAX StatEncryptionChannelEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Detail Encryption Statistics Entry"
+            INDEX { deStatChannelNumber }
+            ::= { statEncryptionChannelTable 1 }
+
+        StatEncryptionChannelEntry ::=
+            SEQUENCE {
+                deStatChannelNumber
+                    INTEGER,
+                deLastStatisticsReset
+                    DisplayString,
+                deChannelState
+                    INTEGER,
+                deSourceChannel
+                    DisplayString,
+                deDestinationChannel
+                    DisplayString,
+                deCorruptedPackets
+                    INTEGER
+                }
+
+        deStatChannelNumber OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Channel Number."
+            ::=  { statEncryptionChannelEntry 1 }
+
+        deLastStatisticsReset OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time of the Channel stats reset by CTP/SNMP Manager command."
+            ::=  { statEncryptionChannelEntry 2 }
+
+        deChannelState OBJECT-TYPE
+            SYNTAX INTEGER {
+                nonData (1),
+                data (2)
+                }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Activity state of the Channel.
+                 nonData: Non encrypted data
+                 data: Encrypted data"
+            ::=  { statEncryptionChannelEntry 3 }
+
+        deSourceChannel OBJECT-TYPE
+            SYNTAX DisplayString 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Access Protocols identity string"
+            ::=  { statEncryptionChannelEntry 4 }
+
+        deDestinationChannel OBJECT-TYPE
+            SYNTAX DisplayString 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Network Protocols identity string"
+            ::=  { statEncryptionChannelEntry 5 }
+
+        deCorruptedPackets OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of decrypted packets with false data integrity check field."
+            ::=  { statEncryptionChannelEntry 6 }
+
+        cdx6500ControlsEncryption OBJECT IDENTIFIER ::= { cdx6500Controls 18 }
+
+        ctrlEncryptionGeneral OBJECT IDENTIFIER ::= { cdx6500ControlsEncryption 1 }
+
+        deCtrlEncryptionGeneral OBJECT-TYPE
+            SYNTAX INTEGER {
+                resetStatistics (1)
+                }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "When set, this parameter resets all the data encryption
+                 statistics for all channels."
+            ::=  { ctrlEncryptionGeneral 1 }
+
+        ctrlEncryptionChannelTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF CtrlEncryptionChannelEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Detail Encryption Control Table"
+            ::= { cdx6500ControlsEncryption 2}
+
+        ctrlEncryptionChannelEntry OBJECT-TYPE
+            SYNTAX CtrlEncryptionChannelEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Detail Encryption Control Entry"
+            INDEX { deCtrlChannelNumber }
+            ::= { ctrlEncryptionChannelTable 1 }
+
+        CtrlEncryptionChannelEntry ::=
+            SEQUENCE {
+                deCtrlChannelNumber
+                    INTEGER,
+                deCtrlEncryptionChannel
+                    INTEGER
+                }
+
+        deCtrlChannelNumber OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Channel Number."
+            ::=  { ctrlEncryptionChannelEntry 1 }
+
+        deCtrlEncryptionChannel OBJECT-TYPE
+            SYNTAX INTEGER {
+               resetStatistics (1)
+               }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "When set, this parameter resets the data encryption statistics
+                 for a given channel."
+            ::=  { ctrlEncryptionChannelEntry 2 }
+
+        END
+

@@ -1,0 +1,1270 @@
+        -- Version 1.8, modified 11/18/98
+
+
+        FRDCE-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+
+                mgmt, NetworkAddress, IpAddress, Counter, Gauge, TimeTicks
+                    FROM RFC1155-SMI
+                OBJECT-TYPE
+                    FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                      codex OBJECT IDENTIFIER ::= { enterprises 449 }
+         cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                    cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+      cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+    cdx6500CfgProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 1 }
+cdx6500PCTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 1 }
+cdx6500PCTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 3 }
+          cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+   cdx6500StatProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 1 }
+cdx6500PSTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 1 }
+cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 3 }
+            cdx6500Controls OBJECT IDENTIFIER ::= { cdx6500 4 }
+
+        -- Textual conventions
+        Counter16 ::= INTEGER (0..65535)
+
+        DisplayString ::= OCTET STRING
+        -- This data type is used to model textual information taken
+        -- from the NVT ASCII character set.  By convention, objects
+        -- with this syntax are declared as having SIZE (0..255)
+
+        PhysAddress ::= OCTET STRING
+        -- This data type is used to model media addresses.  For many
+        -- types of media, this will be in a binary representation.
+        -- For example, an ethernet address would be represented as
+        -- a string of 6 octets.
+
+        -- The Frame Relay DCE Port Configuration Table
+        -- This table contains Configuration paramaters 
+        -- for the Frame Relay DCE Port table.
+
+        cdx6500PCTFRDCEPortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTFRDCEPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the configuration parameters relevant
+                 to the Frame Relay DCE Port table."
+        ::= { cdx6500PCTPortProtocolGroup 6 }
+
+        cdx6500PCTFRDCEPortEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTFRDCEPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of SDLC Port configuration parameters."
+            INDEX { cdx6500frdcepCfgPortNum }
+        ::= { cdx6500PCTFRDCEPortTable 1 }
+
+        Cdx6500PCTFRDCEPortEntry ::=
+            SEQUENCE {
+                cdx6500frdcepCfgPortNum
+                    INTEGER,
+                cdx6500frdcepConnectionType
+                    INTEGER,
+                cdx6500frdcepClockSource
+                    INTEGER,
+                cdx6500frdcepClockSpeed
+                    INTEGER,
+                cdx6500frdcepMaxStations
+                    INTEGER,
+                cdx6500frdcepCtrlProtocol
+                    INTEGER,
+                cdx6500frdcepT391
+                    INTEGER,
+                cdx6500frdcepT392
+                    INTEGER,
+                cdx6500frdcepN391
+                    INTEGER,
+                cdx6500frdcepN392
+                    INTEGER,
+                cdx6500frdcepN393
+                    INTEGER,
+                cdx6500frdcepNT1
+                    INTEGER,
+                cdx6500frdcepNT2
+                    INTEGER,
+                cdx6500frdcepNN1
+                    INTEGER,
+                cdx6500frdcepNN2
+                    INTEGER,
+                cdx6500frdcepNN3
+                    INTEGER,
+                cdx6500frdcepSubaddress
+                    DisplayString,
+                cdx6500frdcepBiDirAnnexD
+                    INTEGER,
+                cdx6500frdcepInvertTXClock
+                    INTEGER,
+                cdx6500frdcepControlProtocolOptions
+                    DisplayString,
+                cdx6500frdcepDiscardControlOptions
+                    INTEGER
+                }
+
+        cdx6500frdcepCfgPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port Number."
+        ::= { cdx6500PCTFRDCEPortEntry 1 }
+
+        cdx6500frdcepConnectionType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    simp       (0),
+                    newvalSimp (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specify the control signal handshake and clocking required for
+                 a connection to be made to this port:
+                 simp  - simple, no control signals required.
+                 newvalSimp - same functionality as 'simp', new enumeration
+                              added for RFC1155 compatibility."
+        ::= { cdx6500PCTFRDCEPortEntry 2 }
+
+        cdx6500frdcepClockSource OBJECT-TYPE
+            SYNTAX INTEGER {
+                    int       (0),
+                    ext       (1),
+                    extint    (2),
+                    extlp     (3),
+                    newvalInt (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "int - internal clock source.
+                 ext - external clock source.
+                 extint  - Internal receive and external transmit
+                           clock source (DCE only).
+                 extlp   - external receive and loopback transmit
+                           clock source (DTE only).
+                           EXTLP must be configured in conjunction
+                           with EXTINT.
+                 newvalInt - same functionality as 'int', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500PCTFRDCEPortEntry 3 }
+
+        cdx6500frdcepClockSpeed OBJECT-TYPE
+            SYNTAX INTEGER (1200..2048000)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the speed of the port in bits per second, when using
+                 internal clocking. Note that the maximum port speed is dependent
+                 on the type of hardware installed. Consult the users manual
+                 for details."
+        ::= { cdx6500PCTFRDCEPortEntry 4 }
+
+        cdx6500frdcepMaxStations OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "The highest station number to be configured on this FRA port.
+                 It is used to limit the configuration of stations."
+        ::= { cdx6500PCTFRDCEPortEntry 5 }
+
+        cdx6500frdcepCtrlProtocol OBJECT-TYPE
+            SYNTAX INTEGER {
+                    annexD       (0),
+                    none         (1),
+                    lmi          (2),
+                    annexA       (3),
+                    newvalAnnexD (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Whether ANSI T1.617 Annex D or LMI Support is enabled
+                 none    - None is enabled.
+                 annexD  - Annex D is enabled.
+                 lmi     - LMI is enabled.
+                 annexA  - Annex A is enabled.
+                 newvalAnnexD - same functionality as 'annexD', new enumeration
+                           added for RFC1155 compatibility."
+        ::= { cdx6500PCTFRDCEPortEntry 6 }
+
+        cdx6500frdcepT391 OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the Link Integrity Verification
+                 Timer polling period.  When operating in bi-directional
+                 mode, FRA port sends status enquiry messages to network
+                 every T391/nT1 seconds."
+        ::= { cdx6500PCTFRDCEPortEntry 7 }
+
+        cdx6500frdcepT392 OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the Polling Cycle Verification
+                 Timer priod.  The FRA port expects status enquiry
+                 messages every T392/nT2 seconds.  This parameter must
+                 be set to a value greater than N391/nT1."
+        ::= { cdx6500PCTFRDCEPortEntry 8 }
+
+        cdx6500frdcepN391 OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the Full Status Polling Cycle count.
+                 When operating in bi-directional mode, the FRA port
+                 sends Full status enquiry messages to network every
+                 N391/nN1 polls."
+        ::= { cdx6500PCTFRDCEPortEntry 9 }
+
+        cdx6500frdcepN392 OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the Error Inactivity Threshold.
+                 The data link is declared to be up after receiving
+                 N392/nN2 consecutive events without error.  The data
+                 link is declared to be down when any N392/nN2 of the
+                 previous N393/nN3 events were received in error.
+                 This parameter must be set to a value less than or
+                 equal to N393/nN3."
+        ::= { cdx6500PCTFRDCEPortEntry 10 }
+
+        cdx6500frdcepN393 OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the Monitored Events Count for
+                 measuring N392.  The data link is declared to be down
+                 when any N392/nN2 of the previous N393/nN3 events
+                 were received in error.  This parameter must be set to
+                 a value greater than or equal to N392/nN2."
+        ::= { cdx6500PCTFRDCEPortEntry 11 }
+
+        cdx6500frdcepNT1 OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the Link Integrity Verification
+                 Timer polling period.  When operating in bi-directional
+                 mode, FRA port sends status enquiry messages to network
+                 every T391/nT1 seconds."
+        ::= { cdx6500PCTFRDCEPortEntry 12 }
+
+        cdx6500frdcepNT2 OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the Polling Cycle Verification
+                 Timer priod.  The FRA port expects status enquiry
+                 messages every T392/nT2 seconds.  This parameter must
+                 be set to a value greater than N391/nT1."
+        ::= { cdx6500PCTFRDCEPortEntry 13 }
+
+        cdx6500frdcepNN1 OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the Full Status Polling Cycle count.
+                 When operating in bi-directional mode, the FRA port
+                 sends Full status enquiry messages to network every
+                 N391/nN1 polls."
+        ::= { cdx6500PCTFRDCEPortEntry 14 }
+
+        cdx6500frdcepNN2 OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the Error Inactivity Threshold.
+                 The data link is declared to be up after receiving
+                 N392/nN2 consecutive events without error.  The data
+                 link is declared to be down when any N392/nN2 of the
+                 previous N393/nN3 events were received in error.
+                 This parameter must be set to a value less than or
+                 equal to N393/nN3."
+        ::= { cdx6500PCTFRDCEPortEntry 15 }
+
+        cdx6500frdcepNN3 OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the Monitored Events Count for
+                 measuring N392.  The data link is declared to be down
+                 when any N392/nN2 of the previous N393/nN3 events
+                 were received in error.  This parameter must be set to
+                 a value greater than or equal to N392/nN2."
+        ::= { cdx6500PCTFRDCEPortEntry 16 }
+
+        cdx6500frdcepSubaddress OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..3))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Calls addressed to this node and with this subaddress will 
+                 be routed to this port."
+        ::= { cdx6500PCTFRDCEPortEntry 17 }
+
+        cdx6500frdcepBiDirAnnexD OBJECT-TYPE
+            SYNTAX INTEGER {
+                    bi       (0),
+                    uni      (1),
+                    newvalBi (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Whether ANSI T1.617 Annex D bi-directional procedures 
+                 are enabled
+                 bi  - Bi-directional procedures are enabled.
+                 uni - Uni-directional procedures are enabled.
+                 newvalBi - same functionality as 'bi', new enumeration
+                       added for RFC1155 compatibility."
+        ::= { cdx6500PCTFRDCEPortEntry 18 }
+
+        cdx6500frdcepInvertTXClock OBJECT-TYPE
+            SYNTAX INTEGER {
+                   no  (1),
+                   yes (2),
+                   nc (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies whether the phase of the transmit
+                 clock should be inverted. Note: This parameter is primarily
+                 for X.21 electrical interfaces.
+                   no - Don't invert.
+                   yes - Invert."
+--            DEFVAL { no }
+        ::= { cdx6500PCTFRDCEPortEntry 19 }
+
+        cdx6500frdcepControlProtocolOptions OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..16))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "These options control the PVC management protocol
+                   none  - No option selected
+                   async - The port will send/receive asynchronous
+                           A-bit if it is performing Network side
+                           protocol functionality
+                   nbit  - The port will send and accept N-bit messages
+                   dbit  - The port will send and accept D-bit messages
+                           This forces ASYNC to be specified (dbit+async)"
+        ::= { cdx6500PCTFRDCEPortEntry 20 }
+
+        cdx6500frdcepDiscardControlOptions OBJECT-TYPE
+            SYNTAX INTEGER {
+                   none  (1),
+                   debit (2)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter controls the discard frame options
+                   none - No option selected
+                   debit - DE marked frames are discarded before
+                           non-DE frames"
+--            DEFVAL { none }
+        ::= { cdx6500PCTFRDCEPortEntry 21 }
+
+        -- The Frame Relay DCE Port Statistics Table
+        -- This table contains Statistics paramaters 
+        -- for the Frame Relay DCE Port table.
+
+        cdx6500PPSTFRDCEPortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPSTFRDCEPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the statistics parameters relevant
+                 to the Frame Relay DCE Port table."
+        ::= { cdx6500PSTPortProtocolGroup 6 }
+
+        cdx6500PPSTFRDCEPortEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPSTFRDCEPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of Frame Relay DCE Port statistics parameters."
+            INDEX { cdx6500frdcepStatsPortNum }
+        ::= { cdx6500PPSTFRDCEPortTable 1 }
+
+        Cdx6500PPSTFRDCEPortEntry ::=
+            SEQUENCE {
+                cdx6500frdcepStatsPortNum
+                    INTEGER,
+                cdx6500frdcepPortStatus
+                    INTEGER,
+                cdx6500frdcepPortSpeed
+                    INTEGER,
+                cdx6500frdcepUtilizationIn
+                    INTEGER,
+                cdx6500frdcepUtilizationOut
+                    INTEGER,
+                cdx6500frdcepCharInTotal
+                    Counter,
+                cdx6500frdcepCharOutTotal
+                    Counter,
+                cdx6500frdcepCharsInPerSec
+                    INTEGER,
+                cdx6500frdcepCharsOutPerSec
+                    INTEGER,
+                cdx6500frdcepFrameInTotal
+                    Counter,
+                cdx6500frdcepFrameOutTotal
+                    Counter,
+                cdx6500frdcepFramesInPerSec
+                    INTEGER,
+                cdx6500frdcepFramesOutPerSec
+                    INTEGER,
+                cdx6500frdcepOverrunErrors
+                    Counter16,
+                cdx6500frdcepUnderrunErrors
+                    Counter16,
+                cdx6500frdcepCRCErrors
+                    Counter16
+                }
+
+        cdx6500frdcepStatsPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port Number."
+        ::= { cdx6500PPSTFRDCEPortEntry 1 }
+
+        cdx6500frdcepPortStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    busyOut        (2),
+                    up             (3),
+                    down           (4),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port Status indicates whether or not the port
+                 is switched on and is ready for operation. This value
+                 may be one of :
+                 up        - Port is up and running.
+                 down      - Port is down.
+                 disabled  - Port has been disabled.
+                 enabled   - port has been enabled, but is not yet Up.
+                 busyOut   - port has been set to be disabled as soon as
+                             last active call is disestablished. No new
+                             calls will be established.
+                 newvalDisabled - same functionality as 'disabled', new
+                             enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PPSTFRDCEPortEntry 2 }
+
+        cdx6500frdcepPortSpeed OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the speed of the port if clock is internal. If
+                 clock is external, this is the detected clock speed. If
+                 Port Speed is 0, clock is external, but clocking is not
+                 being received from attatched device."
+        ::= { cdx6500PPSTFRDCEPortEntry 3 }
+
+        cdx6500frdcepUtilizationIn OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Pertcentage of Port input bandwidth in use."
+        ::= { cdx6500PPSTFRDCEPortEntry 4 }
+
+        cdx6500frdcepUtilizationOut OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Pertcentage of Port output bandwidth in use."
+        ::= { cdx6500PPSTFRDCEPortEntry 5 }
+
+        cdx6500frdcepCharInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of message received since last node, port, or
+                 statistics reset."
+        ::= { cdx6500PPSTFRDCEPortEntry 6 }
+
+        cdx6500frdcepCharOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of message sent since last node, port, or
+                 statistics reset."
+        ::= { cdx6500PPSTFRDCEPortEntry 7 }
+
+        cdx6500frdcepCharsInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received per second."
+        ::= { cdx6500PPSTFRDCEPortEntry 8 }
+
+        cdx6500frdcepCharsOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received per second."
+        ::= { cdx6500PPSTFRDCEPortEntry 9 }
+
+        cdx6500frdcepFrameInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames received since last node, port, or
+                 statistics reset."
+        ::= { cdx6500PPSTFRDCEPortEntry 10 }
+
+        cdx6500frdcepFrameOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames sent since last node, port, or
+                 statistics reset."
+        ::= { cdx6500PPSTFRDCEPortEntry 11 }
+
+        cdx6500frdcepFramesInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of frames received per second 
+                 during the previous minute"
+        ::= { cdx6500PPSTFRDCEPortEntry 12 }
+
+        cdx6500frdcepFramesOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of frames transmitted per second 
+                 during the previous minute"
+        ::= { cdx6500PPSTFRDCEPortEntry 13 }
+
+        cdx6500frdcepOverrunErrors OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of overrun errors counted by the I/O driver."
+        ::= { cdx6500PPSTFRDCEPortEntry 14 }
+
+        cdx6500frdcepUnderrunErrors OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of underrun errors counted by the I/O driver."
+        ::= { cdx6500PPSTFRDCEPortEntry 15 }
+
+        cdx6500frdcepCRCErrors OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of CRC errors counted by the I/O driver."
+        ::= { cdx6500PPSTFRDCEPortEntry 16 }
+
+        -- The Frame Relay DCE Station Configuration Table
+        -- This table contains Configuration paramaters 
+        -- for the Frame Relay DCE Station table.
+
+        cdx6500SPCTFRDCEStationTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SPCTFRDCEStationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the configuration parameters relevant
+                 to the Frame Relay DCE Station table."
+        ::= { cdx6500PCTStationProtocolGroup 3 }
+
+        cdx6500SPCTFRDCEStationEntry OBJECT-TYPE
+            SYNTAX Cdx6500SPCTFRDCEStationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of Frame Relay DCE station configuration parameters."
+            INDEX { cdx6500frdcesCfgPortNum, cdx6500frdcesCfgDLCI }
+        ::= { cdx6500SPCTFRDCEStationTable 1 }
+
+        Cdx6500SPCTFRDCEStationEntry ::=
+            SEQUENCE {
+                cdx6500frdcesCfgPortNum
+                    INTEGER,
+                cdx6500frdcesCfgDLCI
+                    INTEGER,
+                cdx6500frdcesAutocallMnem
+                    DisplayString,
+                cdx6500frdcesAutocallTimeout
+                    INTEGER,
+                cdx6500frdcesMaxAutocalls
+                    INTEGER,
+                cdx6500frdcesRemoteConnID
+                    INTEGER,
+                cdx6500frdcesPriority
+                    INTEGER,
+                cdx6500frdcesBillingRecords
+                    INTEGER,
+                cdx6500frdcesStationNum
+                    INTEGER,
+                cdx6500frdcesMaxInboundQueue
+                    INTEGER
+                }
+
+        cdx6500frdcesCfgPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Station number."
+        ::= { cdx6500SPCTFRDCEStationEntry 1 }
+
+        cdx6500frdcesCfgDLCI OBJECT-TYPE
+            SYNTAX INTEGER (16..1007)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The Data Link Connection Identifier (dlci) is the unique
+                 identifier for the station on the FRA Port. Its valid range
+                 is 16 - 1007. It must match the DLCI configured on the
+                 attached FRAD."
+        ::= { cdx6500SPCTFRDCEStationEntry 2 }
+
+        cdx6500frdcesAutocallMnem OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the mnemonic name used  for auto calling.  A blank
+                 indicates auto calling is disabled."
+        ::= { cdx6500SPCTFRDCEStationEntry 3 }
+
+        cdx6500frdcesAutocallTimeout OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the time interval in seconds between call 
+                 attempts when auto calling."
+        ::= { cdx6500SPCTFRDCEStationEntry 4 }
+
+        cdx6500frdcesMaxAutocalls OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is used to specify the number of times 
+                 that this FRA station will attempt to call when auto 
+                 calling is enabled.
+                 A value of zero will allow unlimited attempts."
+        ::= { cdx6500SPCTFRDCEStationEntry 5 }
+
+        cdx6500frdcesRemoteConnID OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies the number of the remote LAN
+                 Connection or the number of the remote FRA station that this
+                 FRA station will attempt to connect to if configured for
+                 autocall."
+        ::= { cdx6500SPCTFRDCEStationEntry 6 }
+
+        cdx6500frdcesPriority OBJECT-TYPE
+            SYNTAX INTEGER {
+                    low       (0),
+                    medium    (1),
+                    high      (2),
+                    expedite  (3),
+                    newvalLow (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies the Traffic Priority of this FRA
+                 station.
+                 newvalLow - same functionality as 'low', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500SPCTFRDCEStationEntry 7 }
+
+        cdx6500frdcesBillingRecords OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This controls whether billing (accounting) records will be
+                 created for calls on this FRA station.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compliance."
+        ::= { cdx6500SPCTFRDCEStationEntry 8 }
+
+        cdx6500frdcesStationNum OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of the logical link on the line. This is the value
+                 of Sxx for routing purposes."
+        ::= { cdx6500SPCTFRDCEStationEntry 9 }
+
+        cdx6500frdcesMaxInboundQueue OBJECT-TYPE
+            SYNTAX INTEGER (100..2500)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the maximum number of frames which may
+                 be queued in the station's inbound queue. A smaller
+                 value may be choosen for applications which experience
+                 objectionable delays, if due to excessive growth of the
+                 station's inbound queue."
+--            DEFVAL { 2500 }
+        ::= { cdx6500SPCTFRDCEStationEntry 10 }
+
+        -- The Frame Relay DCE Station Statistics Table
+        -- This table contains Statistics paramaters 
+        -- for the Frame Relay DCE Station table.
+
+        cdx6500SPSTFRDCEStationTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SPSTFRDCEStationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the statistics parameters relevant
+                 to the Frame Relay DCE Station (DLCI) table."
+        ::= { cdx6500PSTStationProtocolGroup 3 }
+
+        cdx6500SPSTFRDCEStationEntry OBJECT-TYPE
+            SYNTAX Cdx6500SPSTFRDCEStationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of Frame Relay DCE station (DLCI) Statistics parameters."
+            INDEX { cdx6500frdcesStatsPortNum,  cdx6500frdcesStatsDLCI }
+        ::= { cdx6500SPSTFRDCEStationTable 1 }
+
+        Cdx6500SPSTFRDCEStationEntry ::=
+            SEQUENCE {
+                cdx6500frdcesStatsPortNum
+                    INTEGER,
+                cdx6500frdcesStatsDLCI
+                    INTEGER,
+                cdx6500frdcesUtilizationIn
+                    INTEGER,
+                cdx6500frdcesUtilizationOut
+                    INTEGER,
+                cdx6500frdcesMaxSVCCount
+                    INTEGER,
+                cdx6500frdcesCurrentSVCCount
+                    INTEGER,
+                cdx6500frdcesCharInTotal
+                    Counter,
+                cdx6500frdcesCharOutTotal
+                    Counter,
+                cdx6500frdcesCharsInPerSec
+                    INTEGER,
+                cdx6500frdcesCharsOutPerSec
+                    INTEGER,
+                cdx6500frdcesPktInTotal
+                    Counter,
+                cdx6500frdcesPktOutTotal
+                    Counter,
+                cdx6500frdcesPktsInPerSec
+                    INTEGER,
+                cdx6500frdcesPktsOutPerSec
+                    INTEGER,
+                cdx6500frdcesPacketsQueued
+                    INTEGER,
+                cdx6500frdcesFrameInTotal
+                    Counter,
+                cdx6500frdcesFrameOutTotal
+                    Counter,
+                cdx6500frdcesFramesInPerSec
+                    INTEGER,
+                cdx6500frdcesFramesOutPerSec
+                    INTEGER,
+                cdx6500frdcesInfoFramesIn
+                    Counter,
+                cdx6500frdcesInfoFramesOut
+                    Counter,
+                cdx6500frdcesRNRFramesIn
+                    Counter,
+                cdx6500frdcesRNRFramesOut
+                    Counter,
+                cdx6500frdcesRRFramesIn
+                    Counter,
+                cdx6500frdcesRRFramesOut
+                    Counter,
+                cdx6500frdcesREJFramesIn
+                    Counter,
+                cdx6500frdcesREJFramesOut
+                    Counter,
+                cdx6500frdcesDataPktsIn
+                    Counter,
+                cdx6500frdcesDataPktsOut
+                    Counter,
+                cdx6500frdcesResetStats
+                    INTEGER,
+                cdx6500frdcesBoot
+                    INTEGER,
+                cdx6500frdcesDisable
+                    INTEGER,
+                cdx6500frdcesEnable
+                    INTEGER
+                }
+
+        cdx6500frdcesStatsPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port Number."
+        ::= { cdx6500SPSTFRDCEStationEntry 1 }
+
+        cdx6500frdcesStatsDLCI  OBJECT-TYPE
+            SYNTAX INTEGER (16..1007)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The Data Link Connection Identifier (dlci) is the unique
+                 identifier for the station on the FRA Port."
+        ::= { cdx6500SPSTFRDCEStationEntry 2 }
+
+        cdx6500frdcesUtilizationIn OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The quantity of user bytes received on the line as a 
+                 percentage of the maximum number of bytes that could have 
+                 been received."
+        ::= { cdx6500SPSTFRDCEStationEntry 3 }
+
+        cdx6500frdcesUtilizationOut OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The quantity of user bytes sent on the line as a percentage
+                 of the maximum number of bytes that could have been received."
+        ::= { cdx6500SPSTFRDCEStationEntry 4 }
+
+        cdx6500frdcesMaxSVCCount OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "Maximum number of SVCs available in the network."
+        ::= { cdx6500SPSTFRDCEStationEntry 5 }
+
+        cdx6500frdcesCurrentSVCCount OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "Number of SVCs currently in use."
+        ::= { cdx6500SPSTFRDCEStationEntry 6 }
+
+        cdx6500frdcesCharInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of characters received since last node, port,
+                 or station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 7 }
+
+        cdx6500frdcesCharOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of characters sent since last node, port,
+                 or station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 8 }
+
+        cdx6500frdcesCharsInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of characters received per second."
+        ::= { cdx6500SPSTFRDCEStationEntry 9 }
+
+        cdx6500frdcesCharsOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of characters transmitted per second."
+        ::= { cdx6500SPSTFRDCEStationEntry 10 }
+
+        cdx6500frdcesPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of Packets received since last node, port,
+                 or station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 11 }
+
+        cdx6500frdcesPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of Packets sent since last node, port,
+                 or station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 12 }
+
+        cdx6500frdcesPktsInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of Packets received per second."
+        ::= { cdx6500SPSTFRDCEStationEntry 13 }
+
+        cdx6500frdcesPktsOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of Packets transmitted per second."
+        ::= { cdx6500SPSTFRDCEStationEntry 14 }
+
+        cdx6500frdcesPacketsQueued OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current number of packets buffered since since last node, port,
+                 or station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 15 }
+
+        cdx6500frdcesFrameInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of frames received since last node, port, or
+                 station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 16 }
+
+        cdx6500frdcesFrameOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of frames sent since last node, port, or
+                 station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 17 }
+
+        cdx6500frdcesFramesInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of frames received per second."
+        ::= { cdx6500SPSTFRDCEStationEntry 18 }
+
+        cdx6500frdcesFramesOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of frames transmitted per second."
+        ::= { cdx6500SPSTFRDCEStationEntry 19 }
+
+        cdx6500frdcesInfoFramesIn OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "Number of data frames received since last node, port, or
+                 station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 20 }
+
+        cdx6500frdcesInfoFramesOut OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "Number of data frames sent since last node, port, or
+                 station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 21 }
+
+        cdx6500frdcesRNRFramesIn OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "Number of RNR frames received since last node, port, or
+                 station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 22 }
+
+        cdx6500frdcesRNRFramesOut OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "Number of RNR frames sent since last node, port, or
+                 station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 23 }
+
+        cdx6500frdcesRRFramesIn OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "Number of RR frames received since last node, port, or
+                 station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 24 }
+
+        cdx6500frdcesRRFramesOut OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "Number of RR frames sent since last node, port, or
+                 station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 25 }
+
+        cdx6500frdcesREJFramesIn OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "Number of REJ frames received since last node, port, or
+                 station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 26 }
+
+        cdx6500frdcesREJFramesOut OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "Number of REJ frames sent since last node, port, or
+                 station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 27 }
+
+        cdx6500frdcesDataPktsIn OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of data packets received since last node, port, or
+                 station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 28 }
+
+        cdx6500frdcesDataPktsOut OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of data packets sent since last node, port, or
+                 station boot or statistics reset."
+        ::= { cdx6500SPSTFRDCEStationEntry 29 }
+
+
+        -- The Frame Relay DCE Station Control objects
+        -- These objects provide Control parameters
+        -- for the Frame Relay DCE Stations.
+
+        cdx6500frdcesResetStats OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset   (1),
+                    noReset (2)
+                    }
+            ACCESS write-only
+            STATUS obsolete
+            DESCRIPTION
+                "reset   : Resets the specified Frame Relay station statistics.
+                 noReset : Do not reset the specified Frame Relay station
+                           statistics."
+        ::= { cdx6500SPSTFRDCEStationEntry 30 }
+
+        cdx6500frdcesBoot OBJECT-TYPE
+            SYNTAX INTEGER {
+                    boot   (1),
+                    noBoot (2)
+                    }
+            ACCESS write-only
+            STATUS obsolete
+            DESCRIPTION
+                "boot   : Boots the specified Frame Relay station.
+                 noBoot : Do not boot the specified Frame Relay station."
+        ::= { cdx6500SPSTFRDCEStationEntry 31 }
+
+        cdx6500frdcesDisable OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disable   (1),
+                    noDisable (2)
+                    }
+            ACCESS write-only
+            STATUS obsolete
+            DESCRIPTION
+                "disable   : Disables the specified Frame Relay station.
+                 noDisable : Do not disable the specified Frame Relay station."
+        ::= { cdx6500SPSTFRDCEStationEntry 32 }
+
+        cdx6500frdcesEnable OBJECT-TYPE
+            SYNTAX INTEGER {
+                    enable   (1),
+                    noEnable (2)
+                    }
+            ACCESS write-only
+            STATUS obsolete
+            DESCRIPTION
+                "enable   : Enable the specified Frame Relay station.
+                 noEnable : Do not enable the specified Frame Relay station."
+        ::= { cdx6500SPSTFRDCEStationEntry 33 }
+
+        -- The FRA Port Control Table
+        cdx6500ContFRATable OBJECT IDENTIFIER
+        ::= { cdx6500Controls 17 }
+
+        cdx6500frdcepPContTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500frdcepPContEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Control parameters for FRA ports."
+        ::= { cdx6500ContFRATable 1 }
+
+        cdx6500frdcepPContEntry OBJECT-TYPE
+            SYNTAX Cdx6500frdcepPContEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of FRA port control."
+            INDEX { cdx6500frdcepContPortNumber }
+        ::= { cdx6500frdcepPContTable 1 }
+
+        Cdx6500frdcepPContEntry ::=
+            SEQUENCE {
+                cdx6500frdcepContPortNumber
+                    INTEGER,
+                cdx6500frdcepContPortControl
+                    INTEGER
+                }
+
+        cdx6500frdcepContPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Port number of the FRA port."
+        ::= { cdx6500frdcepPContEntry 1 }
+
+        cdx6500frdcepContPortControl OBJECT-TYPE
+            SYNTAX INTEGER {
+                   boot       (1),
+                   enable     (2),
+                   disable    (3),
+                   resetstats (4)
+                   }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Control operations for the specified FRA port.
+                 boot       - Boots the FRA port
+                 enable     - Enables the FRA port
+                 disable    - Disables the FRA port
+                 resetstats - Resets the FRA port statistics."
+        ::= { cdx6500frdcepPContEntry 2 }
+
+        cdx6500frdcesSContTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500frdcesSContEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Control parameter for Fra stations"
+        ::= { cdx6500ContFRATable 2 }
+
+        cdx6500frdcesSContEntry OBJECT-TYPE
+            SYNTAX Cdx6500frdcesSContEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of FRA Station control"
+            INDEX { cdx6500frdcesStationPortNumber, cdx6500frdcesStationDLCI }
+        ::= { cdx6500frdcesSContTable 1 }
+
+        Cdx6500frdcesSContEntry ::=
+            SEQUENCE {
+                cdx6500frdcesStationPortNumber INTEGER,
+                cdx6500frdcesStationDLCI INTEGER,
+                cdx6500frdcesStationControl INTEGER
+                }
+
+        cdx6500frdcesStationPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Fra Station Port number"
+        ::= { cdx6500frdcesSContEntry 1 }
+
+        cdx6500frdcesStationDLCI OBJECT-TYPE
+            SYNTAX INTEGER (16..1007)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Fra Station DLCI number"
+        ::= { cdx6500frdcesSContEntry 2 }
+
+        cdx6500frdcesStationControl OBJECT-TYPE
+            SYNTAX INTEGER {
+                   boot       (1),
+                   enable     (2),
+                   disable    (3),
+                   resetstats (4)
+                   }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Control operations for the specified FRA station.
+                 boot        - Boot the FRA station
+                 enable      - Enables the FRA station
+                 disable     - Disables the FRA station
+                 resetstats - Resets the FRA station statistics."
+        ::= { cdx6500frdcesSContEntry 3 }
+
+        END

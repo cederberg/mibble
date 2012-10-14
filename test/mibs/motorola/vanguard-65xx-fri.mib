@@ -1,0 +1,3382 @@
+        -- Version 1.5, modified  08/25/98
+
+
+        FRI-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+            Counter
+                FROM RFC1155-SMI
+
+            OBJECT-TYPE
+                FROM RFC-1212;
+
+                         codex OBJECT IDENTIFIER ::= { enterprises 449 }
+            cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                       cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+         cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+       cdx6500CfgProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 1 }
+   cdx6500PCTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 1 }
+cdx6500PCTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 3 }
+
+             cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+      cdx6500StatProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 1 }
+   cdx6500PSTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 1 }
+cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 3 }
+
+               cdx6500Controls OBJECT IDENTIFIER ::= { cdx6500 4 }
+
+        DisplayString ::=
+            OCTET STRING
+        -- This data type is used to model textual information taken
+        -- from the NVT ASCII character set.  By convention, objects
+        -- with this syntax are declared as having SIZE (0..255)
+
+
+        -- The FRI Port Configuration Table
+        -- This Table replaces cdx6500PCTFRDTEPortTable which is now obsolete
+
+        cdx6500PPCTFRIPortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPCTFRIPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains Frame Relay DTE Port configuration 
+                 parameters."
+        ::= { cdx6500PCTPortProtocolGroup 31 }
+
+        cdx6500PPCTFRIPortEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPCTFRIPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the FRI Port Configuration Table."
+            INDEX { friPCfgPortNumber }
+        ::= { cdx6500PPCTFRIPortTable 1 }
+
+        -- NOTE : Numeric objects which are skipped during configuration
+        --        will return 0 on query.
+        Cdx6500PPCTFRIPortEntry ::=
+            SEQUENCE {
+                friPCfgPortNumber
+                    INTEGER,
+                friPCfgPortType
+                    INTEGER,
+                friPCfgConnectionType
+                    INTEGER,
+                friPCfgClockSource
+                    INTEGER,
+                friPCfgClockSpeed
+                    INTEGER,
+                friPCfgHighestStnNumber
+                    INTEGER,
+                friPCfgFrameSeqCounting
+                    INTEGER,
+                friPCfgPktSeqCounting
+                    INTEGER,
+                friPCfgCntrlProtocolSupport
+                    INTEGER,
+                friPCfgHighPriorityStn
+                    INTEGER,
+                friPCfgMaxVoiceBWBitsPerSec
+                    INTEGER,
+                friPCfgSegSizeVoicePresent
+                    INTEGER,
+                friPCfgSegSizeVoiceNotPresent
+                    INTEGER,
+                friPCfgT391Timer
+                    INTEGER,
+                friPCfgT392Timer
+                    INTEGER,
+                friPCfgN391PollCycle
+                    INTEGER,
+                friPCfgN392ErrsDuringMonitoredEvents
+                    INTEGER,
+                friPCfgN393MonitoredEvents
+                    INTEGER,
+                friPCfgNT1PollTimer
+                    INTEGER,
+                friPCfgNT2VerificationTimer
+                    INTEGER,
+                friPCfgNN1StatusPollingCycle
+                    INTEGER,
+                friPCfgNN2ErrsDuringMonitoredEvents
+                    INTEGER,
+                friPCfgNN3MonitoredEvents
+                    INTEGER,
+                friPCfgInvertTXClock
+                    INTEGER,
+                friPCfgControlProtocolOptions
+                    DisplayString,
+                friPCfgDiscardControlOptions
+                    INTEGER
+                }
+
+        friPCfgPortNumber OBJECT-TYPE
+            SYNTAX  INTEGER (1..255)
+            ACCESS  read-only
+            STATUS  mandatory
+            DESCRIPTION
+                "Port number of this port."
+        ::= { cdx6500PPCTFRIPortEntry 1 }
+
+        friPCfgPortType OBJECT-TYPE
+            SYNTAX INTEGER {
+                   fri(18)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port type of the Port."
+--            DEFVAL { fri }
+        ::= { cdx6500PPCTFRIPortEntry 2 }
+
+        friPCfgConnectionType OBJECT-TYPE
+            SYNTAX INTEGER {
+                   simp  (1),
+                   dtr   (2),
+                   simpb (21),
+                   nc    (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The Specified control signal handshake and clocking required 
+                 for a connection to be made to this port :
+                 simp  - simple, no control signals required.
+                 dtr   - dedicated, require the data terminal ready signal (DTR).
+                 simpb - simple, no control signals required for data 
+                         transmission and reception. By default output 
+                         leads will be low.
+                 nc    - Skipped during configuration."
+--            DEFVAL { simp }
+        ::= { cdx6500PPCTFRIPortEntry 3 }
+
+        friPCfgClockSource OBJECT-TYPE
+            SYNTAX INTEGER {
+                   int    (1),
+                   ext    (2),
+                   extint (3),
+                   extlp  (4),
+                   nc     (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "int     - Internal clock source
+                 ext     - External clock source.
+                 extint  - Internal receive and external transmit 
+                           clock source (DCE only).
+                 extlp   - external receive and loopback transmit 
+                           clock source (DTE only).
+                           EXTLP must be configured in conjunction
+                           with EXTINT.
+                 nc      - Skipped during configuration."
+--            DEFVAL { ext }
+        ::= { cdx6500PPCTFRIPortEntry 4 }
+
+        friPCfgClockSpeed OBJECT-TYPE
+            SYNTAX INTEGER (1200..2048000)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the speed of the port in bits per second, when using
+                 internal clocking. The highest available speed is dependent
+                 on the card type, and on the interface type."
+--            DEFVAL { 64000 }
+        ::= { cdx6500PPCTFRIPortEntry 5 }
+
+        friPCfgHighestStnNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..254)
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "This is the highest station number that can be  configured on
+                 the FRI port. It is used to limit the configuration of 
+                 stations."
+        ::= { cdx6500PPCTFRIPortEntry 6 }
+
+        friPCfgFrameSeqCounting OBJECT-TYPE
+            SYNTAX INTEGER {
+                   normal   (1),
+                   extended (2),
+                   nc       (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port uses normal or extended frame sequence numbering:
+                 normal   - normal sequencing   (modulo 8)
+                 extended - extended sequencing (modulo 128).
+                 nc       - Skipped during configuration.
+                 All stations on this port will be set to this value."
+--            DEFVAL { normal }
+        ::= { cdx6500PPCTFRIPortEntry 7 }
+
+        friPCfgPktSeqCounting OBJECT-TYPE
+            SYNTAX INTEGER {
+                   normal   (1),
+                   extended (2),
+                   nc       (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port uses normal or extended packet level sequence numbers
+                 normal   - normal sequencing   (modulo 8)
+                 extended - extended sequencing (modulo 128)
+                 nc       - Skipped during configuration.
+                 This parameter must be set to the same value
+                 at both this FRI port and the remote FRI port.
+                 All stations on this port will be set to this value."
+--            DEFVAL { normal }
+        ::= { cdx6500PPCTFRIPortEntry 8 }
+
+        friPCfgCntrlProtocolSupport OBJECT-TYPE
+            SYNTAX INTEGER {
+                   annexD (1),
+                   none   (2),
+                   lmi    (3),
+                   annexA (4),
+                   auto   (5),
+                   nc     (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Whether ANSI T1.617 Annex D, CCITT Q.933 Annex A or 
+                 LMI Support is enabled.
+                 annexD - Annex D is enabled.
+                 none   - None is enabled.
+                 lmi    - LMI is enabled.
+                 annexA - Annex A is enabled.
+                 auto   - Auto-learn the Network control protocol type
+                 nc     - Skipped during configuration."
+--            DEFVAL { auto }
+        ::= { cdx6500PPCTFRIPortEntry 9 }
+
+        friPCfgHighPriorityStn OBJECT-TYPE
+            SYNTAX INTEGER (1..254)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies a station who's PVC status has 
+                 priority over all other stations when FRI same port back 
+                 up is enabled. When the network reports this DLCI inactive, 
+                 an alternate connection over a backup link is attempted."
+        ::= { cdx6500PPCTFRIPortEntry 10 }
+
+        friPCfgMaxVoiceBWBitsPerSec OBJECT-TYPE
+            SYNTAX INTEGER (0..2048000)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter limits the bandwidth, in bits per sec 
+                 (including overhead), for voice traffic passing through this 
+                 frame relay port. A zero value disables any voice passing 
+                 through this port."
+--            DEFVAL { 2048000 }
+        ::= { cdx6500PPCTFRIPortEntry 11 }
+
+        friPCfgSegSizeVoicePresent OBJECT-TYPE
+            SYNTAX INTEGER {
+                   segSize32   (33),
+                   segSize64   (65),
+                   segSize128  (129),
+                   segSize256  (257),
+                   segSize512  (513),
+                   segSize1024 (1025),
+                   nc          (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Data packets to be segmented into this maximum frame size when
+                 voice is active on this port.
+                 segSize32   - 32   byte segments
+                 segSize64   - 64   byte segments
+                 segSize128  - 128  byte segments
+                 segSize256  - 256  byte segments
+                 segSize512  - 512  byte segments
+                 segSize1024 - 1024 byte segments
+                 nc          - Skipped during configuration."
+--            DEFVAL { segSize64 }
+        ::= { cdx6500PPCTFRIPortEntry 12 }
+
+        friPCfgSegSizeVoiceNotPresent  OBJECT-TYPE
+            SYNTAX INTEGER {
+                   segSize32   (33),
+                   segSize64   (65),
+                   segSize128  (129),
+                   segSize256  (257),
+                   segSize512  (513),
+                   segSize1024 (1025),
+                   segSize2048 (2049),
+                   segSize4096 (4097),
+                   disable     (32000),
+                   nc          (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Data packets to be segmented into this maximum frame size when
+                 voice is not active on this port.
+                 segSize32   - 32   byte segments
+                 segSize64   - 64   byte segments
+                 segSize128  - 128  byte segments
+                 segSize256  - 256  byte segments
+                 segSize512  - 512  byte segments
+                 segSize1024 - 1024 byte segments
+                 segSize2048 - 2048 byte segments
+                 segSize4096 - 4096 byte segments
+                 disable     - segment size is 32768 bytes
+                 nc          - Skipped during configuration."
+--            DEFVAL { disable }
+        ::= { cdx6500PPCTFRIPortEntry 13 }
+
+        friPCfgT391Timer OBJECT-TYPE
+            SYNTAX INTEGER (5..30)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the Link Integrity Verification
+                 Timer polling period. The FRI port sends status enquiry
+                 messages to network every T391/nT1 seconds."
+--            DEFVAL { 10 }
+        ::= { cdx6500PPCTFRIPortEntry 14 }
+
+        friPCfgT392Timer OBJECT-TYPE
+            SYNTAX INTEGER (5..30)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the polling Cycle Verification
+                 Timer period. The FRI port expects status enquiry messages
+                 every T392/nT2 seconds. This parameter must be set to a
+                 value greater than N391/nT1, and applies only in
+                 bi-directional mode."
+--            DEFVAL { 15 }
+        ::= { cdx6500PPCTFRIPortEntry 15 }
+
+        friPCfgN391PollCycle OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Full Status polling cycle.  FRI port sends Full status
+                 enquiry messages to network every nN1 polls."
+--            DEFVAL { 5 }
+        ::= { cdx6500PPCTFRIPortEntry 16 }
+
+        friPCfgN392ErrsDuringMonitoredEvents OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Error inactivity threshold.  Number of errors during NN3
+                 events that cause the station to be declared inactive.
+                 Should be less than or equal to nN3."
+--            DEFVAL { 5 }
+        ::= { cdx6500PPCTFRIPortEntry 17 }
+
+        friPCfgN393MonitoredEvents OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Monitored events count for measuring nN3. nN2 errors during
+                 nN3 events will cause the station to be declared inactive.
+                 Should be greater than nN3."
+--            DEFVAL { 4 }
+        ::= { cdx6500PPCTFRIPortEntry 18 }
+
+        friPCfgNT1PollTimer OBJECT-TYPE
+            SYNTAX INTEGER (5..30)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the Link Integrity Verification
+                 Timer polling period. The FRI port sends status enquiry
+                 messages to network every T391/nT1 seconds."
+--            DEFVAL { 10 }
+        ::= { cdx6500PPCTFRIPortEntry 19 }
+
+        friPCfgNT2VerificationTimer OBJECT-TYPE
+            SYNTAX INTEGER (5..30)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the polling Cycle Verification
+                 Timer period. The FRI port expects status enquiry messages
+                 every T392/nT2 seconds. This parameter must be set to a
+                 value greater than N391/nT1, and applies only in
+                 bi-directional mode."
+--            DEFVAL { 15 }
+        ::= { cdx6500PPCTFRIPortEntry 20 }
+
+        friPCfgNN1StatusPollingCycle OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Full Status polling cycle.  FRI port sends Full status
+                 enquiry messages to network every nN1 polls."
+--            DEFVAL { 5 }
+        ::= { cdx6500PPCTFRIPortEntry 21 }
+
+        friPCfgNN2ErrsDuringMonitoredEvents OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Error inactivity threshold.  Number of errors during NN3
+                 events that cause the station to be declared inactive.
+                 Should be less than or equal to nN3."
+--            DEFVAL { 3 } 
+        ::= { cdx6500PPCTFRIPortEntry 22 }
+
+        friPCfgNN3MonitoredEvents OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Monitored events count for measuring nN3. nN2 errors during
+                 nN3 events will cause the station to be declared inactive.
+                 Should be greater than nN3."
+--            DEFVAL { 4 }
+        ::= { cdx6500PPCTFRIPortEntry 23 }
+
+        friPCfgInvertTXClock OBJECT-TYPE
+            SYNTAX INTEGER {
+                   no  (1),
+                   yes (2),
+                   nc (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies whether the phase of the transmit
+                 clock should be inverted. Note: This parameter is primarily
+                 for X.21 electrical interfaces.
+                   no - Don't invert.
+                   yes - Invert."
+--            DEFVAL { no }
+        ::= { cdx6500PPCTFRIPortEntry 24 }
+
+        friPCfgControlProtocolOptions OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..16))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "These options control the PVC management protocol
+                   none  - No option selected
+                   async - The port will send/receive asynchronous
+                           A-bit if it is performing Network side
+                           protocol functionality
+                   nbit  - The port will send and accept N-bit messages
+                   dbit  - The port will send and accept D-bit messages
+                           This forces ASYNC to be specified (dbit+async)"
+        ::= { cdx6500PPCTFRIPortEntry 25 }
+
+        friPCfgDiscardControlOptions OBJECT-TYPE
+            SYNTAX INTEGER {
+                   none  (1),
+                   debit (2)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter controls the discard frame options
+                   none - No option selected
+                   debit - DE marked frames are discarded before
+                           non-DE frames"
+--            DEFVAL { none }
+        ::= { cdx6500PPCTFRIPortEntry 26 }
+
+        -- The FRI Station Configuration Table
+        -- This Table replaces cdx6500SPCTFRDTEStationTable which is now 
+        -- obsolete
+
+        cdx6500SPCTFRIStationTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SPCTFRIStationEntry
+            ACCESS  not-accessible
+            STATUS  mandatory
+            DESCRIPTION
+                "This table contains Frame Relay DTE Station configuration
+                 parameters."
+        ::= { cdx6500PCTStationProtocolGroup 9 }
+
+        cdx6500SPCTFRIStationEntry OBJECT-TYPE
+            SYNTAX  Cdx6500SPCTFRIStationEntry
+            ACCESS  not-accessible
+            STATUS  mandatory
+            DESCRIPTION
+                "Entries in the FRI Station Configuration Table."
+            INDEX  { friSCfgPortNumber, friSCfgStnNumber }
+        ::= { cdx6500SPCTFRIStationTable 1 }
+
+        -- NOTE : Numeric objects which are skipped during configuration
+        --        will return 0 on query.
+        Cdx6500SPCTFRIStationEntry ::=
+            SEQUENCE {
+                friSCfgPortNumber
+                    INTEGER,
+                friSCfgStnNumber
+                    INTEGER,
+                friSCfgStnType
+                    INTEGER,
+                friSCfgDLCI
+                    INTEGER,
+                friSCfgCommInfoRate
+                    INTEGER,
+                friSCfgCommBurstSize
+                    INTEGER,
+                friSCfgTransDelay
+                    INTEGER,
+                friSCfgCongControlMode
+                    INTEGER,
+                friSCfgLinkAddress
+                    INTEGER,
+                friSCfgPVCChannels
+                    INTEGER,
+                friSCfgStartingPVC
+                    INTEGER,
+                friSCfgSVCChannels
+                    INTEGER,
+                friSCfgStartingSVC
+                    INTEGER,
+                friSCfgVoiceSVCChannels
+                    INTEGER,
+                friSCfgInitialFrame
+                    INTEGER,
+                friSCfgT1RetryTimer
+                    INTEGER,
+                friSCfgT4PollTimer
+                    INTEGER,
+                friSCfgN2TransmissionTries
+                    INTEGER,
+                friSCfgKFrameWindow
+                    INTEGER,
+                friSCfgWPacketWindow
+                    INTEGER,
+                friSCfgPPacketSize
+                    INTEGER,
+                friSCfgDataQUpperThreshold
+                    INTEGER,
+                friSCfgDataQLowerThreshold
+                    INTEGER,
+                friSCfgRestartTimer
+                    INTEGER,
+                friSCfgResetTimer
+                    INTEGER,
+                friSCfgCallTimer
+                    INTEGER,
+                friSCfgClearTimer
+                    INTEGER,
+                friSCfgX25Options
+                    DisplayString,
+                friSCfgRestrictedConnDest
+                    DisplayString,
+                friSCfgCUGMembership
+                    DisplayString,
+                friSCfgBillingRecords
+                    INTEGER,
+                friSCfgFrameSegmenter
+                    INTEGER,
+                friSCfgVoiceCongCtrlMode
+                    INTEGER,
+                friSCfgPeakUtilization
+                    INTEGER,
+                friSCfgMaxInboundQueue
+                    INTEGER,
+                friSCfgAnnexGRateReduction
+                    INTEGER
+                }
+
+        friSCfgPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The FRI port number corresponding to this station."
+        ::= { cdx6500SPCTFRIStationEntry 1 }
+
+        friSCfgStnNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..254)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of the configured FRI Station."
+        ::= { cdx6500SPCTFRIStationEntry 2 }
+
+        friSCfgStnType OBJECT-TYPE
+            SYNTAX INTEGER {
+                   annexG      (1),
+                   bypass      (2),
+                   voiceRelay  (3)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Identifies the type of station configured.
+                 annexG      - This station uses X.25 signaling for layer 3.
+                 bypass      - This station type bypasses layer 3. There is no
+                               signaling for SVC's on this station.
+                 voiceRelay  - Not used in the current version."
+        ::= { cdx6500SPCTFRIStationEntry 3 }
+
+        friSCfgDLCI OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The Data Link Connection Identifier (DLCI) is the unique 
+                 identifier for the station on the FRI Port. Its valid range
+                 is 0, 16 - 1007.
+                 A zero value in this field places the FRI station in DLCI
+                 auto-learn mode. In auto learn mode, the station is eligible
+                 for automatic assignment of an available network DLCI.
+                 A configured value of 16-1007 must match a DLCI on the FR
+                 networking node.
+                 NOTE: When a station record is configured for the first time,
+                 the DLCI prompt displays an auto-incrementing DLCI value.
+                 The DLCI's start from 16 for station 1, and increment by one 
+                 for each station configured. If the station record is not 
+                 saved to memory, a default DLCI value of zero is used."
+        ::= { cdx6500SPCTFRIStationEntry 4 }
+
+        friSCfgCommInfoRate OBJECT-TYPE
+            SYNTAX INTEGER (0..2048000)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter (CIR) specifies the rate (in bits-per-second)
+                 that the Frame Relay network agrees to transfer information
+                 under congested conditions for the FRI Station.  
+                 This value is used to throttle data on the FRI station for
+                 congestion control purposes. The CIR cannot be greater than
+                 the link speed."
+--            DEFVAL { 16000 }
+        ::= { cdx6500SPCTFRIStationEntry 5 }
+
+        friSCfgCommBurstSize OBJECT-TYPE
+            SYNTAX INTEGER (0..768000)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter (BC) specifies the maximum amount of data (in
+                 bits) that the Frame Relay network agrees to transfer over a
+                 time interval T = Committed Burst Size / Committed Information
+                 Rate.This must be greater than 1/20th of the Committed 
+                 Information Rate.This is used for congestion control purposes."
+--            DEFVAL { 16000 }
+        ::= { cdx6500SPCTFRIStationEntry 6 }
+
+        friSCfgTransDelay OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is the expected one-way delay through the
+                 network. This is specified in milliseconds."
+--            DEFVAL { 50 }
+        ::= { cdx6500SPCTFRIStationEntry 7 }
+
+        friSCfgCongControlMode OBJECT-TYPE
+            SYNTAX INTEGER {
+                   normal    (1),
+                   disable   (2),
+                   congested (3),
+                   limit     (4),
+                   nc        (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter controls the method of congestion control:
+                 normal       - congestion control is normal
+                 disable      - never enter Congested State (CTRL)
+                 congested    - never enter a Non-Congested State (UCTRL)
+                 limit        - congestion control is normal but limits the
+                                data rate to no lower than CIR.
+                 nc           - Skipped during configuration"
+--            DEFVAL { normal }
+        ::= { cdx6500SPCTFRIStationEntry 8 }
+
+        friSCfgLinkAddress OBJECT-TYPE
+            SYNTAX INTEGER {
+                   dte (1),
+                   dce (2),
+                   nc  (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The logical link address must be set to complementary values
+                 in this FRI Station and its corresponding remote FRI station:
+                 dte - station to have logical DTE address (A)
+                 dce - station to have logical DCE address (B)
+                 nc  - Skipped during configuration."
+--            DEFVAL { dte }
+        ::= { cdx6500SPCTFRIStationEntry 9 }
+
+        friSCfgPVCChannels OBJECT-TYPE
+            SYNTAX INTEGER (0..128)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of logical channels used for Permanent Virtual 
+                 Circuits. The total number of PVC and SVC channels on a 
+                 station (logical link) should be kept as small as possible and
+                 consistent with needs. PVC connections must be configured in
+                 the PVC Table."
+--            DEFVAL { 0 }
+        ::= { cdx6500SPCTFRIStationEntry 10 }
+
+        friSCfgStartingPVC OBJECT-TYPE
+            SYNTAX INTEGER (1..4095)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the starting logical channel number for the 
+                 Permanent Virtual Circuits on this FRI station. Not used if 
+                 the number of PVCs = 0."
+--            DEFVAL { 1 }
+        ::= { cdx6500SPCTFRIStationEntry 11 }
+
+
+        friSCfgSVCChannels OBJECT-TYPE
+            SYNTAX INTEGER (0..512)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of logical channels used in Switched Virtual Circuits.
+                 The total number of PVC and SVC channels on a station 
+                 (logical link) should be kept as small as possible and 
+                 consistent with needs."
+--            DEFVAL { 16 }
+        ::= { cdx6500SPCTFRIStationEntry 12 }
+
+        friSCfgStartingSVC OBJECT-TYPE
+            SYNTAX INTEGER (0..4095)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the starting logical channel number for the switched
+                 Virtual Circuits on this station (logical link). Not used if
+                 the number of SVCs = 0."
+--            DEFVAL { 1 }
+        ::= { cdx6500SPCTFRIStationEntry 13 }
+
+        friSCfgVoiceSVCChannels OBJECT-TYPE
+            SYNTAX INTEGER (0..15)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of logical voice channels used in Switched Virtual
+                 Circuits.The total number of voice and data channels on a
+                 station (logical link) should be kept as small as possible
+                 and consistent with needs."
+--            DEFVAL { 0 }
+        ::= { cdx6500SPCTFRIStationEntry 14 }
+
+        friSCfgInitialFrame OBJECT-TYPE
+            SYNTAX INTEGER {
+                   sabm (1),
+                   disc (2),
+                   none (3),
+                   nc   (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specify the initial frame required by other end for (logical)
+                 link startup:
+                 none - do nothing (other end initiates link-up)
+                 sabm - send SABM
+                 disc - send DISC, then SABM
+                 nc   - Skipped during configuration"
+--            DEFVAL { sabm }
+        ::= { cdx6500SPCTFRIStationEntry 15 }
+
+        friSCfgT1RetryTimer OBJECT-TYPE
+            SYNTAX INTEGER (1..254)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "T1 link retry timer value in tenths of a second (e.g. 
+                 30 = 3.0 seconds)."
+--            DEFVAL { 30 }
+        ::= { cdx6500SPCTFRIStationEntry 16 }
+
+        friSCfgT4PollTimer OBJECT-TYPE
+            SYNTAX INTEGER (10..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This sets the time an idle link is probed for assurance of
+                 connection to the remote FRI station.
+                 0 - disable the timer
+                 X - X is in tenths of a second (e.g. 40 = 4.0 seconds) and
+                 must be set greater than T1."
+--            DEFVAL { 40 }
+        ::= { cdx6500SPCTFRIStationEntry 17 }
+
+        friSCfgN2TransmissionTries OBJECT-TYPE
+            SYNTAX INTEGER (1..20)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The maximum number of attempts allowed to complete a
+                 transmission."
+--            DEFVAL { 10 }
+        ::= { cdx6500SPCTFRIStationEntry 18 }
+
+        friSCfgKFrameWindow OBJECT-TYPE
+            SYNTAX INTEGER (1..15)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Frame level window size must be set to the same value
+                 at both this FRI station and the remote FRI station."
+--            DEFVAL { 7 }
+        ::= { cdx6500SPCTFRIStationEntry 19 }
+
+        friSCfgWPacketWindow OBJECT-TYPE
+            SYNTAX INTEGER (1..15)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Packet level window size must be set to the same value
+                 at both this FRI station and the remote FRI station."
+--            DEFVAL { 2 }
+        ::= { cdx6500SPCTFRIStationEntry 20 }
+
+        friSCfgPPacketSize  OBJECT-TYPE
+            SYNTAX INTEGER {
+                   psize32   (6),
+                   psize64   (7),
+                   psize128  (8),
+                   psize256  (9),
+                   psize512  (10),
+                   psize1024 (11),
+                   nc        (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the maximum X.25 packet size used on the station
+                 (logical link).For proper operation, this must be set to the
+                 same value at both this FRI station and the remote FRI 
+                 station."
+--            DEFVAL { psize128 }
+        ::= { cdx6500SPCTFRIStationEntry 21 }
+
+        friSCfgDataQUpperThreshold OBJECT-TYPE
+            SYNTAX INTEGER (5..15)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the maximum number of data packets a channel on this
+                 station (logical link) will queue for transmission before
+                 invoking flow control to the attached channel"
+--            DEFVAL { 5 }
+        ::= { cdx6500SPCTFRIStationEntry 22 }
+
+        friSCfgDataQLowerThreshold OBJECT-TYPE
+            SYNTAX INTEGER (0..4)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the number of data packets a channel on this FRI
+                 station will have queued for transmission when it releases
+                 flow control to the attached channel"
+--            DEFVAL { 0 }
+        ::= { cdx6500SPCTFRIStationEntry 23 }
+
+        friSCfgRestartTimer OBJECT-TYPE
+            SYNTAX INTEGER (5..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Restart-Request timeout timer in seconds. If timer expires on
+                 this FRI station, the Restart request is sent again."
+--            DEFVAL { 180 }
+        ::= { cdx6500SPCTFRIStationEntry 24 }
+
+        friSCfgResetTimer OBJECT-TYPE
+            SYNTAX INTEGER (5..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Reset-Request timeout timer in seconds. If timer expires on
+                 this FRI station, the Reset request is sent again."
+--            DEFVAL { 180 }
+        ::= { cdx6500SPCTFRIStationEntry 25 }
+
+        friSCfgCallTimer OBJECT-TYPE
+            SYNTAX INTEGER (5..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Call-Request timeout timer in seconds. If timer expires on
+                 this FRI station, the call is cleared."
+--            DEFVAL { 200 }
+        ::= { cdx6500SPCTFRIStationEntry 26 }
+
+        friSCfgClearTimer OBJECT-TYPE
+            SYNTAX INTEGER (5..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Clear-Request timeout timer in seconds. If timer expires on
+                 this FRI station, the Clear request is sent again."
+--            DEFVAL { 180 }
+        ::= { cdx6500SPCTFRIStationEntry 27 }
+
+        friSCfgX25Options OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..24))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Select X.25 options on this station (logical link) as 
+                 follows:
+                 NONE  - no option specified
+                 CUG   - check closed user group; otherwise, CUG passes
+                         transparently
+                 CAUSE - pass cause, diagnostic, code in outbound packets
+                 HOLD  - hold calls over link restart
+                 INL   - inter-node link. Link goes to another 6500 device
+                 DELAY - Enable Delay and Path Trace on this link
+                 Any combination of above specified by summing (e.g. CUG+ 
+                 CAUSE+....). "
+        ::= { cdx6500SPCTFRIStationEntry 28 }
+
+        friSCfgRestrictedConnDest OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..255))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "All calls entering this station will be routed to the
+                 destination specified in this parameter,irrespective of route
+                 selection table entries. For example, to route all calls to
+                 X.25 port 3, use X25-3.
+                 To route calls to SDLC port 2, station 4, use SDLC-2S4. Blank
+                 in this  field disables this function."
+        ::= { cdx6500SPCTFRIStationEntry 29 }
+
+        friSCfgCUGMembership OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..23))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The station may be a member of up to 8 different Closed User
+                 Groups (CUGs).Each CUG membership must be a two digit number
+                 (except --) and separated by a comma. ( e.g. 12,34,56,09,02,
+                 03).
+                 --    - No CUG Membership
+                 00-99 - CUG Membership"
+        ::= { cdx6500SPCTFRIStationEntry 30 }
+
+        friSCfgBillingRecords OBJECT-TYPE
+            SYNTAX INTEGER {
+                   off (1),
+                   on  (2),
+                   nc  (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This controls whether billing (accounting) records will be
+                 created for calls on this FRI station.
+                 off - Billing records will not be created.
+                 on  - Billing records will be created.
+                 nc  - Skipped during configuration."
+--            DEFVAL { off }
+        ::= { cdx6500SPCTFRIStationEntry 31 }
+
+        friSCfgFrameSegmenter OBJECT-TYPE
+            SYNTAX INTEGER {
+                   disabled (1),
+                   enabled  (2),
+                   nc       (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Determine if this station will support the Frame Segmenter
+                 Header.The Frame Segmenter should be enabled if the frame
+                 relay port is configured to pass voice traffic.
+                 disabled - Frame Segmenter disabled.
+                 enabled  - Frame Segmenter enabled.
+                 nc       - Skipped during configuration."
+--            DEFVAL { disabled }
+        ::= { cdx6500SPCTFRIStationEntry 32 }
+
+        friSCfgVoiceCongCtrlMode OBJECT-TYPE
+            SYNTAX INTEGER {
+                   disabled (1),
+                   enabled  (2),
+                   nc       (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter controls the method of voice congestion 
+                 control:
+                 enabled  - Station is forced into congestion when voice 
+                            calls are detected.
+                 disabled - Station operates normally
+                 Use this parameter in voice applications, when the frame 
+                 relay network can have more than 140ms of data buffered. 
+                 One typical application is asymmetrical speeds. When this 
+                 parameter is enabled, and voice is detected, delta T is 
+                 forced to 50 ms and the BC is forced to 1/20 CIR."
+--            DEFVAL { disabled }
+        ::= { cdx6500SPCTFRIStationEntry 33 }
+
+        friSCfgPeakUtilization OBJECT-TYPE
+            SYNTAX INTEGER (0..240)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                 "The monitoring interval size specifies the time period
+                  to use when monitoring peak data link/CIR (Committed
+                  Information Rate) utilization.
+
+                  0 - Disables this monitoring feature.
+                  1 to 240 - The number of 64 second increments to use for the
+                  monitoring interval time period.
+                  For example: a value of 30 specifies a time duration
+                  equal to 30 * 64 seconds = 1920 seconds or 32 minutes."
+--            DEFVAL { 0 }
+        ::= { cdx6500SPCTFRIStationEntry 34 }
+
+        friSCfgMaxInboundQueue OBJECT-TYPE
+            SYNTAX INTEGER (100..2500)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the maximum number of frames from the
+                 network which may be queued in a BYPASS station. A
+                 smaller value may ve choosen for applications which
+                 experience objectable delays, if due to excessive
+                 growth of the BYPASS inbound queue."
+--            DEFVAL { 2500 }
+        ::= { cdx6500SPCTFRIStationEntry 35 }
+
+        friSCfgAnnexGRateReduction OBJECT-TYPE
+            SYNTAX INTEGER {
+                   disabled (1),
+                   enabled  (2),
+                   nc (100)
+                }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter determines whether Annex G stations will
+                 invoke implicit congestion control when a link error is
+                 detected, reducing their transmitted information rate 
+                 to 1/4 CIR. The rate will be gradually increased in the
+                 normal way as non-BECN frames are received."
+--            DEFVAL { enabled }
+        ::= { cdx6500SPCTFRIStationEntry 36 }
+
+        -- FRI Port Statistics Table
+        -- This table replaces cdx6500PPSTFRDTEPortTable which is now 
+        -- obsolete
+        cdx6500PPSTFRIPStatsTable OBJECT IDENTIFIER
+        ::= { cdx6500PSTPortProtocolGroup 32 }
+
+        cdx6500PPSTFRIPortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPSTFRIPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains FRI Port Statistics parameters."
+        ::= { cdx6500PPSTFRIPStatsTable 1 }
+
+        cdx6500PPSTFRIPortEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPSTFRIPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the FRI Port Statistics Table."
+            INDEX { friPStatsPortNumber }
+        ::= { cdx6500PPSTFRIPortTable 1 }
+
+        Cdx6500PPSTFRIPortEntry ::=
+            SEQUENCE {
+                friPStatsPortNumber
+                    INTEGER,
+                friPStatsPortType
+                    INTEGER,
+                friPStatsPortStatus
+                    INTEGER,
+                friPStatsConfiguredStns
+                    DisplayString,
+                friPStatsPortSpeed
+                    INTEGER,
+                friPStatsOpCntrlProtocol
+                    DisplayString,
+                friPStatsSPBackup
+                    DisplayString,
+                friPStatsPriorityStn
+                    INTEGER,
+                friPStatsLastStatsReset
+                    DisplayString
+                }
+
+        friPStatsPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The port number of the FRI port."
+        ::= { cdx6500PPSTFRIPortEntry 1 }
+
+        friPStatsPortType OBJECT-TYPE
+            SYNTAX INTEGER {
+                   fri(17)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port type of this port."
+        ::= { cdx6500PPSTFRIPortEntry 2 }
+
+        friPStatsPortStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                   disabled (1),
+                   enabled  (2),
+                   busyOut  (3),
+                   up       (4),
+                   down     (5),
+                   na       (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the current port status.
+                 enabled  - Port is operational.
+                 disabled - Port has been disabled.
+                 busyOut  - Port has been busied out.
+                 up       - Port is up and operational.
+                 down     - Port is down.
+                 na       - Value not Available."
+        ::= { cdx6500PPSTFRIPortEntry 3 }
+
+        friPStatsConfiguredStns OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "A list of all the configured stations."
+        ::= { cdx6500PPSTFRIPortEntry 4 }
+
+        friPStatsPortSpeed OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Message transmission speed in bits per second. "
+        ::= { cdx6500PPSTFRIPortEntry 5 }
+
+        friPStatsOpCntrlProtocol OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Control Protocol type learned from network."
+        ::= { cdx6500PPSTFRIPortEntry 6 }
+
+        friPStatsSPBackup OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates whether the same port backup  is configured 
+                 for this port."
+        ::= { cdx6500PPSTFRIPortEntry 7 }
+
+        friPStatsPriorityStn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the high priority station."
+        ::= { cdx6500PPSTFRIPortEntry 8 }
+
+        friPStatsLastStatsReset OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the time stamp of the last statistics reset."
+        ::= { cdx6500PPSTFRIPortEntry 9 }
+
+        cdx6500PPSTFRIDataSummaryTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPSTFRIDataSummaryEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains FRI Port Data Summary 
+                 Statistics parameters."
+        ::= { cdx6500PPSTFRIPStatsTable 2 }
+
+        cdx6500PPSTFRIDataSummaryEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPSTFRIDataSummaryEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the FRI Port Data Summary Statistics Table."
+            INDEX { friDataSummPortNumber }
+        ::= { cdx6500PPSTFRIDataSummaryTable 1 }
+
+        Cdx6500PPSTFRIDataSummaryEntry ::=
+            SEQUENCE {
+                friDataSummPortNumber
+                    INTEGER,
+                friPStatsCharInTotal
+                    Counter,
+                friPStatsCharOutTotal
+                    Counter,
+                friPStatsCharInPerSec
+                    INTEGER,
+                friPStatsCharOutPerSec
+                    INTEGER,
+                friPStatsFramesInTotal
+                    Counter,
+                friPStatsFramesOutTotal
+                    Counter,
+                friPStatsFramesInPerSec
+                    INTEGER,
+                friPStatsFramesOutPerSec
+                    INTEGER,
+                friPStatsAvFrameSizeIn
+                    INTEGER,
+                friPStatsAvFrameSizeOut
+                    INTEGER,
+                friPStatsUtilIn
+                    INTEGER,
+                friPStatsUtilOut
+                    INTEGER
+                }
+
+        friDataSummPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The port number of the FRI port."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 1 }
+
+        friPStatsCharInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received since last boot or statistics 
+                 reset."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 2 }
+
+        friPStatsCharOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters transmitted since last boot or statistics
+                 reset."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 3 }
+
+        friPStatsCharInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of characters received per second."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 4 }
+
+        friPStatsCharOutPerSec  OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of characters transmitted per second."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 5 }
+
+        friPStatsFramesInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames received since last boot or statistics 
+                 reset."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 6 }
+
+        friPStatsFramesOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames transmitted since last boot or statistics
+                 reset."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 7 }
+
+        friPStatsFramesInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of frames received per second."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 8 }
+
+        friPStatsFramesOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of frames transmitted per second."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 9 }
+
+        friPStatsAvFrameSizeIn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average frame size of received frames."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 10 }
+
+        friPStatsAvFrameSizeOut OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average size of transmitted frames."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 11 }
+
+        friPStatsUtilIn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port Utilization of incoming data."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 12 }
+      
+        friPStatsUtilOut OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port Utilization of outgoing data."
+        ::= { cdx6500PPSTFRIDataSummaryEntry 13 }
+
+        cdx6500PPSTFRISummaryTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPSTFRISummaryEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains FRI Summary Statistics parameters."
+        ::= { cdx6500PPSTFRIPStatsTable 3 }
+
+        cdx6500PPSTFRISummaryEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPSTFRISummaryEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the FRI Summary Statistics Table."
+            INDEX { friSummPortNumber }
+        ::= { cdx6500PPSTFRISummaryTable 1 }
+
+        Cdx6500PPSTFRISummaryEntry ::=
+            SEQUENCE {
+                friSummPortNumber
+                    INTEGER,
+                friPStatsCRCErrors
+                    Counter,
+                friPStatsOverrunErrors
+                    Counter,
+                friPStatsFrameLengthErrors
+                    Counter,
+                friPStatsUnderrunErrors
+                    Counter,
+                friPStatsUnknownDLCICount
+                    Counter,
+                friPStatsLastUnknownDLCI
+                    INTEGER,
+                friPStatsSplittingRatio
+                    INTEGER,
+                friPStatsTotalSegmentsLost
+                    INTEGER,
+                friPStatsMaxContiguousSegmentsLost
+                    INTEGER,
+                friPStatsVoiceBWOnPort
+                    INTEGER,
+                friPStatsFrameSegmenterSyncLost
+                    INTEGER,
+                friPStatsStatusEnqSentFull
+                    INTEGER,
+                friPStatsFullStatusRecd
+                    INTEGER,
+                friPStatsStatusEnqSentLIV
+                    INTEGER,
+                friPStatsLIVStatusRecd
+                    INTEGER,
+                friPStatsStatusEnqRecdFull
+                    INTEGER,
+                friPStatsStatusEnqRecdLIV
+                    INTEGER,
+                friPStatsAsyncUpdateRecd
+                    INTEGER,
+                friPStatsSeqNumMismatch
+                    INTEGER,
+                friPStatsTimeouts
+                    INTEGER
+                }
+
+        friSummPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The port number of the FRI port."
+        ::= { cdx6500PPSTFRISummaryEntry 1 }
+
+        friPStatsCRCErrors OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of errors detected by Cyclic Redundancy Check 
+                 since last node boot or reset of statistics."
+        ::= { cdx6500PPSTFRISummaryEntry 2 }
+           
+        friPStatsOverrunErrors OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of OverrunErrors detected since last node boot 
+                 or reset of statistics."
+        ::= { cdx6500PPSTFRISummaryEntry 3 }
+
+        friPStatsFrameLengthErrors OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Frame Length Errors detected since last node 
+                 boot or statistics reset."
+        ::= { cdx6500PPSTFRISummaryEntry 4 }
+
+        friPStatsUnderrunErrors OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Underrun Errors detected since last node boot or
+                 statistics reset."
+        ::= { cdx6500PPSTFRISummaryEntry 5 }
+
+        friPStatsUnknownDLCICount OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of DLCIs not recognized."
+        ::= { cdx6500PPSTFRISummaryEntry 6 }
+
+        friPStatsLastUnknownDLCI OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the last unknown dlci received."
+        ::= { cdx6500PPSTFRISummaryEntry 7 }
+
+        friPStatsSplittingRatio OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The Frame Segmenter's splitting ratio calculated as a
+                 percentage of Number of frames segmented/Number of frames."
+        ::= { cdx6500PPSTFRISummaryEntry 8 }
+
+        friPStatsTotalSegmentsLost OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total Segments lost by Frame Segmenter Receiver."
+        ::= { cdx6500PPSTFRISummaryEntry 9 }
+
+        friPStatsMaxContiguousSegmentsLost OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum consecutive segments lost by Farme Segmenter Receiver."
+        ::= { cdx6500PPSTFRISummaryEntry 10 }
+
+        friPStatsVoiceBWOnPort OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current amount of voice bandwidth allocated."
+        ::= { cdx6500PPSTFRISummaryEntry 11 }
+
+        friPStatsFrameSegmenterSyncLost OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of times synchronization has been lost."
+        ::= { cdx6500PPSTFRISummaryEntry 12 }
+
+        friPStatsStatusEnqSentFull OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of status enquiries SENT FULL."
+        ::= { cdx6500PPSTFRISummaryEntry 13 }
+
+        friPStatsFullStatusRecd OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of full status received."
+        ::= { cdx6500PPSTFRISummaryEntry 14 }
+
+        friPStatsStatusEnqSentLIV OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of status enq sent LIV."
+        ::= { cdx6500PPSTFRISummaryEntry 15 }
+
+        friPStatsLIVStatusRecd OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of status update received."
+        ::= { cdx6500PPSTFRISummaryEntry 16 }
+
+        friPStatsStatusEnqRecdFull OBJECT-TYPE
+            SYNTAX INTEGER 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Full status enq RCV bi-directional mode."
+        ::= { cdx6500PPSTFRISummaryEntry 17 }
+
+        friPStatsStatusEnqRecdLIV OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of LIV status enq RCV bi-directional mode."
+        ::= { cdx6500PPSTFRISummaryEntry 18 }
+
+        friPStatsAsyncUpdateRecd OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of async update received."
+        ::= { cdx6500PPSTFRISummaryEntry 19 }
+
+        friPStatsSeqNumMismatch OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Sequence Number Mismatches occurred."
+        ::= { cdx6500PPSTFRISummaryEntry 20 }
+
+        friPStatsTimeouts OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of timeouts occurred."
+        ::= { cdx6500PPSTFRISummaryEntry 21 }
+
+        cdx6500PPSTFRIISDNCallStatusTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPSTFRIISDNCallStatusEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains FRI ISDN Statistics parameters."
+        ::= { cdx6500PPSTFRIPStatsTable 4 }
+
+        cdx6500PPSTFRIISDNCallStatusEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPSTFRIISDNCallStatusEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the FRI ISDN Statistics Table."
+            INDEX { friISDNCallStatusPortNumber }
+        ::= { cdx6500PPSTFRIISDNCallStatusTable  1 }
+
+        Cdx6500PPSTFRIISDNCallStatusEntry ::= 
+            SEQUENCE {
+                friISDNCallStatusPortNumber
+                    INTEGER,
+                friPStatsNumRxCallsSinceLastReset
+                    INTEGER,
+                friPStatsNumRxCallsRejected
+                    INTEGER,
+                friPStatsRxLastCallFailureCause
+                    INTEGER,
+                friPStatsRxLastCalledNumber
+                    DisplayString,
+                friPStatsRxLastCallingNumber 
+                    DisplayString,
+                friPStatsRxMinCallDuration
+                    DisplayString,
+                friPStatsRxMaxCallDuration 
+                    DisplayString,
+                friPStatsRxAvgCallDuration 
+                    DisplayString,
+                friPStatsNumTxCallsSinceLastReset 
+                    INTEGER,
+                friPStatsNumTxCallsRejected 
+                    INTEGER,
+                friPStatsTxLastCallFailureCause 
+                    INTEGER,
+                friPStatsTxLastCalledNumber 
+                    DisplayString,
+                friPStatsTxLastCallingNumber 
+                    DisplayString,
+                friPStatsTxMinCallDuration 
+                    DisplayString,
+                friPStatsTxMaxCallDuration 
+                    DisplayString,
+                friPStatsTxAvgCallDuration 
+                    DisplayString,
+                friPStatsSignalingState
+                    INTEGER
+        }
+
+        friISDNCallStatusPortNumber  OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The port number of the FRI Port."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 1 }
+
+        friPStatsNumRxCallsSinceLastReset  OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of inbound calls that were attempted
+                 since the last statistics reset."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 2 }
+
+        friPStatsNumRxCallsRejected  OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of inbound calls that were rejected
+                 since the last statistics reset."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 3 }
+
+        friPStatsRxLastCallFailureCause  OBJECT-TYPE
+            SYNTAX INTEGER {
+                   noFailureReported          (193),
+                   noAvailableVirtualPort     (194),
+                   securityViolation          (195),
+                   noResourcesAvailable       (196),
+                   callRejected               (197),
+                   invalidPhoneNumber         (198),
+                   outgoingCallRequestTimeout (199),
+                   callCollision              (200),
+                   virtualPortNotAvailable    (201),
+                   invalidConfiguration       (202),
+                   failureNotSupported        (203),
+                   na                         (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The reason the last inbound call was rejected,
+                 since the last statistics reset.
+                 The posssible values are:
+                 noFailureReported          - No call failure
+                 noAvailableVirtualPort     - No virtual port available
+                 securityViolation          - Password security failed
+                 noResourcesAvailable       - No resources available
+                 callRejected               - Call failed by Xircom card
+                 invalidPhoneNumber         - Phone number is incorrect
+                 outgoingCallRequestTimeout - Outgoing call request timed out
+                 callCollision              - Call collision
+                 virtualPortNotAvailable    - This port is not available
+                 invalidConfiguration       - Configuration is incorrect
+                 failureNotSupported        - Failure is not supported
+                 na                         - Value Not Available."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 4 }
+
+        friPStatsRxLastCalledNumber  OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The phone number of the virtual port of the last ISDN
+                 call made into this port."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 5 }
+
+        friPStatsRxLastCallingNumber  OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The phone number of last party to make an ISDN
+                 call into this port."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 6 }
+
+        friPStatsRxMinCallDuration  OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The minimum call duration of all inbound ISDN calls made
+                 into this port, since the last statistics reset."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 7 }
+
+        friPStatsRxMaxCallDuration  OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The maximum call duration of all inbound ISDN calls made 
+                 into this port, since the last statistics reset."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 8 }
+
+        friPStatsRxAvgCallDuration  OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The average call duration of all inbound ISDN calls made
+                 into this port, since the last statistics reset."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 9 }
+
+        friPStatsNumTxCallsSinceLastReset  OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of outbound calls that were attempted
+                 since the last statistics reset."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 10 }
+
+        friPStatsNumTxCallsRejected  OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of outbound calls that were rejected
+                 since the last statistics reset."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 11 }
+
+        friPStatsTxLastCallFailureCause  OBJECT-TYPE
+            SYNTAX INTEGER {
+                   noFailureReported          (193),
+                   noAvailableVirtualPort     (194),
+                   securityViolation          (195),
+                   noResourcesAvailable       (196),
+                   callRejected               (197),
+                   invalidPhoneNumber         (198),
+                   outgoingCallRequestTimeout (199),
+                   callCollision              (200),
+                   virtualPortNotAvailable    (201),
+                   invalidConfiguration       (202),
+                   failureNotSupported        (203),
+                   na                         (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The reason the last outbound call was rejected,
+                 since the last statistics reset.
+                 The posssible values are:
+                 noFailureReported          - No call failure
+                 noAvailableVirtualPort     - No virtual port available
+                 securityViolation          - Password security failed
+                 noResourcesAvailable       - No resources available
+                 callRejected               - Call failed by Xircom card
+                 invalidPhoneNumber         - Phone number is incorrect
+                 outgoingCallRequestTimeout - Outgoing call request timed out
+                 callCollision              - Call collision
+                 virtualPortNotAvailable    - This port is not available
+                 invalidConfiguration       - Configuration is incorrect
+                 failureNotSupported        - Failure is not supported
+                 na                         - Value Not Available."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 12 }
+
+        friPStatsTxLastCalledNumber  OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The phone number of the last ISDN call made by a virtual
+                 port from this port."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 13 }       
+
+        friPStatsTxLastCallingNumber  OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The phone number of the virtual port that made the last
+                 ISDN call from this port."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 14 }
+
+        friPStatsTxMinCallDuration  OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The minimum call duration of all outbound ISDN calls made
+                 from this port, since the last statistics reset."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 15 }
+
+        friPStatsTxMaxCallDuration  OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The maximum call duration of all outbound ISDN calls made
+                 from this port, since the last statistics reset."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 16 }
+
+        friPStatsTxAvgCallDuration  OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The average call duration of all outbound ISDN calls made
+                 from this port, since the last statistics reset."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 17 }
+
+        friPStatsSignalingState  OBJECT-TYPE
+            SYNTAX INTEGER {
+                   idle                    (1),
+                   ringing                 (2),
+                   connected               (3),
+                   congested               (4),
+                   disabled                (5),
+                   dChannelDown            (6),
+                   disabledDChannelDown    (7),
+                   disconnecting           (8),
+                   na                      (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "ISDN call signaling state.
+                 The possible values are:
+                 idle                    - No ISDN call present.
+                 ringing                 - Pending outgoing ISDN call request.
+                 connected               - ISDN call is connected.
+                 congested               - Congested mode.
+                 disabled                - Virtual Port is disabled.
+                 dChannelDown            - D-channel is down.
+                 disabledDChannelDown    - Disabled and D-channel is down.
+                 disconnecting           - Pending ISDN call disconnection.
+                 na                      - Value not available."
+        ::= { cdx6500PPSTFRIISDNCallStatusEntry 18 }
+
+        
+              
+        -- FRI Station Statistics Table
+        -- This table replaces cdx6500SPSTFRDTEStationTable which is now 
+        -- obsolete
+        cdx6500SPSTFRISStatsTable OBJECT IDENTIFIER
+        ::= { cdx6500PSTStationProtocolGroup 10 }
+
+        -- General FRI Statistics Table
+        friSGenStatsTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500friSGenStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains FRI Station Statistics parameters."
+        ::= { cdx6500SPSTFRISStatsTable 1 }
+
+        cdx6500friSGenStatsEntry OBJECT-TYPE
+            SYNTAX Cdx6500friSGenStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the FRI Station Statistics Table."
+            INDEX { friSGenStatsPortNumber, friSGenStatsStnNumber }
+        ::= { friSGenStatsTable 1 }
+
+        Cdx6500friSGenStatsEntry ::=
+            SEQUENCE {
+                friSGenStatsPortNumber
+                    INTEGER,
+                friSGenStatsStnNumber
+                    INTEGER,
+                friSStatsStnType
+                    INTEGER,
+                friSStatsStnStatus
+                    DisplayString,
+                friSStatsDLCI
+                    INTEGER,
+                friSStatsStnState
+                    DisplayString,
+                friSStatsConfiguredCIR
+                    INTEGER,
+                friSStatsAllowedInfoRate
+                    INTEGER,
+                friSStatsImpCongDetect
+                    INTEGER,
+                friSStatsExpCongDetect
+                    INTEGER,
+                friSStatsLMIFlowCntrl
+                    INTEGER,
+                friSStatsMaxSVCCount
+                    INTEGER,
+                friSStatsCurrSVCCount
+                    INTEGER,
+                friSStatsMaxPVCCount
+                    INTEGER,
+                friSStatsCurrPVCCount
+                    INTEGER,
+                friSStatsLastStatsReset
+                    DisplayString,
+                friSStatsFrameSegState
+                    DisplayString,
+                friSStatsFrameSegSyncLost
+                    INTEGER,
+                friSStatsPVCState
+                    DisplayString,
+                friSStatsVoiceCongDetect
+                    INTEGER
+                }
+
+        friSGenStatsPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The FRI port number corresponding to this station."
+        ::= { cdx6500friSGenStatsEntry 1 }
+
+        friSGenStatsStnNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..254)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of the FRI Station."
+        ::= { cdx6500friSGenStatsEntry 2 }
+
+        friSStatsStnType OBJECT-TYPE
+            SYNTAX INTEGER {
+                   annexG (1),
+                   bypass (2),
+                   voice  (3)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "annex G - Annex G station type.
+                 bypass  - bypass station type.
+                 voice   - voice station type."
+        ::= { cdx6500friSGenStatsEntry 3 }
+
+        friSStatsStnStatus OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Status of the station."
+        ::= { cdx6500friSGenStatsEntry 4 }
+
+        friSStatsDLCI OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Data Link Connection Identifier is the unique 
+                 identifier for the station on the FRI port and 
+                 must match the DLCI configured on the Frame Relay 
+                 networking node.
+                 The DLCI is 0 in Auto-Learning mode."
+        ::= { cdx6500friSGenStatsEntry 5 }
+
+        friSStatsStnState OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the state of the station :
+                 unused       - station is unconfigured/disabled
+                 uncontrolled - station is not controlled.
+                 controlled   - station is controlled, congestion detected."
+        ::= { cdx6500friSGenStatsEntry 6 }
+
+        friSStatsConfiguredCIR OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Committed Information Rate in bits per second :
+                 Value of this parameter is 0 for Bypass stations 
+                 (not available)."
+        ::= { cdx6500friSGenStatsEntry 7 }
+
+        friSStatsAllowedInfoRate OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Allowed information rate is the link speed if uncongested, 
+                 0 if unused and the current desired information rate
+                 if congested. Value of this parameter is also 0 for 
+                 Bypass stations (not available)."
+        ::= { cdx6500friSGenStatsEntry 8 }
+
+        friSStatsImpCongDetect OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of times implicit congestion procedures have been
+                 invoked.Value of this parameter is 0 for Bypass stations 
+                 (not available)."
+        ::= { cdx6500friSGenStatsEntry 9 }
+
+        friSStatsExpCongDetect OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of times explicit congestion procedures have been
+                 invoked."
+        ::= { cdx6500friSGenStatsEntry 10 }
+
+        friSStatsLMIFlowCntrl OBJECT-TYPE
+            SYNTAX INTEGER {
+                   off (1),
+                   on  (2),
+                   na  (100)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the flow status, whether OFF or ON.
+                 na - Value not available."
+        ::= { cdx6500friSGenStatsEntry 11 }
+
+        friSStatsMaxSVCCount OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of SVCs available in the network.
+                 Value of this parameter is 0 for Bypass stations
+                 (not available)"
+        ::= { cdx6500friSGenStatsEntry 12 }
+
+        friSStatsCurrSVCCount OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of SVCs currently in use.
+                 Value of this parameter is 0 for Bypass stations
+                 (not available)"
+        ::= { cdx6500friSGenStatsEntry 13 }
+
+        friSStatsMaxPVCCount OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of async pvc channels.
+                 Value of this parameter is 0 for Bypass stations
+                 (not available)"
+        ::= { cdx6500friSGenStatsEntry 14 }
+
+        friSStatsCurrPVCCount OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current number of async pvc channels.
+                 Value of this parameter is 0 for Bypass stations
+                 (not available)"
+        ::= { cdx6500friSGenStatsEntry 15 }
+
+        friSStatsLastStatsReset OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the time stamp of the last statistics reset."
+        ::= { cdx6500friSGenStatsEntry 16 }
+
+        friSStatsFrameSegState OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "State of the Frame segmenter receiver."
+        ::= { cdx6500friSGenStatsEntry 17 }
+
+        friSStatsFrameSegSyncLost OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of segments lost by Frame Segmenter Receiver."
+        ::= { cdx6500friSGenStatsEntry 18 }
+
+        friSStatsPVCState OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current state of the PVC.
+                 Value of this parameter is not available for stations
+                 other than Bypass Stations."
+        ::= { cdx6500friSGenStatsEntry 19 }
+
+        friSStatsVoiceCongDetect OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of times voice congestion procedures have been 
+                 invoked. 
+                 Value of this parameter is 0 (Not Available) for Bypass
+                 stations."
+        ::= { cdx6500friSGenStatsEntry 20 }
+
+        -- Data Summary Statistics Table
+        friSDataSummaryStatsTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500friSDataSummaryStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains FRI Station Data Summary Statistics 
+                 parameters."
+        ::= { cdx6500SPSTFRISStatsTable 2 }
+
+        cdx6500friSDataSummaryStatsEntry OBJECT-TYPE
+            SYNTAX Cdx6500friSDataSummaryStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the FRI Station Data Summary Statistics Table."
+            INDEX { friSDataSummStatsPortNumber, 
+                    friSDataSummStatsStnNumber }
+        ::= { friSDataSummaryStatsTable 1 }
+
+        Cdx6500friSDataSummaryStatsEntry ::=
+            SEQUENCE {
+                friSDataSummStatsPortNumber
+                    INTEGER,
+                friSDataSummStatsStnNumber
+                    INTEGER,
+                friSStatsCharInTotal
+                    Counter,
+                friSStatsCharOutTotal
+                    Counter,
+                friSStatsCharInPerSec
+                    INTEGER,
+                friSStatsCharOutPerSec
+                    INTEGER,
+                friSStatsPktInTotal
+                    Counter,
+                friSStatsPktOutTotal
+                    Counter,
+                friSStatsPktInPerSec
+                    INTEGER,
+                friSStatsPktOutPerSec
+                    INTEGER,
+                friSStatsFrameInTotal
+                    Counter,
+                friSStatsFrameOutTotal
+                    Counter,
+                friSStatsFrameInPerSec
+                    INTEGER,
+                friSStatsFrameOutPerSec
+                    INTEGER,
+                friSStatsUtilIn
+                    INTEGER,
+                friSStatsUtilOut
+                    INTEGER,
+                friSStatsNumPktsQueued
+                    INTEGER,
+                friSStatsPktsDiscardIn
+                    INTEGER,
+                friSStatsPktsDiscardOut
+                    INTEGER,
+                friSStatsPktsQueuedIn
+                    INTEGER,
+                friSStatsPktsQueuedOut
+                    INTEGER
+                }
+
+        friSDataSummStatsPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The FRI port number corresponding to this station."
+        ::= { cdx6500friSDataSummaryStatsEntry 1 }
+
+        friSDataSummStatsStnNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..254)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of the FRI station."
+        ::= { cdx6500friSDataSummaryStatsEntry 2 }
+
+        friSStatsCharInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received since last node boot or
+                 statistics reset."
+        ::= { cdx6500friSDataSummaryStatsEntry 3 }
+
+        friSStatsCharOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters transmitted since last node boot or
+                 statistics reset."
+        ::= { cdx6500friSDataSummaryStatsEntry 4 }
+
+        friSStatsCharInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of characters received per second."
+        ::= { cdx6500friSDataSummaryStatsEntry 5 }
+
+        friSStatsCharOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of characters transmitted per second."
+        ::= { cdx6500friSDataSummaryStatsEntry 6 }
+
+        friSStatsPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets received since last node boot or statistics
+                 reset. Value of this parameter is 0 for Bypass stations
+                 (not available)"
+        ::= { cdx6500friSDataSummaryStatsEntry 7 }
+
+        friSStatsPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets transmitted since last node boot 
+                 or statistics reset. Value of this parameter is 0 
+                 for Bypass stations (not available)"
+        ::= { cdx6500friSDataSummaryStatsEntry 8 }
+
+        friSStatsPktInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of packets received per second.
+                 Value of this parameter is 0 for Bypass stations
+                 (not available)"
+        ::= { cdx6500friSDataSummaryStatsEntry 9 }
+
+        friSStatsPktOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of packets transmitted per second.
+                 Value of this parameter is 0 for Bypass stations
+                 (not available)"
+        ::= { cdx6500friSDataSummaryStatsEntry 10 }
+
+        friSStatsFrameInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames transmitted since last node boot 
+                 or statistics reset."
+        ::= { cdx6500friSDataSummaryStatsEntry 11 }
+
+        friSStatsFrameOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames transmitted since last node boot or
+                 statistics reset."
+        ::= { cdx6500friSDataSummaryStatsEntry 12 }
+
+        friSStatsFrameInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of frames received per second."
+        ::= { cdx6500friSDataSummaryStatsEntry 13 }
+
+        friSStatsFrameOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of frames transmitted per second."
+        ::= { cdx6500friSDataSummaryStatsEntry 14 }
+
+        friSStatsUtilIn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates the quantity of user bytes received on the link
+                 expressed as a percentage of the maximum number of bytes that
+                 could have been received."
+        ::= { cdx6500friSDataSummaryStatsEntry 15 }
+
+        friSStatsUtilOut OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates the quantity of user bytes sent down the link
+                 expressed as a percentage of the maximum number of bytes that
+                 could have been sent."
+        ::= { cdx6500friSDataSummaryStatsEntry 16 }
+
+        friSStatsNumPktsQueued OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current number of packets buffered since last node boot or
+                 statistics reset. Value of this parameter is 0 for Bypass 
+                 stations (not available)"
+        ::= { cdx6500friSDataSummaryStatsEntry 17 }
+
+        friSStatsPktsDiscardIn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of incoming packets discarded.
+                 Value of this parameter is only available for Bypass stations,
+                 0 is returned otherwise."
+        ::= { cdx6500friSDataSummaryStatsEntry 18 }
+
+        friSStatsPktsDiscardOut OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of outgoing packets discarded.
+                 Value of this parameter is only available for Bypass stations,
+                 0 is returned otherwise."
+        ::= { cdx6500friSDataSummaryStatsEntry 19 }
+
+        friSStatsPktsQueuedIn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current number of Incoming packets buffered since last node
+                 boot or statistics reset of a Bypass station.
+                 Value of this parameter is only available for Bypass stations,
+                 0 is returned otherwise."
+        ::= { cdx6500friSDataSummaryStatsEntry 20 }
+
+        friSStatsPktsQueuedOut OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current number of Outgoing packets buffered since last node
+                 boot or statistics reset of a Bypass station.
+                 Value of this parameter is only available for Bypass stations,
+                 0 is returned otherwise."
+        ::= { cdx6500friSDataSummaryStatsEntry 21 }
+
+        -- Voice Summary Statistics Table
+        friSVoiceSummaryStatsTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500friSVoiceSummaryStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains FRI Station Voice Summary Statistics
+                 parameters."
+        ::= { cdx6500SPSTFRISStatsTable 3 }
+
+        cdx6500friSVoiceSummaryStatsEntry OBJECT-TYPE
+            SYNTAX Cdx6500friSVoiceSummaryStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the FRI Station Voice Summary Statistics Table.
+                 NOTE : Value of all objects in this table will be 0 for 
+                 Bypass stations (not available)."
+            INDEX { friSVoiceSummStatsPortNumber, 
+                    friSVoiceSummStatsStnNumber }
+        ::= { friSVoiceSummaryStatsTable 1 }
+
+        Cdx6500friSVoiceSummaryStatsEntry ::=
+            SEQUENCE {
+                friSVoiceSummStatsPortNumber
+                    INTEGER,
+                friSVoiceSummStatsStnNumber
+                    INTEGER,
+                friSStatsVoiceCharInTotal
+                    Counter,
+                friSStatsVoiceCharOutTotal
+                    Counter,
+                friSStatsVoiceCharInPerSec
+                    INTEGER,
+                friSStatsVoiceCharOutPerSec
+                    INTEGER,
+                friSStatsVoicePktInTotal
+                    Counter,
+                friSStatsVoicePktOutTotal
+                    Counter,
+                friSStatsVoicePktInPerSec
+                    INTEGER,
+                friSStatsVoicePktOutPerSec
+                    INTEGER
+                }
+
+        friSVoiceSummStatsPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The FRI port number corresponding to this station."
+        ::= { cdx6500friSVoiceSummaryStatsEntry 1 }
+
+        friSVoiceSummStatsStnNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..254)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of the FRI station."
+        ::= { cdx6500friSVoiceSummaryStatsEntry 2 }
+
+        friSStatsVoiceCharInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of voice characters received."
+        ::= { cdx6500friSVoiceSummaryStatsEntry 3 }
+
+        friSStatsVoiceCharOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of voice characters transmitted."
+        ::= { cdx6500friSVoiceSummaryStatsEntry 4 }
+
+        friSStatsVoiceCharInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of voice characters received per second."
+        ::= { cdx6500friSVoiceSummaryStatsEntry 5 }
+
+        friSStatsVoiceCharOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of voice characters transmitted per second."
+        ::= { cdx6500friSVoiceSummaryStatsEntry 6 }
+
+        friSStatsVoicePktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of voice packets received."
+        ::= { cdx6500friSVoiceSummaryStatsEntry 7 }
+
+        friSStatsVoicePktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of voice packets transmitted."
+        ::= { cdx6500friSVoiceSummaryStatsEntry 8 }
+
+        friSStatsVoicePktInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of voice packets received per second."
+        ::= { cdx6500friSVoiceSummaryStatsEntry 9 }
+
+        friSStatsVoicePktOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of voice packets transmitted per second."
+        ::= { cdx6500friSVoiceSummaryStatsEntry 10 }
+
+        -- Frame Summary Statistics Table
+        friSFrameSummaryStatsTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500friSFrameSummaryStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains FRI Station Frame Summary Statistics
+                 parameters."
+        ::= { cdx6500SPSTFRISStatsTable 4 }
+
+        cdx6500friSFrameSummaryStatsEntry OBJECT-TYPE
+            SYNTAX Cdx6500friSFrameSummaryStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the FRI Station Frame Summary Statistics Table.
+                 NOTE : Value of all objects in this table will be 0 for
+                 Bypass stations (not available)"
+            INDEX { friSFrameSummStatsPortNumber, 
+                    friSFrameSummStatsStnNumber }
+        ::= { friSFrameSummaryStatsTable 1 }
+
+        Cdx6500friSFrameSummaryStatsEntry ::=
+            SEQUENCE {
+                friSFrameSummStatsPortNumber
+                    INTEGER,
+                friSFrameSummStatsStnNumber
+                    INTEGER,
+                friSStatsInfoFramesInTotal
+                    Counter,
+                friSStatsInfoFramesOutTotal
+                    Counter,
+                friSStatsRRFramesInTotal
+                    Counter,
+                friSStatsRRFramesOutTotal
+                    Counter,
+                friSStatsRNRFramesInTotal
+                    Counter,
+                friSStatsRNRFramesOutTotal
+                    Counter,
+                friSStatsREJFramesInTotal
+                    Counter,
+                friSStatsREJFramesOutTotal
+                    Counter,
+                friSStatsSABMFramesInTotal
+                    Counter,
+                friSStatsSABMFramesOutTotal
+                    Counter,
+                friSStatsDISCFramesInTotal
+                    Counter,
+                friSStatsDISCFramesOutTotal
+                    Counter,
+                friSStatsDMFramesInTotal
+                    Counter,
+                friSStatsDMFramesOutTotal
+                    Counter,
+                friSStatsUAFramesInTotal
+                    Counter,
+                friSStatsUAFramesOutTotal
+                    Counter,
+                friSStatsFRMRFramesInTotal
+                    Counter,
+                friSStatsFRMRFramesOutTotal
+                    Counter
+                }
+                
+        friSFrameSummStatsPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The FRI port number corresponding to this station."
+        ::= { cdx6500friSFrameSummaryStatsEntry 1 }
+
+        friSFrameSummStatsStnNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..254)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of the FRI station."
+        ::= { cdx6500friSFrameSummaryStatsEntry 2 }
+
+        friSStatsInfoFramesInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Information Frames received since last node boot 
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 3 }
+
+        friSStatsInfoFramesOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Information Frames transmitted since last node boot 
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 4 }
+
+        friSStatsRRFramesInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of RR Frames received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 5 }
+
+        friSStatsRRFramesOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of RR Frames transmitted since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 6 }
+
+        friSStatsRNRFramesInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of RNR frames received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 7 }
+
+        friSStatsRNRFramesOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of RNR frames transmitted since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 8 }
+
+        friSStatsREJFramesInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of REJ frames received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 9 }
+
+        friSStatsREJFramesOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of REJ frames transmitted since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 10 }
+
+        friSStatsSABMFramesInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of SABM frames received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 11 }
+
+        friSStatsSABMFramesOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of SABM frames transmitted since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 12 }
+
+        friSStatsDISCFramesInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of DISC frames received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 13 }
+
+        friSStatsDISCFramesOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of DISC frames transmitted since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 14 }
+
+        friSStatsDMFramesInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of DM frames received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 15 }
+
+        friSStatsDMFramesOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of DM frames transmitted since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 16 }
+
+        friSStatsUAFramesInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of UA frames received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 17 }
+
+        friSStatsUAFramesOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of UA frames transmitted since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 18 }
+
+        friSStatsFRMRFramesInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of FRMR frames received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 19 }
+
+        friSStatsFRMRFramesOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of FRMR frames transmitted since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSFrameSummaryStatsEntry 20 }
+
+        -- Packet Summary Statistics Table
+        friSPacketSummaryStatsTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500friSPacketSummaryStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains FRI Station Packet Summary Statistics
+                 parameters."
+        ::= { cdx6500SPSTFRISStatsTable 5 }
+
+        cdx6500friSPacketSummaryStatsEntry OBJECT-TYPE
+            SYNTAX Cdx6500friSPacketSummaryStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the FRI Station Packet Summary Statistics Table.
+                 NOTE : Value of all objects in this table will be 0 for
+                 Bypass stations (not available)"
+            INDEX { friSPktSummStatsPortNumber, 
+                    friSPktSummStatsStnNumber }
+        ::= { friSPacketSummaryStatsTable 1 }
+
+        Cdx6500friSPacketSummaryStatsEntry ::=
+            SEQUENCE {
+                friSPktSummStatsPortNumber
+                    INTEGER,
+                friSPktSummStatsStnNumber
+                    INTEGER,
+                friSStatsDataPktInTotal
+                    Counter,
+                friSStatsDataPktOutTotal
+                    Counter,
+                friSStatsRRPktInTotal
+                    Counter,
+                friSStatsRRPktOutTotal
+                    Counter,
+                friSStatsRNRPktInTotal
+                    Counter,
+                friSStatsRNRPktOutTotal
+                    Counter,
+                friSStatsREJPktInTotal
+                    Counter,
+                friSStatsREJPktOutTotal
+                    Counter,
+                friSStatsCallReqPktInTotal
+                    Counter,
+                friSStatsCallReqPktOutTotal
+                    Counter,
+                friSStatsCallAccPktInTotal
+                    Counter,
+                friSStatsCallAccPktOutTotal
+                    Counter,
+                friSStatsClrReqPktInTotal
+                    Counter,
+                friSStatsClrReqPktOutTotal
+                    Counter,
+                friSStatsClrConfPktInTotal
+                    Counter,
+                friSStatsClrConfPktOutTotal
+                    Counter,
+                friSStatsIntrReqPktInTotal
+                    Counter,
+                friSStatsIntrReqPktOutTotal
+                    Counter,
+                friSStatsIntrConfPktInTotal
+                    Counter,
+                friSStatsIntrConfPktOutTotal
+                    Counter,
+                friSStatsResetReqPktInTotal
+                    Counter,
+                friSStatsResetReqPktOutTotal
+                    Counter,
+                friSStatsResetConfPktInTotal
+                    Counter,
+                friSStatsResetConfPktOutTotal
+                    Counter,
+                friSStatsRestartReqPktInTotal
+                    Counter,
+                friSStatsRestartReqPktOutTotal
+                    Counter,
+                friSStatsRestartConfPktInTotal
+                    Counter,
+                friSStatsRestartConfPktOutTotal
+                    Counter
+                }
+
+        friSPktSummStatsPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The FRI port number corresponding to this station."
+        ::= { cdx6500friSPacketSummaryStatsEntry 1 }
+
+        friSPktSummStatsStnNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..254)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of the FRI station."
+        ::= { cdx6500friSPacketSummaryStatsEntry 2 }
+
+        friSStatsDataPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Data packets received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 3 }
+
+        friSStatsDataPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Data packets transmitted since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 4 }
+
+        friSStatsRRPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of RR packets received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 5 }
+
+        friSStatsRRPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of RR packets transmitted since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 6 }
+
+        friSStatsRNRPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of RNR packets received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 7 }
+
+        friSStatsRNRPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of RNR packets transmitted since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 8 }
+
+        friSStatsREJPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of REJ packets received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 9 }
+
+        friSStatsREJPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of REJ packets transmitted since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 10 }
+
+        friSStatsCallReqPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of call request packets received since last node boot
+                 or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 11 }
+
+        friSStatsCallReqPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of call request packets transmitted since last node 
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 12 }
+
+        friSStatsCallAccPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of call accept packets received since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 13 }
+
+        friSStatsCallAccPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of call accept packets transmitted since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 14 }
+
+        friSStatsClrReqPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of clear request packets received since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 15 }
+
+        friSStatsClrReqPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of clear request packets transmitted since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 16 }
+
+        friSStatsClrConfPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of clear confirm packets received since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 17 }
+
+        friSStatsClrConfPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of clear confirm packets transmitted since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 18 }
+
+        friSStatsIntrReqPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of interrupt request packets received since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 19 }
+
+        friSStatsIntrReqPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of interrupt request packets transmitted since last 
+                 node boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 20 }
+
+        friSStatsIntrConfPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of interrupt confirm packets received since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 21 }
+
+        friSStatsIntrConfPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of interrupt confirm packets transmitted since last 
+                 node boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 22 }
+
+        friSStatsResetReqPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of reset request packets received since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 23 }
+
+        friSStatsResetReqPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of reset request packets transmitted since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 24 }
+
+        friSStatsResetConfPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of reset confirm packets received since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 25 }
+
+        friSStatsResetConfPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of reset confirm packets transmitted since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 26 }
+
+        friSStatsRestartReqPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of restart request packets received since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 27 }
+
+        friSStatsRestartReqPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of restart request packets transmitted since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 28 }
+
+        friSStatsRestartConfPktInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of restart confirm packets received since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 29 }
+
+        friSStatsRestartConfPktOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of restart confirm packets transmitted since last node
+                 boot or statistics reset."
+        ::= { cdx6500friSPacketSummaryStatsEntry 30 }
+
+        -- FRI Summary Statistics Table
+        friSFRISummaryStatsTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500friSFRISummaryStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains FRI Station FRI Summary Statistics
+                 parameters."
+        ::= { cdx6500SPSTFRISStatsTable 6 }
+
+        cdx6500friSFRISummaryStatsEntry OBJECT-TYPE
+            SYNTAX Cdx6500friSFRISummaryStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the FRI Station FRI Summary Statistics Table.
+                 NOTE : Value of all objects in this table are valid only
+                 for Bypass stations; 0 will be returned otherwise."
+            INDEX { friSFRISummStatsPortNumber, 
+                    friSFRISummStatsStnNumber }
+        ::= { friSFRISummaryStatsTable 1 }
+
+        Cdx6500friSFRISummaryStatsEntry ::=
+            SEQUENCE {
+                friSFRISummStatsPortNumber
+                    INTEGER,
+                friSFRISummStatsStnNumber
+                    INTEGER,
+                friSStatsFECNInTotal
+                    Counter,
+                friSStatsFECNOutTotal
+                    Counter,
+                friSStatsBECNInTotal
+                    Counter,
+                friSStatsBECNOutTotal
+                    Counter,
+                friSStatsDEInTotal
+                    Counter,
+                friSStatsDEOutTotal
+                    Counter
+                }
+
+        friSFRISummStatsPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The FRI port number corresponding to this station."
+        ::= { cdx6500friSFRISummaryStatsEntry 1 }
+
+        friSFRISummStatsStnNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..254)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of the FRI station."
+        ::= { cdx6500friSFRISummaryStatsEntry 2 }
+
+        friSStatsFECNInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Forward Explicit Congestion Notification (FECN)
+                 packets received since last node boot or statistics reset."
+        ::= { cdx6500friSFRISummaryStatsEntry 3 }
+
+        friSStatsFECNOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                 "Number of Forward Explicit Congestion Notification (FECN)
+                  packets transmitted since last node boot or statistics reset."
+        ::= { cdx6500friSFRISummaryStatsEntry 4 }
+
+        friSStatsBECNInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Backward Explicit Congestion Notification (BECN)
+                 packets received since last node boot or statistics reset."
+        ::= { cdx6500friSFRISummaryStatsEntry 5 }
+
+        friSStatsBECNOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Backward Explicit Congestion Notification (BECN)
+                 packets transmitted since last node boot or statistics reset."
+        ::= { cdx6500friSFRISummaryStatsEntry 6 }
+
+        friSStatsDEInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Discard Eligibility (DE) packets received 
+                 since last node boot or statistics reset."
+        ::= { cdx6500friSFRISummaryStatsEntry 7 }
+
+        friSStatsDEOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Discard Eligibility (DE) packets transmitted 
+                 since last node boot or statistics reset."
+        ::= { cdx6500friSFRISummaryStatsEntry 8 }
+
+        -- The FRI Port Control Table
+        cdx6500ContFRITable OBJECT IDENTIFIER 
+        ::= { cdx6500Controls 14 }
+
+        cdx6500FRIPContTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500FRIPContEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Control parameters for FRI ports."
+        ::= { cdx6500ContFRITable 1 }
+
+        cdx6500FRIPContEntry OBJECT-TYPE
+            SYNTAX Cdx6500FRIPContEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each control applies to a single FRI port."
+            INDEX { friPContPortNumber }
+        ::= { cdx6500FRIPContTable 1 }
+
+        Cdx6500FRIPContEntry ::=
+            SEQUENCE {
+                friPContPortNumber
+                    INTEGER,
+                friPContPortControl
+                    INTEGER
+                }
+
+        friPContPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Port number of the FRI port."
+        ::= { cdx6500FRIPContEntry 1 }
+
+        friPContPortControl OBJECT-TYPE
+            SYNTAX INTEGER {
+                   boot       (1),
+                   enable     (2),
+                   disable    (3),
+                   resetstats (4)
+                   }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Control operations for the specified FRI port.
+                 boot       - Boots the FRI port
+                 enable     - Enables the FRI port
+                 disable    - Disables the FRI port
+                 resetstats - Resets the FRI port statistics."
+        ::= { cdx6500FRIPContEntry 2 }
+
+        -- The FRI Station Control Table
+
+        cdx6500FRISContTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500FRISContEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Control parameters for FRI stations."
+        ::= { cdx6500ContFRITable 2 }
+
+        cdx6500FRISContEntry OBJECT-TYPE
+            SYNTAX Cdx6500FRISContEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each control applies to a single FRI station."
+            INDEX { friSContPortNumber, friSContStnNumber }
+        ::= { cdx6500FRISContTable 1 }
+
+        Cdx6500FRISContEntry ::=
+            SEQUENCE {
+                friSContPortNumber
+                    INTEGER,
+                friSContStnNumber
+                    INTEGER,
+                friSContStnControl
+                    INTEGER
+            }
+
+        friSContPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "The FRI port number corresponding to this station."
+        ::= { cdx6500FRISContEntry 1 }
+
+        friSContStnNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..254)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "FRI station number."
+        ::= { cdx6500FRISContEntry 2 }
+
+        friSContStnControl OBJECT-TYPE
+            SYNTAX INTEGER {
+                   boot       (1),
+                   enable     (2),
+                   disable    (3),
+                   resetstats (4)
+                   }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Control operations for the specified FRI station.
+                 boot       - Boots the FRI station
+                 enable     - Enables the FRI station
+                 disable    - Disables the FRI station
+                 resetstats - Resets the FRI station statistics."
+        ::= { cdx6500FRISContEntry 3 }
+
+        END

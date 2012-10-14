@@ -1,0 +1,364 @@
+ 	 ALCATEL-IND1-UDP-RELAY-MIB DEFINITIONS ::= BEGIN
+	 IMPORTS
+	 	  RowStatus 			 FROM SNMPv2-TC
+
+		  IpAddress,
+		  MODULE-IDENTITY,
+		  OBJECT-TYPE,
+		  OBJECT-IDENTITY,
+		  Unsigned32  FROM SNMPv2-SMI
+
+		  
+		  MODULE-COMPLIANCE, 
+		  OBJECT-GROUP		FROM SNMPv2-CONF
+		  routingIND1UdpRelay  FROM ALCATEL-IND1-BASE;
+
+
+	     alcatelIND1UDPRelayMIB MODULE-IDENTITY
+	 	LAST-UPDATED "200108180000Z"
+		ORGANIZATION  "Alcatel -Architects Of An Internet World "
+		CONTACT-INFO
+		"Please consult with Customer Service to insure the most appropriate 
+		version of this document  is used with the products in question:
+
+			Alcatel Internetworking, Incorporated
+			(Division 1, Formerly XYLAN Corporation)
+				26801 West Agoura Road
+			    Agoura Hills, CA 91301-5122
+			      United States Of America
+
+		Telephone:		North America  +1 800 995 2696
+					Latin America  +1 877 919 9526
+					Europe	       +31 23 556 0100
+					Asia	       +65 394 7933
+					All Other      +1 818 878 4507
+
+		Electronic Mail:	support@ind.alcatel.com
+		World Wide Web:	        http://www.ind.alcatel.com
+		File Transfer Protocol: ftp://ftp.ind.alcatel.com/pub/products/mibs"
+
+
+		
+	        DESCRIPTION
+			      "This module describes an authoritative enterprise-specific Simple
+             Network Management Protocol (SNMP) Management Information Base (MIB):
+         
+             For the Birds Of Prey Product Line
+	     UDP Relay to forward BOOTP/DHCP requests across VLANs
+		   
+	     The right to make changes in specification and other information
+             contained in this document without prior notice is reserved.
+         
+             No liability shall be assumed for any incidental, indirect, special, or
+             consequential damages whatsoever arising from or related to this
+             document or the information contained herein.
+         
+             Vendors, end-users, and other interested parties are granted
+             non-exclusive license to use this specification in connection with
+             management of the products for which it is intended to be used.
+         
+               Copyright (C) 1995-2002 Alcatel Internetworking, Incorporated
+                             ALL RIGHTS RESERVED WORLDWIDE"
+
+	      	REVISION      "200107170000Z"
+	     DESCRIPTION
+		  "Addressing discrepancies with Alcatel Standard." 	  
+		      ::= {routingIND1UdpRelay 1}
+
+
+
+        alcatelIND1UDPRelayMIBObjects OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+            "Branch For UDP Relay
+            Subsystem Managed Objects."
+        ::= { alcatelIND1UDPRelayMIB 1 }
+
+
+	alcatelIND1UDPRelayMIBConformance OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+            "Branch For UDP Relay
+            Subsystem Conformance Information."
+        ::= { alcatelIND1UDPRelayMIB 2 }
+
+	alcatelIND1UDPRelayMIBGroups OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+            "Branch For UDP Relay
+	     Subsystem Units Of Conformance."
+        ::= { alcatelIND1UDPRelayMIBConformance 1 }
+
+
+
+	alcatelIND1UDPRelayMIBCompliances OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+            "Branch For UDP Relay
+            Subsystem Compliance Statements."
+        ::= { alcatelIND1UDPRelayMIBConformance 2 }	
+
+
+   iphelperMIB OBJECT IDENTIFIER ::= { alcatelIND1UDPRelayMIBObjects 1 }
+
+  
+  
+  
+   IphelperServIndex ::= INTEGER {
+    	iphelperBootp(1)
+	}
+
+   iphelperTable OBJECT-TYPE
+      SYNTAX SEQUENCE OF IphelperEntry
+      MAX-ACCESS not-accessible
+      STATUS current 
+      DESCRIPTION
+      		" A list of UDP Relay Service instances."
+  ::= { iphelperMIB 1 }
+
+ 
+  iphelperEntry  OBJECT-TYPE
+    SYNTAX	IphelperEntry
+    MAX-ACCESS	not-accessible
+    STATUS	current
+    DESCRIPTION
+    		" An entry in UDP Relay table"
+    INDEX { iphelperService, iphelperForwAddr ,iphelperVlan }
+    ::= { iphelperTable 1 }
+
+    IphelperEntry ::= SEQUENCE {
+      iphelperService
+      		IphelperServIndex,
+      iphelperForwAddr
+      		IpAddress,
+      iphelperVlan
+                Unsigned32,
+      iphelperStatus
+       RowStatus 
+   }
+
+   iphelperService  OBJECT-TYPE
+   	SYNTAX  IphelperServIndex
+	MAX-ACCESS  read-only
+	STATUS	current
+	DESCRIPTION
+		"This specifies the UDP Relay Service to be  forwarded."
+  ::= { iphelperEntry 1 }
+
+  iphelperForwAddr OBJECT-TYPE
+  	SYNTAX IpAddress
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"This sets the relay's forwarding address. It can 
+		either be set to a distinct IP address (e.g. the address
+		of a server), to an IP broadcast address or a VLAN. This
+		setting is only used by BOOTP/DHCP service for now."
+  ::= { iphelperEntry 2 }
+
+  iphelperVlan OBJECT-TYPE
+        SYNTAX Unsigned32
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+                "This allows the user to allocate a particular server address to a particular vlan.
+                 This is part of the per Vlan relay forwarding feature enhancement."
+  ::= { iphelperEntry 3 } 
+
+  iphelperStatus OBJECT-TYPE
+	SYNTAX RowStatus
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+            "Row Status for creating/deleting"
+  ::= { iphelperEntry 4 }
+
+
+iphelperStatTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF IphelperStatEntry
+	MAX-ACCESS	not-accessible
+	STATUS	current
+	DESCRIPTION
+		"This keeps the statistics for each service type."
+::= { iphelperMIB 2 }
+
+iphelperStatEntry  OBJECT-TYPE
+	SYNTAX  IphelperStatEntry
+	MAX-ACCESS  not-accessible
+	STATUS	current
+	DESCRIPTION
+		"An entry in the stat table."
+  	INDEX {iphelperServerAddress}
+::= { iphelperStatTable 1 }
+			      
+
+IphelperStatEntry ::= SEQUENCE {
+	iphelperServerAddress
+                IpAddress,
+	iphelperRxFromClient
+		Unsigned32,
+        iphelperTxToServer
+                Unsigned32,
+        iphelperMaxHopsViolation
+                Unsigned32,
+        iphelperForwDelayViolation
+                Unsigned32,
+        iphelperResetAll
+                INTEGER
+		}
+
+iphelperServerAddress  OBJECT-TYPE
+        SYNTAX IpAddress
+	MAX-ACCESS read-write
+	STATUS	current
+	DESCRIPTION
+               " This specifies the unique server address."
+::= { iphelperStatEntry 1 }
+
+iphelperRxFromClient OBJECT-TYPE
+	SYNTAX	Unsigned32 (0..65535)
+	MAX-ACCESS	read-write
+	STATUS	current
+	DESCRIPTION	
+		"This keeps track of the number of packets recieved from the client."
+::= { iphelperStatEntry 2 }
+
+
+iphelperTxToServer  OBJECT-TYPE
+	SYNTAX	Unsigned32 (0..65535)
+	MAX-ACCESS	read-write
+	STATUS current
+	DESCRIPTION
+              " This keeps track of the number of packets transmitted  to the server."
+::= { iphelperStatEntry  3}
+
+
+iphelperMaxHopsViolation  OBJECT-TYPE
+	SYNTAX	Unsigned32 (0..65535)
+	MAX-ACCESS	read-write
+	STATUS current
+	DESCRIPTION
+              " This keeps track of the number of packets dropped due to max hops violation."
+::= { iphelperStatEntry  4}
+
+iphelperForwDelayViolation  OBJECT-TYPE
+	SYNTAX	Unsigned32 (0..65535)
+	MAX-ACCESS	read-write
+	STATUS current
+	DESCRIPTION
+              " This keeps track of the number of packets dropped due to forward delay violation."
+::= { iphelperStatEntry  5}
+
+iphelperResetAll  OBJECT-TYPE
+	SYNTAX	INTEGER(0..1)
+	MAX-ACCESS	read-write
+	STATUS current
+	DESCRIPTION
+            "This parameter resets all the stats."
+::= { iphelperStatEntry 6}
+
+iphelperForwDelay  OBJECT-TYPE
+  	SYNTAX Unsigned32 (0..65535)
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"This sets the BOOTP/DHCP relay's forwarding delay and
+		is only used by the BOOTP/DHCP service. For other services
+		it is ignored.It is typically set as seconds, but the value is totally 
+		client dependent.This relay will not forward frames until client 
+		frames have 'secs' field set to atleast the value 
+		iphelperForwDelay."
+::= { iphelperMIB 3 }
+
+iphelperMaxHops OBJECT-TYPE
+	SYNTAX Unsigned32 (1..16)
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"This sets the BOOTP/DHCP relay's maximum hops 
+		forwarding limit and is only used by the BOOTP/DHCP service. For
+		other services it is ignored. If a frame arrives with hopcount greater than 
+	or equal to iphelperMaxHops, it will be dropped."
+::= {iphelperMIB  4}
+
+iphelperForwardOption OBJECT-TYPE
+	SYNTAX INTEGER
+		{
+		  standard(1),
+		  avlanOnly(2),
+                  perVlanOnly(3)
+		}
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"This is only significant for the BOOTP/DHCP service. It allows the relay
+		to forward DHCP requests only when they are issued by an Authenticated Vlan
+		client.Needed to prevent having multiple relays enabled on the same vlan.
+		Default value is standard"
+::= {iphelperMIB  5}
+
+
+
+    
+    alcatelIND1UDPRelayMIBCompliance MODULE-COMPLIANCE
+    	STATUS	current
+	DESCRIPTION
+	    "Compliance statement for UDP Relay"
+	MODULE
+		MANDATORY-GROUPS
+		{
+		    iphelperGroup,
+		    iphelperStatGroup,
+		    iphelperMiscGroup
+		}
+
+	    ::={ alcatelIND1UDPRelayMIBCompliances 1}
+
+
+
+   iphelperGroup  OBJECT-GROUP
+     	OBJECTS
+	{
+	   iphelperForwAddr,
+	   iphelperStatus
+
+	}
+	STATUS current
+	DESCRIPTION
+	     " Collection of objects for the management of parameters of UDP Relay."
+	::= {  alcatelIND1UDPRelayMIBGroups 1}
+
+
+    iphelperStatGroup  OBJECT-GROUP
+     	OBJECTS
+	{
+	    iphelperServerAddress,
+	    iphelperRxFromClient,
+            iphelperTxToServer,
+            iphelperMaxHopsViolation,
+            iphelperForwDelayViolation,
+            iphelperResetAll
+	}
+	STATUS current
+	DESCRIPTION
+	     " Collection of objects for management of statistics for UDP Relay."
+	::= {  alcatelIND1UDPRelayMIBGroups 2}
+
+
+     iphelperMiscGroup   OBJECT-GROUP
+     	OBJECTS
+	{
+	      iphelperForwDelay,
+	      iphelperMaxHops,
+	      iphelperForwardOption	
+	}	   
+	STATUS current
+	DESCRIPTION
+	        " Other independent objects of UDP Relay."
+	::= {  alcatelIND1UDPRelayMIBGroups 3}
+
+
+   END
+  
+
+

@@ -1,0 +1,2810 @@
+-------------------------------------------------------
+-- Copyright 1999 - Sun Microsystems, Inc. All Rights Reserved.
+--
+--
+-------------------------------------------------------
+-- Sun Management Center
+-------------------------------------------------------
+
+KERNEL-READER-SUNMANAGEMENTCENTER-MIB DEFINITIONS ::= BEGIN
+
+
+  IMPORTS
+        enterprises, MODULE-IDENTITY, OBJECT-TYPE, Counter64, Integer32
+                FROM SNMPv2-SMI
+         OBJECT-GROUP
+                FROM SNMPv2-CONF
+         DisplayString
+               FROM SNMPv2-TC;
+
+
+kernelReader MODULE-IDENTITY
+    LAST-UPDATED "9907201505Z"
+    ORGANIZATION "Sun Microsystems Inc."
+    CONTACT-INFO
+        "        Sun Microsystems Inc.
+       Customer Support
+            Postal: 901 San Antonio Road
+       Palo Alto, CA-94303-4900
+    USA
+                         Tel: 650-960-1300
+                E-mail: service@sun.com"
+    DESCRIPTION
+        "The kernel reader mib obtains information from the operating
+	system about kernel based entities, including CPUs, disk drives, 
+	streams buffers, VM statistics, etc. This information is used
+	to monitor and report on CPU usage, disk and network
+	I/O, Paging and swapping rates, and so on. "
+
+    REVISION  "9907201505Z"
+    DESCRIPTION
+        "Rev 1.0  20th July 1999 15:05, Initial version Of MIB."
+    ::= { modules 12 }
+
+sun       OBJECT IDENTIFIER ::= { enterprises 42 }
+prod      OBJECT IDENTIFIER ::= { sun 2 }
+sunsymon  OBJECT IDENTIFIER ::= { prod 12 }
+agent     OBJECT IDENTIFIER ::= { sunsymon 2 }
+modules   OBJECT IDENTIFIER ::= { agent 2 }
+
+
+krUserGroup OBJECT-GROUP
+        OBJECTS {  krConsoleUser, krTotNumOfUsers, krTotNumOfSessions, 
+		krPrimaryUser }
+        STATUS current
+        DESCRIPTION
+        "User related statistics."
+        ::= { kernelReader 1 }
+
+
+
+krLoadGroup OBJECT-GROUP
+        OBJECTS {  krSystemLoadAvg1min, krSystemLoadAvg5min, 
+		krSystemLoadAvg15min }
+        STATUS current
+        DESCRIPTION
+        "Load related statistics."
+        ::= { kernelReader 2 }
+
+
+krDisk	OBJECT IDENTIFIER ::= { kernelReader 3 }
+
+krFileSystem   OBJECT IDENTIFIER ::= { kernelReader 4 }
+
+krCPUDetail	OBJECT IDENTIFIER ::= { kernelReader 5 }
+
+krMemoryUsageGroup OBJECT-GROUP
+        OBJECTS {  krTotPhyMemAvail, krPhyMemInUse, krPctOfPhyMemInUse, 
+		krFreePhyMem, krPctOfPhyMemFree }
+        STATUS current
+        DESCRIPTION
+        "Memory usage related statistics."
+        ::= { kernelReader 6 }
+
+
+krSwapDetailGroup OBJECT-GROUP
+        OBJECTS {  krTotSwapSpaceAvail, krTotReservedSwapSpace, 
+		krTotAllocatedSwapSpace, krTotUsedSwapSpace, 
+		krTotSwapSpace, krTotPctOfSwapSpaceUsed }
+        STATUS current
+        DESCRIPTION
+        "Swap space detail related statistics."
+        ::= { kernelReader 7 }
+
+
+krStreamsDetail	OBJECT IDENTIFIER ::= { kernelReader 8 }
+
+
+krConsoleUser OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "User currently logged in on the console."
+    ::= { krUserGroup 1 }
+
+krTotNumOfUsers OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of unique users currently logged in."
+    ::= { krUserGroup 2 }
+
+krTotNumOfSessions OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of currently active user sessions."
+    ::= { krUserGroup 3 }
+
+krPrimaryUser OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The login name of the primary user."
+    ::= { krUserGroup 4 }
+
+krSystemLoadAvg1min OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "Jobs"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Load average of the system over the last 1 minute."
+    ::= { krLoadGroup 1 }
+
+krSystemLoadAvg5min OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "Jobs"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Load average of the system over the last 5 minutes."
+    ::= { krLoadGroup 2 }
+
+krSystemLoadAvg15min OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "Jobs"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Load average of the system over the last 15 minutes."
+    ::= { krLoadGroup 3 }
+
+krDiskDetailGroup OBJECT-GROUP
+        OBJECTS {  krDDDiskName, krDiskAliasName, krDiskReadOpRate, 
+		krDiskWriteOpRate, krDiskOperationRate, krDiskDataReadRate, 
+		krDiskDataWriteRate, krDiskDataTransferRate, 
+		krDiskAvgWaitTrans, krDiskAvgRunTrans }
+        STATUS current
+        DESCRIPTION
+        "Disk detail related statistics."
+        ::= { krDisk 1 }
+
+
+krDiskSrvcTimeGroup OBJECT-GROUP
+        OBJECTS {  krDSDiskName, krDiskSrvcWaitPctTime, krDiskBusyPctTime, 
+		krDiskSrvcAvgWaitTime, krDiskSrvcAvgTransRunTime, 
+		krDiskSrvcAvgTransTime }
+        STATUS current
+        DESCRIPTION
+        "Disk load related statistics."
+        ::= { krDisk 2 }
+
+
+krDiskDetailTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF KrDiskDetailEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Table of information about all the disks installed on 
+		the system." 
+    ::= { krDiskDetailGroup 1 }
+
+krDiskDetailEntry OBJECT-TYPE
+    SYNTAX      KrDiskDetailEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Information about a disk installed on the system."
+    INDEX  { krDDDiskName }
+    ::= { krDiskDetailTable 1 }
+
+KrDiskDetailEntry ::=
+    SEQUENCE {
+        krDDDiskName
+            DisplayString,
+        krDiskAliasName
+            DisplayString,
+        krDiskReadOpRate
+            DisplayString,
+        krDiskWriteOpRate
+            DisplayString,
+        krDiskOperationRate
+            DisplayString,
+        krDiskDataReadRate
+            DisplayString,
+        krDiskDataWriteRate
+            DisplayString,
+        krDiskDataTransferRate
+            DisplayString,
+        krDiskAvgWaitTrans
+            DisplayString,
+        krDiskAvgRunTrans
+            DisplayString
+    }
+
+krDDDiskName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Name of the disk (sd0, etc ...)."
+    ::= { krDiskDetailEntry 1 }
+
+krDiskAliasName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Name of the disk alias (c0t0d0, etc)."
+    ::= { krDiskDetailEntry 2 }
+
+krDiskReadOpRate OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "op/sec"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of read operations per second on the disk."
+    ::= { krDiskDetailEntry 3 }
+
+krDiskWriteOpRate OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "op/sec"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of write operations per second on the disk."
+    ::= { krDiskDetailEntry 4 }
+
+krDiskOperationRate OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "op/sec"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total number of read and write operations per second 
+		(read + write) on the disk."
+    ::= { krDiskDetailEntry 5 }
+
+krDiskDataReadRate OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "KB/sec"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Rate of data reads per second from this disk, in 
+		Kbytes per second."
+    ::= { krDiskDetailEntry 6 }
+
+krDiskDataWriteRate OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "KB/secops"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Rate of data writes per second to this disk, in Kbytes 
+		per second."
+    ::= { krDiskDetailEntry 7 }
+
+krDiskDataTransferRate OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "KB/sec"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Rate of data transfers per second to or from this disk, 
+		in Kbytes per second." 
+    ::= { krDiskDetailEntry 8 }
+
+krDiskAvgWaitTrans OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Average number of transactions waiting."
+    ::= { krDiskDetailEntry 9 }
+
+krDiskAvgRunTrans OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Average number of transactions running."
+    ::= { krDiskDetailEntry 10 }
+
+krDiskSrvTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF KrDiskSrvEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Table of performance related information for all the disks."
+    ::= { krDiskSrvcTimeGroup 1 }
+
+krDiskSrvEntry OBJECT-TYPE
+    SYNTAX      KrDiskSrvEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Performance related information for one disk."
+    INDEX  { krDSDiskName }
+    ::= { krDiskSrvTable 1 }
+
+KrDiskSrvEntry ::=
+    SEQUENCE {
+        krDSDiskName
+            DisplayString,
+        krDiskSrvcWaitPctTime
+            DisplayString,
+        krDiskBusyPctTime
+            DisplayString,
+        krDiskSrvcAvgWaitTime
+            DisplayString,
+        krDiskSrvcAvgTransRunTime
+            DisplayString,
+        krDiskSrvcAvgTransTime
+            DisplayString
+    }
+
+krDSDiskName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Name of the disk (sd0, etc ...)."
+    ::= { krDiskSrvEntry 1 }
+
+krDiskSrvcWaitPctTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "%"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of time there is a transaction waiting for service
+		(wait queue length)."
+    ::= { krDiskSrvEntry 2 }
+
+krDiskBusyPctTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "%"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of time the disk is busy (transaction running)."
+    ::= { krDiskSrvEntry 3 }
+
+krDiskSrvcAvgWaitTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "msec"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The average wait service time in msec
+		for one disk transaction, either read or write."
+    ::= { krDiskSrvEntry 4 }
+
+krDiskSrvcAvgTransRunTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "msec"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The average run service time in msec
+                for one disk transaction, either read or write."
+    ::= { krDiskSrvEntry 5 }
+
+krDiskSrvcAvgTransTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "msec"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The average service (run + wait) time 
+		in msec for one disk transaction, either read or write."
+    ::= { krDiskSrvEntry 6 }
+
+krUFSFileSystemGroup OBJECT-GROUP
+        OBJECTS {  krUFSFileSystemIndex, krUFSFileSystemMountPoint, 
+		krUFSFileSystemDiskName, krUFSFileSystemSize, 
+		krUFSFileSystemFreeSpace, krUFSFreeSpaceForNonSU, 
+		krUFSFileSystemPctUsedSpace, krUFSTotNumOfInodes, 
+		krUFSTotNumOfInodesAvail, krUFSPctInodesUsed }
+        STATUS current
+        DESCRIPTION
+        "UFS file system related statistics."
+        ::= { krFileSystem 1 }
+
+
+krVXFSFileSystemGroup OBJECT-GROUP
+        OBJECTS {  krVXFSFileSystemIndex, krVXFSFileSystemMountPoint, 
+		krVXFSFileSystemDiskName, krVXFSFileSystemSize, 
+		krVXFSFileSystemFreeSpace, krVXFSFreeSpaceForNonSU, 
+		krVXFSFileSystemPctUsedSpace, krVXFSTotNumOfInodes, 
+		krVXFSTotNumOfInodesAvail, krVXFSPctInodesUsed }
+        STATUS current
+        DESCRIPTION
+        "VXFS file system related statistics."
+        ::= { krFileSystem 2 }
+
+
+
+krUFSFileTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF KrUFSFileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Table of information about UFS file systems." 
+    ::= { krUFSFileSystemGroup 1 }
+
+krUFSFileEntry OBJECT-TYPE
+    SYNTAX      KrUFSFileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Information about a UFS file system."
+    INDEX  { krUFSFileSystemIndex }
+    ::= { krUFSFileTable 1 }
+
+KrUFSFileEntry ::=
+    SEQUENCE {
+        krUFSFileSystemIndex
+            DisplayString,
+        krUFSFileSystemMountPoint
+            DisplayString,
+        krUFSFileSystemDiskName
+            DisplayString,
+        krUFSFileSystemSize
+            Integer32,
+        krUFSFileSystemFreeSpace
+            Integer32,
+        krUFSFreeSpaceForNonSU
+            Integer32,
+        krUFSFileSystemPctUsedSpace
+            DisplayString,
+        krUFSTotNumOfInodes
+            Integer32,
+        krUFSTotNumOfInodesAvail
+            Integer32,
+        krUFSPctInodesUsed
+            DisplayString
+    }
+
+krUFSFileSystemIndex OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The index for the file system in table."
+    ::= { krUFSFileEntry 1 }
+
+krUFSFileSystemMountPoint OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The full pathname where the file system is mounted."
+    ::= { krUFSFileEntry 2 }
+
+krUFSFileSystemDiskName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The name of the device (/dev/dsk/...)."
+    ::= { krUFSFileEntry 3 }
+
+krUFSFileSystemSize OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "KB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The total size of the file system, in Kbytes."
+    ::= { krUFSFileEntry 4 }
+
+krUFSFileSystemFreeSpace OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "KB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Available disk space in the file system, in Kbytes."
+    ::= { krUFSFileEntry 5 }
+
+krUFSFreeSpaceForNonSU OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "KB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Available disk space in file system for non-superusers, 
+		in Kbytes."
+    ::= { krUFSFileEntry 6 }
+
+krUFSFileSystemPctUsedSpace OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "%"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of disk space used in the file system."
+    ::= { krUFSFileEntry 7 }
+
+krUFSTotNumOfInodes OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "inodes"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The total number of inodes in the file system."
+    ::= { krUFSFileEntry 8 }
+
+krUFSTotNumOfInodesAvail OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "inodes"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The total number of inodes available in the file system."
+    ::= { krUFSFileEntry 9 }
+
+krUFSPctInodesUsed OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "%"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of inodes used in the file system."
+    ::= { krUFSFileEntry 10 }
+
+
+krVXFSFileTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF KrVXFSFileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Table of information about VXFS file systems."
+    ::= { krVXFSFileSystemGroup 1 }
+
+krVXFSFileEntry OBJECT-TYPE
+    SYNTAX      KrVXFSFileEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Information about a VXFS file system."
+    INDEX  { krVXFSFileSystemIndex }
+    ::= { krVXFSFileTable 1 }
+
+KrVXFSFileEntry ::=
+    SEQUENCE {
+        krVXFSFileSystemIndex
+            DisplayString,
+        krVXFSFileSystemMountPoint
+            DisplayString,
+        krVXFSFileSystemDiskName
+            DisplayString,
+        krVXFSFileSystemSize
+            Integer32,
+        krVXFSFileSystemFreeSpace
+            Integer32,
+        krVXFSFreeSpaceForNonSU
+            Integer32,
+        krVXFSFileSystemPctUsedSpace
+            DisplayString,
+        krVXFSTotNumOfInodes
+            Integer32,
+        krVXFSTotNumOfInodesAvail
+            Integer32,
+        krVXFSPctInodesUsed
+            DisplayString
+    }
+
+krVXFSFileSystemIndex OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The index of the file system in the table."
+    ::= { krVXFSFileEntry 1 }
+
+krVXFSFileSystemMountPoint OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The full pathname where the file system is mounted."
+    ::= { krVXFSFileEntry 2 }
+
+krVXFSFileSystemDiskName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The name of the device (/dev/dsk/...)."
+    ::= { krVXFSFileEntry 3 }
+
+krVXFSFileSystemSize OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "KB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The total size of the file system, in Kbytes."
+    ::= { krVXFSFileEntry 4 }
+
+krVXFSFileSystemFreeSpace OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "KB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Available disk space of the file system, in Kbytes."
+    ::= { krVXFSFileEntry 5 }
+
+krVXFSFreeSpaceForNonSU OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "KB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Available disk space in file system for non-superusers, 
+		in Kbytes."
+    ::= { krVXFSFileEntry 6 }
+
+krVXFSFileSystemPctUsedSpace OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "%"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of disk space used in the file system."
+    ::= { krVXFSFileEntry 7 }
+
+krVXFSTotNumOfInodes OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "inodes"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The total number of inodes in the file system."
+    ::= { krVXFSFileEntry 8 }
+
+krVXFSTotNumOfInodesAvail OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "inodes"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The total number of inodes available in the file system."
+    ::= { krVXFSFileEntry 9 }
+
+krVXFSPctInodesUsed OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "%"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of inodes used in the file system."
+    ::= { krVXFSFileEntry 10 }
+
+krCPUUtilGroup OBJECT-GROUP
+        OBJECTS {  krCPUInstance, krCPUDelta, krCPUIdleTime, 
+		krCPUUserModeTime, krCPUKernelModeTime, krCPUTotWaitTime, 
+		krCPUTotIOWaitTime, krCPUTotSwapWaitTime, 
+		krCPUTotPIOWaitTime, krCPUNumOfIdleThreadSched }
+        STATUS current
+        DESCRIPTION
+        "CPU utilization related statistics."
+        ::= { krCPUDetail 1 }
+
+krCPUProcess       OBJECT IDENTIFIER ::= { krCPUDetail 2 }
+
+krCPUIOGroup OBJECT-GROUP
+        OBJECTS {  krIOCPUInstance, krNumPhyBlocksRead, krNumPhyBlocksWrite, 
+		krNumLogBlocksRead, krNumLogBlocksWrite, krNumRawIOReads, 
+		krNumRawIOWrites, krNumBytesRead, krNumBytesWritten, krrcvint, 
+		krxmtint, krmdmint, krNumTermInputChars,
+		krNumCanModeCharsHandled, krNumTermOutChars, 
+		krNumPhyBlocksAsyncWrite, krphysio }
+        STATUS current
+        DESCRIPTION
+        "CPU I/O related statistics."
+        ::= { krCPUDetail 3 }
+
+
+krCPUInterruptsGroup OBJECT-GROUP
+        OBJECTS {  krIntrCPUInstance, krNumOfContextSwitches, krNumberOfTraps, 
+		krNumberOfDevInterrupts, krNumOfIntrThreads, krNumOfInterrupts }
+        STATUS current
+        DESCRIPTION
+        "CPU interrupt related statistics."
+        ::= { krCPUDetail 4 }
+
+
+krCPUSyscallGroup OBJECT-GROUP
+        OBJECTS {  krSyscCPUInstance, krNumOfSysCallsMade, krNumOfSysReads, 
+		krNumOfSysWrites, krNumOfForksCalled, krNumOfVForksCalled, 
+		krNumOfExecsCalled, krTotNumOfMessages, krTotNumOfSemops, 
+		krNumOfPnameLookup, krNumOfUfsigetcalls, krNumOfDirBlocksRead, 
+		krNumOfInodesTakenWAP, krNumOfInodesTakenWNAP, 
+		krNumOfInodeTblOvrFlow, krNumOfFileTblOvrFlow, 
+		krNumOfProcTblOvrFlow }
+        STATUS current
+        DESCRIPTION
+        "System call related statistics."
+        ::= { krCPUDetail 5 }
+
+
+krCPUMiscGroup OBJECT-GROUP
+        OBJECTS {  krMiscCPUInstance, krNumOfIvolCSwitches, 
+		krNumOfThrCreateCalls, krNumOfCPUMig, krNumOfxcalls, 
+		krNumOfFldMutxEntrs, krNumOfRWReaderFails, 
+		krNumOfRWWriterFails, krNumOfModuleLoads, 
+		krNumOfModuleUnloads, krNumOfRWLockTry }
+        STATUS current
+        DESCRIPTION
+        "Miscellaneous statistics."
+        ::= { krCPUDetail 6 }
+
+
+krCPURegWindowGroup OBJECT-GROUP
+        OBJECTS {  krRWCPUInstance, krNumOfRegWinUsrOvrFlow, 
+		krNumOfRegWinUsrUndrFlow, krNumOfRegWinSysOvrFlow, 
+		krNumOfRegWinSysUndrFlow, krNumOfRegWinSysUsrOvrFlow }
+        STATUS current
+        DESCRIPTION
+        "CPU register window related statistics."
+        ::= { krCPUDetail 7 }
+
+
+krCPUPginfoGroup OBJECT-GROUP
+        OBJECTS {  krPgCPUInstance, krNumOfPageReclaims, 
+		krNumOfFreeListPgReclaims, krNumOfPageIns, krNumOfPgsPagedIn, 
+		krNumOfPageOuts, krkrNumOfPgsPagedOut, krNumOfSwapIns, 
+		krNumOfPgsSwappedIn, krNumOfSwapOuts, krNumOfPgsSwappedOut, 
+		krNumOfZeroFilledPages, krNumOfAutoFreedPages, 
+		krNumberOfScanedPages, krNumOfPDHandsRvln, krNumOfPagerRun }
+        STATUS current
+        DESCRIPTION
+        "CPU page related statistics."
+        ::= { krCPUDetail 8 }
+
+
+krCPUFaultsGroup OBJECT-GROUP
+        OBJECTS {  krFaultCPUInstance, krNumOfMinorHatPageFaults, 
+		krNumOfMinorAsPageFaults, krNumOfMajorPageFaults,
+		krNumOfCopyOnWriteFaults, krNumOfProtectionFaults, 
+		krNumOfSWLockFaults, krNumOfAsFaultsInKSpace }
+        STATUS current
+        DESCRIPTION
+        "CPU fault related statistics."
+        ::= { krCPUDetail 9 }
+
+
+krCPUUtilTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF KrCPUUtilEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Table of CPU utilization information for all CPUs."
+    ::= { krCPUUtilGroup 1 }
+
+KrCPUUtilEntry ::=
+    SEQUENCE {
+        krCPUInstance
+            Integer32 (1..2147483647),
+        krCPUDelta
+            DisplayString,
+        krCPUIdleTime
+            DisplayString,
+        krCPUUserModeTime
+            DisplayString,
+        krCPUKernelModeTime
+            DisplayString,
+        krCPUTotWaitTime
+            DisplayString,
+        krCPUTotIOWaitTime
+            DisplayString,
+        krCPUTotSwapWaitTime
+            DisplayString,
+        krCPUTotPIOWaitTime
+            DisplayString,
+        krCPUNumOfIdleThreadSched
+            Counter64
+    }
+
+krCPUUtilEntry OBJECT-TYPE
+    SYNTAX      KrCPUUtilEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "CPU utilization information for one CPU."
+    INDEX  { krCPUInstance }
+    ::= { krCPUUtilTable 1 }
+
+
+krCPUInstance OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The CPU number."
+    ::= { krCPUUtilEntry 1 }
+
+krCPUDelta OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The delta of V1(value 1) and V2(value 2), where V1 and 
+		V2 are the cumulative CPU clock ticks taken at different
+		times which is either when refresh interval reaches or 
+		when the mannual refresh is issued. V1 or V2 is the Sum 
+		of CPU_IdleTime, CPU_UserModeTime, CPU_KernelModeTime and 
+		CPU_WaitTime. If V1 is the previous value and V2 is the
+		current value then
+	 
+		krCPUDelta = V2 - V1."
+    ::= { krCPUUtilEntry 2 }
+
+krCPUIdleTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Idle CPU time in percentage of CPU delta. If V1
+		is the previous value of idle time and V2 is the 
+		current value of idle time then
+		krCPUIdleTime = ( V2 - V1 ) * 100 / krCPUDelta ."
+    ::= { krCPUUtilEntry 3 }
+
+krCPUUserModeTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Time spent by CPU in user mode in percentage of CPU 
+		delta. If V1 is the previous value of user mode time 
+		and V2 is the current value of user mode time then
+                krCPUUserModeTime = ( V2 - V1 ) * 100 / krCPUDelta ."
+    ::= { krCPUUtilEntry 4 }
+
+krCPUKernelModeTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Time spent by CPU in kernel mode in percentage of CPU 
+		delta. If V1 is the previous value of kernel mode time 
+                and V2 is the current value of kernel mode time then
+                krCPUKernelModeTime = ( V2 - V1 ) * 100 / krCPUDelta ."
+    ::= { krCPUUtilEntry 5 }
+
+krCPUTotWaitTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total CPU wait time in percentage of CPU delta.
+		If V1 is the previous value of CPU wait time 
+                and V2 is the current value of CPU wait time then
+                krCPUTotWaitTime = ( V2 - V1 ) * 100 / krCPUDelta ."
+    ::= { krCPUUtilEntry 6 }
+
+krCPUTotIOWaitTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total CPU IO wait time in percentage of CPU delta.
+		If V1 is the previous value of CPU IO wait time 
+                and V2 is the current value of CPU IO wait time then
+                krCPUTotIOWaitTime = ( V2 - V1 ) * 100 / krCPUDelta ."
+    ::= { krCPUUtilEntry 7 }
+
+krCPUTotSwapWaitTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total CPU swap wait time in percentage of CPU delta.
+                If V1 is the previous value of CPU swap wait time
+                and V2 is the current value of CPU swap wait time then
+                krCPUTotSwapWaitTime = ( V2 - V1 ) * 100 / krCPUDelta ."
+
+    ::= { krCPUUtilEntry 8 }
+
+krCPUTotPIOWaitTime OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total CPU peripheral IO wait time in percentage of CPU 
+		delta. If V1 is the previous value of CPU peripheral 
+		wait time and V2 is the current value of CPU peripheral 
+		wait time then
+                krCPUTotPIOWaitTime = ( V2 - V1 ) * 100 / krCPUDelta ."
+    ::= { krCPUUtilEntry 9 }
+
+krCPUNumOfIdleThreadSched OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of idle thread scheduled.
+		If V1 and V2 is the number of idle threads scheduled
+		found at time T1 and T2 respectively then
+                krCPUNumOfIdleThreadSched = (V2 - V1)/(T2 - T1)."
+    ::= { krCPUUtilEntry 10 }
+
+krCPUProcInStatesGroup OBJECT-GROUP
+        OBJECTS {  krTotProcInRunQueue, krTotProcBlocked, 
+		krTotProcReadyInSwap, krTotNumberOfCPUs }
+        STATUS current
+        DESCRIPTION
+        "Statistics related to numbers of processes in different states."
+        ::= { krCPUProcess 1 }
+
+krTotProcInRunQueue OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of processes in run queue."
+    ::= { krCPUProcInStatesGroup  1 }
+
+krTotProcBlocked OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of processes blocked for resources."
+    ::= { krCPUProcInStatesGroup 2 }
+
+krTotProcReadyInSwap OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of processes runnable but swapped."
+    ::= { krCPUProcInStatesGroup 3 }
+
+krTotNumberOfCPUs OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total number Of CPUs."
+    ::= { krCPUProcInStatesGroup 4 }
+
+
+
+
+krCPUIOTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF KrCPUIOEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Table of CPU I/O information for all CPUs."
+    ::= { krCPUIOGroup 1 }
+
+krCPUIOEntry OBJECT-TYPE
+    SYNTAX      KrCPUIOEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "I/O related information for one CPU."
+    INDEX  { krIOCPUInstance }
+    ::= { krCPUIOTable 1 }
+
+KrCPUIOEntry ::=
+    SEQUENCE {
+        krIOCPUInstance
+            Integer32 (1..2147483647),
+        krNumPhyBlocksRead
+            Counter64,
+        krNumPhyBlocksWrite
+            Counter64,
+        krNumLogBlocksRead
+            Counter64,
+        krNumLogBlocksWrite
+            Counter64,
+        krNumRawIOReads
+            Counter64,
+        krNumRawIOWrites
+            Counter64,
+        krNumBytesRead
+            Counter64,
+        krNumBytesWritten
+            Counter64,
+        krrcvint
+            Counter64,
+        krxmtint
+            Counter64,
+        krmdmint
+            Counter64,
+        krNumTermInputChars
+            Counter64,
+        krNumCanModeCharsHandled
+            Counter64,
+        krNumTermOutChars
+            Counter64,
+        krNumPhyBlocksAsyncWrite
+            Counter64,
+        krphysio
+            Counter64
+    }
+
+krIOCPUInstance OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The CPU number."
+    ::= { krCPUIOEntry 1 }
+
+krNumPhyBlocksRead OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of physical blocks read. Number
+		of physical blocks read is calculated at different
+		times which is either when refresh interval reaches or 
+		when the mannual refresh is issued. If at time T1 the 
+		value is X and at time T2 the value is Y then 
+		krNumPhyBlocksRead = (Y - X)/(T2 - T1)."
+
+    ::= { krCPUIOEntry 2 }
+
+krNumPhyBlocksWrite OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of physical blocks written (sync 
+		or async). Number of physical blocks written is calculated 
+		at different times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at 
+		time T1 the value is X and at time T2 the value is Y then 
+                krNumPhyBlocksWrite = (Y - X)/(T2 - T1)."
+    ::= { krCPUIOEntry 3 }
+
+krNumLogBlocksRead OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of logical blocks read. Number
+                of logical blocks read is calculated at different
+                times which is either when refresh interval reaches or 
+		when the mannual refresh is issued. If at time T1 the 
+		value is X and at time T2 the value is Y then
+                krNumLogBlocksRead = (Y - X)/(T2 - T1)."
+    ::= { krCPUIOEntry 4 }
+
+krNumLogBlocksWrite OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of logical blocks written. Number
+                of logical blocks written is calculated at different
+                times which is either when refresh interval reaches or 
+		when the mannual refresh is issued. If at time T1 the 
+		value is X and at time T2 the value is Y then
+                krNumLogBlocksWrite = (Y - X)/(T2 - T1)."
+    ::= { krCPUIOEntry 5 }
+
+krNumRawIOReads OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of cummulative number of raw I/O reads. 
+                Cummulative number of raw I/O reads is calculated 
+		at different times which is either when refresh 
+		interval reaches or when the mannual refresh is 
+		issued. If at time T1 the value is X and at time T2 
+		the value is Y then
+                krNumRawIOReads = (Y - X)/(T2 - T1)."
+    ::= { krCPUIOEntry 6 }
+
+krNumRawIOWrites OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of cummulative number of raw I/O writes. 
+                Cummulative number of raw I/O writes is calculated 
+                at different times which is either when refresh 
+		interval reaches or when the mannual refresh is 
+		issued. If at time T1 the value is X and at time 
+		T2 the value is Y then
+                krNumRawIOWrites = (Y - X)/(T2 - T1)."
+    ::= { krCPUIOEntry 7 }
+
+krNumBytesRead OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of Number of bytes read by rdwr().
+                Number of bytes read by rdwr() is calculated
+                at different times which is either when refresh 
+                interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time 
+		T2 the value is Y then
+                krNumBytesRead = (Y - X)/(T2 - T1)."
+    ::= { krCPUIOEntry 8 }
+
+krNumBytesWritten OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of bytes written by rdwr().
+                Number of bytes written by rdwr() is calculated
+                at different times which is either when refresh 
+                interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time 
+		T2 the value is Y then
+                krNumBytesWritten = (Y - X)/(T2 - T1)."
+    ::= { krCPUIOEntry 9 }
+
+krrcvint OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "UNUSED."
+    ::= { krCPUIOEntry 10 }
+
+krxmtint OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "UNUSED."
+    ::= { krCPUIOEntry 11 }
+
+krmdmint OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "UNUSED."
+    ::= { krCPUIOEntry 12 }
+
+krNumTermInputChars OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of terminal input characters.
+                Number of terminal input characters is calculated
+                at different times which is either when refresh 
+                interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time 
+		T2 the value is Y then
+                krNumTermInputChars = (Y - X)/(T2 - T1)."
+    ::= { krCPUIOEntry 13 }
+
+krNumCanModeCharsHandled OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of characters handled in canonical
+		mode. Number of characters handled in canonical mode 
+		is calculated at different times which is either when 
+		refresh interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time T2 
+		the value is Y then
+                krNumCanModeCharsHandled = (Y - X)/(T2 - T1)."
+    ::= { krCPUIOEntry 14 }
+
+krNumTermOutChars OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of terminal output characters.
+                Number of terminal output characters is calculated 
+		at different times which is either when refresh 
+                interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time 
+		T2 the value is Y then
+                krNumTermOutChars = (Y - X)/(T2 - T1)."
+    ::= { krCPUIOEntry 15 }
+
+krNumPhyBlocksAsyncWrite OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of asynchronous physical block writes.
+                Number of physical block writes asynchronously is calculated 
+                at different times which is either when refresh 
+                interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time T2 the 
+		value is Y then
+                krNumPhyBlocksAsyncWrite = (Y - X)/(T2 - T1)."
+    ::= { krCPUIOEntry 16 }
+
+krphysio OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "UNUSED."
+    ::= { krCPUIOEntry 17 }
+
+krCPUIntrTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF KrCPUIntrEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Table of CPU Interrupts related information."
+    ::= { krCPUInterruptsGroup 1 }
+
+krCPUIntrEntry OBJECT-TYPE
+    SYNTAX      KrCPUIntrEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "CPU Interrupts related information for one CPU."
+    INDEX  { krIntrCPUInstance }
+    ::= { krCPUIntrTable 1 }
+
+KrCPUIntrEntry ::=
+    SEQUENCE {
+        krIntrCPUInstance
+            Integer32 (1..2147483647),
+        krNumOfContextSwitches
+            Counter64,
+        krNumberOfTraps
+            Counter64,
+        krNumberOfDevInterrupts
+            Counter64,
+        krNumOfIntrThreads
+            Counter64,
+        krNumOfInterrupts
+            Counter64
+    }
+
+krIntrCPUInstance OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The CPU number."
+    ::= { krCPUIntrEntry 1 }
+
+krNumOfContextSwitches OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of context switches. Number of 
+		context switches is calculated at different times 
+		 which is either when refresh interval reaches or when 
+		the mannual refresh is issued. If at time T1 the value 
+		is X and at time T2 the value is Y then
+                krNumOfContextSwitches = (Y - X)/(T2 - T1)."
+    ::= { krCPUIntrEntry 2 }
+
+krNumberOfTraps OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of traps. Number of traps is  
+                calculated at different times which is either when 
+		refresh interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time T2 
+		the value is Y then
+                krNumberOfTraps = (Y - X)/(T2 - T1)."
+    ::= { krCPUIntrEntry 3 }
+
+krNumberOfDevInterrupts OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of device interrupts. Number 
+		of device interrupts is calculated at different 
+		times which is either when refresh interval reaches 
+		or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumberOfDevInterrupts = (Y - X)/(T2 - T1)."
+    ::= { krCPUIntrEntry 4 }
+
+krNumOfIntrThreads OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of interrupts as threads.
+		Number of interrupts as threads is calculated at 
+		different times which is either when refresh 
+                interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and 
+		at time T2 the value is Y then
+                krNumOfIntrThreads = (Y - X)/(T2 - T1)."
+    ::= { krCPUIntrEntry 5 }
+
+krNumOfInterrupts OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of interrupts locked, prempted, 
+		or released. Number of interrupts locked, prempted, 
+		or released is calculated at different times which 
+		is either when refresh interval reaches or when the 
+		mannual refresh is issued. If at time T1 the value 
+		is X and at time T2 the value is Y then
+                krNumOfInterrupts = (Y - X)/(T2 - T1)."
+    ::= { krCPUIntrEntry 6 }
+
+krCPUSysTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF KrCPUSysEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Table of system call related information for all CPUs."
+    ::= { krCPUSyscallGroup 1 }
+
+krCPUSysEntry OBJECT-TYPE
+    SYNTAX      KrCPUSysEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "System call related information for one CPU."
+    INDEX  { krSyscCPUInstance }
+    ::= { krCPUSysTable 1 }
+
+KrCPUSysEntry ::=
+    SEQUENCE {
+        krSyscCPUInstance
+            Integer32 (1..2147483647),
+        krNumOfSysCallsMade
+            Counter64,
+        krNumOfSysReads
+            Counter64,
+        krNumOfSysWrites
+            Counter64,
+        krNumOfForksCalled
+            Counter64,
+        krNumOfVForksCalled
+            Counter64,
+        krNumOfExecsCalled
+            Counter64,
+        krTotNumOfMessages
+            Counter64,
+        krTotNumOfSemops
+            Counter64,
+        krNumOfPnameLookup
+            Counter64,
+        krNumOfUfsigetcalls
+            Counter64,
+        krNumOfDirBlocksRead
+            Counter64,
+        krNumOfInodesTakenWAP
+            Counter64,
+        krNumOfInodesTakenWNAP
+            Counter64,
+        krNumOfInodeTblOvrFlow
+            Counter64,
+        krNumOfFileTblOvrFlow
+            Counter64,
+        krNumOfProcTblOvrFlow
+            Counter64
+    }
+
+krSyscCPUInstance OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The CPU number."
+    ::= { krCPUSysEntry 1 }
+
+krNumOfSysCallsMade OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of system calls made. Number of 
+		system calls made is calculated at different times 
+		which is either when refresh interval reaches or when 
+		the mannual refresh is issued. If at time T1 the value 
+		is X and at time T2 the value is Y then 
+		krNumOfSysCallsMade = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 2 }
+
+krNumOfSysReads OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of system reads using read() and 
+		readv(). Number of reads using read() and readv() is 
+		calculated at different times which is either when refresh 
+                interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time T2 the 
+		value is Y then 
+                krNumOfSysReads = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 3 }
+
+krNumOfSysWrites OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of system writes using write() and 
+                writev(). Number of writes using write() and writev() is 
+                calculated at different times which is either when refresh 
+                interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time T2 the 
+		value is Y then
+                krNumOfSysWrites = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 4 }
+
+krNumOfForksCalled OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of forks called. Number of forks 
+		called is calculated at different times which is either 
+		when refresh interval reaches or when the mannual refresh 
+		is issued. If at time T1 the value is X and at time T2 
+		the value is Y then
+                krNumOfForksCalled = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 5 }
+
+krNumOfVForksCalled OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of vforks called. Number of vforks 
+                called is calculated at different times which is either 
+                when refresh interval reaches or when the mannual refresh 
+                is issued. If at time T1 the value is X and at time T2 
+		the value is Y then
+                krNumOfVForksCalled = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 6 }
+
+krNumOfExecsCalled OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of execs called. Number of execs
+                called is calculated at different times which is either 
+		when refresh interval reaches or when the mannual refresh 
+		is issued. If at time T1 the value is X and at time T2 
+		the value is Y then
+                krNumOfExecsCalled = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 7 }
+
+krTotNumOfMessages OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of sum of messages sent or received by 
+		msgrcv() and msgsnd(). Sum of messages sent or 
+		received by msgrcv() and msgsnd() is calculated at 
+		different times which is either when refresh 
+                interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and 
+		at time T2 the value is Y then
+                krTotNumOfMessages = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 8 }
+
+krTotNumOfSemops OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of semaphore operations using 
+		semop() call. Number of semaphore operations using 
+		semop() call is calculated at different times which 
+		is either when refresh interval reaches or when the 
+		mannual refresh is issued. If at time T1 the value 
+		is X and at time T2 the value is Y then
+                krTotNumOfSemops = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 9 }
+
+krNumOfPnameLookup OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of pathname lookup. Number of pathname 
+		lookup is calculated at different times which is either 
+		when refresh interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time T2 the value 
+		is Y then
+                krNumOfPnameLookup = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 10 }
+
+krNumOfUfsigetcalls OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of ufs_iget() calls. Number of ufs_iget() 
+		calls is calculated at different times which is either when 
+		refresh interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time T2 the value 
+		is Y then
+                krNumOfUfsigetcalls = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 11 }
+
+krNumOfDirBlocksRead OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of directory blocks read. Number of 
+		directory blocks read is calculated at different times 
+		which is either when refresh interval reaches or when 
+		the mannual refresh is issued. If at time T1 the value 
+		is X and at time T2 the value is Y then
+                krNumOfDirBlocksRead = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 12 }
+
+krNumOfInodesTakenWAP OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of inodes taken with attached pages.
+		Number of inodes taken with attached pages is calculated 
+		at different times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfInodesTakenWAP = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 13 }
+
+krNumOfInodesTakenWNAP OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of inodes taken with no attached pages.
+                Number of inodes taken with no attached pages is calculated 
+                at different times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfInodesTakenWNAP = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 14 }
+
+krNumOfInodeTblOvrFlow OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of inode table overflows. Number of 
+		inode table overflows is calculated at different times 
+		which is either when refresh interval reaches or when 
+		the mannual refresh is issued. If at time T1 the value 
+		is X and at time T2 the value is Y then
+                krNumOfInodeTblOvrFlow = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 15 }
+
+krNumOfFileTblOvrFlow OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of file table overflows. Number of 
+		file table overflows is calculated at different times 
+		which is either when refresh interval reaches or when 
+		the mannual refresh is issued. If at time T1 the value 
+		is X and at time T2 the value is Y then
+                krNumOfFileTblOvrFlow = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 16 }
+
+krNumOfProcTblOvrFlow OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of proc table overflows. Number of proc
+                table overflows is calculated at different times which is 
+		either when refresh interval reaches or when the mannual 
+		refresh is issued. If at time T1 the value is X and at 
+		time T2 the value is Y then
+                krNumOfProcTblOvrFlow = (Y - X)/(T2 - T1)."
+    ::= { krCPUSysEntry 17 }
+
+krCPUMiscTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF KrCPUMiscEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Table of miscellaneous information about all CPUs."
+    ::= { krCPUMiscGroup 1 }
+
+krCPUMiscEntry OBJECT-TYPE
+    SYNTAX      KrCPUMiscEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Miscellaneous information for one CPU."
+    INDEX  { krMiscCPUInstance }
+    ::= { krCPUMiscTable 1 }
+
+KrCPUMiscEntry ::=
+    SEQUENCE {
+        krMiscCPUInstance
+            Integer32 (1..2147483647),
+        krNumOfIvolCSwitches
+            Counter64,
+        krNumOfThrCreateCalls
+            Counter64,
+        krNumOfCPUMig
+            Counter64,
+        krNumOfxcalls
+            Counter64,
+        krNumOfFldMutxEntrs
+            Counter64,
+        krNumOfRWReaderFails
+            Counter64,
+        krNumOfRWWriterFails
+            Counter64,
+        krNumOfModuleLoads
+            Counter64,
+        krNumOfModuleUnloads
+            Counter64,
+        krNumOfRWLockTry
+            Counter64
+    }
+
+krMiscCPUInstance OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The CPU number."
+    ::= { krCPUMiscEntry 1 }
+
+krNumOfIvolCSwitches OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of involuntary context switches. 
+		Number of involuntary context switches is calculated 
+		at different times which is either when refresh 
+                interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time T2 
+		the value is Y then
+                krNumOfIvolCSwitches = (Y - X)/(T2 - T1)."
+    ::= { krCPUMiscEntry 2 }
+
+krNumOfThrCreateCalls OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of thread_create() calls. Number 
+		of thread_create() calls is calculated at different 
+		times which is either when refresh interval reaches 
+		or when the mannual refresh is issued. If at time T1 
+		the value is X and at time T2 the value is Y then
+                krNumOfThrCreateCalls = (Y - X)/(T2 - T1)."
+    ::= { krCPUMiscEntry 3 }
+
+krNumOfCPUMig OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of CPU migrations by threads.
+		Number of CPU migrations by threads is calculated 
+		at different times which is either when refresh 
+                interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at time T2 
+		the value is Y then
+                krNumOfCPUMig = (Y - X)/(T2 - T1)."
+    ::= { krCPUMiscEntry 4 }
+
+krNumOfxcalls OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of xcalls to other CPU. Number 
+		of xcalls to other CPU is calculated at different 
+		times which is either when refresh interval reaches 
+		or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfxcalls = (Y - X)/(T2 - T1)."
+    ::= { krCPUMiscEntry 5 }
+
+krNumOfFldMutxEntrs OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of failed mutex enters. Number 
+                of failed mutex enters is calculated at different 
+                times which is either when refresh interval reaches 
+		or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfFldMutxEntrs = (Y - X)/(T2 - T1)."
+    ::= { krCPUMiscEntry 6 }
+
+krNumOfRWReaderFails OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of rw reader failures. Number 
+                of rw reader failures is calculated at different 
+                times which is either when refresh interval reaches 
+		or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfRWReaderFails = (Y - X)/(T2 - T1)."
+    ::= { krCPUMiscEntry 7 }
+
+krNumOfRWWriterFails OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of rw writer failures. Number  
+                of rw writer failures is calculated at different  
+                times which is either when refresh interval reaches 
+		or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfRWWriterFails = (Y - X)/(T2 - T1)."
+    ::= { krCPUMiscEntry 8 }
+
+krNumOfModuleLoads OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of times loadable modules loaded.
+		Number of times loadable modules loaded is calculated 
+		at different  times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfModuleLoads = (Y - X)/(T2 - T1)."
+    ::= { krCPUMiscEntry 9 }
+
+krNumOfModuleUnloads OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of times loadable modules unloaded.
+                Number of times loadable modules unloaded is calculated 
+                at different  times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfModuleUnloads = (Y - X)/(T2 - T1)."
+    ::= { krCPUMiscEntry 10 }
+
+krNumOfRWLockTry OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of tries to acquire rw lock. Number 
+		of tries to acquire rw lock is calculated at different  
+		times which is either when refresh interval reaches or 
+		when the mannual refresh is issued. If at time T1 the 
+		value is X and at time T2 the value is Y then
+                krNumOfRWLockTry = (Y - X)/(T2 - T1)."
+    ::= { krCPUMiscEntry 11 }
+
+krCPURegTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF KrCPURegEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Table of CPU register window related information for 
+		all CPUs."
+    ::= { krCPURegWindowGroup 1 }
+
+krCPURegEntry OBJECT-TYPE
+    SYNTAX      KrCPURegEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "CPU register window related information for one CPU."
+    INDEX  { krRWCPUInstance }
+    ::= { krCPURegTable 1 }
+
+KrCPURegEntry ::=
+    SEQUENCE {
+        krRWCPUInstance
+            Integer32 (1..2147483647),
+        krNumOfRegWinUsrOvrFlow
+            Counter64,
+        krNumOfRegWinUsrUndrFlow
+            Counter64,
+        krNumOfRegWinSysOvrFlow
+            Counter64,
+        krNumOfRegWinSysUndrFlow
+            Counter64,
+        krNumOfRegWinSysUsrOvrFlow
+            Counter64
+    }
+
+krRWCPUInstance OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The CPU number."
+    ::= { krCPURegEntry 1 }
+
+krNumOfRegWinUsrOvrFlow OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of register window user overflows. 
+		Number of register window user overflows is calculated 
+		at different times which is either when refresh 
+                interval reaches or when the mannual refresh is 
+                issued. If at time T1 the value is X and at 
+		time T2 the value is Y then
+                krNumOfRegWinUsrOvrFlow = (Y - X)/(T2 - T1)."
+    ::= { krCPURegEntry 2 }
+
+krNumOfRegWinUsrUndrFlow OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of register window user underflows. 
+                Number of register window user underflows is calculated 
+                at different times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfRegWinUsrUndrFlow = (Y - X)/(T2 - T1)."
+    ::= { krCPURegEntry 3 }
+
+krNumOfRegWinSysOvrFlow OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of register window system overflows.
+                Number of register window system overflows is calculated
+                at different times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfRegWinSysOvrFlow = (Y - X)/(T2 - T1)."
+    ::= { krCPURegEntry 4 }
+
+krNumOfRegWinSysUndrFlow OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of register window system underflows.
+                Number of register window system underflows is calculated
+                at different times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfRegWinSysUndrFlow = (Y - X)/(T2 - T1)."
+    ::= { krCPURegEntry 5 }
+
+krNumOfRegWinSysUsrOvrFlow OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of register window system user overflows.
+                Number of register window system user overflows is calculated
+                at different times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfRegWinSysUsrOvrFlow = (Y - X)/(T2 - T1)."
+    ::= { krCPURegEntry 6 }
+
+krCPUPgTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF KrCPUPgEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Table of paging related information for all CPUs."
+    ::= { krCPUPginfoGroup 1 }
+
+krCPUPgEntry OBJECT-TYPE
+    SYNTAX      KrCPUPgEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Paging related information for one CPU."
+    INDEX  { krPgCPUInstance }
+    ::= { krCPUPgTable 1 }
+
+KrCPUPgEntry ::=
+    SEQUENCE {
+        krPgCPUInstance
+            Integer32 (1..2147483647),
+        krNumOfPageReclaims
+            Counter64,
+        krNumOfFreeListPgReclaims
+            Counter64,
+        krNumOfPageIns
+            Counter64,
+        krNumOfPgsPagedIn
+            Counter64,
+        krNumOfPageOuts
+            Counter64,
+        krkrNumOfPgsPagedOut
+            Counter64,
+        krNumOfSwapIns
+            Counter64,
+        krNumOfPgsSwappedIn
+            Counter64,
+        krNumOfSwapOuts
+            Counter64,
+        krNumOfPgsSwappedOut
+            Counter64,
+        krNumOfZeroFilledPages
+            Counter64,
+        krNumOfAutoFreedPages
+            Counter64,
+        krNumberOfScanedPages
+            Counter64,
+        krNumOfPDHandsRvln
+            Counter64,
+        krNumOfPagerRun
+            Counter64
+    }
+
+krPgCPUInstance OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The CPU number."
+    ::= { krCPUPgEntry 1 }
+
+krNumOfPageReclaims OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of page reclaims including pageout. 
+		Number of page reclaims including pageout is calculated 
+		at different times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfPageReclaims = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 2 }
+
+krNumOfFreeListPgReclaims OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of page reclaims from free list. 
+                Number of page reclaims from free list is calculated 
+                at different times which is either when refresh interval 
+                reaches or when the mannual refresh is issued. If at time 
+                T1 the value is X and at time T2 the value is Y then
+                krNumOfFreeListPgReclaims = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 3 }
+
+krNumOfPageIns OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of pageins. Number of pageins  is 
+		calculated at different times which is either when refresh 
+		interval reaches or when the mannual refresh is issued. 
+		If at time T1 the value is X and at time T2 the value is 
+		Y then
+                krNumOfPageIns = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 4 }
+
+krNumOfPgsPagedIn OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of pages paged in. Number of pages  
+		paged in is calculated at different times which is either 
+		when refresh interval reaches or when the mannual refresh 
+		is issued. If at time T1 the value is X and at time T2 the 
+		value is Y then
+                krNumOfPgsPagedIn = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 5 }
+
+krNumOfPageOuts OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of pageouts. Number of pageouts  is
+                calculated at different times which is either when refresh
+                interval reaches or when the mannual refresh is issued.
+                If at time T1 the value is X and at time T2 the value is
+                Y then
+                krNumOfPageOuts = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 6 }
+
+krkrNumOfPgsPagedOut OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of pages paged out. Number of pages  
+                paged out is calculated at different times which is either 
+                when refresh interval reaches or when the mannual refresh 
+                is issued. If at time T1 the value is X and at time T2 the 
+                value is Y then
+                krkrNumOfPgsPagedOut = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 7 }
+
+krNumOfSwapIns OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of swapins. Number of swapins  is
+                calculated at different times which is either when refresh
+                interval reaches or when the mannual refresh is issued.
+                If at time T1 the value is X and at time T2 the value is
+                Y then
+                krNumOfSwapIns = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 8 }
+
+krNumOfPgsSwappedIn OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of pages swapped in. Number of pages 
+                swapped in is calculated at different times which is either
+                when refresh interval reaches or when the mannual refresh 
+                is issued. If at time T1 the value is X and at time T2 the 
+                value is Y then
+                krNumOfPgsSwappedIn = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 9 }
+
+krNumOfSwapOuts OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of swapouts. Number of swapouts  is
+                calculated at different times which is either when refresh
+                interval reaches or when the mannual refresh is issued.
+                If at time T1 the value is X and at time T2 the value is
+                Y then
+                krNumOfSwapOuts = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 10 }
+
+krNumOfPgsSwappedOut OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of pages swapped out. Number of pages
+                swapped out is calculated at different times which is either
+                when refresh interval reaches or when the mannual refresh 
+                is issued. If at time T1 the value is X and at time T2 the 
+                value is Y then
+                krNumOfPgsSwappedOut = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 11 }
+
+krNumOfZeroFilledPages OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of pages zero filled on demand. Number 
+		of pages zero filled on demand is calculated at different 
+		times which is either when refresh interval reaches or 
+		when the mannual refresh is issued. If at time T1 the value 
+		is X and at time T2 the value is Y then
+                krNumOfZeroFilledPages = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 12 }
+
+krNumOfAutoFreedPages OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of pages freed by daemon or auto. Number
+                of pages freed by daemon or auto is calculated at different
+                times which is either when refresh interval reaches or
+                when the mannual refresh is issued. If at time T1 the value
+                is X and at time T2 the value is Y then
+                krNumOfAutoFreedPages = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 13 }
+
+krNumberOfScanedPages OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of pages examined by pageout daemons.
+		 Number of pages examined by pageout daemons is calculated 
+		at different times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumberOfScanedPages = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 14 }
+
+krNumOfPDHandsRvln OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of revolutions of the page daemon hands. 
+                 Number of revolutions of the page daemon hands is calculated
+                at different times which is either when refresh interval 
+                reaches or when the mannual refresh is issued. If at time 
+                T1 the value is X and at time T2 the value is Y then
+                krNumOfPDHandsRvln = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 15 }
+
+krNumOfPagerRun OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of times pager was scheduled.
+                 Number of times pager was scheduled is calculated
+                at different times which is either when refresh interval 
+                reaches or when the mannual refresh is issued. If at time 
+                T1 the value is X and at time T2 the value is Y then
+                krNumOfPagerRun = (Y - X)/(T2 - T1)."
+    ::= { krCPUPgEntry 16 }
+
+krCPUFaultTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF KrCPUFaultEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "Table of CPU fault related information for all CPUs."
+    ::= { krCPUFaultsGroup 1 }
+
+krCPUFaultEntry OBJECT-TYPE
+    SYNTAX      KrCPUFaultEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+                "CPU fault related information for one CPU."
+    INDEX  { krFaultCPUInstance }
+    ::= { krCPUFaultTable 1 }
+
+KrCPUFaultEntry ::=
+    SEQUENCE {
+        krFaultCPUInstance
+            Integer32 (1..2147483647),
+        krNumOfMinorHatPageFaults
+            Counter64,
+        krNumOfMinorAsPageFaults
+            Counter64,
+        krNumOfMajorPageFaults
+            Counter64,
+        krNumOfCopyOnWriteFaults
+            Counter64,
+        krNumOfProtectionFaults
+            Counter64,
+        krNumOfSWLockFaults
+            Counter64,
+        krNumOfAsFaultsInKSpace
+            Counter64
+    }
+
+krFaultCPUInstance OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The CPU number."
+    ::= { krCPUFaultEntry 1 }
+
+krNumOfMinorHatPageFaults OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of minor page faults via hat_fault().
+		Number of minor page faults via hat_fault() is calculated 
+		at different times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfMinorHatPageFaults = (Y - X)/(T2 - T1)."
+    ::= { krCPUFaultEntry 2 }
+
+krNumOfMinorAsPageFaults OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of minor page faults via as_fault().
+                Number of minor page faults via as_fault() is calculated 
+                at different times which is either when refresh interval 
+                reaches or when the mannual refresh is issued. If at time 
+                T1 the value is X and at time T2 the value is Y then
+                krNumOfMinorAsPageFaults = (Y - X)/(T2 - T1)."
+    ::= { krCPUFaultEntry 3 }
+
+krNumOfMajorPageFaults OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of major page faults. Number of major 
+		page faults is calculated at different times which is 
+		either when refresh interval reaches or when the mannual 
+		refresh is issued. If at time T1 the value is X and at 
+		time T2 the value is Y then
+                krNumOfMajorPageFaults = (Y - X)/(T2 - T1)."
+    ::= { krCPUFaultEntry 4 }
+
+krNumOfCopyOnWriteFaults OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of copy-on-write faults. Number of 
+		copy-on-write faults is calculated at different times 
+		which is either when refresh interval reaches or when 
+		the mannual refresh is issued. If at time T1 the value 
+		is X and at time T2 the value is Y then
+                krNumOfCopyOnWriteFaults = (Y - X)/(T2 - T1)."
+    ::= { krCPUFaultEntry 5 }
+
+krNumOfProtectionFaults OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of protection faults. Number of 
+                protection faults is calculated at different times 
+                which is either when refresh interval reaches or when 
+                the mannual refresh is issued. If at time T1 the value 
+                is X and at time T2 the value is Y then
+                krNumOfProtectionFaults = (Y - X)/(T2 - T1)."
+    ::= { krCPUFaultEntry 6 }
+
+krNumOfSWLockFaults OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of faults due to software locking 
+		req. Number of faults is calculated at different times 
+                which is either when refresh interval reaches or when 
+                the mannual refresh is issued. If at time T1 the value 
+                is X and at time T2 the value is Y then
+                krNumOfSWLockFaults = (Y - X)/(T2 - T1)."
+    ::= { krCPUFaultEntry 7 }
+
+krNumOfAsFaultsInKSpace OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The rate of number of as_faults() in kernel addr space.
+                Number of as_faults() in kernel addr space is calculated 
+		at different times which is either when refresh interval 
+		reaches or when the mannual refresh is issued. If at time 
+		T1 the value is X and at time T2 the value is Y then
+                krNumOfAsFaultsInKSpace = (Y - X)/(T2 - T1)."
+    ::= { krCPUFaultEntry 8 }
+
+krTotPhyMemAvail OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "MB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total physical memory available, in Mbytes."
+    ::= { krMemoryUsageGroup 1 }
+
+krPhyMemInUse OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "MB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total physical memory in use, in Mbytes."
+    ::= { krMemoryUsageGroup 2 }
+
+krPctOfPhyMemInUse OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total percentage of physical memory in use."
+    ::= { krMemoryUsageGroup 3 }
+
+krFreePhyMem OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "MB"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total amount of physical memory free, in Mbytes."
+    ::= { krMemoryUsageGroup 4 }
+
+krPctOfPhyMemFree OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total percentage of physical memory free."
+    ::= { krMemoryUsageGroup 5 }
+
+krTotSwapSpaceAvail OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "Kilo Bytes"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total amount of swap space available, in Kbytes 
+		(total swap - reserved)."
+    ::= { krSwapDetailGroup 1 }
+
+krTotReservedSwapSpace OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "Kilo Bytes"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total amount of swap space reserved, in Kbytes."
+    ::= { krSwapDetailGroup 2 }
+
+krTotAllocatedSwapSpace OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "Kilo Bytes"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total amount of swap space allocated, in Kbytes."
+    ::= { krSwapDetailGroup 3 }
+
+krTotUsedSwapSpace OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "Kilo Bytes"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total amount of swap space used, in Kbytes."
+    ::= { krSwapDetailGroup 4 }
+
+krTotSwapSpace OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "Kilo Bytes"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total amount of swap space."
+    ::= { krSwapDetailGroup 5 }
+
+krTotPctOfSwapSpaceUsed OBJECT-TYPE
+    SYNTAX      DisplayString
+    UNITS       "%"
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Total percentage of swap space used."
+    ::= { krSwapDetailGroup 6 }
+
+
+krStreamHeadCacheGroup OBJECT-GROUP
+        OBJECTS {  krStrHeadCacheName, krStrHeadCacheCurrUsage, 
+		krStrHeadCacheSize, krTotSHCacheAllocation, 
+		krTotSHAllocFailures, krStrHeadCachePctUsed }
+        STATUS current
+        DESCRIPTION
+        "Stream head cache related statistics."
+        ::= { krStreamsDetail 1 }
+
+
+
+krQueueCacheGroup OBJECT-GROUP
+        OBJECTS {  krQueueCacheName, krQueueCacheCurrUsage, krQueueCacheSize, 
+		krTotQCacheAllocation, krTotQAllocFailures, 
+		krQueueCachePctUsed }
+        STATUS current
+        DESCRIPTION
+        "Queue cache related statistics."
+        ::= { krStreamsDetail 2 }
+
+
+krStreamsMsgGroup OBJECT-GROUP
+        OBJECTS {  krStrMsgCacheName, krStrMsgCacheCurrUsage, 
+		krStrMsgCacheSize, krTotSMCacheAllocation,
+		 krTotSMAllocFailures, krStrMsgCachePctUsed }
+        STATUS current
+        DESCRIPTION
+        "Stream message related statistics."
+        ::= { krStreamsDetail 3 }
+
+
+krLinkinfoCacheGroup OBJECT-GROUP
+        OBJECTS {  krLinkinfoCacheName, krLinkinfoCacheCurrUsage, 
+		krLinkinfoCacheSize, krTotLICacheAllocation, 
+		krTotLIAllocFailures, krLinkinfoCachePctUsed }
+        STATUS current
+        DESCRIPTION
+        "Link info cache related statistics."
+        ::= { krStreamsDetail 4 }
+
+
+krStreventCacheGroup OBJECT-GROUP
+        OBJECTS {  krStrEventCacheName, krStrEventCacheCurrUsage, 
+		krStrEventCacheSize, krTotSECacheAllocation, 
+		krTotSEAllocFailures, krStrEventCachePctUsed }
+        STATUS current
+        DESCRIPTION
+        "Stream event cache related statistics."
+        ::= { krStreamsDetail 5 }
+
+
+krSyncqCacheGroup OBJECT-GROUP
+        OBJECTS {  krSyncCacheName, krSyncCacheCurrUsage, krSyncCacheSize, 
+		krTotSyCacheAllocation, krTotSyAllocFailures, 
+		krSyncCachePctUsed }
+        STATUS current
+        DESCRIPTION
+        "Sync cache related statistics."
+        ::= { krStreamsDetail 6 }
+
+
+krQbandCacheGroup OBJECT-GROUP
+        OBJECTS {  krQbandCacheName, krQbandCacheCurrUsage, krQbandCacheSize,
+		 krTotQBCacheAllocation, krTotQBAllocFailures, 
+		krQbandCachePctUsed }
+        STATUS current
+        DESCRIPTION
+        "Qband cache related statistics."
+        ::= { krStreamsDetail 7 }
+
+
+krStrHeadCacheName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The name of the streams head cache maintained by kernel."
+    ::= { krStreamHeadCacheGroup 1 }
+
+krStrHeadCacheCurrUsage OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Current usage (total - avail) of streams head cache."
+    ::= { krStreamHeadCacheGroup 2 }
+
+krStrHeadCacheSize OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Maximum capacity of streams head cache."
+    ::= { krStreamHeadCacheGroup 3 }
+
+krTotSHCacheAllocation OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of total cache allocatios in streams head cache."
+    ::= { krStreamHeadCacheGroup 4 }
+
+krTotSHAllocFailures OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of allocation failures in streams head cache."
+    ::= { krStreamHeadCacheGroup 5 }
+
+krStrHeadCachePctUsed OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of streams head cache used."
+    ::= { krStreamHeadCacheGroup 6 }
+
+krQueueCacheName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The name of the queue cache maintained by kernel."
+    ::= { krQueueCacheGroup 1 }
+
+krQueueCacheCurrUsage OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Current usage (total - avail) of queue cache."
+    ::= { krQueueCacheGroup 2 }
+
+krQueueCacheSize OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Maximum capacity of the queue cache."
+    ::= { krQueueCacheGroup 3 }
+
+krTotQCacheAllocation OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of total queue cache allocations."
+    ::= { krQueueCacheGroup 4 }
+
+krTotQAllocFailures OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of allocation failures in queue cache."
+    ::= { krQueueCacheGroup 5 }
+
+krQueueCachePctUsed OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of queue cache used."
+    ::= { krQueueCacheGroup 6 }
+
+krStrMsgCacheName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The name of the streams messages cache maintained by kernel."
+    ::= { krStreamsMsgGroup 1 }
+
+krStrMsgCacheCurrUsage OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Current usage (total - avail) of streams messages cache."
+    ::= { krStreamsMsgGroup 2 }
+
+krStrMsgCacheSize OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Maximum capacity of streams messages cache."
+    ::= { krStreamsMsgGroup 3 }
+
+krTotSMCacheAllocation OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of total streams messages cache allocations."
+    ::= { krStreamsMsgGroup 4 }
+
+krTotSMAllocFailures OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of allocation failures in streams messages cache."
+    ::= { krStreamsMsgGroup 5 }
+
+krStrMsgCachePctUsed OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of streams messages cache used."
+    ::= { krStreamsMsgGroup 6 }
+
+krLinkinfoCacheName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The name of the link information cache maintained by kernel."
+    ::= { krLinkinfoCacheGroup 1 }
+
+krLinkinfoCacheCurrUsage OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Current usage (total - avail) of link information cache."
+    ::= { krLinkinfoCacheGroup 2 }
+
+krLinkinfoCacheSize OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Maximum capacity of link information cache."
+    ::= { krLinkinfoCacheGroup 3 }
+
+krTotLICacheAllocation OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of total allocations in link information cache."
+    ::= { krLinkinfoCacheGroup 4 }
+
+krTotLIAllocFailures OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of allocation failures in link information cache."
+    ::= { krLinkinfoCacheGroup 5 }
+
+krLinkinfoCachePctUsed OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of link information cache used."
+    ::= { krLinkinfoCacheGroup 6 }
+
+krStrEventCacheName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The name of the streams event cache maintained by kernel."
+    ::= { krStreventCacheGroup 1 }
+
+krStrEventCacheCurrUsage OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Current usage (total - avail) of streams event cache."
+    ::= { krStreventCacheGroup 2 }
+
+krStrEventCacheSize OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Maximum capacity of streams event cache."
+    ::= { krStreventCacheGroup 3 }
+
+krTotSECacheAllocation OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of total allocations in streams event cache."
+    ::= { krStreventCacheGroup 4 }
+
+krTotSEAllocFailures OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of allocation failures in streams event cache."
+    ::= { krStreventCacheGroup 5 }
+
+krStrEventCachePctUsed OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of streams event cache used."
+    ::= { krStreventCacheGroup 6 }
+
+krSyncCacheName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The name of the syncq cache maintained by kernel."
+    ::= { krSyncqCacheGroup 1 }
+
+krSyncCacheCurrUsage OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Current usage (total - avail) of syncq cache."
+    ::= { krSyncqCacheGroup 2 }
+
+krSyncCacheSize OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Maximum capacity of syncq cache."
+    ::= { krSyncqCacheGroup 3 }
+
+krTotSyCacheAllocation OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of total allocations in syncq cache."
+    ::= { krSyncqCacheGroup 4 }
+
+krTotSyAllocFailures OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of allocation failures in syncq cache."
+    ::= { krSyncqCacheGroup 5 }
+
+krSyncCachePctUsed OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of syncq cache used."
+    ::= { krSyncqCacheGroup 6 }
+
+krQbandCacheName OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "The name of the qband cache maintained by kernel."
+    ::= { krQbandCacheGroup 1 }
+
+krQbandCacheCurrUsage OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Current usage (total - avail) of qband cache."
+    ::= { krQbandCacheGroup 2 }
+
+krQbandCacheSize OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Maximum capacity of qband cache."
+    ::= { krQbandCacheGroup 3 }
+
+krTotQBCacheAllocation OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of total allocations in qband cache."
+    ::= { krQbandCacheGroup 4 }
+
+krTotQBAllocFailures OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Number of allocation failures in qband cache."
+    ::= { krQbandCacheGroup 5 }
+
+krQbandCachePctUsed OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+                "Percentage of qband cache used."
+    ::= { krQbandCacheGroup 6 }
+
+END

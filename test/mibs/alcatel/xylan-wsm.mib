@@ -1,0 +1,472 @@
+ 
+     XYLAN-WSM-MIB DEFINITIONS ::= BEGIN
+
+     --  RCSID information
+
+     --  $RCSfile: xylan-wsm.mib,v $
+     --  $Revision: 1.5 $		$State: Exp $
+     --  $Date: 1997/09/14 21:17:35 $
+     --  $Author: fr $
+
+
+     --  xylan-wsm.mib
+     --  Author: Alan K. Bartky
+
+     --  Revision History:
+
+     --  Revision: 1.2
+     --  ktran: Added support for Circuit Emulation Serial port 
+
+     --  Revision: 1.3
+     --  Date: July 17, 1997
+     --  alan: Added support for ISDN and PPP changes, additional comments
+
+     --  Revision: 1.4
+     --  Date: Aug 12, 1997
+     --  plim: Added support for FT1E1 changes (2 OIDS added to WsmPortEntry).
+
+     --  Revision: 1.5
+     --  Date: Sept 11, 1997
+     --  plim: Added support for link_mode for On-Demand or Backup OID
+
+     --  Alcatel Internetworking, Inc.
+     --  26801 W. Agoura Road
+     --  Calabasas, CA 91301
+     --  (818) 880-3500
+     --  support@ind.alcatel.com
+
+     --  This module provides authoritative definitions for Alcatel Internetworking, Inc.
+     --  enterprise-specific fr MIB.
+
+     --  This module will be extended, as needed.
+
+
+     --  Alcatel Internetworking, Inc. reserves the right to make changes in 
+     --  specification and other information contained in this document 
+     --  without prior notice.  The reader should consult Alcatel Internetworking,
+     --  Inc. to determine whether any such changes have been made.
+
+     --  In no event shall Alcatel Internetworking, Inc. be liable for any incidental, 
+     --  indirect, special, or consequential damages whatsoever (including 
+     --  but not limited to lost profits) arising out of or related to this
+     --  document or the information contained in it, even if Alcatel Internetworking,
+     --  Inc. has been advised of, known, or should have known, the 
+     --  possibility of such damages.
+     --  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+     --  parties a non-exclusive license to use this Specification in connection
+     --  with the management of Alcatel Internetworking, Inc. products.
+
+     --  Copyright (C) 1996, 1997 Alcatel Internetworking, Inc. All Rights Reserved.
+
+     
+     	IMPORTS
+		OBJECT-TYPE
+			FROM RFC-1212
+		DisplayString 
+			FROM RFC1213-MIB
+                xylanWsmArch
+                        FROM XYLAN-BASE-MIB
+			;
+
+     -- Textual Conventions
+
+
+
+
+     --
+     --                    The MIB groups
+     --
+     wsmPortGroup             OBJECT IDENTIFIER ::= { xylanWsmArch 1 }
+     wsmLinkGroup             OBJECT IDENTIFIER ::= { xylanWsmArch 2 }
+
+     
+     --		The Port Group
+
+     -- The WSM/WAN Port Table
+
+     -- This table contains non-protocol specific information about
+     -- the WSM and other modules that support WAN functions.  
+     -- Protocol specific, proprietary MIB port information
+     -- are in tables such as the Frame Relay port table in xylan-fr.mib
+     -- and PPP port table in xylan-ppp.mib files.
+     --
+     -- Standard MIB port information is available via the RS232 and
+     -- standard Frame Relay and PPP MIBs.
+
+         wsmPortTable   OBJECT-TYPE
+	    SYNTAX   SEQUENCE OF WsmPortEntry 
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"A table of port layer status and parameter information 
+	            for the WSM's physical interfaces." 
+            ::= { wsmPortGroup 1 }
+
+         wsmPortEntry   OBJECT-TYPE
+            SYNTAX   WsmPortEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"An entry in the table, containing information about 
+                the physical layer of a WSM interface."
+            INDEX   { wsmPortSlotIndex, wsmPortPortIndex }
+            ::= { wsmPortTable 1 }
+
+         WsmPortEntry ::=
+             SEQUENCE {
+                 wsmPortSlotIndex
+                     INTEGER,
+                 wsmPortPortIndex
+                     INTEGER,
+                 wsmPortInterfaceType
+                     INTEGER,
+                 wsmPortCableType
+                     INTEGER,
+                 wsmPortSerialRxClockPol
+                     INTEGER,
+                 wsmPortSerialTxClockPol
+                     INTEGER,
+                 wsmPortFunctionType
+                     INTEGER,
+                 wsmPortProtocol
+                     INTEGER,
+                 wsmPortIfIndex
+                     INTEGER,
+                 wsmPortT1E1StartingTimeSlot
+                     INTEGER,
+                 wsmPortT1E1NumberOfTimeSlot
+                     INTEGER
+         }
+
+         wsmPortSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+             ::= { wsmPortEntry 1 }
+
+         wsmPortPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..8)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this WSM submodule port."
+             ::= { wsmPortEntry 2 }
+
+         wsmPortInterfaceType OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      universalSerial(1), -- Cable determined serial interface
+                      isdnBRI(2),         -- ISDN Basic Rate Interface
+                      ds1(3)              -- Integral T1/E1/ISDN PRI
+                      }
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The type of interface on this WSM physical port."
+             ::= { wsmPortEntry 3 }
+ 
+    
+         wsmPortCableType OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      noneAttached(1),  -- No cable currently attached
+                      indeterminate(2), -- Can't tell what it is or problem
+                      unknown(3),       -- Not applicable or new type
+                      rs232DTE(4),
+                      rs232DCE(5),
+                      v35DTE(6),
+                      v35DCE(7),
+                      rs530DTE(8),      -- Also used for RS-449 DTE
+                      rs530DCE(9),      -- Also used for RS-449 DCE
+                      x21DTE(10),
+                      x21DCE(11),
+                      isdnU(12),
+                      isdnSt(13),
+                      t1(14),
+                      e1(15)
+                      }
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The type of cable attached to the universal serial
+                 port.  Non Universal Serial Ports will always return
+                 'unknown'.  
+
+                 NOTE: RS-449 cables will return as RS-530 as
+                 they are detected as the same type.  RS-449 is
+                 implemented only as a different connector (DB-37 instead
+                 of DB-25) on the end of the cable."
+             ::= { wsmPortEntry 4 }
+ 
+         wsmPortSerialRxClockPol OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      non-inverted(1), 
+                      inverted(2)         
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The receive clock polarity.  It is inverted or not inverted.
+		 For interfaces that do not support this, the value 
+                 will be stored but ignored."
+             ::= { wsmPortEntry 5 }
+ 
+         wsmPortSerialTxClockPol OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      non-inverted(1), 
+                      inverted(2)         
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The Transmit clock polarity.  It is inverted or not inverted.
+		 For interfaces that do not support this, the value 
+                 will be stored but ignored."
+             ::= { wsmPortEntry 6 }
+
+         wsmPortFunctionType OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      frameType(1), -- Supports Framing (e.g. HDLC/Frame Relay)
+                      cellType(2),  -- Supports ATM
+                      cbrType(3)    -- Supports Constant Bit rate to ATM (AAL1)
+                      }
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The functional capability of the port.
+                 
+                 This allows the Manager code to determine the
+                 capabilities of the port so the proper
+                 data can be managed based on the functions
+                 the WAN port can provide.
+
+                 A 'frameType' port supports layer 2 protocols such
+                 as HDLC and Frame Relay.
+
+                 A 'cellType' performs ATM interface functions such
+                 as ATM T1 UNI interface.
+
+                 A 'cbrType' port is used to perform Bit to Cell Conversion
+                 (AAL1)."
+             ::= { wsmPortEntry 7 }
+ 
+         wsmPortProtocol OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      none(1), 
+                      frameRelay(2),
+                      ppp(3)         
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The layer 2 protocol of the port.  
+
+                 This parameter only applies when wsmPortFunctionType
+                 is equal to frameType(1).
+
+                 For ports that don't support this (e.g. Circuit Emulation T1
+                 ports) only a value of none(1) is supported.  
+
+                 For ports that support upper layer protocols (frameType ports)
+                 a value other than none must be used."
+             ::= { wsmPortEntry 8 }
+
+         wsmPortIfIndex OBJECT-TYPE
+             SYNTAX   INTEGER 
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The ifIndex of the WAN port.  
+
+                 This parameter is used in order to get the physical
+                 port Index used for SNMP standard MIBs that 
+                 use ifIndex instead of slot/port."
+             ::= { wsmPortEntry 9 }
+
+         wsmPortT1E1StartingTimeSlot OBJECT-TYPE
+             SYNTAX   INTEGER (1..31)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "Starting TimeSlot for Fractional T1E1 board.
+                 This is only use for Fractional T1E1 board type.
+                 Valid Range: T1: 1..24
+                              E1: 1..31 (May need to skip 16)
+                              The valid range may be effected by
+                              wsmPortT1E1NumberOfTimeSlot too."
+             ::= { wsmPortEntry 10 }
+
+         wsmPortT1E1NumberOfTimeSlot OBJECT-TYPE
+             SYNTAX   INTEGER (1..31)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "Number of TimeSlot for Fractional T1E1 board.
+                 This is only use for Fractional T1E1 board type.
+                 Valid Range: T1: 1..24
+                              E1: 1..31
+                              The valid range may be effected by
+                              wsmPortT1E1NumberOfTimeSlot too."
+             ::= { wsmPortEntry 11 }
+
+     --		The Link Group
+
+     --  This table is currently implemented to support PPP and
+     --  multilink PPP over both serial ports, fractional T1/E1
+     --  ports and ISDN calls.  It may be used in the future
+     --  to support other protocols (e.g. Frame Relay over ISDN).
+     --
+     --  It is not and will never be implemented for circuit
+     --  emulation ports.
+     --
+
+
+         linkxTable   OBJECT-TYPE
+	    SYNTAX   SEQUENCE OF LinkxEntry 
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"A table of WAN link(s) configuration information." 
+            ::= { wsmLinkGroup 1 }
+
+         linkxEntry   OBJECT-TYPE
+            SYNTAX   LinkxEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"An entry in the WAN link Configuration table, 
+                 containing information about a single link's
+                 configuration." 
+            INDEX   { linkxPeerID, linkxIfIndex }
+            ::= { linkxTable 1 }
+
+         LinkxEntry ::=
+             SEQUENCE {
+                 linkxPeerID
+                     INTEGER,
+                 linkxIfIndex
+                     INTEGER,
+                 linkxDescription
+                     DisplayString,
+	         linkxAdminStatus
+                     INTEGER,
+                 linkxType
+                     INTEGER,
+                 linkxSlot
+                     INTEGER,
+                 linkxPort
+                     INTEGER,
+                 linkxMode
+                     INTEGER
+         }
+
+         linkxPeerID OBJECT-TYPE
+             SYNTAX   INTEGER
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The peer ID.  This is used as a unique
+                 ID to identify a remote entity and to associate
+                 links to it.  For example, for 'normal' PPP, there
+                 is one entry in the link table.  For Multilink
+                 PPP there are one or more multiple links.
+                 In either case the Link table is indexed
+                 by Link index (one per link) and by Peer ID.
+                 When one or more entrys in the link table
+                 has the same Peer ID, then these entries
+                 form a group for use either for Multilink
+                 PPP, or as a rotary group."
+             ::= { linkxEntry 1 }
+
+         linkxIfIndex OBJECT-TYPE
+             SYNTAX   INTEGER
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The ifIndex of the Link.  This is used as a unique
+                 ID to identify an individual WAN link entity."
+             ::= { linkxEntry 2 }
+
+         linkxDescription OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A description for this WAN link."
+             ::= { linkxEntry 3 }
+
+	 linkxAdminStatus OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      enabled(1),
+                      disabled(2),
+                      delete(3)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "This object controls the Administrative Status
+                 of this WAN Link Entity.  Enabled will allow the
+                 Link Entity to operate.  Disabled will 
+                 disable the Link Entity without deleting it.
+                 Delete will disable the Link entity and delete
+                 the PPP configuration record."
+             ::= { linkxEntry 4 }
+
+	 linkxType OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      wsmPort(1),
+                      isdnCall(2)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The type of link.  A wsmPort type is for
+                 WSM serial and Fractional T1 ports.  An
+                 ISDN call is for incoming or outgoing
+                 ISDN calls.  Additional information
+                 can then be found in Xylan and Standard
+                 MIBs based on the type of the link."
+             ::= { linkxEntry 5 }
+
+	 linkxSlot OBJECT-TYPE
+             SYNTAX   INTEGER (0..9)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The slot that is Link is on or zero if the
+                 link is not tied to a given slot (e.g.
+                 for ISDN incoming calls).
+
+                 If type is wsmPort(1), this must be a non-zero
+                 value."
+             ::= { linkxEntry 6 }
+
+	 linkxPort OBJECT-TYPE
+             SYNTAX   INTEGER (0..8)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The port that is Link is on or zero if the
+                 link is not tied to a given port (e.g.
+                 for ISDN incoming calls or Multilink
+                 PPP that requires to run Multilink with
+                 combined serial ports and ISDN calls on
+                 the same slot, but not necessarily fixed
+                 to a given ISDN port on that slot).
+
+                 If type is wsmPort(1), this must be a non-zero
+                 value."
+             ::= { linkxEntry 7 }
+
+	 linkxMode OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      ondemand(1),
+                      backup(2)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "This object define whether the given link is to be
+                 a On-Demand Link or it is use for Backup."
+             ::= { linkxEntry 8 }
+END

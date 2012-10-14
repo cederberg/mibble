@@ -1,0 +1,694 @@
+ 
+     XYLAN-IPX-MIB DEFINITIONS ::= BEGIN
+
+     --  RCSID information
+
+     --  $RCSfile: xylan-ipx.mib,v $
+     --  $Revision: 1.10 $		$State: Exp $
+     --  $Date: 1998/08/28 16:18:53 $
+     --  $Author: jchriste $
+
+
+     --  xylan-ipx.mib
+     --  Revision: 1.00
+     --  Date: Feb 6, 1995
+
+     --  Alcatel Internetworking, Inc.
+     --  26801 W. Agoura Road
+     --  Calabasas, CA 91301
+     --  (818) 880-3500
+     --  support@ind.alcatel.com
+
+     --  This module provides authoritative definitions for Alcatel Internetworking, Inc.
+     --  enterprise-specific IPX MIB.
+
+     --  This module will be extended, as needed.
+
+
+     --  Alcatel Internetworking, Inc. reserves the right to make changes in 
+     --  specification and other information contained in this document 
+     --  without prior notice.  The reader should consult Alcatel Internetworking,
+     --  Inc. to determine whether any such changes have been made.
+     --  Current MIBs are availible from the following URLs:
+     --			ftp://ftp.ind.alcatel.com/pub/products/mibs
+     --			http://www.ind.alcatel.com
+
+     --  In no event shall Alcatel Internetworking, Inc. be liable for any incidental, 
+     --  indirect, special, or consequential damages whatsoever (including 
+     --  but not limited to lost profits) arising out of or related to this
+     --  document or the information contained in it, even if Alcatel Internetworking,
+     --  Inc. has been advised of, known, or should have known, the 
+     --  possibility of such damages.
+     --  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+     --  parties a non-exclusive license to use this Specification in connection
+     --  with the management of Alcatel Internetworking, Inc. products.
+
+     --  Copyright (C) 1995, Alcatel Internetworking, Inc. All Rights Reserved.
+
+     
+     	IMPORTS
+		OBJECT-TYPE
+			FROM RFC-1212
+	        xylanIpxArch
+			FROM XYLAN-BASE-MIB 
+			;
+
+     xylanIpxRoutingGroup         OBJECT IDENTIFIER ::= { xylanIpxArch 1 }
+     xylanIpxFilterGroup          OBJECT IDENTIFIER ::= { xylanIpxArch 2 }
+     xylanIpxWatchdogSpoofGroup   OBJECT IDENTIFIER ::= { xylanIpxArch 3 }
+     xylanIpxSerialFilterGroup    OBJECT IDENTIFIER ::= { xylanIpxArch 4 }
+     xylanSpxKeepaliveSpoofGroup  OBJECT IDENTIFIER ::= { xylanIpxArch 5 }
+     xylanIpxType20Group          OBJECT IDENTIFIER ::= { xylanIpxArch 6 }
+     xylanIpxTimerGroup           OBJECT IDENTIFIER ::= { xylanIpxArch 7 }
+     xylanIpxDefRouteGroup        OBJECT IDENTIFIER ::= { xylanIpxArch 8 }
+     xylanIpxExtGroup             OBJECT IDENTIFIER ::= { xylanIpxArch 9 }
+   
+-- Static Routes Table    
+--   This table contains the information about all the static routes    
+--   defined.  There may be more than one static route to any given    
+--   destination.  Only the route currently being used will also be                 
+--   present in the Destination Table defined above.    
+
+xylanIpxStaticRouteTable OBJECT-TYPE 
+  SYNTAX      SEQUENCE OF IPXStaticRouteEntry
+  ACCESS      not-accessible    
+  STATUS      mandatory    
+  DESCRIPTION "The Static Routes table contains information about all    
+               destinations reached via statically configured routes."
+  ::= {xylanIpxRoutingGroup 1}
+
+
+xylanIpxStaticRouteEntry OBJECT-TYPE    
+  SYNTAX      IPXStaticRouteEntry    
+  ACCESS      not-accessible
+  STATUS      mandatory
+  DESCRIPTION "Each entry corresponds to one static route."    
+  INDEX       {
+              xylanIpxStaticRouteNetNum    
+              }
+  ::= {xylanIpxStaticRouteTable 1}
+
+IPXStaticRouteEntry ::= SEQUENCE {
+                   xylanIpxStaticRouteNetNum
+                      OCTET STRING (SIZE(4)),
+		   xylanIpxStaticRouteAdminState
+		      INTEGER,
+                   xylanIpxStaticRouteNextHopNet
+		      OCTET STRING (SIZE(4)),
+                   xylanIpxStaticRouteNextHopNode
+		      OCTET STRING (SIZE(6)),
+                   xylanIpxStaticRouteTicks
+                      INTEGER,
+                   xylanIpxStaticRouteHopCount
+                      INTEGER
+                   }
+                          
+xylanIpxStaticRouteNetNum OBJECT-TYPE    
+  SYNTAX      OCTET STRING (SIZE(4))
+  ACCESS      read-write
+  STATUS      mandatory
+  DESCRIPTION "The IPX network number of the route's destination."
+  ::= {xylanIpxStaticRouteEntry 1}
+
+xylanIpxStaticRouteAdminState OBJECT-TYPE
+  SYNTAX  INTEGER 	{
+			active (1),
+			delete (2)
+			}
+  ACCESS  read-write
+  STATUS  mandatory
+  DESCRIPTION   "The current status of this route.  active (1) means
+		 the route is functioning, delete (2) tell SNMP to 
+		 delete the route "
+  ::= { xylanIpxStaticRouteEntry 2 }
+
+xylanIpxStaticRouteNextHopNet OBJECT-TYPE
+  SYNTAX      OCTET STRING (SIZE(4))
+  ACCESS      read-write    
+  STATUS      mandatory    
+  DESCRIPTION "The IPX network number of the router used to
+               reach the first hop in the static route."
+  ::= {xylanIpxStaticRouteEntry 3}
+
+xylanIpxStaticRouteNextHopNode OBJECT-TYPE
+  SYNTAX      OCTET STRING (SIZE(6))
+  ACCESS      read-write    
+  STATUS      mandatory    
+  DESCRIPTION "The IPX node number of the router used to
+               reach the first hop in the static route."
+  ::= {xylanIpxStaticRouteEntry 4}
+
+xylanIpxStaticRouteTicks OBJECT-TYPE    
+  SYNTAX      INTEGER                         
+  ACCESS      read-only    
+  STATUS      mandatory    
+  DESCRIPTION "The delay, in ticks, to reach the route's destination."
+  ::= {xylanIpxStaticRouteEntry 5}
+
+xylanIpxStaticRouteHopCount OBJECT-TYPE        
+  SYNTAX      INTEGER    
+  ACCESS      read-only    
+  STATUS      mandatory    
+  DESCRIPTION "The number of hops necessary to reach the destination."
+  ::= {xylanIpxStaticRouteEntry 6}
+
+
+-- RIP/SAP Filter Table
+--   This table contains the information about all of the IPX RIP/SAP    
+--   filters that have been defined.  
+
+xylanIpxRipSapFilterTable OBJECT-TYPE
+   SYNTAX	SEQUENCE OF IPXRipSapFilterEntry
+   ACCESS	not-accessible
+   STATUS	mandatory
+   DESCRIPTION	"The IPX Rip/Sap Filter Table contains information about
+		all filters that have been defined."
+   ::= {xylanIpxFilterGroup 1}
+
+xylanIpxRipSapFilterEntry OBJECT-TYPE
+   SYNTAX	IPXRipSapFilterEntry
+   ACCESS	not-accessible
+   STATUS	mandatory
+   DESCRIPTION	"Each entry corresponds to one filter."
+   INDEX	{
+		xylanIpxRipSapFilterNum
+		}
+   ::= {xylanIpxRipSapFilterTable 1}
+
+IPXRipSapFilterEntry ::= SEQUENCE {
+		xylanIpxRipSapFilterNum
+		   INTEGER,
+		xylanIpxRipSapFilterAdminState
+		   INTEGER,
+		xylanIpxRipSapFilterType
+		   INTEGER,
+		xylanIpxRipSapFilterNet
+		   OCTET STRING (SIZE(4)),
+		xylanIpxRipSapFilterNetMask
+		   OCTET STRING (SIZE(4)),
+		xylanIpxRipSapFilterNode
+		   OCTET STRING (SIZE(6)),
+		xylanIpxRipSapFilterNodeMask
+		   OCTET STRING (SIZE(6)),
+		xylanIpxRipSapFilterSvcType
+		   INTEGER,
+		xylanIpxRipSapFilterMode
+		   INTEGER,
+		xylanIpxRipSapFilterGroupId
+		   INTEGER,
+		xylanIpxRipSapFilterVlanId
+		   INTEGER,
+		xylanIpxRipSapFilterWanType
+		   INTEGER,
+		xylanIpxRipSapFilterSlot
+		   INTEGER,
+		xylanIpxRipSapFilterPort
+		   INTEGER,
+		xylanIpxRipSapFilterVc
+		   INTEGER,
+		xylanIpxRipSapFilterPeerId
+		   INTEGER
+                }
+
+xylanIpxRipSapFilterNum OBJECT-TYPE
+   SYNTAX	INTEGER
+   ACCESS	read-only
+   STATUS	mandatory
+   DESCRIPTION	"The number identifying this instance.  This number can
+		 be used when specifying a filter to delete."
+   ::= {xylanIpxRipSapFilterEntry 1}
+
+xylanIpxRipSapFilterAdminState OBJECT-TYPE
+   SYNTAX	INTEGER        {
+			       active (1),
+			       delete (2)
+			       }
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The current status of this filter, active (1) means
+		 the filter is functioning, delete (2) tells SNMP to
+		 delete the filter "
+   ::= {xylanIpxRipSapFilterEntry 2}
+
+xylanIpxRipSapFilterType OBJECT-TYPE
+   SYNTAX	INTEGER        {
+			       sap-output (1),
+			       sap-input  (2),
+			       gns-output (3),
+			       rip-output (4),
+			       rip-input  (5)
+			       }
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The type of filter. "
+   ::= {xylanIpxRipSapFilterEntry 3}
+
+xylanIpxRipSapFilterNet OBJECT-TYPE
+   SYNTAX	OCTET STRING (SIZE(4))
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The IPX Network Address to filter.  A network address
+                 of all 0's is used to denote All Networks."
+   ::= {xylanIpxRipSapFilterEntry 4}
+
+xylanIpxRipSapFilterNetMask OBJECT-TYPE
+   SYNTAX	OCTET STRING (SIZE(4))
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The IPX Network Mask to be used."
+   ::= {xylanIpxRipSapFilterEntry 5}
+
+xylanIpxRipSapFilterNode OBJECT-TYPE
+   SYNTAX	OCTET STRING (SIZE(6))
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The IPX node address to filter. A node address
+                 of all 0's is used to denote All Nodes."
+   ::= {xylanIpxRipSapFilterEntry 6}
+
+xylanIpxRipSapFilterNodeMask OBJECT-TYPE
+   SYNTAX	OCTET STRING (SIZE(6))
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The IPX node address mask to be used."
+   ::= {xylanIpxRipSapFilterEntry 7}
+
+xylanIpxRipSapFilterSvcType OBJECT-TYPE
+   SYNTAX	INTEGER	(0..65535)
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The SAP service type on which to filter.  The SAP
+		 service types are defined by Novell.  A value of
+		 ALL (65535) indicates that all services will be filtered."
+   ::= {xylanIpxRipSapFilterEntry 8}
+
+xylanIpxRipSapFilterMode OBJECT-TYPE
+   SYNTAX	INTEGER        {
+			       allow (1),
+			       block (2)
+			       }
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The action defined by this filter. block (1) means
+		 packets matching this filter will be blocked, and
+		 allow (0) means that packets matching this filter
+		 will be allowed."
+   ::= {xylanIpxRipSapFilterEntry 9}
+
+xylanIpxRipSapFilterGroupId OBJECT-TYPE
+   SYNTAX	INTEGER
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The GroupId can be used to apply this filter to a 
+		 particular interface.  A GroupId of 0 means that the
+		 filter is global."
+   ::= {xylanIpxRipSapFilterEntry 10}
+
+xylanIpxRipSapFilterVlanId OBJECT-TYPE
+   SYNTAX	INTEGER
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The VlanId for this filter."
+   ::= {xylanIpxRipSapFilterEntry 11}
+
+xylanIpxRipSapFilterWanType OBJECT-TYPE
+   SYNTAX       INTEGER      {
+                             not-used (1),
+                             frame-relay (2),
+                             ppp (3)
+                             }
+   ACCESS       read-write
+   STATUS       mandatory
+   DESCRIPTION  "If the Vlan has Wan Routing enabled, this object
+                 can be used to specify whether this interface is
+                 a Frame Relay service or a PPP service.  This will
+                 be used to determine whether the slot/port/vc or
+                 PeerId fields are applicable to this entry.  A value
+                 of 1 implies that this field is not used. (The
+                 interface is not a WAN interface or the filter is
+                 not being applied to a specific VC or PeerId.) A
+                 value of 2 indicates that this is a Frame Relay service
+                 in which case the slot/port/vc fields can be used to
+                 apply the filter to a specific VC.  A value of 3
+                 indicates that this is a PPP service and the Peer ID
+                 field may be used."
+   ::= {xylanIpxRipSapFilterEntry 12}
+
+xylanIpxRipSapFilterSlot OBJECT-TYPE
+   SYNTAX	INTEGER
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION  "If the WanType specifies a Frame Relay service, the
+                 slot/port/vc can be used to apply this filter to a
+                 particular Virtual Circuit (VC)."
+   ::= {xylanIpxRipSapFilterEntry 13}
+
+xylanIpxRipSapFilterPort OBJECT-TYPE
+   SYNTAX	INTEGER
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION  "If the WanType specifies a Frame Relay service, the
+                 slot/port/vc can be used to apply this filter to a
+                 particular Virtual Circuit (VC)."
+   ::= {xylanIpxRipSapFilterEntry 14}
+
+xylanIpxRipSapFilterVc OBJECT-TYPE
+   SYNTAX	INTEGER
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION  "If the WanType specifies a Frame Relay service, the
+                 slot/port/vc can be used to apply this filter to a
+                 particular Virtual Circuit (VC)."
+   ::= {xylanIpxRipSapFilterEntry 15}
+
+xylanIpxRipSapFilterPeerId OBJECT-TYPE
+   SYNTAX	INTEGER
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION  "If the WanType specifies a PPP service, the
+                 PeerId can be used to apply this filter to a
+                 particular Peer."
+   ::= {xylanIpxRipSapFilterEntry 16}
+
+--   This table contains the information about the IPX Watchdog Spoofing   
+--   status of all of the WAN routing services.
+
+xylanIpxWatchdogSpoofTable OBJECT-TYPE
+   SYNTAX	SEQUENCE OF IPXWatchdogSpoofEntry
+   ACCESS	not-accessible
+   STATUS	mandatory
+   DESCRIPTION	"The IPX Watchdog Spoofing Table contains information about
+		all of the WAN routing services and their current IPX spoofing
+		status."
+   ::= {xylanIpxWatchdogSpoofGroup 1}
+
+xylanIpxWatchdogSpoofEntry OBJECT-TYPE
+   SYNTAX	IPXWatchdogSpoofEntry
+   ACCESS	not-accessible
+   STATUS	mandatory
+   DESCRIPTION	"Each entry corresponds to one WAN routing service."
+   INDEX	{
+		xylanIpxWatchdogSpoofGroupId
+		}
+   ::= {xylanIpxWatchdogSpoofTable 1}
+
+IPXWatchdogSpoofEntry ::= SEQUENCE {
+		xylanIpxWatchdogSpoofGroupId
+		   INTEGER,
+		xylanIpxWatchdogSpoofMode
+		   INTEGER
+                }
+
+xylanIpxWatchdogSpoofGroupId OBJECT-TYPE
+   SYNTAX	INTEGER	(0..65535)
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The GroupId of the WAN routing service that this entry
+		 applies to."
+   ::= {xylanIpxWatchdogSpoofEntry 1}
+
+xylanIpxWatchdogSpoofMode OBJECT-TYPE
+   SYNTAX	INTEGER        {
+			       disabled (1),
+			       enabled  (2)
+			       }
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"This controls whether the IPX Watchdog Spoofing is
+		 enabled or disabled.  When enabled, this routing service
+		 will spoof IPX Watchdog packets.  When disabled,
+		 this routing service will not spoof IPX Watchdog packets."
+   ::= {xylanIpxWatchdogSpoofEntry 2}
+
+--   This table contains the information about the IPX Serialization   
+--   Filtering Status of all of the WAN routing services.
+
+xylanIpxSerialFilterTable OBJECT-TYPE
+   SYNTAX	SEQUENCE OF IPXSerialFilterEntry
+   ACCESS	not-accessible
+   STATUS	mandatory
+   DESCRIPTION	"The IPX Serialization Filtering Table contains 
+		information about all of the WAN routing services and their 
+		current IPX Serialization Filtering status."
+   ::= {xylanIpxSerialFilterGroup 1}
+
+xylanIpxSerialFilterEntry OBJECT-TYPE
+   SYNTAX	IPXSerialFilterEntry
+   ACCESS	not-accessible
+   STATUS	mandatory
+   DESCRIPTION	"Each entry corresponds to one WAN routing service."
+   INDEX	{
+		xylanIpxSerialFilterGroupId
+		}
+   ::= {xylanIpxSerialFilterTable 1}
+
+IPXSerialFilterEntry ::= SEQUENCE {
+		xylanIpxSerialFilterGroupId
+		   INTEGER,
+		xylanIpxSerialFilterMode
+		   INTEGER
+                }
+
+xylanIpxSerialFilterGroupId OBJECT-TYPE
+   SYNTAX	INTEGER	(0..65535)
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The GroupId of the WAN routing service that this entry
+		 applies to."
+   ::= {xylanIpxSerialFilterEntry 1}
+
+xylanIpxSerialFilterMode OBJECT-TYPE
+   SYNTAX	INTEGER        {
+			       disabled (1),
+			       enabled  (2)
+			       }
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"This controls whether the IPX Serialization Filtering is
+		 enabled or disabled.  When enabled, this routing service
+		 will filter IPX Serialization packets.  When disabled,
+		 this routing service will not filter IPX Serialization 
+                 packets."
+   ::= {xylanIpxSerialFilterEntry 2}
+
+--   This table contains the information about the SPX Keepalive Spoofing   
+--   status of all of the WAN routing services.
+
+xylanSpxKeepaliveSpoofTable OBJECT-TYPE
+   SYNTAX	SEQUENCE OF SPXKeepaliveSpoofEntry
+   ACCESS	not-accessible
+   STATUS	mandatory
+   DESCRIPTION	"The SPX Keepalive Spoofing Table contains information about
+		all of the WAN routing services and their current SPX Keepalive
+		spoofing status."
+   ::= {xylanSpxKeepaliveSpoofGroup 1}
+
+xylanSpxKeepaliveSpoofEntry OBJECT-TYPE
+   SYNTAX	SPXKeepaliveSpoofEntry
+   ACCESS	not-accessible
+   STATUS	mandatory
+   DESCRIPTION	"Each entry corresponds to one WAN routing service."
+   INDEX	{
+		xylanSpxKeepaliveSpoofGroupId
+		}
+   ::= {xylanSpxKeepaliveSpoofTable 1}
+
+SPXKeepaliveSpoofEntry ::= SEQUENCE {
+		xylanSpxKeepaliveSpoofGroupId
+		   INTEGER,
+		xylanSpxKeepaliveSpoofMode
+		   INTEGER
+                }
+
+xylanSpxKeepaliveSpoofGroupId OBJECT-TYPE
+   SYNTAX	INTEGER	(0..65535)
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"The GroupId of the WAN routing service that this entry
+		 applies to."
+   ::= {xylanSpxKeepaliveSpoofEntry 1}
+
+xylanSpxKeepaliveSpoofMode OBJECT-TYPE
+   SYNTAX	INTEGER        {
+			       disabled (1),
+			       enabled  (2)
+			       }
+   ACCESS	read-write
+   STATUS	mandatory
+   DESCRIPTION	"This controls whether the SPX Keepalive Spoofing is
+		 enabled or disabled.  When enabled, this routing service
+		 will spoof SPX Keepalive packets.  When disabled,
+		 this routing service will not spoof SPX Keepalive packets."
+   ::= {xylanSpxKeepaliveSpoofEntry 2}
+
+--   This table contains the information about the IPX Type 20 packet
+--   control for NetBios over IPX control.
+
+xylanIpxType20Table OBJECT-TYPE
+   SYNTAX       SEQUENCE OF IPXType20Entry
+   ACCESS       not-accessible
+   STATUS       mandatory
+   DESCRIPTION  "The IPX Type 20 packets allow NetBios to use IPX.  This
+                 can enable the passing of packet on each interface."
+   ::= {xylanIpxType20Group 1}
+
+xylanIpxType20Entry OBJECT-TYPE
+   SYNTAX       IPXType20Entry
+   ACCESS       not-accessible
+   STATUS       mandatory
+   DESCRIPTION  "Each entry corresponds to one Virtual LAN."
+   INDEX        {
+                xylanIpxType20VlanId
+                }
+   ::= {xylanIpxType20Table 1}
+
+IPXType20Entry ::= SEQUENCE {
+                xylanIpxType20VlanId
+                   INTEGER,
+                xylanIpxType20Mode
+                   INTEGER
+                }
+
+xylanIpxType20VlanId OBJECT-TYPE
+   SYNTAX       INTEGER (0..65535)
+   ACCESS       read-write
+   STATUS       mandatory
+   DESCRIPTION  "The VLAN Id of the routing interface that this entry
+                 applies to."
+   ::= {xylanIpxType20Entry 1}
+
+xylanIpxType20Mode OBJECT-TYPE
+   SYNTAX       INTEGER        {
+                               disabled (1),
+                               enabled  (2)
+                               }
+   ACCESS       read-write
+   STATUS       mandatory
+   DESCRIPTION  "This controls whether IPX Type 20 packet are
+                 enabled or disabled.  When enabled, this routing interface
+                 will forward Type 20 packets.  When disabled,
+                 the packets will not."
+   ::= {xylanIpxType20Entry 2}
+
+--   This table contains the information about the IPX RIP and SAP timer
+--   control.
+
+xylanIpxTimerTable OBJECT-TYPE
+   SYNTAX       SEQUENCE OF IPXTimerEntry
+   ACCESS       not-accessible
+   STATUS       mandatory
+   DESCRIPTION  "The IPX Timer allows adjustable variation of the RIP and SAP
+                timers."
+   ::= {xylanIpxTimerGroup 1}
+
+xylanIpxTimerEntry OBJECT-TYPE
+   SYNTAX       IPXTimerEntry
+   ACCESS       not-accessible
+   STATUS       mandatory
+   DESCRIPTION  "Each entry corresponds to one Virtual LAN."
+   INDEX        {
+                xylanIpxTimerVlanId
+                }
+   ::= {xylanIpxTimerTable 1}
+
+IPXTimerEntry ::= SEQUENCE {
+                xylanIpxTimerVlanId
+                   INTEGER,
+                xylanIpxTimerRip
+                   INTEGER,
+                xylanIpxTimerSap
+                   INTEGER
+                }
+
+xylanIpxTimerVlanId OBJECT-TYPE
+   SYNTAX       INTEGER (0..65535)
+   ACCESS       read-write
+   STATUS       mandatory
+   DESCRIPTION  "The VLAN Id of the routing interface that this entry
+                 applies to."
+   ::= {xylanIpxTimerEntry 1}
+
+xylanIpxTimerSap OBJECT-TYPE
+   SYNTAX       INTEGER (1..180)
+   ACCESS       read-write
+   STATUS       mandatory
+   DESCRIPTION  "This controls whether IPX SAP packet timer duration."
+   ::= {xylanIpxTimerEntry 2}
+
+xylanIpxTimerRip OBJECT-TYPE
+   SYNTAX       INTEGER (1..180)
+   ACCESS       read-write
+   STATUS       mandatory
+   DESCRIPTION  "This controls whether IPX RIP packet timer duration."
+   ::= {xylanIpxTimerEntry 3}
+
+--   This table contains the information about the default route
+--   for IPX.
+
+xylanIpxDefRouteTable OBJECT-TYPE
+  SYNTAX      SEQUENCE OF IPXDefRouteEntry
+  ACCESS      not-accessible
+  STATUS      mandatory
+  DESCRIPTION "The default route table contains information about
+               the destinations to which all packets are sent when the
+               destination network is not known."
+  ::= {xylanIpxDefRouteGroup 1}
+
+
+xylanIpxDefRouteEntry OBJECT-TYPE
+  SYNTAX      IPXDefRouteEntry
+  ACCESS      not-accessible
+  STATUS      mandatory
+  DESCRIPTION "One table entry per switch for default route."
+  INDEX       {
+              xylanIpxDefRouteNum
+              }
+  ::= {xylanIpxDefRouteTable 1}
+
+IPXDefRouteEntry ::= SEQUENCE {
+                   xylanIpxDefRouteNum
+                      INTEGER,
+                   xylanIpxDefRouteNet
+                      OCTET STRING (SIZE(4)),
+                   xylanIpxDefRouteNode
+                      OCTET STRING (SIZE(6))
+                   }
+
+
+xylanIpxDefRouteNum OBJECT-TYPE
+  SYNTAX      INTEGER
+  ACCESS      read-write
+  STATUS      mandatory
+  DESCRIPTION "The table row ID will always be 1."
+  ::= {xylanIpxDefRouteEntry 1}
+
+xylanIpxDefRouteNet OBJECT-TYPE
+  SYNTAX      OCTET STRING (SIZE(4))
+  ACCESS      read-write
+  STATUS      mandatory
+  DESCRIPTION "The IPX network number of the router used to
+               reach the first hop in the default route."
+  ::= {xylanIpxDefRouteEntry 2}
+
+xylanIpxDefRouteNode OBJECT-TYPE
+  SYNTAX      OCTET STRING (SIZE(6))
+  ACCESS      read-write
+  STATUS      mandatory
+  DESCRIPTION "The IPX node number of the router used to
+               reach the first hop in the default route."
+  ::= {xylanIpxDefRouteEntry 3}
+
+
+--   This table contains the information about the extended RIP/SAP
+--   messages for IPX.
+
+
+xylanIpxExtMsg OBJECT-TYPE
+  SYNTAX      INTEGER
+  ACCESS      read-write
+  STATUS      mandatory
+  DESCRIPTION " A boolean variable that indicated whether extended RIP/SAP
+               packets are sent and received."
+  ::= {xylanIpxExtGroup 1}
+
+END

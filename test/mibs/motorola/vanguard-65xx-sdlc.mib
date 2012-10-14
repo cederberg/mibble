@@ -1,0 +1,1917 @@
+        -- Version 1.8, modified   06/01/98
+
+        SDLC-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+                mgmt, NetworkAddress, IpAddress, Counter, Gauge,
+                    TimeTicks
+                    FROM RFC1155-SMI
+                OBJECT-TYPE
+                    FROM RFC-1212;
+
+               -- Codex MIB Group definitions
+
+                         codex OBJECT IDENTIFIER ::= { enterprises 449 }
+            cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                       cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+         cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+       cdx6500CfgProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 1 }
+   cdx6500PCTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 1 }
+cdx6500PCTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 3 }
+
+             cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+      cdx6500StatProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 1 }
+   cdx6500PSTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 1 }
+cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 3 }
+
+               cdx6500Controls OBJECT IDENTIFIER ::= { cdx6500 4 }
+               cdx6500ContSDLC OBJECT IDENTIFIER ::= { cdx6500Controls 5 }
+
+        -- Textual conventions
+        Counter16  ::= INTEGER (0..65535)
+
+        DisplayString ::= OCTET STRING
+        -- This data type is used to model textual information taken
+        -- from the NVT ASCII character set. By convention, objects
+        -- with this syntax are declared as having SIZE (0..255)
+
+        -- The SDLC Port Configuration Table
+        -- This table contains Configuration paramaters 
+        -- for the SDLC Port table.
+                        
+        cdx6500PCTSDLCPortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTSDLCPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the configuration parameters relevant
+                 to the SDLC Port table."
+        ::= { cdx6500PCTPortProtocolGroup 12 }
+                
+        cdx6500PCTSDLCPortEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTSDLCPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of SDLC Port configuration parameters."
+            INDEX { cdx6500sdlcpCfgPortNum }
+        ::= { cdx6500PCTSDLCPortTable 1 }
+                
+        Cdx6500PCTSDLCPortEntry ::=
+            SEQUENCE {
+                cdx6500sdlcpCfgPortNum
+                    INTEGER,
+                cdx6500sdlcpSubType
+                    INTEGER,
+                cdx6500sdlcpTxCoding
+                    INTEGER,
+                cdx6500sdlcpLineType
+                    INTEGER,
+                cdx6500sdlcpTxType
+                    INTEGER,
+                cdx6500sdlcpSendSigDelay
+                    INTEGER,
+                cdx6500sdlcpClock
+                    INTEGER,
+                cdx6500sdlcpClockSpeed
+                    INTEGER,
+                cdx6500sdlcpNumControllers
+                    INTEGER,
+                cdx6500sdlcpPollTimer
+                    INTEGER,
+                cdx6500sdlcpPollFrequency
+                    INTEGER,
+                cdx6500sdlcpTries
+                    INTEGER,
+                cdx6500sdlcpOptions
+                    DisplayString,
+                cdx6500sdlcpPortAddress
+                    DisplayString,
+                cdx6500sdlcpPortOptions
+                    DisplayString,
+                cdx6500sdlcpHPADResponseDelay
+                    INTEGER
+                }
+        
+        cdx6500sdlcpCfgPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies a specific port (physical port number) in the node."
+        ::= { cdx6500PCTSDLCPortEntry 1 }
+                
+        cdx6500sdlcpSubType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    hpad       (0),
+                    tpad       (1),
+                    newvalHpad (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the SDLC port subtype
+                 hpad - Host PAD.
+                 tpad - Terminal PAD.
+                 newvalHpad - same functionality as 'hpad', new enumeration
+                        added for RFC1155 compatibility."
+        ::= { cdx6500PCTSDLCPortEntry 2 }
+                        
+        cdx6500sdlcpTxCoding OBJECT-TYPE
+            SYNTAX INTEGER {
+                    nrz       (0),
+                    nrzi      (1),
+                    newvalNrz (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the data encoding used on the SDLC link.
+                 nrz  - Non Return to Zero
+                 nrzi - Non Return to Zero Inverted
+                 newvalNrz - same functionality as 'nrz', new enumeration
+                        added for RFC1155 compatibility."
+        ::= { cdx6500PCTSDLCPortEntry 3 }
+                        
+        cdx6500sdlcpLineType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    hdx       (0),
+                    fdx       (1),
+                    hdxdce    (2),
+                    newvalHdx (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Type of line, indicates whether half duplex or full duplex
+                 signals are being generated. 
+                 fdx  - communications occuring in both directions 
+                        simultaneously between devices.
+                 hdx  - transmission occuring in both directions, 
+                        but only one direction at a time. 
+                        This operation is not currently supported.
+                 hdxdce - (Half Duplex DCE) This is used on the HPAD when
+                        the port is a DCE and the port is interfacing
+                        directly to a FEP. The port detects RTS go HIGH,
+                        waits RTS TO CTS DELAY ms, and raises CTS.
+                 newvalHdx - same functionality as 'hdx', new enumeration added
+                        for RFC1155 compatibility."
+        ::= { cdx6500PCTSDLCPortEntry 4 }
+                        
+        cdx6500sdlcpTxType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    tws       (0),
+                    twa       (1),
+                    newvalTws (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the transmission mode used on the line.
+                 tws - Two way Simultaneout.
+                 twa - Two Way Alternate used by most controllers.
+                 newvalTws - same functionality as 'tws', new enumeration
+                       added for RFC1155 compatibility."
+        ::= { cdx6500PCTSDLCPortEntry 5 }
+                        
+        cdx6500sdlcpSendSigDelay OBJECT-TYPE
+            SYNTAX INTEGER {
+                    deprecatedObj (1)
+                    }
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "This object is replaced by cdx6500sdlcpHPADResponseDelay.
+                 This is a configurable delay that defines the amount
+                 of time that the HPAD delays before sending a response
+                 to the HOST. The delay is specified in milliseconds."
+        ::= { cdx6500PCTSDLCPortEntry 6 }
+                        
+        cdx6500sdlcpClock OBJECT-TYPE
+            SYNTAX INTEGER {
+                    int       (0),
+                    ext       (1),
+                    newvalInt (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "int - Internal clock source.
+                 ext - External clock source.
+                 newvalInt - same functionality as 'int', new enumeration
+                       added for RFC1155 compatibility."
+        ::= { cdx6500PCTSDLCPortEntry 7 }
+                        
+        cdx6500sdlcpClockSpeed OBJECT-TYPE
+            SYNTAX INTEGER (1200..80000)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the speed of the port in bits per second, when using
+                 internal clocking."
+        ::= { cdx6500PCTSDLCPortEntry 8 }
+                        
+        cdx6500sdlcpNumControllers OBJECT-TYPE
+            SYNTAX INTEGER (1..32)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the number of controllers (PU TYPE 1 or PU TYPE 2
+                 devices) on the SDLC line."
+        ::= { cdx6500PCTSDLCPortEntry 9 }
+                        
+        cdx6500sdlcpPollTimer OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Worst case delay for a slave to respond to a poll frame
+                 sent by the master, including modem turn around time, etc.
+                 Value in 10ths of second ( 30 = 3.0 seconds )."
+        ::= { cdx6500PCTSDLCPortEntry 10 }
+                        
+        cdx6500sdlcpPollFrequency OBJECT-TYPE
+            SYNTAX INTEGER (50..250)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time in milliseconds between polls when no data is exchanged."
+        ::= { cdx6500PCTSDLCPortEntry 11 }
+                        
+        cdx6500sdlcpTries OBJECT-TYPE
+            SYNTAX INTEGER (1..16)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of attempts to complete a transmission."
+        ::= { cdx6500PCTSDLCPortEntry 12 }
+                        
+        cdx6500sdlcpOptions OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(3..5))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Select options on this SDLC port as follows:
+                 NONE  - no option specified
+                 MARKi - port uses mark idle between frame exchanges
+                         (Required by System 36 - AS/400 series)
+                 DMs   - HPAD does not send DM in response to SNRM/XID 
+                         received from host. After call is accepted and 
+                         TPAD responds with QUA/QXID, HPAD will send UA/XID.
+                 DISCs - TPAD sends a DISC frame when station goes down.
+                         The DISC may be retransmitted up to Tries times,
+                         if the Cluster Controller does not respond, before 
+                         sending a SNRM.
+                 FFBF -  TPAD sends a broadcast XID.
+                         If the number of controllers configured is equal to 1 and
+                         the associated QLLC station table option is not XIDs
+                         the TPAD will poll with a broadcast address until a
+                         secondary station response address is received."
+        ::= { cdx6500PCTSDLCPortEntry 13 }
+                        
+        cdx6500sdlcpPortAddress OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..15))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "When an SDLC port makes a call, this address is inserted into
+                 the calling address field."
+        ::= { cdx6500PCTSDLCPortEntry 14 }
+                        
+        cdx6500sdlcpPortOptions OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(2..4))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specify any of the following port control options:
+                 NONE    - no option specified
+                 MB      - raise Pin 22 when the port becomes disabled"
+        ::= { cdx6500PCTSDLCPortEntry 15 }
+
+        cdx6500sdlcpHPADResponseDelay OBJECT-TYPE
+            SYNTAX INTEGER {
+                    msec0       (0),
+                    msec50      (51),
+                    msec100     (100),
+                    msec150     (150),
+                    msec200     (200),
+                    newvalMsec0 (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This object replaces cdx6500sdlcpSendSigDelay. 
+                 This is a configurable delay that defines the amount
+                 of time that the HPAD delays before sending a response
+                 to the HOST. The delay is specified in milliseconds.
+                 newvalMsec0 : same functionality as 'msec0', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500PCTSDLCPortEntry 16 }
+                        
+        -- The SDLC Port Statistics Table
+        -- This table contains Statistics paramaters 
+        -- for the SDLC Port table.
+                        
+        cdx6500PPSTSDLCPortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPSTSDLCPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the statistics parameters relevant to the 
+                 SDLC Port table."
+        ::= { cdx6500PSTPortProtocolGroup 12 }
+                        
+        cdx6500PPSTSDLCPortEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPSTSDLCPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of SDLC Port statistics parameters."
+            INDEX { cdx6500sdlcpStatsPortNum }
+        ::= { cdx6500PPSTSDLCPortTable 1 }
+                        
+        Cdx6500PPSTSDLCPortEntry ::=
+            SEQUENCE {
+                cdx6500sdlcpStatsPortNum
+                    INTEGER,
+                cdx6500sdlcpPortStatus
+                    INTEGER,
+                cdx6500sdlcpPortSpeed
+                    INTEGER,
+                cdx6500sdlcpCharInTotal
+                    Counter,
+                cdx6500sdlcpCharOutTotal
+                    Counter,
+                cdx6500sdlcpCharsInPerSec
+                    INTEGER,
+                cdx6500sdlcpCharsOutPerSec
+                    INTEGER,
+                cdx6500sdlcpFrameInTotal
+                    Counter,
+                cdx6500sdlcpFrameOutTotal
+                    Counter,
+                cdx6500sdlcpFramesInPerSec
+                    INTEGER,
+                cdx6500sdlcpFramesOutPerSec
+                    INTEGER,
+                cdx6500sdlcpStateChange
+                    DisplayString,
+                cdx6500sdlcpLinkDowns
+                    Counter16,
+                cdx6500sdlcpUtilizationIn
+                    INTEGER,
+                cdx6500sdlcpUtilizationOut
+                    INTEGER,
+                cdx6500sdlcpOverrunErrors
+                    Counter16,
+                cdx6500sdlcpUnderrunErrors
+                    Counter16,
+                cdx6500sdlcpCRCErrors
+                    Counter16,
+                cdx6500sdlcpPacketsQueued
+                    INTEGER,
+                cdx6500sdlcpRRInFrames
+                    Counter,
+                cdx6500sdlcpRROutFrames
+                    Counter,
+                cdx6500sdlcpRNRInFrames
+                    Counter,
+                cdx6500sdlcpRNROutFrames
+                    Counter,
+                cdx6500sdlcpSNRMInFrames
+                    Counter,
+                cdx6500sdlcpSNRMOutFrames
+                    Counter,
+                cdx6500sdlcpUAInFrames
+                    Counter,
+                cdx6500sdlcpUAOutFrames
+                    Counter,
+                cdx6500sdlcpDMInFrames
+                    Counter,
+                cdx6500sdlcpDMOutFrames
+                    Counter,
+                cdx6500sdlcpXIDInFrames
+                    Counter,
+                cdx6500sdlcpXIDOutFrames
+                    Counter,
+                cdx6500sdlcpREJInFrames
+                    Counter,
+                cdx6500sdlcpREJOutFrames
+                    Counter,
+                cdx6500sdlcpDISCInFrames
+                    Counter,
+                cdx6500sdlcpDISCOutFrames
+                    Counter,
+                cdx6500sdlcpRDInFrames
+                    Counter,
+                cdx6500sdlcpRDOutFrames
+                    Counter,
+                cdx6500sdlcpFRMRInFrames
+                    Counter,
+                cdx6500sdlcpFRMROutFrames
+                    Counter,
+                cdx6500sdlcpUPInFrames
+                    Counter,
+                cdx6500sdlcpUPOutFrames
+                    Counter,
+                cdx6500sdlcpTESTInFrames
+                    Counter,
+                cdx6500sdlcpTESTOutFrames
+                    Counter
+                }
+                        
+        cdx6500sdlcpStatsPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies a specific port (physical port number) in the node."
+        ::= { cdx6500PPSTSDLCPortEntry 1 }
+                        
+        cdx6500sdlcpPortStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    busyOut        (2),
+                    up             (3),
+                    down           (4),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the current port status.
+                 up       : At least one station is responding to polls.
+                 down     : None of the stattions are responding to polls.
+                 disabled : The port is disabled by the user.
+                 newvalDisabled : same functionality as 'disabled', new
+                            enumeration added for RFc1155 compatibility."
+        ::= { cdx6500PPSTSDLCPortEntry 2 }
+                        
+        cdx6500sdlcpPortSpeed OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The measured port speed in bits per second."
+        ::= { cdx6500PPSTSDLCPortEntry 3 }
+                        
+        cdx6500sdlcpCharInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of characters received until now, not 
+                 including all SDLC header characters."
+        ::= { cdx6500PPSTSDLCPortEntry 4 }
+                        
+        cdx6500sdlcpCharOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of characters transmitted until now, not 
+                 including all SDLC header characters."
+        ::= { cdx6500PPSTSDLCPortEntry 5 }
+                        
+        cdx6500sdlcpCharsInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The average number of characters received per second 
+                 during the previous minute."
+        ::= { cdx6500PPSTSDLCPortEntry 6 }
+                        
+        cdx6500sdlcpCharsOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The average number of characters transmitted per second 
+                 during the previous minute."
+        ::= { cdx6500PPSTSDLCPortEntry 7 }
+                        
+        cdx6500sdlcpFrameInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of SDLC frames received until now."
+        ::= { cdx6500PPSTSDLCPortEntry 8 }
+                        
+        cdx6500sdlcpFrameOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The total number of SDLC frames transmitted until now."
+        ::= { cdx6500PPSTSDLCPortEntry 9 }
+                        
+        cdx6500sdlcpFramesInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The average number of frames received per second 
+                 during the previous minute."
+        ::= { cdx6500PPSTSDLCPortEntry 10 }
+                        
+        cdx6500sdlcpFramesOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The average number of frames transmitted per second 
+                 during the previous minute."
+        ::= { cdx6500PPSTSDLCPortEntry 11 }
+
+        cdx6500sdlcpStateChange OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..20))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The date and time when the link entered the current state."
+        ::= { cdx6500PPSTSDLCPortEntry 12 }
+                        
+        cdx6500sdlcpLinkDowns OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of times link has made a transition from 
+                 the UP state to the DOWN state."
+        ::= { cdx6500PPSTSDLCPortEntry 13 }
+
+        cdx6500sdlcpUtilizationIn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates a percentage of the link resources currently 
+                 in use in the IN(from the line to the port) direction."
+        ::= { cdx6500PPSTSDLCPortEntry 14 }
+
+        cdx6500sdlcpUtilizationOut OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates a percentage of the link resources currently 
+                 in use in the OUT(from the port to the line) direction."
+        ::= { cdx6500PPSTSDLCPortEntry 15 }
+
+        cdx6500sdlcpOverrunErrors OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of overrun errors counted by the I/O driver.
+                 Overrun errors occur when received data is lost because 
+                 it cannot be processed by the CPU."
+        ::= { cdx6500PPSTSDLCPortEntry 16 }
+
+        cdx6500sdlcpUnderrunErrors OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of underrun errors counted by the I/O driver.
+                 Underrun errors occur when the transmission of a frame 
+                 cannot be completed because of momentary CPU overload."
+        ::= { cdx6500PPSTSDLCPortEntry 17 }
+
+        cdx6500sdlcpCRCErrors OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of CRC errors counted by the I/O driver."
+        ::= { cdx6500PPSTSDLCPortEntry 18 }
+
+        cdx6500sdlcpPacketsQueued OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of packets queued at the SDLC protocol layer 
+                 by the transmitter."
+        ::= { cdx6500PPSTSDLCPortEntry 19 }
+
+        cdx6500sdlcpRRInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of RR frames received until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 20 }
+
+        cdx6500sdlcpRROutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of RR frames transmitted until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 21 }
+
+        cdx6500sdlcpRNRInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of RNR frames received until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 22 }
+
+        cdx6500sdlcpRNROutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of RNR frames transmitted until the present 
+                 time."
+        ::= { cdx6500PPSTSDLCPortEntry 23 }
+
+        cdx6500sdlcpSNRMInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of SNRM frames received until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 24 }
+
+        cdx6500sdlcpSNRMOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of SNRM frames transmitted until the present 
+                 time."
+        ::= { cdx6500PPSTSDLCPortEntry 25 }
+
+        cdx6500sdlcpUAInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of UA frames received until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 26 }
+
+        cdx6500sdlcpUAOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of UA frames transmitted until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 27 }
+
+        cdx6500sdlcpDMInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of DM frames received until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 28 }
+
+        cdx6500sdlcpDMOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of DM frames transmitted until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 29 }
+
+        cdx6500sdlcpXIDInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of XID frames received until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 30 }
+
+        cdx6500sdlcpXIDOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of XID frames transmitted until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 31 }
+
+        cdx6500sdlcpREJInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of REJ frames received until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 32 }
+
+        cdx6500sdlcpREJOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of REJ frames transmitted until the present 
+                 time."
+        ::= { cdx6500PPSTSDLCPortEntry 33 }
+
+        cdx6500sdlcpDISCInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of DISC frames received until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 34 }
+
+        cdx6500sdlcpDISCOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of DISC frames transmitted until the 
+                 present time."
+        ::= { cdx6500PPSTSDLCPortEntry 35 }
+
+        cdx6500sdlcpRDInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of RD frames received until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 36 }
+
+        cdx6500sdlcpRDOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of RD frames transmitted until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 37 }
+
+        cdx6500sdlcpFRMRInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of FRMR frames received until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 38 }
+
+        cdx6500sdlcpFRMROutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of FRMR frames transmitted until the 
+                 present time."
+        ::= { cdx6500PPSTSDLCPortEntry 39 }
+
+        cdx6500sdlcpUPInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of UP frames received until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 40 }
+
+        cdx6500sdlcpUPOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of UP frames transmitted until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 41 }
+
+        cdx6500sdlcpTESTInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of TEST frames received until the present time."
+        ::= { cdx6500PPSTSDLCPortEntry 42 }
+
+        cdx6500sdlcpTESTOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of TEST frames transmitted until the 
+                 present time."
+        ::= { cdx6500PPSTSDLCPortEntry 43 }
+
+        -- The SDLC Station Configuration Table
+        -- This table contains Configuration paramaters 
+        -- for the SDLC Station table.
+                        
+        cdx6500SPCTSDLCStationTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SPCTSDLCStationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the configuration parameters relevant
+                 to the SDLC Station table."
+        ::= { cdx6500PCTStationProtocolGroup 4 }
+                        
+        cdx6500SPCTSDLCStationEntry OBJECT-TYPE
+            SYNTAX Cdx6500SPCTSDLCStationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of SDLC station configuration parameters."
+            INDEX { cdx6500sdlcsCfgPortNum, cdx6500sdlcsCfgStationNum }
+        ::= { cdx6500SPCTSDLCStationTable 1 }
+                        
+        Cdx6500SPCTSDLCStationEntry ::=
+            SEQUENCE {
+                cdx6500sdlcsCfgPortNum
+                    INTEGER,
+                cdx6500sdlcsCfgStationNum
+                    INTEGER,
+                cdx6500sdlcsStationAddr
+                    DisplayString,
+                cdx6500sdlcsFrameWinSize
+                    INTEGER,
+                cdx6500sdlcsAutocallMnem
+                    DisplayString,
+                cdx6500sdlcsProtocolID
+                    DisplayString,
+                cdx6500sdlcsCUG
+                    DisplayString,
+                cdx6500sdlcsOptions
+                    DisplayString,
+                cdx6500sdlcsStationID
+                    DisplayString,
+                cdx6500sdlcsBillingFlag
+                    INTEGER,
+                cdx6500sdlcsStnSubaddress
+                    DisplayString,
+                cdx6500sdlcsGroupAddress
+                    DisplayString,
+                cdx6500sdlcsX25Password
+                    DisplayString,
+                cdx6500sdlcsProtectionLevel
+                    INTEGER,
+                cdx6500sdlcsReconnectTimeout
+                    INTEGER,
+                cdx6500sdlcsReconnectLimit
+                    INTEGER,
+                cdx6500sdlcsTrafficPriority
+                    INTEGER,
+                cdx6500sdlcsCallTimer
+                    INTEGER,
+                cdx6500sdlcsIdleTimer
+                    INTEGER,
+                cdx6500sdlcsVerConnTimer
+                    INTEGER,
+                cdx6500sdlcsUnsusWaitTimer
+                    INTEGER
+                }
+                        
+        cdx6500sdlcsCfgPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Refers to the physical port number."
+        ::= { cdx6500SPCTSDLCStationEntry 1 }
+                        
+        cdx6500sdlcsCfgStationNum OBJECT-TYPE
+            SYNTAX INTEGER (1..32)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of the controller on the multidrop line.
+                 Also used for routing purposes."
+        ::= { cdx6500SPCTSDLCStationEntry 2 }
+                        
+        cdx6500sdlcsStationAddr OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..2))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The station address on the multidrop line."
+        ::= { cdx6500SPCTSDLCStationEntry 3 }
+                        
+        cdx6500sdlcsFrameWinSize OBJECT-TYPE
+            SYNTAX INTEGER (1..7)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Frame level window size must be set to the same value in
+                 devices at each end of the link."
+        ::= { cdx6500SPCTSDLCStationEntry 4 }
+                        
+        cdx6500sdlcsAutocallMnem OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..255))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This mnemonic references the remote address which will 
+                 be called when polling activity is detected on the sdlc line."
+        ::= { cdx6500SPCTSDLCStationEntry 5 }
+                        
+        cdx6500sdlcsProtocolID OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The protocol identifier is the first four bytes of
+                 the call user data. If not configured the PAD will use
+                 C3000000 as the protocol ID in the call."
+        ::= { cdx6500SPCTSDLCStationEntry 6 }
+                        
+        cdx6500sdlcsCUG OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(23))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The station may be a member of up to 8 different Closed User
+                 Groups (CUGs). Each CUG membership must be a two digit number
+                 (except --)and separated by a comma.
+                 (e.g. 12,34,56,09,02,03).
+                 --    - No CUG Membership
+                 00-99 - CUG Membership"
+        ::= { cdx6500SPCTSDLCStationEntry 7 }
+                        
+        cdx6500sdlcsOptions OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(3..4))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Select options on this SDLC station as follows:
+                 NONE - no option specified.
+                 CUG  - check closed user group in incoming calls, and insert
+                        closed user group facility in outgoing calls.
+                 QRRs - HPAD sends QRR after QLLC link comes up
+                 XIDs - TPAD responds to QXIDs with XID configured for this
+                        station XIDs are not sent to the Cluster Controller.
+                 XID3 - HPAD and TPAD will pass XIDs transparently. This option
+                        should not be set if XIDs option is selected.
+                        Corresponding station options must be XID3.
+                 RNRs - TPAD initially polls with RNR until a data packet or an
+                        QRR is received by the QLLC station on the TPAD side.
+                 DFC  - the station will wait the amount of time specified by
+                        the call timer before placing the first call."
+        ::= { cdx6500SPCTSDLCStationEntry 8 }
+                        
+        cdx6500sdlcsStationID OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..14))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the identification sent by the TPAD in a response.
+                 to a QXID when XIDs are enabled in the QLLC Options."
+        ::= { cdx6500SPCTSDLCStationEntry 9 }
+                        
+        cdx6500sdlcsBillingFlag OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off       (0),
+                    on        (1),
+                    newvalOff (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This controls whether billing (accounting) records will 
+                 be created for calls on this port.
+                 off  -  Billing (accounting) records will not be created for 
+                         calls on this port.
+                 on   -  Billing (accounting) records will be created for
+                         calls on this port.
+                 newvalOff - same functionality as 'off', new enumeration
+                         added for RFC1155 compatibility."
+        ::= { cdx6500SPCTSDLCStationEntry 10 }
+                        
+        cdx6500sdlcsStnSubaddress OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..3))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The calling subaddress is appended to the port address
+                 to create the calling address in the autocall generated."
+        ::= { cdx6500SPCTSDLCStationEntry 11 }
+                        
+        cdx6500sdlcsGroupAddress OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..3))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the address of the poll group to which this station 
+                 belongs.  Enter an address of 0x00 for no group membership."
+        ::= { cdx6500SPCTSDLCStationEntry 12 }
+                        
+        cdx6500sdlcsX25Password OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(1..24))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Only TPAD initiated autocall packets shall use this feature. 
+                 The X.25 Network Password which may be up to 12 bytes long 
+                 is inserted in the CUD of the Call Request packet. Padding 
+                 with spaces must be added as necessary. Configure the 
+                 Protocol ID to C3 01 00 00."
+        ::= { cdx6500SPCTSDLCStationEntry 13 }
+
+        cdx6500sdlcsProtectionLevel OBJECT-TYPE
+            SYNTAX INTEGER {
+                    none       (0),
+                    cpOnly     (1),
+                    fullDcp    (2),
+                    newvalNone (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the level of data or connection protection 
+                 which will be applied to calls to or from this port.  
+                 The actual level for a call will be negotiated to the lesser 
+                 of this level and the level configured for the other end of 
+                 the call.
+                 none       - No protection.
+                 cpOnly     - Connection protection only.
+                 fullDcp    - Full data and connection protection.
+                 newvalNone - same functionality as 'none', new enumeration
+                              added for RFC1155 compatibility."
+        ::= { cdx6500SPCTSDLCStationEntry 14 }
+                        
+        cdx6500sdlcsReconnectTimeout OBJECT-TYPE
+            SYNTAX INTEGER (1..128)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of seconds that DCP on the 
+                 originating side will wait between reconnection attempts."
+        ::= { cdx6500SPCTSDLCStationEntry 15 }
+                        
+        cdx6500sdlcsReconnectLimit OBJECT-TYPE
+            SYNTAX INTEGER (0..127)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of times that DCP on the originating
+                 side will attempt to reconnect before clearing the call.  If 0
+                 is entered, it will not attempt to reconnect."
+        ::= { cdx6500SPCTSDLCStationEntry 16 }
+
+        cdx6500sdlcsTrafficPriority OBJECT-TYPE
+            SYNTAX INTEGER {
+                    lowPriority       (0),
+                    medPriority       (1),
+                    hiPriority        (2),
+                    xpPriority        (3),
+                    newvalLowPriority (50)
+                    }
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "This is the traffic priority of the SDLC station; low,
+                 medium, high, or expedite.
+                 newvalLowPriority : same functionality as 'lowPriority',
+                 new enumeration added for RFC1155 compatibility."
+        ::= { cdx6500SPCTSDLCStationEntry 17 }
+
+        cdx6500sdlcsCallTimer OBJECT-TYPE
+            SYNTAX INTEGER (0..300)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the time before the next call is made.  If 0 is
+                 entered, the time to the next call is handled internally.
+                 The time is in seconds."
+        ::= { cdx6500SPCTSDLCStationEntry 18 }
+
+        cdx6500sdlcsIdleTimer OBJECT-TYPE
+            SYNTAX INTEGER (0..65534)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The Link Idle Timer is used by the SNA Dial on Demand feature
+                 for determining how long the station should wait for a data
+                 frame before bringing the X.25 call down. If a 0 is entered,
+                 the call will never be brought down. The time is in seconds."
+        ::= { cdx6500SPCTSDLCStationEntry 19 }
+
+        cdx6500sdlcsVerConnTimer OBJECT-TYPE
+            SYNTAX INTEGER (0..65534)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The Verify Connection Timer is used by the SNA Dial on 
+                 Demand feature for periodically verifying that the connection
+                 to the remote station is still active, after the link has been
+                 suspended. The timer specifies how long the the station waits
+                 before verifying the connection. If a 0 is entered, the
+                 connection will never be verified.  The time is in seconds."
+        ::= { cdx6500SPCTSDLCStationEntry 20 }
+
+        cdx6500sdlcsUnsusWaitTimer OBJECT-TYPE
+            SYNTAX INTEGER (0..65534)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The Unsuspend Wait Timer is used by the SNA Dial on Demand 
+                 feature for determining how long the station will wait in
+                 LINK_UNSUSPENDING state after receiving a call request before
+                 bringing the station down. If a 0 is entered, the station
+                 waits in LINK_UNSUSPENDED state forever.
+                 Time is in seconds."
+        ::= { cdx6500SPCTSDLCStationEntry 21 }
+
+        -- The SDLC Station Statistics Table
+        -- This table contains Statistics paramaters 
+        -- for the SDLC Station table.
+                        
+        cdx6500SPSTSDLCStationTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SPSTSDLCStationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the statistics parameters relevant
+                 to the SDLC Station table."
+        ::= { cdx6500PSTStationProtocolGroup 4 }
+                        
+        cdx6500SPSTSDLCStationEntry OBJECT-TYPE
+            SYNTAX Cdx6500SPSTSDLCStationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of SDLC station Statistics parameters."
+            INDEX { cdx6500sdlcsStatsPortNum, cdx6500sdlcsStatsStationNum }
+        ::= { cdx6500SPSTSDLCStationTable 1 }
+                        
+        Cdx6500SPSTSDLCStationEntry ::=
+            SEQUENCE {
+                cdx6500sdlcsStatsPortNum
+                    INTEGER,
+                cdx6500sdlcsStatsStationNum
+                    INTEGER,
+                cdx6500sdlcsStatsStationAddr
+                    INTEGER,
+                cdx6500sdlcsQLLCState
+                    DisplayString,
+                cdx6500sdlcsCharInTotal
+                    Counter,
+                cdx6500sdlcsCharOutTotal
+                    Counter,
+                cdx6500sdlcsCharsInPerSec
+                    INTEGER,
+                cdx6500sdlcsCharsOutPerSec
+                    INTEGER,
+                cdx6500sdlcsFrameInTotal
+                    Counter,
+                cdx6500sdlcsFrameOutTotal
+                    Counter,
+                cdx6500sdlcsFramesInPerSec
+                    INTEGER,
+                cdx6500sdlcsFramesOutPerSec
+                    INTEGER,
+                cdx6500sdlcsQRRInTotal
+                    Counter16,
+                cdx6500sdlcsQRROutTotal
+                    Counter16,
+                cdx6500sdlcsUtilizationIn
+                    INTEGER,
+                cdx6500sdlcsUtilizationOut
+                    INTEGER,
+                cdx6500sdlcsPacketsQueued
+                    INTEGER,
+                cdx6500sdlcsRRInFrames
+                    Counter,
+                cdx6500sdlcsRROutFrames
+                    Counter,
+                cdx6500sdlcsRNRInFrames
+                    Counter,
+                cdx6500sdlcsRNROutFrames
+                    Counter,
+                cdx6500sdlcsSNRMInFrames
+                    Counter,
+                cdx6500sdlcsSNRMOutFrames
+                    Counter,
+                cdx6500sdlcsUAInFrames
+                    Counter,
+                cdx6500sdlcsUAOutFrames
+                    Counter,
+                cdx6500sdlcsDMInFrames
+                    Counter,
+                cdx6500sdlcsDMOutFrames
+                    Counter,
+                cdx6500sdlcsXIDInFrames
+                    Counter,
+                cdx6500sdlcsXIDOutFrames
+                    Counter,
+                cdx6500sdlcsREJInFrames
+                    Counter,
+                cdx6500sdlcsREJOutFrames
+                    Counter,
+                cdx6500sdlcsDISCInFrames
+                    Counter,
+                cdx6500sdlcsDISCOutFrames
+                    Counter,
+                cdx6500sdlcsRDInFrames
+                    Counter,
+                cdx6500sdlcsRDOutFrames
+                    Counter,
+                cdx6500sdlcsFRMRInFrames
+                    Counter,
+                cdx6500sdlcsFRMROutFrames
+                    Counter,
+                cdx6500sdlcsUPInFrames
+                    Counter,
+                cdx6500sdlcsUPOutFrames
+                    Counter,
+                cdx6500sdlcsTESTInFrames
+                    Counter,
+                cdx6500sdlcsTESTOutFrames
+                    Counter,
+                cdx6500sdlcsQSMInFrames
+                    Counter16,
+                cdx6500sdlcsQSMOutFrames
+                    Counter16,
+                cdx6500sdlcsQUAInFrames
+                    Counter16,
+                cdx6500sdlcsQUAOutFrames
+                    Counter16,
+                cdx6500sdlcsQRDInFrames
+                    Counter16,
+                cdx6500sdlcsQRDOutFrames
+                    Counter16,
+                cdx6500sdlcsQFRMRInFrames
+                    Counter16,
+                cdx6500sdlcsQFRMROutFrames
+                    Counter16,
+                cdx6500sdlcsQXIDInFrames
+                    Counter16,
+                cdx6500sdlcsQXIDOutFrames
+                    Counter16,
+                cdx6500sdlcsQDCInFrames
+                    Counter16,
+                cdx6500sdlcsQDCOutFrames
+                    Counter16,
+                cdx6500sdlcsQDMInFrames
+                    Counter16,
+                cdx6500sdlcsQDMOutFrames
+                    Counter16,
+                cdx6500sdlcsQTESTInFrames
+                    Counter16,
+                cdx6500sdlcsQTESTOutFrames
+                    Counter16,
+                cdx6500sdlcsQSSInFrames
+                    Counter16,
+                cdx6500sdlcsQSSOutFrames
+                    Counter16,
+                cdx6500sdlcsQRSInFrames
+                    Counter16,
+                cdx6500sdlcsQRSOutFrames
+                    Counter16
+                }
+                        
+        cdx6500sdlcsStatsPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Refers to the physical port number."
+        ::= { cdx6500SPSTSDLCStationEntry 1 }
+                        
+        cdx6500sdlcsStatsStationNum OBJECT-TYPE
+            SYNTAX INTEGER (1..32)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Station reference number."
+        ::= { cdx6500SPSTSDLCStationEntry 2 }
+                        
+        cdx6500sdlcsStatsStationAddr OBJECT-TYPE
+            SYNTAX INTEGER (0..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Configured station address."
+        ::= { cdx6500SPSTSDLCStationEntry 3 }
+                        
+        cdx6500sdlcsQLLCState OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..255))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates the status of the QLLC layer:
+                 INOPERATIVE : No connection exists with the station.
+                 LINK_CLOSED : X.25 call is connected, but there has 
+                               been no successful QXID exchange and 
+                               data cannot pass.
+                 LINK_OPENING: The X.25 call is connected and there has
+                               been a successful QXID exchange. However,
+                               there has been no QUA or QDM response to
+                               a QSM command.
+                 LINK_OPENED : X.25 call is connected and data is 
+                               passing.
+                 LINK_CLOSING: Disconnect in process. Station may come
+                               back up after an SVC clear or PVC reset.
+                               If it does not, boot the station to
+                               clear it.
+                 LINK_RECOVERY: X.25 call is connected and the station
+                                has sent a QFRMR packet over the link.
+                                Station may come back up after SVC clear
+                                or PVC reset. If it does not recover,
+                                boot the station to clear it.
+                 NOTE: This value is not supported by the 6500."
+        ::= { cdx6500SPSTSDLCStationEntry 4 }
+                        
+        cdx6500sdlcsCharInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of characters received until now, not 
+                 including SDLC header characters."
+        ::= { cdx6500SPSTSDLCStationEntry 5 }
+                        
+        cdx6500sdlcsCharOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of characters transmitted until now, not 
+                 including SDLC header characters."
+        ::= { cdx6500SPSTSDLCStationEntry 6 }
+                        
+        cdx6500sdlcsCharsInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The average number of characters received per second 
+                 during the previous minute."
+        ::= { cdx6500SPSTSDLCStationEntry 7 }
+                        
+        cdx6500sdlcsCharsOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The average number of characters transmitted per second 
+                 during the previous minute."
+        ::= { cdx6500SPSTSDLCStationEntry 8 }
+                        
+        cdx6500sdlcsFrameInTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of frames received."
+        ::= { cdx6500SPSTSDLCStationEntry 9 }
+                        
+        cdx6500sdlcsFrameOutTotal OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of frames transmitted."
+        ::= { cdx6500SPSTSDLCStationEntry 10 }
+                        
+        cdx6500sdlcsFramesInPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The average number of frames received per second 
+                 during the previous minute."
+        ::= { cdx6500SPSTSDLCStationEntry 11 }
+                        
+        cdx6500sdlcsFramesOutPerSec OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The average number of frames transmitted per second 
+                 during the previous minute."
+        ::= { cdx6500SPSTSDLCStationEntry 12 }
+                        
+        cdx6500sdlcsQRRInTotal OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QRR packets received until now."
+        ::= { cdx6500SPSTSDLCStationEntry 13 }
+                        
+        cdx6500sdlcsQRROutTotal OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QRR packets transmitted until now."
+        ::= { cdx6500SPSTSDLCStationEntry 14 }
+
+        cdx6500sdlcsUtilizationIn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates a percentage of the link resources currently in 
+                 use in the IN(from the line to the port) direction."
+        ::= { cdx6500SPSTSDLCStationEntry 15 }
+
+        cdx6500sdlcsUtilizationOut OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates a percentage of the link resources currently in 
+                 use in the OUT(from the port to the line) direction."
+        ::= { cdx6500SPSTSDLCStationEntry 16 }
+
+        cdx6500sdlcsPacketsQueued OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of packets queued at the SDLC protocol layer 
+                 by the transmitter."
+        ::= { cdx6500SPSTSDLCStationEntry 17 }
+
+        cdx6500sdlcsRRInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of RR frames received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 18 }
+
+        cdx6500sdlcsRROutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of RR frames transmitted until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 19 }
+
+        cdx6500sdlcsRNRInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of RNR frames received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 20 }
+
+        cdx6500sdlcsRNROutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of RNR frames transmitted until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 21 }
+
+        cdx6500sdlcsSNRMInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of SNRM frames received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 22 }
+
+        cdx6500sdlcsSNRMOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of SNRM frames transmitted until the present 
+                 time."
+        ::= { cdx6500SPSTSDLCStationEntry 23 }
+
+        cdx6500sdlcsUAInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of UA frames received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 24 }
+
+        cdx6500sdlcsUAOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of UA frames transmitted until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 25 }
+
+        cdx6500sdlcsDMInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of DM frames received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 26 }
+
+        cdx6500sdlcsDMOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of DM frames transmitted until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 27 }
+
+        cdx6500sdlcsXIDInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of XID frames received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 28 }
+
+        cdx6500sdlcsXIDOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of XID frames transmitted until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 29 }
+
+        cdx6500sdlcsREJInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of REJ frames received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 30 }
+
+        cdx6500sdlcsREJOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of REJ frames transmitted until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 31 }
+
+        cdx6500sdlcsDISCInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of DISC frames received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 32 }
+
+        cdx6500sdlcsDISCOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of DISC frames transmitted until the present 
+                 time."
+        ::= { cdx6500SPSTSDLCStationEntry 33 }
+
+        cdx6500sdlcsRDInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of RD frames received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 34 }
+
+        cdx6500sdlcsRDOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of RD frames transmitted until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 35 }
+
+        cdx6500sdlcsFRMRInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of FRMR frames received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 36 }
+
+        cdx6500sdlcsFRMROutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of FRMR frames transmitted until the present 
+                 time."
+        ::= { cdx6500SPSTSDLCStationEntry 37 }
+
+        cdx6500sdlcsUPInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of UP frames received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 38 }
+
+        cdx6500sdlcsUPOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of UP frames transmitted until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 39 }
+
+        cdx6500sdlcsTESTInFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of TEST frames received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 40 }
+
+        cdx6500sdlcsTESTOutFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of TEST frames transmitted until the present 
+                 time."
+        ::= { cdx6500SPSTSDLCStationEntry 41 }
+
+        cdx6500sdlcsQSMInFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QSM packets received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 42 }
+
+        cdx6500sdlcsQSMOutFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QSM packets transmitted until the present 
+                 time."
+        ::= { cdx6500SPSTSDLCStationEntry 43 }
+
+        cdx6500sdlcsQUAInFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QUA packets received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 44 }
+
+        cdx6500sdlcsQUAOutFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QUA packets transmitted until the present 
+                 time."
+        ::= { cdx6500SPSTSDLCStationEntry 45 }
+
+        cdx6500sdlcsQRDInFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QRD packets received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 46 }
+
+        cdx6500sdlcsQRDOutFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QRD packets transmitted until the present 
+                 time."
+        ::= { cdx6500SPSTSDLCStationEntry 47 }
+
+        cdx6500sdlcsQFRMRInFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QFRMR packets received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 48 }
+
+        cdx6500sdlcsQFRMROutFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QFRMR packets transmitted until the present 
+                 time."
+        ::= { cdx6500SPSTSDLCStationEntry 49 }
+
+        cdx6500sdlcsQXIDInFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QXID packets received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 50 }
+
+        cdx6500sdlcsQXIDOutFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QXID packets transmitted until the present 
+                 time."
+        ::= { cdx6500SPSTSDLCStationEntry 51 }
+
+        cdx6500sdlcsQDCInFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QDC packets received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 52 }
+
+        cdx6500sdlcsQDCOutFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QDC packets transmitted until the present 
+                 time."
+        ::= { cdx6500SPSTSDLCStationEntry 53 }
+
+        cdx6500sdlcsQDMInFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QDM packets received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 54 }
+
+        cdx6500sdlcsQDMOutFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QDM packets transmitted until the present 
+                 time."
+        ::= { cdx6500SPSTSDLCStationEntry 55 }
+
+        cdx6500sdlcsQTESTInFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QTEST packets received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 56 }
+
+        cdx6500sdlcsQTESTOutFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QTEST packets transmitted until the present 
+                 time."
+        ::= { cdx6500SPSTSDLCStationEntry 57 }
+
+        cdx6500sdlcsQSSInFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QSS packets received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 58 }
+
+        cdx6500sdlcsQSSOutFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QSS packets transmitted until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 59 }
+
+        cdx6500sdlcsQRSInFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QRS packets received until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 60 }
+
+        cdx6500sdlcsQRSOutFrames OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of QRS packets transmitted until the present time."
+        ::= { cdx6500SPSTSDLCStationEntry 61 }
+
+        -- The SDLC Station Controls Table
+        -- This table contains Control paramaters 
+        -- for the SDLC Station table.
+                        
+        cdx6500ContSDLCStationTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500ContSDLCStationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the control parameters relevant
+                 to the SDLC Station table."
+        ::= { cdx6500ContSDLC 1 }
+                        
+        cdx6500ContSDLCStationEntry OBJECT-TYPE
+            SYNTAX Cdx6500ContSDLCStationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of SDLC Station Control parameters."
+            INDEX { cdx6500sdlcsContPortNum, cdx6500sdlcsContStationNum }
+        ::= { cdx6500ContSDLCStationTable 1 }
+                        
+        Cdx6500ContSDLCStationEntry ::=
+             SEQUENCE {
+                 cdx6500sdlcsContPortNum
+                     INTEGER,
+                 cdx6500sdlcsContStationNum
+                     INTEGER,
+                 cdx6500sdlcsContBootStation
+                     INTEGER,
+                 cdx6500sdlcsContDisableStation
+                     INTEGER,
+                 cdx6500sdlcsContEnableStation
+                     INTEGER,
+                 cdx6500sdlcsContBusyOutStation
+                     INTEGER,
+                 cdx6500sdlcsContResetStnStats
+                     INTEGER
+                 }
+                        
+        cdx6500sdlcsContPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Refers to the physical port number."
+        ::= { cdx6500ContSDLCStationEntry 1 }
+                        
+        cdx6500sdlcsContStationNum OBJECT-TYPE
+            SYNTAX INTEGER (1..32)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Station reference number."
+        ::= { cdx6500ContSDLCStationEntry 2 }
+                        
+        cdx6500sdlcsContBootStation OBJECT-TYPE
+            SYNTAX INTEGER {
+                    boot   (1),
+                    noBoot (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Boots the specified SDLC station.
+                 boot   - Boot Station
+                 noBoot - Do not boot Station"
+        ::= { cdx6500ContSDLCStationEntry 3 }
+                        
+        cdx6500sdlcsContDisableStation OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disable   (1),
+                    noDisable (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Disables the specified SDLC station.
+                 disable   - Disable Station.
+                 noDisable - Do not disable Station."
+        ::= { cdx6500ContSDLCStationEntry 4 }
+                        
+        cdx6500sdlcsContEnableStation OBJECT-TYPE
+            SYNTAX INTEGER {
+                    enable   (1),
+                    noEnable (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Enables the specified SDLC station.
+                 enable   - Enable Station.
+                 noEnable - Not not enable Station."
+        ::= { cdx6500ContSDLCStationEntry 5 }
+                        
+        cdx6500sdlcsContBusyOutStation OBJECT-TYPE
+            SYNTAX INTEGER {
+                    busyOut   (1),
+                    noBusyOut (2)
+                    }
+            ACCESS write-only
+            STATUS deprecated
+            DESCRIPTION
+                "This operation is no longer supported.
+                 Busy out the specified SDLC station.
+                 busyOut   - Busyout Station.
+                 noBusyOut - Do not busyout Station."
+        ::= { cdx6500ContSDLCStationEntry 6 }
+
+        cdx6500sdlcsContResetStnStats OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset   (1),
+                    noReset (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Resets statistics for the specified SDLC station
+                 reset   - Reset Station Statistics
+                 noReset - Do not reset Station Statistics"
+        ::= { cdx6500ContSDLCStationEntry 7 }
+
+        END

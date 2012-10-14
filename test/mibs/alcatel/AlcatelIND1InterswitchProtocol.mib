@@ -1,0 +1,567 @@
+ALCATEL-IND1-INTERSWITCH-PROTOCOL-MIB DEFINITIONS ::= BEGIN
+
+     	IMPORTS
+    		NOTIFICATION-TYPE, 
+		MODULE-IDENTITY, 
+		OBJECT-TYPE, 
+		IpAddress
+        		FROM SNMPv2-SMI
+          	MacAddress 
+			FROM SNMPv2-TC
+                softentIND1Aip, aipAMAPTraps, aipGMAPTraps
+                        FROM ALCATEL-IND1-BASE
+		MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+			FROM SNMPv2-CONF
+		InterfaceIndex 
+			FROM IF-MIB
+
+			;
+
+        alcatelIND1InterswitchProtocolMIB MODULE-IDENTITY
+                LAST-UPDATED "200108270000Z"
+                ORGANIZATION "Alcatel - Architects Of An Internet World"
+                CONTACT-INFO
+            "Please consult with Customer Service to insure the most appropriate
+             version of this document is used with the products in question:
+
+                        Alcatel Internetworking, Incorporated
+                       (Division 1, Formerly XYLAN Corporation)
+                               26801 West Agoura Road
+                            Agoura Hills, CA  91301-5122
+                              United States Of America
+
+            Telephone:               North America  +1 800 995 2696
+                                     Latin America  +1 877 919 9526
+                                     Europe         +31 23 556 0100
+                                     Asia           +65 394 7933
+                                     All Other      +1 818 878 4507
+
+            Electronic Mail:         support@ind.alcatel.com
+            World Wide Web:          http://www.ind.alcatel.com
+            File Transfer Protocol:  ftp://ftp.ind.alcatel.com/pub/products/mibs"
+
+                DESCRIPTION
+                        "This module describes an authoritative enterprise-specific Simple
+             Network Management Protocol (SNMP) Management Information Base (MIB):
+
+                 For the Birds Of Prey Product Line
+                 Health Monitoring for dissemination of resource consumption information.
+
+             The right to make changes in specification and other information
+             contained in this document without prior notice is reserved.
+
+             No liability shall be assumed for any incidental, indirect, special, or
+             consequential damages whatsoever arising from or related to this
+             document or the information contained herein.
+
+             Vendors, end-users, and other interested parties are granted
+             non-exclusive license to use this specification in connection with
+             management of the products for which it is intended to be used.
+
+               Copyright (C) 1995-2002 Alcatel Internetworking, Incorporated
+                             ALL RIGHTS RESERVED WORLDWIDE"
+
+                REVISION      "200108270000Z"
+        DESCRIPTION
+            "Addressing discrepancies with Alcatel Standard."
+                ::= { softentIND1Aip 1 }
+
+alcatelIND1InterswitchProtocolMIBObjects OBJECT IDENTIFIER ::= { alcatelIND1InterswitchProtocolMIB 1 }
+aipGMAPconfig OBJECT IDENTIFIER ::= { alcatelIND1InterswitchProtocolMIBObjects 1 }
+aipAMAPconfig OBJECT IDENTIFIER ::= { alcatelIND1InterswitchProtocolMIBObjects 2 }
+
+
+alcatelIND1InterswitchProtocolMIBConformance OBJECT IDENTIFIER ::= { alcatelIND1InterswitchProtocolMIB 2 }
+
+
+-- GMAP Configuration *********************
+
+aipGMAPstate OBJECT-TYPE
+	SYNTAX  INTEGER {
+		active   (1),
+		inactive (2)
+	}
+	MAX-ACCESS  read-write
+	STATUS  current
+	DESCRIPTION "Current state of the GMAP functionality."
+	::= { aipGMAPconfig 1 }
+
+aipGMAPgaptime OBJECT-TYPE
+	SYNTAX INTEGER (1..65535)
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION "The time in milliseconds for gaps between successive GMAP 
+		     protocol packets."
+	::= { aipGMAPconfig 2 }
+
+aipGMAPupdatetime OBJECT-TYPE
+	SYNTAX INTEGER (1..65535)
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION "The time in seconds between GMAP update packet generation."
+	::= { aipGMAPconfig 3 }
+
+aipGMAPholdtime OBJECT-TYPE
+	SYNTAX INTEGER (1..65535)
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION "The time in minutes that the switch will remember 
+		     information received in GMAP update packets."
+	::= { aipGMAPconfig 4 }
+
+
+-- GMAP Trap elements *********************
+
+aipGMAPLastTrapReason OBJECT-TYPE
+	SYNTAX  INTEGER {
+		authenticated-vlan (1),
+		conflicting-binding-rule (2),
+		same-proto-different-vlans-conflict (3),
+		same-vlan-different-protocols-conflict (4),
+		non-mobile-vlan (5),
+		none (6)
+	}
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "Reason for last GMAP update to not be applied.  Valid
+                     reasons are: 
+
+		       1 - Target Vlan is an authenticated vlan 
+		       2 - Update would conflict with a binding rule
+		       3 - Update would create two different vlan entries
+		           for the same protocol
+		       4 - Update would create two different protocol entries
+		           for the same vlan
+		       5 - Target vlan is not mobile
+		       6 - No trap has been sent"
+
+	::= { aipGMAPconfig 5 }
+
+aipGMAPLastTrapPort OBJECT-TYPE
+	SYNTAX INTEGER (0..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The ifindex number of the last port on which the 
+		     GMAP change was not applied because of a conflict."
+	::= { aipGMAPconfig 6 }
+
+aipGMAPLastTrapMac OBJECT-TYPE
+	SYNTAX  MacAddress
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The last MAC address for which a GMAP change was not
+		     applied because of a conflict."
+	::= { aipGMAPconfig 7 }
+
+aipGMAPLastTrapProtocol OBJECT-TYPE
+	SYNTAX INTEGER (1..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The protocol identifier of the last GMAP change that
+		     was not applied because of a conflict."
+	::= { aipGMAPconfig 8 }
+
+aipGMAPLastTrapVlan OBJECT-TYPE
+	SYNTAX INTEGER (0..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The Vlan identifier of the last GMAP change that was 
+		     not applied because of a conflict."
+	::= { aipGMAPconfig 9 }
+
+-- GMAP Trap  *****************************
+
+aipGMAPConflictTrap NOTIFICATION-TYPE
+    OBJECTS    {
+		  aipGMAPLastTrapReason,
+		  aipGMAPLastTrapPort,
+		  aipGMAPLastTrapMac,
+		  aipGMAPLastTrapProtocol,
+		  aipGMAPLastTrapVlan		  
+               }
+    STATUS  current
+    DESCRIPTION
+           "A GMAP update conflict."
+    ::= { aipGMAPTraps 0 1 }
+
+
+-- GMAP Table *****************************
+
+aipGMAPTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF AipGMAPTableEntry
+	MAX-ACCESS  not-accessible
+	STATUS  current
+	DESCRIPTION "GMAP MAC address list."
+	::= { aipGMAPconfig 10 }
+
+aipGMAPTableEntry OBJECT-TYPE
+	SYNTAX  AipGMAPTableEntry
+	MAX-ACCESS  not-accessible
+	STATUS  current
+	DESCRIPTION "GMAP MAC address list."
+	INDEX { aipGMAPMacAddr, aipGMAPProtocol }
+	::= { aipGMAPTable 1 }
+
+AipGMAPTableEntry ::= SEQUENCE {
+	aipGMAPMacAddr MacAddress,
+	aipGMAPProtocol INTEGER,
+	aipGMAPVlan INTEGER,
+	aipGMAPSrcSwitch MacAddress,
+	aipGMAPFlags OCTET STRING (SIZE(4)),
+	aipGMAPTimeout INTEGER
+	} 
+
+aipGMAPMacAddr OBJECT-TYPE
+	SYNTAX  MacAddress
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The MAC address of a GMAP entry."
+	::= { aipGMAPTableEntry 1 }
+
+aipGMAPProtocol OBJECT-TYPE
+	SYNTAX INTEGER (1..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The protocol identifier for a GMAP entry."
+	::= { aipGMAPTableEntry 2 }
+
+aipGMAPVlan OBJECT-TYPE
+	SYNTAX INTEGER (0..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The Vlan identifier for a GMAP entry."
+	::= { aipGMAPTableEntry 3 }
+
+aipGMAPSrcSwitch OBJECT-TYPE
+	SYNTAX  MacAddress
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The MAC address of the switch that provided the
+	             information for a GMAP entry."
+	::= { aipGMAPTableEntry 4 }
+
+aipGMAPFlags OBJECT-TYPE
+	SYNTAX  OCTET STRING (SIZE(4)) 
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The flags for a GMAP entry.  The least significant byte
+	             holds the router flags.  The next byte contains the flags
+	             from auto-tracker.  The most significant 2 bytes are not
+	             currently used."
+	::= { aipGMAPTableEntry 5 }
+
+aipGMAPTimeout OBJECT-TYPE
+	SYNTAX INTEGER (1..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "Seconds remaining before this entry will age out."
+	::= { aipGMAPTableEntry 6 }
+
+-- GMAP Configuration end *********************
+
+
+
+-- AMAP Configuration *********************
+
+aipAMAPstate OBJECT-TYPE
+	SYNTAX  INTEGER {
+		active   (1),
+		inactive (2)
+	}
+	MAX-ACCESS  read-write
+	STATUS  current
+	DESCRIPTION "Current state of the AMAP agent."
+	DEFVAL	{ active }
+	::= { aipAMAPconfig 1 }
+
+aipAMAPdisctime OBJECT-TYPE
+	SYNTAX INTEGER (1..65535)
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION "The time in seconds for interval betweeen hello
+		     packets in the initial discovery phase
+		     of the AMAP protocol."
+	DEFVAL	{ 30 }
+	::= { aipAMAPconfig 2 }
+
+aipAMAPcommontime OBJECT-TYPE
+	SYNTAX INTEGER (1..65535)
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION "The time in seconds for the interval between hello
+		     packets at other than the discovery phase."
+	DEFVAL	{ 300 }
+	::= { aipAMAPconfig 3 }
+
+-- AMAP Trap elements *********************
+
+aipAMAPLastTrapReason OBJECT-TYPE
+	SYNTAX  INTEGER {
+		add (1),
+		change (2),
+		remove (3),
+		none (4)
+	}
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "Reason for last change of port status.  Valid
+                     reasons are: 
+		       1 - port added 
+		       2 - change of information on existing port
+		       3 - port deleted
+		       4 - no trap has been sent"
+	::= { aipAMAPconfig 4 }
+
+aipAMAPLastTrapPort OBJECT-TYPE
+	SYNTAX INTEGER (0..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The ifindex number of the port that most recently changed."
+	::= { aipAMAPconfig 5 }
+
+-- AMAP Trap *********************
+
+aipAMAPStatusTrap NOTIFICATION-TYPE
+    OBJECTS    {
+		  aipAMAPLastTrapReason,
+		  aipAMAPLastTrapPort
+               }
+    STATUS   current
+    DESCRIPTION
+           "An AMAP port status change and reason."
+    ::= { aipAMAPTraps 0 1 }
+
+
+-- AMAP Adjacency Tables *********************
+
+aipAMAPportConnectionTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF AipAMAPportConnectionEntry
+	MAX-ACCESS  not-accessible
+	STATUS  current
+	DESCRIPTION "AMAP adjacent switch, local and remote connection index, and Vlan information."
+	::= { aipAMAPconfig 6 }
+
+aipAMAPportConnectionentry OBJECT-TYPE
+	SYNTAX  AipAMAPportConnectionEntry
+	MAX-ACCESS  not-accessible
+	STATUS  current
+	DESCRIPTION "AMAP adjacent switch, local and remote connection index, and Vlan information."
+	INDEX { aipAMAPLocalConnectionIndex, aipAMAPRemMac,
+		aipAMAPRemConnectionIndex }
+	::= { aipAMAPportConnectionTable 1 }
+
+AipAMAPportConnectionEntry ::= SEQUENCE {
+	aipAMAPLocalConnectionIndex INTEGER,
+	aipAMAPRemMac MacAddress,
+	aipAMAPRemConnectionIndex INTEGER,
+	aipAMAPRemVlan INTEGER,
+	aipAMAPRemHostname OCTET STRING(SIZE(32)),
+	aipAMAPLocalIfindex InterfaceIndex,
+	aipAMAPLocalSlot INTEGER,
+	aipAMAPLocalPort INTEGER,
+	aipAMAPRemSlot INTEGER,
+	aipAMAPRemPort INTEGER
+	} 
+
+aipAMAPLocalConnectionIndex OBJECT-TYPE
+	SYNTAX INTEGER (0..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The local index number of a connection in the local switch which has an 
+			adjacent switch connected. This index is assigned to a connection by 
+			the AMAP application running on the local switch."
+	::= { aipAMAPportConnectionentry 1 }
+
+aipAMAPRemMac OBJECT-TYPE
+	SYNTAX  MacAddress
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The MAC Address of the CMM in the adjacent switch."
+	::= { aipAMAPportConnectionentry 2 }
+
+aipAMAPRemConnectionIndex OBJECT-TYPE
+	SYNTAX INTEGER (0..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The remote index number of the connection in the adjacent switch to which 
+			the local switch has a connection connected.  This index is assigned
+			to a connection by the AMAP application running on the adjacent switch."
+	::= { aipAMAPportConnectionentry 3 }
+
+aipAMAPRemVlan OBJECT-TYPE
+	SYNTAX INTEGER (0..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The remote Vlan to which the connection is connected in the adjacent switch."
+	::= { aipAMAPportConnectionentry 4 }
+
+aipAMAPRemHostname OBJECT-TYPE
+	SYNTAX  OCTET STRING (SIZE(32))
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The remote hostname for the adjacent switch."
+	::= { aipAMAPportConnectionentry 5 }
+
+aipAMAPLocalIfindex OBJECT-TYPE
+	SYNTAX  InterfaceIndex 
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The local ifindex of the port to which the connection is connected."
+	::= { aipAMAPportConnectionentry 6 }
+
+aipAMAPLocalSlot OBJECT-TYPE
+	SYNTAX INTEGER (0..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The local slot of the port to which the connection is connected."
+	::= { aipAMAPportConnectionentry 7 }
+
+aipAMAPLocalPort OBJECT-TYPE
+	SYNTAX INTEGER (0..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The local interface port of the port to which the connection is 
+			connected."
+	::= { aipAMAPportConnectionentry 8 }
+
+aipAMAPRemSlot OBJECT-TYPE
+	SYNTAX INTEGER (0..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The remote slot of the port to which the connection is connected."
+	::= { aipAMAPportConnectionentry 9 }
+
+aipAMAPRemPort OBJECT-TYPE
+	SYNTAX INTEGER (0..65535)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The remote interface port of the port to which the connection is 
+			connected."
+	::= { aipAMAPportConnectionentry 10 }
+
+
+
+
+aipAMAPhostsTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF AipAMAPHostEntry
+	MAX-ACCESS  not-accessible
+	STATUS  current
+	DESCRIPTION "AMAP adjacent switch IP address information."
+	::= { aipAMAPconfig 7 }
+
+aipAMAPHostentry OBJECT-TYPE
+	SYNTAX  AipAMAPHostEntry
+	MAX-ACCESS  not-accessible
+	STATUS current
+	DESCRIPTION "AMAP adjacent switch IP address information."
+	INDEX { aipAMAPHostMac,
+		aipAMAPIpAddr }
+	::= { aipAMAPhostsTable 1 }
+
+AipAMAPHostEntry ::= SEQUENCE {
+	aipAMAPHostMac  MacAddress,
+	aipAMAPIpAddr   IpAddress
+	} 
+
+aipAMAPHostMac OBJECT-TYPE
+	SYNTAX  MacAddress
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The MAC Address of the CMM in the adjacent switch."
+	::= { aipAMAPHostentry 1 }
+
+aipAMAPIpAddr OBJECT-TYPE
+	SYNTAX  IpAddress
+	MAX-ACCESS  read-only
+	STATUS  current
+       	DESCRIPTION "An IP address of the adjacent switch."
+	::= { aipAMAPHostentry 2 }
+
+-- AMAP configuration end *********************
+
+
+-- AIP Conformance 
+
+alcatelIND1InterswitchProtocolMIBGroups OBJECT IDENTIFIER      ::= 
+{ alcatelIND1InterswitchProtocolMIBConformance 1 }
+
+alcatelIND1InterswitchProtocolMIBCompliances OBJECT IDENTIFIER ::= 
+{ alcatelIND1InterswitchProtocolMIBConformance 2 }
+
+aipGMAPConfGroup OBJECT-GROUP
+    OBJECTS {
+	aipGMAPstate,
+	aipGMAPgaptime,
+	aipGMAPupdatetime,
+	aipGMAPholdtime,
+	aipGMAPLastTrapReason,
+	aipGMAPLastTrapPort,
+	aipGMAPLastTrapMac,
+	aipGMAPLastTrapProtocol,
+	aipGMAPLastTrapVlan,
+	aipGMAPMacAddr,
+	aipGMAPProtocol,
+	aipGMAPVlan,
+	aipGMAPSrcSwitch,
+	aipGMAPFlags,
+	aipGMAPTimeout
+    }
+    STATUS      current
+    DESCRIPTION
+        "A collection of objects providing information about GMAP."
+    ::= { alcatelIND1InterswitchProtocolMIBGroups 1 }
+
+aipAMAPConfGroup OBJECT-GROUP
+    OBJECTS {
+	aipAMAPstate,
+	aipAMAPdisctime,
+	aipAMAPcommontime,
+	aipAMAPLastTrapReason,
+	aipAMAPLastTrapPort,
+	aipAMAPLocalConnectionIndex,
+	aipAMAPRemMac,
+	aipAMAPRemConnectionIndex,
+	aipAMAPRemVlan,
+	aipAMAPRemHostname,
+	aipAMAPLocalIfindex,
+	aipAMAPLocalSlot,
+	aipAMAPLocalPort,
+	aipAMAPRemSlot,
+	aipAMAPRemPort,
+	aipAMAPHostMac,
+	aipAMAPIpAddr
+    }
+    STATUS      current
+    DESCRIPTION
+        "A collection of objects providing information about AMAP."
+    ::= { alcatelIND1InterswitchProtocolMIBGroups 2 }
+
+aipNotificationGroup NOTIFICATION-GROUP
+    NOTIFICATIONS { aipAMAPStatusTrap,
+                    aipGMAPConflictTrap}
+    STATUS  current
+    DESCRIPTION
+            "A collection of notifications for signaling AIP events."
+    ::= { alcatelIND1InterswitchProtocolMIBGroups 3 }
+
+
+
+alcatelIND1InterswitchProtocolMIBCompliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+        "The compliance statement for device support of AIP."
+
+
+    MODULE
+        MANDATORY-GROUPS {
+            aipGMAPConfGroup,
+            aipAMAPConfGroup,
+	    aipNotificationGroup
+        }
+
+    ::= { alcatelIND1InterswitchProtocolMIBCompliances 1 }
+
+
+
+END
+

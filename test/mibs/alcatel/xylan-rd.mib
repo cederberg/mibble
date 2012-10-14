@@ -1,0 +1,455 @@
+
+     XYLAN-RD-MIB DEFINITIONS ::= BEGIN
+
+     --  xylan-rd.mib
+     --  Revision: 1.00
+     --  Date: July 7, 1999
+
+     --  Xylan Corporation, Inc.
+     --  26679 W. Agoura Road
+     --  Calabasas, CA 91302
+     --  (818) 880-3500
+     --  support@xylan.com
+
+     --  This module provides authoritative definitions for Xylan's
+     --  enterprise-specific Routing Domains MIB.
+
+     --  This module will be extended, as needed.
+
+
+     --  Xylan Corporation reserves the right to make changes in
+     --  specification and other information contained in this document
+     --  without prior notice.  The reader should consult Xylan Corporation
+     --  to determine whether any such changes have been made.
+     --  Current MIBs are availible from the following URLs:
+     --        ftp://ftp.xylan.com/pub/products/mibs
+     --        http://www.xylan.com
+
+     --  In no event shall Xylan Corporation be liable for any incidental,
+     --  indirect, special, or consequential damages whatsoever (including
+     --  but not limited to lost profits) arising out of or related to this
+     --  document or the information contained in it, even if Xylan
+     --  Corporation has been advised of, known, or should have known, the
+     --  possibility of such damages.
+     --  Xylan grants vendors, end-users, and other interested parties
+     --  a non-exclusive license to use this Specification in connection
+     --  with the management of Xylan products.
+
+     --  Copyright (C) 1999, Xylan Corporation. All Rights Reserved.
+
+
+      IMPORTS
+      OBJECT-TYPE
+         FROM RFC-1212
+      Gauge32
+         FROM SNMPv2-SMI
+      IpAddress
+         FROM RFC1155-SMI
+      RowStatus
+        FROM SNMPv2-TC
+      xylanRdArch
+         FROM XYLAN-BASE-MIB
+         ;
+
+     xylanRdGroup	          OBJECT IDENTIFIER ::= { xylanRdArch 1}
+
+
+-- ***************************************************************************
+-- Routing Domains Table
+-- ***************************************************************************
+
+xylanRdTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF RdEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "Table for Routing Domains which consists of a
+            sequence (i.e., one or more conceptual rows) of
+            'xylanRdEntry' items."
+    ::= { xylanRdGroup  1 }
+
+xylanRdEntry OBJECT-TYPE
+    SYNTAX  RdEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "An entry in the xylanRdTable containing the 
+            characteristics of a Routing Domain. A given Routing
+            Domain is identified by a unique 32-bit integer,
+            referred to as the Routing Domain Identifier (RDID)."
+
+    INDEX   { xylanRdId }
+    ::= { xylanRdTable  1 }
+
+RdEntry ::= SEQUENCE {
+		xylanRdId
+			Gauge32,
+		xylanRdDefaultGateway
+			IpAddress,
+		xylanRdIcmpAccess
+			INTEGER,
+		xylanRdFtpAccess
+			INTEGER,
+		xylanRdTelnetAccess
+			INTEGER,
+		xylanRdNumRoutes
+			INTEGER,
+		xylanRdRowStatus
+			RowStatus
+	}
+
+xylanRdId OBJECT-TYPE
+   SYNTAX   Gauge32 
+   ACCESS   read-only
+   STATUS   mandatory
+   DESCRIPTION  "The unique number identifying this routing domain."
+   ::= {xylanRdEntry  1}
+
+xylanRdDefaultGateway OBJECT-TYPE
+   SYNTAX   IpAddress
+   ACCESS   read-write
+   STATUS   mandatory
+   DESCRIPTION "The Default Gateway that will be used as the next
+                hop for the default route of this routing domain.
+                An IP Address of 0.0.0.0 is used to specify that no
+                Default Gateway has been defined."
+   DEFVAL  { '00000000'H } -- 0.0.0.0
+   ::= {xylanRdEntry 2}
+
+xylanRdIcmpAccess OBJECT-TYPE
+   SYNTAX   INTEGER        {
+                enabled  (1),
+                disabled (2)
+                }
+   ACCESS   read-write
+   STATUS   mandatory
+   DESCRIPTION "The ICMP access provides control to administratively
+                enable (1) or disable (2) whether ICMP packets will be 
+                accepted for this routing domain."
+   DEFVAL  { enabled }
+   ::= {xylanRdEntry 3}
+
+xylanRdFtpAccess OBJECT-TYPE
+   SYNTAX   INTEGER        {
+                enabled  (1),
+                disabled (2)
+                }
+   ACCESS   read-write
+   STATUS   mandatory
+   DESCRIPTION "The FTP access provides control to administratively
+                enable (1) or disable (2) whether FTP access will be 
+                allowed for this routing domain."
+   DEFVAL  { disabled }
+   ::= {xylanRdEntry 4}
+
+xylanRdTelnetAccess OBJECT-TYPE
+   SYNTAX   INTEGER        {
+                enabled  (1),
+                disabled (2)
+                }
+   ACCESS   read-write
+   STATUS   mandatory
+   DESCRIPTION "The TELNET access provides control to administratively
+                enable (1) or disable (2) whether TELNET access will be 
+                allowed for this routing domain."
+   DEFVAL  { disabled }
+   ::= {xylanRdEntry 5}
+
+xylanRdNumRoutes OBJECT-TYPE
+   SYNTAX   INTEGER
+   ACCESS   read-only
+   STATUS   mandatory
+   DESCRIPTION  "The number of routes that exist in this Routing
+                 Domains routing table."
+   ::= {xylanRdEntry  6}
+
+xylanRdRowStatus OBJECT-TYPE
+    SYNTAX  RowStatus
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "The row status variable, used according to installation
+            and removal conventions for conceptual rows. Setting this
+            object to 'active' or 'createAndGo' results in the addition
+            of a routing domain.  Destroying the entry or setting it to 
+				'notInService' removes the associated interface from the routing 
+            domain.  The other 'RowStatus' values are not used.
+
+            Removing a Routing Domain entry will result in automatic
+            removal of all xylanRdAssoIntfEntry rows that correspond to 
+            this routing domain."
+    ::= { xylanRdEntry  7 }
+
+-- ***************************************************************************
+-- Routing Domain Associated Interface Table
+-- ***************************************************************************
+
+xylanRdAssoIntfTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF RdAssoIntfEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The table of interfaces associated with this routing domain."
+    ::= { xylanRdGroup  2 }
+
+xylanRdAssoIntfEntry OBJECT-TYPE
+    SYNTAX  RdAssoIntfEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "An entry in the table contains an interface that is 
+            defined by a GP:VLAN pair that is associated with a
+            Routing Domain.  The number of rows for a given
+            RDID will equal the number of GP:Vlans that are
+            associated with a particular routing domain."
+
+    INDEX   {
+                 xylanRdId,
+                 xylanRdAssoIntfGroup,
+                 xylanRdAssoIntfVlan
+               }
+    ::= { xylanRdAssoIntfTable  1 }
+
+RdAssoIntfEntry ::=
+    SEQUENCE {
+        xylanRdAssoIntfGroup
+            INTEGER,
+
+        xylanRdAssoIntfVlan
+            INTEGER,
+
+        xylanRdAssoIntfRowStatus
+            RowStatus
+     }
+
+xylanRdAssoIntfGroup OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The Group is used to define the Group of the Group:Vlan
+            pair that is to be added/removed from this routing domain."
+    ::= { xylanRdAssoIntfEntry  1 }
+
+xylanRdAssoIntfVlan OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The Vlan is used to define the Vlan of the Group:Vlan
+            pair that is to be added/removed from this routing domain."
+    ::= { xylanRdAssoIntfEntry  2 }
+
+xylanRdAssoIntfRowStatus OBJECT-TYPE
+    SYNTAX  RowStatus
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "The row status variable, used according to installation
+            and removal conventions for conceptual rows. Setting this
+            object to 'active' or 'createAndGo' results in the addition
+            of an associated interface (GP:Vlan) to a routing domain. 
+            Destroying the entry or setting it to 'notInService' removes the
+            associated interface from the routing domain.  The other
+            'RowStatus' values are not used."
+    ::= { xylanRdAssoIntfEntry  3 }
+
+-- ***************************************************************************
+-- Routing Domain Associated Routing Table
+-- ***************************************************************************
+
+xylanRdAssoRouteTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF RdAssoRouteEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "This Routing Domain's IP Routing table."
+    ::= { xylanRdGroup  3 }
+
+xylanRdAssoRouteEntry OBJECT-TYPE
+    SYNTAX  RdAssoRouteEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "A particular route to a particular destination, for this
+            routing domain."
+
+    INDEX   {
+                 xylanRdId,
+                 xylanRdAssoRouteDest,
+                 xylanRdAssoRouteMask,
+                 xylanRdAssoRouteNextHop
+               }
+    ::= { xylanRdAssoRouteTable  1 }
+
+RdAssoRouteEntry ::=
+    SEQUENCE {
+        xylanRdAssoRouteDest
+            IpAddress,
+        xylanRdAssoRouteMask
+            IpAddress,
+        xylanRdAssoRouteNextHop
+            IpAddress,
+        xylanRdAssoRouteMetric
+            INTEGER,
+        xylanRdAssoRouteProto
+            INTEGER,
+        xylanRdAssoRouteGroup
+            INTEGER,
+        xylanRdAssoRouteVlan
+            INTEGER,
+        xylanRdAssoRouteRowStatus
+            RowStatus
+     }
+
+xylanRdAssoRouteDest OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "The destination IP address of this route.  An entry
+            with a value of 0.0.0.0 is considered a default route.
+
+            This object may not take a Multicast (Class D)
+            address value.
+
+            Any assignment (implicit or otherwise) of an instance
+            of this object to a value x must be rejected if the
+            bitwise logical-AND of x with the value of the
+            corresponding instance of the xylanRdAssoRouteMask
+            object is not equal to x."
+    ::= { xylanRdAssoRouteEntry  1 }
+
+xylanRdAssoRouteMask OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "Indicate the mask to be logical-ANDed with the
+            destination address before being compared to the
+            value in the xylanRdAssoRouteDest field.  For those
+            systems that do not support arbitrary subnet masks,
+            an agent constructs the value of the xylanRdAssoRouteMask
+            by reference to the IP Address Class.
+
+            Any assignment (implicit or otherwise) of an
+            instance of this object to a value x must be rejected
+            if the bitwise logical-AND of x with the value of the
+            corresponding instance of the xylanRdAssoRouteDest
+            object is not equal to xylanRdAssoRouteDest."
+    DEFVAL { '00000000'h } 	-- 0.0.0.0
+    ::= { xylanRdAssoRouteEntry  2 }
+
+xylanRdAssoRouteNextHop OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "On remote routes, the address of the next system
+            en route; Otherwise, 0.0.0.0" 
+    ::= { xylanRdAssoRouteEntry  3 }
+
+xylanRdAssoRouteMetric OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "The primary routing metric for this route.
+            The semantics of this metric are determined by
+            the routing-protocol specified in the route's
+            xylanRdAssoRouteProto value.  If this metric is not
+            used, its value should be set to -1."
+    DEFVAL { -1 }
+    ::= { xylanRdAssoRouteEntry  4 }
+
+xylanRdAssoRouteProto OBJECT-TYPE
+    SYNTAX   INTEGER {
+                other     (1),  -- not specified
+                local     (2),  -- local interface
+                netmgmt   (3),  -- static route
+                icmp      (4),  -- result of ICMP Redirect
+
+                        -- the following are all dynamic
+                        -- routing protocols
+                egp       (5),  -- Exterior Gateway Protocol
+                ggp       (6),  -- Gateway-Gateway Protocol
+                hello     (7),  -- FuzzBall HelloSpeak
+                rip       (8),  -- Berkeley RIP or RIP-II
+                is-is     (9),  -- Dual IS-IS
+                es-is     (10), -- ISO 9542
+                ciscoIgrp (11), -- Cisco IGRP
+                bbnSpfIgp (12), -- BBN SPF IGP
+                ospf      (13), -- Open Shortest Path First
+                bgp       (14), -- Border Gateway Protocol
+                idpr      (15)  -- InterDomain Policy Routing
+             }
+    ACCESS   read-only
+    STATUS   mandatory
+    DESCRIPTION
+       "The routing mechanism via which this route was
+       learned.  Inclusion of values for gateway rout-
+       ing protocols is not  intended  to  imply  that
+       hosts should support those protocols."
+    ::= { xylanRdAssoRouteEntry 5 }
+
+xylanRdAssoRouteGroup OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "The Group that this route was learned on."
+    ::= { xylanRdAssoRouteEntry  6 }
+
+xylanRdAssoRouteVlan OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "The Vlan that this route was learned on."
+    ::= { xylanRdAssoRouteEntry  7 }
+
+xylanRdAssoRouteRowStatus OBJECT-TYPE
+    SYNTAX  RowStatus
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "The row status variable, used according to installation
+            and removal conventions for conceptual rows. Setting this
+            object to 'active' or 'createAndGo' results in the addition
+            of this route to this routing domains routing table.  
+            Destroying the entry or setting it to 'notInService' removes the
+            associated route from the routing table.  The other
+            'RowStatus' values are not used."
+    ::= { xylanRdAssoRouteEntry  8 }
+
+-- ***************************************************************************
+-- Routing Domain Global Configuration
+-- ***************************************************************************
+
+xylanRdGlobal OBJECT IDENTIFIER ::= {  xylanRdGroup 4 }
+
+xylanRdGlobalSwitchAccess OBJECT-TYPE
+    SYNTAX   INTEGER   {
+                enabled  (1),
+                disabled (2)
+                }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "Indicates the default value to be used for the ICMP Switch
+	    Access parameter when creating a new Routing Domain.
+	    'Enabled' allows ICMP Switch Access; 'disabled' does not allow
+	    ICMP switch access. By default, ICMP access will be enabled."
+    ::= { xylanRdGlobal 1 }
+
+xylanRdGlobalOutRdid OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "Indicates the Routing Domain ID (RDID) to be used
+	    for packets which are generated on the switch."
+    ::= { xylanRdGlobal 2 }
+
+END
+

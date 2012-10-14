@@ -1,0 +1,521 @@
+ALCATEL-IND1-PCAM-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    Counter64, Unsigned32, MODULE-IDENTITY, OBJECT-IDENTITY, OBJECT-TYPE
+        FROM SNMPv2-SMI
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        FROM SNMPv2-CONF
+    TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    hardentIND1Pcam  
+        FROM ALCATEL-IND1-BASE;
+
+alcatelIND1PCAMMIB MODULE-IDENTITY
+
+    LAST-UPDATED  "200107112130Z"
+    ORGANIZATION  "Alcatel - Architects Of An Internet World"
+    CONTACT-INFO
+        "Please consult with Customer Service to insure the most appropriate
+         version of this document is used with the products in question:
+         
+                    Alcatel Internetworking, Incorporated
+                   (Division 1, Formerly XYLAN Corporation)
+                           26801 West Agoura Road
+                        Agoura Hills, CA  91301-5122
+                          United States Of America
+        
+        Telephone:               North America  +1 800 995 2696
+                                 Latin America  +1 877 919 9526
+                                 Europe         +31 23 556 0100
+                                 Asia           +65 394 7933
+                                 All Other      +1 818 878 4507
+        
+        Electronic Mail:         support@ind.alcatel.com
+        World Wide Web:          http://www.ind.alcatel.com
+        File Transfer Protocol:  ftp://ftp.ind.alcatel.com/pub/products/mibs"
+    
+    DESCRIPTION
+        "This module describes an authoritative enterprise-specific Simple
+         Network Management Protocol (SNMP) Management Information Base (MIB):
+         
+             This MIB contains management information for Coronado Layer 
+             3 Hardware Routing Engine (HRE) management.
+         
+         The right to make changes in specification and other information
+         contained in this document without prior notice is reserved.
+         
+         No liability shall be assumed for any incidental, indirect, special, or
+         consequential damages whatsoever arising from or related to this
+         document or the information contained herein.
+         
+         Vendors, end-users, and other interested parties are granted
+         non-exclusive license to use this specification in connection with
+         management of the products for which it is intended to be used.
+         
+           Copyright (C) 1995-2002 Alcatel Internetworking, Incorporated
+                         ALL RIGHTS RESERVED WORLDWIDE"
+
+    REVISION      "200107112130Z"
+    DESCRIPTION
+        "The latest version of this MIB Module."
+
+    ::= { hardentIND1Pcam 1 }
+
+alcatelIND1PCAMMIBObjects OBJECT-IDENTITY 
+    STATUS current
+    DESCRIPTION "Branch for Coronado Layer 3 HRE Managed Objects."
+    ::= {alcatelIND1PCAMMIB 1}
+
+alcatelIND1PCAMMIBConformance OBJECT-IDENTITY 
+    STATUS current
+    DESCRIPTION "Branch for Coronado Layer 3 HRE Conformance Information."
+    ::= {alcatelIND1PCAMMIB 2}
+
+alcatelIND1PCAMMIBGroups OBJECT-IDENTITY 
+    STATUS current
+    DESCRIPTION "Branch for Coronado Layer 3 HRE Units of Conformance."
+    ::= {alcatelIND1PCAMMIBConformance 1}
+
+alcatelIND1PCAMMIBCompliances OBJECT-IDENTITY 
+    STATUS current
+    DESCRIPTION "Branch for Coronado Layer 3 HRE Compliance Statements."
+    ::= {alcatelIND1PCAMMIBConformance 2}
+
+CoroL3HashFunction ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION "An HRE hash function maps a value to be hashed to a hash
+                index by selecting a sub-set of the bits in the hashed value
+                and concatenating them together.  This field describes a
+                hash function by identifying in a bit mask those bit positions
+                in the value to be hashed that should be selected and concatenated
+                to form the hash index."
+    SYNTAX OCTET STRING (SIZE(10))
+
+alaCoroL3HrePerModeTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CoroL3HrePerModeEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The statistics and configurable data for a Coronado L3 HRE mode."
+    ::= {alcatelIND1PCAMMIBObjects 1}
+  
+alaCoroL3HrePerModeTableEntry OBJECT-TYPE
+    SYNTAX      CoroL3HrePerModeEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Each entry corresponds to a single mode for a single Coronado."
+    INDEX       { alaCoroL3HrePerModeSlotNumber, 
+                  alaCoroL3HrePerModeSliceNumber,
+                  alaCoroL3HrePerModeModeNumber }
+    ::= {alaCoroL3HrePerModeTable 1}
+  
+CoroL3HrePerModeEntry ::= 
+    SEQUENCE {
+        alaCoroL3HrePerModeSlotNumber Unsigned32,
+        alaCoroL3HrePerModeSliceNumber Unsigned32,
+        alaCoroL3HrePerModeModeNumber INTEGER,
+        alaCoroL3HreModeHashTableSize Unsigned32,
+        alaCoroL3HreModeHashEntriesInUse Unsigned32,
+        alaCoroL3HreModeCollEntriesInUse Unsigned32,
+        alaCoroL3HreModeCurrentHashFunction CoroL3HashFunction,
+        alaCoroL3HreMaxCollChainLen Unsigned32,
+        alaCoroL3HreAvgCollChainLen Unsigned32
+    }
+
+alaCoroL3HrePerModeSlotNumber OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The slot number in which the Coronado resides.  Valid range
+                will vary depending on hardware configuration."
+    ::= {alaCoroL3HrePerModeTableEntry 1}
+  
+alaCoroL3HrePerModeSliceNumber OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The slice number in which the Coronado resides.  Valid range
+                will vary depending on hardware configuration."
+    ::= {alaCoroL3HrePerModeTableEntry 2}
+  
+alaCoroL3HrePerModeModeNumber OBJECT-TYPE
+    SYNTAX      INTEGER (0..3)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Identifier for L3 HRE mode.  Note that mode 3 refers to 
+                data used for modes 3 through 5 since they share hash 
+                function and memory space."
+    ::= {alaCoroL3HrePerModeTableEntry 3}
+
+alaCoroL3HreModeHashTableSize OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of hash buckets to be used for this mode.  This must
+                be 0 or a power of 2."
+    ::= {alaCoroL3HrePerModeTableEntry 4}
+  
+alaCoroL3HreModeHashEntriesInUse OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of hash buckets currently in use for this mode."
+    ::= {alaCoroL3HrePerModeTableEntry 5}
+  
+alaCoroL3HreModeCollEntriesInUse OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of collision entries in use by this mode."
+    ::= {alaCoroL3HrePerModeTableEntry 6}
+  
+alaCoroL3HreModeCurrentHashFunction OBJECT-TYPE
+    SYNTAX      CoroL3HashFunction
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Current hash function in use by this mode."
+    ::= {alaCoroL3HrePerModeTableEntry 7}
+  
+alaCoroL3HreMaxCollChainLen OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Maximum length for the collision chains in this mode."
+    ::= {alaCoroL3HrePerModeTableEntry 8}
+
+alaCoroL3HreAvgCollChainLen OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Average length for the collision chains in this mode."
+    ::= {alaCoroL3HrePerModeTableEntry 9}
+
+alaCoroL3HrePerCoronadoStatsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CoroL3HrePerCoronadoStatsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The statistics for a Coronado L3 HRE."
+    ::= {alcatelIND1PCAMMIBObjects 2}
+  
+alaCoroL3HrePerCoronadoStatsTableEntry OBJECT-TYPE
+    SYNTAX      CoroL3HrePerCoronadoStatsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Each entry corresponds to a single Coronado."
+    INDEX       { alaCoroL3HreSlotNumber, alaCoroL3HreSliceNumber }
+    ::= {alaCoroL3HrePerCoronadoStatsTable 1}
+
+CoroL3HrePerCoronadoStatsEntry ::= 
+    SEQUENCE {
+        alaCoroL3HreSlotNumber Unsigned32,
+        alaCoroL3HreSliceNumber Unsigned32,
+        alaCoroL3HreRouteCacheEntriesTotal Unsigned32,
+        alaCoroL3HreRouteCacheEntriesInUse Unsigned32,
+        alaCoroL3HreIpPacketsReceived Counter64,
+        alaCoroL3HreIpBytesReceived Counter64,
+        alaCoroL3HreIpPacketsForwarded Counter64,
+        alaCoroL3HreIpBytesForwarded Counter64,
+        alaCoroL3HreIpPacketsDiscarded Counter64,
+        alaCoroL3HreIpBytesDiscarded Counter64,
+        alaCoroL3HreIpPacketsFragmented Counter64,
+        alaCoroL3HreIpPacketsFragsGenerated Counter64,
+        alaCoroL3HreIpPacketsFailedToFrag Counter64,
+        alaCoroL3HreIpxPacketsReceived Counter64,
+        alaCoroL3HreIpxBytesReceived Counter64,
+        alaCoroL3HreIpxPacketsForwarded Counter64,
+        alaCoroL3HreIpxBytesForwarded Counter64,
+        alaCoroL3HreIpxPacketsDiscarded Counter64,
+        alaCoroL3HreIpxBytesDiscarded Counter64
+    }
+
+alaCoroL3HreSlotNumber OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The slot number in which the Coronado resides.  Valid range
+                will vary depending on hardware configuration."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 1}
+
+alaCoroL3HreSliceNumber OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The slice number in which the Coronado resides.  Valid range
+                will vary depending on hardware configuration."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 2}
+
+alaCoroL3HreRouteCacheEntriesTotal OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Total number of configured route cache entries."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 3}
+
+alaCoroL3HreRouteCacheEntriesInUse OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of route cache entries currently in-use."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 4}
+
+alaCoroL3HreIpPacketsReceived OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IP packets received."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 5}
+
+alaCoroL3HreIpBytesReceived OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IP bytes received."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 6}
+
+alaCoroL3HreIpPacketsForwarded OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IP packets routed."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 7}
+
+alaCoroL3HreIpBytesForwarded OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IP bytes routed."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 8}
+
+alaCoroL3HreIpPacketsDiscarded OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IP packets discarded."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 9}
+
+alaCoroL3HreIpBytesDiscarded OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IP bytes discarded."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 10}
+  
+alaCoroL3HreIpPacketsFragmented OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IP packets fragmented."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 11}
+  
+alaCoroL3HreIpPacketsFragsGenerated OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IP packet fragments generated."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 12}
+
+alaCoroL3HreIpPacketsFailedToFrag OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IP packets that could not be fragmented 
+                because IP flag precluded it."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 13}
+
+alaCoroL3HreIpxPacketsReceived OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IPX packets received."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 14}
+  
+alaCoroL3HreIpxBytesReceived OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IPX bytes received."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 15}
+  
+alaCoroL3HreIpxPacketsForwarded OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IPX packets routed."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 16}
+  
+alaCoroL3HreIpxBytesForwarded OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IPX bytes routed."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 17}
+  
+alaCoroL3HreIpxPacketsDiscarded OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IPX packets discarded."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 18}
+  
+alaCoroL3HreIpxBytesDiscarded OBJECT-TYPE
+    SYNTAX      Counter64 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Number of IPX bytes discarded."
+    ::= {alaCoroL3HrePerCoronadoStatsTableEntry 19}
+  
+alaCoroL3HreUpdateChanges OBJECT-TYPE
+    SYNTAX      INTEGER { 
+                    apply (0),
+                    clear (1)
+                }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Updating this object causes the change list to either be applied
+                cleared."
+    ::= {alcatelIND1PCAMMIBObjects 3}
+
+alaCoroL3HreChangeTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF CoroL3HreChangeEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The statistics and configurable data for a Coronado L3 HRE mode."
+    ::= {alcatelIND1PCAMMIBObjects 4}
+  
+alaCoroL3HreChangeTableEntry OBJECT-TYPE
+    SYNTAX      CoroL3HreChangeEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "Each entry corresponds to a single mode for a single Coronado."
+    INDEX       { alaCoroL3HreChangeSlotNumber, 
+                  alaCoroL3HreChangeSliceNumber,
+                  alaCoroL3HreChangeModeNumber }
+    ::= {alaCoroL3HreChangeTable 1}
+  
+CoroL3HreChangeEntry ::= 
+    SEQUENCE {
+        alaCoroL3HreChangeSlotNumber Unsigned32,
+        alaCoroL3HreChangeSliceNumber Unsigned32,
+        alaCoroL3HreChangeModeNumber INTEGER,
+        alaCoroL3HreChangeHashTableSize Unsigned32,
+        alaCoroL3HreChangeHashFunction CoroL3HashFunction,
+        alaCoroL3HreChangeClear INTEGER
+    }
+
+alaCoroL3HreChangeSlotNumber OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The slot number in which the Coronado resides.  Valid range
+                will vary depending on hardware configuration."
+    ::= {alaCoroL3HreChangeTableEntry 1}
+  
+alaCoroL3HreChangeSliceNumber OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "The slice number in which the Coronado resides.  Valid range
+                will vary depending on hardware configuration."
+    ::= {alaCoroL3HreChangeTableEntry 2}
+  
+alaCoroL3HreChangeModeNumber OBJECT-TYPE
+    SYNTAX      INTEGER (0..3)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION "Identifier for L3 HRE mode.  Note that mode 3 refers to 
+                data used for modes 3 through 5 since they share hash 
+                function and memory space."
+    ::= {alaCoroL3HreChangeTableEntry 3}
+
+alaCoroL3HreChangeHashTableSize OBJECT-TYPE
+    SYNTAX      Unsigned32 
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Number of hash buckets to be used for this mode.  This must
+                be 0 or a power of 2."
+    ::= {alaCoroL3HreChangeTableEntry 4}
+  
+alaCoroL3HreChangeHashFunction OBJECT-TYPE
+    SYNTAX      CoroL3HashFunction
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Hash function to be used for this mode."
+    ::= {alaCoroL3HreChangeTableEntry 5}
+  
+alaCoroL3HreChangeClear OBJECT-TYPE
+    SYNTAX      INTEGER { clear(0) }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION "Clears changes for the specified mode."
+    ::= {alaCoroL3HreChangeTableEntry 6}
+  
+alaCoroL3HrePerModeObjects OBJECT-GROUP
+    OBJECTS {
+        alaCoroL3HrePerModeSlotNumber,
+        alaCoroL3HrePerModeSliceNumber,
+        alaCoroL3HrePerModeModeNumber,
+        alaCoroL3HreModeHashTableSize,
+        alaCoroL3HreModeHashEntriesInUse,
+        alaCoroL3HreModeCollEntriesInUse,
+        alaCoroL3HreModeCurrentHashFunction,
+        alaCoroL3HreMaxCollChainLen,
+        alaCoroL3HreAvgCollChainLen
+    }
+    STATUS current
+    DESCRIPTION
+    "A collection of objects providing information for each mode."
+    ::= { alcatelIND1PCAMMIBGroups 1 }
+
+alaCoroL3HrePerCoronadoObjects OBJECT-GROUP
+    OBJECTS {
+        alaCoroL3HreSlotNumber,
+        alaCoroL3HreSliceNumber,
+        alaCoroL3HreRouteCacheEntriesTotal,
+        alaCoroL3HreRouteCacheEntriesInUse,
+        alaCoroL3HreIpPacketsReceived,
+        alaCoroL3HreIpBytesReceived,
+        alaCoroL3HreIpPacketsForwarded,
+        alaCoroL3HreIpBytesForwarded,
+        alaCoroL3HreIpPacketsDiscarded,
+        alaCoroL3HreIpBytesDiscarded,
+        alaCoroL3HreIpPacketsFragmented,
+        alaCoroL3HreIpPacketsFragsGenerated,
+        alaCoroL3HreIpPacketsFailedToFrag,
+        alaCoroL3HreIpxPacketsReceived,
+        alaCoroL3HreIpxBytesReceived,
+        alaCoroL3HreIpxPacketsForwarded,
+        alaCoroL3HreIpxBytesForwarded,
+        alaCoroL3HreIpxPacketsDiscarded,
+        alaCoroL3HreIpxBytesDiscarded
+    }
+    STATUS current
+    DESCRIPTION "A collection of objects providing information for each Coronado."
+    ::= { alcatelIND1PCAMMIBGroups 2 }
+
+alaCoroL3HreChangeObjects OBJECT-GROUP
+    OBJECTS {
+        alaCoroL3HreUpdateChanges,
+        alaCoroL3HreChangeSlotNumber,
+        alaCoroL3HreChangeSliceNumber,
+        alaCoroL3HreChangeModeNumber,
+        alaCoroL3HreChangeHashTableSize,
+        alaCoroL3HreChangeHashFunction,
+        alaCoroL3HreChangeClear
+    }
+    STATUS current
+    DESCRIPTION
+    "A collection of objects providing information for changes to be made."
+    ::= { alcatelIND1PCAMMIBGroups 3 }
+
+alcatelInd1PCAMMIBCompliance MODULE-COMPLIANCE
+    STATUS current
+    DESCRIPTION "The compliance statement for the Coronado Layer 3."
+    MODULE
+    MANDATORY-GROUPS {
+        alaCoroL3HrePerModeObjects,
+        alaCoroL3HrePerCoronadoObjects,
+        alaCoroL3HreChangeObjects
+    }
+
+    ::= { alcatelIND1PCAMMIBCompliances 1 }
+END
+

@@ -1,0 +1,834 @@
+--  Copyright (C) 1996 Alcatel Internetworking, Inc., all rights reserved.
+--
+--           Xylan Private Network-Network Interface MIB ASN.1 
+--           Specification
+--
+-- File:        xylan-ipms.mib
+--
+-- Purpose:     Specifies Xylan's MIB definitions for the IP Multicast
+--              Manager Software.
+--
+-- Conformance: Created proprietary MIB to address specific needs of
+--              Xylan. This MIB does not attempt to conform to 
+--              any existing MIBS.
+--
+-- Background:  The MIB is proprietary and bears no resemblance
+--              to other MIBS.
+--
+--              History
+--              =======
+--              4/20/97    swr  Created
+--              7/21/97    swr  Updated with new impfwd table
+--              7/29/97    swr  Updated with design review comments
+--                              (type and instance for each port)
+--              9/17/99    swr  Copied ipmm.mib to make IPMS V2 changes
+--
+--              11/07/01   cpc  Added comments about ipmsState being the
+--                              only object which is accessable unless
+--                              and until IPMS is loaded/enabled.
+--
+
+IPMS-MIB DEFINITIONS ::= BEGIN
+ 
+IMPORTS
+    OBJECT-TYPE             FROM RFC-1212
+    xylanIpmsArch           FROM XYLAN-BASE-MIB
+    IpAddress               FROM RFC1155-SMI;
+
+    ipmsMIB OBJECT IDENTIFIER ::= { xylanIpmsArch 1 }
+
+    ipmsMIBObjects OBJECT IDENTIFIER ::= { ipmsMIB 1 }
+
+   DisplayString ::=
+       OCTET STRING
+   -- This data type is used to model textual information taken
+   -- from the NVT ASCII character set.  By convention, objects
+   -- with this syntax are declared as having
+   --
+   --      SIZE (0..255)
+
+
+
+--  The General Group **********************************************
+
+ipmsGeneralGroup OBJECT IDENTIFIER ::= { ipmsMIBObjects 1 }
+
+ipmsVersion  OBJECT-TYPE                           
+        SYNTAX        DisplayString 
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "The current version of IPMS."
+        ::= { ipmsGeneralGroup 1 }
+
+ipmsState  OBJECT-TYPE                           
+        SYNTAX        INTEGER {
+            enabled(1),
+            disabled(2)
+            }
+        ACCESS        read-write
+        STATUS        mandatory
+        DESCRIPTION
+            "The current state of IPMS.  When read this flag indicates
+             whether IPMS is enabled or disabled.  Setting this
+             flag to enabled causes the IPMS software to be loaded.
+             Setting this flag to disabled causes the IPMS software to
+             be unloaded.  If this flag indicates that IPMS is
+             disabled, then no other objects within the IPMS MIB can
+             be accessed (because the IPMS software is not loaded on
+             the switch).  In other words, the full IPMS MIB is
+             available only when this flag indicates that IPMS is
+             enabled."
+        ::= { ipmsGeneralGroup 2 }
+
+
+-- Destination IP Address / Port Table  **********************************************
+
+ipmsDIPAddressPortTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF IpmsDIPAddressPortEntry
+        ACCESS        not-accessible
+        STATUS        mandatory
+        DESCRIPTION
+            "This table contains entries that list which switch
+             ports have requested membership in a specific IP
+             Multicast Group.  There are several slot/port 
+             combinations for each IP Multicast Group."
+        ::= { ipmsMIBObjects 2 }
+ 
+ipmsDIPAddressPortEntry OBJECT-TYPE
+        SYNTAX        IpmsDIPAddressPortEntry
+        ACCESS        not-accessible
+        STATUS        mandatory
+        DESCRIPTION
+            "This defines an entry in the Destination IP 
+             Address/Port table."
+        INDEX         { ipmsDIPAddress,
+                        ipmsDIPDstVlan,
+                        ipmsDIPSlotNumber,
+                        ipmsDIPPortNumber,
+                        ipmsDIPPortInstance,
+                        ipmsDIPPortService
+         }
+        ::= { ipmsDIPAddressPortTable 1 }
+ 
+IpmsDIPAddressPortEntry ::=
+        SEQUENCE {
+                ipmsDIPAddress            IpAddress,
+                ipmsDIPDstVlan            INTEGER,
+                ipmsDIPDstVlanMask        INTEGER,
+                ipmsDIPSlotNumber         INTEGER,
+                ipmsDIPPortNumber         INTEGER,
+                ipmsDIPPortType           INTEGER,
+                ipmsDIPPortInstance       INTEGER,
+                ipmsDIPPortService        INTEGER,
+                ipmsDIPSrcIPAddr          IpAddress,
+                ipmsDIPPortTimeout        INTEGER
+                }
+
+ipmsDIPAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the Destination IP Multicast 
+             address for the fields that follow."
+        ::= { ipmsDIPAddressPortEntry 1 }
+ 
+ipmsDIPDstVlan OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the VlanId of which the port is a member."
+        ::= { ipmsDIPAddressPortEntry 2 }
+
+ipmsDIPDstVlanMask OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the Vlan Mask for the afforementioned Vlan."
+        ::= { ipmsDIPAddressPortEntry 3 }
+
+ipmsDIPSlotNumber OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the slot number of the port that
+             corresponds to the IP Multicast group that it has joined."
+        ::= { ipmsDIPAddressPortEntry 4 }
+
+ipmsDIPPortNumber OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This value contains the port number for this virtual port."
+        ::= { ipmsDIPAddressPortEntry 5 }
+
+ipmsDIPPortType OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This value contains the type of this port."
+        ::= { ipmsDIPAddressPortEntry 6 }
+
+ipmsDIPPortInstance OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This value contains the instance for this port."
+        ::= { ipmsDIPAddressPortEntry 7 }
+
+ipmsDIPPortService OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This value contains the service for this port."
+        ::= { ipmsDIPAddressPortEntry 8 }
+
+ipmsDIPSrcIPAddr OBJECT-TYPE
+        SYNTAX        IpAddress
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This value contains the IP address of the station sending the membership
+             report."
+        ::= { ipmsDIPAddressPortEntry 9 }
+
+ipmsDIPPortTimeout OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This value contains the timeout value in seconds for this port."
+        ::= { ipmsDIPAddressPortEntry 10 }
+
+-- Neighbor Table     **********************************************
+
+ipmsNeighborTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF IpmsNeighborTableEntry
+        ACCESS        not-accessible
+        STATUS        mandatory
+        DESCRIPTION
+            "This table contains entries that list all known
+             external or neighboring routers."
+        ::= { ipmsMIBObjects 3 }
+ 
+ipmsNeighborTableEntry OBJECT-TYPE
+        SYNTAX        IpmsNeighborTableEntry
+        ACCESS        not-accessible
+        STATUS        mandatory
+        DESCRIPTION
+            "This defines an entry in the Neighbor table."
+        INDEX         { ipmsNbrVlanID,
+                        ipmsNbrSIPAddress
+         }
+        ::= { ipmsNeighborTable 1 }
+ 
+IpmsNeighborTableEntry ::=
+        SEQUENCE {
+                ipmsNbrVlanID             INTEGER,
+                ipmsNbrVlanMask           INTEGER,
+                ipmsNbrSIPAddress         IpAddress,
+                ipmsNbrSlotNumber         INTEGER,
+                ipmsNbrPortNumber         INTEGER,
+                ipmsNbrPortType           INTEGER,
+                ipmsNbrPortInstance       INTEGER,
+                ipmsNbrPortService        INTEGER,
+                ipmsNbrPortTimeout        INTEGER
+                }
+
+ipmsNbrVlanID OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the VlanId of the neighboring router."
+        ::= { ipmsNeighborTableEntry 1 }
+
+ipmsNbrVlanMask OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the Vlan Mask of the neighboring router."
+        ::= { ipmsNeighborTableEntry 2 }
+
+ipmsNbrSIPAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the IP address of the neighboring router."
+        ::= { ipmsNeighborTableEntry 3 }
+ 
+ipmsNbrSlotNumber OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the slot number of the neighboring router."
+        ::= { ipmsNeighborTableEntry 4 }
+
+ipmsNbrPortNumber OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This value contains the port number of the neighboring router."
+        ::= { ipmsNeighborTableEntry 5 }
+
+ipmsNbrPortType OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This value contains the type of the neighboring router."
+        ::= { ipmsNeighborTableEntry 6 }
+
+ipmsNbrPortInstance OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This value contains the instance of the neighboring router."
+        ::= { ipmsNeighborTableEntry 7 }
+
+ipmsNbrPortService OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This value contains the service of the neighboring router."
+        ::= { ipmsNeighborTableEntry 8 }
+
+ipmsNbrPortTimeout OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This value contains the timeout value in seconds of the neighboring router."
+        ::= { ipmsNeighborTableEntry 9 }
+
+-- Statistics Table   ********************************************
+
+ipmsStatsTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF IpmsStatsEntry
+        ACCESS        not-accessible
+        STATUS        mandatory
+        DESCRIPTION
+            "This table contains entries that supply statistical
+             information about the IP Multicast traffic that is
+             being switched and forwarded by this router."
+        ::= { ipmsMIBObjects 4 }
+ 
+ipmsStatsEntry OBJECT-TYPE
+        SYNTAX        IpmsStatsEntry
+        ACCESS    not-accessible
+   STATUS   mandatory
+        DESCRIPTION
+            "This table entry describes the entries included in
+             the above tables."
+        INDEX         { ipmsStatsDIPAddress,
+                        ipmsStatsSIPAddress, 
+                        ipmsStatsVlanID 
+         }
+      ::= { ipmsStatsTable 1 }
+ 
+IpmsStatsEntry ::=
+        SEQUENCE { ipmsStatsDIPAddress         IpAddress,
+                   ipmsStatsSIPAddress         IpAddress,
+                   ipmsStatsVlanID             INTEGER,
+                   ipmsStatsVlanMask           INTEGER,
+                   ipmsStatsPacketsOut         INTEGER,
+                   ipmsStatsSecsSinceZeroed    INTEGER,
+                   ipmsStatsAveragePPS         INTEGER
+                 }
+
+ipmsStatsDIPAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the Destinatin IP address of
+             the dest/source entry value.  There can be many IP
+             source addresses for a given Destination IP address."
+        ::= { ipmsStatsEntry 1 }
+
+ipmsStatsSIPAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the Source IP Address for a given
+             Destination IP address."
+        ::= { ipmsStatsEntry 2 }
+
+ipmsStatsVlanID OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the VlanID of the entry."
+        ::= { ipmsStatsEntry 3 }
+
+ipmsStatsVlanMask OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the Vlan mask of the entry."
+        ::= { ipmsStatsEntry 4 }
+
+ipmsStatsPacketsOut OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the number of packets that have
+             been sent for a given Destination IP/source IP
+             address pair."
+        ::= { ipmsStatsEntry 5 }
+
+ipmsStatsSecsSinceZeroed OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the number seconds that have
+             elapsed since the statistics have been zeroed."
+        ::= { ipmsStatsEntry 6 }
+ 
+ipmsStatsAveragePPS OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the average number of packets per second
+             for this data flow."
+        ::= { ipmsStatsEntry 7 }
+ 
+--  Zero Statistics **********************************************
+
+ipmsZeroStatsGroup OBJECT IDENTIFIER ::= { ipmsMIBObjects 5 }
+
+ipmsZeroStatsFlag  OBJECT-TYPE                           
+        SYNTAX        INTEGER {
+               zeroStats (1)
+        }
+        ACCESS        read-write
+        STATUS        mandatory
+        DESCRIPTION
+            "Seting this flag to one causes statistics counters to be 
+             zeroed."
+        ::= { ipmsZeroStatsGroup 1 }
+
+-- Forwarding Table ************************************************
+
+ipmsForwardingTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF IpmsFwdTableEntry
+        ACCESS        not-accessible
+        STATUS        mandatory
+        DESCRIPTION
+            "This table contains entries that represent the contents
+             of IPMS forwarding table.  For each
+             source and destination IP address pair, several 
+             slot/port combinations can be assigned."
+
+        ::= { ipmsMIBObjects 6 }
+ 
+ipmsFwdTableEntry OBJECT-TYPE
+        SYNTAX        IpmsFwdTableEntry
+        ACCESS        not-accessible
+        STATUS        mandatory
+        DESCRIPTION
+            "This defines an entry in the Forwarding table."
+        INDEX         { ipmsFwdDestIP,
+                        ipmsFwdSourceIP,
+                        ipmsFwdEntryType,
+                        ipmsFwdSrcVlan,
+                        ipmsFwdDstSlotNumber,
+                        ipmsFwdDstPortNumber,
+                        ipmsFwdDstPortInstance,
+                        ipmsFwdDstPortService
+         }
+        ::= { ipmsForwardingTable 1 }
+ 
+IpmsFwdTableEntry ::=
+        SEQUENCE {
+                ipmsFwdDestIP           IpAddress,
+                ipmsFwdSourceIP         IpAddress,
+                ipmsFwdEntryType        INTEGER,
+                ipmsFwdSrcVlan          INTEGER,
+                ipmsFwdSrcVlanMask      INTEGER,
+                ipmsFwdSrcSlotNumber    INTEGER,
+                ipmsFwdSrcPortNumber    INTEGER,
+                ipmsFwdSrcPortType      INTEGER,
+                ipmsFwdSrcPortInstance  INTEGER,
+                ipmsFwdSrcPortService   INTEGER,
+                ipmsFwdDstVlan          INTEGER,
+                ipmsFwdDstVlanMask      INTEGER,
+                ipmsFwdDstSlotNumber    INTEGER,
+                ipmsFwdDstPortNumber    INTEGER,
+                ipmsFwdDstPortType      INTEGER,
+                ipmsFwdDstPortInstance  INTEGER,
+                ipmsFwdDstPortService   INTEGER,
+                ipmsFwdDstPortMbrFlag   INTEGER,
+                ipmsFwdDstPortNbrFlag   INTEGER,
+                ipmsFwdDstPortRteFlag   INTEGER
+                }
+
+ipmsFwdDestIP OBJECT-TYPE
+        SYNTAX        IpAddress
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the Dest IP Multicast address for 
+             the fields that follow."
+        ::= { ipmsFwdTableEntry 1 }
+
+ipmsFwdSourceIP OBJECT-TYPE
+        SYNTAX        IpAddress
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the Source IP Multicast address for 
+             the fields that follow."
+        ::= { ipmsFwdTableEntry 2 }
+
+ipmsFwdEntryType OBJECT-TYPE
+        SYNTAX        INTEGER {
+            switched(1),
+            switchedError(2),
+            switchedPrimary(3),
+            routed(4)
+            }
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the type of this forwarding entry."
+        ::= { ipmsFwdTableEntry 3 }
+
+ipmsFwdSrcVlan OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the source VlanID of this stream."
+        ::= { ipmsFwdTableEntry 4 }
+
+ipmsFwdSrcVlanMask OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the source VlanID Mask of this stream."
+        ::= { ipmsFwdTableEntry 5 }
+
+ipmsFwdSrcSlotNumber OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the slot number of the svpn that is 
+             emitting this multicast stream."
+        ::= { ipmsFwdTableEntry 6 }
+ 
+ipmsFwdSrcPortNumber OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the port number of the aforementioned svpn."
+        ::= { ipmsFwdTableEntry 7 }
+ 
+ipmsFwdSrcPortType OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the port type."
+        ::= { ipmsFwdTableEntry 8 }
+
+ipmsFwdSrcPortInstance OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the port instance."
+        ::= { ipmsFwdTableEntry 9 }
+
+ipmsFwdSrcPortService OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the port service."
+        ::= { ipmsFwdTableEntry 10 }
+
+ipmsFwdDstVlan OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the destination VlanID of this port."
+        ::= { ipmsFwdTableEntry 11 }
+
+ipmsFwdDstVlanMask OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the destination VlanID Mask of this port."
+        ::= { ipmsFwdTableEntry 12 }
+
+ipmsFwdDstSlotNumber OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the slot number of the svpn that has
+             requested the multicast stream."
+        ::= { ipmsFwdTableEntry 13 }
+
+ipmsFwdDstPortNumber OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the port number of the destination svpn."
+        ::= { ipmsFwdTableEntry 14 }
+
+ipmsFwdDstPortType OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the port type."
+        ::= { ipmsFwdTableEntry 15 }
+
+ipmsFwdDstPortInstance OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the port instance."
+        ::= { ipmsFwdTableEntry 16 }
+
+ipmsFwdDstPortService OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains the port service."
+        ::= { ipmsFwdTableEntry 17 }
+
+ipmsFwdDstPortMbrFlag OBJECT-TYPE
+        SYNTAX        INTEGER {
+            membershipRequested(1),
+            membershipNotRequested(2)
+            }
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains a flag indicating whether or not this port
+             is in the forwarding table due to the reception of an IGMP 
+             membership report."
+        ::= { ipmsFwdTableEntry 18 }
+
+ipmsFwdDstPortNbrFlag OBJECT-TYPE
+        SYNTAX        INTEGER {
+            portIsNeighbor(1),
+            portIsNotNeighbor(2)
+            }
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains a flag indicating whether or not this port
+             is in the forwarding table because their is a neighboring router
+             present on the port."
+        ::= { ipmsFwdTableEntry 19 }
+
+ipmsFwdDstPortRteFlag OBJECT-TYPE
+        SYNTAX        INTEGER {
+            portIsRouted(1),
+            portIsNotRouted(2)
+            }
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field contains a flag indicating whether or not this port
+             is in the forwarding table because it is being routed to or not."
+        ::= { ipmsFwdTableEntry 20 }
+
+--  The Policy Manger Parameter Table **********************************************
+
+ipmsPolManParameters OBJECT IDENTIFIER ::= { ipmsMIBObjects 7 }
+
+ipmsPolManDefaultPolicy  OBJECT-TYPE                           
+        SYNTAX        INTEGER {
+            permitted(1),
+            denied(2)
+            }
+        ACCESS        read-write
+        STATUS        mandatory
+        DESCRIPTION
+            "The default policy for IPMS."
+        ::= { ipmsPolManParameters 1 }
+
+ipmsPolManActiveTimer  OBJECT-TYPE                           
+        SYNTAX        INTEGER 
+        ACCESS        read-write
+        STATUS        mandatory
+        DESCRIPTION
+            "The time in seconds that entries in the IPMS Policy Manager
+             cache table remain active before being flagged as 'stale'."
+        ::= { ipmsPolManParameters 2 }
+
+ipmsPolManDeleteTimer  OBJECT-TYPE                           
+        SYNTAX        INTEGER 
+        ACCESS        read-write
+        STATUS        mandatory
+        DESCRIPTION
+            "The time in seconds that entries in the IPMS Policy Manager
+             cache table remain stale before being deleted from the table."
+        ::= { ipmsPolManParameters 3 }
+
+-- The Policy Manager Cache Table ************************************************
+
+ipmsPolManCacheTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF IpmsPolManCacheTableEntry
+        ACCESS        not-accessible
+        STATUS        mandatory
+        DESCRIPTION
+            "This table contains entries that represent the contents
+             of IPMS policy manager cache table."
+
+        ::= { ipmsMIBObjects 8 }
+ 
+ipmsPolManCacheTableEntry OBJECT-TYPE
+        SYNTAX        IpmsPolManCacheTableEntry
+        ACCESS        not-accessible
+        STATUS        mandatory
+        DESCRIPTION
+            "This defines an entry in the Forwarding table."
+        INDEX         { ipmsPolManMCGroup,
+                        ipmsPolManSlot,
+                        ipmsPolManPort,
+                        ipmsPolManType,
+                        ipmsPolManInstance,
+                        ipmsPolManService
+         }
+        ::= { ipmsPolManCacheTable 1 }
+ 
+IpmsPolManCacheTableEntry ::=
+        SEQUENCE {
+                ipmsPolManMCGroup   IpAddress,
+                ipmsPolManSlot      INTEGER,
+                ipmsPolManPort      INTEGER,
+                ipmsPolManType      INTEGER,
+                ipmsPolManInstance  INTEGER,
+                ipmsPolManService   INTEGER,
+                ipmsPolManVlanGroup INTEGER,
+                ipmsPolManStatus    INTEGER,
+                ipmsPolManState     INTEGER,
+                ipmsPolManTimeout   INTEGER
+                }
+
+ipmsPolManMCGroup OBJECT-TYPE
+        SYNTAX        IpAddress
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the Dest IP Multicast address for 
+             the fields that follow."
+        ::= { ipmsPolManCacheTableEntry 1 }
+
+ipmsPolManSlot OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the slot for this entry."
+        ::= { ipmsPolManCacheTableEntry 2 }
+
+ipmsPolManPort OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the port for this entry."
+        ::= { ipmsPolManCacheTableEntry 3 }
+
+ipmsPolManType OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the type for this entry."
+        ::= { ipmsPolManCacheTableEntry 4 }
+
+ipmsPolManInstance OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the instance for this entry."
+        ::= { ipmsPolManCacheTableEntry 5 }
+
+ipmsPolManService OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the service for this entry."
+        ::= { ipmsPolManCacheTableEntry 6 }
+
+ipmsPolManVlanGroup OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the vlan group for this entry."
+        ::= { ipmsPolManCacheTableEntry 7 }
+
+ipmsPolManStatus OBJECT-TYPE
+        SYNTAX        INTEGER {
+            permitted(1),
+            denied(2)
+            }
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the status of this entry."
+        ::= { ipmsPolManCacheTableEntry 8 }
+
+ipmsPolManState OBJECT-TYPE
+        SYNTAX        INTEGER {
+            active(1),
+            stale(2)
+            }
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the status for this entry. An entry is active
+             if a response has been received from policy manager before the
+             active timer expires. If the active timer expires, the entry will
+             go into a stale state. If stale for longer than the delete timer,
+             the entry will be deleted."
+        ::= { ipmsPolManCacheTableEntry 9 }
+
+ipmsPolManTimeout OBJECT-TYPE
+        SYNTAX        INTEGER
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "This field defines the timeout value for this entry."
+        ::= { ipmsPolManCacheTableEntry 10 }
+
+END

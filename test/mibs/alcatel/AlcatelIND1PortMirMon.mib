@@ -1,0 +1,383 @@
+ALCATEL-IND1-PORT-MIRRORING-MONITORING-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+	OBJECT-TYPE,
+	MODULE-IDENTITY,
+	OBJECT-IDENTITY,
+	NOTIFICATION-TYPE              FROM SNMPv2-SMI
+	MODULE-COMPLIANCE,
+	OBJECT-GROUP,
+	NOTIFICATION-GROUP             FROM SNMPv2-CONF
+	TEXTUAL-CONVENTION,
+        RowStatus		       FROM SNMPv2-TC
+	InterfaceIndex			FROM IF-MIB
+	portMirroringMonitoringTraps,
+        softentIND1PortMirroringMonitoring              FROM ALCATEL-IND1-BASE;
+
+ 
+	alcatelIND1PortMirrorMonitoringMIB MODULE-IDENTITY
+		LAST-UPDATED "200108270000Z"
+		ORGANIZATION "Alcatel - Architects Of An Internet World"
+		CONTACT-INFO
+            "Please consult with Customer Service to insure the most appropriate
+             version of this document is used with the products in question:
+         
+                        Alcatel Internetworking, Incorporated
+                       (Division 1, Formerly XYLAN Corporation)
+                               26801 West Agoura Road
+                            Agoura Hills, CA  91301-5122
+                              United States Of America
+        
+            Telephone:               North America  +1 800 995 2696
+                                     Latin America  +1 877 919 9526
+                                     Europe         +31 23 556 0100
+                                     Asia           +65 394 7933
+                                     All Other      +1 818 878 4507
+        
+            Electronic Mail:         support@ind.alcatel.com
+            World Wide Web:          http://www.ind.alcatel.com
+            File Transfer Protocol:  ftp://ftp.ind.alcatel.com/pub/products/mibs"
+
+		DESCRIPTION
+			"This module describes an authoritative enterprise-specific Simple
+             Network Management Protocol (SNMP) Management Information Base (MIB):
+         
+                 For the Birds Of Prey Product Line
+		 Port Mirroring and Monitoring for mirroring/monitoring session control
+         
+             The right to make changes in specification and other information
+             contained in this document without prior notice is reserved.
+         
+             No liability shall be assumed for any incidental, indirect, special, or
+             consequential damages whatsoever arising from or related to this
+             document or the information contained herein.
+         
+             Vendors, end-users, and other interested parties are granted
+             non-exclusive license to use this specification in connection with
+             management of the products for which it is intended to be used.
+         
+               Copyright (C) 1995-2002 Alcatel Internetworking, Incorporated
+                             ALL RIGHTS RESERVED WORLDWIDE"
+
+		REVISION      "200108270000Z"
+        DESCRIPTION
+            "Addressing discrepancies with Alcatel Standard."
+     	        ::= { softentIND1PortMirroringMonitoring 1}
+
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+	alcatelIND1PortMirMonMIBObjects OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+            "Branch For Port Mirroring and Monitoring
+            Subsystem Managed Objects."
+            ::= { alcatelIND1PortMirrorMonitoringMIB 1 }
+
+
+    alcatelIND1PortMirMonMIBConformance OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+            "Branch For Port Mirroring and Monitoring
+            Subsystem Conformance Information."
+            ::= { alcatelIND1PortMirrorMonitoringMIB 2 }
+
+
+    alcatelIND1PortMirMonMIBGroups OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+            "Branch For Port Mirroring and Monitoring
+            Subsystem Units Of Conformance."
+            ::= { alcatelIND1PortMirMonMIBConformance 1}
+
+
+    alcatelIND1PortMirMonMIBCompliances OBJECT-IDENTITY
+        STATUS current
+        DESCRIPTION
+            "Branch For Port Mirroring and Monitoring
+            Subsystem Compliance Statements."
+            ::= { alcatelIND1PortMirMonMIBConformance 2}
+
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+	mirmonMirroring  OBJECT IDENTIFIER ::= { alcatelIND1PortMirMonMIBObjects 1 }
+
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+mirrorTable  OBJECT-TYPE
+	    SYNTAX  SEQUENCE OF MirrorEntry
+	    MAX-ACCESS  not-accessible
+	    STATUS  current
+	    DESCRIPTION
+		"A list of port mirroring instances."
+            ::= { mirmonMirroring 1 }
+
+
+mirrorEntry  OBJECT-TYPE
+	SYNTAX  MirrorEntry
+	MAX-ACCESS  not-accessible
+	STATUS  current
+	DESCRIPTION
+		"A port  mirroring entry."
+	INDEX { mirrorSessionNumber }
+	    ::= { mirrorTable 1 }
+
+
+MirrorEntry ::= SEQUENCE {
+	mirrorSessionNumber
+		INTEGER,
+	mirrorMirroredIfindex
+		InterfaceIndex,
+	mirrorMirroringIfindex
+		InterfaceIndex,
+	mirrorStatus
+		INTEGER,
+	mirrorUnblockedVLAN
+		INTEGER,
+        mirrorRowStatus
+		RowStatus
+	}
+
+mirrorSessionNumber OBJECT-TYPE
+	SYNTAX  INTEGER  (1..2147483647)
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"Identifies a specific port mirroring instance."
+           DEFVAL  { 1 }
+           ::= { mirrorEntry 1 }	
+
+mirrorMirroredIfindex  OBJECT-TYPE
+	SYNTAX  InterfaceIndex
+	MAX-ACCESS  read-write
+	STATUS  current
+	DESCRIPTION
+		"The physical identification number for this mirroring port instance (mirrorred port)."
+        DEFVAL  { 1 }
+	::= { mirrorEntry 2 }
+
+mirrorMirroringIfindex  OBJECT-TYPE
+	SYNTAX  InterfaceIndex
+	MAX-ACCESS  read-write
+	STATUS  current
+	DESCRIPTION
+		" The physical identification number for this mirroring port instance (mirroring port)."
+            DEFVAL  { 1 }
+	    ::= { mirrorEntry 3 }
+ 
+mirrorStatus  OBJECT-TYPE
+	SYNTAX  INTEGER {
+		off (1),
+		on (2)
+	}
+	MAX-ACCESS  read-write
+	STATUS  current
+	DESCRIPTION
+		"Whether mirroring is enabled or disabled for this port.
+		 Prior to enabling mirroring, or at the same time all other
+		 read write values in this table for the same row must
+		 be set to appropriate values, or defaults will be assumed."
+            DEFVAL  { off }
+	    ::= { mirrorEntry 4 }
+
+mirrorUnblockedVLAN OBJECT-TYPE
+	SYNTAX  INTEGER  (1..2147483647)
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+		"A VLAN identifier which specifies the VLAN identifier that must remain unblocked no matter what is the output of the spanning tree algorithm."
+           DEFVAL  { 1 }
+           ::= { mirrorEntry 5 }	
+
+mirrorRowStatus OBJECT-TYPE
+	 	SYNTAX  RowStatus
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		        "The status of this table entry.  
+			The only value supported for set is destroy(6),
+		         to remove a mirroring session."
+           ::= { mirrorEntry 6 }	
+
+	    
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+	mirmonNotificationVars  OBJECT IDENTIFIER ::= { alcatelIND1PortMirMonMIBObjects 3 }
+
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+MirMonErrorIds ::= TEXTUAL-CONVENTION
+	STATUS 	current
+	DESCRIPTION
+		"This data type is used to define the different type of error
+		occured while configuring Mirroring/Monitoring."
+	SYNTAX INTEGER {
+		other (1), 
+		wrongSession (2), -- Wrong session given to NI.
+		hwQError (3),     -- HW queue error on NI 
+		swQError (4) 	  -- SW queue error on NI
+		}
+
+mirmonPrimarySlot OBJECT-TYPE
+	        SYNTAX  INTEGER  (1..2147483647)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		        "Slot of mirrored or monitored interface."
+           ::= { mirmonNotificationVars 1 }	
+
+mirmonPrimaryPort OBJECT-TYPE
+	        SYNTAX  INTEGER  (1..2147483647)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		        "Port of mirrored or monitored interface."
+           ::= { mirmonNotificationVars 2 }	
+
+mirroringSlot OBJECT-TYPE
+	        SYNTAX  INTEGER  (1..2147483647)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		        "Slot of mirroring interface."
+           ::= { mirmonNotificationVars 3 }	
+
+mirroringPort OBJECT-TYPE
+	        SYNTAX  INTEGER  (1..2147483647)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		        "Port of mirroring interface."
+           ::= { mirmonNotificationVars 4 }	
+
+mirMonSession	OBJECT-TYPE
+	 SYNTAX  INTEGER  (1..2147483647)
+	 MAX-ACCESS  read-only
+	 STATUS  current
+	 DESCRIPTION
+	 	"The Mirroring session number."
+	 ::= {mirmonNotificationVars 5 }
+
+mirMonError OBJECT-TYPE
+	SYNTAX	MirMonErrorIds
+	MAX-ACCESS read-only
+	STATUS	   current
+	DESCRIPTION
+		"The Error returned by the NI which failed to configure Mirroring/Monitoring"
+	::= {mirmonNotificationVars  6 }
+
+mirMonErrorNi OBJECT-TYPE
+           SYNTAX  INTEGER  (1..2147483647)
+           MAX-ACCESS  read-only
+           STATUS  current
+           DESCRIPTION
+                 "The NI slot number. "
+           ::= { mirmonNotificationVars 7 }
+
+
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+--  NOTIFICATIONS
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+mirrorConfigError NOTIFICATION-TYPE
+	OBJECTS {
+		mirmonPrimarySlot,
+		mirmonPrimaryPort,
+		mirroringSlot,
+		mirroringPort,
+		mirMonErrorNi, -- NI which reported the error.
+		mirMonError    -- Error
+		}
+	STATUS current
+	DESCRIPTION
+		"The Mirroring Configuration failed on NI.
+		This trap is sent when any NI fails to configure mirroring.			
+		Due to this error, port mirroring session will be terminated."
+	::= { portMirroringMonitoringTraps 0 1 }
+
+
+mirrorUnlikeNi	NOTIFICATION-TYPE
+	OBJECTS {
+		mirmonPrimarySlot,
+		mirmonPrimaryPort,
+		mirroringSlot,
+		mirroringPort,
+		mirMonErrorNi  -- NI slot number where the Unlike NI is inserted.
+		}
+	STATUS current
+	DESCRIPTION
+		" The Mirroring Configuration is deleted due to the swapping of different 
+		  NI board type. Port Mirroring session which was active on a slot,cannot 
+		  continue with the insertion of different NI type in the same slot. "
+	::= { portMirroringMonitoringTraps 0 3 }
+	
+
+	
+
+
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+-- COMPLIANCE
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+    alcatelIND1PortMirMonMIBCompliance MODULE-COMPLIANCE
+        STATUS  current
+        DESCRIPTION
+            "Compliance statement for
+             Port Mirroring and Monitoring."
+        MODULE
+            MANDATORY-GROUPS
+            {
+                portMirroringGroup,
+                portNotificationVarsGroup 
+            }
+
+        ::= { alcatelIND1PortMirMonMIBCompliances 1 }
+
+
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+-- UNITS OF CONFORMANCE
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+    portMirroringGroup OBJECT-GROUP
+        OBJECTS
+        {
+	                mirrorSessionNumber,     -- port mirroring table
+	                mirrorMirroredIfindex,
+	                mirrorMirroringIfindex,
+	                mirrorStatus,
+	                mirrorUnblockedVLAN,
+	                mirrorRowStatus
+        }
+        STATUS  current
+        DESCRIPTION
+            "Collection of objects for management of Port Mirroring."
+        ::= { alcatelIND1PortMirMonMIBGroups 1 }
+
+
+    portNotificationVarsGroup OBJECT-GROUP
+        OBJECTS
+        {
+                       mirmonPrimarySlot,
+                       mirmonPrimaryPort,
+                       mirroringSlot,
+                       mirroringPort,
+		       mirMonSession,
+		       mirMonError,
+		       mirMonErrorNi
+	}
+        STATUS  current
+        DESCRIPTION
+            "Collection of objects which appear only in notifications."
+        ::= { alcatelIND1PortMirMonMIBGroups 3 }
+		 
+
+    mirmonTrapsGroup NOTIFICATION-GROUP
+	NOTIFICATIONS {
+  	    mirrorConfigError,
+	    mirrorUnlikeNi
+	}
+        STATUS  current
+        DESCRIPTION
+            "Collection of Traps for port mirroring and monitoring."
+        ::= { alcatelIND1PortMirMonMIBGroups 4 }
+
+
+	END

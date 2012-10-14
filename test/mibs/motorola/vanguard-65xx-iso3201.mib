@@ -1,0 +1,1599 @@
+        -- Version 1.4, modified 02/12/98
+
+        ISO3201-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+            Counter, Gauge
+                FROM RFC1155-SMI
+            OBJECT-TYPE
+                FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                         codex OBJECT IDENTIFIER ::= { enterprises 449 }
+            cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                       cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+         cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+       cdx6500CfgProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 1 }
+   cdx6500PCTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 1 }
+cdx6500PCTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 3 }
+
+             cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+      cdx6500StatProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 1 }
+   cdx6500PSTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 1 }
+cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 3 }
+
+               cdx6500Controls OBJECT IDENTIFIER ::= { cdx6500 4 }
+
+        -- Textual conventions
+
+        DisplayString ::= OCTET STRING
+
+        -- The Datapac 3201 Port Configuration Table
+        -- This table contains Configuration parameters 
+        -- related to a 3201 port.
+
+        cdx6500PPCT3201PortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPCT3201PortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains the 3201 Port configuration parameters."
+        ::= { cdx6500PCTPortProtocolGroup 28 }
+
+        cdx6500PPCT3201PortEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPCT3201PortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the 3201 Port Configuration Table."
+            INDEX { iso3201PCfgPortNum }
+        ::= { cdx6500PPCT3201PortTable 1 }
+
+        Cdx6500PPCT3201PortEntry ::=
+            SEQUENCE {
+                iso3201PCfgPortNum
+                    INTEGER,
+                iso3201PCfgPortType
+                    INTEGER,
+                iso3201PCfgPortSpeed
+                    INTEGER,
+                iso3201PCfgNoOfControllers
+                    INTEGER,
+                iso3201PCfgResponseTimeout
+                    INTEGER,
+                iso3201PCfgInterChrTimeout
+                    INTEGER,
+                iso3201PCfgNoOfRetries
+                    INTEGER,
+                iso3201PCfgNoOfConsecRetries
+                    INTEGER,
+                iso3201PCfgSlowPollWaitCycle
+                    INTEGER
+                }
+
+        iso3201PCfgPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port number of the 3201 port."
+        ::= { cdx6500PPCT3201PortEntry 1 }
+
+        iso3201PCfgPortType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    iso3201 (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The Port Type of the port."
+        ::=  { cdx6500PPCT3201PortEntry 2 }
+
+        iso3201PCfgPortSpeed OBJECT-TYPE
+            SYNTAX INTEGER {
+                    speed300   (3),
+                    speed1200  (4),
+                    speed600   (5),
+                    speed1800  (8),
+                    speed2400  (13),
+                    speed4800  (14),
+                    speed9600  (15),
+                    speed19200 (16),
+                    speed7200  (99)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION 
+                "This specifies port speed in bits per second
+                 speed300   : 300  bits per second
+                 speed600   : 600  bits per second
+                 speed1200  : 1200 bits per second
+                 speed1800  : 1800 bits per second
+                 speed2400  : 2400 bits per second
+                 speed4800  : 4800 bits per second
+                 speed7200  : 7200 bits per second
+                 speed9600  : 9600 bits per second
+                 speed19200 : 19200 bits per second ."
+        ::= { cdx6500PPCT3201PortEntry 3}
+
+        iso3201PCfgNoOfControllers OBJECT-TYPE
+            SYNTAX INTEGER (1..16)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of controllers on this line."
+        ::= { cdx6500PPCT3201PortEntry 4 } 
+
+        iso3201PCfgResponseTimeout OBJECT-TYPE
+            SYNTAX INTEGER (5..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the amount of time in 1/20th of a
+                 second that the PAD waits for a response from a
+                 controller. A value of 5 gives a response timeout
+                 of 250ms."
+        ::= { cdx6500PPCT3201PortEntry 5 }
+
+        iso3201PCfgInterChrTimeout OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the maximum amount of time in 1/20
+                 of a second that the PAD waits between two characters
+                 when receiving data from the attatched devices before
+                 detecting a line problem. A value of 2 gives an 
+                 intercharacter timeout of 100ms."
+        ::= { cdx6500PPCT3201PortEntry 6 }
+
+        iso3201PCfgNoOfRetries OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the retry limit for polls/selects 
+                 sent, NAKs sent/received and ENQs sent/received.
+                 In case of polls and selects, the controller is 
+                 placed in slow poll mode on reaching this limit."
+        ::= { cdx6500PPCT3201PortEntry 7 }
+
+        iso3201PCfgNoOfConsecRetries OBJECT-TYPE
+            SYNTAX INTEGER (0..5)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of retries that will be
+                 made immediately in case of response timeout on
+                 Poll, response timeout on Select or NAK response 
+                 to select. The next controller in the list will be
+                 polled/selected only after these many retries are
+                 made for the non-responding controller.
+                 All consecutive retries will be counted as one retry
+                 attempt."
+        ::= { cdx6500PPCT3201PortEntry 8 }
+
+        iso3201PCfgSlowPollWaitCycle OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of poll cycles to active
+                 controllers before a poll is sent to one controller
+                 in the slow poll list."
+        ::= { cdx6500PPCT3201PortEntry 9 }
+
+
+        -- 3201 Station Configuration Tables
+        -- These tables contain configuration parameters
+        -- for the 3201 station table
+
+        cdx6500SPCT3201StnTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SPCT3201StnEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains the 3201 Station Configuration
+                 parameters." 
+        ::= { cdx6500PCTStationProtocolGroup 7 }
+
+        cdx6500SPCT3201StnEntry OBJECT-TYPE
+            SYNTAX Cdx6500SPCT3201StnEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the 3201 Station Configuration Table."
+            INDEX { iso3201SCfgPortNum, iso3201SCfgStnNum }
+        ::= { cdx6500SPCT3201StnTable 1 }
+
+        Cdx6500SPCT3201StnEntry ::=
+            SEQUENCE {
+                iso3201SCfgPortNum
+                    INTEGER,
+                iso3201SCfgStnNum
+                    INTEGER,
+                iso3201SCfgControllerAddress
+                    DisplayString,
+                iso3201SCfgAutocallMnemonic
+                    DisplayString,
+                iso3201SCfgAutocallTimeout
+                    INTEGER,
+                iso3201SCfgMaxNoAutocallAttempts
+                    INTEGER,
+                iso3201SCfgX25Address
+                    DisplayString,
+                iso3201SCfgBillingRecords
+                    INTEGER
+                }
+
+        iso3201SCfgPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port number of the 3201 port."
+        ::= { cdx6500SPCT3201StnEntry 1 }
+
+        iso3201SCfgStnNum OBJECT-TYPE
+            SYNTAX INTEGER (1..16) 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Station number of the 3201 station."
+        ::= { cdx6500SPCT3201StnEntry 2 }
+
+        iso3201SCfgControllerAddress OBJECT-TYPE
+            SYNTAX DisplayString 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the address of this controller
+                 The valid addresses  are :
+                 0x20, 0x21, 0x22, 0x23, 0x24, 0x25,
+                 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B,
+                 0x2C, 0x2D, 0x2E, 0x2F, 0x40, 0x41,
+                 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
+                 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D,
+                 0x4E, 0x4F, 0x60, 0x61, 0x62, 0x63,
+                 0x64, 0x65, 0x66, 0x67, 0x68, 0x69,
+                 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F." 
+        ::= { cdx6500SPCT3201StnEntry 3  }
+
+        iso3201SCfgAutocallMnemonic OBJECT-TYPE
+            SYNTAX DisplayString  (SIZE(0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the mnemonic used by the PAD to
+                 place calls to the Host for this controller.
+                 Host initiated calls will be accepted only if
+                 this field is blank."
+        ::= { cdx6500SPCT3201StnEntry 4 }
+
+        iso3201SCfgAutocallTimeout OBJECT-TYPE
+            SYNTAX INTEGER (5..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION 
+                "This specifies the time interval in seconds 
+                 between call attempts."
+        ::= { cdx6500SPCT3201StnEntry 5 }
+         
+        iso3201SCfgMaxNoAutocallAttempts OBJECT-TYPE
+            SYNTAX INTEGER (0..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of times autocall
+                 attempts will be made. A value of 0 will allow 
+                 unlimited attempts." 
+        ::= { cdx6500SPCT3201StnEntry 6 }
+
+        iso3201SCfgX25Address OBJECT-TYPE
+            SYNTAX DisplayString  (SIZE(0..15))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the X.25 address inserted in the 
+                 calling address field of the call packet sent by
+                 the PAD to the Host. This address identifies the
+                 controller to the Host."
+        ::= { cdx6500SPCT3201StnEntry 7 }
+
+        iso3201SCfgBillingRecords OBJECT-TYPE
+            SYNTAX INTEGER {
+                    billingDisabled (1),
+                    billingEnabled  (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This controls whether billing(accounting) records
+                 will be created for calls on this station
+                 billingDisabled : billing is disabled
+                 billingEnabled  : billing is enabled ."
+        ::= { cdx6500SPCT3201StnEntry 8 }
+
+        --  3201  Port Statistics
+
+        cdx6500PPST3201PStatsTable  OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPST3201PStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains 3201 Port Statistics parameters."
+        ::= { cdx6500PSTPortProtocolGroup 29 }
+          
+        cdx6500PPST3201PStatsEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPST3201PStatsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the 3201 Port Statistics Table."
+            INDEX { iso3201PStatsPortNum }
+        ::= { cdx6500PPST3201PStatsTable 1 }
+
+        Cdx6500PPST3201PStatsEntry ::=
+            SEQUENCE {
+              iso3201PStatsPortNum
+                    INTEGER,
+                iso3201PStatsPortStatus
+                    INTEGER,
+                iso3201PStatsPortType
+                    INTEGER,
+                iso3201PStatsPortSpeed
+                    INTEGER,
+                iso3201PStatsPortUtilIn
+                    INTEGER,
+                iso3201PStatsPortUtilOut
+                    INTEGER,
+                iso3201PStatsLineStatus
+                    INTEGER,
+                iso3201PStatsTxChrs
+                    Counter,
+                iso3201PStatsTxMsgs
+                    Counter,
+                iso3201PStatsTxPolls
+                    Counter,
+                iso3201PStatsTxSelects
+                    Counter,
+                iso3201PStatsTxACKs
+                    Counter, 
+                iso3201PStatsTxNAKs
+                    Counter,
+                iso3201PStatsTxENQs
+                    Counter,
+                iso3201PStatsRxChrs
+                    Counter,
+                iso3201PStatsRxMsgs
+                    Counter,
+                iso3201PStatsRxACKs
+                    Counter, 
+                iso3201PStatsRxNAKs
+                    Counter,
+                iso3201PStatsRxENQs
+                    Counter
+                }
+
+        iso3201PStatsPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port Number of the 3201 Port."
+        ::= { cdx6500PPST3201PStatsEntry 1 }
+
+        iso3201PStatsPortStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled (1),
+                    up       (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the operational status of the port
+                 up        : port is enabled
+                 disabled  : port is disabled ."
+        ::= { cdx6500PPST3201PStatsEntry 2 }
+
+        iso3201PStatsPortType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    iso3201 (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the type of access protocol for this port."
+        ::=  { cdx6500PPST3201PStatsEntry 3 }
+
+        iso3201PStatsPortSpeed OBJECT-TYPE
+            SYNTAX INTEGER {
+                    speed300   (3),
+                    speed1200  (4),
+                    speed600   (5),
+                    speed1800  (8),
+                    speed2400  (13),
+                    speed4800  (14),
+                    speed9600  (15),
+                    speed19200 (16),
+                    speed7200  (99)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION 
+                "This specifies port speed in bits per second
+                 speed300   : 300  bits per second
+                 speed600   : 600  bits per second
+                 speed1200  : 1200 bits per second
+                 speed1800  : 1800 bits per second
+                 speed2400  : 2400 bits per second
+                 speed4800  : 4800 bits per second
+                 speed7200  : 7200 bits per second
+                 speed9600  : 9600 bits per second
+                 speed19200 : 19200 bits per second ."
+        ::= { cdx6500PPST3201PStatsEntry 4 }
+
+        iso3201PStatsPortUtilIn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the port utilization for the line to port
+                 direction."
+        ::= { cdx6500PPST3201PStatsEntry 5 }
+
+        iso3201PStatsPortUtilOut OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the port utilization for the port to line
+                 direction."
+        ::= { cdx6500PPST3201PStatsEntry 6 }
+
+        iso3201PStatsLineStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    down (1),
+                    up   (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the line status : 
+                 up      : if one or more controllers are responding
+                           to polls
+                 down    : if no controllers are responding or garbage
+                           is being received."
+        ::= { cdx6500PPST3201PStatsEntry 7 }
+
+        iso3201PStatsTxChrs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of characters transmitted."
+        ::= { cdx6500PPST3201PStatsEntry 8 } 
+
+        iso3201PStatsTxMsgs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of data messages transmitted."
+        ::= { cdx6500PPST3201PStatsEntry 9 } 
+
+        iso3201PStatsTxPolls OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of polls transmitted."
+        ::= { cdx6500PPST3201PStatsEntry 10 } 
+
+        iso3201PStatsTxSelects OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of selects transmitted."
+        ::= { cdx6500PPST3201PStatsEntry 11 } 
+
+        iso3201PStatsTxACKs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of data messages for which
+                 ACKs were transmitted." 
+        ::= { cdx6500PPST3201PStatsEntry 12 } 
+
+        iso3201PStatsTxNAKs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of messages for which
+                 NAKs were transmitted."
+        ::= { cdx6500PPST3201PStatsEntry 13  } 
+
+        iso3201PStatsTxENQs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of ENQs transmitted."
+        ::= { cdx6500PPST3201PStatsEntry 14  } 
+
+        iso3201PStatsRxChrs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of characters received."
+        ::= { cdx6500PPST3201PStatsEntry 15 } 
+
+        iso3201PStatsRxMsgs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of data messages received."
+        ::= { cdx6500PPST3201PStatsEntry 16  } 
+
+        iso3201PStatsRxACKs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of data messages for which
+                 ACKs were received." 
+        ::= { cdx6500PPST3201PStatsEntry 17 } 
+
+        iso3201PStatsRxNAKs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of messages for which
+                 NAKs were received."
+        ::= { cdx6500PPST3201PStatsEntry 18 } 
+
+        iso3201PStatsRxENQs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of ENQs received."
+        ::= { cdx6500PPST3201PStatsEntry 19 } 
+
+        -- These tables contain Statistics parameters
+        -- for the 3201 Station table.
+
+        cdx6500SPST3201StnTable OBJECT IDENTIFIER ::=
+            { cdx6500PSTStationProtocolGroup 6 }
+
+        cdx6500SPST3201SStatsTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SPST3201StnEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains 3201 Station statistics parameters."
+        ::= { cdx6500SPST3201StnTable 1 }
+
+        cdx6500SPST3201StnEntry OBJECT-TYPE
+            SYNTAX Cdx6500SPST3201StnEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the 3201 Station statistics table."
+            INDEX { iso3201SStatsPortNum, iso3201SStatsStnNum }
+        ::= { cdx6500SPST3201SStatsTable 1 }
+
+        Cdx6500SPST3201StnEntry ::=
+            SEQUENCE {
+                iso3201SStatsPortNum
+                    INTEGER,
+                iso3201SStatsStnNum
+                    INTEGER,
+                iso3201SStatsControllerAddress
+                    DisplayString,
+                iso3201SStatsStnState
+                    INTEGER,
+                iso3201SStatsCurrentStatus
+                    INTEGER,
+                iso3201SStatsNoOfAutocallAttmpts
+                    Gauge,
+                iso3201SStatsNxtAutocallAttmpt
+                    INTEGER,
+                iso3201SStatsLastClearCauseCode
+                    DisplayString,
+                iso3201SStatsLastClearDiagCode
+                    DisplayString,
+                iso3201SStatsLastInCalledAddress
+                    DisplayString,
+                iso3201SStatsLastInCallingAddress
+                    DisplayString,
+                iso3201SStatsLastInCallFacilities
+                    DisplayString,
+                iso3201SStatsLastInCallCUD
+                    DisplayString,
+                iso3201SStatsLastOutCalledAddress
+                    DisplayString,
+                iso3201SStatsLastOutCallingAddress
+                    DisplayString,
+                iso3201SStatsLastOutCallFacilities
+                    DisplayString,
+                iso3201SStatsLastOutCallCUD
+                    DisplayString
+               }
+
+        iso3201SStatsPortNum  OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION 
+                "Port number of the 3201 port."
+        ::= { cdx6500SPST3201StnEntry 1 }
+
+        iso3201SStatsStnNum OBJECT-TYPE
+            SYNTAX INTEGER (1..16)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Station number of the 3201 station."
+        ::= { cdx6500SPST3201StnEntry 2 }
+
+        iso3201SStatsControllerAddress OBJECT-TYPE
+            SYNTAX DisplayString  
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the address of this controller
+                 The valid addresses are :
+                 0x20, 0x21, 0x22, 0x23, 0x24, 0x25,
+                 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B,
+                 0x2C, 0x2D, 0x2E, 0x2F, 0x40, 0x41,
+                 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
+                 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D,
+                 0x4E, 0x4F, 0x60, 0x61, 0x62, 0x63,
+                 0x64, 0x65, 0x66, 0x67, 0x68, 0x69,
+                 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F." 
+        ::= { cdx6500SPST3201StnEntry 3 }
+
+        iso3201SStatsStnState OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled  (1),
+                    down      (2),
+                    up        (3),
+                    suspended (4),
+                    blocked   (5)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION         
+                "This indicates the current state of the station
+                 up             : when responding to polls
+                 down           : when tries have expired and controller
+                                  is in slow poll
+                 suspended      : when polling has been stopped by host
+                 blocked        : when polling has been stopped because
+                                  the X.25 channel is blocked
+                 disabled       : when station is disabled."
+        ::= {cdx6500SPST3201StnEntry 4 }
+
+        iso3201SStatsCurrentStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    idle      (1),
+                    calling   (2),
+                    connected (3)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION 
+                "This gives information regarding the calls placed by this
+                 station on its host.
+                 calling    : when it is waiting call accept from the host
+                 connected  : when the connection to the host has been
+                              accepted
+                 idle       : when connection attempts are not in progress
+                              (no data to send to the Host), or autocall
+                              attempts have been exhausted or when it is 
+                              waiting for autocall timeout (to send call
+                              request again)."
+        ::= {cdx6500SPST3201StnEntry 5 }
+
+        iso3201SStatsNoOfAutocallAttmpts OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of attempts made to establish 
+                 connection to the host.
+                 This is reset to 0 when a connection is established."
+        ::= { cdx6500SPST3201StnEntry 6 }
+               
+        iso3201SStatsNxtAutocallAttmpt OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the time (in seconds ) after which the
+                 station will place autocall to the host."
+        ::= { cdx6500SPST3201StnEntry 7 }
+
+        iso3201SStatsLastClearCauseCode OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Last autocall clear cause code."
+        ::= { cdx6500SPST3201StnEntry 8 }
+
+        iso3201SStatsLastClearDiagCode OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Last clear diagnostic code."
+        ::= { cdx6500SPST3201StnEntry 9 }
+
+        iso3201SStatsLastInCalledAddress OBJECT-TYPE
+            SYNTAX DisplayString 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the called address in the last
+                 inbound call request packet sent by this station.
+                 A value of 'Last Call Information not available'
+                 will be returned if the last incoming call packet
+                 is not present."
+        ::= { cdx6500SPST3201StnEntry 10 } 
+
+        iso3201SStatsLastInCallingAddress OBJECT-TYPE
+            SYNTAX DisplayString 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the calling address in the last  
+                 inbound request packet sent by this station.
+                 A value of 'Last Call Information not available'
+                 will be returned if the last incoming call packet
+                 is not present."
+        ::= { cdx6500SPST3201StnEntry 11 }              
+
+        iso3201SStatsLastInCallFacilities  OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the facilities in the last 
+                 inbound request packet sent by this station.
+                 A value of 'Last Call Information not available'
+                 will be returned if the last incoming call packet
+                 is not present."
+        ::= { cdx6500SPST3201StnEntry 12 }
+
+        iso3201SStatsLastInCallCUD  OBJECT-TYPE
+            SYNTAX DisplayString 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the data in the Call User Data field
+                 in the last inbound call request packet sent by this
+                 station. A value of 'Last Call Information not available'
+                 will be returned if the incoming call packet is not
+                 present."
+        ::= { cdx6500SPST3201StnEntry 13 }
+       
+        iso3201SStatsLastOutCalledAddress OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..15))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the called address in the last 
+                 outbound call request packet sent by this station.
+                 A value of 'Last Call Information not available'
+                 will be returned if the last outgoing call packet
+                 is not present."
+        ::= { cdx6500SPST3201StnEntry 14 } 
+
+        iso3201SStatsLastOutCallingAddress OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..15))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the calling address in the last  
+                 outbound call request packet sent by this station.
+                 A value of 'Last Call Information not available'
+                 will be returned if the last outgoing call packet
+                 is not present."
+        ::= { cdx6500SPST3201StnEntry 15 }              
+
+        iso3201SStatsLastOutCallFacilities  OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the facilities in the last 
+                 outbound call request packet sent by this station.
+                 A value of 'Last Call Information not available'
+                 will be returned if the last outgoing call packet
+                 is not present."
+        ::= { cdx6500SPST3201StnEntry 16 }
+
+        iso3201SStatsLastOutCallCUD  OBJECT-TYPE
+            SYNTAX DisplayString 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the data in the Call User Data field
+                 in the last outbound call request packet sent by 
+                 this station. A value of 'Last Call Information not
+                 available' will be returned if the last call outgoing
+                 packet is not present."
+        ::= { cdx6500SPST3201StnEntry 17 }
+
+        cdx6500SPST3201PktSummTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SPST3201PktSummEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains the Packet Summary 
+                 statistics parameters."  
+        ::= { cdx6500SPST3201StnTable 2 }
+
+        cdx6500SPST3201PktSummEntry OBJECT-TYPE
+            SYNTAX Cdx6500SPST3201PktSummEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the Packet Summary statistics table."
+            INDEX { iso3201SStatsPktSummPortNum, iso3201SStatsPktSummStnNum }
+        ::= { cdx6500SPST3201PktSummTable 1 }
+
+        Cdx6500SPST3201PktSummEntry ::=
+            SEQUENCE {
+                iso3201SStatsPktSummPortNum
+                    INTEGER,
+                iso3201SStatsPktSummStnNum
+                    INTEGER,
+                iso3201SStatsTxData
+                    Counter,
+                iso3201SStatsTxCallRequest
+                    Counter,
+                iso3201SStatsTxCallAccept
+                    Counter,
+                iso3201SStatsTxClearRequest
+                    Counter,
+                iso3201SStatsTxClearConfirm
+                    Counter,
+                iso3201SStatsTxResetRequest
+                    Counter,
+                iso3201SStatsTxResetConfirm
+                    Counter,
+                iso3201SStatsTxWindowClosed
+                    Gauge,
+                iso3201SStatsRxData
+                    Counter,
+                iso3201SStatsRxCallRequest
+                    Counter, 
+                iso3201SStatsRxCallAccept
+                    Counter,
+                iso3201SStatsRxClearRequest
+                    Counter,
+                iso3201SStatsRxClearConfirm
+                    Counter,
+                iso3201SStatsRxResetRequest
+                    Counter,
+                iso3201SStatsRxResetConfirm
+                    Counter,
+                iso3201SStatsRxWindowClosed
+                    Gauge
+                }
+
+        iso3201SStatsPktSummPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION 
+                "This specifies the physical port number ."
+        ::= { cdx6500SPST3201PktSummEntry 1 }
+
+        iso3201SStatsPktSummStnNum OBJECT-TYPE
+            SYNTAX INTEGER (1..16)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the  entry number of this station."
+        ::= { cdx6500SPST3201PktSummEntry 2 }
+
+        iso3201SStatsTxData OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of data packets transmitted."
+        ::= { cdx6500SPST3201PktSummEntry 3 }   
+
+        iso3201SStatsTxCallRequest OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of call request packets transmitted."
+        ::= { cdx6500SPST3201PktSummEntry 4 }
+
+        iso3201SStatsTxCallAccept OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of call accept packets transmitted."
+        ::= { cdx6500SPST3201PktSummEntry 5 }
+
+        iso3201SStatsTxClearRequest OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of clear request packets
+                 transmitted."
+        ::= { cdx6500SPST3201PktSummEntry 6 }
+
+        iso3201SStatsTxClearConfirm OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of clear confirm packets
+                 transmitted."
+        ::= { cdx6500SPST3201PktSummEntry 7 }
+
+        iso3201SStatsTxResetRequest OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of reset request packets 
+                 transmitted."
+        ::= { cdx6500SPST3201PktSummEntry 8 }
+
+        iso3201SStatsTxResetConfirm OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of reset confirm packets
+                 transmitted."
+        ::= { cdx6500SPST3201PktSummEntry 9 }
+
+        iso3201SStatsTxWindowClosed OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The 'Transmit Window Closed' counts the number of
+                 times the 3201 station could not send data to the
+                 adjacent channel because of flow control."
+        ::= { cdx6500SPST3201PktSummEntry 10 }
+
+        iso3201SStatsRxData OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of data packets received."
+        ::= { cdx6500SPST3201PktSummEntry 11 }   
+
+        iso3201SStatsRxCallRequest OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of call request packets received."
+        ::= { cdx6500SPST3201PktSummEntry 12 }
+
+        iso3201SStatsRxCallAccept OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of call accept packets received."
+        ::= { cdx6500SPST3201PktSummEntry 13 }
+
+        iso3201SStatsRxClearRequest OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of clear request packets received."
+        ::= { cdx6500SPST3201PktSummEntry 14 }
+
+        iso3201SStatsRxClearConfirm OBJECT-TYPE
+            SYNTAX Counter 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of clear confirm packets received."
+        ::= { cdx6500SPST3201PktSummEntry 15 }
+
+        iso3201SStatsRxResetRequest OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of reset request packets received."
+        ::= { cdx6500SPST3201PktSummEntry 16 }
+
+        iso3201SStatsRxResetConfirm OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the count of reset confirm packets received."
+        ::= { cdx6500SPST3201PktSummEntry 17 }
+
+        iso3201SStatsRxWindowClosed OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The 'Receive Window Closed' is incremented every 
+                 time the 3201 station removes data out of its queue
+                 towards the terminal and the number of messages queued
+                 is greater than 15."
+        ::= { cdx6500SPST3201PktSummEntry 18 }
+
+        cdx6500SPST3201SummTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SPST3201SummEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains the 3201 summary statistics parameters." 
+        ::= { cdx6500SPST3201StnTable 3 }
+
+        cdx6500SPST3201SummEntry OBJECT-TYPE
+            SYNTAX Cdx6500SPST3201SummEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the 3201 Summary statistics table."
+            INDEX { iso3201SStatsSummPortNum, iso3201SStatsSummStnNum }
+        ::= { cdx6500SPST3201SummTable 1 }
+
+        Cdx6500SPST3201SummEntry ::=
+            SEQUENCE {
+                iso3201SStatsSummPortNum
+                    INTEGER,
+                iso3201SStatsSummStnNum
+                    INTEGER,
+                iso3201SStatsTxPolls
+                    Counter,
+                iso3201SStatsTxSelects
+                    Counter,
+                iso3201SStatsTxDataBytes
+                    Counter,
+                iso3201SStatsTxDataMsgs
+                    Gauge,
+                iso3201SStatsTxDataMsgsPerHour
+                    Counter,
+                iso3201SStatsTxAvgMsgLength
+                    Counter,
+                iso3201SStatsTxMsgsNAKed
+                    Gauge,
+                iso3201SStatsTxSelectRetryExhausted
+                    Counter,
+                iso3201SStatsTxNAKRetryExhausted
+                    Counter,
+                iso3201SStatsTxENQs
+                    Gauge,
+                iso3201SStatsTxENQRetryExhausted
+                    Counter,
+                iso3201SStatsTxPollingSuspendedByHost
+                    Gauge,
+                iso3201SStatsRxDataBytes
+                    Counter,
+                iso3201SStatsRxDataMsgs
+                    Gauge,
+                iso3201SStatsRxDataMsgsPerHour
+                    Counter,
+                iso3201SStatsRxAvgMsgLength
+                    Counter,
+                iso3201SStatsRxMsgsNAKed
+                    Gauge,
+                iso3201SStatsRxMsgsAborted
+                    Gauge,
+                iso3201SStatsRxSelectsNAKed
+                    Gauge,
+                iso3201SStatsRxInvRespToSelect
+                    Counter,
+                iso3201SStatsRxNAKRetryExhausted
+                    Counter,
+                iso3201SStatsRxENQs
+                    Gauge,
+                iso3201SStatsRxENQRetryExhausted
+                    Counter,
+                iso3201SStatsRxInterChrTimeout
+                    Counter,
+                iso3201SStatsRxPollTimeout
+                    Gauge,
+                iso3201SStatsRxSelectTimeout
+                    Gauge,
+                iso3201SStatsRxReceiveTimeout
+                    Counter,
+                iso3201SStatsRxParityErrorsOnCntrl
+                    Gauge
+                }
+                       
+        iso3201SStatsSummPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION 
+                "This specifies the physical port number."
+        ::= { cdx6500SPST3201SummEntry 1 }
+
+        iso3201SStatsSummStnNum OBJECT-TYPE
+            SYNTAX INTEGER (1..16)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the entry number of this station."
+        ::= { cdx6500SPST3201SummEntry 2 }
+
+        iso3201SStatsTxPolls OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of polls transmitted to
+                 this controller."
+        ::= { cdx6500SPST3201SummEntry 3 }
+
+        iso3201SStatsTxSelects OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of selects transmitted to
+                 this controller."
+        ::= { cdx6500SPST3201SummEntry 4 }
+
+        iso3201SStatsTxDataBytes OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of data bytes transmitted."
+        ::= { cdx6500SPST3201SummEntry 5 }
+
+        iso3201SStatsTxDataMsgs OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of data messages transmitted."
+        ::= { cdx6500SPST3201SummEntry 6 }
+
+        iso3201SStatsTxDataMsgsPerHour OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of data messages transmitted
+                 per hour."
+        ::= { cdx6500SPST3201SummEntry 7 }
+
+        iso3201SStatsTxAvgMsgLength OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the average length of data messages 
+                 transmitted."
+        ::= { cdx6500SPST3201SummEntry 8 }
+
+        iso3201SStatsTxMsgsNAKed OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of data messages for which 
+                 NAKs were transmitted."
+        ::= { cdx6500SPST3201SummEntry 9 }
+
+        iso3201SStatsTxSelectRetryExhausted OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of selects to this 
+                 controller for which all attempts failed."
+        ::= { cdx6500SPST3201SummEntry 10 }
+
+        iso3201SStatsTxNAKRetryExhausted OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of times the NAK sent 
+                 retry limit was crossed."
+        ::= { cdx6500SPST3201SummEntry 11 }
+
+        iso3201SStatsTxENQs OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of ENQs transmitted."
+        ::= { cdx6500SPST3201SummEntry 12 }
+
+        iso3201SStatsTxENQRetryExhausted OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of times the ENQ sent 
+                 retry limit was crossed."
+        ::= { cdx6500SPST3201SummEntry 13 }
+
+        iso3201SStatsTxPollingSuspendedByHost OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of times polling was suspended 
+                 on account of receiving an interrupt packet from the host."
+        ::= { cdx6500SPST3201SummEntry 14 }
+
+        iso3201SStatsRxDataBytes OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of data bytes received."
+        ::= { cdx6500SPST3201SummEntry 15 }
+
+        iso3201SStatsRxDataMsgs OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of data messages received."
+        ::= { cdx6500SPST3201SummEntry 16 }
+
+        iso3201SStatsRxDataMsgsPerHour OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of data messages received
+                 per hour."
+        ::= { cdx6500SPST3201SummEntry 17 }
+
+        iso3201SStatsRxAvgMsgLength OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the average length of data messages 
+                 received."
+        ::= { cdx6500SPST3201SummEntry 18 }
+
+        iso3201SStatsRxMsgsNAKed OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of data messages for which 
+                 NAKs were received."
+        ::= { cdx6500SPST3201SummEntry 19 }
+
+        iso3201SStatsRxMsgsAborted OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of data messages to the 
+                 controller for which were aborted by the controller
+                 (by sending EOT)."
+        ::= { cdx6500SPST3201SummEntry 20 }
+
+        iso3201SStatsRxSelectsNAKed OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of selects for which NAKs 
+                 were received by the controller."
+        ::= { cdx6500SPST3201SummEntry 21 }
+                
+        iso3201SStatsRxInvRespToSelect OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of selects for which an 
+                 invalid response was received."
+        ::= { cdx6500SPST3201SummEntry 22 }
+
+        iso3201SStatsRxNAKRetryExhausted OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of times the NAK received 
+                 retry limit was crossed."
+        ::= { cdx6500SPST3201SummEntry 23 }
+
+        iso3201SStatsRxENQs OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of ENQs received."
+        ::= { cdx6500SPST3201SummEntry 24 }
+
+        iso3201SStatsRxENQRetryExhausted OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of times the ENQ received 
+                 retry limit was crossed."
+        ::= { cdx6500SPST3201SummEntry 25 }
+
+        iso3201SStatsRxInterChrTimeout OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of times intercharacter timeout
+                 occurred while receiving data from the controller ."
+        ::= { cdx6500SPST3201SummEntry 26 }
+
+        iso3201SStatsRxPollTimeout OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of times the controller did not
+                 respond to poll before response timeout ."
+        ::= { cdx6500SPST3201SummEntry 27 }
+                
+        iso3201SStatsRxSelectTimeout OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of times the controller did not 
+                 respond to select before response timeout."
+        ::= { cdx6500SPST3201SummEntry 28 }
+
+        iso3201SStatsRxReceiveTimeout OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This indicates the number of times the controller did not
+                 respond to a ACK before response timeout and the number
+                 of times the inter-character timer expired when receiving
+                 response to a NAK."
+        ::= { cdx6500SPST3201SummEntry 29 }
+
+        iso3201SStatsRxParityErrorsOnCntrl OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the number of times the PAD detected
+                 a parity error on the control characters ACK, DLE, 
+                 NAK, ENQ, EOT, ETX, SOH, STX."
+        ::= { cdx6500SPST3201SummEntry 30 }
+
+        -- The 3201 Control Objects
+         
+        cdx6500Cont3201Table OBJECT IDENTIFIER  ::=
+            { cdx6500Controls 11 }
+
+        -- The 3201 Port Control Table
+
+        cdx6500Cont3201PortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500Cont3201PortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains the 3201 Port Control parameters."
+        ::= { cdx6500Cont3201Table 1 }
+
+        cdx6500Cont3201PortEntry OBJECT-TYPE
+            SYNTAX Cdx6500Cont3201PortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the 3201 Port control Table."
+            INDEX { iso3201PContPortNum }
+        ::= { cdx6500Cont3201PortTable 1 }
+
+        Cdx6500Cont3201PortEntry ::=
+            SEQUENCE {
+                iso3201PContPortNum
+                    INTEGER,
+                iso3201ContPortBoot
+                    INTEGER,
+                iso3201ContPortEnable
+                    INTEGER,
+                iso3201ContPortDisable
+                    INTEGER,
+                iso3201ContPortResetStats
+                    INTEGER
+                }
+
+        iso3201PContPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "3201 port number ."
+        ::= { cdx6500Cont3201PortEntry 1 }
+
+        iso3201ContPortBoot OBJECT-TYPE
+            SYNTAX INTEGER {
+                    boot   (1),
+                    noBoot (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Boots the specified 3201 port.
+                 boot   : Boot the port
+                 noBoot : Do not boot the port."
+        ::= { cdx6500Cont3201PortEntry 2 }
+
+        iso3201ContPortEnable OBJECT-TYPE
+            SYNTAX INTEGER {
+                    enable   (1),
+                    noEnable (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Enables the specified 3201 Port.
+                 enable   : Enable the Port
+                 noEnable : Do not enable the port." 
+        ::= { cdx6500Cont3201PortEntry 3 }
+
+        iso3201ContPortDisable OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disable   (1),
+                    noDisable (2)
+                    }
+            ACCESS  write-only
+            STATUS  mandatory
+            DESCRIPTION
+                "Disables the specified 3201 Port.
+                 disable   : Disable Port
+                 noDisable : Do not disable Port."
+        ::= { cdx6500Cont3201PortEntry 4 }
+
+        iso3201ContPortResetStats OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset   (1),
+                    noreset (2) 
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Reset statistics for the specified 3201 Port
+                 reset   : Reset port statistics
+                 noReset : Do not reset port statistics."
+        ::= { cdx6500Cont3201PortEntry 5 }
+
+        -- The 3201 Station Controls Table
+        -- This table contains the station control parameters for 
+        -- 3201 station
+
+        cdx6500Cont3201StnTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500Cont3201StnEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains the 3201 Station Control parameters."
+        ::= { cdx6500Cont3201Table 2 }
+
+        cdx6500Cont3201StnEntry OBJECT-TYPE
+            SYNTAX Cdx6500Cont3201StnEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Entries in the 3201 Station Control Table."
+            INDEX { iso3201SContPortNum, iso3201ContStnNum }
+        ::= { cdx6500Cont3201StnTable 1 }
+
+        Cdx6500Cont3201StnEntry ::=
+            SEQUENCE {
+                iso3201SContPortNum
+                    INTEGER,
+                iso3201ContStnNum
+                    INTEGER,
+                iso3201ContStnBoot
+                    INTEGER,
+                iso3201ContStnEnable
+                    INTEGER,
+                iso3201ContStnDisable
+                    INTEGER,
+                iso3201ContStnResetStats
+                    INTEGER
+                }
+
+        iso3201SContPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "3201 port number."
+        ::= { cdx6500Cont3201StnEntry 1 }
+
+        iso3201ContStnNum OBJECT-TYPE
+            SYNTAX INTEGER (1..16)
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "3201 station number."
+        ::= { cdx6500Cont3201StnEntry 2 }
+
+        iso3201ContStnBoot OBJECT-TYPE
+            SYNTAX INTEGER {
+                    boot   (1),
+                    noBoot (2) 
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Boots the secified 3201 station.
+                 boot   : Boot the station
+                 noBoot : Do not boot Station."
+        ::= { cdx6500Cont3201StnEntry 3 }
+
+        iso3201ContStnEnable OBJECT-TYPE
+            SYNTAX INTEGER {
+                    enable   (1),
+                    noEnable (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Enables the specified 3201 station
+                 enable   : Enable station
+                 noEnable : Do not enable station."
+        ::= { cdx6500Cont3201StnEntry 4 }
+
+        iso3201ContStnDisable OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disable   (1),
+                    noDisable (2)  
+                    }
+            ACCESS  write-only
+            STATUS  mandatory
+            DESCRIPTION
+                "Disables the specified 3201 Station
+                 disable   : Disable Station
+                 noDisable : Do not disable Station."
+        ::= { cdx6500Cont3201StnEntry 5 }
+
+        iso3201ContStnResetStats OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset   (1),
+                    noReset (2) 
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Reset statistics for the specified 3201 station
+                 reset   : Reset station statistics
+                 noReset : Do not reset station statistics."
+        ::= { cdx6500Cont3201StnEntry  6 }
+
+        END

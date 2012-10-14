@@ -1,0 +1,1319 @@
+--  Copyright (C) 1996 Alcatel Internetworking, Inc., all rights reserved.
+--
+--           Xylan SoftPvc MIB ASN.1 Specification
+--
+-- File:        SoftPvc.mib
+--
+-- Purpose:     Specifies Xylan's SoftPvc MIB definitions for the Omnicell
+--				platform.
+--
+-- Conformance: Abstracted from the Forum SoftPvc MIB, repositioned under 
+--               the Xylan MIB Tree, and realigned for SNMP V1.
+--
+-- Background:  Currently in the IETF, work is ongoing for SNMP V2 in the form
+--              of RFCs numbered in the 19xx series. An obsolete set exists in
+--              the RFC 14xx series which ATMForum PNNI v1.0 references. 
+--
+--              Xylan has translated the Forum SoftPvc Mib spec to a SNMP V1 
+--				compatible MIB and incorporated it under its tree. 
+--
+--              History
+--              =======
+--               10/23/96 Paramesh Kailasam (PK) Created 
+--               10/23/96 PK Added the private tables
+--
+--
+XYLAN-SOFT-PVC-MIB DEFINITIONS ::= BEGIN
+
+
+IMPORTS
+    TRAP-TYPE
+        FROM RFC-1215
+    OBJECT-TYPE
+        FROM RFC-1212
+    Counter
+        FROM RFC1155-SMI
+	AtmxTrafficDescrParamIndex
+        FROM XYLAN-CSM-MIB
+	DisplayString
+		FROM RFC1213-MIB
+	xylanCsmArch
+		FROM XYLAN-BASE-MIB	
+    Gauge32
+        FROM SNMPv2-SMI;
+
+-- created from atmSoftPvcMIB (9606210000Z)
+
+atmxSoftPvcMIB            OBJECT IDENTIFIER    ::= { xylanCsmArch 2 }
+atmxSoftPvcMIBObjects     OBJECT IDENTIFIER    ::= { atmxSoftPvcMIB 1 }
+atmxSoftPvcMIBTraps 		 OBJECT IDENTIFIER    ::= { atmxSoftPvcMIB  2 }
+
+	TruthValue ::= INTEGER { true(1), false(2) }
+	AtmxSoftPvcBbcIndex	::= INTEGER (0..2048)
+
+atmxSoftPvcBaseGroup OBJECT IDENTIFIER ::= { atmxSoftPvcMIBObjects  1 }
+
+atmxSoftPvcCallFailuresTrapEnable OBJECT-TYPE
+    SYNTAX  TruthValue
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "Allows the generation of traps in response to call
+		failures. By default, this object is set to 'false'."
+    ::= { atmxSoftPvcBaseGroup  1 }
+
+atmxSoftPvcCallFailures OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "The number of times a series of call attempts has failed to
+		establish a Soft PVCC or Soft PVPC. The number of call
+		attempts in a series is determined by
+		atmSoftPVccRetryThreshold or atmSoftPVpcRetryThreshold,
+		respectively."
+    ::= { atmxSoftPvcBaseGroup  2 }
+
+atmxSoftPvcCurrentlyFailingSoftPVccs OBJECT-TYPE
+    SYNTAX  Gauge32
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "The current number of Soft PVCCs for which there is
+		an active row in the atmSoftPVccTable having an
+		atmSoftPVccOperStatus with a value other than 'connected'."
+    ::= { atmxSoftPvcBaseGroup  3 }
+
+atmxSoftPvcCurrentlyFailingSoftPVpcs OBJECT-TYPE
+    SYNTAX  Gauge32
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "The current number of Soft PVPCs for which there is an
+		active row in the atmSoftPVpcTable having an 
+		atmSoftPVpcOperStatus with a value other than 'connected'."
+    ::= { atmxSoftPvcBaseGroup  4 }
+
+atmxSoftPvcNotificationInterval OBJECT-TYPE
+    SYNTAX  INTEGER	-- UNITS seconds
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "The minimum interval between the sending
+		of atmSoftPvcCallFailuresTrap notifications."
+    DEFVAL  { 30 }
+    ::= { atmxSoftPvcBaseGroup  5 }
+
+-- We cannot use the Vcl/Vpl Tables for creation since the channel type is not
+-- present in the forum mib. Also to prevent creation of VCL's alone and not
+-- cross connecting them and not using them as SoftPvc would be problematic to
+-- to the switch...as the cells would just get switched and returned on the input
+-- port. To avoid it...we dont use the Vcl/Vpl Tables in 1695. So for Soft PVCs
+-- we include all the parameters from the Vcl table and the atmSoftPVccTable
+-- to form the private table and if these Vcls are dangling...then tuff luck...
+-- So all the forum specific tables are present and the agent would just return
+-- error (and if at some later stage we decide to support them...then well just
+-- change the agent)
+
+
+atmxCurrentlyFailingSoftPVccTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF AtmxCurrentlyFailingSoftPVccEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "A table indicating all Soft Permanent Virtual Channel
+		Connections (Soft PVCCs) for which the atmSoftPVccRowStatus
+		is 'active' and the atmSoftPVccOperStatus is other than
+		'connected'."
+    ::= { atmxSoftPvcMIBObjects  2 }
+
+atmxCurrentlyFailingSoftPVccEntry OBJECT-TYPE
+    SYNTAX  AtmxCurrentlyFailingSoftPVccEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "Each entry in this table represents a Soft Permanent
+		Virtual Channel Connection (Soft PVCC) for which the
+		atmSoftPVccRowStatus is 'active' and the 
+		atmSoftPVccOperStatus is other than 'connected'."
+    INDEX   {
+                 atmxCurrentlyFailingSoftPVccSlotIndex,
+				 atmxCurrentlyFailingSoftPVccPortIndex,
+                 atmxCurrentlyFailingSoftPVccVpi,
+                 atmxCurrentlyFailingSoftPVccVci,
+                 atmxCurrentlyFailingSoftPVccLeafReference
+               }
+    ::= { atmxCurrentlyFailingSoftPVccTable  1 }
+
+AtmxCurrentlyFailingSoftPVccEntry ::=
+    SEQUENCE {
+		atmxCurrentlyFailingSoftPVccSlotIndex
+			INTEGER,
+		atmxCurrentlyFailingSoftPVccPortIndex
+			INTEGER,
+		atmxCurrentlyFailingSoftPVccVpi
+			INTEGER,
+		atmxCurrentlyFailingSoftPVccVci
+			INTEGER,
+		atmxCurrentlyFailingSoftPVccLeafReference
+			INTEGER,
+        atmxCurrentlyFailingSoftPVccTimeStamp
+            DisplayString
+    }
+
+
+atmxCurrentlyFailingSoftPVccSlotIndex OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The slot instance"
+    ::= { atmxCurrentlyFailingSoftPVccEntry  1 }
+
+atmxCurrentlyFailingSoftPVccPortIndex OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The port instance"
+    ::= { atmxCurrentlyFailingSoftPVccEntry  2 }
+
+atmxCurrentlyFailingSoftPVccVpi OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The vpi instance"
+    ::= { atmxCurrentlyFailingSoftPVccEntry  3 }
+
+atmxCurrentlyFailingSoftPVccVci OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The vci instance"
+    ::= { atmxCurrentlyFailingSoftPVccEntry  4 }
+
+atmxCurrentlyFailingSoftPVccLeafReference OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The leaf reference"
+    ::= { atmxCurrentlyFailingSoftPVccEntry  5 }
+
+atmxCurrentlyFailingSoftPVccTimeStamp OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "The time at which this Soft PVCC began to fail."
+    ::= { atmxCurrentlyFailingSoftPVccEntry  6 }
+
+atmxCurrentlyFailingSoftPVpcTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF AtmxCurrentlyFailingSoftPVpcEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "A table indicating all Soft Permanent Virtual Path
+		Connections (Soft PVPCs) for which the atmSoftPVpcRowStatus
+		is 'active' and the atmSoftPVpcOperStatus is other than
+		'connected'."
+    ::= { atmxSoftPvcMIBObjects  3 }
+
+atmxCurrentlyFailingSoftPVpcEntry OBJECT-TYPE
+    SYNTAX  AtmxCurrentlyFailingSoftPVpcEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "Each entry in this table represents a Soft Permanent
+		Virtual Path Connection (Soft PVPC) for which the
+		atmSoftPVpcRowStatus is 'active' and the 
+		atmSoftPVpcOperStatus is other than 'connected'."
+    INDEX   {
+                 atmxCurrentlyFailingSoftPVpcSlotIndex,
+				 atmxCurrentlyFailingSoftPVpcPortIndex,
+                 atmxCurrentlyFailingSoftPVpcVpi,
+                 atmxCurrentlyFailingSoftPVpcLeafReference
+               }
+    ::= { atmxCurrentlyFailingSoftPVpcTable  1 }
+
+AtmxCurrentlyFailingSoftPVpcEntry ::=
+    SEQUENCE {
+		 atmxCurrentlyFailingSoftPVpcSlotIndex
+			INTEGER,
+		 atmxCurrentlyFailingSoftPVpcPortIndex
+			INTEGER,
+         atmxCurrentlyFailingSoftPVpcVpi
+			INTEGER,
+	     atmxCurrentlyFailingSoftPVpcLeafReference
+			INTEGER,
+        atmxCurrentlyFailingSoftPVpcTimeStamp
+            DisplayString
+    }
+
+atmxCurrentlyFailingSoftPVpcSlotIndex OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The slot instance"
+    ::= { atmxCurrentlyFailingSoftPVpcEntry  1 }
+
+atmxCurrentlyFailingSoftPVpcPortIndex OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The port instance"
+    ::= { atmxCurrentlyFailingSoftPVpcEntry  2 }
+
+atmxCurrentlyFailingSoftPVpcVpi OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The vpi instance"
+    ::= { atmxCurrentlyFailingSoftPVpcEntry  3 }
+
+atmxCurrentlyFailingSoftPVpcLeafReference OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The leaf reference"
+    ::= { atmxCurrentlyFailingSoftPVpcEntry  4 }
+
+atmxCurrentlyFailingSoftPVpcTimeStamp OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "The time at which this Soft PVPC began to fail."
+    ::= { atmxCurrentlyFailingSoftPVpcEntry  5 }
+
+
+-- Private tables
+
+
+-- The atmSoftPVpc table is duplicated with the inclusion of the input
+-- slot port and vpi. The reason this is done is to prevent the user
+-- from creating vpc's and not cross-connecting it. In our OmniCell
+-- implementation, there is no such thing as a VPL...All are cross-connects
+-- which implies that a pure VPL would receive cells on the input go to the
+-- fabric and then get switched back on the same input parameters. To avoid
+-- the above scenario, our NMS would not show the VPL tables, but this table
+-- where the user would be forced to create cross-connect entries.
+
+xylnatmSoftPVpcTable	OBJECT-TYPE
+	SYNTAX	SEQUENCE OF XylnatmSoftPVpcEntry
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"The (conceptual) table used to manage Soft
+		Permanent Virtual Path Connections (Soft PVPCs)
+		The Soft PVPC table is applicable only to switches."
+	::= { atmxSoftPvcMIBObjects 4 }
+
+
+xylnatmSoftPVpcEntry	OBJECT-TYPE
+	SYNTAX	XylnatmSoftPVpcEntry
+	ACCESS	not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+		"Each entry in this table represents a  Soft
+		Permanent Virtual Path Connection (Soft PVPC)
+		originating at a switch interface.
+
+		A Soft PVPC is a VPC that is:
+		  - provisioned at the originating (source)
+			interface of the connection
+		  - established by signalling procedures
+			across a network to a destination interface.
+
+		When a row is made active, an attempt is made
+		to set up a switched connection to an interface at
+		the destination switch. No objects (other than
+		atmSoftPVpcRowStatus) can be set while the row is
+		active.
+
+		At the destination, the VPL may be defined (but
+		not cross-connected) prior to arrival of the Setup
+		request.
+
+		The combination of slot/port, atmVplVpi specified
+		in the index clause of this entry serves to
+		identify the VPL on the source interface. The
+		atmSoftPVpcLeafReference object aids in distinguishing
+		between leaves of a point-to-multipoint Soft PVPC."
+	INDEX	{ 
+               xylnatmSoftPVpcSlotIndex,
+			   xylnatmSoftPVpcPortIndex,
+               xylnatmSoftPVpcVpi,
+               xylnatmSoftPVpcLeafReference }
+	::= { xylnatmSoftPVpcTable 1 }
+
+
+XylnatmSoftPVpcEntry ::=
+	SEQUENCE {
+		xylnatmSoftPVpcSlotIndex				INTEGER,
+		xylnatmSoftPVpcPortIndex				INTEGER,
+		xylnatmSoftPVpcVpi						INTEGER,
+		xylnatmSoftPVpcLeafReference			INTEGER,
+		xylnatmSoftPVpcTargetAddress			DisplayString,
+		xylnatmSoftPVpcTargetSelectType			INTEGER,
+		xylnatmSoftPVpcTargetVpi				INTEGER,
+		xylnatmSoftPVpcLastReleaseCause			INTEGER,
+		xylnatmSoftPVpcLastReleaseDiagnostic	OCTET STRING,
+		xylnatmSoftPVpcOperStatus				INTEGER,
+		xylnatmSoftPVpcRestart					INTEGER,
+		xylnatmSoftPVpcRetryInterval			INTEGER,
+		xylnatmSoftPVpcRetryTimer				INTEGER,
+		xylnatmSoftPVpcRetryThreshold			INTEGER,
+		xylnatmSoftPVpcRetryFailures			Gauge32,
+		xylnatmSoftPVpcRetryLimit				INTEGER,
+		xylnatmSoftPVpcLowTDIndex 				AtmxTrafficDescrParamIndex,
+		xylnatmSoftPVpcHighTDIndex           	AtmxTrafficDescrParamIndex,
+		xylnatmSoftPVpcLastChange            	DisplayString,
+		xylnatmSoftPVpcOutSlot                	INTEGER,
+		xylnatmSoftPVpcOutPort                	INTEGER,
+		xylnatmSoftPVpcOutVpi                 	INTEGER,
+		xylnatmSoftPVpcAdminStatus            	INTEGER,
+		xylnatmSoftPVpcCrossConnectIdentifier 	INTEGER,
+		xylnatmSoftPVpcBbcIndex					INTEGER,
+		xylnatmSoftPVpcRowStatus				INTEGER,
+		xylnatmSoftPVpcCharging				INTEGER
+		}
+
+xylnatmSoftPVpcSlotIndex	OBJECT-TYPE
+	SYNTAX	INTEGER (1..9)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The slot index for this vpc"
+	::= { xylnatmSoftPVpcEntry 1 }
+
+
+xylnatmSoftPVpcPortIndex	OBJECT-TYPE
+	SYNTAX	INTEGER 
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The port number"
+	::= { xylnatmSoftPVpcEntry 2 }
+
+
+xylnatmSoftPVpcVpi	OBJECT-TYPE
+	SYNTAX	INTEGER (0..4095)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The VPI value of the VPL used at the
+		in interface."
+	::= { xylnatmSoftPVpcEntry 3 }
+
+
+xylnatmSoftPVpcLeafReference	OBJECT-TYPE
+	SYNTAX	INTEGER (1..65535)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The leaf reference for this Vpl"
+	::= { xylnatmSoftPVpcEntry 4 }
+
+xylnatmSoftPVpcTargetAddress	OBJECT-TYPE
+	SYNTAX	DisplayString
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The target ATM Address of this Soft PVPC."
+	::= { xylnatmSoftPVpcEntry 5 }
+
+
+xylnatmSoftPVpcTargetSelectType	OBJECT-TYPE
+	SYNTAX	INTEGER {
+			required(1),
+			any(2)
+			}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Indicates whether the target VPI value
+		is to be used at the destination.
+		If the value 'any' is specified, the
+		destination switch will choose the VPI
+		value. In such a case, once the Soft PVPC
+		atmSoftPVpcOperStatus value is 'connected',
+		the value of this object changes to 'required',
+		such that the same VPI value will continue to
+		be used even if the connection is subsequently
+		torn down and re-established. The VPI value
+		chosen will be available for reading in
+		atmSoftPVpcTargetVpi.
+
+		If the value 'required' is specified, then
+		a value must be supplied for object
+		atmSoftPVpcTargetVpi prior to activation
+		of the row. This value is then to be used
+		at the destination."
+	DEFVAL { required }
+	::= { xylnatmSoftPVpcEntry 6 }
+
+
+xylnatmSoftPVpcTargetVpi	OBJECT-TYPE
+	SYNTAX	INTEGER (0..4095)
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The VPI value of the VPL used at the
+		target interface.
+
+		This value must be filled in when the
+		atmSoftPVpcTargetSelectType is set to 'required'.
+		This value is not relevant when the value of
+		atmSoftPVpcTargetSelectType is 'any'."
+	::= { xylnatmSoftPVpcEntry 7 }
+
+
+xylnatmSoftPVpcLastReleaseCause	OBJECT-TYPE
+	SYNTAX	INTEGER(1..127)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"Value of the Cause field of the Cause
+		Information Element in the last RELEASE
+		signalling message received for this Soft PVPC.
+		Indicates the reason for the Release."
+	::= { xylnatmSoftPVpcEntry 8 }
+
+
+xylnatmSoftPVpcLastReleaseDiagnostic	OBJECT-TYPE
+	SYNTAX	OCTET STRING (SIZE(0..8))
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"Value of the first 8 bytes of diagnostic information
+		from the Cause field of the Cause Information Element
+		in the last RELEASE signalling message received for
+		this Soft PVPC."
+	::= { xylnatmSoftPVpcEntry 9 }
+
+
+xylnatmSoftPVpcOperStatus	OBJECT-TYPE
+		SYNTAX	INTEGER {
+				other(1),
+				establishmentInProgress(2),
+				connected(3),
+				retriesExhausted(4)
+				}
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"Describes the status of the Soft PVPC. When the
+		row is not 'active', the value of this
+		object is 'other'."
+	::= { xylnatmSoftPVpcEntry 10 }
+
+
+xylnatmSoftPVpcRestart	OBJECT-TYPE
+	SYNTAX	INTEGER {
+				restart(1),
+				noop(2)
+				}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"When the value is set to 'restart', the Soft PVPC is
+		released if necessary and a new setup procedure is begun.
+		As a result of this action, the atmSoftPVpcOperStatus
+		object transitions to 'establishmentInProgress' (if not
+		already in this state) and the atmSoftPVpcRetryFailures
+		object is cleared.
+
+		When the value is set to 'noop', no operation is performed.
+		When read, the value 'noop' is returned."
+	::= { xylnatmSoftPVpcEntry 11 }
+
+
+xylnatmSoftPVpcRetryInterval	OBJECT-TYPE
+	SYNTAX	INTEGER (0..3600)
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Defines the period to wait before attempting
+		to establish the Soft PVPC connection after the first
+		failed call attempt.  Zero represents an infinite
+		interval indicating no retries."
+	DEFVAL { 10 }
+	::= { xylnatmSoftPVpcEntry 12 }
+
+
+xylnatmSoftPVpcRetryTimer	OBJECT-TYPE
+	SYNTAX	INTEGER (0..86400)
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"Indicates the current value of the retry timer for
+		this connection. When the value reaches zero an attempt
+		will be made to establish the Soft PVPC. When the
+		timer is not running, the value zero shall be returned."
+	::= { xylnatmSoftPVpcEntry 13 }
+
+
+xylnatmSoftPVpcRetryThreshold  OBJECT-TYPE
+	SYNTAX	INTEGER (0..65535)
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Indicates the number of consecutive call setup attempts for
+		the same Soft PVPC which need to fail before the
+		atmSoftPvcCallFailures object is incremented. A value of
+		zero indicates that an infinite number of call attempts
+		are required to increment the atmSoftPvcCallFailures object
+		and thus disables alarms for the Soft PVPC."
+	DEFVAL { 1 }
+	::= { xylnatmSoftPVpcEntry 14 }
+
+
+xylnatmSoftPVpcRetryFailures	OBJECT-TYPE
+	SYNTAX	Gauge32 
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"Indicates how many attempts to establish the connection
+		have failed.  This count is reset whenever a connection
+		is successfully established or the Soft PVPC is restarted."
+	::= { xylnatmSoftPVpcEntry 15 }
+
+
+xylnatmSoftPVpcRetryLimit	OBJECT-TYPE
+	SYNTAX	INTEGER (0..65535)
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Sets a maximum limit on how many consecutive unsuccessful
+		call setup attempts can be made before stopping the attempt
+		to set up the connection. If this limit is reached then
+		management action will be required (e.g. setting
+		atmSoftPVpcRestart to 'restart') to initiate a new attempt
+		to establish the connection. A value of zero indicates no
+		limit - the attempts will continue until successful."
+	DEFVAL { 0 }
+	::= { xylnatmSoftPVpcEntry 16 }
+
+xylnatmSoftPVpcLowTDIndex 			OBJECT-TYPE
+	SYNTAX	AtmxTrafficDescrParamIndex
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		" The low end Traffic Descriptor ..refer rfc1695 for details"
+	::= { xylnatmSoftPVpcEntry 17 }
+
+xylnatmSoftPVpcHighTDIndex	OBJECT-TYPE
+	SYNTAX	AtmxTrafficDescrParamIndex
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The high end of the TD"
+	::= { xylnatmSoftPVpcEntry 18 }
+
+xylnatmSoftPVpcLastChange	OBJECT-TYPE
+	SYNTAX	 DisplayString
+	ACCESS	 read-only
+	STATUS	 mandatory
+	DESCRIPTION
+		"The value of MIB II sysUptime object at the time this VPL entered
+		 its current op state."
+	::= { xylnatmSoftPVpcEntry 19 }
+
+xylnatmSoftPVpcOutSlot	OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		" The outgoing slot once the connection is established..else its 0"
+	::= { xylnatmSoftPVpcEntry 20 }
+
+xylnatmSoftPVpcOutPort	OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The out going slot if the connection is established..else its 0"
+	::= { xylnatmSoftPVpcEntry 21 }
+	
+xylnatmSoftPVpcOutVpi	OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The outgoing vpi if established..else 0"
+	::= { xylnatmSoftPVpcEntry 22 }
+
+xylnatmSoftPVpcAdminStatus	OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The admin status of the VPL"
+	::= { xylnatmSoftPVpcEntry 23 }
+	
+xylnatmSoftPVpcCrossConnectIdentifier OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"A unique non-zero value if the VPL is exiting the switch apart
+		from the input"
+	::= { xylnatmSoftPVpcEntry 24 }
+
+xylnatmSoftPVpcBbcIndex OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The BBC Index from the BBC Table"
+	::= { xylnatmSoftPVpcEntry 25 }
+
+xylnatmSoftPVpcRowStatus	OBJECT-TYPE
+	SYNTAX	INTEGER {
+						create(1),
+						modify(2),
+						delete(3),
+						active(4),
+						unknown(5)
+					}
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"Used to create and delete a Soft PVPC."
+	::= { xylnatmSoftPVpcEntry 26 }
+
+xylnatmSoftPVpcCharging OBJECT-TYPE
+		SYNTAX	INTEGER {
+				enabled(1),
+				disabled(2),
+				usePortValue(3) }
+		ACCESS	read-write
+		STATUS	mandatory
+		DESCRIPTION
+			"States whether Charging Detail Records
+			 must be generated for this soft PVC."
+	::= { xylnatmSoftPVpcEntry 27 }
+
+
+
+xylnatmSoftPVccTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF XylnatmSoftPVccEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "The (conceptual) table used to manage Soft
+		Permanent Virtual Channel Connections (Soft PVCCs).
+		The Soft PVCC table is applicable only to switches."
+    ::= { atmxSoftPvcMIBObjects 5 }
+
+xylnatmSoftPVccEntry OBJECT-TYPE
+    SYNTAX  XylnatmSoftPVccEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+           "Each entry in this table represents a  Soft
+		Permanent Virtual Channel Connection (Soft PVCC)
+		originating at a switch interface.
+
+		When a row is made active, an attempt is made
+		to set up a switched connection to an interface at
+		the destination switch. No objects (other than
+		atmSoftPVccRowStatus) can be set while the row is 
+		active.
+
+
+		At the destination, the VCL may be defined (but 
+		not cross-connected) prior to arrival of the Setup 
+		request.
+
+
+		The combination of Slot/Port, atmVclVpi, and atmVclVci
+		specified in the index clause of this entry serves to
+		identify the VCL on the source interface. The
+		atmSoftPVccLeafReference object aids in distinguishing
+		between leaves of a point-to-multipoint Soft PVCC."
+    INDEX   {
+                 xylnatmSoftPVccSlotIndex,
+				 xylnatmSoftPVccPortIndex,
+                 xylnatmSoftPVccVpi,
+                 xylnatmSoftPVccVci,
+                 xylnatmSoftPVccLeafReference
+               }
+    ::= { xylnatmSoftPVccTable  1 }
+
+XylnatmSoftPVccEntry ::=
+    SEQUENCE {
+		xylnatmSoftPVccSlotIndex
+			INTEGER,
+		xylnatmSoftPVccPortIndex
+			INTEGER,
+		xylnatmSoftPVccVpi
+			INTEGER,
+		xylnatmSoftPVccVci
+			INTEGER,
+        xylnatmSoftPVccLeafReference
+            INTEGER,
+        xylnatmSoftPVccTargetAddress
+            DisplayString,
+        xylnatmSoftPVccTargetSelectType
+            INTEGER,
+        xylnatmSoftPVccTargetVpi
+            INTEGER,
+        xylnatmSoftPVccTargetVci
+            INTEGER,
+        xylnatmSoftPVccLastReleaseCause
+            INTEGER,
+        xylnatmSoftPVccLastReleaseDiagnostic
+            OCTET STRING,
+        xylnatmSoftPVccOperStatus
+            INTEGER,
+        xylnatmSoftPVccRestart
+            INTEGER,
+        xylnatmSoftPVccRetryInterval
+            INTEGER,
+        xylnatmSoftPVccRetryTimer
+            INTEGER,
+        xylnatmSoftPVccRetryThreshold
+            INTEGER,
+        xylnatmSoftPVccRetryFailures
+            Gauge32,
+        xylnatmSoftPVccRetryLimit
+            INTEGER,
+		xylnatmSoftPVccLowTDIndex 			
+			AtmxTrafficDescrParamIndex,
+		xylnatmSoftPVccHighTDIndex           
+			AtmxTrafficDescrParamIndex,
+		xylnatmSoftPVccLastChange            
+			DisplayString,
+		xylnatmSoftPVccOutSlot                
+			INTEGER,
+		xylnatmSoftPVccOutPort                
+			INTEGER,
+		xylnatmSoftPVccOutVpi                 
+			INTEGER,
+		xylnatmSoftPVccOutVci
+			INTEGER,
+		xylnatmSoftPVccAdminStatus            
+			INTEGER,
+		xylnatmSoftPVccCrossConnectIdentifier 
+			INTEGER,
+		xylnatmSoftPVccBbcIndex
+			INTEGER,
+		xylnatmSoftPVccRowStatus
+			INTEGER,
+		xylnatmSoftPVccCharging
+			INTEGER    }
+
+ 
+               xylnatmSoftPVccSlotIndex    OBJECT-TYPE
+                    SYNTAX      INTEGER
+                    ACCESS      read-only
+                    STATUS      mandatory
+                    DESCRIPTION
+                        "Slot Instance"
+                    ::= { xylnatmSoftPVccEntry 1}
+ 
+               xylnatmSoftPVccPortIndex    OBJECT-TYPE
+                    SYNTAX      INTEGER
+                    ACCESS      read-only
+                    STATUS      mandatory
+                    DESCRIPTION
+                        "Port Instance"
+                    ::= { xylnatmSoftPVccEntry 2}
+ 
+               xylnatmSoftPVccVpi OBJECT-TYPE
+                    SYNTAX      INTEGER
+                    ACCESS      read-only
+                    STATUS      mandatory
+                    DESCRIPTION
+                        "Vpi instance"
+                   ::= { xylnatmSoftPVccEntry 3}
+ 
+                xylnatmSoftPVccVci   OBJECT-TYPE
+                    SYNTAX      INTEGER
+                    ACCESS      read-only
+                    STATUS      mandatory
+                    DESCRIPTION
+                        "Vcl instance"
+                    ::= { xylnatmSoftPVccEntry 4 }
+ 
+
+xylnatmSoftPVccLeafReference OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "An arbitrary integer which, in the case of the
+		source VCL having an atmVclCastType of
+		'p2mpRoot', serves to distinguish between the 
+		multiple leaves attached to a root of a 
+		point-to-multipoint Soft PVCC. If the atmVclCastType 
+		is not 'p2mpRoot' the value 1 shall be used."
+    ::= { xylnatmSoftPVccEntry  5 }
+
+xylnatmSoftPVccTargetAddress OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "The target ATM Address of this Soft PVCC."
+    ::= { xylnatmSoftPVccEntry  6 }
+
+xylnatmSoftPVccTargetSelectType OBJECT-TYPE
+    SYNTAX  INTEGER {
+                 required(1),
+                 any(2)
+               }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "Indicates whether the target VPI/VCI values
+		are to be used at the destination.
+
+
+		If the value 'any' is specified, the destination
+		switch will choose the VPI/VCI values. In such a
+		case, once the Soft PVCC atmSoftPVccOperStatus
+		value is 'connected', the value of this object
+		changes to 'required', such that the same VPI/VCI
+		values will continue to be used even if the connection
+		is subsequently torn down and re-established. The
+		VPI/VCI values chosen will be available for reading in 
+		atmSoftPVccTargetVpi and atmSoftPVccTargetVci.
+
+
+		If the value 'required' is specified, then values
+		must be supplied for objects atmSoftPVccTargetVpi
+		and atmSoftPVccTargetVci prior to activation of the
+		row. These values are then to be used at the destination."
+    DEFVAL  { required }
+    ::= { xylnatmSoftPVccEntry  7 }
+
+xylnatmSoftPVccTargetVpi OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "The VPI value of the VCL used at the target interface.
+		This value is not relevant when the value of 
+		atmSoftPVccTargetSelectType is 'any'."
+    DEFVAL  { 0 }
+    ::= { xylnatmSoftPVccEntry  8 }
+
+xylnatmSoftPVccTargetVci OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "The VCI value of the VCL used at the target interface.
+		This value must be filled in when the
+		atmSoftPVccTargetSelectType is set to 'required'.This 
+		value is not relevant when the value of 
+		atmSoftPVccTargetSelectType is 'any'."
+    ::= { xylnatmSoftPVccEntry  9 }
+
+xylnatmSoftPVccLastReleaseCause OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "Value of the Cause field of the Cause
+		Information Element in the last RELEASE
+		signalling message received for this Soft PVCC.
+		Indicates the reason for the Release."
+    ::= { xylnatmSoftPVccEntry  10 }
+
+xylnatmSoftPVccLastReleaseDiagnostic OBJECT-TYPE
+    SYNTAX  OCTET STRING
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "Value of the first 8 bytes of diagnostic information
+		from the Cause field of the Cause Information Element
+		in the last RELEASE signalling message received for
+		this Soft PVCC."
+    ::= { xylnatmSoftPVccEntry  11 }
+
+xylnatmSoftPVccOperStatus OBJECT-TYPE
+    SYNTAX  INTEGER {
+                 other(1),
+                 establishmentInProgress(2),
+                 connected(3),
+                 retriesExhausted(4)
+               }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "Describes the status of the Soft PVCC. When the
+		row is not 'active', the value of this
+		object is 'other'."
+    ::= { xylnatmSoftPVccEntry  12 }
+
+xylnatmSoftPVccRestart OBJECT-TYPE
+    SYNTAX  INTEGER {
+                 restart(1),
+                 noop(2)
+               }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "When the value is set to 'restart' the Soft PVCC
+		is released if necessary and a new setup procedure
+		is begun. As a result of this action, the
+		atmSoftPVccOperStatus object transitions to
+		'establishmentInProgress' (if not already in this state)
+		and the atmSoftPVccRetryFailures object is cleared
+
+
+		When the value is set to 'noop' no operation is
+		performed. When read, the value 'noop' is returned."
+    ::= { xylnatmSoftPVccEntry  13 }
+
+xylnatmSoftPVccRetryInterval OBJECT-TYPE
+    SYNTAX  INTEGER	--UNITS seconds
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "Defines the period to wait before attempting
+		to establish the Soft PVC after the first failed call
+		attempt.  Zero represents an infinite interval indicating no
+		retries."
+    DEFVAL  { 10 }
+    ::= { xylnatmSoftPVccEntry  14 }
+
+xylnatmSoftPVccRetryTimer OBJECT-TYPE
+    SYNTAX  INTEGER	--UNITS seconds
+
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "Indicates the current value of the retry timer for
+		this connection. When the value reaches zero an attempt
+		will be made to establish the Soft PVCC. When the timer
+		is not running, the value zero shall be returned."
+    ::= { xylnatmSoftPVccEntry  15 }
+
+xylnatmSoftPVccRetryThreshold OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "Indicates the number of consecutive call setup attempts for
+		the same Soft PVCC which need to fail before the
+		atmSoftPvcCallFailures object is incremented. A value of
+		zero indicates that an infinite number of call attempts
+		are required to increment the atmSoftPvcCallFailures object
+		and thus disables alarms for the Soft PVCC."
+    DEFVAL  { 1 }
+    ::= { xylnatmSoftPVccEntry  16 }
+
+xylnatmSoftPVccRetryFailures OBJECT-TYPE
+    SYNTAX  Gauge32
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+           "Indicates how many attempts to establish the connection
+		have failed.  This count is reset whenever a connection
+		is successfully established or the Soft PVCC is restarted."
+    ::= { xylnatmSoftPVccEntry  17 }
+
+xylnatmSoftPVccRetryLimit OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "Sets a maximum limit on how many consecutive unsuccessful
+		call setup attempts can be made before stopping the attempt
+		to set up the connection. If this limit is reached then
+		management action will be required (e.g. setting 
+		atmSoftPVccRestart to 'restart') to initiate a new attempt
+		to establish the connection. A value of zero indicates
+		no limit - the attempts will continue until successful."
+    DEFVAL  { 0 }
+    ::= { xylnatmSoftPVccEntry  18 }
+
+xylnatmSoftPVccLowTDIndex	OBJECT-TYPE
+	SYNTAX	AtmxTrafficDescrParamIndex
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		" The low end TD...Refer 1695 for interpretation"
+	::= { xylnatmSoftPVccEntry 19 }
+
+xylnatmSoftPVccHighTDIndex	OBJECT-TYPE
+	SYNTAX	AtmxTrafficDescrParamIndex
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The high end TD"
+	::= { xylnatmSoftPVccEntry 20 }
+
+xylnatmSoftPVccLastChange	OBJECT-TYPE
+	SYNTAX	DisplayString
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		" The value of MIB II sysUpTime at the time this VCL entered its 
+		  current operational state. If the current state was entered
+		  prior to the last re-initialization of the agent, then this object
+		  contains a zero value"
+	::= { xylnatmSoftPVccEntry 21}
+
+xylnatmSoftPVccOutSlot	OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The outgoing slot if the connection has been established..else 0"
+	::= { xylnatmSoftPVccEntry 22}
+
+xylnatmSoftPVccOutPort	OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The outgoing port..."
+	::= { xylnatmSoftPVccEntry 23 }
+
+xylnatmSoftPVccOutVpi	OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The outgoing vpi"
+	::= { xylnatmSoftPVccEntry 24 }
+
+xylnatmSoftPVccOutVci	OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"The outgoing vci.."
+	::= { xylnatmSoftPVccEntry 25 }
+
+xylnatmSoftPVccAdminStatus	OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The admin status of this VCL"
+	::= { xylnatmSoftPVccEntry 26}
+
+xylnatmSoftPVccCrossConnectIdentifier OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-only
+	STATUS	mandatory
+	DESCRIPTION
+		"A non zero value if the VCL is cross-connected"
+	::= { xylnatmSoftPVccEntry 27}
+
+xylnatmSoftPVccBbcIndex OBJECT-TYPE
+	SYNTAX	INTEGER
+	ACCESS	read-write
+	STATUS	mandatory
+	DESCRIPTION
+		"The BBC Index from the BBC Table"
+	::= { xylnatmSoftPVccEntry 28}
+
+xylnatmSoftPVccRowStatus OBJECT-TYPE
+    SYNTAX  INTEGER {
+						create(1),
+						modify(2),
+						delete(3),
+						active(4),
+						unknown(5)
+					}
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+           "Used to create and delete a Soft PVCC."
+    ::= { xylnatmSoftPVccEntry  29 }
+
+xylnatmSoftPVccCharging OBJECT-TYPE
+		SYNTAX	INTEGER {
+			enabled(1),
+			disabled(2),
+			usePortValue(3) }
+		ACCESS	read-write
+		STATUS	mandatory
+		DESCRIPTION
+			"States whether Charging Detail Records
+			 must be generated for this PVC."
+	::= { xylnatmSoftPVccEntry 30}
+
+
+--
+--    ATM Soft PVC Bearer Capability Group
+--
+--    This group is used to specify the bearer capability of a 
+--    soft PVC connection.  The soft PVC virtual path and virtual
+--    channel connection tables use entries in this table to 
+--    described the bearer capability of a given soft PVC.  This
+--    table is manadatory.
+--
+
+atmxSoftPvcBbcTable    OBJECT-TYPE
+    SYNTAX         SEQUENCE OF AtmxSoftPvcBbcEntry
+    ACCESS     not-accessible
+    STATUS         mandatory
+    DESCRIPTION
+        "This table contains information related to ATM bearer capability
+         type and associated parameters."
+    ::= { atmxSoftPvcMIBObjects 6 }
+
+atmxSoftPvcBbcEntry    OBJECT-TYPE
+    SYNTAX         AtmxSoftPvcBbcEntry
+    ACCESS     not-accessible
+    STATUS         mandatory
+    DESCRIPTION
+        "An entry in this table is used to specify the bearer capa-
+        bility of a given soft PVC."
+    INDEX    { atmxSoftPvcBbcIndex }
+    ::= { atmxSoftPvcBbcTable 1 }
+
+AtmxSoftPvcBbcEntry    ::= SEQUENCE    {
+    atmxSoftPvcBbcIndex                       AtmxSoftPvcBbcIndex,
+    atmxSoftPvcBbcClass                       INTEGER,
+    atmxSoftPvcBbcTrafficType                 INTEGER,
+    atmxSoftPvcBbcTimingRequirements          INTEGER,
+    atmxSoftPvcBbcSusceptibilityToClipping    INTEGER,
+    atmxSoftPvcBbcUserPlaneConnectionConfig   INTEGER,  
+    atmxSoftPvcBbcRowStatus                   INTEGER
+}                                                 
+
+atmxSoftPvcBbcIndex        OBJECT-TYPE
+    SYNTAX         AtmxSoftPvcBbcIndex
+    ACCESS     	   not-accessible
+    STATUS         mandatory
+    DESCRIPTION
+        "Identifies an entry in the atmSoftPvcBbcTable."
+    DEFVAL   { 0 }
+    ::= { atmxSoftPvcBbcEntry 1 }
+
+atmxSoftPvcBbcClass       OBJECT-TYPE
+    SYNTAX         INTEGER {
+                       bcobA (1),
+                       bcobC (2),
+                       bcobX (3)
+                   }
+    ACCESS     read-write
+    STATUS         mandatory
+    DESCRIPTION
+        "Indicates the broadband bearer capability class."
+    ::= { atmxSoftPvcBbcEntry 2 }
+
+atmxSoftPvcBbcTrafficType       OBJECT-TYPE
+    SYNTAX         INTEGER {
+                       noIndication (1),
+                       constantBitRate (2),
+                       variableBitRate (3)
+                   }
+    ACCESS     read-write
+    STATUS         mandatory
+    DESCRIPTION
+        "Indicates the broadband bearer capability traffic class."
+    ::= { atmxSoftPvcBbcEntry 3 }
+
+atmxSoftPvcBbcTimingRequirements OBJECT-TYPE
+    SYNTAX         INTEGER {
+                       noIndication (1),
+                       endToEndTimingRequired (2),
+                       endToEndTimingNotRequired (3)
+                   }
+    ACCESS     read-write
+    STATUS         mandatory
+    DESCRIPTION
+        "Indicates the broadband bearer capability timing requirements."
+    ::= { atmxSoftPvcBbcEntry 4 }
+
+atmxSoftPvcBbcSusceptibilityToClipping OBJECT-TYPE
+    SYNTAX         INTEGER {
+                       susceptibleToClipping (1),
+                       notSusceptibleToClipping(2)
+                   }
+    ACCESS     read-write
+    STATUS         mandatory
+    DESCRIPTION
+        "Indicates the broadband bearer capability susceptibility to
+        clipping parameter."
+    ::= { atmxSoftPvcBbcEntry 5 }
+
+atmxSoftPvcBbcUserPlaneConnectionConfig OBJECT-TYPE
+    SYNTAX         INTEGER {
+                       point-to-point (1),
+                       point-to-multipoint (2)
+                   }
+    ACCESS     read-write
+    STATUS         mandatory
+    DESCRIPTION
+        "Indicates the broadband bearer capability user plane configuration
+        parmmeter."
+    ::= { atmxSoftPvcBbcEntry 6 }
+
+atmxSoftPvcBbcRowStatus OBJECT-TYPE
+    SYNTAX         INTEGER {
+							create (1),
+							modify (2),
+							delete (3),
+							active (4),
+							unknown (5)
+						}
+	
+    ACCESS     read-write
+    STATUS         mandatory
+    DESCRIPTION
+        "This object is used to create, modify, and delete rows 
+        in the 'atmSoftPvcBbcTable'."
+    ::= { atmxSoftPvcBbcEntry 7 }
+
+
+
+atmxSoftPvcTraps OBJECT IDENTIFIER ::= { atmxSoftPvcMIBTraps  1 }
+
+atmxSoftPvcTrapsPrefix OBJECT IDENTIFIER ::= { atmxSoftPvcTraps  1 }
+
+atmxSoftPvcCallFailuresTrap TRAP-TYPE
+    ENTERPRISE  atmxSoftPvcTrapsPrefix
+    VARIABLES   {
+                 atmxSoftPvcCallFailures,
+                 atmxSoftPvcCurrentlyFailingSoftPVccs,
+                 atmxSoftPvcCurrentlyFailingSoftPVpcs
+               }
+    DESCRIPTION
+           "A notification indicating that one or more series of
+		call attempts in trying to establish a Soft PVPC or
+		Soft PVCC have failed since the last
+		atmSoftPvcCallFailureTrap was sent. If this trap has
+		not been sent for the last atmSoftPvcNotificationInterval,
+		then it will be sent on the next increment of
+		atmSoftPvcCallFailures."
+    ::= 1
+
+atmxSoftPvcMIBConformance OBJECT IDENTIFIER ::= { atmxSoftPvcMIB  3 }
+
+atmxSoftPvcMIBCompliances OBJECT IDENTIFIER ::= {atmxSoftPvcMIBConformance  1 }
+
+atmxSoftPvcMIBGroups OBJECT IDENTIFIER ::= { atmxSoftPvcMIBConformance  2 }
+
+atmxSoftPvcMIBCompliance OBJECT IDENTIFIER ::= { atmxSoftPvcMIBCompliances  1 }
+
+atmxSoftPvcBaseMIBGroup OBJECT IDENTIFIER ::= { atmxSoftPvcMIBGroups  1 }
+
+atmxSoftPvcVccMIBGroup OBJECT IDENTIFIER ::= { atmxSoftPvcMIBGroups  2 }
+
+atmxSoftPvcVpcMIBGroup OBJECT IDENTIFIER ::= { atmxSoftPvcMIBGroups  3 }
+
+atmxSoftPvcAddressMIBGroup OBJECT IDENTIFIER ::= { atmxSoftPvcMIBGroups  4 }
+
+atmxCurrentlyFailingSoftPVccMIBGroup OBJECT IDENTIFIER ::= { atmxSoftPvcMIBGroups  5 }
+
+atmxCurrentlyFailingSoftPVpcMIBGroup OBJECT IDENTIFIER ::= { atmxSoftPvcMIBGroups  6 }
+
+END

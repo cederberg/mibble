@@ -1,0 +1,2367 @@
+        -- Version 1.5, modified 02/12/98
+
+        ROUTER-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS 
+            IpAddress
+                FROM RFC1155-SMI          
+            
+           OBJECT-TYPE 
+                FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                      codex OBJECT IDENTIFIER ::= { enterprises 449 }
+         cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                    cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+      cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+    cdx6500CfgProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 1 }
+      cdx6500PCTRouterGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 5 }
+
+          cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+   cdx6500StatProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 1 }
+      cdx6500PSTRouterGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 4 }
+
+            cdx6500Controls OBJECT IDENTIFIER ::= { cdx6500 4 }
+
+        -- Textual Conventions
+
+        MacAddress ::= OCTET STRING (SIZE (6))
+
+        -- Router Group
+        -- IP Configurables
+
+        cdx6500PCTRarpCacheTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTRarpCacheEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "ARP Cache Configuration Table."
+        ::= { cdx6500PCTRouterGroup 1 }
+
+        cdx6500PCTRarpCacheEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTRarpCacheEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IP configurables"
+            INDEX { cdx6500PCTRarpCacheIndex }
+        ::= { cdx6500PCTRarpCacheTable 1 }
+
+        Cdx6500PCTRarpCacheEntry ::=
+            SEQUENCE {
+                cdx6500PCTRarpCacheIndex
+                     INTEGER,
+                cdx6500PCTRarpCacheIfNum
+                     INTEGER,
+                cdx6500PCTRarpCacheProtocol
+                     INTEGER,
+                cdx6500PCTRarpCacheProtocolAd
+                     IpAddress,
+                cdx6500PCTRarpCacheMacAd
+                     MacAddress
+                }
+
+        cdx6500PCTRarpCacheIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTRarpCacheEntry 1 }
+
+        cdx6500PCTRarpCacheIfNum OBJECT-TYPE
+            SYNTAX INTEGER (1..36)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface Number. This must be a router Interface 
+                 Number as assigned in the Interface Configuration Table
+                 (cdx6500PCTRifConfTable) entry."
+        ::= { cdx6500PCTRarpCacheEntry 2 }
+
+        cdx6500PCTRarpCacheProtocol OBJECT-TYPE
+            SYNTAX INTEGER {
+                    ip        (0),
+                    ipx       (7),
+                    appleTalk (22),
+                    newvalIp  (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Protocol Type. This identifies one of the routing protocols
+                 supported by the router.
+                 newvalIp : same functionality as 'ip', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500PCTRarpCacheEntry 3 }
+
+        cdx6500PCTRarpCacheProtocolAd OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "IP Address. The IP address of a particular host on the
+                 attached network identified by the Interface Number."
+        ::= { cdx6500PCTRarpCacheEntry 4 }
+
+        cdx6500PCTRarpCacheMacAd OBJECT-TYPE
+            SYNTAX MacAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "MAC Address.The hardware MAC address of the host with the
+                 IP Address of this entry."
+        ::= { cdx6500PCTRarpCacheEntry 5 }
+
+        cdx6500PCTRarpParamAutoRef OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Auto-Refresh. Enables/Disables the routers capacity to send
+                 an ARP request based on the entry in the translation cache
+                 before the refresh timer expires.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 2 }
+
+        cdx6500PCTRarpParamRefTime OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Refresh Timeout. Changes the timeout value (in minutes) for
+                 the refresh timer. A setting of 0 turns off (disables) the
+                 refresh timer."
+        ::= { cdx6500PCTRouterGroup 3 }
+
+        cdx6500PCTRarpParamUseTime OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Usage Timeout. Changes the timeout value (in minutes) for the
+                 usage timer. A setting of 0 turns off (disables) the usage
+                 timer."
+        ::= { cdx6500PCTRouterGroup 4 }
+
+        cdx6500PCTRarpParamProxy OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Proxy ARP. Enables the router to respond as proxy for hosts
+                 on different nets reachable from the router.  Normal ARP
+                 operation calls for hosts to send an ARP request only for
+                 destinations that are on the same IP network (or subnetwork)
+                 as the requester. Some IP hosts, however, ARP even for
+                 off-network IP destination hosts. This parameter enables the
+                 router to respond as a proxy for such off-network hosts,
+                 causing the source to properly send off-network packets to the
+                 router. The router will respond only if the destination
+                 network/subnetwork is in its IP Routing Table.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 5 }
+
+        cdx6500PCTRarpParamProxySub OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Proxy ARP Subnets Only. Enables the router to respond as a
+                 proxy for hosts on different subnets of the same top-level IP
+                 net as the ARP requester.  This is a subset of the operation
+                 controlled with the Proxy ARP parameter. The router will
+                 respond only for a reachable destination subnet,i.e. one
+                 which is in its IP Routing Table.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 6 }
+
+        cdx6500PCTRaccControlTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTRaccControlEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "IP Access Control Table."
+        ::= { cdx6500PCTRouterGroup 7 }
+
+        cdx6500PCTRaccControlEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTRaccControlEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IP configurables."
+            INDEX { cdx6500PCTRaccControlIndex }
+        ::= { cdx6500PCTRaccControlTable 1 }
+
+        Cdx6500PCTRaccControlEntry ::=
+            SEQUENCE {
+                cdx6500PCTRaccControlIndex
+                    INTEGER,
+                cdx6500PCTRaccControlType
+                    INTEGER,
+                cdx6500PCTRaccControlSrcAd
+                    IpAddress,
+                cdx6500PCTRaccControlSrcMask
+                    IpAddress,
+                cdx6500PCTRaccControlDstAd
+                    IpAddress,
+                cdx6500PCTRaccControlDstMask
+                    IpAddress,
+                cdx6500PCTRaccControlFstProt
+                    INTEGER,
+                cdx6500PCTRaccControlLstProt
+                    INTEGER,
+                cdx6500PCTRaccControlFstPort
+                    INTEGER,
+                cdx6500PCTRaccControlLstPort
+                    INTEGER
+                }
+
+        cdx6500PCTRaccControlIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTRaccControlEntry 1 }
+
+        cdx6500PCTRaccControlType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    excluded       (0),
+                    included       (1),
+                    newvalExcluded (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Access Type. Each received IP packet is compared with all
+                 Access Control list entries in order of Entry number. If the
+                 first matching Access Control Entry is include, the packet
+                 is forwarded.  If the entry is exclude, the packet is
+                 dropped. If no matching entry is found, the packet is dropped.
+                 An entry matches a packet when the source IP address,
+                 destination IP address, IP Protocol number range and TCP/UDP
+                 port number range all match the packet.
+                 newvalExcluded : same functionality as 'excluded', new 
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRaccControlEntry 2 }
+
+        cdx6500PCTRaccControlSrcAd OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Source Address. IP source address to compare against a
+                 packet. An IP packet's source IP address field matches an
+                 Access Control entry when the result of logically AND-ing it
+                 with the Source Mask field equals the Source Address field. A
+                 Source Address field of 0.0.0.0 with a Source Mask field of
+                 0.0.0.0 matches any source IP address in the packet."
+        ::= { cdx6500PCTRaccControlEntry 3 }
+
+        cdx6500PCTRaccControlSrcMask OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Address Mask. Address mask to be applied to a received source
+                 IP address.  An address is logically AND-ed with the mask and
+                 compared with the Source Address.  For example, a mask of
+                 255.0.0.0 with a result of 129.0.0.0 will match any address
+                 with 129 in the first byte. A mask of 255.255.255.255 with a
+                 result of 129.122.3.26 matches only the IP host 129.122.3.26.
+                 A mask of 0.0.0.0 with a result of 0.0.0.0 is a wild card, and
+                 matches any IP address."
+        ::= { cdx6500PCTRaccControlEntry 4 }
+
+        cdx6500PCTRaccControlDstAd OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Destination Address. IP destination address in dotted
+                 notation. An IP packet's destination IP address field matches
+                 an Access Control entry when the result of logically AND-ing
+                 it with the Destination Mask field equals the Destination
+                 Address field. A Destination Address field of 0.0.0.0 with a
+                 Destination Mask field of 0.0.0.0 matches any destination IP
+                 address in the packet."
+        ::= { cdx6500PCTRaccControlEntry 5 }
+
+        cdx6500PCTRaccControlDstMask OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Address Mask. Address mask in dotted notation to be applied
+                 to an IP packet's destination address. The packet destination
+                 IP address is logically AND-ed with the Destination Mask field
+                 and compared with the Destination Address field. For example,
+                 a mask of 255.0.0.0 with a result of 129.0.0.0 will match any
+                 address with 129 in the first byte. A mask of 255.255.255.255
+                 with a result of 126.122.3.26 matches only the IP host
+                 129.122.3.26.  A mask of 0.0.0.0 with a result of 0.0.0.0 is a
+                 wild card, and matches any IP address."
+        ::= { cdx6500PCTRaccControlEntry 6 }
+
+        cdx6500PCTRaccControlFstProt OBJECT-TYPE
+            SYNTAX INTEGER (0..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "First Protocol. This decimal number corresponds to the
+                 protocol byte in the IP header. A packet with an IP protocol
+                 byte between the First Protocol value and Last Protocol value,
+                 inclusive, will match the entry. The First Protocol value must
+                 be less than or equal to the Last Protocol field value. A
+                 First Protocol of 0 and a Last Protocol of 255 will match all
+                 IP packets. Commonly used IP protocol numbers are 1 for ICMP,
+                 6 for TCP, 8 for EGP, 17 for UDP and 89 for OSPF."
+        ::= { cdx6500PCTRaccControlEntry 7 }
+
+        cdx6500PCTRaccControlLstProt OBJECT-TYPE
+            SYNTAX INTEGER (0..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Last Protocol. This decimal number corresponds to the
+                 protocol byte in the IP header.A packet with a protocol value
+                 in the specified range will match. This parameter defines the
+                 upper value of this range, and must be greater than or equal
+                 to the First Protocol field value. A Protocol range of 0 to 
+                 255 will match all IP packets. Commonly used protocol numbers 
+                 are 1 for ICMP, 6 for TCP, 8 for EGP, 17 for UDP and 89 
+                 for OSPF."
+        ::= { cdx6500PCTRaccControlEntry 8 }
+
+        cdx6500PCTRaccControlFstPort OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "First Port. This decimal number corresponds to a UDP or TCP
+                 port number.A UDP or TCP packet will match an Access Control
+                 Entry when its UDP/TCP port number is at or above the entry's
+                 First Port value, and at or below the Last Port value. An
+                 entry with a First Port value of 0 and a Last Port value of
+                 65535 will match all packets. Commonly used port numbers are
+                 21 for FTP, 23 for Telnet, 25 for SMTP, 513 for rlogin, 520
+                 for RIP, and 600 for X."
+        ::= { cdx6500PCTRaccControlEntry 9 }
+
+        cdx6500PCTRaccControlLstPort OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Last Port. This decimal number corresponds to a UDP or TCP
+                 port number. A UDP or TCP packet will match an Access Control
+                 Entry when its UDP/TCP port number is at or above the entry's
+                 First Port value, and at or below the Last Port value. An
+                 entry with a First Port value of 0 and a Last Port value of
+                 65535 will match all packets. Commonly used port numbers are
+                 21 for FTP, 23 for Telnet, 25 for SMTP, 513 for rlogin, 520
+                 for RIP, and 600 for X."
+        ::= { cdx6500PCTRaccControlEntry 10 }
+
+        cdx6500PCTRAcceptRIPRouteTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTRAcceptRIPRouteEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "IP Accept RIP Route Table."
+        ::= { cdx6500PCTRouterGroup 8 }
+
+        cdx6500PCTRAcceptRIPRouteEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTRAcceptRIPRouteEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "IP Accept RIP Route Table."
+            INDEX { cdx6500PCTRAcceptRIPRouteIndex }
+        ::= { cdx6500PCTRAcceptRIPRouteTable 1 }
+
+        Cdx6500PCTRAcceptRIPRouteEntry ::=
+            SEQUENCE {
+                cdx6500PCTRAcceptRIPRouteIndex
+                    INTEGER,
+                cdx6500PCTRAcceptRIPRouteIpNet
+                    IpAddress
+                }
+
+        cdx6500PCTRAcceptRIPRouteIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTRAcceptRIPRouteEntry 1 }
+
+        cdx6500PCTRAcceptRIPRouteIpNet OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "IP Network/subnet. IP address which identifies a destination
+                 network or subnetwork for which RIP route information is
+                 accepted. The route is accepted from any received RIP packet,
+                 and overrides any disabled Learn Net Route or Learn Subnet
+                 Route setting."
+        ::= { cdx6500PCTRAcceptRIPRouteEntry 2 }
+
+        cdx6500PCTRifConfTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTRifConfEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "IP Interface Table."
+        ::= { cdx6500PCTRouterGroup 9 }
+
+        cdx6500PCTRifConfEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTRifConfEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IP configurables."
+            INDEX { cdx6500PCTRifConfIndex }
+        ::= { cdx6500PCTRifConfTable 1 }
+
+        Cdx6500PCTRifConfEntry ::=
+            SEQUENCE {
+                cdx6500PCTRifConfIndex
+                    INTEGER,
+                cdx6500PCTRifConfIfNum
+                    INTEGER,
+                cdx6500PCTRifConfIpAd
+                    IpAddress,
+                cdx6500PCTRifConfAdMask
+                    IpAddress,
+                cdx6500PCTRifConfOvrDefRoute
+                    INTEGER,
+                cdx6500PCTRifConfOvrStatRoute
+                    INTEGER,
+                cdx6500PCTRifConfSndgDefRoute
+                    INTEGER,
+                cdx6500PCTRifConfSndgNetRoute
+                    INTEGER,
+                cdx6500PCTRifConfSndgSubRoute
+                    INTEGER,
+                cdx6500PCTRifConfSndgStatRoute
+                    INTEGER,
+                cdx6500PCTRifConfRcvgRipPkts
+                    INTEGER,
+                cdx6500PCTRifConfRcvgDynNets
+                    INTEGER,
+                cdx6500PCTRifConfRcvgDynSubs
+                    INTEGER,
+                cdx6500PCTRifConfTagAsNum
+                    INTEGER,
+                cdx6500PCTRifConfBcastStyle
+                    INTEGER,
+                cdx6500PCTRifConfBcastFill
+                    INTEGER,
+                cdx6500PCTRifMaxIpMTUSize
+                    INTEGER,
+                cdx6500PCTRifConfSplitHorizon
+                    INTEGER,
+                cdx6500PCTRifConfSr
+                    INTEGER
+                } 
+
+        cdx6500PCTRifConfIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTRifConfEntry 1 }
+
+        cdx6500PCTRifConfIfNum OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface Number. Each interface must be assigned an
+                 Interface Number. Interface Numbers 1 through 4 are for the
+                 LAN ports. Interface numbers 5 through 36 are reserved for Lan
+                 Connections, which are virtual circuit links over WAN networks
+                 such as X.25 or Frame Relay to other routers."
+        ::= { cdx6500PCTRifConfEntry 2 }
+
+        cdx6500PCTRifConfIpAd OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "IP Address. This parameter defines the 32-bit IP host address
+                 of the router on the associated interface. IP Addresses are
+                 considered to consist of a network part, a subnetwork part,
+                 and a host number. All IP routers and hosts on a LAN must be
+                 assigned the same network/subnetwork part for their IP
+                 address. The serial links (LAN connections) between routers
+                 must also be assigned an IP network/subnetwork number, and the
+                 IP Address assigned on both sides of a serial link must have
+                 the same network (and subnetwork) part."
+        ::= { cdx6500PCTRifConfEntry 3 }
+
+        cdx6500PCTRifConfAdMask OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Address Mask. This parameter is entered in dotted notation
+                 and configures the 32-bit IP Subnetwork Address Mask
+                 associated with network to which the interfaces attaches. The
+                 subnetwork address mask has 1 bit for the bits which form the
+                 network and subnetwork portions of the IP address. For
+                 example, if the interface is on a class B network such as
+                 128.185.0.0, and the third byte is used to select a subnet
+                 (e.g. 128.185.100.0), the mask should be set to 255.255.255.0.
+                 All IP devices on a subnetted network must be configured with
+                 the same subnetwork address mask."
+        ::= { cdx6500PCTRifConfEntry 4 }
+
+        cdx6500PCTRifConfOvrDefRoute OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Override Default Route.Enables the router to override the
+                 configured Default Gateway when it receives a RIP update from
+                 another router advertising the default route of 0.0.0.0 with a
+                 cheaper metric than the configured Default Gateway Metric.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRifConfEntry 5 }
+
+        cdx6500PCTRifConfOvrStatRoute OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Override Static Route. Enables/Disables the receipt of RIP
+                 information on this interface to override the router's
+                 statically configured routing information, providing the cost
+                 of the RIP information is cheaper.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRifConfEntry 6 }
+
+        cdx6500PCTRifConfSndgDefRoute OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Advertise Default Route. Enables/Disables this router
+                 advertising the default route of 0.0.0.0 on this interface.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRifConfEntry 7 }
+
+        cdx6500PCTRifConfSndgNetRoute OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Advertise Network Routes. Enables/Disables advertisement of
+                 directly-attached networks and learned IP network routes on
+                 RIP updates transmitted on this interface.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRifConfEntry 8 }
+
+        cdx6500PCTRifConfSndgSubRoute OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Advertise Subnet Routes. Enables/Disables the inclusion of all
+                 subnet routes within RIP updates sent on this interface.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRifConfEntry 9 }
+
+        cdx6500PCTRifConfSndgStatRoute OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Advertise Static/Direct Routes. Enables/Disables the 
+                 inclusion of all statically configured and directly connected 
+                 routes within RIP updates sent on this interface.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRifConfEntry 10 }
+
+        cdx6500PCTRifConfRcvgRipPkts OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Accept RIP. Enables/Disables the processing of RIP
+                 updates received on this interface. This is normally enabled
+                 whenever RIP is enabled.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRifConfEntry 11 }
+
+        cdx6500PCTRifConfRcvgDynNets OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Learn Network Routes. Enables/Disables the learning of new
+                 network-level routes received from neighboring routers on this
+                 interface's network.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRifConfEntry 12 }
+
+        cdx6500PCTRifConfRcvgDynSubs OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Learn Subnet Routes. Enables/Disables the learning of
+                 new subnet-level routes received from neighboring routers on
+                 this interface's network.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRifConfEntry 13 }
+
+        cdx6500PCTRifConfTagAsNum OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "AS Number. Specifies a tag to be associated with RIP
+                 information received on this interface. Tags are used to group
+                 routes together for later readvertisement via EGP, where the
+                 tag is treated as if it were a route's source Autonomous
+                 System. Tags are also propagated by the OSPF routing protocol."
+        ::= { cdx6500PCTRifConfEntry 14 }
+
+        cdx6500PCTRifConfBcastStyle OBJECT-TYPE
+            SYNTAX INTEGER {
+                    network       (0),
+                    local         (1),
+                    newvalNetwork (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Broadcast Style. Specifies the convention for addressing IP
+                 broadcasts to all other hosts on the attached network. LOCAL
+                 broadcast style means that the Broadcast Fill Pattern (1s or
+                 0s) fills all 32 bits of the IP broadcast address. NET
+                 broadcast style means that the Network and subnetwork portion
+                 of the IP broadcast address is set to the interface's network
+                 number, and the Broadcast Fill pattern fills only the host
+                 portion.
+                 Examples: 
+                 LOCAL 1-fill: 255.255.255.255   LOCAL 0-fill: 0.0.0.0
+                 NET 1-fill:   128.185.255.255   NET 0-fill:   128.185.0.0
+                 All IP devices on a network must be configured with the same
+                 IP broadcast address convention.
+                 newvalNetwork : same functionality as 'network', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRifConfEntry 15 }
+
+        cdx6500PCTRifConfBcastFill OBJECT-TYPE
+            SYNTAX INTEGER (0..1)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Broadcast Fill Pattern. Specifies the IP broadcast fill
+                 pattern the router will use when broadcasting on this
+                 interface. See Broadcast Style, cdx6500PCTRifConfBcastStyle."
+        ::= { cdx6500PCTRifConfEntry 16 }
+
+        cdx6500PCTRifMaxIpMTUSize OBJECT-TYPE
+            SYNTAX INTEGER (576..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the Maximum Transmission Unit to be used."
+        ::= { cdx6500PCTRifConfEntry 17 }
+
+        cdx6500PCTRifConfSplitHorizon OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter enables/disables the IP RIP 
+                 split horizon.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRifConfEntry 18 }
+
+        cdx6500PCTRifConfSr OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter enables/disables the IP use of a
+                 RIF field in Token Ring networks for ARPs and RIPs.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRifConfEntry 19 }
+
+        cdx6500PCTRbootpServTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTRbootpServEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "IP BOOTP Server Table."
+        ::= { cdx6500PCTRouterGroup 10 }
+
+        cdx6500PCTRbootpServEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTRbootpServEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IP configurables."
+            INDEX { cdx6500PCTRbootpServIndex }
+        ::= { cdx6500PCTRbootpServTable 1  }
+
+        Cdx6500PCTRbootpServEntry ::=
+            SEQUENCE {
+                cdx6500PCTRbootpServIndex
+                    INTEGER,
+                cdx6500PCTRbootpServAd
+                    IpAddress
+                }
+
+        cdx6500PCTRbootpServIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTRbootpServEntry 1 }
+
+        cdx6500PCTRbootpServAd OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "BOOTP Server Address. Adds a BootP server IP address (in
+                 dotted notation) to the routers configuration (the router will
+                 forward BootP requests to the specified BootP server). This
+                 must be used in conjunction with the BootP Forwarding command
+                 under the IP Parameters menu. There are no  defaults for this
+                 command and valid address must be entered."
+        ::= { cdx6500PCTRbootpServEntry 2 }
+
+        cdx6500PCTRegpAsTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTRegpAsEntry
+            ACCESS not-accessible
+            STATUS optional
+            DESCRIPTION
+                "IP EGP AS Information Table."
+        ::= { cdx6500PCTRouterGroup 11 }
+
+        cdx6500PCTRegpAsEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTRegpAsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IP configurables."
+            INDEX { cdx6500PCTRegpAsIndex }
+        ::= { cdx6500PCTRegpAsTable 1 }
+
+        Cdx6500PCTRegpAsEntry ::=
+            SEQUENCE {
+                cdx6500PCTRegpAsIndex
+                    INTEGER,
+                cdx6500PCTRegpAsNeighAs
+                    INTEGER,
+                cdx6500PCTRegpAsInterchFlag
+                    INTEGER,
+                cdx6500PCTRegpAsUseEgMetric
+                    INTEGER,
+                cdx6500PCTRegpAsDefMetric
+                    INTEGER
+                }
+
+        cdx6500PCTRegpAsIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTRegpAsEntry 1 }
+
+        cdx6500PCTRegpAsNeighAs OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Neighboring AS. The number of the Autonomous System to which
+                 routing information wil be exchanged. For a value of 0, the
+                 default EGP exchange is defined."
+        ::= { cdx6500PCTRegpAsEntry 2 }
+
+        cdx6500PCTRegpAsInterchFlag OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off       (0),
+                    on        (1),
+                    newvalOff (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interchange Flag. Defines the permissible exchange of EGP
+                 route information. IN causes all routes received from the
+                 neighboring AS to be readvertised via OSPF and RIP. OUT causes
+                 all internal known routes to be advertised to EGP. OFF
+                 indicates the particular IP networks to be re-advertised
+                 are controlled with the Output-Interchange and
+                 Input-Interchange configurations. OFF is the recommended
+                 configuration.
+                 newvalOff : same functionality as 'off', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500PCTRegpAsEntry 3 }
+
+        cdx6500PCTRegpAsUseEgMetric OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off       (0),
+                    on        (1),
+                    newvalOff (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Use EGP Metric. This parameter is ON or OFF. When ON, the
+                 re-advertised cost is the same as the originally learned cost.
+                 For IN interchanges, the EGP cost metric is reported as the
+                 RIP/OSPF cost. For OUT interchanges, the RIP/OSPF cost metric
+                 is reported as the EGP cost. If this parameter is OFF, the
+                 Default Metric parameter of this record is always reported as
+                 the cost.
+                 newvalOff : same functionality as 'off', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500PCTRegpAsEntry 4 }
+
+        cdx6500PCTRegpAsDefMetric OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Default Metric. The default cost used for readvertisements.
+                 This is usually interpreted as a number of hops. For IN
+                 interchanges, this means all routes will be readvertised
+                 by OSPF and RIP with the Default Metric cost. In the OUT
+                 direction, this means all routes in the RIP/OSPF routing
+                 table will be advertised to EGP with the given cost."
+        ::= { cdx6500PCTRegpAsEntry 5 }
+
+        cdx6500PCTRegpNeighTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTRegpNeighEntry
+            ACCESS not-accessible
+            STATUS optional
+            DESCRIPTION
+                "IP EGP Neighbor Table."
+        ::= { cdx6500PCTRouterGroup 12 }
+
+        cdx6500PCTRegpNeighEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTRegpNeighEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IP configurables."
+            INDEX { cdx6500PCTRegpNeighIndex }
+        ::= { cdx6500PCTRegpNeighTable 1 }
+
+        Cdx6500PCTRegpNeighEntry ::=
+            SEQUENCE {
+                cdx6500PCTRegpNeighIndex
+                    INTEGER,
+                cdx6500PCTRegpNeighIdAd
+                    IpAddress,
+                cdx6500PCTRegpNeighAs
+                    INTEGER
+                }
+
+        cdx6500PCTRegpNeighIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTRegpNeighEntry 1 }
+
+        cdx6500PCTRegpNeighIdAd OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Neighbor IP Address. IP address of an EGP neighbor in dotted
+                 notation."
+        ::= { cdx6500PCTRegpNeighEntry 2 }
+
+        cdx6500PCTRegpNeighAs OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Neighboring AS. Autonomous System number of the EGP neighbor."
+        ::= { cdx6500PCTRegpNeighEntry 3 }
+
+        cdx6500PCTRipParamBootpFwdg OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "BOOTP Forwarding. Enables/Disables the forwarding of BootP
+                 requests. BOOTP (Boot Parameters) is a protocol that allows
+                 workstations to obtain their startup operating system software
+                 and other parameters from a BOOTP Server host on the IP
+                 network. If enabled, the location of the BOOTP servers must be
+                 configured in the cdx6500PCTRbootpServTable MIB table.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 13 }
+
+        cdx6500PCTRipParamBootpMaxHops OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "BOOTP Max Allowed Metric. The maximum cost metric (hop count)
+                 a BootP request is allowed to attain before being discarded.
+                 This is NOT the maximum number of IP hops to the BootP server."
+        ::= { cdx6500PCTRouterGroup 14 }
+
+        cdx6500PCTRipParamBootpSbf OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "BOOTP Seconds Before Forward. The number of seconds the
+                 router will wait for a BOOT request to be repeated before
+                 forwarding the request to BOOTP Server."
+        ::= { cdx6500PCTRouterGroup 15 }
+
+        cdx6500PCTRipParamEgpSysNum OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "EGP System Number. Configures the router's Autonomous System
+                 Number, as assigned by the Internet Network Information
+                 Center. The Exterior Gateway Protocol (EGP) is used to
+                 communicate with the Internet backbone. Usually, all of the
+                 routers for one company are considered in a single Autonomous
+                 System (AS), and all must have the same EGP Autonomous system
+                 number. EGP is used by the one (or two, for backup) of a
+                 company's gateway routers that connect to an administered
+                 Internet backbone such as Milnet or NSFnet."
+        ::= { cdx6500PCTRouterGroup 16 }
+
+        cdx6500PCTRipParamEgpReadvert OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "EGP Readvertise. Globally Enables/Disables the
+                 readvertisement of EGP routes which were originally learned
+                 from EGP. When Enabled, the learned routes are advertised
+                 locally with RIP or OSPF. The particular EGP neighbors from
+                 which routes are learned are specified with the
+                 cdx6500PCTRegpAsTable table. The particular networks which are
+                 learned can be specified with the cdx6500PCTRinInterchTable
+                 table.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 17 }
+
+        cdx6500PCTRipParamRip OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "RIP Enable. Globally Enables/Disables RIP protocol processing
+                 for the router. The Routing Information Protocol (RIP) was the
+                 original internal gateway routing protocol used for IP
+                 networks, and is suitable for moderate size organization
+                 networks. An organization may operate both RIP and OSPF
+                 simultaneously.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 18 }
+
+        cdx6500PCTRipParamRipOrigDef OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Originate Default Route. Enables origination and RIP
+                 advertisement of the default IP route 0.0.0.0. Default route
+                 advertisements must also be explicitly enabled for each
+                 interface. The router will originate the default route only
+                 when it has EGP-derived or external OSPF routes in its routing
+                 table.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 19 }
+
+        cdx6500PCTRipParamAdvDefMetCost OBJECT-TYPE
+            SYNTAX INTEGER (1..16)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Advertised Default Metric Cost. Sets the cost metric (usually
+                 the number of hops) that RIP will advertise for the default
+                 route of 0.0.0.0.  A metric of 16 advertises that the default
+                 route is unreachable." 
+        ::= { cdx6500PCTRouterGroup 20 }
+
+        cdx6500PCTRipParamNextHopDefGway OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Default Gateway. The IP address of the default
+                 gateway -this- router will use when a packet's destination
+                 route is otherwise unknown. The next hop must be to a router
+                 on a directly attached network."
+        ::= { cdx6500PCTRouterGroup 21 }
+
+        cdx6500PCTRipParamDistDefGway OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Default Gateway Metric. The cost metric for a transmission to
+                 this router's default gateway, usually given as the number of
+                 network hops."
+        ::= { cdx6500PCTRouterGroup 22 }
+
+        cdx6500PCTRipParamRoutTableSize OBJECT-TYPE
+            SYNTAX INTEGER (64..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Routing Table Size. The maximum number of routes that may be
+                 stored in the IP routing table."
+        ::= { cdx6500PCTRouterGroup 23 }
+
+        cdx6500PCTRipParamDirBcast OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Directed Broadcast. Enables/Disables the forwarding of IP
+                 packets whose destination is a non-local (remote LAN)
+                 broadcast address.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 24 }
+
+        cdx6500PCTRipParamInternalNetMask OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is entered in dotted notation and configures
+                 the 32-bit IP Subnetwork Address Mask associated with the
+                 Internal interface created when the Internal Address is
+                 added to the router configuration parameters. The Internal
+                 Network address is derived from the configured Internal
+                 address and Internal Network Mask parameter."
+        ::= { cdx6500PCTRouterGroup 25 }
+
+        cdx6500PCTRipParamInternalIpAd OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is an IP Address that becomes the Default IP Address for
+                 the router. The Default IP Address is used as the IP source
+                 address of PING and ICMP frames originated from the router to
+                 unnumbered interfaces and it is the reported IP Address in
+                 SNMP Trap frames. A Internal Network is added to the router
+                 routing table with the network address  derived from the
+                 configured Internal address and Internal Network Mask
+                 parameter. If Internal IP Address is left undefined or the
+                 network part of this address matches network address of the
+                 configured router interfaces, Default IP Address becomes the
+                 IP address of the lowest numbered operational interface of the
+                 router."
+        ::= { cdx6500PCTRouterGroup 26 }
+
+        cdx6500PCTRipParamCacheSize OBJECT-TYPE
+            SYNTAX INTEGER (64..10000)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "IP Route Cache Size. The maximum number of entries that may
+                 be stored in the IP Route cache. The IP Route Cache holds the
+                 destination addresses of recently received packets and for
+                 each entry maintains a count of packets forwarded to that
+                 destination."
+        ::= { cdx6500PCTRouterGroup 27 }
+
+        cdx6500PCTRipParamReasmBuffSize OBJECT-TYPE
+            SYNTAX INTEGER (2048.. 65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Reassembly Buffer Size. Sets the size (in bytes) of the 
+                 IP fragment reassembly buffers. It must be set greater than 
+                 the size of the largest IP packet to be transmitted on the 
+                 organization's network."
+        ::= { cdx6500PCTRouterGroup 28 }
+
+        cdx6500PCTRipParamAccessCntrl OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Access Control. Globally enables or disables operation of the
+                 IP Access Control table.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 29 }
+
+        cdx6500PCTRdefSubGwayTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTRdefSubGwayEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "IP Default Subnet Gateway Table."
+        ::= { cdx6500PCTRouterGroup 30 }
+
+        cdx6500PCTRdefSubGwayEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTRdefSubGwayEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IP configurables."
+            INDEX { cdx6500PCTRdefSubGwayIndex }
+        ::= { cdx6500PCTRdefSubGwayTable 1 }
+
+        Cdx6500PCTRdefSubGwayEntry ::=
+            SEQUENCE {
+                cdx6500PCTRdefSubGwayIndex
+                    INTEGER,
+                cdx6500PCTRdefSubGwaySubnetAd
+                    IpAddress,
+                cdx6500PCTRdefSubGwayNextHopAd
+                    IpAddress,
+                cdx6500PCTRdefSubGwayDistToGway
+                    INTEGER
+                }
+
+        cdx6500PCTRdefSubGwayIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTRdefSubGwayEntry 1 }
+
+        cdx6500PCTRdefSubGwaySubnetAd OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Top-Level IP Address. The top-level IP network number must
+                 be a class A, B, or C IP address. If this router receives a
+                 packet destined to an unknown subnet of that top level net, it
+                 will forward the packet to the default subnet router for that
+                 net."
+        ::= { cdx6500PCTRdefSubGwayEntry 2 }
+
+        cdx6500PCTRdefSubGwayNextHopAd OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Next Hop to Subnet Gateway. The IP address of the
+                 next hop towards a router performing subnet routing for the
+                 top-level net of this record. This next hop must be to an IP
+                 address on a network directly connected to this router."
+        ::= { cdx6500PCTRdefSubGwayEntry 3 }
+
+        cdx6500PCTRdefSubGwayDistToGway OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Metric to Subnet Gateway. The cost metric for a transmission
+                 to the default subnet gateway, usually the number of network
+                 hops to reach that other router."
+        ::= { cdx6500PCTRdefSubGwayEntry 4 }
+
+        cdx6500PCTRStaticRouteTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTRStaticRouteEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "IP Route Table."
+        ::= { cdx6500PCTRouterGroup 31 }
+
+        cdx6500PCTRStaticRouteEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTRStaticRouteEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IP configurables."
+            INDEX { cdx6500PCTRipRouteIndex }
+        ::= { cdx6500PCTRStaticRouteTable 1 }
+
+        Cdx6500PCTRStaticRouteEntry ::=
+            SEQUENCE {
+                cdx6500PCTRipRouteIndex
+                    INTEGER,
+                cdx6500PCTRipRouteIpNetwork
+                    IpAddress,
+                cdx6500PCTRipRouteIpMask
+                    IpAddress,
+                cdx6500PCTRipRouteNextHop
+                    IpAddress,
+                cdx6500PCTRipRouteCost
+                    INTEGER
+                }
+
+        cdx6500PCTRipRouteIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTRStaticRouteEntry 1 }
+
+        cdx6500PCTRipRouteIpNetwork OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "IP Network/Subnet. The IP address of a destination network or
+                 subnetwork Host addresses are not included in the route table."
+        ::= { cdx6500PCTRStaticRouteEntry 2 }
+
+        cdx6500PCTRipRouteIpMask OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "IP Address Mask. The mask associated with the IP
+                 Network/Subnet address. For example: if the destination is a
+                 subnet of a class B network and the third byte of the IP
+                 address is used as the subnet portion, the address mask would
+                 be set to 255.255.255.0."
+        ::= { cdx6500PCTRStaticRouteEntry 3 }
+
+        cdx6500PCTRipRouteNextHop OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Next Hop. The IP address of the next hop
+                 to the destination. The next hop itself must be on an IP
+                 network directly connected to the router."
+        ::= { cdx6500PCTRStaticRouteEntry 4 }
+
+        cdx6500PCTRipRouteCost OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Cost. The distance or cost metric to the destination. It is
+                 interpreted as a number of hops."
+        ::= { cdx6500PCTRStaticRouteEntry 5 }
+
+        cdx6500PCTRoutInterchTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTRoutInterchEntry
+            ACCESS not-accessible
+            STATUS optional
+            DESCRIPTION
+                "IP Output Interchange Table."
+        ::= { cdx6500PCTRouterGroup 32 }
+
+        cdx6500PCTRoutInterchEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTRoutInterchEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IP configurables."
+            INDEX { cdx6500PCTRoutInterchIndex }
+        ::= { cdx6500PCTRoutInterchTable 1 }
+
+        Cdx6500PCTRoutInterchEntry ::=
+            SEQUENCE {
+                cdx6500PCTRoutInterchIndex
+                    INTEGER,
+                cdx6500PCTRoutInterchInterchNeighAs
+                    INTEGER,
+                cdx6500PCTRoutInterchSourceAs
+                    INTEGER,
+                cdx6500PCTRoutInterchIpNetwork
+                    IpAddress,
+                cdx6500PCTRoutInterchUseIgpMetric
+                    INTEGER,
+                cdx6500PCTRoutInterchMetric
+                    INTEGER
+                }
+
+        cdx6500PCTRoutInterchIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTRoutInterchEntry 1 }
+
+        cdx6500PCTRoutInterchInterchNeighAs OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Neighboring AS. The AS number assigned to an EGP neighbor.
+                 If nonzero, the value must match a Neighboring AS number
+                 entered in a IP EGP AS Information Table,
+                 cdx6500PCTRegpAsTable, entry. A value of 0 adds the route to
+                 the default Output Exchange Table, which is reported to all
+                 new EGP neighbors learned and not otherwise entered in the
+                 IP EGP AS Information table."
+        ::= { cdx6500PCTRoutInterchEntry 2 }
+
+        cdx6500PCTRoutInterchSourceAs OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Source AS. A value of 0 indicates the route should be
+                 advertised regardless of the Autonomous System it was received
+                 from. A value other than 0 indicates the route should only be
+                 advertised if the route was received from the specified AS."
+        ::= { cdx6500PCTRoutInterchEntry 3 }
+
+        cdx6500PCTRoutInterchIpNetwork OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "IP Network. The address of the local IP network for which
+                 routing information will be advertised."
+        ::= { cdx6500PCTRoutInterchEntry 4 }
+
+        cdx6500PCTRoutInterchUseIgpMetric OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off       (0),
+                    on        (1),
+                    newvalOff (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Use IGP Metric. This parameter and the following Metric
+                 parameter, cdx6500PCTRoutInterchMetric, determine the cost
+                 reported to EGP of accessing the internal IP network. The two
+                 possible Interior Gateway Protocols (IGPs) are RIP or OSPF. If
+                 Use IGP metric is ON, the cost advertised to EGP will be
+                 identical to the locally reported routing table cost (from RIP
+                 or OSPF). If Use IGP metric OFF, the Metric parameter of this
+                 entry is reported.
+                 newvalOff : same functionality as 'off', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRoutInterchEntry 5 }
+
+        cdx6500PCTRoutInterchMetric OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Metric. A configured cost of the route to the interior
+                 network, interpreted as a hop count. This cost is reported to
+                 EGP if the the Use IGP metric parameter,
+                 cdx6500PCTRoutInterchUseIgpMetric, is OFF."
+        ::= { cdx6500PCTRoutInterchEntry 6 }
+
+        cdx6500PCTRinInterchTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTRinInterchEntry
+            ACCESS not-accessible
+            STATUS optional
+            DESCRIPTION
+                "IP Input Interchange Table."
+        ::= { cdx6500PCTRouterGroup 33 }
+
+        cdx6500PCTRinInterchEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTRinInterchEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IP configurables."
+            INDEX { cdx6500PCTRinInterchIndex }
+        ::= { cdx6500PCTRinInterchTable 1 }
+
+        Cdx6500PCTRinInterchEntry ::=
+            SEQUENCE {
+                cdx6500PCTRinInterchIndex
+                    INTEGER,
+                cdx6500PCTRinInterchNeighAs
+                    INTEGER,
+                cdx6500PCTRinInterchIpNetwork
+                    IpAddress,
+                cdx6500PCTRinInterchUseEgpMetric
+                    INTEGER,
+                cdx6500PCTRinInterchMetric
+                    INTEGER
+                }
+
+        cdx6500PCTRinInterchIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTRinInterchEntry 1 }
+
+        cdx6500PCTRinInterchNeighAs OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Neighboring AS. A neighboring Autonomous System to which
+                 route information will be readvertised via OSPF and RIP. A
+                 value of 0 adds the route to the default Input Exchange
+                 Table."
+        ::= { cdx6500PCTRinInterchEntry 2 }
+
+        cdx6500PCTRinInterchIpNetwork OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "IP Network. The IP address of a network for which EGP
+                 received routing information."
+        ::= { cdx6500PCTRinInterchEntry 3 }
+
+        cdx6500PCTRinInterchUseEgpMetric OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off       (0),
+                    on        (1),
+                    newvalOff (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Use EGP Metric. Defines the source of the internally
+                 readvertised costs of reaching the external IP network for
+                 this entry. If ON, the readvertised cost will be identical to
+                 the cost received by the EGP protocol. If OFF, the Metric
+                 parameter of this entry is reported.
+                 newvalOff : same functionality as 'off', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRinInterchEntry 4 }
+
+        cdx6500PCTRinInterchMetric OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Metric. A configured cost of the route."
+        ::= { cdx6500PCTRinInterchEntry 5 }
+
+        cdx6500PCTRfilterTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTRfilterEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "IP Filter Table."
+        ::= { cdx6500PCTRouterGroup 34 }
+
+        cdx6500PCTRfilterEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTRfilterEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IP configurables."
+            INDEX { cdx6500PCTRfilterIndex }
+        ::= { cdx6500PCTRfilterTable 1 }
+
+        Cdx6500PCTRfilterEntry ::=
+            SEQUENCE {
+                cdx6500PCTRfilterIndex
+                    INTEGER,
+                cdx6500PCTRfilterDstIpAd
+                    IpAddress,
+                cdx6500PCTRfilterAdMask
+                    IpAddress
+                }
+
+        cdx6500PCTRfilterIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..256)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTRfilterEntry 1 }
+
+        cdx6500PCTRfilterDstIpAd OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Destination IP Address. IP address of a network/subnet to
+                 filter. All packets destined for a filtered network are
+                 discarded, and no route to the filtered network is
+                 advertised."
+        ::= { cdx6500PCTRfilterEntry 2 }
+
+        cdx6500PCTRfilterAdMask OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Address Mask. Network (or Subnetwork) Address mask associated
+                 with the network/subnet address to filter."
+        ::= { cdx6500PCTRfilterEntry 3 }
+
+        cdx6500PCTRifState1 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "Interface #1 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 35 }
+
+        cdx6500PCTRifState2 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #2 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 36 }
+
+        cdx6500PCTRifState3 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #3 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 37 }
+
+        cdx6500PCTRifState4 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #4 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 38 }
+
+        cdx6500PCTRifState5 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #5 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 39 }
+
+        cdx6500PCTRifState6 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #6 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 40 }
+
+        cdx6500PCTRifState7 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #7 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 41 }
+
+        cdx6500PCTRifState8 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #8 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 42 }
+
+        cdx6500PCTRifState9 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #9 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 43 }
+
+        cdx6500PCTRifState10 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #10 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 44 }
+
+        cdx6500PCTRifState11 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #11 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 45 }
+
+        cdx6500PCTRifState12 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #12 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 46 }
+
+        cdx6500PCTRifState13 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #13 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 47 }
+
+        cdx6500PCTRifState14 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #14 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 48 }
+
+        cdx6500PCTRifState15 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #15 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 49 }
+
+        cdx6500PCTRifState16 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #16 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 50 }
+
+        cdx6500PCTRifState17 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #17 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 51 }
+
+        cdx6500PCTRifState18 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #18 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 52 }
+
+        cdx6500PCTRifState19 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #19 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 53 }
+
+        cdx6500PCTRifState20 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #20 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 54 }
+
+        cdx6500PCTRifState21 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #21 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 55 }
+
+        cdx6500PCTRifState22 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #22 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 56 }
+
+        cdx6500PCTRifState23 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #23 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 57 }
+
+        cdx6500PCTRifState24 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #24 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 58 }
+
+        cdx6500PCTRifState25 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #25 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 59 }
+
+        cdx6500PCTRifState26 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #26 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 60 }
+
+        cdx6500PCTRifState27 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #27 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 61 }
+
+        cdx6500PCTRifState28 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #28 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 62 }
+
+        cdx6500PCTRifState29 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #29 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 63 }
+
+        cdx6500PCTRifState30 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #30 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 64 }
+
+        cdx6500PCTRifState31 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #31 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 65 }
+
+        cdx6500PCTRifState32 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #32 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 66 }
+
+        cdx6500PCTRifState33 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #33 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 67 }
+
+        cdx6500PCTRifState34 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #34 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 68 }
+
+        cdx6500PCTRifState35 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #35 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 69 }
+
+        cdx6500PCTRifState36 OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    unconfigured   (2),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Interface #36 State. Enable/Disable all routing operations on
+                 the interface associated with this interface number.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 70 }
+
+        cdx6500PCTReventsTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PCTReventsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "IP Events Table."
+        ::= { cdx6500PCTRouterGroup 71 }
+
+        cdx6500PCTReventsEntry OBJECT-TYPE
+            SYNTAX Cdx6500PCTReventsEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IP configurables."
+            INDEX { cdx6500PCTReventsIndex }
+        ::= { cdx6500PCTReventsTable 1 }
+
+        Cdx6500PCTReventsEntry ::=
+            SEQUENCE {
+                cdx6500PCTReventsIndex
+                    INTEGER,
+                cdx6500PCTReventsSubsystem
+                    INTEGER,
+                cdx6500PCTReventsPerPktTrace
+                    INTEGER,
+                cdx6500PCTReventsUnusualOper
+                    INTEGER,
+                cdx6500PCTReventsCommonOper
+                    INTEGER
+                }
+
+        cdx6500PCTReventsIndex OBJECT-TYPE
+            SYNTAX INTEGER (1..8)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Table Index."
+        ::= { cdx6500PCTReventsEntry 1 }
+
+        cdx6500PCTReventsSubsystem OBJECT-TYPE
+            SYNTAX INTEGER {
+                    arp       (0),
+                    ip        (1),
+                    icmp      (2),
+                    udp       (3),
+                    rip       (4),
+                    egp       (5),
+                    ospf      (6),
+                    ipx       (7),
+                    tkr       (8),
+                    eth       (9),
+                    newvalArp (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Protocol. This field selects one of the protocols supported
+                 by the router. The event messages are controlled on a
+                 per-protocol basis.
+                 newvalArp : same functionality as 'arp', new enumeration 
+                 added for RFC1155 compatibility."
+        ::= { cdx6500PCTReventsEntry 2 }
+
+        cdx6500PCTReventsPerPktTrace OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Per Packet Trace. If enabled, reports an event for every
+                 packet processed by the subsytem.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTReventsEntry 3 }
+
+        cdx6500PCTReventsUnusualOper OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Unusual Operation. Enables/Disables reporting of unusual
+                 conditions such as detected packet format errors.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTReventsEntry 4 }
+
+        cdx6500PCTReventsCommonOper OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Common Operation. Enables/Disables reporting of commonly
+                 occurring events, such as receiving a RIP or OSPF update
+                 packet.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500PCTReventsEntry 5 }
+
+        cdx6500PCTRpriorityIpTraffic OBJECT-TYPE
+            SYNTAX INTEGER {
+                    low       (0),
+                    medium    (1),
+                    high      (2),
+                    newvalLow (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "IP Traffic Priority. Defines the priority for IP traffic
+                 relative to the rest of the traffic transmitted over WAN
+                 virtual circuits. If not configured, a default priority of
+                 HIGH is used.
+                 newvalLow : same functionality as 'low', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 72 }
+
+        cdx6500PCTRpriorityIpxTraffic OBJECT-TYPE
+            SYNTAX INTEGER {
+                    low       (0),
+                    medium    (1),
+                    high      (2),
+                    newvalLow (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "IPX Traffic Priority. Defines the priority for IPX traffic
+                 relative to the rest of the traffic transmitted over WAN
+                 virtual circuits. If not configured, a default priority of
+                 HIGH is used.
+                 newvalLow : same functionality as 'low', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500PCTRouterGroup 73 }
+
+        cdx6500PCTRMaxIpInterfaces OBJECT-TYPE
+            SYNTAX INTEGER  (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the maximum number of IP Interfaces that
+                 may be configured"
+        ::= { cdx6500PCTRouterGroup 74 }
+
+        -- Router Group
+        -- Proteon Router Statistics
+
+        proProtoIpDefGwAddress OBJECT-TYPE
+            SYNTAX IpAddress
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The Internet address of the default
+                 gateway for the router."
+        ::= { cdx6500PSTRouterGroup 1 }
+
+        proProtoIpDefGwCost OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The cost of the default gateway for the router."
+        ::= { cdx6500PSTRouterGroup 2 }
+
+        proProtoIpDefGwAge OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "The age of the default gateway for the router."
+        ::= { cdx6500PSTRouterGroup 3  }
+
+        END

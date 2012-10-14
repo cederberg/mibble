@@ -1,0 +1,1494 @@
+XYLAN-NTP-MIB DEFINITIONS ::= BEGIN
+     --  xylan-ntp.mib
+     --  Revision: 1.0
+     --  Date: March 1999
+
+     --  Alcatel Internetworking, Inc.
+     --  26801 W. Agoura Road
+     --  Calabasas, CA 91301
+     --  (818) 880-3500
+     --  support@ind.alcatel.com
+
+     --  This module provides authoritative definitions for NTP
+
+     --  This module will be extended, as needed.
+
+     --  Alcatel Internetworking, Inc. reserves the right to make changes in 
+     --  specification and other information contained in this document 
+     --  without prior notice.  The reader should consult Alcatel Internetworking,
+     --  Inc. to determine whether any such changes have been made.
+     --  Current MIBs are availible from the following URLs:
+     --			ftp://ftp.ind.alcatel.com/pub/products/mibs
+     --			http://www.ind.alcatel.com
+
+     --  In no event shall Alcatel Internetworking, Inc. be liable for any incidental, 
+     --  indirect, special, or consequential damages whatsoever (including 
+     --  but not limited to lost profits) arising out of or related to this
+     --  document or the information contained in it, even if Alcatel Internetworking,
+     --  Inc. has been advised of, known, or should have known, the 
+     --  possibility of such damages.
+     --  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+     --  parties a non-exclusive license to use this Specification in connection
+     --  with the management of Alcatel Internetworking, Inc. products.
+
+     --  Copyright (C) 1998, Alcatel Internetworking, Inc. All Rights Reserved.
+
+     
+     	IMPORTS
+		OBJECT-TYPE
+			FROM RFC-1212
+		DisplayString 
+			FROM RFC1213-MIB
+		IpAddress, Counter 
+			FROM RFC1155-SMI
+	        xylanNtpArch
+			FROM XYLAN-BASE-MIB 
+			;
+
+--
+--
+
+     xylanNtpConfig         OBJECT IDENTIFIER ::= { xylanNtpArch 1 }
+     xylanNtpInfo           OBJECT IDENTIFIER ::= { xylanNtpArch 2 }
+     xylanNtpLocalInfo      OBJECT IDENTIFIER ::= { xylanNtpInfo 2 } 
+
+     xylanNtpStats          OBJECT IDENTIFIER ::= { xylanNtpArch 3 }
+     xylanNtpStatsStat      OBJECT IDENTIFIER ::= { xylanNtpStats 1 }
+     xylanNtpStatsLoop      OBJECT IDENTIFIER ::= { xylanNtpStats 3 }
+     xylanNtpStatsIo        OBJECT IDENTIFIER ::= { xylanNtpStats 4 }
+     xylanNtpAdmin          OBJECT IDENTIFIER ::= { xylanNtpArch 4 }
+     xylanNtpAccess         OBJECT IDENTIFIER ::= { xylanNtpArch 5 }
+
+--
+--
+
+-- NTP configuration
+
+
+xylanNtpEnable OBJECT-TYPE
+  SYNTAX       INTEGER{
+			enable (1),
+			disable (2)
+		}
+  ACCESS       read-write
+  STATUS       mandatory
+  DESCRIPTION  "Enables/disables NTP server."
+  ::= {xylanNtpConfig 1}
+
+xylanNtpMonitorEnable OBJECT-TYPE
+  SYNTAX       INTEGER{
+                        enable (1),
+                        disable (2)
+                }
+  ACCESS       read-write
+  STATUS       mandatory
+  DESCRIPTION  "Enables/disables NTP monitor."
+  ::= {xylanNtpConfig 2}
+
+
+xylanNtpPeerTable OBJECT-TYPE
+  SYNTAX       SEQUENCE OF NtpPeerEntry
+  ACCESS       not-accessible
+  STATUS       mandatory
+  DESCRIPTION  "Table containing the synchronization host this
+		switch will be associated with."
+  ::= {xylanNtpConfig 3}
+
+xylanNtpPeerEntry OBJECT-TYPE
+  SYNTAX      NtpPeerEntry
+  ACCESS      not-accessible
+  STATUS      mandatory
+  DESCRIPTION "Each entry corresponds to a synchronization host."
+  INDEX       {
+              xylanNtpPeerAddress
+              }
+  ::= {xylanNtpPeerTable 1}
+
+NtpPeerEntry ::= SEQUENCE {
+                xylanNtpPeerAddress
+                   IpAddress,
+		xylanNtpPeerType
+		   INTEGER,
+                xylanNtpPeerAuth
+                   INTEGER,
+                xylanNtpPeerVersion
+                   INTEGER,
+                xylanNtpPeerMinpoll
+                   INTEGER,
+                xylanNtpPeerPrefer
+                   INTEGER,
+                xylanNtpPeerAdmin
+                   INTEGER,
+		xylanNtpPeerName
+		   DisplayString
+                }
+
+xylanNtpPeerAddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The IP address of the synchronization host." 
+        ::={ xylanNtpPeerEntry 1 }
+
+xylanNtpPeerType OBJECT-TYPE
+	SYNTAX  INTEGER       {
+			active(1),
+                        client (3),
+                        broadcast (5)
+                        }
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION   "Type of synchronization host that will communicate 
+			with this switch."
+	::= { xylanNtpPeerEntry 2 }
+
+xylanNtpPeerAuth OBJECT-TYPE
+	SYNTAX  INTEGER       
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION   "The authorization keyid for the remote host."
+	::= { xylanNtpPeerEntry 3 }
+
+xylanNtpPeerVersion OBJECT-TYPE
+	SYNTAX  INTEGER       
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION   "The NTP version to communicate with the remote host."
+	::= { xylanNtpPeerEntry 4 }
+
+xylanNtpPeerMinpoll OBJECT-TYPE
+	SYNTAX  INTEGER       
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION   "The minimum poll duration to the remote host.  This 
+		value is a power of 2 seconds when the poll will occur.
+		For example, 4 (2 to the power 4) is 16 seconds."
+	::= { xylanNtpPeerEntry 5 }
+
+xylanNtpPeerPrefer OBJECT-TYPE
+	SYNTAX  INTEGER {
+			prefer (1),
+			no-prefer(2)
+			}
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION   "Marks the host as a preferred connection."
+	::= { xylanNtpPeerEntry 6 }
+
+xylanNtpPeerAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+			active(1),
+			delete(2)
+		}
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION     "The current state of the table entry.  
+			If the value written is a 2, the entry is 
+			deleted. "
+        ::={ xylanNtpPeerEntry 7 }
+
+xylanNtpPeerName OBJECT-TYPE
+        SYNTAX DisplayString 
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION     "The DNS name for the peer association,"
+        ::={ xylanNtpPeerEntry 8 }
+
+
+xylanNtpAuthDelay OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION     "This field sets a specified time interval 
+			that is added to timestamps included in 
+			requests to the server that required 
+			authentication. Typically this delay is 
+			needed in cases of long delay paths, or servers 
+			whose clocks are unsynchronized. Value is
+			in milli-seconds"
+        ::={ xylanNtpConfig 4 }
+
+xylanNtpKeysFile OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION     "Name of the file which has the authorization keys."
+        ::={ xylanNtpConfig 5 }
+
+xylanNtpConfigReqKeyId OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION     "Request messages ask for information from the NTP
+                        entity such as timestamp information, statistics, etc.
+                        This changes the authentication key identifier for
+                        request messages sent from the switch to another NTP
+                        entity."
+        ::={ xylanNtpConfig 6 }
+
+xylanNtpConfigCtlKeyId OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION     "Control messages attempt to change the configuration
+                        of the NTP entity in some fashion.  This changes
+                        the authentication key identifier for control messages
+                        sent from the switch to another NTP entity."
+        ::={ xylanNtpConfig 7 }
+
+xylanNtpConfigCfgKeyId OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION     "Configuration messages changes information on the
+                        NTP entity."
+        ::={ xylanNtpConfig 8 }
+
+xylanNtpPrecision OBJECT-TYPE
+        SYNTAX  INTEGER( -20..-1 )
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION     "This sets the server's advertised precision."
+        ::={ xylanNtpConfig 9 }
+
+
+
+-- NTP information
+
+
+xylanNtpPeerListTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF NtpPeerListEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION  "Used to display a brief list of all NTP associations 
+		related to this switch (servers, peers, etc.)."
+	::= {xylanNtpInfo 1}
+
+xylanNtpPeerListEntry OBJECT-TYPE
+	SYNTAX  NtpPeerListEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION "Each entry corresponds to one association."
+	INDEX   {
+		xylanNtpPeerListAddress
+		}
+	::= {xylanNtpPeerListTable 1}
+
+NtpPeerListEntry ::= SEQUENCE {
+                xylanNtpPeerListAddress
+                   IpAddress,
+		xylanNtpPeerListLocal
+		   IpAddress,
+		xylanNtpPeerListStratum
+		   INTEGER,
+		xylanNtpPeerListPoll
+		   INTEGER,
+		xylanNtpPeerListReach
+		   INTEGER,
+		xylanNtpPeerListDelay
+		   DisplayString,
+		xylanNtpPeerListOffset
+		   DisplayString,
+		xylanNtpPeerListDispersion
+		   DisplayString,
+		xylanNtpPeerListSynced
+		   INTEGER,
+		xylanNtpPeerListName
+		   DisplayString
+		}
+
+xylanNtpPeerListAddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The IP address of the association."
+        ::={ xylanNtpPeerListEntry 1 }
+
+xylanNtpPeerListLocal OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only 
+        STATUS  mandatory
+        DESCRIPTION     "The local interface address assigned by 
+			NTP to the remote association. If this address is
+			0.0.0.0, then the local address has yet to be 
+			determined."
+        ::={ xylanNtpPeerListEntry 2 }
+
+xylanNtpPeerListStratum OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only 
+        STATUS  mandatory
+        DESCRIPTION     "The stratum level of the remote peer. If this 
+			number is 16, the remote peer has not been
+			synchronized."
+        ::={ xylanNtpPeerListEntry 3 }
+
+xylanNtpPeerListPoll OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only 
+        STATUS  mandatory
+        DESCRIPTION     "The polling interval, in seconds."
+        ::={ xylanNtpPeerListEntry 4 }
+
+xylanNtpPeerListReach OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only 
+        STATUS  mandatory
+        DESCRIPTION     "The reachability register of the remote 
+			association, in octal format. This number is
+			determined by the NTP algorithm."
+        ::={ xylanNtpPeerListEntry 5 }
+
+xylanNtpPeerListDelay OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only 
+        STATUS  mandatory
+        DESCRIPTION     "The currently estimated delay of this remote 
+			association, in seconds. This time is determined
+			by the NTP algorithm."
+        ::={ xylanNtpPeerListEntry 6 }
+
+xylanNtpPeerListOffset OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only 
+        STATUS  mandatory
+        DESCRIPTION     "The currently estimated offset of this remote 
+			association, in seconds. This time is determined
+			by the NTP algorithm."
+        ::={ xylanNtpPeerListEntry 7 }
+
+xylanNtpPeerListDispersion OBJECT-TYPE
+        SYNTAX  DisplayString 
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The currently estimated dispersion of this remote 
+			association, in seconds. This time is determined 
+			by the NTP algorithm."
+        ::={ xylanNtpPeerListEntry 8 }
+
+xylanNtpPeerListSynced OBJECT-TYPE
+        SYNTAX  INTEGER{
+			synchornized(1),
+			not-synchronized(2)
+			}
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "Indicates that NTP is synchronized with this
+			entity."
+        ::={ xylanNtpPeerListEntry 9 }
+
+xylanNtpPeerListName OBJECT-TYPE
+        SYNTAX DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The DNS name for the peer association,"
+        ::={ xylanNtpPeerListEntry 10 }
+
+--
+
+
+xylanNtpInfoPeer OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The IP address of the remote association."
+        ::={ xylanNtpLocalInfo 1 }
+
+xylanNtpInfoMode OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The peer mode of this remote association."
+        ::={ xylanNtpLocalInfo 2 }
+
+xylanNtpInfoLeapIndicator OBJECT-TYPE
+	SYNTAX 	INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The status of leap second insertion for 
+			this association."
+        ::={ xylanNtpLocalInfo 3 }
+
+xylanNtpInfoStratum OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The stratum level of the remote peer. 
+			If this number is 16, the remote peer has not
+			been synchronized."
+        ::={ xylanNtpLocalInfo 4 }
+
+xylanNtpInfoPrecision OBJECT-TYPE
+        SYNTAX  INTEGER( -20..-4 )
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The advertised precision of the switch. 
+			It will be a number between -4 and -20."
+        ::={ xylanNtpLocalInfo 5 }
+
+xylanNtpInfoDistance OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is a signed fixed-point number indicating 
+			the total roundtrip delay to the primary reference 
+			source at the root of the synchronization subnet, 
+			in seconds."
+        ::={ xylanNtpLocalInfo 6 }
+
+xylanNtpInfoDispersion OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is a signed fixed-point number indicating 
+			the maximum error relative to the primary reference 
+			source at the root of the synchronization subnet, 
+			in seconds." 
+        ::={ xylanNtpLocalInfo 7 }
+
+xylanNtpInfoReferenceId OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is a 32-bit code identifying the particular 
+			reference clock.  Can be an IP address."
+        ::={ xylanNtpLocalInfo 8 }
+
+xylanNtpInfoReferenceTime OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is the local time at which the local clock 
+			was last set or corrected."
+        ::={ xylanNtpLocalInfo 9 }
+
+xylanNtpInfoFrequency OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "A number determining the local clocks frequency
+			in relation to a reference clock's Pulse per 
+			Second (PPS). If the clock is running in perfect 
+			synchronization, this number should be 1. Otherwise, 
+			it will be slightly lower or higher in order to 
+			compensate for the time differ-ence."
+        ::={ xylanNtpLocalInfo 10 }
+
+xylanNtpInfoStability OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The stability of the clock in relation to a
+			reference clock's Pulse per Second (PPS)."
+        ::={ xylanNtpLocalInfo 11 }
+
+xylanNtpInfoBroadcastDelay OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The broadcast delay, in seconds, of this association."
+        ::={ xylanNtpLocalInfo 12 }
+
+xylanNtpInfoAuthDelay OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The authentication delay, in seconds, of this 
+			association."
+        ::={ xylanNtpLocalInfo 13 }
+
+
+xylanNtpPeerShowTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF NtpPeerShowEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION  "Used to display a brief list of all NTP associations
+                related to this switch (servers, peers, etc.)."
+        ::= {xylanNtpInfo 3}
+
+xylanNtpPeerShowEntry OBJECT-TYPE
+        SYNTAX  NtpPeerShowEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION "Each entry corresponds to one association."
+        INDEX   {
+                xylanNtpPeerShowRemote
+                }
+        ::= {xylanNtpPeerShowTable 1}
+
+NtpPeerShowEntry ::= SEQUENCE {
+                xylanNtpPeerShowRemote
+                   IpAddress,
+                xylanNtpPeerShowLocal
+                   IpAddress,
+                xylanNtpPeerShowHmode
+                   DisplayString,
+                xylanNtpPeerShowPmode
+                   DisplayString,
+                xylanNtpPeerShowStratum
+                   INTEGER,
+                xylanNtpPeerShowPrecision
+                   INTEGER,
+                xylanNtpPeerShowLeapIndicator
+                   INTEGER,
+                xylanNtpPeerShowReferenceId
+		   DisplayString,
+		xylanNtpPeerShowRootDistance
+		   DisplayString,
+		xylanNtpPeerShowRootDispersion
+		   DisplayString,
+		xylanNtpPeerShowPpoll
+		   INTEGER,
+		xylanNtpPeerShowHpoll
+		   INTEGER,
+		xylanNtpPeerShowKeyid
+		   INTEGER,
+		xylanNtpPeerShowVersion
+		   INTEGER,
+		xylanNtpPeerShowAssociation
+		   INTEGER,
+		xylanNtpPeerShowValid
+		   INTEGER,
+		xylanNtpPeerShowReach
+		   INTEGER,
+		xylanNtpPeerShowUnreach
+		   INTEGER,
+		xylanNtpPeerShowFlash
+		   INTEGER,
+		xylanNtpPeerShowBroadcastOffset
+		   DisplayString,
+		xylanNtpPeerShowTTL
+		   INTEGER,
+		xylanNtpPeerShowTimer
+		   INTEGER,
+		xylanNtpPeerShowFlags
+		   INTEGER,
+		xylanNtpPeerShowReferenceTime
+		   DisplayString,
+		xylanNtpPeerShowOriginateTime
+		   DisplayString,
+		xylanNtpPeerShowReceiveTime
+		   DisplayString,
+		xylanNtpPeerShowTransmitTime
+		   DisplayString,
+		xylanNtpPeerShowOffset
+		   DisplayString,
+		xylanNtpPeerShowDelay
+		   DisplayString,
+		xylanNtpPeerShowDispersion
+		   DisplayString,
+		xylanNtpPeerShowName
+		   DisplayString
+		}
+
+xylanNtpPeerShowRemote OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The IP address of the remote association."
+        ::={ xylanNtpPeerShowEntry 1 }
+
+
+xylanNtpPeerShowLocal OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The local interface address assigned by NTP to the 
+			remote associations."
+        ::={ xylanNtpPeerShowEntry 2 }
+
+xylanNtpPeerShowHmode OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The host mode of this remote association."
+        ::={ xylanNtpPeerShowEntry 3 }
+
+xylanNtpPeerShowPmode OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The peer mode of this remote association."
+        ::={ xylanNtpPeerShowEntry 4 }
+
+xylanNtpPeerShowStratum OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The stratum level of the remote peer."
+        ::={ xylanNtpPeerShowEntry 5 }
+
+xylanNtpPeerShowPrecision OBJECT-TYPE
+        SYNTAX  INTEGER(-20..-4)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The advertised precision of this association, 
+			which is a number from -4 to -20."
+        ::={ xylanNtpPeerShowEntry 6 }
+
+xylanNtpPeerShowLeapIndicator OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The status of leap second insertion for
+                        this association."
+        ::={ xylanNtpPeerShowEntry 7 }
+
+xylanNtpPeerShowReferenceId OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The status of leap second insertion for
+                        this association.  Normally an IP address."
+        ::={ xylanNtpPeerShowEntry 8 }
+
+xylanNtpPeerShowRootDistance OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is a signed fixed-point number indicating 
+			the total roundtrip delay to the primary reference 
+			source at the root of the synchronization subnet, 
+			in seconds."
+        ::={ xylanNtpPeerShowEntry 9 }
+
+xylanNtpPeerShowRootDispersion OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is a signed fixed-point number indicating 
+			the maximum error relative to the primary reference 
+			source at the root of the synchronization subnet, 
+			in seconds."
+        ::={ xylanNtpPeerShowEntry 10 }
+
+xylanNtpPeerShowPpoll OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The poll time for this association when it is a peer."
+        ::={ xylanNtpPeerShowEntry 11 }
+
+xylanNtpPeerShowHpoll OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The poll time for this association when it is a host."
+        ::={ xylanNtpPeerShowEntry 12 }
+
+xylanNtpPeerShowKeyid OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is an integer identifying the cryptographic 
+			key used to generate the message authentication code."
+        ::={ xylanNtpPeerShowEntry 13 }
+
+xylanNtpPeerShowVersion OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "What version of NTP this association is using."
+        ::={ xylanNtpPeerShowEntry 14 }
+
+xylanNtpPeerShowAssociation OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of seconds since this NTP entity was 
+			associated with the switch."
+        ::={ xylanNtpPeerShowEntry 15 }
+
+xylanNtpPeerShowValid OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is an integer counter indicating the valid 
+			samples remaining in the filter register."
+        ::={ xylanNtpPeerShowEntry 16 }
+
+xylanNtpPeerShowReach OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is a shift register used to determine the 
+			reachability status of this peer."
+        ::={ xylanNtpPeerShowEntry 17 }
+
+xylanNtpPeerShowUnreach OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of times this NTP entity was unreachable."
+        ::={ xylanNtpPeerShowEntry 18 }
+
+xylanNtpPeerShowFlash OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "These reveal the state at the last grumble from the 
+			peer and are most handy for diagnosing problems."
+        ::={ xylanNtpPeerShowEntry 19 }
+
+xylanNtpPeerShowBroadcastOffset OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The broadcast delay."
+        ::={ xylanNtpPeerShowEntry 20 }
+
+xylanNtpPeerShowTTL OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This fields displays the Time-to-Live (TTL) time 
+			in seconds and the mode (unicast, multicast, or 
+			broadcast) of NTP messages sent to a broadcast address."
+        ::={ xylanNtpPeerShowEntry 21 }
+
+xylanNtpPeerShowTimer OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The time to next poll."
+        ::={ xylanNtpPeerShowEntry 22 }
+
+xylanNtpPeerShowFlags OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This counter lists what flags have been configured 
+			for this NTP entity.
+			0x01 - Configured
+			0x02 - System Peer
+			0x10 - Preferred
+			0x20 - Authentable."
+					
+        ::={ xylanNtpPeerShowEntry 23 }
+
+xylanNtpPeerShowReferenceTime OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is the local time, in timestamp format, when 
+			the local clock was last updated."
+        ::={ xylanNtpPeerShowEntry 24 }
+
+xylanNtpPeerShowOriginateTime OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is the local time, in timestamp format, of 
+			the peer when its latest NTP message was sent."
+        ::={ xylanNtpPeerShowEntry 25 }
+
+xylanNtpPeerShowReceiveTime OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is the local time, in timestamp format, when 
+			the latest NTP message from the peer arrived."
+        ::={ xylanNtpPeerShowEntry 26 }
+
+xylanNtpPeerShowTransmitTime OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "This is the local time, in timestamp format, at 
+			which the last NTP message was sent from this 
+			association."
+        ::={ xylanNtpPeerShowEntry 27 }
+
+xylanNtpPeerShowOffset OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The currently estimated offset of this remote 
+			association, in seconds."
+        ::={ xylanNtpPeerShowEntry 28 }
+
+xylanNtpPeerShowDelay OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The currently estimated delay of this remote 
+			association, in seconds."
+        ::={ xylanNtpPeerShowEntry 29 }
+
+xylanNtpPeerShowDispersion OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The currently estimated dispersion of this remote 
+			association, in seconds."
+        ::={ xylanNtpPeerShowEntry 30 }
+
+xylanNtpPeerShowName OBJECT-TYPE
+        SYNTAX DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The DNS name for the peer association,"
+        ::={ xylanNtpPeerShowEntry 31 }
+
+
+
+-- NTP statistics
+
+xylanNtpStatsStatUptime OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of seconds the local NTP server has 
+			been associated with the switch."
+        ::={ xylanNtpStatsStat 1 }
+
+xylanNtpStatsStatReset OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of seconds since the last time the 
+			local NTP server has been restarted."
+        ::={ xylanNtpStatsStat 2 }
+
+xylanNtpStatsStatBadStratum OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of NTP packets received that had a 
+			corrupted stratum bit in the data of the packet."
+        ::={ xylanNtpStatsStat 3 }
+
+xylanNtpStatsStatOldVersion OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of NTP packets received that were 
+			of an older version of NTP (either version 1 or 2)."
+        ::={ xylanNtpStatsStat 4 }
+
+xylanNtpStatsStatNewVersion OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of NTP packets received that were 
+			version 3 of NTP."
+        ::={ xylanNtpStatsStat 5 }
+
+xylanNtpStatsStatUnknownVersion OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of NTP packets received that the 
+			version was unknown (most likely due to packet 
+			corruption)."
+        ::={ xylanNtpStatsStat 6 }
+
+xylanNtpStatsStatBadLength OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of NTP packets received that did not 
+			fit the NTP packet structure (most likely due to 
+			packet corruption)."
+        ::={ xylanNtpStatsStat 7 }
+
+xylanNtpStatsStatProcessed OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The total number of NTP packets processed."
+        ::={ xylanNtpStatsStat 8 }
+
+xylanNtpStatsStatBadAuth OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of NTP packets rejected because they 
+			did not meet authentication standards."
+        ::={ xylanNtpStatsStat 9 }
+
+xylanNtpStatsStatLimitRejects OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of NTP packets rejected because they 
+			did not meet authentication standards."
+        ::={ xylanNtpStatsStat 10 }
+
+xylanNtpStatsPeerTable OBJECT-TYPE
+	SYNTAX       SEQUENCE OF NtpStatsPeerEntry
+	ACCESS       not-accessible
+	STATUS       mandatory
+	DESCRIPTION  "Table containing the synchronization host statistics."
+	::= {xylanNtpStats 2}
+
+xylanNtpStatsPeerEntry OBJECT-TYPE
+	SYNTAX      NtpStatsPeerEntry
+	ACCESS      not-accessible
+	STATUS      mandatory
+	DESCRIPTION "Each entry corresponds to a synchronization host."
+	INDEX       {
+	            xylanNtpStatsPeerAddress
+	            }
+	::= {xylanNtpStatsPeerTable 1}
+
+NtpStatsPeerEntry ::= SEQUENCE {
+                xylanNtpStatsPeerAddress
+                   IpAddress,
+                xylanNtpStatsPeerLocal
+                   IpAddress,
+                xylanNtpStatsPeerLastRcv
+                   Counter,
+                xylanNtpStatsPeerNextSend
+                   Counter,
+                xylanNtpStatsPeerReachChange
+                   Counter,
+                xylanNtpStatsPeerPacketsSent
+                   Counter,
+                xylanNtpStatsPeerPacketsRcvd
+                   Counter,
+                xylanNtpStatsPeerBadAuth
+                   Counter,
+                xylanNtpStatsPeerBogusOrigin
+                   Counter,
+                xylanNtpStatsPeerDuplicate
+                   Counter,
+                xylanNtpStatsPeerBadDispersion
+                   Counter,
+                xylanNtpStatsPeerBadRefTime
+                   Counter,
+                xylanNtpStatsPeerCandidateOrder
+                   Counter,
+                xylanNtpStatsPeerReset
+                   INTEGER,
+		xylanNtpStatsPeerName
+		   DisplayString
+                }
+
+xylanNtpStatsPeerAddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The IP address of the synchronization host."
+        ::={ xylanNtpStatsPeerEntry 1 }
+
+xylanNtpStatsPeerLocal OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The local interface address assigned by
+                        NTP to the remote association."
+        ::={ xylanNtpStatsPeerEntry 2 }
+
+xylanNtpStatsPeerLastRcv OBJECT-TYPE
+        SYNTAX  Counter      
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION   "The time since the last packet was received."
+        ::= { xylanNtpStatsPeerEntry 3 }
+
+xylanNtpStatsPeerNextSend OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION   "The time until the next packet is to be sent."
+        ::= { xylanNtpStatsPeerEntry 4 }
+
+xylanNtpStatsPeerReachChange OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION   "The time that the peer has been reachable."
+        ::= { xylanNtpStatsPeerEntry 5 }
+
+xylanNtpStatsPeerPacketsSent OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION   "The number of packets that have been sent."
+        ::= { xylanNtpStatsPeerEntry 6 }
+
+xylanNtpStatsPeerPacketsRcvd OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION   "The number of packets that have been received."
+        ::= { xylanNtpStatsPeerEntry 7 }
+
+xylanNtpStatsPeerBadAuth OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION   "The number of packets received with bad 
+			authentication."
+        ::= { xylanNtpStatsPeerEntry 8 }
+
+xylanNtpStatsPeerBogusOrigin OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION   "The number of bogus packets."
+        ::= { xylanNtpStatsPeerEntry 9 }
+
+xylanNtpStatsPeerDuplicate OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION   "The number of duplicated packets received."
+        ::= { xylanNtpStatsPeerEntry 10 }
+
+xylanNtpStatsPeerBadDispersion OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION   "The number bad dispersions."
+        ::= { xylanNtpStatsPeerEntry 11 }
+
+xylanNtpStatsPeerBadRefTime OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION   "The number of bad reference times received."
+        ::= { xylanNtpStatsPeerEntry 12 }
+
+xylanNtpStatsPeerCandidateOrder OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION   "The order of synchronization candidates."
+        ::= { xylanNtpStatsPeerEntry 13 }
+
+xylanNtpStatsPeerReset OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  write-only
+        STATUS  mandatory
+        DESCRIPTION   "Resets the statistics for the peer."
+        ::= { xylanNtpStatsPeerEntry 14 }
+
+xylanNtpStatsPeerName OBJECT-TYPE
+        SYNTAX DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The DNS name for the peer association,"
+        ::={ xylanNtpStatsPeerEntry 15 }
+
+xylanNtpStatsLoopOffset OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The currently estimated offset of this remote 
+			association, in seconds. This counter indicates 
+			the offset of the peer clock relative to the local 
+			clock."
+        ::={ xylanNtpStatsLoop 1 }
+
+xylanNtpStatsLoopFrequency OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "A number determining the local clocks frequency 
+			in relation to a reference clocks Pulse per Second 
+			(PPS). If the clock is running in perfect 
+			synchronization, this number should be 1. Otherwise, 
+			it will be slightly lower or higher in order to 
+			compensate for the time discrepancy between the 
+			reference clock and the local clock."
+        ::={ xylanNtpStatsLoop 2 }
+
+xylanNtpStatsLoopPollAdjust OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "Determines the peer polling time."
+        ::={ xylanNtpStatsLoop 3 }
+
+xylanNtpStatsLoopWatchdog OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "Makes sure that NTP timer continues to run."
+        ::={ xylanNtpStatsLoop 4 }
+
+xylanNtpStatsIoReset OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of seconds since the last restart of NTP."
+        ::={ xylanNtpStatsIo 1 }
+
+xylanNtpStatsIoRcvBuffers OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of switch receive buffers currently being 
+			used by this NTP entity."
+        ::={ xylanNtpStatsIo 2 }
+
+xylanNtpStatsIoFreeRcvBuffers OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of free receive buffers."
+        ::={ xylanNtpStatsIo 3 }
+
+xylanNtpStatsIoUsedRcvBuffers OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of receive buffers currently being used."
+        ::={ xylanNtpStatsIo 4 }
+
+xylanNtpStatsIoRefills OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of times we added packets."
+        ::={ xylanNtpStatsIo 5 }
+
+xylanNtpStatsIoDroppedPackets OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of packets dropped."
+        ::={ xylanNtpStatsIo 6 }
+
+xylanNtpStatsIoIgnoredPackets OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of packets ignored."
+        ::={ xylanNtpStatsIo 7 }
+
+xylanNtpStatsIoRcvPackets OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The total number of NTP packets received by the 
+			switch."
+        ::={ xylanNtpStatsIo 8 }
+
+xylanNtpStatsIoSentPackets OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The total number of NTP packets sent by the switch."
+        ::={ xylanNtpStatsIo 9 }
+
+xylanNtpStatsIoNotSentPackets OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of NTP packets generated but not sent
+			 due to restrictions."
+        ::={ xylanNtpStatsIo 10 }
+
+xylanNtpStatsIoInterrupts OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of times NTP information was interrupted 
+			in the process of transmitting or receiving."
+        ::={ xylanNtpStatsIo 11 }
+
+xylanNtpStatsIoInterruptsRcv OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of packets received by the interrupt
+			handler."
+        ::={ xylanNtpStatsIo 12 }
+
+xylanNtpStatsReset OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  write-only
+        STATUS  mandatory
+        DESCRIPTION     "Resets the statistics counters for the following 
+			subsystems:
+			0x01	- all peers
+			0x02	- i/o
+			0x04	- system
+			0x08	- memory
+			0x10	- timer
+			0x20	- authentication
+			0x40	- control"
+        ::={ xylanNtpStats 5 }
+
+xylanNtpStatsMonitorTable OBJECT-TYPE
+        SYNTAX       SEQUENCE OF NtpStatsMonitorEntry
+        ACCESS       not-accessible
+        STATUS       mandatory
+        DESCRIPTION  "Table containing the association monitoring list."
+        ::= {xylanNtpStats 6}
+
+xylanNtpStatsMonitorEntry OBJECT-TYPE
+        SYNTAX      NtpStatsMonitorEntry
+        ACCESS      not-accessible
+        STATUS      mandatory
+        DESCRIPTION "Each entry corresponds to a synchronization host."
+        INDEX       {
+                    xylanNtpStatsMonitorIndex
+                    }
+        ::= {xylanNtpStatsMonitorTable 1}
+
+NtpStatsMonitorEntry ::= SEQUENCE {
+		xylanNtpStatsMonitorIndex
+		   Counter,
+                xylanNtpStatsMonitorAddress
+                   IpAddress,
+		xylanNtpStatsMonitorPort
+		   INTEGER,
+		xylanNtpStatsMonitorLocalAddress
+		   IpAddress,
+		xylanNtpStatsMonitorCount
+		   Counter,
+		xylanNtpStatsMonitorMode
+		   DisplayString,
+		xylanNtpStatsMonitorVersion
+		   INTEGER,
+		xylanNtpStatsMonitorDrop
+		   Counter,
+		xylanNtpStatsMonitorLast
+		   Counter,
+		xylanNtpStatsMonitorFirst
+		   Counter,
+		xylanNtpStatsMonitorName
+		   DisplayString
+	}
+
+xylanNtpStatsMonitorIndex OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "Table index."
+        ::={ xylanNtpStatsMonitorEntry 1 }
+		
+xylanNtpStatsMonitorAddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The IP address of the remote association."
+        ::={ xylanNtpStatsMonitorEntry 2 }
+
+xylanNtpStatsMonitorPort OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The IP port number of the association."
+        ::={ xylanNtpStatsMonitorEntry 3 }
+
+xylanNtpStatsMonitorLocalAddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The local IP address of the association."
+        ::={ xylanNtpStatsMonitorEntry 4 }
+
+xylanNtpStatsMonitorCount OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of NTP packets received from
+			this association."
+        ::={ xylanNtpStatsMonitorEntry 5 }
+
+xylanNtpStatsMonitorMode OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The mode the NTP association uses in relation
+			to the switch."
+        ::={ xylanNtpStatsMonitorEntry 6 }
+
+xylanNtpStatsMonitorVersion OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The version of NTP the association is using."
+        ::={ xylanNtpStatsMonitorEntry 7 }
+
+xylanNtpStatsMonitorDrop OBJECT-TYPE
+        SYNTAX  Counter  
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of NTP packets received from this
+			association that were dropped."
+        ::={ xylanNtpStatsMonitorEntry 8 }
+
+xylanNtpStatsMonitorLast OBJECT-TYPE
+        SYNTAX  Counter  
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of seconds since the last NTP message 
+			has been received from this association."
+        ::={ xylanNtpStatsMonitorEntry 9 }
+
+xylanNtpStatsMonitorFirst OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The number of seconds since the first NTP message
+                        has been received from this association."
+        ::={ xylanNtpStatsMonitorEntry 10 }
+
+xylanNtpStatsMonitorName OBJECT-TYPE
+        SYNTAX DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "The DNS name for the peer association,"
+        ::={ xylanNtpStatsMonitorEntry 11 }
+
+
+-- NTP Admin control
+
+
+-- NTP Access control
+
+xylanNtpAccessKeyIdTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF NtpAccessKeyIdEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION     "Table containing the trusted keys."
+        ::={ xylanNtpAccess 1 }
+
+xylanNtpAccessKeyIdEntry OBJECT-TYPE
+        SYNTAX  NtpAccessKeyIdEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION     "Entry of a trusted key."
+	INDEX	{
+			xylanNtpAccessKeyIdKeyId
+		}
+        ::={ xylanNtpAccessKeyIdTable 1 }
+
+NtpAccessKeyIdEntry ::= SEQUENCE {
+		xylanNtpAccessKeyIdKeyId
+			INTEGER,
+		xylanNtpAccessKeyIdAdmin
+			INTEGER
+		}
+
+xylanNtpAccessKeyIdKeyId OBJECT-TYPE
+	SYNTAX	INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "Keyid of the key in the key file."
+	::={ xylanNtpAccessKeyIdEntry 1 }
+
+xylanNtpAccessKeyIdAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                        active(1),
+                        delete(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION     "The current state of the table entry.
+                        If the value written is a 2, the entry is
+                        deleted. "
+        ::={ xylanNtpAccessKeyIdEntry 2 }
+
+
+
+xylanNtpAccessRestrictedTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF NtpAccessRestrictedEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION     "Table containing the restricted addresses."
+        ::={ xylanNtpAccess 2 }
+
+xylanNtpAccessRestrictedEntry OBJECT-TYPE
+        SYNTAX  NtpAccessRestrictedEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION     "Entry of a restricted address."
+	INDEX	{
+		xylanNtpAccessRestrictedIpAddress, xylanNtpAccessRestrictedMask
+		}
+        ::={ xylanNtpAccessRestrictedTable 1 }
+
+NtpAccessRestrictedEntry ::= SEQUENCE {
+                xylanNtpAccessRestrictedIpAddress
+                        IpAddress,
+		xylanNtpAccessRestrictedMask
+			IpAddress,
+		xylanNtpAccessRestrictedRestrictions
+			INTEGER,
+		xylanNtpAccessRestrictedCount
+			INTEGER,
+                xylanNtpAccessRestrictedAdmin
+                        INTEGER
+                }
+xylanNtpAccessRestrictedIpAddress OBJECT-TYPE
+        SYNTAX  IpAddress 
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "IP address to restrict."
+        ::={ xylanNtpAccessRestrictedEntry 1 }
+
+
+xylanNtpAccessRestrictedMask OBJECT-TYPE
+        SYNTAX  IpAddress
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "IP mask to restrict."
+        ::={ xylanNtpAccessRestrictedEntry 2 }
+
+xylanNtpAccessRestrictedRestrictions OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION     "A mask indicating the restrictions to apply
+			to the entry.
+			0x0001 - ignore, Ignore all packets from hosts.
+			0x0002 - noquery, Ignore all NTP information 
+				queries and configuration requests
+				from the source.
+			0x0004 - nomodify, Ignore all NTP information 
+				queries and configuration requests
+				that attempt to modify the state of the server.
+			0x0008 - notrap, Decline to provide control message 
+				trap service to matching hosts.
+			0x0010 - lowpriotrap, Declare traps set by matching 
+				hosts to be low priority.
+			0x0020 - noserve, Ignore NTP packets other than 
+				information queries and config-uration requests.
+			0x0040 - nopeer, Provide stateless time service to 
+				polling hosts, but do not allocate peer 
+				memory resources to these hosts even if 
+				they otherwise might be considered useful 
+				as future synchronization partners.
+			0x0080 - notrust, Treat these hosts normally in other 
+				respects, but never use them as synchronization 
+				sources.
+			0x0100 - limited, These hosts are subject to a 
+				limitation of the number of clients from the 
+				same net."
+        ::={ xylanNtpAccessRestrictedEntry 3 }
+
+xylanNtpAccessRestrictedCount OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION     "Number of packets matched."
+        ::={ xylanNtpAccessRestrictedEntry 4 }
+
+xylanNtpAccessRestrictedAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                        active(1),
+                        delete(2)
+                }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION     "The current state of the table entry.
+                        If the value written is a 2, the entry is
+                        deleted. "
+        ::={ xylanNtpAccessRestrictedEntry 5 }
+
+xylanNtpAccessRereadKeyFile OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  write-only
+        STATUS  mandatory
+        DESCRIPTION     "Re-examining the keys file will load all currently 
+			existing keys in the file into the switch's memory."
+        ::={ xylanNtpAccess 3 }
+
+END

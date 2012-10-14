@@ -1,0 +1,262 @@
+XYLAN-LDP-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+         OBJECT-TYPE
+                 FROM RFC-1212
+         TRAP-TYPE
+                 FROM RFC-1215
+         IpAddress
+                 FROM RFC1155-SMI
+         xylanMplsArch, xylanSwitchDevice
+                 FROM XYLAN-BASE-MIB
+         mplsLdpEntityID, mplsLdpPeerIndex, mplsLdpPeerID, mplsLdpSessionIndex
+                 FROM MPLS-LDP-MIB;
+
+-- This is the XYLAN Corporation proprietary MIB module for configuring
+--  the MPLS in the OmniSwitch
+
+
+xylanMplsFecObjects            OBJECT IDENTIFIER   ::=  { xylanMplsArch 1 }
+
+
+-- MPLS FEC configuration group
+
+xylanMplsFecTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF XylanMplsFecEntry
+         ACCESS  not-accessible
+         STATUS      mandatory
+         DESCRIPTION
+             "This table contains information about the MPLS FEC entries which exist on this LSR."
+         ::= { xylanMplsFecObjects 1 }
+
+
+     xylanMplsFecEntry OBJECT-TYPE
+         SYNTAX     XylanMplsFecEntry
+         ACCESS  not-accessible
+         STATUS      mandatory
+         DESCRIPTION
+             "An entry in this table represents an NHLFE entity. This table displays the present FEC             
+              entries in  for which label switching is taking place. An entry can be either added 
+              dynamically or created by a network administrator or by an SNMP agent for particular 
+              policy based routing."
+         INDEX       {  xylanMplsFecMask }
+         ::= { xylanMplsFecTable 1 }
+
+     XylanMplsFecEntry ::= SEQUENCE {
+         xylanMplsFecMask                         OCTET STRING,
+         xylanMplsFecInVpi                        INTEGER,
+         xylanMplsFecInVci                        INTEGER,
+         xylanMplsFecInSlot                       INTEGER,
+         xylanMplsFecInPort                       INTEGER,
+         xylanMplsFecOutVpi                       INTEGER,
+         xylanMplsFecOutVci                       INTEGER,
+         xylanMplsFecOutSlot                      INTEGER,
+         xylanMplsFecOutPort                      INTEGER,
+         xylanMplsFecNextHopIpAddress             IpAddress,
+         xylanMplsFecUpstreamLspStatus            INTEGER,
+         xylanMplsFecDownstreamLspStatus          INTEGER
+     }
+
+     xylanMplsFecMask OBJECT-TYPE
+         SYNTAX      OCTET STRING (SIZE (16))
+         ACCESS  read-only
+         STATUS      mandatory
+         DESCRIPTION
+             "This contains 16 byte mask containing Destination and
+             Source IP address and ToS and precedence field of IP 
+             header and TCP/UDP port.
+             ------------------------------------------------------------
+             Dst IP | Src IP | ToS | Proto | Dst Port | Src Port | Resvd |
+             ------------------------------------------------------------
+                4       4       1      1        2          2        2 
+
+             This uniquely identifies one FEC. "
+
+         ::= { xylanMplsFecEntry 1 }
+
+xylanMplsFecInVpi OBJECT-TYPE
+         SYNTAX     INTEGER
+         ACCESS  read-only
+         STATUS      mandatory
+         DESCRIPTION
+             "Value of the VPI of the LSP on the upstream side."
+         DEFVAL      {0}
+         ::= { xylanMplsFecEntry 2 }
+
+xylanMplsFecInVci OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS  read-only
+         STATUS      mandatory
+         DESCRIPTION
+             "Value of the VCI of the LSP on the upstream side"
+         DEFVAL      {0}
+         ::= { xylanMplsFecEntry 3 }
+
+xylanMplsFecInSlot OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS  read-only
+         STATUS      mandatory
+         DESCRIPTION
+             "Slot for the upstream LSR for this LSP."
+         DEFVAL      {0}
+         ::= { xylanMplsFecEntry 4 }
+
+xylanMplsFecInPort OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS  read-only
+         STATUS      mandatory
+         DESCRIPTION
+             "Port for the upstream LSR for this LSP."
+         DEFVAL      {0}
+         ::= { xylanMplsFecEntry 5 }
+
+xylanMplsFecOutVpi OBJECT-TYPE
+         SYNTAX     INTEGER
+         ACCESS  read-only
+         STATUS      mandatory
+         DESCRIPTION
+             "Value of the VPI of the LSP with the next hop."
+         DEFVAL      {0}
+         ::= { xylanMplsFecEntry 6 }
+
+xylanMplsFecOutVci OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS  read-only
+         STATUS      mandatory
+         DESCRIPTION
+             "Value of the VCI of the LSP with the next hop "
+         DEFVAL      {0}
+         ::= { xylanMplsFecEntry 7 }
+
+xylanMplsFecOutSlot OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS  read-only
+         STATUS      mandatory
+         DESCRIPTION
+             "Slot for the downstream LSR for this LSP."
+         DEFVAL      {0}
+         ::= { xylanMplsFecEntry 8 }
+
+xylanMplsFecOutPort OBJECT-TYPE
+         SYNTAX      INTEGER
+         ACCESS  read-only
+         STATUS      mandatory
+         DESCRIPTION
+             "Port for the downstream LSR for this LSP."
+         DEFVAL      {0}
+         ::= { xylanMplsFecEntry 9 }
+
+xylanMplsFecNextHopIpAddress OBJECT-TYPE
+         SYNTAX      IpAddress
+         ACCESS  read-only
+         STATUS      mandatory
+         DESCRIPTION
+             "IP Address of the Next hop along the LSP for this FEC."
+         ::= { xylanMplsFecEntry 10 }
+
+xylanMplsFecUpstreamLspStatus OBJECT-TYPE
+         SYNTAX       INTEGER {
+                                                   idle(0),
+                                                   response-awaited(1),
+                                                   established(2),
+                                                   release-awaited(3),
+												   awaiting-label-resource(4)
+                                                 }
+         ACCESS  read-only
+         STATUS      mandatory
+         DESCRIPTION
+             "Status of the label for using in label switching"
+         ::= { xylanMplsFecEntry 11 }
+
+xylanMplsFecDownstreamLspStatus OBJECT-TYPE
+         SYNTAX       INTEGER {
+                                                   idle(0),
+                                                   response-awaited(1),
+                                                   established(2),
+                                                   release-awaited(3),
+												   awaiting-label-resource(4)
+                                                 }
+         ACCESS  read-only
+         STATUS      mandatory
+         DESCRIPTION
+             "Status of the label for using in label switching"
+         ::= { xylanMplsFecEntry 12 }
+
+xylanMplsLdpObjects            OBJECT IDENTIFIER   ::=  { xylanMplsArch 2 }
+
+-- MPLS LDP configuration group
+
+xylanMplsLdpTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF XylanMplsLdpEntry
+         ACCESS  not-accessible
+         STATUS      mandatory
+         DESCRIPTION
+             "This table contains information about the MPLS LDP entries which exist on this LSR."
+         ::= { xylanMplsLdpObjects 1 }
+
+     xylanMplsLdpEntry OBJECT-TYPE
+         SYNTAX     XylanMplsLdpEntry
+         ACCESS  not-accessible
+         STATUS      mandatory
+         DESCRIPTION
+             "An entry in this table represents LDP parameters for negotiation with peers"
+         INDEX       {  mplsLdpEntityID }
+         ::= { xylanMplsLdpTable 1 }
+
+     XylanMplsLdpEntry ::= SEQUENCE {
+         xylanMplsLdpVlan                      INTEGER,
+         xylanMplsLdpTransMode                 INTEGER,
+         xylanMplsLdpHoldTime                  INTEGER,
+         xylanMplsLdpSlot                      INTEGER,
+         xylanMplsLdpPort                      INTEGER
+     }
+
+   xylanMplsLdpVlan OBJECT-TYPE
+         SYNTAX     INTEGER
+         ACCESS  read-write
+         STATUS      mandatory
+         DESCRIPTION
+             "VLAN to which this entity should be attached"
+         ::= { xylanMplsLdpEntry 1 }
+
+   xylanMplsLdpTransMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                               unk (0),
+                               tcp (1),
+                               native (2)
+                             }
+         ACCESS  read-write
+         STATUS      mandatory
+         DESCRIPTION
+             "LDP transport Protocol"
+         DEFVAL {1}
+         ::= { xylanMplsLdpEntry 2 }
+
+   xylanMplsLdpHoldTime OBJECT-TYPE
+         SYNTAX     INTEGER (1..3600)
+         ACCESS  read-write
+         STATUS      mandatory
+         DESCRIPTION
+             "Hold time for Hello adjacency"
+         DEFVAL {5}
+         ::= { xylanMplsLdpEntry 3 }
+
+   xylanMplsLdpSlot OBJECT-TYPE
+         SYNTAX     INTEGER
+         ACCESS  read-write
+         STATUS      mandatory
+         DESCRIPTION
+             "Physical slot of the MPLS entity"
+         ::= { xylanMplsLdpEntry 4 }
+
+   xylanMplsLdpPort OBJECT-TYPE
+         SYNTAX     INTEGER
+         ACCESS  read-write
+         STATUS      mandatory
+         DESCRIPTION
+             "Physical port of the MPLS entity"
+         ::= { xylanMplsLdpEntry 5 }
+
+
+END
+

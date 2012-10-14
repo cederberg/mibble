@@ -1,0 +1,1354 @@
+ 
+     XYLAN-PPP-MIB DEFINITIONS ::= BEGIN
+
+     --  RCSID information
+
+     --  $RCSfile: xylan-ppp.mib,v $
+     --  $Revision: 1.5 $		$State: Exp $
+     --  $Date: 1997/09/26 03:20:43 $
+     --  $Author: fr $
+
+
+     --  xylan-ppp.mib
+     --  Author:  Alan K. Bartky
+
+     --  Revision Hisory:
+
+     --  Revision: 0.01
+     --  alan 06/10/97, Initial version 
+
+     --  Revision: 0.02
+     --  alan 07/12/97, Changed tables to reflect new design
+
+     --  Revision: 0.03
+     --  alan 07/17/97, Changed based on comments from review meeting
+
+     --  Revision: 0.01
+     --  alan 07/18/97, Changed index for Link Stats Table and
+     --  Control Protocol level table.
+
+     --  Revision: 0.04
+     --  plim 8/30/97, changed pppxCpOperStatus to pppxCpIpOperStatus
+     --                added compression OperStatus too.
+     --                added compression adminstatus too.
+     --                added compression statistic too.
+
+     --  plim 3/9/99   added 2 more emulated type for BridgingMode
+     --                0 = Bridge All
+     --                1 = Ethernet Only
+     --                2 = Bridge All No FCS
+     --                3 = Ethernet Only No FCS
+
+     --  Alcatel Internetworking, Inc.
+     --  26801 W. Agoura Road
+     --  Calabasas, CA 91301
+     --  (818) 880-3500
+     --  support@ind.alcatel.com
+
+     --  This module provides authoritative definitions for Alcatel Internetworking, Inc.
+     --  enterprise-specific fr MIB.
+
+     --  This module will be extended, as needed.
+
+
+     --  Alcatel Internetworking, Inc. reserves the right to make changes in 
+     --  specification and other information contained in this document 
+     --  without prior notice.  The reader should consult Alcatel Internetworking,
+     --  Inc. to determine whether any such changes have been made.
+
+     --  In no event shall Alcatel Internetworking, Inc. be liable for any incidental, 
+     --  indirect, special, or consequential damages whatsoever (including 
+     --  but not limited to lost profits) arising out of or related to this
+     --  document or the information contained in it, even if Alcatel Internetworking,
+     --  Inc. has been advised of, known, or should have known, the 
+     --  possibility of such damages.
+     --  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+     --  parties a non-exclusive license to use this Specification in connection
+     --  with the management of Alcatel Internetworking, Inc. products.
+
+     --  Copyright (C) 1997, Alcatel Internetworking, Inc. All Rights Reserved.
+     --  Rev 0.1
+     	IMPORTS
+		Counter, IpAddress
+			FROM RFC1155-SMI
+		OBJECT-TYPE
+			FROM RFC-1212
+		DisplayString 
+			FROM RFC1213-MIB
+                xylanPppArch
+                        FROM XYLAN-BASE-MIB
+			;
+
+     -- Textual Conventions
+
+
+     --
+     --                    The MIB groups
+     --
+     pppxConfigGroup           OBJECT IDENTIFIER ::= { xylanPppArch 1 }
+     pppxCpGroup               OBJECT IDENTIFIER ::= { xylanPppArch 2 }
+     pppxStatsGroup            OBJECT IDENTIFIER ::= { xylanPppArch 3 }
+     pppxIncomingGroup        OBJECT IDENTIFIER ::= { xylanPppArch 4 }
+     
+
+     --		The Port Group
+
+
+         pppxConfigTable   OBJECT-TYPE
+	    SYNTAX   SEQUENCE OF PppxConfigEntry 
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"A table of PPP protocol entity configuration information." 
+            ::= { pppxConfigGroup 1 }
+
+         pppxConfigEntry   OBJECT-TYPE
+            SYNTAX   PppxConfigEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"An entry in the PPP Entity Configuration table, 
+                 containing information about PPP protocol configuration." 
+            INDEX   { pppxConfigPeerID }
+            ::= { pppxConfigTable 1 }
+
+         PppxConfigEntry ::=
+             SEQUENCE {
+                 pppxConfigPeerID
+                     INTEGER,
+                 pppxConfigDescription
+                     DisplayString,
+	         pppxConfigAdminStatus
+                     INTEGER,
+                 pppxConfigMode
+                     INTEGER,
+                 pppxConfigBridgingVLAN
+                     INTEGER,
+                 pppxConfigRoutingVLAN
+                     INTEGER,
+                 pppxConfigCompressionType
+                     INTEGER,
+                 pppxConfigBridgingMode
+                     INTEGER,
+                 pppxConfigIpConfigAdminStatus
+                     INTEGER,
+                 pppxConfigBcpConfigAdminStatus
+                     INTEGER,
+                 pppxConfigIpxConfigAdminStatus
+                     INTEGER,
+                 pppxConfigCcpConfigAdminStatus
+                     INTEGER,
+                 pppxConfigRemoteIpAddress
+                     IpAddress,
+                 pppxConfigAuthenticationType
+                     INTEGER,
+                 pppxConfigUserIdToRemote
+                     DisplayString,
+                 pppxConfigPasswordToRemote
+                     DisplayString,
+                 pppxConfigUserIdFromRemote
+                     DisplayString,
+                 pppxConfigPasswordFromRemote
+                     DisplayString,
+                 pppxConfigMaxFailureCount
+	             INTEGER,
+                 pppxConfigMaxConfigureCount
+                     INTEGER,
+                 pppxConfigMaxTerminateCount
+	             INTEGER,
+                 pppxConfigRetryTimeout
+	             INTEGER,
+                 pppxConfigFragmentationInterleaving
+                     INTEGER,
+                 pppxConfigFragmentationDelay
+                     INTEGER,
+                 pppxConfigFragmentationCompatible
+                     INTEGER
+         }
+
+         pppxConfigPeerID OBJECT-TYPE
+             SYNTAX   INTEGER
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The PPP peer ID.  This is used as a unique
+                 ID to identify a PPP entity and to associate
+                 PPP links to it.  For 'normal' PPP, there
+                 is one entry in the link table.  For Multilink
+                 PPP there are one or more multiple links.
+                 In either case the Link table is indexed
+                 by Link index (one per link) and by Peer ID.
+                 When one or more entrys in the link table
+                 has the same Peer ID, then these entries
+                 form a group for use either for Multilink
+                 PPP, or as a rotary group."
+             ::= { pppxConfigEntry 1 }
+
+         pppxConfigDescription OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A description for this PPP port or peer group."
+             ::= { pppxConfigEntry 2 }
+
+	 pppxConfigAdminStatus OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      enabled(1),
+                      disabled(2),
+                      delete(3)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "This object controls the Administrative Status
+                 of this PPP Entity.  Enabled will allow the
+                 PPP Entity to operate.  Disabled will 
+                 disable the PPP Entity without deleting it.
+                 Delete will disable the PPP entity and delete
+                 the PPP configuration record."
+             ::= { pppxConfigEntry 3 }
+
+	 pppxConfigMode OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      normal(1),
+                      multilink(2)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "This object controls whether or not Multilink PPP will
+                 be used." 
+             ::= { pppxConfigEntry 4 }
+
+         pppxConfigBridgingVLAN OBJECT-TYPE
+             SYNTAX   INTEGER (0..65535)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The VLAN Group for PPP bridging.
+
+                 A value of zero(0) indicates that this PPP port will not
+                 perform a bridging service and will discard all
+                 bridged format packets received or transmitted.
+
+                 A non-zero value indicates the bridging VLAN to be used."
+             ::= { pppxConfigEntry 5 }
+
+         pppxConfigRoutingVLAN OBJECT-TYPE
+             SYNTAX   INTEGER (0..65535)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default VLAN for new PVCs that have not been
+                 configured for a routing Service.
+
+                 A value of zero(0) indicates that unconfigured VCs will not
+                 perform a routing service and will discard all
+                 routed format packets received or transmitted.
+
+                 A non-zero value indicates the routing VLAN to be used if
+                 the network informs the port of a new VC."
+             ::= { pppxConfigEntry 6 }
+
+	 pppxConfigCompressionType OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      none(1),
+                      lzsDcp(2)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "This object controls whether or not PPP will
+                 not perform compression (none) or the type
+                 of compression to attempt to negotiate for."
+             ::= { pppxConfigEntry 7 }
+
+         pppxConfigBridgingMode OBJECT-TYPE
+	     SYNTAX   INTEGER (0..3) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default Briding Mode,  0 = BRIDGE_ALL, 1 = ETHERNET ONLY
+                 2 = Bridge All No FCS, 3 = Ethernet Only No FCS"
+             ::= { pppxConfigEntry 8 }
+
+         pppxConfigIpConfigAdminStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {open(1), close(2)}
+             ACCESS    read-write
+             STATUS    mandatory
+             DESCRIPTION
+                "The immediate desired status of the IP network
+                 protocol. Setting this object to open will
+                 inject an administrative open event into the IP
+                 network protocol's finite state machine.
+                 Setting this object to close will inject an
+                 administrative close event into the IP network
+                 protocol's finite state machine."
+             ::= { pppxConfigEntry 9 }
+
+         pppxConfigBcpConfigAdminStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {open(1), close(2)}
+             ACCESS    read-write
+             STATUS    mandatory
+             DESCRIPTION
+                "The immediate desired status of the BCP network
+                 protocol. Setting this object to open will
+                 inject an administrative open event into the BCP
+                 network protocol's finite state machine.
+                 Setting this object to close will inject an
+                 administrative close event into the IP network
+                 protocol's finite state machine."
+             ::= { pppxConfigEntry 10 }
+
+         pppxConfigIpxConfigAdminStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {open(1), close(2)}
+             ACCESS    read-write
+             STATUS    mandatory
+             DESCRIPTION
+                "The immediate desired status of the IPX network
+                 protocol. Setting this object to open will
+                 inject an administrative open event into the IPX
+                 network protocol's finite state machine.
+                 Setting this object to close will inject an
+                 administrative close event into the IP network
+                 protocol's finite state machine."
+             ::= { pppxConfigEntry 11 }
+
+         pppxConfigCcpConfigAdminStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {open(1), close(2)}
+             ACCESS    read-write
+             STATUS    mandatory
+             DESCRIPTION
+                "The immediate desired status of the IPX network
+                 protocol. Setting this object to open will
+                 inject an administrative open event into the IPX
+                 network protocol's finite state machine.
+                 Setting this object to close will inject an
+                 administrative close event into the IP network
+                 protocol's finite state machine."
+             ::= { pppxConfigEntry 12 }
+
+         pppxConfigRemoteIpAddress OBJECT-TYPE
+            SYNTAX  IpAddress
+            ACCESS  read-write
+            STATUS  mandatory
+            DESCRIPTION
+               "The Remote IP address of the PPP connection.
+
+                If set to 0.0.0.0 and IP routing is enabled
+                then the IP address will be learned during
+                the IP LCP negotiation.  If set to a value
+                then no IP address negotiation will occur."
+             ::= { pppxConfigEntry 13 }
+
+         pppxConfigAuthenticationType   OBJECT-TYPE
+            SYNTAX  INTEGER {
+                    none(1), 
+                    pap(2),
+                    chap(3)
+                    }
+            ACCESS    read-write
+            STATUS    mandatory
+            DESCRIPTION
+                "The desired Authentication protocol to use for
+                 this PPP connection."
+             ::= { pppxConfigEntry 14 }
+
+         pppxConfigUserIdToRemote  OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "User ID sent to remote during PAP or
+                 CHAP Authentication.  If this string
+                 is empty, then no local to remote authentication
+                 will occur."
+             ::= { pppxConfigEntry 15 }
+
+         pppxConfigPasswordToRemote  OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "Password sent to remote during PAP or
+                 CHAP Authentication.  If this string
+                 is empty, then no local to remote authentication
+                 will occur."
+             ::= { pppxConfigEntry 16 }
+
+         pppxConfigUserIdFromRemote  OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "User ID expected to be received remote during PAP or
+                 CHAP Authentication.  If this string
+                 is empty, then no remote to local authentication
+                 will be required."
+             ::= { pppxConfigEntry 17 }
+
+         pppxConfigPasswordFromRemote  OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "Password expected to be received remote during PAP or
+                 CHAP Authentication.  If this string
+                 is empty, then no remote to local authentication
+                 will be required."
+             ::= { pppxConfigEntry 18 }
+
+         pppxConfigMaxFailureCount OBJECT-TYPE
+	     SYNTAX   INTEGER (1..65535) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "PPP LCP and NCP Negotiation Maximum Failure Count"
+             REFERENCE "RFC 1661 Section 4.6. Counters and Timers"
+             ::= { pppxConfigEntry 19 }
+
+         pppxConfigMaxConfigureCount OBJECT-TYPE
+	     SYNTAX   INTEGER (1..65535) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "PPP LCP Negotiation Maximum Configure Count"
+             REFERENCE "RFC 1661 Section 4.6. Counters and Timers"
+             ::= { pppxConfigEntry 20 }
+
+         pppxConfigMaxTerminateCount OBJECT-TYPE
+	     SYNTAX   INTEGER (1..65535) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "PPP LCP Negotiation Maximum Terminate Count"
+             REFERENCE "RFC 1661 Section 4.6. Counters and Timers"
+             ::= { pppxConfigEntry 21 }
+
+         pppxConfigRetryTimeout OBJECT-TYPE
+	     SYNTAX   INTEGER (1..65535) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "PPP LCP Negotiation Retry Timeout"
+             REFERENCE "RFC 1661 Section 4.6. Counters and Timers"
+             ::= { pppxConfigEntry 22 }
+
+         pppxConfigFragmentationInterleaving OBJECT-TYPE
+             SYNTAX   INTEGER{
+                      no (0),
+                      yes (1)}
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "PPP Fragmentation Interleaving is either
+                 enabled (Yes(1)) or disabled (No(0))."
+             ::= { pppxConfigEntry 23 }
+
+         pppxConfigFragmentationDelay OBJECT-TYPE
+             SYNTAX   INTEGER(0..100000000)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "PPP Fragmentation Delay in milliseconds."
+             ::= { pppxConfigEntry 24 }
+
+         pppxConfigFragmentationCompatible OBJECT-TYPE
+             SYNTAX   INTEGER{
+                      no (0),
+                      yes (1)}
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "PPP Fragmentation Compatibility determines if
+                 it's cisco compatible (Yes (1)) or native (No (0)).
+                 It will limit Maximum number of fragmentation to 16."
+             ::= { pppxConfigEntry 25 }
+
+    -- PPP Control Protocol status and statistics Table
+
+         pppxCpTable   OBJECT-TYPE
+             SYNTAX   SEQUENCE OF PppxCpEntry 
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+             	"A table of PPP connection Link Control and Network Control
+                 Protocol status and statistics information." 
+             ::= { pppxCpGroup 1 }
+
+         pppxCpEntry   OBJECT-TYPE
+             SYNTAX   PppxCpEntry
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+                "An entry in the table, containing information about 
+                the PPP LCP and NCP status and statistics."
+             INDEX   { pppxCpPeerID }
+             ::= { pppxCpTable 1 }
+
+         PppxCpEntry ::=
+             SEQUENCE {
+                 pppxCpPeerID
+                     INTEGER,
+                 pppxCpSlotIndex
+                     INTEGER,
+                 pppxCpPortIndex
+                     INTEGER,
+                 pppxCpIpOperStatus
+                     INTEGER,
+                 pppxCpIpxOperStatus
+                     INTEGER,
+                 pppxCpBcpOperStatus
+                     INTEGER,
+                 pppxCpCcpOperStatus
+                     INTEGER,
+	         pppxCpTxLcpPackets
+                     Counter,
+	         pppxCpRxLcpPackets
+                     Counter,
+	         pppxCpTxIpcpPackets
+                     Counter,
+	         pppxCpRxIpcpPackets
+                     Counter,
+	         pppxCpTxIpxcpPackets
+                     Counter,
+	         pppxCpRxIpxcpPackets
+                     Counter,
+	         pppxCpTxBcpPackets
+                     Counter,
+	         pppxCpRxBcpPackets
+                     Counter,
+	         pppxCpTxCcpPackets
+                     Counter,
+	         pppxCpRxCcpPackets
+                     Counter
+         }
+                                                                                        
+         pppxCpPeerID OBJECT-TYPE
+             SYNTAX   INTEGER 
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique ID which identifies this PPP Control Protocol
+                 entity."
+             ::= { pppxCpEntry 1 }
+
+         pppxCpSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (0..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this WSM board slot
+                 that the PPP Control Protocol Entity is running on.
+
+                 A value of zero is returned when PPP is not currently
+                 assigned to a slot (e.g. for PPP for an incoming
+                 ISDN call."
+             ::= { pppxCpEntry 2 }
+
+         pppxCpPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (0..128)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this WSM port
+                 that the PPP Control Protocol Entity is running on.
+
+                 A value of zero is returned when PPP is not currently
+                 assigned to a slot (e.g. for PPP for an incoming
+                 ISDN call.)"
+             ::= { pppxCpEntry 3 }
+
+	 pppxCpIpOperStatus OBJECT-TYPE
+             SYNTAX    INTEGER {opened(1), not-opened(2)}
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The operational status of the IP network
+                 protocol. If the value of this object is up
+                 then the finite state machine for the IP
+                 network protocol has reached the Opened state."
+             ::= { pppxCpEntry 4 }
+
+         pppxCpIpxOperStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {opened(1), not-opened(2)}
+             ACCESS    read-only
+             STATUS    mandatory
+             DESCRIPTION
+                "The operational status of the IPX network
+                 protocol. If the value of this object is up
+                 then the finite state machine for the IP
+                 network protocol has reached the Opened state."
+             ::= { pppxCpEntry 5 }
+
+         pppxCpBcpOperStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {opened(1), not-opened(2)}
+             ACCESS    read-only
+             STATUS    mandatory
+             DESCRIPTION
+                "The operational status of the BCP network
+                 protocol. If the value of this object is up
+                 then the finite state machine for the IP
+                 network protocol has reached the Opened state."
+             ::= { pppxCpEntry 6 }
+
+         pppxCpCcpOperStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {opened(1), not-opened(2)}
+             ACCESS    read-only
+             STATUS    mandatory
+             DESCRIPTION
+                "The operational status of the CCP network
+                 protocol. If the value of this object is up
+                 then the finite state machine for the IP
+                 network protocol has reached the Opened state."
+             ::= { pppxCpEntry 7 }
+
+
+	 pppxCpTxLcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted Link Control Protocol packets
+                 on this PPP connection."
+             ::= { pppxCpEntry 8 }
+
+	 pppxCpRxLcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received Link Control Protocol packets
+                 on this PPP connection."
+             ::= { pppxCpEntry 9 }
+
+	 pppxCpTxIpcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted IP Control Protocol packets
+                 on this PPP connection."
+             ::= { pppxCpEntry 10 }
+
+	 pppxCpRxIpcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received IP Control Protocol packets
+                 on this PPP connection."
+             ::= { pppxCpEntry 11 }
+
+	 pppxCpTxIpxcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted IPX Control Protocol packets
+                 on this PPP connection."
+             ::= { pppxCpEntry 12 }
+
+	 pppxCpRxIpxcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received IPX Control Protocol packets
+                 on this PPP connection."
+             ::= { pppxCpEntry 13 }
+
+	 pppxCpTxBcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted Bridge Control Protocol packets
+                 on this PPP connection."
+             ::= { pppxCpEntry 14 }
+
+	 pppxCpRxBcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received Bridge Control Protocol packets
+                 on this PPP connection."
+             ::= { pppxCpEntry 15 }
+
+	 pppxCpTxCcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted Compression Control Protocol
+                 packets on this PPP connection."
+             ::= { pppxCpEntry 16 }
+
+	 pppxCpRxCcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received Compression Control Protocol 
+                 packets on this PPP connection."
+             ::= { pppxCpEntry 17 }
+
+   
+    -- PPP connections statistics Table
+
+         pppxStatsTable   OBJECT-TYPE
+             SYNTAX   SEQUENCE OF PppxStatsEntry 
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+             	"A table of PPP connection
+                 statistics information." 
+             ::= { pppxStatsGroup 1 }
+
+         pppxStatsEntry   OBJECT-TYPE
+             SYNTAX   PppxStatsEntry
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+                "An entry in the table, containing information about 
+                the PPP PPP connection statistics."
+             INDEX   { pppxStatsIfIndex }
+             ::= { pppxStatsTable 1 }
+
+         PppxStatsEntry ::=
+             SEQUENCE {
+                 pppxStatsPeerID
+                     INTEGER, 
+                 pppxStatsIfIndex
+                     INTEGER,
+                 pppxStatsSlotIndex
+                     INTEGER,
+                 pppxStatsPortIndex
+                     INTEGER,
+                 pppxStatsSubIndex
+                     INTEGER,
+		 pppxStatsTxIPOctets
+		     Counter,
+		 pppxStatsTxIPPackets
+		     Counter,
+		 pppxStatsRxIPOctets
+		     Counter,
+		 pppxStatsRxIPPackets
+		     Counter,
+		 pppxStatsTxIPXOctets
+		     Counter,
+		 pppxStatsTxIPXPackets
+		     Counter,
+		 pppxStatsRxIPXOctets
+		     Counter,
+		 pppxStatsRxIPXPackets
+		     Counter,
+		 pppxStatsTxBPDUOctets
+		     Counter,
+		 pppxStatsTxBPDUPackets
+		     Counter,
+		 pppxStatsRxBPDUOctets
+		     Counter,
+		 pppxStatsRxBPDUPackets
+		     Counter,
+		 pppxStatsTxEthernetOctets
+		     Counter,
+		 pppxStatsTxEthernetPackets
+		     Counter,
+		 pppxStatsRxEthernetOctets
+		     Counter,
+		 pppxStatsRxEthernetPackets
+		     Counter,
+		 pppxStatsTx8025Octets
+		     Counter,
+		 pppxStatsTx8025Packets
+		     Counter,
+		 pppxStatsRx8025Octets
+		     Counter,
+		 pppxStatsRx8025Packets
+		     Counter,
+		 pppxStatsTxFDDIOctets
+		     Counter,
+		 pppxStatsTxFDDIPackets
+		     Counter,
+		 pppxStatsRxFDDIOctets
+		     Counter,
+		 pppxStatsRxFDDIPackets
+		     Counter,
+		 pppxStatsTxCompressedOctets
+		     Counter,
+		 pppxStatsTxCompressedPackets
+		     Counter,
+		 pppxStatsRxCompressedOctets
+		     Counter,
+		 pppxStatsRxCompressedPackets
+		     Counter,
+		 pppxStatsTxPrecompressedOctets
+		     Counter,
+		 pppxStatsRxDecompressedOctets
+		     Counter,
+		 pppxStatsRxCompressedDiscards
+		     Counter
+         }
+                                                                                        
+         pppxStatsPeerID OBJECT-TYPE
+             SYNTAX   INTEGER 
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique ID which identifies the PPP Control Protocol
+                 entity associated with this PPP link."
+             ::= { pppxStatsEntry 1 }
+
+         pppxStatsIfIndex OBJECT-TYPE
+             SYNTAX   INTEGER
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The ifindex that represents this PPP link."
+             ::= { pppxStatsEntry 2 }
+
+         pppxStatsSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (0..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot
+                 that this PPP link is running on."
+             ::= { pppxStatsEntry 3 }
+
+         pppxStatsPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (0..128)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this WSM submodule port
+                 that this PPP link is running on."
+             ::= { pppxStatsEntry 4 }
+
+         pppxStatsSubIndex OBJECT-TYPE
+             SYNTAX   INTEGER (0..32)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies the sub-element
+                 of the  WSM submodule port
+                 that this PPP link is running on.
+
+                 For Serial ports this will always return 0.
+
+                 For ISDN BRI ports, this will return 1 or 2
+                 for B1 or B2 channel respectively."
+             ::= { pppxStatsEntry 5 }
+
+	 pppxStatsTxIPOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within routed IP format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 6 }
+
+	 pppxStatsTxIPPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted routed IP format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 7 }
+
+	 pppxStatsRxIPOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within routed IP format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 8 }
+
+	 pppxStatsRxIPPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received routed IP format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 9 }
+
+	 pppxStatsTxIPXOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within routed IPX format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 10 }
+
+	 pppxStatsTxIPXPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted routed IPX format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 11 }
+
+	 pppxStatsRxIPXOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within routed IPX format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 12 }
+
+	 pppxStatsRxIPXPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received routed IPX format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 13 }
+
+	 pppxStatsTxBPDUOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within BPDU packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 14 }
+
+	 pppxStatsTxBPDUPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted BPDU packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 15 }
+
+	 pppxStatsRxBPDUOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within BPDU packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 16 }
+
+	 pppxStatsRxBPDUPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received BPDU packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 17 }
+
+	 pppxStatsTxEthernetOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within bridged 802.3 format
+                 packets on this PPP connection."
+             ::= { pppxStatsEntry 18 }
+
+	 pppxStatsTxEthernetPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted bridged 802.3 format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 19 }
+
+	 pppxStatsRxEthernetOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within bridged 802.3 format
+                 packets on this PPP connection."
+             ::= { pppxStatsEntry 20 }
+
+	 pppxStatsRxEthernetPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received bridged 802.3 format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 21 }
+
+	 pppxStatsTx8025Octets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within 8025 packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 22 }
+
+	 pppxStatsTx8025Packets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted 8025 packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 23 }
+
+	 pppxStatsRx8025Octets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within 8025 packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 24 }
+
+	 pppxStatsRx8025Packets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received 8025 packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 25 }
+
+	 pppxStatsTxFDDIOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within FDDI packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 26 }
+
+	 pppxStatsTxFDDIPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted FDDI packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 27 }
+
+	 pppxStatsRxFDDIOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within FDDI packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 28 }
+
+	 pppxStatsRxFDDIPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received FDDI packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 29 }
+
+ 
+	 pppxStatsTxCompressedOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within compressed format
+                 packets on this PPP connection."
+             ::= { pppxStatsEntry 30 }
+
+	 pppxStatsTxCompressedPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted compressed format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 31 }
+
+	 pppxStatsRxCompressedOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within compressed format
+                 packets on this PPP connection."
+             ::= { pppxStatsEntry 32 }
+
+	 pppxStatsRxCompressedPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received compressed format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 33 }
+ 
+	 pppxStatsTxPrecompressedOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of octets (including the PPP
+                 Header field) prior to compression of data for
+                 transmission within compressed format packets
+                 on this PPP connection."
+             ::= { pppxStatsEntry 34 }
+
+	 pppxStatsRxDecompressedOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of octets (including the PPP
+                 Header field) after decompression of data received
+                 within compressed format packets on this PPP connection."
+             ::= { pppxStatsEntry 35 }
+
+	 pppxStatsRxCompressedDiscards OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received compressed format packets
+                 on this PPP connection that were discarded due to
+                 error or lost packets (e.g. out of sequence, decompression
+                 errors, etc.)"
+             ::= { pppxStatsEntry 36 }
+
+-- Start of pppxIncoming Group
+
+         pppxIncomingTable   OBJECT-TYPE
+	    SYNTAX   SEQUENCE OF PppxIncomingEntry 
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"A table of PPP protocol entity Incoming configuration 
+                 information." 
+            ::= { pppxIncomingGroup 1 }
+
+         pppxIncomingEntry   OBJECT-TYPE
+            SYNTAX   PppxIncomingEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"An entry in the PPP Entity Configuration table, 
+                 containing information about PPP protocol configuration." 
+            INDEX   { pppxIncomingIndex }
+            ::= { pppxIncomingTable 1 }
+
+         PppxIncomingEntry ::=
+             SEQUENCE {
+                 pppxIncomingIndex
+                     INTEGER,
+	         pppxIncomingAdminStatus
+                     INTEGER,
+                 pppxIncomingAuthenticationType
+                     INTEGER,
+                 pppxIncomingUserIdToRemote
+                     DisplayString,
+                 pppxIncomingPasswordToRemote
+                     DisplayString,
+                 pppxIncomingBridgingVLAN
+                     INTEGER,
+                 pppxIncomingRoutingVLAN
+                     INTEGER,
+                 pppxIncomingCompressionType
+                     INTEGER,
+                 pppxIncomingIpConfigAdminStatus
+                     INTEGER,
+                 pppxIncomingBcpConfigAdminStatus
+                     INTEGER,
+                 pppxIncomingIpxConfigAdminStatus
+                     INTEGER,
+                 pppxIncomingCcpConfigAdminStatus
+                     INTEGER
+         }
+
+         pppxIncomingIndex OBJECT-TYPE
+             SYNTAX   INTEGER
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "Index to uniquelly identify this entry ."
+             ::= { pppxIncomingEntry 1 }
+
+	 pppxIncomingAdminStatus OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      enabled(1),
+                      disabled(2),
+                      delete(3)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "This object controls the Administrative Status
+                 of this Incoming Entity.  Enabled will allow the
+                 Incoming Entity to operate.  Disabled will 
+                 disable the Incoming Entity without deleting it.
+                 Delete will disable the Incoming entity and delete
+                 the PPP configuration record."
+             ::= { pppxIncomingEntry 2 }
+
+         pppxIncomingAuthenticationType   OBJECT-TYPE
+            SYNTAX  INTEGER {
+                    none(1), 
+                    pap(2),
+                    chap(3)
+                    }
+            ACCESS    read-write
+            STATUS    mandatory
+            DESCRIPTION
+                "The desired Authentication protocol to use for
+                 this PPP connection."
+             ::= { pppxIncomingEntry 3 }
+
+         pppxIncomingUserIdToRemote  OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "User ID sent to remote during PAP or
+                 CHAP Authentication.  If this string
+                 is empty, then no local to remote authentication
+                 will occur."
+             ::= { pppxIncomingEntry 4 }
+
+         pppxIncomingPasswordToRemote  OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "Password sent to remote during PAP or
+                 CHAP Authentication.  If this string
+                 is empty, then no local to remote authentication
+                 will occur."
+             ::= { pppxIncomingEntry 5 }
+
+         pppxIncomingBridgingVLAN OBJECT-TYPE
+             SYNTAX   INTEGER (0..65535)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The VLAN Group for PPP bridging.
+
+                 A value of zero(0) indicates that this PPP port will not
+                 perform a bridging service and will discard all
+                 bridged format packets received or transmitted.
+
+                 A non-zero value indicates the bridging VLAN to be used."
+             ::= { pppxIncomingEntry 6 }
+
+         pppxIncomingRoutingVLAN OBJECT-TYPE
+             SYNTAX   INTEGER (0..65535)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default VLAN for new PVCs that have not been
+                 configured for a routing Service.
+
+                 A value of zero(0) indicates that unconfigured VCs will not
+                 perform a routing service and will discard all
+                 routed format packets received or transmitted.
+
+                 A non-zero value indicates the routing VLAN to be used if
+                 the network informs the port of a new VC."
+             ::= { pppxIncomingEntry 7 }
+
+	 pppxIncomingCompressionType OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      none(1),
+                      lzsDcp(2)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "This object controls whether or not PPP will
+                 not perform compression (none) or the type
+                 of compression to attempt to negotiate for."
+             ::= { pppxIncomingEntry 8 }
+
+         pppxIncomingIpConfigAdminStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {open(1), close(2)}
+             ACCESS    read-write
+             STATUS    mandatory
+             DESCRIPTION
+                "The immediate desired status of the IP network
+                 protocol. Setting this object to open will
+                 inject an administrative open event into the IP
+                 network protocol's finite state machine.
+                 Setting this object to close will inject an
+                 administrative close event into the IP network
+                 protocol's finite state machine."
+             ::= { pppxIncomingEntry 9 }
+
+         pppxIncomingBcpConfigAdminStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {open(1), close(2)}
+             ACCESS    read-write
+             STATUS    mandatory
+             DESCRIPTION
+                "The immediate desired status of the BCP network
+                 protocol. Setting this object to open will
+                 inject an administrative open event into the BCP
+                 network protocol's finite state machine.
+                 Setting this object to close will inject an
+                 administrative close event into the IP network
+                 protocol's finite state machine."
+             ::= { pppxIncomingEntry 10 }
+
+         pppxIncomingIpxConfigAdminStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {open(1), close(2)}
+             ACCESS    read-write
+             STATUS    mandatory
+             DESCRIPTION
+                "The immediate desired status of the IPX network
+                 protocol. Setting this object to open will
+                 inject an administrative open event into the IPX
+                 network protocol's finite state machine.
+                 Setting this object to close will inject an
+                 administrative close event into the IP network
+                 protocol's finite state machine."
+             ::= { pppxIncomingEntry 11 }
+
+         pppxIncomingCcpConfigAdminStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {open(1), close(2)}
+             ACCESS    read-write
+             STATUS    mandatory
+             DESCRIPTION
+                "The immediate desired status of the CCP network
+                 protocol. Setting this object to open will
+                 inject an administrative open event into the IPX
+                 network protocol's finite state machine.
+                 Setting this object to close will inject an
+                 administrative close event into the IP network
+                 protocol's finite state machine."
+             ::= { pppxIncomingEntry 12 }
+
+
+END 

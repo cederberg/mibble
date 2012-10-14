@@ -1,0 +1,185 @@
+	XYLAN-CSM-VUNINNI-MIB DEFINITIONS ::= BEGIN
+IMPORTS
+    DisplayString
+        FROM RFC1213-MIB
+    OBJECT-TYPE
+        FROM RFC-1212
+    Counter
+        FROM RFC1155-SMI
+    xylnatmInterfaceConfGroup
+	FROM XYLAN-CSM-MIB;
+
+     xylnatmVUniConfGroup OBJECT IDENTIFIER ::= { xylnatmInterfaceConfGroup 2 }
+
+     xylnatmVUniConfInstanceCount OBJECT-TYPE
+	SYNTAX Counter
+	ACCESS read-only
+	STATUS mandatory
+	DESCRIPTION
+		" The total number of active virtual UNI/NNI instances on 
+		  this switching system"
+	::= { xylnatmVUniConfGroup 1 }
+     xylnatmVUniConfTable  OBJECT-TYPE 
+        SYNTAX  SEQUENCE OF XylnatmVUniConfEntry 
+        ACCESS  not-accessible 
+        STATUS  mandatory 
+        DESCRIPTION 
+           " The xylnatmVUniConfTable collects attributes about virtual UNI/NNI 
+             instances on a switch" 
+        ::= { xylnatmVUniConfGroup 2 } 
+
+     xylnatmVUniConfEntry  OBJECT-TYPE 
+        SYNTAX  XylnatmVUniConfEntry 
+        ACCESS  not-accessible 
+        STATUS  mandatory 
+        DESCRIPTION 
+           " An entry in the table, containing configuration information about a 
+             virtual UNI/NNI instance in a specific physical port" 
+        INDEX { xylnatmVUniConfSlotIndex, xylnatmVUniConfPortIndex,xylnatmVUniConfInsIndex } 
+        ::= { xylnatmVUniConfTable 1 } 
+
+     XylnatmVUniConfEntry ::= SEQUENCE { 
+	xylnatmVUniConfSlotIndex          INTEGER, 
+	xylnatmVUniConfPortIndex          INTEGER, 
+	xylnatmVUniConfInsIndex           INTEGER, 
+	xylnatmVUniConfIfIndex            INTEGER,
+	xylnatmVUniConfVPI     	          INTEGER, 
+	xylnatmVUniConfTunnelID           INTEGER,
+	xylnatmVUniConfDescr              DisplayString, 
+	xylnatmVUniConfIfType             INTEGER, 
+	xylnatmVUniConfSigEnable	  INTEGER, 
+	xylnatmVUniConfSignalingVer       INTEGER, 
+	xylnatmVUniConfILMIEnable         INTEGER, 
+	xylnatmVUniConfAdminStatus        INTEGER, 
+	xylnatmVUniConfRowStatus          INTEGER 
+	} 
+
+    xylnatmVUniConfSlotIndex OBJECT-TYPE 
+	SYNTAX INTEGER  
+	ACCESS read-only 
+	STATUS mandatory 
+	DESCRIPTION 
+		" A unique value which identifies this virtual UNI/NNI instance in a 
+		specific slot" 
+	::= { xylnatmVUniConfEntry 1 } 
+
+    xylnatmVUniConfPortIndex OBJECT-TYPE 
+	SYNTAX INTEGER 
+	ACCESS read-only
+	STATUS mandatory 
+	DESCRIPTION 
+		" A unique value which identifies this virtual UNI/NNI instance in a 
+		specific physical port in the slot identified by xylnatmVUniConfSlotIndex" 
+	::= { xylnatmVUniConfEntry 2 } 
+
+    xylnatmVUniConfInsIndex OBJECT-TYPE 
+	SYNTAX INTEGER  
+	--	   Instance Index is assigned by switch software not by user 
+	--	   after user provide slot and port number to create a virtual 
+	--	   UNI/NNI instance, the switch will assign this value 
+	--         In SNMP create, user specify slotIndex, PortIndex, InsIndex
+	--         which are now not used by other Virtual UNI/NNI instances,
+	--         agent code will create UNI/NNI according to slotIndex & PortIndex
+	--         and assign an insIndex
+	--         For example, you can specify 5.1.4 as instance index and give it
+	--         to agent for create, the agent look at 5.1.4 and know it's a new 
+	--         instance which doesn't exist, then it only look at 5.1., make sure
+	--         they are valid, and then create a virutal UNI/NNI, but agent may 
+	--         assign 3 for the insIndex, So, after user create this UNI/NNI,
+	--         the whole index instance become 5.1.3
+	ACCESS read-only 
+	STATUS mandatory
+	DESCRIPTION 
+		" A unique value which identifies this virtual UNI/NNI instance in the 
+		port identified by xylnatmVUniConfPortIndex in slot xylnatmVUniConfSlotIndex" 
+	DEFVAL { 0 }
+	::= { xylnatmVUniConfEntry 3 } 
+
+    xylnatmVUniConfIfIndex OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS mandatory
+	-- this IfIndex is mainly used to cross reference objects in PNNI MIB
+	-- it's assigned by switch software, not by user
+	DESCRIPTION
+		" A unique interface index identifies this virtual UNI/NNI instance 
+		in the switch"
+	::= { xylnatmVUniConfEntry 4 }
+
+    xylnatmVUniConfVPI OBJECT-TYPE 
+	SYNTAX INTEGER 
+	ACCESS read-write 
+	STATUS mandatory 
+	DESCRIPTION 
+		" A unique VPI used to create a virtual UNI/NNI on the physical 		port identified by xylnatmVUniConfSlotIndex & xylnatmVUniConfPortIndex" 
+	DEFVAL { 1 }
+	::= { xylnatmVUniConfEntry 5 } 
+
+    xylnatmVUniConfTunnelID OBJECT-TYPE
+	SYNTAX INTEGER
+	ACCESS read-only
+	STATUS mandatory
+	DESCRIPTION
+		" A unique Tunnel ID assigned by switch software to identify this
+		  Virtual UNI/NNI instance on this switching system "
+	::= { xylnatmVUniConfEntry 6 }
+
+    xylnatmVUniConfDescr OBJECT-TYPE 
+        SYNTAX DisplayString (SIZE (0..30)) 
+	ACCESS read-write 
+	STATUS mandatory 
+	DESCRIPTION 
+		" A description for this virtual UNI/NNI instance" 
+		::= { xylnatmVUniConfEntry 7 } 
+
+    xylnatmVUniConfIfType OBJECT-TYPE 
+	SYNTAX INTEGER { pub-uni(1), pri-uni(2), pnni(3), iisp-network(4), iisp-user(5) } 
+	ACCESS read-write 
+	STATUS mandatory 
+	DESCRIPTION 
+		" The interface type of this virtual UNI/NNI instance " 
+	::= { xylnatmVUniConfEntry 8 } 
+
+    xylnatmVUniConfSigEnable OBJECT-TYPE 
+	SYNTAX INTEGER { disable(0), enable(1) } 
+	ACCESS read-write 
+	STATUS mandatory 
+	DESCRIPTION 
+		"Identify if signaling is enable or disable for this Virtual UNI/NNI instance" 
+::= { xylnatmVUniConfEntry 9 } 
+
+    xylnatmVUniConfSignalingVer OBJECT-TYPE 
+	SYNTAX INTEGER { ver30(1), ver31(2) } 
+	ACCESS read-write 
+	STATUS mandatory 
+	DESCRIPTION 
+		" The signaling version of running on this virtual UNI/NNI instance" 
+	::={ xylnatmVUniConfEntry 10 } 
+
+    xylnatmVUniConfILMIEnable OBJECT-TYPE 
+	SYNTAX INTEGER { disable(0), enable(1) } 
+	ACCESS read-write 
+	STATUS mandatory 
+	DESCRIPTION 
+		" Identify if ILMI is enabled for this virutal UNI/NNI instance" 
+	::= { xylnatmVUniConfEntry 11 } 
+
+    xylnatmVUniConfAdminStatus OBJECT-TYPE 
+	SYNTAX INTEGER { disable(0), enable(1) } 
+	ACCESS read-write 
+	STATUS mandatory 
+	DESCRIPTION 
+		" Indicate the adminstration status of this virtual UNI/NNI instance" 
+	::= { xylnatmVUniConfEntry 12 } 
+
+    xylnatmVUniConfRowStatus OBJECT-TYPE 
+	SYNTAX INTEGER { create(1), modify(2), delete(3), inService(4) }
+	ACCESS read-write 
+	STATUS mandatory 
+	DESCRIPTION 
+		" Indicate the current status of this row which represent a virtual 
+		UNI/NNI instance entity" 
+	::= { xylnatmVUniConfEntry 13 } 
+
+	END
+

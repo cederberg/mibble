@@ -1,0 +1,403 @@
+        -- Version 1.4, modified 02/12/98
+
+        ETH-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS 
+            Counter
+                FROM RFC1155-SMI          
+            
+            OBJECT-TYPE 
+                FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                      codex OBJECT IDENTIFIER ::= { enterprises 449 }
+         cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                    cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+      cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+    cdx6500CfgProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 1 }
+cdx6500PCTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 1 }
+
+          cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+   cdx6500StatProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 1 }
+cdx6500PSTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 1 }
+
+        -- Textual conventions
+
+        MacAddress ::= OCTET STRING (SIZE (6))  
+        -- a 6 octet address in the "canonical" order
+
+        DisplayString ::= OCTET STRING
+
+        -- Ethernet Port Configuration Table
+        -- This table contains configuration information.
+        -- These ojects are additional to those included in RFC1321.
+
+        cdx6500PPCTdot3PortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPCTdot3PortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains Ethernet interface parameters and 
+                 state variables, one entry per 802.3 interface."
+        ::= { cdx6500PCTPortProtocolGroup 8 }
+
+        cdx6500PPCTdot3PortEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPCTdot3PortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of Ethernet status and parameter
+                 values for an 802.3 interface."
+            INDEX { cdx6500dot3IfIndex }
+        ::= { cdx6500PPCTdot3PortTable 1 }
+
+        Cdx6500PPCTdot3PortEntry ::=
+            SEQUENCE {
+                cdx6500dot3IfIndex
+                    INTEGER,
+                cdx6500dot3LanCableType
+                    INTEGER,
+                cdx6500dot3PortMacAddress
+                    MacAddress,
+                cdx6500dot3TransmitQueueLimit
+                    INTEGER,
+                cdx6500dot3CollisionSensitivity
+                    INTEGER,
+                cdx6500dot3CarrierSensitivity
+                    INTEGER,
+		cdx6500dot3BridgeLinkNum
+		    INTEGER,
+                cdx6500dot3RouterIfNum
+	            INTEGER
+                }
+
+        cdx6500dot3IfIndex OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This object is the port number for the Interface."
+        ::= { cdx6500PPCTdot3PortEntry 1 }
+
+        cdx6500dot3LanCableType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    aui (2),
+                    utp (3)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Two LAN connectors are provided and only one connector,
+                 selected by software, is active at any given time. 
+                 This parameter specifies the type of cable and therefore
+                 which connector is used for the LAN interface as follows:
+                 utp: Unshielded Twisted Pair (RJ-45)
+                 aui: Attachment Unit Interface (DB-15)"
+        ::= { cdx6500PPCTdot3PortEntry 2 }
+
+        cdx6500dot3PortMacAddress OBJECT-TYPE
+            SYNTAX MacAddress
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the MAC address of the LAN port.
+                 The entered value of 00-00-00-00-00-00 will be replaced by 
+                 the Burned In Address (BIA) if the LAN hardware is present."
+        ::= { cdx6500PPCTdot3PortEntry 3 }
+
+        cdx6500dot3TransmitQueueLimit OBJECT-TYPE
+            SYNTAX INTEGER 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames that can be queued on the LAN transmitter
+                 before any frame is dropped."
+        ::= { cdx6500PPCTdot3PortEntry 4 }
+
+        cdx6500dot3CollisionSensitivity OBJECT-TYPE
+            SYNTAX INTEGER 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies the width required of the collision 
+                 detection signal, in bit times, before it is recognized that 
+                 a collision has occurred."
+        ::= { cdx6500PPCTdot3PortEntry 5 }
+
+        cdx6500dot3CarrierSensitivity OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies the width required of the carrier 
+                 sense signal in bit times, before it is recognized as being 
+                 active. Carrier sense deactivation is recognized immediately.
+                 This capability is useful in noisy cable environments."
+        ::= { cdx6500PPCTdot3PortEntry 6 }
+
+        cdx6500dot3BridgeLinkNum OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies the bridge link number
+                 associated with this LAN port."
+        ::= { cdx6500PPCTdot3PortEntry 7 }
+
+        cdx6500dot3RouterIfNum OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies the router interface number
+                 associated with this LAN port."
+        ::= { cdx6500PPCTdot3PortEntry 8 }
+
+        -- The Ethernet Port Statistics Table
+        -- This table contains statistics and error counter which are
+        -- specific to 802.3 interfaces.  These objects are in addition
+        -- to those listed in RFC1231.
+
+        cdx6500PPSTdot3PortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPSTdot3Entry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A table containing Ethernet statistics, one entry per
+                 802.3 interface. All the statistics are defined using
+                 the syntax Counter as 32-bit wrap around counters. Thus,
+                 if an interface's hardware maintains these statistics in
+                 16-bit counters, then the agent must read the hardware's 
+                 counters frequently enough to prevent loss of significance, 
+                 in order to maintain 32-bit counters in software."
+        ::= { cdx6500PSTPortProtocolGroup 8 }
+
+        cdx6500PPSTdot3PortEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPSTdot3Entry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "An entry contains the 802.3 statistics
+                 for a particular interface."
+            INDEX { cdx6500dot3StatsIfIndex }
+        ::= { cdx6500PPSTdot3PortTable 1 }
+
+        Cdx6500PPSTdot3Entry ::= 
+            SEQUENCE {
+                cdx6500dot3StatsIfIndex
+                    INTEGER,
+                cdx6500dot3StatsPortType
+                    INTEGER,
+                cdx6500dot3StatsRxShortFrames
+                    Counter,
+                cdx6500dot3StatsRxCollisions
+                    Counter,
+                cdx6500dot3StatsRxLongFrames
+                    Counter,
+                cdx6500dot3StatsTxDiscards
+                    Counter,
+                cdx6500dot3StatsDataBytesRx
+                    Counter,
+                cdx6500dot3StatsDataBytesTx
+                    Counter,
+                cdx6500dot3StatsPortStatus
+                    INTEGER,
+                cdx6500dot3StatsLastStatReset
+                    DisplayString,
+                cdx6500dot3StatsClearStats
+                    INTEGER,
+                cdx6500dot3StatsCommand
+                    INTEGER,
+                cdx6500dot3Statsframesin
+                    Counter,
+                cdx6500dot3Statsframesout
+                    Counter,
+                cdx6500dot3Statsfpsin
+                    Counter,
+                cdx6500dot3Statsfpsout
+                    Counter,
+                cdx6500dot3Statshadiscards
+                    Counter
+                }
+
+        cdx6500dot3StatsIfIndex OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The value of this object identifies the 802.3 interface 
+                 for which this entry contains management information. It
+                 is also the port number of the interface."
+        ::= { cdx6500PPSTdot3PortEntry 1 }
+
+        cdx6500dot3StatsPortType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    eth (30)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The configured value of the Port type."
+        ::= { cdx6500PPSTdot3PortEntry 2 }
+
+        cdx6500dot3StatsRxShortFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This counter is incremented when the LAN port observes 
+                 a receive or transmitted frame which is less than 18 bytes."
+        ::= { cdx6500PPSTdot3PortEntry 3 }
+
+        cdx6500dot3StatsRxCollisions OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This counter is incremented when the LAN port observes 
+                 collisions."
+        ::= { cdx6500PPSTdot3PortEntry 4 }
+
+        cdx6500dot3StatsRxLongFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This counter is incremented when the LAN port observes a 
+                 frame that can not be forwarded because of excessive length."
+        ::= { cdx6500PPSTdot3PortEntry 5 }
+
+        cdx6500dot3StatsTxDiscards OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This counter is incremented when the LAN port discards the 
+                 frame because the transmit queue exceeds the maximum queue 
+                 length."
+        ::= { cdx6500PPSTdot3PortEntry 6 }
+
+        cdx6500dot3StatsDataBytesRx OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This counter is incremented for each data byte received by 
+                 the LAN port."
+        ::= { cdx6500PPSTdot3PortEntry 7 }
+
+        cdx6500dot3StatsDataBytesTx OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This counter is incremented for each data byte transmitted 
+                 by the LAN port."
+        ::= { cdx6500PPSTdot3PortEntry 8 }
+
+        cdx6500dot3StatsPortStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    up             (3),
+                    down           (4),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates the status of the LAN port.
+                 newvalDisabled : same functionality as 'disabled', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500PPSTdot3PortEntry 9 }
+
+        cdx6500dot3StatsLastStatReset OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time stamp when the statistics were last reset."
+        ::= { cdx6500PPSTdot3PortEntry 10 }
+
+        cdx6500dot3StatsClearStats OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset (1)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the command to reset the LAN port statistics."
+        ::= { cdx6500PPSTdot3PortEntry 11 }
+
+        cdx6500dot3StatsCommand OBJECT-TYPE
+            SYNTAX INTEGER {
+                    enable  (1),
+                    boot    (2),
+                    disable (3)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is a control for the 802.3 port.
+                 enable  : will enable the port.
+                 boot    : will boot the port.
+                 disable : will disable the port."
+        ::= { cdx6500PPSTdot3PortEntry 12 }
+
+        cdx6500dot3Statsframesin OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This counter is incremented for each frame
+                 received by the LAN port."
+        ::= { cdx6500PPSTdot3PortEntry 13 }
+
+        cdx6500dot3Statsframesout OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This counter is incremented for each frame
+                 transmitted by the LAN port."
+        ::= { cdx6500PPSTdot3PortEntry 14 }
+
+        cdx6500dot3Statsfpsin OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This stat specifies the number of frames
+                 per second received by the LAN port."
+        ::= { cdx6500PPSTdot3PortEntry 15 }
+
+        cdx6500dot3Statsfpsout OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This stat specifies the number of frames
+                 per second transmitted by the LAN port."
+        ::= { cdx6500PPSTdot3PortEntry 16 }
+
+        cdx6500dot3Statshadiscards OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This counter specifies the number of frames
+                 the HA discarded."
+        ::= { cdx6500PPSTdot3PortEntry 17 }
+
+        END
+
+
+
+
+
+
+
+
+

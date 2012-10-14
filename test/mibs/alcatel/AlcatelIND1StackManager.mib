@@ -1,0 +1,410 @@
+ALCATEL-IND1-STACK-MANAGER-MIB DEFINITIONS ::= BEGIN
+
+     	IMPORTS
+    		NOTIFICATION-TYPE, 
+		MODULE-IDENTITY, 
+		OBJECT-TYPE,
+		Counter32		FROM SNMPv2-SMI
+		TEXTUAL-CONVENTION	FROM SNMPv2-TC
+		softentIND1StackMgr     FROM ALCATEL-IND1-BASE
+		MODULE-COMPLIANCE, 
+		OBJECT-GROUP, 
+		NOTIFICATION-GROUP	FROM SNMPv2-CONF	;
+
+        alcatelIND1StackMgrMIB MODULE-IDENTITY
+                LAST-UPDATED "200108270000Z"
+                ORGANIZATION "Alcatel - Architects Of An Internet World"
+                CONTACT-INFO
+            "Please consult with Customer Service to insure the most appropriate
+             version of this document is used with the products in question:
+
+                        Alcatel Internetworking, Incorporated
+                       (Division 1, Formerly XYLAN Corporation)
+                               26801 West Agoura Road
+                            Agoura Hills, CA  91301-5122
+                              United States Of America
+
+            Telephone:               North America  +1 800 995 2696
+                                     Latin America  +1 877 919 9526
+                                     Europe         +31 23 556 0100
+                                     Asia           +65 394 7933
+                                     All Other      +1 818 878 4507
+
+            Electronic Mail:         support@ind.alcatel.com
+            World Wide Web:          http://www.ind.alcatel.com
+            File Transfer Protocol:  ftp://ftp.ind.alcatel.com/pub/products/mibs"
+
+                DESCRIPTION
+                        "This module describes an authoritative enterprise-specific Simple
+             Network Management Protocol (SNMP) Management Information Base (MIB):
+
+                 For the Birds Of Prey Product Line
+                 Stack Manager
+
+             The right to make changes in specification and other information
+             contained in this document without prior notice is reserved.
+
+             No liability shall be assumed for any incidental, indirect, special, or
+             consequential damages whatsoever arising from or related to this
+             document or the information contained herein.
+
+             Vendors, end-users, and other interested parties are granted
+             non-exclusive license to use this specification in connection with
+             management of the products for which it is intended to be used.
+
+               Copyright (C) 1995-2002 Alcatel Internetworking, Incorporated
+                             ALL RIGHTS RESERVED WORLDWIDE"
+
+                REVISION      "200108270000Z"
+        DESCRIPTION
+            "Addressing discrepancies with Alcatel Standard."
+                ::= { softentIND1StackMgr 1 }
+
+alcatelIND1StackMgrMIBObjects OBJECT IDENTIFIER ::= { alcatelIND1StackMgrMIB 1 }
+alcatelIND1StackMgrMIBConformance OBJECT IDENTIFIER ::= { alcatelIND1StackMgrMIB 2 }
+alcatelIND1StackMgrTrapObjects OBJECT IDENTIFIER ::= { alcatelIND1StackMgrMIB 3 }
+alaStackMgrTraps OBJECT IDENTIFIER ::= { alcatelIND1StackMgrMIB 4 }
+
+AlaStackMgrLinkNumber ::= TEXTUAL-CONVENTION
+	STATUS  current
+	DESCRIPTION "lists the port numbers that the stackable ports can hold. 
+	Also the values are the same as the one marked on the Stack chassis pannel."
+	SYNTAX  INTEGER { linkA(27), linkB(28) }
+
+AlaStackMgrNINumber ::= TEXTUAL-CONVENTION
+	STATUS  current
+	DESCRIPTION "The numbers allocated for the Stack NIs are from 0 to 8, 
+	where 0 indicates that it is not present. The values from 1 ..8 are corresponding 
+	to the values from the entPhysicalTable."
+	SYNTAX  INTEGER (0..8)
+
+AlaStackMgrLinkStatus ::= TEXTUAL-CONVENTION
+	STATUS  current
+	DESCRIPTION "indicates if link is Active or Inactive."
+	SYNTAX  INTEGER { active(1), inactive(2) }
+
+AlaStackMgrSlotRole ::= TEXTUAL-CONVENTION
+	STATUS  current
+	DESCRIPTION "Indicates the role of each stackable in the stack."
+	SYNTAX  INTEGER { primary (1), secondary (2), idle (3), standalone (4) }
+
+AlaStackMgrStackStatus ::= TEXTUAL-CONVENTION
+	STATUS  current
+	DESCRIPTION "indicates whether the Stack is or not in Loop."
+	SYNTAX  INTEGER { loop(1), noloop(2) }
+
+
+-----------------------------------------------
+-- Stack Chassis Table 
+-----------------------------------------------
+
+alaStackMgrChassisTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF AlaStackMgrChassisEntry
+	MAX-ACCESS  not-accessible
+	STATUS  current
+	DESCRIPTION " holds the list of all chassis in a stack."
+	::= { alcatelIND1StackMgrMIBObjects 1 }
+
+alaStackMgrChassisEntry OBJECT-TYPE
+	SYNTAX  AlaStackMgrChassisEntry 
+	MAX-ACCESS  not-accessible
+	STATUS  current
+	DESCRIPTION " each entry corresponds to a chassis and lists its role and its neighbors in the stack."
+	INDEX { alaStackMgrSlotNINumber }
+	::= { alaStackMgrChassisTable 1 }
+
+AlaStackMgrChassisEntry ::= SEQUENCE {
+	alaStackMgrSlotNINumber    AlaStackMgrNINumber,
+	alaStackMgrSlotCMMNumber   INTEGER,
+	alaStackMgrChasRole        AlaStackMgrSlotRole,
+	alaStackMgrLocalLinkStateA AlaStackMgrLinkStatus,
+	alaStackMgrRemoteNISlotA   AlaStackMgrNINumber,
+	alaStackMgrRemoteLinkA     AlaStackMgrLinkNumber,
+	alaStackMgrLocalLinkStateB AlaStackMgrLinkStatus,
+	alaStackMgrRemoteNISlotB   AlaStackMgrNINumber,
+	alaStackMgrRemoteLinkB     AlaStackMgrLinkNumber
+	} 
+
+alaStackMgrSlotNINumber OBJECT-TYPE
+	SYNTAX  AlaStackMgrNINumber
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The numbers allocated for the Stack NIs are from 1 .. 8"
+	::= { alaStackMgrChassisEntry 1 }
+
+alaStackMgrSlotCMMNumber OBJECT-TYPE
+	SYNTAX  INTEGER
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The numbers allocated for the Stack CMMs are from 65.. 72 or 0 if not present"
+	::= { alaStackMgrChassisEntry 2 }
+
+alaStackMgrChasRole OBJECT-TYPE
+	SYNTAX  AlaStackMgrSlotRole 
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "The current role of the chassis (Primary, Secondary, Idle or Stand-alone)"
+	::= { alaStackMgrChassisEntry 3 }
+
+alaStackMgrLocalLinkStateA OBJECT-TYPE
+	SYNTAX  AlaStackMgrLinkStatus
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "1 indicates the link A (port 27) is active, which means it knows its adjacent node. 
+	2 indicates the link A is inactive and RemoteNISlotA and RemoteLinkA are not significants"
+	::= { alaStackMgrChassisEntry 4 }
+
+alaStackMgrRemoteNISlotA OBJECT-TYPE
+	SYNTAX  AlaStackMgrNINumber
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION " This is the remote NI slot seen by the current NI through its link A (port 27).
+        The numbers allocated for the Stack NIs are from 1 to 8 or 0 if not present"
+	::= { alaStackMgrChassisEntry 5 }
+
+alaStackMgrRemoteLinkA OBJECT-TYPE
+	SYNTAX  AlaStackMgrLinkNumber 
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "This is the remote link of the remote NI slot seen through the link A (port 27).
+	The values for these ports are 27 or 28 or 0 if not present"
+	::= { alaStackMgrChassisEntry 6 }
+
+alaStackMgrLocalLinkStateB OBJECT-TYPE
+	SYNTAX  AlaStackMgrLinkStatus
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "1 indicates the link B (port 28) is active, which means it knows its adjacent node. 
+	2 indicates the link B is inactive and RemoteNISlotB and RemoteLinkB are not significants"
+	::= { alaStackMgrChassisEntry 7 }
+
+alaStackMgrRemoteNISlotB OBJECT-TYPE
+	SYNTAX  AlaStackMgrNINumber
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION " This is the remote NI slot seen by the current NI through its link B (port 28).
+        The numbers allocated for the Stack NIs are from 1 to 8 or 0 if not present"
+	::= { alaStackMgrChassisEntry 8 }
+
+alaStackMgrRemoteLinkB OBJECT-TYPE
+	SYNTAX  AlaStackMgrLinkNumber 
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "This is the remote link of the remote NI slot seen through the link B (port 28).
+	The values for these ports are 27 or 28 or 0 if not present"
+	::= { alaStackMgrChassisEntry 9 }
+
+
+
+----------------------------------------------------------
+-- Stack Mgr Statistics Table
+----------------------------------------------------------
+
+alaStackMgrStatsTable OBJECT-TYPE
+	SYNTAX  SEQUENCE OF AlaStackMgrStatsEntry
+	MAX-ACCESS  not-accessible
+	STATUS  current
+	DESCRIPTION "Stack port statistics table."
+	::= { alcatelIND1StackMgrMIBObjects 2 }
+
+alaStackMgrStatsEntry OBJECT-TYPE
+	SYNTAX  AlaStackMgrStatsEntry 
+	MAX-ACCESS  not-accessible
+	STATUS  current
+	DESCRIPTION " Stats table for stackable ports."
+	INDEX { alaStackMgrSlotNINumber, alaStackMgrStatLinkNumber}
+	::= { alaStackMgrStatsTable 1 }
+
+AlaStackMgrStatsEntry ::= SEQUENCE {
+	alaStackMgrStatLinkNumber AlaStackMgrLinkNumber,
+	alaStackMgrStatPktsRx Counter32,
+	alaStackMgrStatPktsTx Counter32,
+	alaStackMgrStatErrorsRx Counter32,
+	alaStackMgrStatErrorsTx Counter32,
+	alaStackMgrStatDelayFromLastMsg INTEGER 
+	}
+	
+alaStackMgrStatLinkNumber OBJECT-TYPE
+	SYNTAX  AlaStackMgrLinkNumber 
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION " Local link refers to the stacking port on each slot. 
+	The values for these ports are 27 and 28"
+	::= { alaStackMgrStatsEntry 1 }
+	
+alaStackMgrStatPktsRx OBJECT-TYPE
+	SYNTAX     Counter32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	         "The total number of packets recieved on this port."
+	::= { alaStackMgrStatsEntry 2 }
+	
+alaStackMgrStatPktsTx OBJECT-TYPE
+	SYNTAX     Counter32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	         "The total number of packets transmitted on this port."
+	::= { alaStackMgrStatsEntry 3 }
+	
+alaStackMgrStatErrorsRx OBJECT-TYPE
+     SYNTAX     Counter32
+     MAX-ACCESS read-only
+     STATUS     current
+     DESCRIPTION
+         "The total number of packets in error - received on the port."
+     ::= { alaStackMgrStatsEntry 4 }	
+
+
+alaStackMgrStatErrorsTx OBJECT-TYPE
+     SYNTAX     Counter32
+     MAX-ACCESS read-only
+     STATUS     current
+     DESCRIPTION
+         "The total number of packets in error - transmitted on the port."
+     ::= { alaStackMgrStatsEntry 5 }	
+     
+alaStackMgrStatDelayFromLastMsg OBJECT-TYPE
+     SYNTAX     INTEGER
+     MAX-ACCESS read-only
+     STATUS     current
+     DESCRIPTION
+         "The delay since the last message."
+     ::= { alaStackMgrStatsEntry 6 }	
+     	
+
+alaStackMgrStackStatus OBJECT-TYPE  
+    SYNTAX 	AlaStackMgrStackStatus 
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "indicates whether the Stack is or not in Loop."
+    ::= { alcatelIND1StackMgrMIBObjects 3 }
+
+-------------------------------------------------------
+-- Stack Manager Trap Objects 
+-------------------------------------------------------
+
+alaStackMgrTrapLinkNumber OBJECT-TYPE  
+    SYNTAX 	AlaStackMgrLinkNumber 
+    MAX-ACCESS	accessible-for-notify
+    STATUS	current
+    DESCRIPTION
+    "Holds the link number, when the stack is not in loop."
+    ::= { alcatelIND1StackMgrTrapObjects 1 }
+
+alaStackMgrPrimary OBJECT-TYPE  
+    SYNTAX 	AlaStackMgrNINumber 
+    MAX-ACCESS	accessible-for-notify
+    STATUS	current
+    DESCRIPTION
+    "Holds the number of the stack, which is in Primary role."
+    ::= { alcatelIND1StackMgrTrapObjects 2 }
+
+alaStackMgrSecondary OBJECT-TYPE
+    SYNTAX     	AlaStackMgrNINumber
+    MAX-ACCESS	accessible-for-notify
+    STATUS	current
+    DESCRIPTION
+    "Holds the number of the stack, which is in Secondary role."
+    ::= { alcatelIND1StackMgrTrapObjects 3 }
+ 
+
+-------------------------------------------------------
+-- Stack Manager Traps 
+-------------------------------------------------------   
+
+alaStackMgrDuplicateSlotTrap NOTIFICATION-TYPE
+    OBJECTS    {
+               alaStackMgrSlotNINumber	  
+               }
+    STATUS  current
+    DESCRIPTION
+           "Two or more slots claim to be the same number."
+    ::= { alaStackMgrTraps 0 1 }
+
+
+alaStackMgrNeighborChangeTrap NOTIFICATION-TYPE
+    OBJECTS    {
+               alaStackMgrStackStatus,
+               alaStackMgrSlotNINumber,
+               alaStackMgrTrapLinkNumber
+               }
+    STATUS  current
+    DESCRIPTION
+           "Indicates whether the stack is in loop or not.
+            In case of no loop, alaStackMgrSlotNINumber and alaStackMgrTrapLinkNumber
+            indicate where the Stack is broken"
+    ::= { alaStackMgrTraps 0 2 }
+
+
+alaStackMgrRoleChangeTrap NOTIFICATION-TYPE
+    OBJECTS    {
+    		alaStackMgrPrimary,
+		alaStackMgrSecondary		  
+               }
+    STATUS  current
+    DESCRIPTION
+           " Role Change Trap. Indicates that a new primary or secondary is elected."
+    ::= { alaStackMgrTraps 0 3 }
+
+
+
+
+-- StackMgr Conformance 
+
+alcatelIND1StackMgrMIBGroups OBJECT IDENTIFIER ::= 
+{ alcatelIND1StackMgrMIBConformance 1 }
+
+
+alcatelIND1StackMgrMIBCompliances OBJECT IDENTIFIER ::= 
+{ alcatelIND1StackMgrMIBConformance 2 }
+
+
+alaStackMgrCfgMgrGroup OBJECT-GROUP
+    OBJECTS {
+		alaStackMgrSlotNINumber,
+		alaStackMgrSlotCMMNumber,
+		alaStackMgrChasRole,
+		alaStackMgrLocalLinkStateA,
+		alaStackMgrRemoteNISlotA,
+		alaStackMgrRemoteLinkA,
+		alaStackMgrLocalLinkStateB,
+		alaStackMgrRemoteNISlotB,
+		alaStackMgrRemoteLinkB
+    	}
+    STATUS      current
+    DESCRIPTION
+        "A collection of objects providing information about 
+	the topology of the stack ."
+    ::= { alcatelIND1StackMgrMIBGroups 1 }
+
+
+alaStackMgrNotificationGroup NOTIFICATION-GROUP
+    NOTIFICATIONS { alaStackMgrDuplicateSlotTrap,
+                    alaStackMgrNeighborChangeTrap,
+		    alaStackMgrRoleChangeTrap
+                  }
+    STATUS  current
+    DESCRIPTION
+            "A collection of notifications for signaling Stack manager events."
+    ::= { alcatelIND1StackMgrMIBGroups 2 }
+
+
+alcatelIND1StackMgrMIBCompliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+        "The compliance statement for device support of Stack Manager."
+    MODULE
+        MANDATORY-GROUPS {
+            alaStackMgrCfgMgrGroup,
+            alaStackMgrNotificationGroup
+        }
+    ::= { alcatelIND1StackMgrMIBCompliances 1 }
+
+
+
+END
+
+

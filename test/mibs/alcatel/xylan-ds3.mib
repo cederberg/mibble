@@ -1,0 +1,996 @@
+     XYLAN-DS3-MIB DEFINITIONS ::= BEGIN
+
+     --  RCSID information
+
+     --  $RCSfile: xylan-ds3.mib,v $
+     --  $Revision: 1.9 $		$State: Exp $
+     --  $Date: 1998/06/05 16:56:33 $
+     --  $Author: eric $
+
+     --  xylan-ds3.mib
+     --  Revision: 1.00
+     --  Date: April 1, 1997
+
+     --  Alcatel Internetworking, Inc.
+     --  26801 W. Agoura Road
+     --  Calabasas, CA 91301
+     --  (818) 880-3500
+     --  support@ind.alcatel.com
+
+     --  This module provides authoritative definitions for Alcatel Internetworking, Inc.
+     --  enterprise-specific physical port parameters MIB.
+
+     --  This module will be extended, as needed.
+
+
+     --  Alcatel Internetworking, Inc. reserves the right to make changes in 
+     --  specification and other information contained in this document 
+     --  without prior notice.  The reader should consult Alcatel Internetworking,
+     --  Inc. to determine whether any such changes have been made.
+
+     --  In no event shall Alcatel Internetworking, Inc. be liable for any incidental, 
+     --  indirect, special, or consequential damages whatsoever (including 
+     --  but not limited to lost profits) arising out of or related to this
+     --  document or the information contained in it, even if Alcatel Internetworking,
+     --  Inc. has been advised of, known, or should have known, the 
+     --  possibility of such damages.
+     --  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+     --  parties a non-exclusive license to use this Specification in connection
+     --  with the management of Alcatel Internetworking, Inc. products.
+
+     --  Copyright (C) 1997, Alcatel Internetworking, Inc. All Rights Reserved.
+     
+     	IMPORTS
+		Counter, TimeTicks
+	         	FROM RFC1155-SMI
+        DisplayString, transmission
+                FROM RFC1213-MIB
+		OBJECT-TYPE
+			FROM RFC-1212
+	        xylanPportArch
+			FROM XYLAN-BASE-MIB 
+			;
+
+        dsx3Port     OBJECT IDENTIFIER ::= { xylanPportArch 2 }
+
+    --  DS3/E3 Physical Port Configuration Table
+
+        dsx3PortConfigTable   OBJECT-TYPE
+	    SYNTAX   SEQUENCE OF Dsx3PortConfigEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	   "A table of DS3/E3 physical layer status and parameter 
+                    information."
+            ::= { dsx3Port 1 }
+
+         dsx3PortConfigEntry   OBJECT-TYPE
+	    SYNTAX   Dsx3PortConfigEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+                   "An entry in the table, containing information about 
+                    the physical layer of a DS3/E3 interface."
+            INDEX   { dsx3PortConfigSlotIndex, dsx3PortConfigPortIndex }
+            ::= { dsx3PortConfigTable 1 }
+
+         Dsx3PortConfigEntry ::=
+             SEQUENCE {
+	         dsx3PortConfigSlotIndex
+                     INTEGER,
+		 dsx3PortConfigPortIndex
+                     INTEGER,
+	         dsx3PortConfigIfType
+		     INTEGER,
+	         dsx3PortConfigTcSubLayer
+		     INTEGER,
+                 dsx3PortConfigPlcpStatus
+	             INTEGER,
+                 dsx3PortConfigFEAC
+	             INTEGER,
+                 dsx3PortConfigNatUse
+	             INTEGER,
+                 dsx3PortConfigRxPayloadType
+        	     INTEGER,
+	         dsx3PortConfigTimeMarker
+                     INTEGER,
+                 dsx3PortConfigTxPayloadType
+                     INTEGER,
+                 dsx3PortConfigExpectedPayloadType
+                     INTEGER,
+                 dsx3PortConfigTxTrailTraceID
+                     DisplayString,
+                 dsx3PortConfigRxTrailTraceID
+                     DisplayString,
+                 dsx3PortConfigExpectedTrailTraceID
+                     DisplayString,
+                 dsx3PortConfigLineStatus
+                     INTEGER, 
+                 dsx3PortConfigPlScramble
+                     INTEGER
+             }
+
+         dsx3PortConfigSlotIndex  OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                    "A unique value which identifies this HSM board slot."
+             ::= { dsx3PortConfigEntry 1 }
+
+         dsx3PortConfigPortIndex   OBJECT-TYPE
+             SYNTAX   INTEGER (1..32)
+
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                    "A unique value which identifies this port."
+             ::= { dsx3PortConfigEntry 2 }
+
+         dsx3PortConfigIfType       OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                         ds3(1),
+	                 e3(2)
+        	     }
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+                  "This objects indicates type of interface."
+             ::= { dsx3PortConfigEntry 3 }
+
+         dsx3PortConfigTcSubLayer  OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                 	none (1),
+                 	plcp (2),
+	                adm (3)
+        	     }
+             ACCESS  read-write
+             STATUS  mandatory
+             DESCRIPTION
+	        "The type of specific Transmission Convergence sublayer used 
+	         on this port.  Each option is described as follows:
+                       none - specific sublayer is not present.
+	               plcp - Physical Layer Convergence Protocol.
+		       adm  - ATM Direct Mapping."
+             ::= { dsx3PortConfigEntry 4 }
+             
+         dsx3PortConfigPlcpStatus OBJECT-TYPE
+	    SYNTAX  INTEGER(1..15)
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "This object indicates current status of PLCP.  This object
+                only applies to port which sublayer is configured to PLCP. 
+                A value of 1 is returned for other cases. 
+
+                The dsx3PortStatsPlcpStatus is a bit map represented as a
+                sum, therfore it can represent multiple alarms.
+
+                1  -  plcpNoAlarm     No alarm present
+	        2  -  plcpOof         Out of frame
+	        4  -  plcpLof         Loss of frame
+                8  -  plcpYellow      Receive yellow alarm from far-end"
+
+	    ::= { dsx3PortConfigEntry 5 }
+
+         dsx3PortConfigFEAC OBJECT-TYPE
+	      SYNTAX  INTEGER {
+                        dsx3NoFEAC (1),
+                        dsx3DS3EquipmentFailure (2),
+                        dsx3DS3LOS (3),
+                        dsx3DS3OutofFrame (4),
+                        dsx3DS3AISreceived (5),
+                        dsx3DS3IDLEreceived (6),
+                        dsx3DS3NonServiceAffectingEquipFailure (7),
+                        dsx3CommonEquipmentFailure (8),
+                        dsx3DS3LoopbackReceived (9),
+                        dsx3DS1ServiceAffectingEquipmentFailure (10),
+                        dsx3DS1NonServiceAffectingEquipFailure (11),
+                        dsx3SingleDS1LOS (12),
+                        dsx3MultipleDS1sLOS (13),
+                        dsx3UnknownCode (14),
+                        dsx3UnsupportedCode (15)
+                    }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "This object indicates the presence FEAC being received by
+             this port.  This object only applies to DS3 interface with 
+             framing format configured to C-bit parity.  A value of 
+	     dsx3NoFEAC(1) is returned for other cases."
+          ::= { dsx3PortConfigEntry 6 }
+
+        dsx3PortConfigNatUse OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                 	one (1),
+                 	zero (2)
+        	     }
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+	        "The object indicates current state of National Use Bit 
+             	 which is bit 12 of G.751 frame.  This object only applies
+	         to E3 port which line framimg is configured to G.751. A value
+                 of one(1) is returned for other sublayers or DS3 port."
+	   ::= { dsx3PortConfigEntry 7 }
+
+        dsx3PortConfigRxPayloadType OBJECT-TYPE
+            SYNTAX   INTEGER {
+                      unknown-or-not-applicable(1),
+                      unequipped(2), 
+                      atm(3), 
+                      equipped-non-specific(4), 
+                      sdh-tu-12s(5) 
+                     } 
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+	        "The object indicates current state of payload type bits 
+	         (bit 3,4,5 of Maintenance and Adaptation byte) of an E3 
+	         G.832 frame.  This objects only applies to E3 port which
+                 framing is configured to G.832.  A value of 1 is returned
+                 for all other cases."
+	   ::= { dsx3PortConfigEntry 8 }
+
+        dsx3PortConfigTimeMarker OBJECT-TYPE
+	     SYNTAX   INTEGER {
+	               one (1),
+                       zero (2)
+	             }
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+	        "The object indicates current state of Timing Marker bit
+                 (bit 8 of Maintenanc and Adaptation byte) of an E3 G.832
+                 frame. This objects only applies to E3 port which
+                 framing is configured to G.832.  A value of one(1) is returned
+                 for other cases."
+	   ::= { dsx3PortConfigEntry 9 }
+
+        dsx3PortConfigTxPayloadType OBJECT-TYPE
+            SYNTAX   INTEGER {
+                      unequipped(1), 
+                      atm(2), 
+                      equipped-non-specific(3), 
+                      sdh-tu-12s(4) 
+                     } 
+             ACCESS  read-write
+             STATUS  mandatory
+             DESCRIPTION
+                "The object reflects the value to be inserted in the payload 
+                 type bits (bit 3,4,5 of Maintenance and Adaptation byte) of  
+                 an E3 G.832 frame.  This objects only applies to E3 port
+                 whose framing is configured as G.832.  Additionally if this 
+                 object is not applicable, i.e. not E3 G.832, writing to this 
+                 object will be silently ignored."  
+           ::= { dsx3PortConfigEntry 10 }
+
+
+        dsx3PortConfigExpectedPayloadType OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                      unequipped(1),
+                      atm(2),
+                      equipped-non-specific(3),
+                      sdh-tu-12s(4)
+                     }
+             ACCESS  read-write
+             STATUS  mandatory
+             DESCRIPTION
+	        "The object indicates the current expected payload type bits 
+	         (bit 3,4,5 of Maintenance and Adaptation byte) of an E3 
+	         G.832 frame.  This objects only applies to E3 port whose
+                 framing is configured as G.832.  Additionally if this 
+                 object is not applicable, i.e. not E3 G.832, writing to 
+                 this object will be silently ignored."  
+	   ::= { dsx3PortConfigEntry 11 }
+
+        dsx3PortConfigTxTrailTraceID OBJECT-TYPE
+             SYNTAX  DisplayString (SIZE (0..15))
+             ACCESS  read-write
+             STATUS  mandatory
+             DESCRIPTION
+	        "The object indicates the characters to be inserted as Trail
+                 Trace Identifier of an E3 G.832 frame. This object only 
+                 applies to E3 port whose framing is configured as G.832.
+                 A binary 0 in the first octet indicates all zeros insertion,
+                 or this port is not configured as E3 G.832 framing. 
+                 Additionally if this object is not applicable, i.e. not E3 
+                 G.832, writing to this object will be silently ignored."  
+	   ::= { dsx3PortConfigEntry 12 }
+
+        dsx3PortConfigRxTrailTraceID OBJECT-TYPE
+             SYNTAX  DisplayString (SIZE (0..15))
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+                "The object indicates the current characters received as Trail 
+                 Trace Identifier of an E3 G.832 frame. This object only 
+                 applies to E3 port whose framing is configured as G.832.
+                 A binary 0 in the first octet indicates all zeros insertion
+                 received or this port is not configured as E3 G.832 framing."
+           ::= { dsx3PortConfigEntry 13 }
+
+        dsx3PortConfigExpectedTrailTraceID OBJECT-TYPE
+             SYNTAX  DisplayString (SIZE (0..15))
+             ACCESS  read-write
+             STATUS  mandatory
+             DESCRIPTION
+                "The object indicates the expected characters received as Trail 
+                 Trace Identifier of an E3 G.832 frame. This object only 
+                 applies to E3 port whose framing is configured as G.832.
+                 A binary 0 in the first octet indicates all zeros insertion,
+                 or this port is not configured as E3 G.832 framing. 
+                 Additionally if this object is not applicable, i.e. not E3 
+                 G.832, writing to this object will be silently ignored."  
+           ::= { dsx3PortConfigEntry 14 }
+
+
+        dsx3PortConfigLineStatus OBJECT-TYPE
+             SYNTAX  INTEGER (1..2097151) 
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+                "This object indicates the line status of a ds3/e3 interface. 
+                 Each bit position (bit-0 to bit-18) represents one failure 
+                 condition of the interface. Bit-19 and bit-20 are used to
+                 represent Timing Marker bit and National Use bit. Note that
+                 the SYNTAX type of Counter instead of INTEGER is used here
+                 as there are more than 16 different conditions to represent. 
+                 The followings define the various bit position and their
+                 meanings: 
+
+                 Bit     Description
+ 
+                    0:   No alarm present   
+                    1:   Out of Frame Alarm received
+                    2:   Loss Of Signal Alarm received
+                    3:   Alarm Indication Signal Alarm received
+                    4:   Red Alarm received
+                    5:   Far End Receive Failure Alarm received (Non E3 G.751 only)
+                         Remote Alarm Indication Alarm received (E3 G.751 only)
+                    6:   Change Of Frame Alignment Alarm received
+                    7:   PLCP Out Of Frame Alarm received
+                    8:   PLCP Yellow Alarm received
+                    9:   PLCP Framing Bit Error Alarm received
+                   10:   PLCP Bit Interleaved Parity Error Alarm received
+                   11:   PLCP Loss Of Frames Alarm received
+                   12:   PLCP Far End Block Error Alarm received
+                   13:   Cell Loss Alarm received
+                   14:   Far End Block Error Alarm received
+                   15:   Parity Error Alarm received 
+                   16:   Trail Trace ID Mismatch Alarm received (E3 G.832 only)
+                   17:   Rx Payload Type Mismatch Alarm received (E3 G.832 only) 
+                   18:   Unequipped Payload Type received (E3 G.832 only)
+                   19:   Timing Marker Bit (bit 8 of the E3 G.832 Maintenance and
+                         Adaptation bye) received.
+                   20:   National Use bit (bit 12 of the frame in a E3 G.751 frame) 
+                         received."
+           ::= { dsx3PortConfigEntry 15 }
+
+         dsx3PortConfigPlScramble OBJECT-TYPE
+	     SYNTAX   INTEGER { false(1), true(2) }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "Payload Scrambling Enable."
+             ::= { dsx3PortConfigEntry 16 }
+
+
+
+    --  DS3/E3 Physical Port Statistics Table
+
+        dsx3PortStatsTable   OBJECT-TYPE
+	    SYNTAX   SEQUENCE OF Dsx3PortStatsEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	   "A table of DS3/E3 physical port statistics."
+            ::= { dsx3Port 2 }
+
+         dsx3PortStatsEntry   OBJECT-TYPE
+	    SYNTAX   Dsx3PortStatsEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+                   "An entry in the table, containing information about 
+                    the physical port statistics of a DS3/E3 interface."
+            INDEX   { dsx3PortStatsSlotIndex, dsx3PortStatsPortIndex }
+            ::= { dsx3PortStatsTable 1 }
+
+         Dsx3PortStatsEntry ::= SEQUENCE {
+	         dsx3PortStatsSlotIndex
+                     INTEGER,
+		 dsx3PortStatsPortIndex
+	             INTEGER,
+	         dsx3PortStatsLossOfSignal 
+	             Counter,
+	         dsx3PortStatsOutOfFrame
+	             Counter,
+                 dsx3PortStatsAISEvent
+	             Counter,
+	         dsx3PortStatsRedAlarmEvent
+                     Counter,
+	         dsx3PortStatsFarEndReceiveError
+	             Counter,
+	         dsx3PortStatsFarEndBlkError
+	             Counter,
+                 dsx3PortStatsLineCodeVioEvent
+	             Counter,
+	         dsx3PortStatsFramingBitError
+	             Counter,
+	         dsx3PortStatsChangeOfFrameAlign
+	             Counter,
+	         dsx3PortStatsParityBitError
+	             Counter,
+	         dsx3PortStatsPathParityBitError
+	             Counter,
+	         dsx3PortStatsPlcpLossOfFrame
+	             Counter,
+	         dsx3PortStatsPlcpOutOfFrame
+	             Counter,
+	         dsx3PortStatsPlcpYellowAlarm
+	             Counter,
+	         dsx3PortStatsPlcpFarEndBlkError
+	             Counter,
+	         dsx3PortStatsPlcpFramingError
+	             Counter,
+	         dsx3PortStatsPlcpBIPError
+	             Counter,
+                 dsx3PortStatsPayloadTypeMismatchError
+	             Counter,
+                 dsx3PortStatsUnequippedError
+	             Counter,
+                 dsx3PortStatsTrailTraceIDMismatchError
+	             Counter,
+	         dsx3PortStatsLossOfRXClockMeter
+	             Counter
+
+         }
+
+         dsx3PortStatsSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                    "A unique value which identifies this HSM board slot."
+             ::= { dsx3PortStatsEntry 1 }
+
+         dsx3PortStatsPortIndex   OBJECT-TYPE
+             SYNTAX   INTEGER (1..32)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                    "A unique value which identifies this port."
+             ::= { dsx3PortStatsEntry 2 }
+
+	dsx3PortStatsLossOfSignal  OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of Loss of Signals that have been detected on 
+	        this port." 
+	    ::= { dsx3PortStatsEntry 3 }
+
+	dsx3PortStatsOutOfFrame    OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of Out of Frames that have been detected on this
+	        port." 
+	    ::= { dsx3PortStatsEntry 4 }
+
+	dsx3PortStatsAISEvent   OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of AIS events that have been detected on this
+	         port." 
+	    ::= { dsx3PortStatsEntry 5 }
+
+	dsx3PortStatsRedAlarmEvent   OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of Red Alarm events that have been detected on 
+	        this port.  This object only applies to DS3 interface." 
+	    ::= { dsx3PortStatsEntry 6 }
+
+	dsx3PortStatsFarEndReceiveError  OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of Far-end Receive Error events that have been 
+	        received on this port."
+	    ::= { dsx3PortStatsEntry 7 }
+
+         dsx3PortStatsFarEndBlkError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of Far-end Block Error events that have been 
+	        received on this port."
+	    ::= { dsx3PortStatsEntry 8 }
+
+         dsx3PortStatsLineCodeVioEvent OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of Line Code Violation events that have been 
+	        received on this port.  This is a count of both Bipolar 
+	        Violation (BPV) and Excessive zeros (EXZs)."
+	    ::= { dsx3PortStatsEntry 9 }
+
+         dsx3PortStatsFramingBitError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of Framing Bit Error events that have been 
+	        detected on this port."
+	    ::= { dsx3PortStatsEntry 10 }
+
+         dsx3PortStatsChangeOfFrameAlign OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of Change of Frame Alignment events that have 
+	        been detected on this port."
+	    ::= { dsx3PortStatsEntry 11 }
+
+         dsx3PortStatsParityBitError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of parity bit errors that have been detected on 
+	        this port."
+	    ::= { dsx3PortStatsEntry 12 }
+
+         dsx3PortStatsPathParityBitError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of path parity bit errors that have been 
+	        detected on this port."
+	    ::= { dsx3PortStatsEntry 13 }
+
+         dsx3PortStatsPlcpLossOfFrame OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of PLCP loss of frame events that have been 
+	        detected on this port.  A value of zero is returned if 
+                port sublayer is not PLCP."
+	    ::= { dsx3PortStatsEntry 14 }
+
+         dsx3PortStatsPlcpOutOfFrame OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of PLCP out of frame events that have been 
+	        detected on this port.  A value of zero is returned if 
+                port sublayer is not PLCP."
+	    ::= { dsx3PortStatsEntry 15 }
+
+         dsx3PortStatsPlcpYellowAlarm OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of PLCP Yellow Alarms that have been detected 
+	        on this port.  A value of zero is returned if port sublayer
+	        is not PLCP."
+	    ::= { dsx3PortStatsEntry 16 }
+
+         dsx3PortStatsPlcpFarEndBlkError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of PLCP Far-end Block Errors that have been 
+	        detected on this port.  A value of zero is returned if port 
+	        sublayer is not PLCP."
+	    ::= { dsx3PortStatsEntry 17 }
+
+         dsx3PortStatsPlcpFramingError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of PLCP Framing Octet Errors that have been 
+	        detected on this port.  A value of zero is returned if port 
+	        sublayer is not PLCP."
+	    ::= { dsx3PortStatsEntry 18 }
+
+         dsx3PortStatsPlcpBIPError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of PLCP Bit Interleaved Parity Errors that have
+	        been detected on this port.  A value of zero is returned if 
+	        port sublayer is not PLCP."
+	    ::= { dsx3PortStatsEntry 19 }
+
+
+         dsx3PortStatsPayloadTypeMismatchError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of payload type mismatch failure that have
+	        been detected on this port.  This object is applicable to 
+                E3 G.832 only. A value of zero is returned if the port is
+                not configured as E3 and G.832."
+	    ::= { dsx3PortStatsEntry 20 }
+
+         dsx3PortStatsUnequippedError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of unequipped failure that have
+	        been detected on this port.  This object is applicable to 
+                E3 G.832 only. A value of zero is returned if the port is
+                not configured as E3 and G.832."
+	    ::= { dsx3PortStatsEntry 21 }
+
+
+         dsx3PortStatsTrailTraceIDMismatchError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of trail trace identification mismatch
+            failure that have been detected on this port.  This 
+            object is applicable to E3 G.832 only. A value of zero 
+            is returned if the port is not configured as E3 and G.832."
+	    ::= { dsx3PortStatsEntry 22 }
+
+         dsx3PortStatsLossOfRXClockMeter OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of times that a loss of Rx clock was detected
+	        on this port."
+	    ::= { dsx3PortStatsEntry 23 }
+
+
+
+	-- DS3/E3 Physical Port Interval Statistics Table
+
+        dsx3PortIntervalTable   OBJECT-TYPE
+	    SYNTAX   SEQUENCE OF Dsx3PortIntervalEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	   "A table of DS3/E3 physical port statistics."
+            ::= { dsx3Port 3 }
+
+         dsx3PortIntervalEntry   OBJECT-TYPE
+	    SYNTAX   Dsx3PortIntervalEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+                   "An entry in the table, containing information about 
+                    the physical port statistics of a DS3/E3 interface."
+            INDEX   { dsx3PortIntervalSlotIndex, dsx3PortIntervalPortIndex }
+            ::= { dsx3PortIntervalTable 1 }
+
+         Dsx3PortIntervalEntry ::= SEQUENCE {
+	         dsx3PortIntervalSlotIndex
+                     INTEGER,
+		 dsx3PortIntervalPortIndex
+	             INTEGER,
+		 dsx3PortIntervalClear
+		     INTEGER,
+		 dsx3PortIntervalLastClear
+	             TimeTicks,
+	         dsx3PortIntervalLossOfSignal 
+	             Counter,
+	         dsx3PortIntervalOutOfFrame
+	             Counter,
+                 dsx3PortIntervalAISEvent
+	             Counter,
+	         dsx3PortIntervalRedAlarmEvent
+                     Counter,
+	         dsx3PortIntervalFarEndReceiveError
+	             Counter,
+	         dsx3PortIntervalFarEndBlkError
+	             Counter,
+                 dsx3PortIntervalLineCodeVioEvent
+	             Counter,
+	         dsx3PortIntervalFramingBitError
+	             Counter,
+	         dsx3PortIntervalChangeOfFrameAlign
+	             Counter,
+	         dsx3PortIntervalParityBitError
+	             Counter,
+	         dsx3PortIntervalPathParityBitError
+	             Counter,
+	         dsx3PortIntervalPlcpLossOfFrame
+	             Counter,
+	         dsx3PortIntervalPlcpOutOfFrame
+	             Counter,
+	         dsx3PortIntervalPlcpYellowAlarm
+	             Counter,
+	         dsx3PortIntervalPlcpFarEndBlkError
+	             Counter,
+	         dsx3PortIntervalPlcpFramingError
+	             Counter,
+	         dsx3PortIntervalPlcpBIPError
+	             Counter,
+                 dsx3PortIntervalPayloadTypeMismatchError
+	             Counter,
+                 dsx3PortIntervalUnequippedError
+	             Counter,
+                 dsx3PortIntervalTrailTraceIDMismatchError
+	             Counter
+         }
+
+         dsx3PortIntervalSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                    "A unique value which identifies this HSM board slot."
+             ::= { dsx3PortIntervalEntry 1 }
+
+         dsx3PortIntervalPortIndex   OBJECT-TYPE
+             SYNTAX   INTEGER (1..32)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                    "A unique value which identifies this port."
+             ::= { dsx3PortIntervalEntry 2 }
+
+	dsx3PortIntervalClear  OBJECT-TYPE
+	    SYNTAX  INTEGER {
+	         noAction(1),
+	         clearRequest(2)
+            }
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "This object allows clearing all interval statistics of this
+	        port to value of zero.  Setting this object to clearRequest
+	        will initiate managed entity to clear the statistics of 
+	        this table."
+	    ::= { dsx3PortIntervalEntry 3 }
+
+	dsx3PortIntervalLastClear  OBJECT-TYPE
+	    SYNTAX  TimeTicks
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+                 "The value of MIB II's sysUpTime object at the time this 
+	          table statistics is cleared."
+	    ::= { dsx3PortIntervalEntry 4 }
+
+	dsx3PortIntervalLossOfSignal  OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of Loss of Signals that have been detected on 
+	        this port since it's cleared by the managing station." 
+	    ::= { dsx3PortIntervalEntry 5 }
+
+	dsx3PortIntervalOutOfFrame    OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of Out of Frames that have been detected on 
+	        this port since it's cleared by the managing station." 
+	    ::= { dsx3PortIntervalEntry 6 }
+
+	dsx3PortIntervalAISEvent   OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of AIS events that have been detected on this 
+	        port since it's cleared by the managing station." 
+	    ::= { dsx3PortIntervalEntry 7 }
+
+	dsx3PortIntervalRedAlarmEvent   OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of Red Alarm events that have been detected on 
+	        this port since it's cleared by the managing station.  This 
+	        object only applies to DS3 interface."
+	    ::= { dsx3PortIntervalEntry 8 }
+
+	dsx3PortIntervalFarEndReceiveError  OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of far-end receive error events that have 
+	        been received on this port since it's cleared by the 
+	        managing station."
+	    ::= { dsx3PortIntervalEntry 9 }
+
+         dsx3PortIntervalFarEndBlkError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of far-end block error events that have been 
+	        received on this port since it's cleared by the managing 
+	        station."
+	    ::= { dsx3PortIntervalEntry 10 }
+
+         dsx3PortIntervalLineCodeVioEvent OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of line code violation events that have been 
+	        received on this port.  This is a count of both Bipolar
+	        Violation (BPV) and Excessive zeros (EXZs) since it's 
+	        cleared by the managing station."
+	    ::= { dsx3PortIntervalEntry 11 }
+
+         dsx3PortIntervalFramingBitError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of Framing Bit Error events that have been 
+	        detected on this port since it's cleared by the managing
+	        station."
+	    ::= { dsx3PortIntervalEntry 12 }
+
+         dsx3PortIntervalChangeOfFrameAlign OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of change of frame alignment events that have
+	        been detected on this port since it's cleared by the managing
+                station."
+	    ::= { dsx3PortIntervalEntry 13 }
+
+         dsx3PortIntervalParityBitError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of parity bit errors that have been detected on 
+	        this port since it's cleared by the managing station."
+	    ::= { dsx3PortIntervalEntry 14 }
+
+         dsx3PortIntervalPathParityBitError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of path parity bit errors that have been 
+	        detected on this port since it's cleared by the managing
+	        station."
+	    ::= { dsx3PortIntervalEntry 15 }
+
+         dsx3PortIntervalPlcpLossOfFrame OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of PLCP loss of frame events that have been 
+	        detected on this port since it's cleared by the managing
+                station. A value of zero is returned if port sublayer is
+                not PLCP. "
+	    ::= { dsx3PortIntervalEntry 16 }
+
+         dsx3PortIntervalPlcpOutOfFrame OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of PLCP out of frame events that have been 
+	        detected on this port since it's cleared by the managing
+                station. A value of zero is returned if port sublayer is
+                not PLCP. "
+	    ::= { dsx3PortIntervalEntry 17 }
+
+         dsx3PortIntervalPlcpYellowAlarm OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of PLCP Yellow Alarms that have been detected 
+	        detected on this port since it's cleared by the managing
+                station. A value of zero is returned if port sublayer is
+                not PLCP. "
+	    ::= { dsx3PortIntervalEntry 18 }
+
+         dsx3PortIntervalPlcpFarEndBlkError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of PLCP Far-end Block Errors that have been 
+	        detected on this port since it's cleared by the managing
+                station. A value of zero is returned if port sublayer is
+                not PLCP. "
+	    ::= { dsx3PortIntervalEntry 19 }
+
+         dsx3PortIntervalPlcpFramingError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of PLCP Framing Octet Errors that have been
+	        detected on this port since it's cleared by the managing
+                station. A value of zero is returned if port sublayer is
+                not PLCP. "
+	    ::= { dsx3PortIntervalEntry 20 }
+
+         dsx3PortIntervalPlcpBIPError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of PLCP Bit Interleaved Parity Errors that have
+	        detected on this port since it's cleared by the managing
+                station. A value of zero is returned if port sublayer is
+                not PLCP. "
+	    ::= { dsx3PortIntervalEntry 21 }
+
+         dsx3PortIntervalPayloadTypeMismatchError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of payload type mismatch failure that have
+	        been detected on this port since it's cleared by the managing
+                station. This object is applicable to E3 G.832 only. A value of 
+                zero is returned if the port is not configured as E3 and G.832."
+	    ::= { dsx3PortIntervalEntry 22 }
+
+         dsx3PortIntervalUnequippedError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of unequipped failure that have
+	        been detected on this port sinece it's cleared by the managing
+                station.  This object is applicable to E3 G.832 only.
+                A value of zero is returned if the port is not configured
+                as E3 and G.832."
+	    ::= { dsx3PortIntervalEntry 23 }
+
+
+         dsx3PortIntervalTrailTraceIDMismatchError OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "Total number of trail trace identification mismatch
+                failure that have been detected on this port since 
+                it's cleared by the managing station.  This 
+                object is applicable to E3 G.832 only. A value of zero 
+                is returned if the port is not configured as E3 and G.832."
+	    ::= { dsx3PortIntervalEntry 24 }
+
+   END
+
+
+
+
+

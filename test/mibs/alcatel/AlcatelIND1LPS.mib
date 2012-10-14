@@ -1,0 +1,464 @@
+ALCATEL-IND1-LPS-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+     OBJECT-TYPE,
+     OBJECT-IDENTITY,
+     NOTIFICATION-TYPE,
+     MODULE-IDENTITY,
+     IpAddress,
+     Integer32                FROM SNMPv2-SMI
+     MacAddress,
+     DisplayString,
+     RowStatus                FROM SNMPv2-TC
+     ifIndex                  FROM IF-MIB
+     dot1qVlanIndex           FROM Q-BRIDGE-MIB
+     systemServicesDate,
+     systemServicesTime       FROM ALCATEL-IND1-SYSTEM-MIB 
+ MODULE-COMPLIANCE,
+ OBJECT-GROUP,
+ NOTIFICATION-GROUP            FROM SNMPv2-CONF
+     softentIND1MacAddress,
+     sourceLearningTraps      FROM ALCATEL-IND1-BASE;
+
+
+alcatelIND1LearnedPortSecurityMIB MODULE-IDENTITY
+    LAST-UPDATED "200101301100Z"
+    ORGANIZATION "Alcatel Internetworking, Incorporated"
+    CONTACT-INFO
+     "Please consult with Customer Service to insure the most
+appropriate
+      version of this document is used with the products in question:
+
+                 Alcatel Internetworking, Incorporated
+                (Division 1, Formerly XYLAN Corporation)
+                        26801 West Agoura Road
+                     Agoura Hills, CA  91301-5122
+                       United States Of America
+
+     Telephone:               North America  +1 800 995 2696
+                              Latin America  +1 877 919 9526
+                              Europe         +31 23 556 0100
+                              Asia           +65 394 7933
+                              All Other      +1 818 878 4507
+
+     Electronic Mail:         support@ind.alcatel.com
+     World Wide Web:          http://www.ind.alcatel.com
+     File Transfer Protocol:
+ftp://ftp.ind.alcatel.com/pub/products/mibs"
+    DESCRIPTION
+ "This module describes an authoritative enterprise-specific Simple
+        etwork Management Protocol (SNMP) Management Information Base
+(MIB):
+
+        For the Birds Of Prey Product Line, this is the MIB module for
+   address learning mac addresses entity.
+
+        The right to make changes in specification and other information
+
+  contained in this document without prior notice is reserved.
+
+  No liability shall be assumed for any incidental, indirect, special,
+or consequential damages whatsoever arising from or related to this
+        document or the information contained herein.
+
+        Vendors, end-users, and other interested parties are granted
+        non-exclusive license to use this specification in connection
+with
+        management of the products for which it is intended to be used.
+
+         Copyright (C) 1995-2002 Alcatel Internetworking, Incorporated
+                       ALL RIGHTS RESERVED WORLDWIDE"
+
+    REVISION      "200209091100Z"
+
+    DESCRIPTION
+        "The MIB module for Learned Port Security entity."
+    ::= { softentIND1MacAddress 2 }
+
+
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+-- Hook into the Alcatel Tree
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+    alcatelIND1LearnedPortSecurityMIBObjects OBJECT-IDENTITY
+ STATUS  current
+ DESCRIPTION
+     "Branch For Learned Port Security Module MIB Subsystem Managed
+Objects."
+ ::= { alcatelIND1LearnedPortSecurityMIB 1 }
+
+    alcatelIND1LearnedPortSecurityMIBConformance OBJECT-IDENTITY
+ STATUS  current
+ DESCRIPTION
+     "Branch for Learned Port Security Module MIB Subsystem Conformance
+Information."
+ ::= { alcatelIND1LearnedPortSecurityMIB 2 }
+
+    alcatelIND1LearnedPortSecurityMIBGroups OBJECT-IDENTITY
+ STATUS  current
+ DESCRIPTION
+     "Branch for Learned Port Security Module MIB Subsystem Units of
+Conformance."
+ ::= { alcatelIND1LearnedPortSecurityMIBConformance 1 }
+
+    alcatelIND1LearnedPortSecurityMIBCompliances OBJECT-IDENTITY
+ STATUS  current
+ DESCRIPTION
+     "Branch for Learned Port Security Module MIB Subsystem Compliance
+Statements."
+ ::= { alcatelIND1LearnedPortSecurityMIBConformance 2 }
+
+
+
+--- Learned Port Security MIB Tables
+
+learnedPortSecurityTable OBJECT-TYPE
+    SYNTAX    SEQUENCE OF LearnedPortSecurityEntry
+    MAX-ACCESS    not-accessible
+    STATUS   current
+    DESCRIPTION
+        "A table contains Learned Port Security information."
+    ::= { alcatelIND1LearnedPortSecurityMIBObjects 1 }
+
+
+learnedPortSecurityEntry  OBJECT-TYPE
+    SYNTAX   LearnedPortSecurityEntry
+    MAX-ACCESS   not-accessible
+    STATUS   current
+    DESCRIPTION
+    "Definition of the Learned Port Security port security table entries."
+    INDEX { ifIndex }
+    ::= { learnedPortSecurityTable 1 }
+
+
+LearnedPortSecurityEntry ::=
+    SEQUENCE {
+ lpsMaxMacNum
+  INTEGER,
+ lpsViolationOption
+  INTEGER,
+ lpsLoMacRange
+  MacAddress,
+ lpsHiMacRange
+  MacAddress,
+ lpsAdminStatus
+  INTEGER,
+ lpsOperStatus
+  INTEGER,
+ lpsRowStatus
+  RowStatus
+}
+
+lpsViolationOption OBJECT-TYPE
+    SYNTAX   INTEGER {
+    restrict (1),
+    shutdown (2)
+    }
+    MAX-ACCESS   read-write
+    STATUS   current
+    DESCRIPTION
+    "The handle option for LPS violation "
+    ::= { learnedPortSecurityEntry 1 }
+
+lpsMaxMacNum OBJECT-TYPE
+    SYNTAX   INTEGER
+    MAX-ACCESS   read-write
+    STATUS   current
+    DESCRIPTION
+    "The maximum number of MAC addresses that the LPS port could learn."
+    ::= { learnedPortSecurityEntry 2 }
+
+lpsLoMacRange OBJECT-TYPE
+    SYNTAX   MacAddress
+    MAX-ACCESS   read-write
+    STATUS   current
+    DESCRIPTION
+    "The low end of Mac range which is allowed to be learned on LPS
+     port"
+    ::= { learnedPortSecurityEntry 3 }
+
+lpsHiMacRange OBJECT-TYPE
+    SYNTAX   MacAddress
+    MAX-ACCESS   read-write
+    STATUS   current
+    DESCRIPTION
+    "The high end of Mac range which is allowed to be learned on LPS
+     port"
+    ::= { learnedPortSecurityEntry 4 }
+
+lpsAdminStatus OBJECT-TYPE
+    SYNTAX   INTEGER {
+    up (1),
+    down (2)
+    }
+    MAX-ACCESS   read-write
+    STATUS   current
+    DESCRIPTION
+    "This object specifies the desired administrative state of
+     the Learned Port Security feature on this port. "
+    DEFVAL { up }
+    ::= { learnedPortSecurityEntry 5 }
+
+lpsOperStatus OBJECT-TYPE
+    SYNTAX INTEGER {
+    up(1),
+    down(2),
+    security-violated(3)
+    }
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+      "This object identifies the current operational state of the
+       LPS port."
+    ::= { learnedPortSecurityEntry 6 }
+
+
+lpsRowStatus OBJECT-TYPE
+    SYNTAX   RowStatus
+    MAX-ACCESS   read-write
+    STATUS   current
+    DESCRIPTION
+    "The RowStatus for this table."
+    ::= { learnedPortSecurityEntry 7 }
+
+
+
+--- Learned Port Security MacAddress MIB Table
+
+learnedPortSecurityMacAddressTable OBJECT-TYPE
+    SYNTAX    SEQUENCE OF LearnedPortSecurityMacAddressEntry
+    MAX-ACCESS    not-accessible
+    STATUS   current
+    DESCRIPTION
+        "A table contains Learned Port Security MAC addresses."
+    ::= { alcatelIND1LearnedPortSecurityMIBObjects 2 }
+
+
+learnedPortSecurityMacAddressEntry  OBJECT-TYPE
+    SYNTAX   LearnedPortSecurityMacAddressEntry
+    MAX-ACCESS   not-accessible
+    STATUS   current
+    DESCRIPTION
+    "Definition of the Learned Port Security port security mac-address table entries."
+    INDEX { ifIndex , lpsMacAddress }
+    ::= { learnedPortSecurityMacAddressTable 1 }
+
+
+LearnedPortSecurityMacAddressEntry ::=
+    SEQUENCE {
+ lpsMacAddress
+  MacAddress,
+ lpsMacAddressLearnType
+  INTEGER,
+ lpsMacAddressRowStatus
+  RowStatus
+}
+
+
+lpsMacAddress OBJECT-TYPE
+    SYNTAX   MacAddress
+    MAX-ACCESS   read-write
+    STATUS   current
+    DESCRIPTION
+    "The MacAddress that is either configured or dynamically learnt on the LPS port." 
+    ::= { learnedPortSecurityMacAddressEntry 1 }
+
+lpsMacAddressLearnType OBJECT-TYPE
+    SYNTAX   INTEGER {
+    configured (1),
+    dynamic (2)
+    }
+    MAX-ACCESS   read-only
+    STATUS   current
+    DESCRIPTION
+    "The handle option for LPS violation "
+    ::= { learnedPortSecurityMacAddressEntry 2 }
+
+lpsMacAddressRowStatus OBJECT-TYPE
+    SYNTAX   RowStatus
+    MAX-ACCESS   read-write
+    STATUS   current
+    DESCRIPTION
+    "The RowStatus for this table."
+    ::= { learnedPortSecurityMacAddressEntry 3 }
+
+
+-- Learned Port Security Global Group for configurable paramaters applying to the whole switch.
+
+learnedPortSecurityGlobalGroup OBJECT IDENTIFIER ::= {alcatelIND1LearnedPortSecurityMIBObjects 3 }
+
+lpsLearningWindowTime OBJECT-TYPE
+    SYNTAX   INTEGER
+    MAX-ACCESS   read-write
+    STATUS   current
+    DESCRIPTION
+    "The learning time window that can be configured on the switch to learn new MACs on the 
+     LPS port. This paramater applies to the whole switch."
+    ::= { learnedPortSecurityGlobalGroup 1 }
+
+
+
+--
+-- LPS Traps
+--
+lpsTraps     OBJECT IDENTIFIER ::= { sourceLearningTraps 0 2 }
+lpsTrapsDesc OBJECT IDENTIFIER ::= { lpsTraps 1 }
+lpsTrapsObj  OBJECT IDENTIFIER ::= { lpsTraps 2 }
+
+--
+-- Traps description
+--
+
+-- LPS Security Violation Trap
+
+lpsViolationTrap       NOTIFICATION-TYPE
+    OBJECTS {
+      lpsTrapSwitchName,
+      lpsTrapSwitchIpAddr,
+      lpsTrapSwitchSlice,
+      lpsTrapSwitchPort,
+      lpsTrapViolatingMac,
+      lpsTrapViolationType,
+      systemServicesDate,
+      systemServicesTime
+    }
+    STATUS  current
+    DESCRIPTION
+        "Learned Port Security Violation Trap."
+    ::= { lpsTrapsDesc 0 1 }
+
+
+--
+-- Trap objects
+--
+
+-- Switch Name
+lpsTrapSwitchName        OBJECT-TYPE
+    SYNTAX                    DisplayString (SIZE (1..255))
+    MAX-ACCESS                read-only
+    STATUS                    current
+    DESCRIPTION               "The name of the switch."
+    ::= { lpsTrapsObj 1 }
+
+-- Switch IP
+lpsTrapSwitchIpAddr       OBJECT-TYPE
+    SYNTAX                IpAddress
+    MAX-ACCESS            read-only
+    STATUS                current
+    DESCRIPTION           "The IP address of switch."
+    ::= { lpsTrapsObj 2 }
+
+-- Switch Slice
+lpsTrapSwitchSlice	OBJECT-TYPE
+        SYNTAX          Integer32
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "The physical slice number for the LPS port on which 
+                         violation occured. "
+    ::= { lpsTrapsObj 3 }
+
+-- Switch Port
+lpsTrapSwitchPort	OBJECT-TYPE
+        SYNTAX          Integer32
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "The physical port number on which 
+                         violation occured. "
+    ::= { lpsTrapsObj 4 }
+
+-- Violating Mac Address
+lpsTrapViolatingMac	OBJECT-TYPE
+        SYNTAX          MacAddress
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "The violating MAC address. "
+    ::= { lpsTrapsObj 5 }
+
+-- Violation Type
+lpsTrapViolationType	OBJECT-TYPE
+    SYNTAX              INTEGER {
+                                 learnWindowExpired(1),
+                                 macOutOfRange(2),
+                                 macsLearnLimitReached(3)
+                                }
+    MAX-ACCESS          read-only
+    STATUS              current
+    DESCRIPTION         "The type of violation that occured on the LPS port."
+    ::= { lpsTrapsObj 6 }
+
+
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+-- COMPLIANCE
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+
+alcatelIND1LearnedPortSecurityMIBCompliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+        "Compliance statement for Learned Port Security."
+    MODULE
+        MANDATORY-GROUPS
+        {
+            learnedPortSecurityGroup,
+            learnedPortSecurityMacAddressGroup,
+            learnedPortSecurityGlobGroup,
+            learnedPortSecurityTrapsGroup
+        }
+    ::= { alcatelIND1LearnedPortSecurityMIBCompliances 1 }
+
+
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+-- UNITS OF CONFORMANCE
+-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+learnedPortSecurityGroup OBJECT-GROUP
+   OBJECTS
+   {
+        lpsViolationOption, 
+     	lpsMaxMacNum,
+     	lpsLoMacRange,
+     	lpsHiMacRange,
+        lpsAdminStatus,
+        lpsOperStatus,
+     	lpsRowStatus
+   }
+   STATUS  current
+   DESCRIPTION
+        "Collection of objects for learned port security table."
+   ::= { alcatelIND1LearnedPortSecurityMIBGroups 1 }
+
+learnedPortSecurityMacAddressGroup OBJECT-GROUP
+   OBJECTS
+   {
+        lpsMacAddress,
+        lpsMacAddressLearnType,
+        lpsRowStatus
+   }
+   STATUS  current
+   DESCRIPTION
+        "Collection of objects for learned port security MacAddress table."
+   ::= { alcatelIND1LearnedPortSecurityMIBGroups 2 }
+
+learnedPortSecurityGlobGroup OBJECT-GROUP
+   OBJECTS
+   {
+        lpsLearningWindowTime
+   }
+   STATUS  current
+   DESCRIPTION
+        "Collection of objects for learned port security global group."
+   ::= {alcatelIND1LearnedPortSecurityMIBGroups 3 }
+
+learnedPortSecurityTrapsGroup NOTIFICATION-GROUP
+   NOTIFICATIONS
+   {
+       lpsViolationTrap
+   }
+   STATUS  current
+   DESCRIPTION
+        "Collection of notifications for learned port security."
+   ::= { alcatelIND1LearnedPortSecurityMIBGroups 4 }
+
+
+
+END

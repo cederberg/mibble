@@ -1,0 +1,1614 @@
+--  Copyright (C) 1996 Alcatel Internetworking, Inc., all rights reserved.
+--
+--           Xylan Private Network-Network Interface MIB ASN.1 Specification
+--
+-- File:        mrd.mib
+--
+-- Purpose:     Specifies Xylan's MIB definitions for the Multicast Routing 
+--		Daemon ported from the Mrouted Software.
+--
+-- Conformance: Created proprietary MIB to address specific needs of Xylan.
+--              This MIB does not attempt to conform to any existing Mrouted
+--              MIBS.
+--
+-- Background:  The MIB is proprietary and bears no resemblance no other Mrouted
+--              MIBS.
+--
+--              History
+--              =======
+--               8/6/96    swr  Created
+--
+--              10/19/99   swr Modified INTEGER constants to eliminate zero
+--                         values. Added fields to General Table 
+--                         for enable/disable.
+--                         Added several new tables to the end of the MIB.   
+--
+--              11/07/01   cpc Added comments about mrdEnableDisable being the
+--                             only object which is accessable unless
+--                             and until MRouteD is loaded/enabled.
+--
+
+MRD-MIB DEFINITIONS ::= BEGIN
+ 
+IMPORTS
+    OBJECT-TYPE 				FROM RFC-1212
+    xylanMrouted				FROM XYLAN-BASE-MIB
+    IpAddress                                   FROM RFC1155-SMI;
+
+    mrdMIB OBJECT IDENTIFIER ::= { xylanMrouted 1 }
+
+    mrdMIBObjects OBJECT IDENTIFIER ::= { mrdMIB 1 }
+
+	DisplayString ::=
+       OCTET STRING
+	-- This data type is used to model textual information taken
+	-- from the NVT ASCII character set.  By convention, objects
+	-- with this syntax are declared as having
+	--
+	--      SIZE (0..255)
+
+
+
+--  The General Group ********************************************************
+
+mrdGeneralGroup OBJECT IDENTIFIER ::= { mrdMIBObjects 1 }
+
+mrdVersion  OBJECT-TYPE                           
+        SYNTAX        DisplayString 
+        ACCESS        read-only
+        STATUS        mandatory
+        DESCRIPTION
+            "The current version of Mrouted."
+        ::= { mrdGeneralGroup 1 }
+
+mrdCachedRouteResTime  OBJECT-TYPE                           
+        SYNTAX        INTEGER 
+        ACCESS        read-write
+        STATUS        mandatory
+        DESCRIPTION
+            "The amount of time cached routes stay in memory in seconds.
+	     The minimum value is 300, the maximum value is 86,400."
+        ::= { mrdGeneralGroup 2 }
+
+mrdPruneFlag  OBJECT-TYPE                           
+        SYNTAX        INTEGER { 
+		      pruningrouter(1), 
+		      non-pruningrouter(2)
+		      }
+        ACCESS        read-write
+        STATUS        mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this router is a pruning
+	     router or not."
+        ::= { mrdGeneralGroup 3 }
+
+mrdConfigUpdate  OBJECT-TYPE                           
+        SYNTAX        INTEGER { 
+		      configUpdate(1), 
+		      noConfigUpdate(2) 
+		      }
+        ACCESS        read-write
+        STATUS        mandatory
+        DESCRIPTION
+            "This flag indicates whether or not the system software will
+	     update the online system with the changes entered into the
+	     configuration file.  This will cause a stop and restart of
+	     the Mrouted software."
+        ::= { mrdGeneralGroup 4 }
+
+mrdEnableDisable  OBJECT-TYPE                           
+        SYNTAX        INTEGER { 
+		      doEnable(1),
+		      doDisable(2) 
+		      }
+        ACCESS        read-write
+        STATUS        mandatory
+        DESCRIPTION
+            "The current state of mrouted.  When read this flag
+             indicates whether mrouted is enabled or disabled.
+             Setting this flag to doEnable causes the mrouted software
+             to be loaded.  Setting this flag to doDisable causes the
+             mrouted software to be unloaded.  If this flag indicates
+             that mrouted is disabled, then no other objects within
+             the mrouted MIB can be accessed (because the mrouted
+             software is not loaded on the switch).  In other words,
+             the full mrouted MIB is available only when this flag
+             indicates that mrouted is enabled."
+        ::= { mrdGeneralGroup 5 }
+
+
+-- Interface Boundary Table  **************************************************
+
+mrdIntfBoundaryTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdIntfBoundaryEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdBoundaryTable contains the entries that describe the
+	     mrd boundary table"
+        ::= { mrdMIBObjects 2 }
+ 
+mrdIntfBoundaryEntry OBJECT-TYPE
+        SYNTAX        MrdIntfBoundaryEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a PNNI
+             logical node in this switching system."
+        INDEX         { mrdIntfPhyIntAddr,
+			mrdIntfScopedAddress }
+        ::= { mrdIntfBoundaryTable 1 }
+ 
+MrdIntfBoundaryEntry ::=
+        SEQUENCE {
+                mrdIntfPhyIntAddr           	IpAddress,
+                mrdIntfScopedAddress           	IpAddress,
+                mrdIntfBoundMaskLength         	INTEGER,
+                mrdIntfAdminState           	INTEGER
+                }
+
+mrdIntfPhyIntAddr OBJECT-TYPE
+        SYNTAX        IpAddress
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the physical interface or tunnel address
+	    associated with this boundary entry."
+        ::= { mrdIntfBoundaryEntry 1 }
+ 
+mrdIntfScopedAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the scoped address for the given boundary."
+        ::= { mrdIntfBoundaryEntry 2 }
+ 
+mrdIntfBoundMaskLength OBJECT-TYPE
+        SYNTAX        INTEGER
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value gives the mask length of the scoped address. "
+        ::= { mrdIntfBoundaryEntry 3 }
+ 
+mrdIntfAdminState OBJECT-TYPE
+        SYNTAX        INTEGER {
+			       delete(1),
+			       normal(2)
+			      }
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value gives current state of this interface. "
+        ::= { mrdIntfBoundaryEntry 4 }
+ 
+
+-- Tunnel Boundary Table  **************************************************
+
+mrdTunBoundaryTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdTunBoundaryEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdBoundaryTable contains the entries that describe the
+	     mrd boundary table"
+        ::= { mrdMIBObjects 3 }
+ 
+mrdTunBoundaryEntry OBJECT-TYPE
+        SYNTAX        MrdTunBoundaryEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a PNNI
+             logical node in this switching system."
+        INDEX         { mrdTunLocalAddress,
+			mrdTunRemoteAddress,
+			mrdTunScopedAddress }
+        ::= { mrdTunBoundaryTable 1 }
+ 
+MrdTunBoundaryEntry ::=
+        SEQUENCE {
+                mrdTunLocalAddress           	IpAddress,
+                mrdTunRemoteAddress           	IpAddress,
+                mrdTunScopedAddress           	IpAddress,
+                mrdTunBoundMaskLength          	INTEGER,
+                mrdTunAdminState          	INTEGER
+                }
+
+mrdTunLocalAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the physical interface or tunnel address
+	    associated with this boundary entry."
+        ::= { mrdTunBoundaryEntry 1 }
+ 
+mrdTunRemoteAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the physical interface or tunnel address
+	    associated with this boundary entry."
+        ::= { mrdTunBoundaryEntry 2 }
+ 
+mrdTunScopedAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the scoped address for the given boundary."
+        ::= { mrdTunBoundaryEntry 3 }
+ 
+mrdTunBoundMaskLength OBJECT-TYPE
+        SYNTAX        INTEGER
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value gives the mask length of the scoped address. "
+        ::= { mrdTunBoundaryEntry 4 }
+ 
+mrdTunAdminState OBJECT-TYPE
+        SYNTAX        INTEGER {
+			       delete(1),
+			       normal(2)
+			      }
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value gives current state of this interface. "
+        ::= { mrdTunBoundaryEntry 5 }
+
+-- Alternate Network Table  ************************************************
+
+mrdAltNetTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdAltNetEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdBoundaryTable contains the entries that describe the
+	     mrd boundary table"
+        ::= { mrdMIBObjects 4 }
+ 
+mrdAltNetEntry OBJECT-TYPE
+        SYNTAX        MrdAltNetEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a PNNI
+             logical node in this switching system."
+        INDEX         { mrdAltNetAddr,
+			mrdNetworkAddress }
+        ::= { mrdAltNetTable 1 }
+ 
+MrdAltNetEntry ::=
+        SEQUENCE {
+                mrdAltNetAddr           	IpAddress,
+                mrdNetworkAddress           	IpAddress,
+                mrdANetMaskLength           	INTEGER,
+                mrdANetAdminState           	INTEGER
+                }
+
+mrdAltNetAddr OBJECT-TYPE
+        SYNTAX        IpAddress
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the address of the Physical Interface 
+	     that this alternate network is associated with network."
+        ::= { mrdAltNetEntry 1 }
+ 
+mrdNetworkAddress OBJECT-TYPE
+        SYNTAX        IpAddress
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the network address for the given alternate
+	     network."
+        ::= { mrdAltNetEntry 2 }
+ 
+mrdANetMaskLength OBJECT-TYPE
+        SYNTAX        INTEGER
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value gives the mask length of the alternate network address. "
+        ::= { mrdAltNetEntry 3 }
+
+
+mrdANetAdminState OBJECT-TYPE
+        SYNTAX        INTEGER {
+			       delete(1),
+			       normal(2)
+			      }
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value gives current state of this interface. "
+        ::= { mrdAltNetEntry 4 }
+
+-- Physical Interface Table  ************************************************
+
+mrdInterfaceTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdInterfaceEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+            "The mrdInterfaceTable  contains the entries that 
+	     describe the Multicast Interface table." 
+        ::= { mrdMIBObjects 5 }
+ 
+mrdInterfaceEntry OBJECT-TYPE
+        SYNTAX        MrdInterfaceEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+	DESCRIPTION
+	    "An entry in the table, containing information about a 
+	     Multicast Interace Table."
+
+	INDEX         { mrdIFAddress }
+	::= { mrdInterfaceTable 1 }
+ 
+MrdInterfaceEntry ::=
+	SEQUENCE {
+		mrdIFAddress     IpAddress,
+		mrdIFEnabledFlag INTEGER,
+		mrdIFMetric      INTEGER,
+		mrdIFThreshold   INTEGER,
+		mrdIFRateLimit   INTEGER,
+		mrdIFBoundary    INTEGER,
+		mrdIFAlternateNetwork INTEGER,
+		mrdIFAdminState INTEGER
+		}
+
+mrdIFAddress OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the network address for the given 
+	     multicast interface table entry."
+        ::= { mrdInterfaceEntry 1 }
+ 
+mrdIFEnabledFlag OBJECT-TYPE
+        SYNTAX    INTEGER {
+		  disabled(1),
+		  enabled(2)
+		  }
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates this entry in the Multicast interface table
+	     is enabled or not."
+        ::= { mrdInterfaceEntry 2 }
+ 
+mrdIFMetric OBJECT-TYPE
+        SYNTAX    INTEGER (1..31)
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates path metric for this entry in the Multicast
+	     Interface table."
+        ::= { mrdInterfaceEntry 3 }
+ 
+mrdIFThreshold OBJECT-TYPE
+        SYNTAX    INTEGER (1..31)
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the threshold for this entry in the Multicast
+	     Interface table."
+        ::= { mrdInterfaceEntry 4 }
+ 
+mrdIFRateLimit OBJECT-TYPE
+        SYNTAX    INTEGER 
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the rate limit for this entry in the Multicast
+	     Interface table."
+        ::= { mrdInterfaceEntry 5 }
+ 
+mrdIFBoundary OBJECT-TYPE
+        SYNTAX    INTEGER {
+		  yes(1),
+		  no(2)
+		  }
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not there is a list of boundary
+	     addresses associated with this interface table." 
+        ::= { mrdInterfaceEntry 6 }
+ 
+mrdIFAlternateNetwork OBJECT-TYPE
+        SYNTAX    INTEGER  {
+		  yes(1),
+		  no(2)
+		  }
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates whether or not there is a list of alternate
+	     network addresses associated with this interface."
+        ::= { mrdInterfaceEntry 7 }
+
+
+mrdIFAdminState OBJECT-TYPE
+        SYNTAX        INTEGER {
+			       delete(1),
+			       normal(2)
+			      }
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value gives current state of this interface. "
+        ::= { mrdInterfaceEntry 8 }
+
+-- Tunnel Table  ************************************************
+
+mrdTunnelTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdTunnelEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdTunnelTable  contains the entries that 
+	     describe the Multicast Tunnel table." 
+        ::= { mrdMIBObjects 6 }
+ 
+mrdTunnelEntry OBJECT-TYPE
+        SYNTAX        MrdTunnelEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a 
+	     Multicast Tunnel Table."
+        INDEX         { mrdLocalAddress, 
+			mrdRemoteAddress }
+        ::= { mrdTunnelTable 1 }
+ 
+MrdTunnelEntry ::=
+        SEQUENCE {
+	        mrdLocalAddress    IpAddress,
+		mrdRemoteAddress   IpAddress,
+		mrdTunnelMetric    INTEGER,
+		mrdTunnelThreshold INTEGER,
+		mrdTunnelRateLimit INTEGER,
+                mrdTunnelBoundary  INTEGER,
+                mrdTunnelAdminState    INTEGER
+		}
+
+mrdLocalAddress OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the local network address for the given 
+	     multicast tunnel table entry."
+        ::= { mrdTunnelEntry 1 }
+ 
+mrdRemoteAddress OBJECT-TYPE
+        SYNTAX    IpAddress 
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the remote network address for the given
+	     multicast tunnel."
+        ::= { mrdTunnelEntry 2 }
+ 
+mrdTunnelMetric OBJECT-TYPE
+        SYNTAX    INTEGER (1..31)
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates path metric for this entry in the Multicast
+	     Tunnel table."
+        ::= { mrdTunnelEntry 3 }
+ 
+mrdTunnelThreshold OBJECT-TYPE
+        SYNTAX    INTEGER (1..31)
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the threshold for this entry in the Multicast
+	     Tunnel table."
+        ::= { mrdTunnelEntry 4 }
+ 
+mrdTunnelRateLimit OBJECT-TYPE
+        SYNTAX    INTEGER 
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the rate limit for this entry in the Multicast
+	     Tunnel table."
+        ::= { mrdTunnelEntry 5 }
+ 
+mrdTunnelBoundary OBJECT-TYPE
+        SYNTAX    INTEGER { 
+		  yes(1),
+		  no(2)
+		  }
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not there is a list of boundaries
+	     for this tunnel entry."
+        ::= { mrdTunnelEntry 6 }
+ 
+mrdTunnelAdminState OBJECT-TYPE
+        SYNTAX        INTEGER {
+			       delete(1),
+			       normal(2)
+			      }
+	ACCESS    read-write
+	STATUS	mandatory
+        DESCRIPTION
+            "This value gives current state of this interface. "
+        ::= { mrdTunnelEntry 7 }
+
+-- Group Table  ************************************************
+
+mrdGroupTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdGroupEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdGroupTable contains one entry for each group
+             or subnet that is defined on the switch."
+        ::= { mrdMIBObjects 7 }
+ 
+mrdGroupEntry OBJECT-TYPE
+        SYNTAX        MrdGroupEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a 
+	     Multicast Group Table."
+        INDEX         { mrdGroupID, 
+			mrdGroupVlanMask,
+			mrdGroupSrcIP
+                       }
+        ::= { mrdGroupTable 1 }
+ 
+MrdGroupEntry ::=
+        SEQUENCE {
+	        mrdGroupID          INTEGER,
+		mrdGroupVlanMask    INTEGER,
+		mrdGroupSrcIP       IpAddress,
+		mrdGroupSrcIPNet    IpAddress,
+		mrdGroupSrcNetMask  IpAddress,
+		mrdGroupMetric      INTEGER,
+                mrdGroupThreshold   INTEGER,
+                mrdGroupRate        INTEGER,
+                mrdGroupPacketsIn   INTEGER,
+                mrdGroupPacketsOut  INTEGER,
+                mrdGroupOneWayFlg   INTEGER,
+                mrdGroupDownFlg     INTEGER,
+                mrdGroupDisabledFlg INTEGER,
+                mrdGroupQuerierFlg  INTEGER,
+                mrdGroupSrcRteFlg   INTEGER,
+                mrdGroupLeafFlg     INTEGER,
+                mrdGroupIgmpv1Flg   INTEGER
+		}
+
+mrdGroupID OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan Group of this entry."
+        ::= { mrdGroupEntry 1 }
+ 
+mrdGroupVlanMask OBJECT-TYPE
+        SYNTAX    INTEGER 
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan Mask of the group."
+        ::= { mrdGroupEntry 2 }
+ 
+mrdGroupSrcIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the source IP address of the group."
+        ::= { mrdGroupEntry 3 }
+ 
+mrdGroupSrcIPNet OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the source IP network address of the group."
+        ::= { mrdGroupEntry 4 }
+ 
+mrdGroupSrcNetMask OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains the network mask for the source IP address."
+        ::= { mrdGroupEntry 5 }
+ 
+mrdGroupMetric OBJECT-TYPE
+        SYNTAX    INTEGER 
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the metric for this group."
+        ::= { mrdGroupEntry 6 }
+ 
+mrdGroupThreshold OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This field indicates how may hops the multicast stream can take."
+        ::= { mrdGroupEntry 7 }
+ 
+mrdGroupRate OBJECT-TYPE
+        SYNTAX        INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value describes the maximum data rate allowed on this interface."
+        ::= { mrdGroupEntry 8 }
+
+mrdGroupPacketsIn OBJECT-TYPE
+        SYNTAX        INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value describes the number of packets received on this interface."
+        ::= { mrdGroupEntry 9 }
+
+mrdGroupPacketsOut OBJECT-TYPE
+        SYNTAX        INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value describes the maximum data rate allowed on this interface."
+        ::= { mrdGroupEntry 10 }
+
+mrdGroupOneWayFlg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isOneWay(1),
+		isNotOneWay(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is in one-way mode."
+        ::= { mrdGroupEntry 11 }
+
+mrdGroupDownFlg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isDown(1),
+		isNotDown(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is down."
+        ::= { mrdGroupEntry 12 }
+
+mrdGroupDisabledFlg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isDisabled(1),
+		isNotDisabled(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is disabled."
+        ::= { mrdGroupEntry 13 }
+
+mrdGroupQuerierFlg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isQuerier(1),
+		isNotQuerier(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is a querier."
+        ::= { mrdGroupEntry 14 }
+
+mrdGroupSrcRteFlg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isSourceRouted(1),
+		isNotSourceRouted(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is source routed."
+        ::= { mrdGroupEntry 15 }
+
+mrdGroupLeafFlg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isLeaf(1),
+		isNotLeaf(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is a leaf."
+        ::= { mrdGroupEntry 16 }
+
+mrdGroupIgmpv1Flg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isIgmpV1(1),
+		isNotIgmpV1(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is running IGMP V1."
+        ::= { mrdGroupEntry 17 }
+
+-- Tunnel List Table  ************************************************
+
+mrdTunnelListTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdTunnelListEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdTunnelListTable contains one entry for each group
+             or subnet that is defined on the switch."
+        ::= { mrdMIBObjects 8 }
+ 
+mrdTunnelListEntry OBJECT-TYPE
+        SYNTAX        MrdTunnelListEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a 
+	     Multicast Tunnel List Table."
+        INDEX         { mrdTunnelListGrpID, 
+			mrdTunnelListVlanMask,
+			mrdTunnelListSrcIP,
+			mrdTunnelListDstIP
+                       }
+        ::= { mrdTunnelListTable 1 }
+ 
+MrdTunnelListEntry ::=
+        SEQUENCE {
+	        mrdTunnelListGrpID          INTEGER,
+		mrdTunnelListVlanMask    INTEGER,
+		mrdTunnelListSrcIP       IpAddress,
+		mrdTunnelListDstIP       IpAddress,
+		mrdTunnelListMetric      INTEGER,
+                mrdTunnelListThreshold   INTEGER,
+                mrdTunnelListRate        INTEGER,
+                mrdTunnelListPacketsIn   INTEGER,
+                mrdTunnelListPacketsOut  INTEGER,
+                mrdTunnelListOneWayFlg   INTEGER,
+                mrdTunnelListDownFlg     INTEGER,
+                mrdTunnelListDisabledFlg INTEGER,
+                mrdTunnelListQuerierFlg  INTEGER,
+                mrdTunnelListSrcRteFlg   INTEGER,
+                mrdTunnelListLeafFlg     INTEGER,
+                mrdTunnelListIgmpv1Flg   INTEGER
+		}
+
+mrdTunnelListGrpID OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan Group of this entry."
+        ::= { mrdTunnelListEntry 1 }
+ 
+mrdTunnelListVlanMask OBJECT-TYPE
+        SYNTAX    INTEGER 
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan Mask of the tunnel."
+        ::= { mrdTunnelListEntry 2 }
+ 
+mrdTunnelListSrcIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the source IP address of the tunnel."
+        ::= { mrdTunnelListEntry 3 }
+ 
+mrdTunnelListDstIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the destination or remote IP address of the tunnel."
+        ::= { mrdTunnelListEntry 4 }
+ 
+mrdTunnelListMetric OBJECT-TYPE
+        SYNTAX    INTEGER 
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the metric for this tunnel."
+        ::= { mrdTunnelListEntry 5 }
+ 
+mrdTunnelListThreshold OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This field indicates how may hops the multicast stream can take."
+        ::= { mrdTunnelListEntry 6 }
+ 
+mrdTunnelListRate OBJECT-TYPE
+        SYNTAX        INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value describes the maximum data rate allowed on this interface."
+        ::= { mrdTunnelListEntry 7 }
+
+mrdTunnelListPacketsIn OBJECT-TYPE
+        SYNTAX        INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value describes the number of packets received on this interface."
+        ::= { mrdTunnelListEntry 8 }
+
+mrdTunnelListPacketsOut OBJECT-TYPE
+        SYNTAX        INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value describes the maximum data rate allowed on this interface."
+        ::= { mrdTunnelListEntry 9 }
+
+mrdTunnelListOneWayFlg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isOneWay(1),
+		isNotOneWay(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is in one-way mode."
+        ::= { mrdTunnelListEntry 10 }
+
+mrdTunnelListDownFlg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isDown(1),
+		isNotDown(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is down."
+        ::= { mrdTunnelListEntry 11 }
+
+mrdTunnelListDisabledFlg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isDisabled(1),
+		isNotDisabled(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is disabled."
+        ::= { mrdTunnelListEntry 12 }
+
+mrdTunnelListQuerierFlg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isQuerier(1),
+		isNotQuerier(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is a querier."
+        ::= { mrdTunnelListEntry 13 }
+
+mrdTunnelListSrcRteFlg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isSourceRouted(1),
+		isNotSourceRouted(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is source routed."
+        ::= { mrdTunnelListEntry 14 }
+
+mrdTunnelListLeafFlg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isLeaf(1),
+		isNotLeaf(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is a leaf."
+        ::= { mrdTunnelListEntry 15 }
+
+mrdTunnelListIgmpv1Flg OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isIgmpV1(1),
+		isNotIgmpV1(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this interface is running IGMP V1."
+        ::= { mrdTunnelListEntry 16 }
+
+-- Peer Table  ************************************************
+
+mrdPeerTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdPeerEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdPeerTable contains one entry for each group
+             or subnet that is defined on the switch."
+        ::= { mrdMIBObjects 9 }
+ 
+mrdPeerEntry OBJECT-TYPE
+        SYNTAX        MrdPeerEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a 
+	     Multicast Tunnel List Table."
+        INDEX         { mrdPeerGrpID, 
+			mrdPeerVlanMask,
+			mrdPeerSrcIP,
+			mrdPeerPeerIP
+                       }
+        ::= { mrdPeerTable 1 }
+ 
+MrdPeerEntry ::=
+        SEQUENCE {
+	        mrdPeerGrpID         INTEGER,
+		mrdPeerVlanMask      INTEGER,
+		mrdPeerSrcIP         IpAddress,
+		mrdPeerPeerIP        IpAddress,
+		mrdPeerMajorLevel    INTEGER,
+                mrdPeerMinorLevel    INTEGER,
+                mrdPeerTimer         INTEGER,
+                mrdPeerFlags         INTEGER,
+                mrdPeerLeafFlag      INTEGER,
+                mrdPeerPruneFlag     INTEGER,
+                mrdPeerGenIdFlag     INTEGER,
+                mrdPeerMtraceFlag    INTEGER
+		}
+
+mrdPeerGrpID OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan Group of this entry."
+        ::= { mrdPeerEntry 1 }
+ 
+mrdPeerVlanMask OBJECT-TYPE
+        SYNTAX    INTEGER 
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan Mask of this entry."
+        ::= { mrdPeerEntry 2 }
+ 
+mrdPeerSrcIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the source IP address of the interface."
+        ::= { mrdPeerEntry 3 }
+ 
+mrdPeerPeerIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the IP address of the peer."
+        ::= { mrdPeerEntry 4 }
+ 
+mrdPeerMajorLevel OBJECT-TYPE
+        SYNTAX    INTEGER 
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the major version level of this peer."
+        ::= { mrdPeerEntry 5 }
+ 
+mrdPeerMinorLevel OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This field indicates the minor version level of this peer."
+        ::= { mrdPeerEntry 6 }
+ 
+mrdPeerTimer OBJECT-TYPE
+        SYNTAX        INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the number of seconds since a neighbor probe has 
+             been received."
+        ::= { mrdPeerEntry 7 }
+
+mrdPeerFlags OBJECT-TYPE
+        SYNTAX        INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value describes the raw contents of the peer's flag byte."
+        ::= { mrdPeerEntry 8 }
+
+mrdPeerLeafFlag OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isALeaf(1),
+		isNotALeaf(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this peer is a leaf."
+        ::= { mrdPeerEntry 9 }
+
+mrdPeerPruneFlag OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isAPruningRouter(1),
+		isNotAPruningRouter(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this peer supports pruning."
+        ::= { mrdPeerEntry 10 }
+
+mrdPeerGenIdFlag OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isIncludingGenID(1),
+		isNotIncludingGenID(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this peer includes the genid
+             and rtlist in probes."
+        ::= { mrdPeerEntry 11 }
+
+mrdPeerMtraceFlag OBJECT-TYPE
+        SYNTAX        INTEGER {
+		isSupportingMtrace(1),
+		isNotSupportingMtrace(2)
+		}
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This flag indicates whether or not this peer supports mtrace
+             requests."
+        ::= { mrdPeerEntry 12 }
+
+-- Alternet Network List Table  ************************************************
+
+mrdAltNetList OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdAltNetListEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdAltNetListTable contains one entry for each alternate
+             Network that is currently running in the switch."
+        ::= { mrdMIBObjects 10 }
+ 
+mrdAltNetListEntry OBJECT-TYPE
+        SYNTAX        MrdAltNetListEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about an 
+	     Alternate Network List Table."
+        INDEX         { mrdAltNetListGrpID, 
+			mrdAltNetListVlanMask,
+			mrdAltNetListSrcIP,
+			mrdAltNetListAltNetIP
+                       }
+        ::= { mrdAltNetList 1 }
+ 
+MrdAltNetListEntry ::=
+        SEQUENCE {
+	        mrdAltNetListGrpID         INTEGER,
+		mrdAltNetListVlanMask      INTEGER,
+		mrdAltNetListSrcIP         IpAddress,
+		mrdAltNetListAltNetIP      IpAddress,
+		mrdAltNetListAltNetNetMask IpAddress
+		}
+
+mrdAltNetListGrpID OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan Group of this entry."
+        ::= { mrdAltNetListEntry 1 }
+ 
+mrdAltNetListVlanMask OBJECT-TYPE
+        SYNTAX    INTEGER 
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan Mask of this entry."
+        ::= { mrdAltNetListEntry 2 }
+ 
+mrdAltNetListSrcIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the source IP address of the interface."
+        ::= { mrdAltNetListEntry 3 }
+ 
+mrdAltNetListAltNetIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the IP address of the Alternate Network."
+        ::= { mrdAltNetListEntry 4 }
+ 
+mrdAltNetListAltNetNetMask OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains the network mask for the Alternate Network IP address."
+        ::= { mrdAltNetListEntry 5 }
+
+-- Boundary List Table  ************************************************
+
+mrdBoundaryList OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdBoundaryListEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdBoundaryListTable contains one entry for each boundary
+             entry that is running in the switch."
+        ::= { mrdMIBObjects 11 }
+ 
+mrdBoundaryListEntry OBJECT-TYPE
+        SYNTAX        MrdBoundaryListEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a 
+	     Boundary List Table."
+        INDEX         { mrdBoundaryListGrpID, 
+			mrdBoundaryListVlanMask,
+			mrdBoundaryListSrcIP,
+			mrdBoundaryListBoundaryIP
+                       }
+        ::= { mrdBoundaryList 1 }
+ 
+MrdBoundaryListEntry ::=
+        SEQUENCE {
+	        mrdBoundaryListGrpID           INTEGER,
+		mrdBoundaryListVlanMask        INTEGER,
+		mrdBoundaryListSrcIP           IpAddress,
+		mrdBoundaryListBoundaryIP      IpAddress,
+		mrdBoundaryListBoundaryNetMask IpAddress
+		}
+
+mrdBoundaryListGrpID OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan Group of this entry."
+        ::= { mrdBoundaryListEntry 1 }
+ 
+mrdBoundaryListVlanMask OBJECT-TYPE
+        SYNTAX    INTEGER 
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan Mask of this entry."
+        ::= { mrdBoundaryListEntry 2 }
+ 
+mrdBoundaryListSrcIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the source IP address of the interface."
+        ::= { mrdBoundaryListEntry 3 }
+ 
+mrdBoundaryListBoundaryIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the IP address of the Boundary entry."
+        ::= { mrdBoundaryListEntry 4 }
+ 
+mrdBoundaryListBoundaryNetMask OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains the network mask for the Boundary Network IP address."
+        ::= { mrdBoundaryListEntry 5 }
+
+-- Group Membership Table  ************************************************
+
+mrdGroupMemTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdGroupMemEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdGroupMem contains one entry for each Multicast Group membership
+             entry that is running in the switch."
+        ::= { mrdMIBObjects 12 }
+ 
+mrdGroupMemEntry OBJECT-TYPE
+        SYNTAX        MrdGroupMemEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a 
+	     Group Membership Table."
+        INDEX         { mrdGroupMemGrpID, 
+			mrdGroupMemVlanMask,
+			mrdGroupMemSrcIP,
+			mrdGroupMemIP
+                       }
+        ::= { mrdGroupMemTable 1 }
+ 
+MrdGroupMemEntry ::=
+        SEQUENCE {
+	        mrdGroupMemGrpID      INTEGER,
+		mrdGroupMemVlanMask   INTEGER,
+		mrdGroupMemSrcIP      IpAddress,
+		mrdGroupMemIP         IpAddress,
+		mrdGroupMemTimer      INTEGER 
+		}
+
+mrdGroupMemGrpID OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan Group of this entry."
+        ::= { mrdGroupMemEntry 1 }
+ 
+mrdGroupMemVlanMask OBJECT-TYPE
+        SYNTAX    INTEGER 
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan Mask of this entry."
+        ::= { mrdGroupMemEntry 2 }
+ 
+mrdGroupMemSrcIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the source IP address of the interface."
+        ::= { mrdGroupMemEntry 3 }
+ 
+mrdGroupMemIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the IP address of the IP Multicast group membership."
+        ::= { mrdGroupMemEntry 4 }
+ 
+mrdGroupMemTimer OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the number of seconds before this membership times out."
+        ::= { mrdGroupMemEntry 5 }
+ 
+-- Forwarding Table  ************************************************
+
+mrdForwardingTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdForwardingEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdForwardingTable contains one entry for each entry in the
+             forwarding table on the switch."
+        ::= { mrdMIBObjects 13 }
+ 
+mrdForwardingEntry OBJECT-TYPE
+        SYNTAX        MrdForwardingEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a 
+	     Forwarding Table."
+        INDEX         { mrdForwardingSrcIP, 
+			mrdForwardingDstIP,
+			mrdForwardingGrpID,
+			mrdForwardingVlanMask
+                       }
+        ::= { mrdForwardingTable 1 }
+ 
+MrdForwardingEntry ::=
+        SEQUENCE {
+	        mrdForwardingSrcIP       IpAddress,
+		mrdForwardingDstIP       IpAddress,
+		mrdForwardingGrpID       INTEGER,
+		mrdForwardingVlanMask    INTEGER,
+	 	mrdForwardingSrcGrpID    INTEGER,
+	 	mrdForwardingSrcVlanMask INTEGER
+		}
+
+mrdForwardingSrcIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Source IP address of this multicast stream."
+        ::= { mrdForwardingEntry 1 }
+ 
+mrdForwardingDstIP OBJECT-TYPE
+        SYNTAX    IpAddress 
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the destination IP address of this multicast stream."
+        ::= { mrdForwardingEntry 2 }
+ 
+mrdForwardingGrpID OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Destination Group ID for this multicast stream."
+        ::= { mrdForwardingEntry 3 }
+ 
+mrdForwardingVlanMask OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan mask of the forwarding group."
+        ::= { mrdForwardingEntry 4 }
+ 
+mrdForwardingSrcGrpID OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains the Vlan Group ID where this stream originates."
+        ::= { mrdForwardingEntry 5 }
+ 
+mrdForwardingSrcVlanMask OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains the Vlan mask of the source group."
+        ::= { mrdForwardingEntry 6 }
+
+-- Prune Table  ************************************************
+
+mrdPruneTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdPruneEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdPruneTable contains one entry for each entry in the
+             prune table on the switch."
+        ::= { mrdMIBObjects 14 }
+ 
+mrdPruneEntry OBJECT-TYPE
+        SYNTAX        MrdPruneEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a 
+	     Prune Table."
+        INDEX         { mrdPruneDstGroup, 
+			mrdPrunePruningRouter
+                       }
+        ::= { mrdPruneTable 1 }
+ 
+MrdPruneEntry ::=
+        SEQUENCE {
+	        mrdPruneDstGroup      IpAddress,
+		mrdPrunePruningRouter IpAddress,
+		mrdPruneGrpID         INTEGER,
+		mrdPruneVlanMask      INTEGER,
+	 	mrdPruneTimer         INTEGER
+		}
+
+mrdPruneDstGroup OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Destination IP address that is being pruned."
+        ::= { mrdPruneEntry 1 }
+ 
+mrdPrunePruningRouter OBJECT-TYPE
+        SYNTAX    IpAddress 
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the IP address of the router that is pruning."
+        ::= { mrdPruneEntry 2 }
+ 
+mrdPruneGrpID OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Group ID of the pruning router."
+        ::= { mrdPruneEntry 3 }
+ 
+mrdPruneVlanMask OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Vlan mask of the pruning router."
+        ::= { mrdPruneEntry 4 }
+ 
+mrdPruneTimer OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains the timer value associated with this prune entry."
+        ::= { mrdPruneEntry 5 }
+
+-- Route Table  ************************************************
+
+mrdRouteTable OBJECT-TYPE
+        SYNTAX        SEQUENCE OF MrdRouteEntry
+        ACCESS        not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "The mrdRouteTable contains one entry for each entry in the
+             forwarding table on the switch."
+        ::= { mrdMIBObjects 15 }
+ 
+mrdRouteEntry OBJECT-TYPE
+        SYNTAX        MrdRouteEntry
+        ACCESS    not-accessible
+	STATUS	mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a 
+	     Route Table."
+        INDEX         { mrdRouteOriginIP, 
+			mrdRouteGatewayIP,
+			mrdRouteGrpID,
+			mrdRouteVlanMask,
+			mrdRouteTunFlag
+                       }
+        ::= { mrdRouteTable 1 }
+ 
+MrdRouteEntry ::=
+        SEQUENCE {
+	        mrdRouteOriginIP    IpAddress,
+		mrdRouteOriginMask  IpAddress,
+		mrdRouteGatewayIP   IpAddress,
+		mrdRouteGrpID       INTEGER,
+	 	mrdRouteVlanMask    INTEGER,
+	 	mrdRouteLeafFlag    INTEGER,
+	 	mrdRouteTunFlag     INTEGER,
+	 	mrdRouteSrcGrpID    INTEGER,
+	 	mrdRouteSrcVlanMask INTEGER,
+	 	mrdRouteMetric      INTEGER,
+	 	mrdRouteTimer       INTEGER
+		}
+
+mrdRouteOriginIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the IP address of origin of this route."
+        ::= { mrdRouteEntry 1 }
+ 
+mrdRouteOriginMask OBJECT-TYPE
+        SYNTAX    IpAddress 
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the network mask of the origin."
+        ::= { mrdRouteEntry 2 }
+ 
+mrdRouteGatewayIP OBJECT-TYPE
+        SYNTAX    IpAddress
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the IP address of the gateway."
+        ::= { mrdRouteEntry 3 }
+ 
+mrdRouteGrpID OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS    read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value indicates the Group ID for which the entry has a route."
+        ::= { mrdRouteEntry 4 }
+ 
+mrdRouteVlanMask OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains the Vlan mask for the group."
+        ::= { mrdRouteEntry 5 }
+ 
+mrdRouteLeafFlag OBJECT-TYPE
+        SYNTAX    INTEGER {
+             isLeaf(1),
+             isNotLeaf(2)
+        }
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains a flag indicating if the router in the route
+             entry is a leaf router or not."
+        ::= { mrdRouteEntry 6 }
+
+mrdRouteTunFlag OBJECT-TYPE
+        SYNTAX    INTEGER {
+             isTunnel(1),
+             isNotTunnel(2)
+        }
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains a flag indicating if the router in the route
+             entry is a tunnel or not."
+        ::= { mrdRouteEntry 7 }
+
+mrdRouteSrcGrpID OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains the Vlan group of the interface that received
+             this route entry."
+        ::= { mrdRouteEntry 8 }
+
+mrdRouteSrcVlanMask OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains the Vlan mask of the source group."
+        ::= { mrdRouteEntry 9 }
+
+mrdRouteMetric OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains the metric for this route."
+        ::= { mrdRouteEntry 10 }
+
+mrdRouteTimer OBJECT-TYPE
+        SYNTAX    INTEGER
+	ACCESS   read-only
+	STATUS	mandatory
+        DESCRIPTION
+            "This value contains the timer value for this route entry."
+        ::= { mrdRouteEntry 11 }
+
+END

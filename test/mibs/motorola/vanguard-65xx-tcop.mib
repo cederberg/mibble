@@ -1,0 +1,901 @@
+        -- Version 1.5, modified 02/12/98
+
+        TCOP-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+            Counter, Gauge
+                FROM RFC1155-SMI
+
+            OBJECT-TYPE
+                FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                      codex OBJECT IDENTIFIER ::= { enterprises 449 }
+         cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                    cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+      cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+    cdx6500CfgProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 1 }
+cdx6500PCTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 1 }
+
+          cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+   cdx6500StatProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 1 }
+cdx6500PSTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 1 }
+
+            cdx6500Controls OBJECT IDENTIFIER ::= { cdx6500 4 }
+
+        -- Textual conventions
+
+        Counter16 ::= INTEGER (0..65535)
+
+        DisplayString ::= OCTET STRING
+
+        -- The TCOP Port Configuration Table
+
+        cdx6500PPCTTCOPPortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPCTTCOPPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table contains TCOP Port configuration parameters."
+        ::= { cdx6500PCTPortProtocolGroup 23 }
+
+        cdx6500PPCTTCOPPortEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPCTTCOPPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each PortEntry contains the configuration
+                 parameters for one TCOP port."
+            INDEX { cdx6500TCOPCfgPortNumber }
+        ::= { cdx6500PPCTTCOPPortTable 1 }
+
+        Cdx6500PPCTTCOPPortEntry ::=
+            SEQUENCE {
+                cdx6500TCOPCfgPortNumber
+                    INTEGER,
+                cdx6500TCOPCfgSubtype
+                    INTEGER,
+                cdx6500TCOPCfgClockSource
+                    INTEGER,
+                cdx6500TCOPCfgClockSpeed
+                    INTEGER,
+                cdx6500TCOPCfgContention
+                    INTEGER,
+                cdx6500TCOPCfgCodeType
+                    INTEGER,
+                cdx6500TCOPCfgReceiveByteCount
+                    INTEGER,
+                cdx6500TCOPCfgCallControl
+                    INTEGER,
+                cdx6500TCOPCfgAutoCallMnem
+                    DisplayString,
+                cdx6500TCOPCfgAutoCallTO
+                    INTEGER,
+                cdx6500TCOPCfgMaxAutoCallTries
+                    INTEGER,
+                cdx6500TCOPCfgPortAddress
+                    DisplayString,
+                cdx6500TCOPCfgProtocolID
+                    DisplayString,
+                cdx6500TCOPCfgEnableBill
+                    INTEGER,
+                cdx6500TCOPCfgRestrictConn
+                    DisplayString,
+                cdx6500TCOPCfgRXQueue
+                    INTEGER,
+                cdx6500TCOPCfgTXQueue
+                    INTEGER,
+                cdx6500TCOPCfgQueueOverflow
+                    INTEGER,
+                cdx6500TCOPCfgPortType
+                    INTEGER,
+                cdx6500TCOPCfgDataTransmission
+                    INTEGER
+                }
+
+        cdx6500TCOPCfgPortNumber OBJECT-TYPE
+            SYNTAX INTEGER(1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port number of the port being used by TCOP."
+        ::= { cdx6500PPCTTCOPPortEntry 1 }
+
+        cdx6500TCOPCfgSubtype OBJECT-TYPE
+            SYNTAX INTEGER {
+                    hsc3  (1),
+                    gnet  (2),
+                    uts   (3),
+                    slc   (4),
+                    ac100 (5)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Select the sub-type for the synchronous protocol
+                 running on this port.
+                 hsc3  - Transparent Hitachi type
+                 gnet  - Transparent GNET type.
+                 uts   - Transparent Uniscope type.
+                 slc   - Synchronous Link Control.
+                 ac100 - AC100."
+        ::= { cdx6500PPCTTCOPPortEntry 2 }
+
+        cdx6500TCOPCfgClockSource OBJECT-TYPE
+            SYNTAX INTEGER {
+                    int (1),
+                    ext (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "int - internal clock source
+                 ext - external clock source on pins 18 and 24."
+        ::= { cdx6500PPCTTCOPPortEntry 3 }
+
+        cdx6500TCOPCfgClockSpeed OBJECT-TYPE
+            SYNTAX INTEGER (1200..80000)
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "This is the port speed in bits per second,
+                 when clock source = int."
+        ::= { cdx6500PPCTTCOPPortEntry 4 }
+          
+        cdx6500TCOPCfgContention OBJECT-TYPE
+            SYNTAX INTEGER {
+                    hdx (1),
+                    fdx (2)
+                    } 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "Specifies the line contention.
+                 hdx - Half duplex, DCD toggles
+                 fdx - Full duplex, DCD is always high."
+        ::= { cdx6500PPCTTCOPPortEntry 5 }
+
+        cdx6500TCOPCfgCodeType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    ascii  (1),
+                    ebcdic (2)
+                    } 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "Either of ascii or ebcdic code set is used."
+        ::= { cdx6500PPCTTCOPPortEntry 6 }
+
+        cdx6500TCOPCfgReceiveByteCount OBJECT-TYPE
+            SYNTAX INTEGER (8..127) 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "Specifies the number of bytes collected from the
+                 line before data is forwarded to the network.
+                 A minimum byte count constraint is imposed for 
+                 port speed intervals as shown in the following
+                 pairs of (port speed in bps, minimum byte count):
+                 (19200 to 80000, 127); (9600 to 19200, 64);
+                 (4800 to 9600, 32); (2400 to 4800, 16);
+                 (below 2400, 8)."
+        ::= { cdx6500PPCTTCOPPortEntry 7 }
+
+        cdx6500TCOPCfgCallControl OBJECT-TYPE
+            SYNTAX INTEGER {
+                    none (1),
+                    auto (2)
+                    } 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "none - port will generate a call
+                 auto - Autocalling enabled."
+        ::= { cdx6500PPCTTCOPPortEntry 8 }
+
+        cdx6500TCOPCfgAutoCallMnem OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8)) 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "This mnemonic name is used for Auto calling."
+        ::= { cdx6500PPCTTCOPPortEntry 9 }
+
+        cdx6500TCOPCfgAutoCallTO OBJECT-TYPE
+            SYNTAX INTEGER (5..255) 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "Specifies the time in seconds between call
+                 attempts when autocalling."
+        ::= { cdx6500PPCTTCOPPortEntry 10 }
+
+        cdx6500TCOPCfgMaxAutoCallTries OBJECT-TYPE
+            SYNTAX INTEGER (0..255) 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "Specifies the maximum number of times the TCOP port
+                 will attempt to call. A value of 0 will allow
+                 unlimited number of attempts."
+        ::= { cdx6500PPCTTCOPPortEntry 11 }
+
+        cdx6500TCOPCfgPortAddress OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..15)) 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "The BCD address specified here is inserted in
+                 the calling address field when the TCOP port
+                 makes a call."
+        ::= { cdx6500PPCTTCOPPortEntry 12 }
+
+        cdx6500TCOPCfgProtocolID OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8)) 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "The protocol identifier specified here is
+                 inserted into a call packet or checked against
+                 the identifier of an incoming call."
+        ::= { cdx6500PPCTTCOPPortEntry 13 }
+
+        cdx6500TCOPCfgEnableBill OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off (1),
+                    on  (2)
+                    } 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "This controls whether billing (accounting) records
+                 will be created for calls on this TCOP port."
+        ::= { cdx6500PPCTTCOPPortEntry 14 }
+
+        cdx6500TCOPCfgRestrictConn OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..32)) 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "Specifies the destination of all calls routed
+                 to from this port, regardless of route selection
+                 table entries. For example, to route calls to
+                 port 1, use P1. To route calls to port 2,
+                 station 4, use P2S4. To route call to X25
+                 port 2, enter X25-2. Blank this field to disable
+                 this functionality."
+        ::= { cdx6500PPCTTCOPPortEntry 15 }
+
+        cdx6500TCOPCfgRXQueue OBJECT-TYPE
+            SYNTAX INTEGER (0..500) 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "Specifies the maximum number of received 
+                 messages to be queued. This parameter is 
+                 effective only when sub-type = gnet."
+        ::= { cdx6500PPCTTCOPPortEntry 16 }
+
+        cdx6500TCOPCfgTXQueue OBJECT-TYPE
+            SYNTAX INTEGER (0..500) 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "Specifies the maximum number of transmit messages to 
+                 be queued. This parameter is effective only when 
+                 sub-type = gnet."
+        ::= { cdx6500PPCTTCOPPortEntry 17 }
+
+        cdx6500TCOPCfgQueueOverflow OBJECT-TYPE
+            SYNTAX INTEGER {
+                    resetConnection (1),
+                    dropMessage     (2),
+                    flushQueue      (3),
+                    eotMessage      (4)
+                    } 
+            ACCESS read-only
+            STATUS mandatory 
+            DESCRIPTION
+                "Specifies the action to be taken if the receive
+                 message queue overflows. This parameter is
+                 effective only when sub-type = gnet.
+                 resetConnection - Reset connections
+                 dropMessage     - Drop the message causing overflow
+                 flushQueue      - Flush the queue
+                 eotMessage      - Flush the queue when receiving
+                                   message terminated with EOT."
+        ::= { cdx6500PPCTTCOPPortEntry 18 }
+
+        cdx6500TCOPCfgPortType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    tcop (27)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The Port Type of the port."
+        ::= { cdx6500PPCTTCOPPortEntry 19 }
+
+        cdx6500TCOPCfgDataTransmission OBJECT-TYPE
+            SYNTAX INTEGER {
+                    hdx (1),
+                    fdx (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This determines the mode of data transfer.
+                 hdx - Indicates half duplex data transfer.
+                 fdx - Indicates full duplex data transfer."
+        ::= { cdx6500PPCTTCOPPortEntry 20 }
+
+        --  TCOP Port Statistics
+          
+        cdx6500PPSTTCOPPortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPSTTCOPPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This table holds statistics items for TCOP ports."
+        ::= { cdx6500PSTPortProtocolGroup 24 }
+          
+        cdx6500PPSTTCOPPortEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPSTTCOPPortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "This entry holds the statistics items for one TCOP port."
+            INDEX { cdx6500TCOPStatPortNumber }
+        ::= { cdx6500PPSTTCOPPortTable 1 }
+          
+        Cdx6500PPSTTCOPPortEntry ::=
+            SEQUENCE {
+                cdx6500TCOPStatPortNumber
+                    INTEGER,
+                cdx6500TCOPStatPortType
+                    INTEGER,
+                cdx6500TCOPStatPortSubtype
+                    INTEGER,
+                cdx6500TCOPStatPortStatus
+                    DisplayString,
+                cdx6500TCOPStatPortState
+                    INTEGER,
+                cdx6500TCOPStatPortSpeed
+                    INTEGER,
+                cdx6500TCOPStatPortUtilIn
+                    INTEGER,
+                cdx6500TCOPStatPortUtilOut
+                    INTEGER,
+                cdx6500TCOPStatPortOverrunErrs
+                    Counter16,
+                cdx6500TCOPStatPortUnderrunErrs
+                    Counter16,
+                cdx6500TCOPStatPortBCCErrs
+                    Counter16,
+                cdx6500TCOPStatPortParityErrs
+                    Counter16,
+                cdx6500TCOPStatPortInChars
+                    Counter,
+                cdx6500TCOPStatPortOutChars
+                    Counter,
+                cdx6500TCOPStatPortInCharsRate
+                    INTEGER,
+                cdx6500TCOPStatPortOutCharsRate
+                    INTEGER,
+                cdx6500TCOPStatPortInMessages
+                    Counter,
+                cdx6500TCOPStatPortOutMessages
+                    Counter,
+                cdx6500TCOPStatPortInMessagesRate
+                    INTEGER,
+                cdx6500TCOPStatPortOutMessagesRate
+                    INTEGER,
+                cdx6500TCOPStatPortInPktsQueued
+                    INTEGER,
+                cdx6500TCOPStatPortOutPktsQueued
+                    INTEGER,
+                cdx6500TCOPStatPortMaxInQueueLength
+                    Gauge,
+                cdx6500TCOPStatPortMaxOutQueueLength
+                    Gauge,
+                cdx6500TCOPStatPortPktQueueFlushCount
+                    INTEGER,
+                cdx6500TCOPStatAutoCallStatus
+                    DisplayString,
+                cdx6500TCOPStatAutoCallNextAttempt
+                    INTEGER,
+                cdx6500TCOPStatAutoCallAttemptCount
+                    Counter,
+                cdx6500TCOPStatAutoCallLastClearCause
+                    INTEGER,
+                cdx6500TCOPStatAutoCallLastClearDiagnosis
+                    INTEGER,
+                cdx6500TCOPStatAutoCallLastInCalledAddress
+                    DisplayString,
+                cdx6500TCOPStatAutoCallLastInCallingAddress
+                    DisplayString,
+                cdx6500TCOPStatAutoCallLastInCallFacilities
+                    DisplayString,
+                cdx6500TCOPStatAutoCallLastInCallCUD
+                    DisplayString,
+                cdx6500TCOPStatAutoCallLastOutCalledAddress
+                    DisplayString,
+                cdx6500TCOPStatAutoCallLastOutCallingAddress
+                    DisplayString,
+                cdx6500TCOPStatAutoCallLastOutCallFacilities
+                    DisplayString,
+                cdx6500TCOPStatAutoCallLastOutCallCUD
+                    DisplayString
+                }
+
+                        
+        cdx6500TCOPStatPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The port number for this TCOP entry."
+        ::= { cdx6500PPSTTCOPPortEntry 1 }
+
+        cdx6500TCOPStatPortType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    tcop (27)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The configured value of the Port Type."
+        ::= { cdx6500PPSTTCOPPortEntry 2 }
+
+        cdx6500TCOPStatPortSubtype OBJECT-TYPE
+            SYNTAX INTEGER {
+                    hsc3 (1),
+                    gnet (2),
+                    uts  (3),
+                    slc  (4),
+                    alc  (5) 
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Access protocol for this port.
+                 hsc3 - Transparent Hitachi type
+                 gnet - Transparent GNET type.
+                 uts   - Transparent Uniscope type.
+                 slc   - Synchronous Link Control.
+                 ac100 - AC100."
+        ::= { cdx6500PPSTTCOPPortEntry 3 }
+
+        cdx6500TCOPStatPortStatus OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(2..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Status of this port:
+                 Up       : Port is enabled
+                 Down     : Port is Inactive
+                 Disabled : Port is disabled."
+        ::= { cdx6500PPSTTCOPPortEntry 4 }
+
+        cdx6500TCOPStatPortState OBJECT-TYPE
+            SYNTAX INTEGER {
+                    discPhase    (1),
+                    callingPhase (2),
+                    calledPhase  (3),
+                    connected    (4)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current port state:
+                 discPhase    - Disconnect phase, no call in place
+                 callingPhase - Port has initiated Autocall
+                 calledPhase  - Port has received a call request
+                 connected    - Connection has been established."
+        ::= { cdx6500PPSTTCOPPortEntry 5 }
+
+        cdx6500TCOPStatPortSpeed OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The measured port speed in bits per second."
+        ::= { cdx6500PPSTTCOPPortEntry 6 }
+
+        cdx6500TCOPStatPortUtilIn OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Percentage of port bandwidth in use."
+        ::= { cdx6500PPSTTCOPPortEntry 7 }
+
+        cdx6500TCOPStatPortUtilOut OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Percentage of port bandwidth in use."
+        ::= { cdx6500PPSTTCOPPortEntry 8 }
+
+        cdx6500TCOPStatPortOverrunErrs OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of overrun errors counted by the I/O
+                 driver since the last node or statistics reset."
+        ::= { cdx6500PPSTTCOPPortEntry 9 }
+
+        cdx6500TCOPStatPortUnderrunErrs OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of underrun errors counted by the I/O
+                 driver since the last node or statistics reset."
+        ::= { cdx6500PPSTTCOPPortEntry 10 }
+
+        cdx6500TCOPStatPortBCCErrs OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of CRC errors counted by the I/O
+                 driver since the last node or statistics reset."
+        ::= { cdx6500PPSTTCOPPortEntry 11 }
+
+        cdx6500TCOPStatPortParityErrs OBJECT-TYPE
+            SYNTAX Counter16
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of parity errors counted by the I/O
+                 driver since the last node or statistics reset."
+        ::= { cdx6500PPSTTCOPPortEntry 12 }
+
+        cdx6500TCOPStatPortInChars OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received since last node,
+                 port or statistics reset."
+        ::= { cdx6500PPSTTCOPPortEntry 13 }
+
+        cdx6500TCOPStatPortOutChars OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters sent since last node,
+                 port or statistics reset."
+        ::= { cdx6500PPSTTCOPPortEntry 14 }
+
+        cdx6500TCOPStatPortInCharsRate OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of characters received per second
+                 since last node, port or statistics reset."
+        ::= { cdx6500PPSTTCOPPortEntry 15 }
+
+        cdx6500TCOPStatPortOutCharsRate OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of characters sent per second
+                 since last node, port or statistics reset."
+        ::= { cdx6500PPSTTCOPPortEntry 16 }
+
+        cdx6500TCOPStatPortInMessages OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of messages received since last node,
+                 port or statistics reset."
+        ::= { cdx6500PPSTTCOPPortEntry 17 }
+
+        cdx6500TCOPStatPortOutMessages OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of messages sent since last node,
+                 port or statistics reset."
+        ::= { cdx6500PPSTTCOPPortEntry 18 }
+
+        cdx6500TCOPStatPortInMessagesRate OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of messages received per second
+                 since last node, port or statistics reset."
+        ::= { cdx6500PPSTTCOPPortEntry 19 }
+
+        cdx6500TCOPStatPortOutMessagesRate OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of messages sent per second
+                 since last node, port or statistics reset."
+        ::= { cdx6500PPSTTCOPPortEntry 20 }
+
+        cdx6500TCOPStatPortInPktsQueued OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of received packets which are currently queued."
+        ::= { cdx6500PPSTTCOPPortEntry 21 }
+
+        cdx6500TCOPStatPortOutPktsQueued OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets currently queued which are to be sent."
+        ::= { cdx6500PPSTTCOPPortEntry 22 }
+
+        cdx6500TCOPStatPortMaxInQueueLength OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The maximum queue length reached for incoming
+                 packets since the last reset."
+        ::= { cdx6500PPSTTCOPPortEntry 23 }
+
+        cdx6500TCOPStatPortMaxOutQueueLength OBJECT-TYPE
+            SYNTAX Gauge
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The maximum queue length reached since 
+                 the last reset, for packets to be sent."
+        ::= { cdx6500PPSTTCOPPortEntry 24 }
+
+        cdx6500TCOPStatPortPktQueueFlushCount OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of times the receive queue is flushed."
+        ::= { cdx6500PPSTTCOPPortEntry 25 }
+
+        cdx6500TCOPStatAutoCallStatus OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current status of the autocall."
+        ::= { cdx6500PPSTTCOPPortEntry 26 }
+
+        cdx6500TCOPStatAutoCallNextAttempt OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time in seconds until next autocall attempt."
+        ::= { cdx6500PPSTTCOPPortEntry 27 }
+
+        cdx6500TCOPStatAutoCallAttemptCount OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of autocall attempts."
+        ::= { cdx6500PPSTTCOPPortEntry 28 }
+
+        cdx6500TCOPStatAutoCallLastClearCause OBJECT-TYPE
+            SYNTAX INTEGER {
+                    dte (1),
+                    np  (2),
+                    occ (3),
+                    nc  (4),
+                    inv (5),
+                    na  (6),
+                    err (7),
+                    rpe (8),
+                    der (9),
+                    rna (10),
+                    roo (11),
+                    icd (12),
+                    fsn (13),
+                    ctp (14),
+                    sha (15)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Last autocall clear cause code
+                 dte - Cleared by other end
+                 np  - Destination not obtainable
+                 occ - Called number busy
+                 nc  - Network congested
+                 inv - Invalid facility requested
+                 na  - Access barred
+                 err - Local procedure error
+                 rpe - Remote procedure error
+                 der - Called number out of order
+                 rna - Reverse charging not accepted
+                 roo - RPOA out of order
+                 icd - Incompatible destination
+                 fsn - Fast select acceptance not subscribed
+                 ctp - Control port intervention
+                 sha - Ship absent."
+        ::= { cdx6500PPSTTCOPPortEntry 29 }
+
+        cdx6500TCOPStatAutoCallLastClearDiagnosis OBJECT-TYPE
+            SYNTAX INTEGER {
+                    none  (1),
+                    bps   (2),
+                    bpr   (3),
+                    ptinv (4),
+                    pna   (5),
+                    psh   (6),
+                    pln   (7),
+                    tout  (8),
+                    tcli  (9),
+                    nocs  (10),
+                    nofc  (11),
+                    nofp  (12),
+                    cald  (13),
+                    cali  (14),
+                    invfl (15),
+                    icb   (16),
+                    nolcn (17),
+                    cco   (18),
+                    dupl  (19),
+                    nadl  (20),
+                    nfcl  (21),
+                    nfce  (22),
+                    trp   (23),
+                    clin  (24),
+                    cldn  (25),
+                    ncil  (26),
+                    ccpo  (27),
+                    csld  (28),
+                    cshe  (29),
+                    finl  (30),
+                    rin3  (31),
+                    disc  (32),
+                    dm    (33),
+                    sabm  (34),
+                    frmr  (35),
+                    invnr (36),
+                    unsf  (37),
+                    ucmd  (38),
+                    uresp (39),
+                    gtcap (40),
+                    t1to  (41),
+                    frlen (42),
+                    aderr (43),
+                    spbo  (44),
+                    dpbo  (45),
+                    srr   (46)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Last clear diagnostic code
+                 none  - No more information 
+                 bps   - Invalid P(S)
+                 bpr   - Invalid P(R)
+                 ptinv - Packet type invalid
+                 pna   - Packet not allowed
+                 psh   - Packet too short
+                 pln   - Packet too long
+                 tout  - Timer expired
+                 tcli  - Timer expired for clear indication
+                 nocs  - Call set-up problem
+                 nofc  - Facility/registration code not allowed
+                 nofp  - Facility/registration parameter not allowed
+                 cald  - Bad called address
+                 cali  - Bad calling address
+                 invfl - Invalid facilities length
+                 icb   - Incoming call barred
+                 nolcn - No logical channel available
+                 cco   - Call collision occurred
+                 dupl  - Duplicate facility requested
+                 nadl  - Non-zero address length
+                 nfcl  - Non-zero facility length
+                 nfce  - Facility not found when expected
+                 trp   - Temporary routing problem
+                 clin  - Call limit reached on intermediate node
+                 cldn  - Call limit reached on destination node
+                 ncil  - No logical channel available on internode link
+                 ccpo  - Call cleared by Control Port operator
+                 csld  - Call setup looping detected
+                 cshe  - Call setup hop count exceeded
+                 finl  - Failure on intermediate node link
+                 rin3  - Restart received at level 3
+                 disc  - DISC received at level 2
+                 dm    - DM received at level 2
+                 sabm  - SABM received at level 2
+                 frmr  - FRMR received at level 2
+                 invnr - Invalid N(R)
+                 unsf  - Unsolicited F bit received
+                 ucmd  - Unknown command received
+                 uresp - Unknown response received
+                 gtcap - I field too long
+                 t1to  - T1/N2 timeout
+                 frlen - Received frame of incorrect size
+                 aderr - Address error
+                 spbo  - Source port is in Busy Out state
+                 dpbo  - Destination port is in Busy Out state
+                 srr   - Session reconnection rejected."
+        ::= { cdx6500PPSTTCOPPortEntry 30 }
+
+        cdx6500TCOPStatAutoCallLastInCalledAddress OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..15))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "X25 called address in BCD format of last inbound call."
+        ::= { cdx6500PPSTTCOPPortEntry 31 }
+
+        cdx6500TCOPStatAutoCallLastInCallingAddress OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..15))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "X25 calling address in BCD format of last inbound call."
+        ::= { cdx6500PPSTTCOPPortEntry 32 }
+
+        cdx6500TCOPStatAutoCallLastInCallFacilities OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "X25 facilities of inbound call."
+        ::= { cdx6500PPSTTCOPPortEntry 33 }
+
+        cdx6500TCOPStatAutoCallLastInCallCUD OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "X25 Call User Data of inbound call."
+        ::= { cdx6500PPSTTCOPPortEntry 34 }
+
+        cdx6500TCOPStatAutoCallLastOutCalledAddress OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "X25 called address in BCD format of last outbound call."
+        ::= { cdx6500PPSTTCOPPortEntry 35 }
+
+        cdx6500TCOPStatAutoCallLastOutCallingAddress OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "X25 calling address in BCD format of last outbound call."
+        ::= { cdx6500PPSTTCOPPortEntry 36 }
+
+        cdx6500TCOPStatAutoCallLastOutCallFacilities OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "X25 facilities of outbound call."
+        ::= { cdx6500PPSTTCOPPortEntry 37 }
+
+        cdx6500TCOPStatAutoCallLastOutCallCUD OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "X25 Call User Data of outbound call."
+        ::= { cdx6500PPSTTCOPPortEntry 38 }
+
+        END

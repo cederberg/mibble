@@ -1,0 +1,1374 @@
+-- HP Enterprise Switch Configuration MIB 
+
+
+          CONFIG-MIB DEFINITIONS ::= BEGIN
+
+          IMPORTS
+                       enterprises, IpAddress
+                           FROM RFC1155-SMI
+                       OBJECT-TYPE
+			   FROM RFC-1212
+                       DisplayString, RowStatus
+                           FROM SNMPv2-TC
+		       IANAifType
+			   FROM IANAifType-MIB;
+
+
+          hp		OBJECT IDENTIFIER ::= { enterprises 11 }
+          nm		OBJECT IDENTIFIER ::= { hp 2 }
+	  icf		OBJECT IDENTIFIER ::= { nm 14 }
+
+          -- type.
+          Timeout ::= INTEGER -- a STP timer in units of 1/100 seconds
+
+          -- Icf Devices 
+
+          hpicfObjects  OBJECT IDENTIFIER ::= { icf 11 }
+          hpicfSwitch   OBJECT IDENTIFIER ::= { hpicfObjects 5 }
+          hpSwitch      OBJECT IDENTIFIER ::= { hpicfSwitch  1 }
+
+          -- Icf Switch Specific 
+	  hpConfig      OBJECT IDENTIFIER ::= { hpSwitch 7 }
+
+          MacAddress ::= OCTET STRING (SIZE (6))    -- a 6 octet address
+                                                    -- in the
+                                                    -- "canonical"
+                                                    -- order
+
+	  VlanID ::= INTEGER (1..65535)
+
+          ConfigStatus ::= INTEGER {
+	active(1),
+		notInService(2),
+		notReady(3)
+		}
+
+          -- ###########################################################
+          -- the hpConfig Group
+
+          -- This group contains switch configuration related variables.
+          -- ###########################################################
+
+	  hpSwitchConfig   OBJECT IDENTIFIER ::= { hpConfig 1 }
+
+	  hpSwitchSystemConfig  OBJECT IDENTIFIER ::= { hpSwitchConfig 1 }
+
+          hpSwitchAutoReboot OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     yes(1),
+                     no(2)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "If the value of this variable was set to yes(1), booting will
+	     conditionally enable all application modules-the spanning tree,
+	     IP and IPX etc.. Otherwise every application module must be 
+	     manually enabled through Network Control Language Interpreter's
+	     ENABLE command."
+          ::= { hpSwitchSystemConfig 1 }
+          
+          hpSwitchTimeZone OBJECT-TYPE
+	  SYNTAX  INTEGER (-1440..1440)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The number of minutes to the west of Greenwich Mean Time(GMT).
+	     For a location ease of GMT, use a negative integer."
+          ::= { hpSwitchSystemConfig 2 }
+          
+          hpSwitchDaylightTimeRule OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     none(1),
+		     alaska(2),
+		     canadaAndContinentalUS(3),
+		     middleEuropeAndPortugal(4),
+		     southernHemisphere(5),
+		     westernEurop(6),
+	             userDefined(7)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The daylight savings time rule for use by the Internet's RFC 868
+	     Time protocol."
+          ::= { hpSwitchSystemConfig 3 }
+
+          hpSwitchDaylightBeginningMonth OBJECT-TYPE
+          SYNTAX  INTEGER (1..12)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The month that daylight saving time starts if DaylightTimeRule
+             is set to userDefined."
+          ::= { hpSwitchSystemConfig 4 }
+
+          hpSwitchDaylightBeginningDay OBJECT-TYPE
+          SYNTAX  INTEGER (1..31)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The day of the month that daylight saving time starts 
+             if DaylightTimeRule is set to userDefined."
+          ::= { hpSwitchSystemConfig 5 }
+
+          hpSwitchDaylightEndingMonth OBJECT-TYPE
+          SYNTAX  INTEGER (1..12)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The month that daylight saving time ends if DaylightTimeRule
+             is set to userDefined."
+          ::= { hpSwitchSystemConfig 6 }
+
+          hpSwitchDaylightEndingDay OBJECT-TYPE
+          SYNTAX  INTEGER (1..31)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The day of the month that daylight saving time emds
+             if DaylightTimeRule is set to userDefined."
+          ::= { hpSwitchSystemConfig 7 }
+          
+          hpSwitchSystemConfigStatus OBJECT-TYPE
+          SYNTAX  ConfigStatus
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+	    "The configuration status of this group of objects. If one or more
+	     variables in this group were reconfigurated since last reboot and
+	     required reboot to take effect, the value of this variable will be
+	     set to notInService."
+          ::= { hpSwitchSystemConfig 8 }
+
+          hpSwitchSystemPortLEDMode OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     link-activity(1),
+                     link-only(2)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+            "The mode of the port LED can be either link/activity (link for 
+             3 seconds then activity thereafter) or link-only."
+          ::= { hpSwitchSystemConfig 9 }
+
+          
+	  hpSwitchConsoleConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 2 }
+
+          hpSwitchTelnetAdminStatus OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+          ACCESS  read-write
+          STATUS  obsolete
+          DESCRIPTION
+	    "The status of the console telnet operation."
+          ::= { hpSwitchConsoleConfig 1 }
+
+          hpSwitchTerminalType OBJECT-TYPE
+	  SYNTAX  INTEGER {
+		      vt100(2),
+		      ansi(4)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "Terminal type of the console device."
+          ::= { hpSwitchConsoleConfig 2 }
+          
+
+          hpSwitchConsoleRefRate OBJECT-TYPE
+	  SYNTAX  INTEGER {
+		      refRate1(1),
+		      refRate3(3),
+		      refRate5(5),
+		      refRate10(10),
+		      refRate20(20),
+		      refRate30(30),
+		      refRate45(45),
+		      refRate(60)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The rate, in second per cycle, at which the display of various
+	     switch measurements."
+          ::= { hpSwitchConsoleConfig 3 }
+          
+
+          hpSwitchDisplayedEvent OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     none(1),
+                     major(2),
+                     notInfo(3),
+                     all(4),
+                     debug(5)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The type of event messages are automatically displayed on the
+	     console."
+          ::= { hpSwitchConsoleConfig 4 }
+
+          hpSwitchConsoleConfigStatus OBJECT-TYPE
+          SYNTAX  ConfigStatus
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+	    "The configuration status of this group of objects. If one or more
+	     variables in this group were reconfigurated since last reboot and
+	     required reboot to take effect, the value of this variable will be
+	     set to notInService."
+          ::= { hpSwitchConsoleConfig 5 }
+ 
+
+         
+ 	  hpSwitchPortConfig    OBJECT IDENTIFIER ::= { hpSwitchConfig 3 }
+
+ 	  hpSwitchPortTable  OBJECT-TYPE
+          SYNTAX  SEQUENCE OF HpSwitchPortEntry
+          ACCESS  not-accessible
+          STATUS  mandatory
+          DESCRIPTION
+            "A table that contains information about the 
+             current port status in this device."
+          ::= { hpSwitchPortConfig 1 }
+
+          hpSwitchPortEntry   OBJECT-TYPE
+          SYNTAX     HpSwitchPortEntry
+          ACCESS     not-accessible
+          STATUS     mandatory
+          DESCRIPTION
+            "Information about a specific port status in 
+             this device."
+          INDEX      { hpSwitchPortIndex }
+          ::= { hpSwitchPortTable 1 }
+       
+          HpSwitchPortEntry ::=
+          SEQUENCE {
+               hpSwitchPortIndex              INTEGER,
+               hpSwitchPortType               IANAifType,
+               hpSwitchPortDescr              DisplayString,
+               hpSwitchPortAdminStatus        INTEGER,
+               hpSwitchPortEtherMode          INTEGER,
+               hpSwitchPortVgMode             INTEGER,
+               hpSwitchPortLinkbeat           INTEGER,
+               hpSwitchPortTrunkGroup         INTEGER,
+               hpSwitchPortBcastLimit         INTEGER,
+               hpSwitchPortFastEtherMode      INTEGER,
+               hpSwitchPortFlowControl        INTEGER,
+           --  hpSwitchPortBcastPktLimit      INTEGER,
+	       hpSwitchPortTrunkType	      INTEGER
+          }
+       
+	  hpSwitchPortIndex OBJECT-TYPE
+	  SYNTAX  INTEGER (1..65535)
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+            "The ifIndex value which uniquely identifies a row in the
+             Interfaces Table."
+          ::= { hpSwitchPortEntry 1 }
+          
+
+	  hpSwitchPortType OBJECT-TYPE
+	  SYNTAX  IANAifType
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+            "The ifType value."
+          ::= { hpSwitchPortEntry 2 }
+          
+          hpSwitchPortDescr OBJECT-TYPE
+	  SYNTAX      DisplayString (SIZE (0..255))
+	  ACCESS      read-only
+	  STATUS      mandatory
+          DESCRIPTION
+	    "A textual string containing information about the
+	     interface."
+	  ::= { hpSwitchPortEntry 3 }
+
+
+          hpSwitchPortAdminStatus OBJECT-TYPE
+	  SYNTAX  INTEGER {
+		     enable(1),
+		     disable(2)
+		  }
+          ACCESS  read-write
+	  STATUS  obsolete
+	  DESCRIPTION
+	    "The desired state of the interface. This variable is
+	     similar to the ifAdminStatus but instead of keeping
+	     the operational status, this variable maintain the
+	     desired state in the configuration data base."
+          ::= { hpSwitchPortEntry 4 }
+
+	  hpSwitchPortEtherMode OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     half-duplex(1),
+                     full-duplex(2)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The type of transmission on this port. This variable is valid
+	     only if the hpSwitchPortType was Ethernet."
+          ::= { hpSwitchPortEntry 5 }
+
+	  hpSwitchPortVgMode OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     master(1),
+                     endNode(2),
+                     autoDetect(3)
+                     }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The type of transmission on this port. This variable is valid
+	     only if the hpSwitchPortType was VG."
+          ::= { hpSwitchPortEntry 6 }
+
+	  hpSwitchPortLinkbeat OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+            "The linkbeat status of this port."
+          ::= { hpSwitchPortEntry 7 }
+         
+	  hpSwitchPortTrunkGroup OBJECT-TYPE
+	  SYNTAX  INTEGER (0..65535)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The trunk group this port belong to."
+          ::= { hpSwitchPortEntry 8 }
+          
+          hpSwitchPortBcastLimit OBJECT-TYPE
+	  SYNTAX  INTEGER (0..99)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The percentage of network bandwidth consumed by broadcast
+             traffic through this port. If the value of this variable
+	     is 0, there will be no broadcast limit."
+          ::= { hpSwitchPortEntry 9 }
+
+	  hpSwitchPortFastEtherMode OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     half-duplex-10Mbits(1),
+                     half-duplex-100Mbits(2),
+                     full-duplex-10Mbits(3),
+                     full-duplex-100Mbits(4),
+                     auto-neg(5)
+                     }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The type of transmission on this port. This variable is valid
+	     only if the hpSwitchPortType was Fast Ethernet."
+          ::= { hpSwitchPortEntry 10 }
+
+	  hpSwitchPortFlowControl OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     disable(1),
+                     enable(2)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+            "The Flow Control of this port."
+          ::= { hpSwitchPortEntry 11}
+
+          -- hpSwitchPortBcastPktLimit OBJECT-TYPE
+	  -- SYNTAX  INTEGER (0..1500000) 
+          -- ACCESS  read-write
+          -- STATUS  mandatory
+          -- DESCRIPTION
+	  --   "Network bandwidth in packets per second consumed by broadcast
+          --    traffic through this port. If the value of this variable
+	  --    is 0, there will be no broadcast limit."
+          -- ::= { hpSwitchPortEntry 12 }
+         
+
+	  hpSwitchPortTrunkType OBJECT-TYPE
+	  SYNTAX  INTEGER {
+		     trunk(1), 
+		     fecAuto(2),
+                     saTrunk(3)
+		  }
+	  ACCESS  read-write
+	  STATUS  mandatory
+	  DESCRIPTION
+	    "Used in conjunction with hpSwitchPortTrunkGroup to determine
+	     what type of trunk and which group it belongs to.  If 
+	     hpSwitchPortTrunkGroup is set to 0, trunking is disabled on
+	     the port and this variable becomes a 'don't care'"
+	  ::= { hpSwitchPortEntry 13 }
+
+          hpSwitchPortConfigStatus OBJECT-TYPE
+          SYNTAX  ConfigStatus
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+	    "The configuration status of this group of objects. If one or 
+             more variables in this group were reconfigurated since last 
+             reboot and required reboot to take effect, the value of this 
+             variable will be set to notInService."
+          ::= { hpSwitchPortConfig 2 }
+
+	  hpSwitchIpxConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 4 }
+
+          hpSwitchIpxConfigStatus OBJECT-TYPE
+	  SYNTAX  ConfigStatus
+	  ACCESS  read-only
+	  STATUS  mandatory
+	  DESCRIPTION
+	    "The status of the IPX configuration table."
+          ::= { hpSwitchIpxConfig 2 }
+
+	  hpSwitchIpConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 5 }
+
+          hpSwitchIpTimepAdminStatus OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     manual(1),
+                     disable(2),
+                     dhcp(3)
+                  }
+          ACCESS     read-write
+          STATUS     mandatory
+          DESCRIPTION
+            "The operational status of the Time protocol." 
+          ::= { hpSwitchIpConfig 1 }
+       
+          hpSwitchIpTimepServerAddr OBJECT-TYPE
+          SYNTAX     IpAddress
+          ACCESS     read-write
+          STATUS     mandatory
+          DESCRIPTION
+            "The IP address of the Time server." 
+          ::= { hpSwitchIpConfig 2 }
+       
+          hpSwitchIpTimepPollInterval OBJECT-TYPE
+          SYNTAX     INTEGER (1..65535)
+          ACCESS     read-write
+          STATUS     mandatory
+          DESCRIPTION
+            "The client poll interval of the Time server
+             in minute." 
+          ::= { hpSwitchIpConfig 3 }
+   
+          hpSwitchIpConfigStatus OBJECT-TYPE
+          SYNTAX  ConfigStatus
+          ACCESS  read-only
+          STATUS  obsolete
+          DESCRIPTION
+	    "The configuration status of the Timep and IP related objects."
+          ::= { hpSwitchIpConfig 5 }
+
+
+          hpSwitchSerialLinkConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 6 }
+
+          hpSwitchSLinkBaudRate OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     speedSense(1),
+		     baudRate300(2),
+		     baudRate600(3),
+		     baudRate1200(4),
+		     baudRate2400(5),
+	             baudRate4800(6),
+		     baudRate9600(7),
+		     baudRate19200(8),
+	             baudRate38400(9),
+	             baudRate57600(10),
+	             baudRate115200(11)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The rate of data transfer between the console and the node.
+	     baudRate1 is speed sense."
+          ::= { hpSwitchSerialLinkConfig 1 }
+
+          hpSwitchSLinkFlowCtrl OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     none(1),
+                     xonXoff(2),
+                     robustXonXoff(3)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The flow-control mechanism between the console and the switch."
+          ::= { hpSwitchSerialLinkConfig 2 }
+
+          hpSwitchSLinkConnInactTime OBJECT-TYPE
+          SYNTAX  INTEGER (0..120)
+	  ACCESS  read-write
+	  STATUS  mandatory
+	  DESCRIPTION
+	    "The number of minutes to wait after no character was input to
+	     log out the console. Valid values are 0(not to log out of the
+	     console for inactivity) through 120(two hours)."
+          ::= { hpSwitchSerialLinkConfig 3 }
+
+          hpSwitchSLinkModemConnTime OBJECT-TYPE
+          SYNTAX  INTEGER (0..300)
+	  ACCESS  read-write
+	  STATUS  mandatory
+	  DESCRIPTION
+	    "The number of seconds to wait for data mode and clear to send
+	     and receiver ready signals after asserting request to send and
+	     terminal ready signals. Valid values are 0(switch will wait
+	     forever for the modem) through 300(5 minutes)."
+          ::= { hpSwitchSerialLinkConfig 4 }
+
+          hpSwitchSLinkModemLostRecvTime OBJECT-TYPE
+          SYNTAX  INTEGER (0..5000)
+	  ACCESS  read-write
+	  STATUS  mandatory
+	  DESCRIPTION
+	    "The number of milliseconds the receiver ready signal is allowed
+	     to drop before the switch will disconnect the modem. Valid values
+	     are 0(the switch will wait forever) through 5000 (5 seconds)."
+          ::= { hpSwitchSerialLinkConfig 5 }
+
+          hpSwitchSLinkModemDisConnTime OBJECT-TYPE
+          SYNTAX  INTEGER (0..60)
+          ACCESS  read-write
+          STATUS  mandatory
+	  DESCRIPTION
+            "The number of seconds to wait after the modem is disconnected
+	     before allowing the modem to be reconnected. Valid values are
+             0(allow a connection as soon as possible, the default) through
+             60 (1 minute)."
+          ::= { hpSwitchSerialLinkConfig 6 }
+
+          hpSwitchSLinkParity OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     parityNone(1),
+		     parityOdd(2),
+		     parityEven(3)
+                  }
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+	    "The type of parity to use between the console and the node."
+          ::= { hpSwitchSerialLinkConfig 7 }
+
+          hpSwitchSLinkCharBits OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     char8Bits(1),
+		     char7Bits(2)
+                  }
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+	    "The number of bits per character to use between the console 
+             and the node."
+          ::= { hpSwitchSerialLinkConfig 8 }
+
+          hpSwitchSLinkStopBits OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     stop1Bits(1),
+		     stop1andHalfBits(2),
+		     stop2Bits(3)
+                  }
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+	    "The number of stop bots to use when communicating between 
+             the console and the node."
+          ::= { hpSwitchSerialLinkConfig 9 }
+
+          hpSwitchSLinkConfigStatus OBJECT-TYPE
+          SYNTAX  ConfigStatus
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+	    "The configuration status of this group of objects. If one or more
+	     variables in this group were reconfigurated since last reboot and
+	     required reboot to take effect, the value of this variable will be
+	     set to notInService."
+          ::= { hpSwitchSerialLinkConfig 10 }
+
+
+          hpSwitchFilterConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 8 }
+
+          -- A sample of the traffic filter
+
+          -- type      MacAddr   ProType  SrcPort       PortMask
+
+          -- unicast   MAC address    X     port #    Bit Mask of ports
+          -- multicast MAC address    X        X      Bit Mask of ports
+          -- port           X         X     port #    Bit Mask of ports
+          -- level 3        X      protocol    X      Bit Mask of ports
+
+	  hpSwitchFilterConfigTable    OBJECT-TYPE
+          SYNTAX  SEQUENCE OF HpSwitchFilterConfigEntry
+          ACCESS  not-accessible
+          STATUS     mandatory
+          DESCRIPTION
+            "A table that contains information about the 
+             traffic filter configuration in this device."
+          ::= { hpSwitchFilterConfig 1 }
+
+ 	  hpSwitchFilterConfigEntry   OBJECT-TYPE
+          SYNTAX     HpSwitchFilterConfigEntry
+          ACCESS     not-accessible
+          STATUS     mandatory
+          DESCRIPTION
+            "Information about a traffic filter configuration 
+             in this device."
+          INDEX      { hpSwitchFilterIndex }
+          ::= { hpSwitchFilterConfigTable 1 }
+       
+          HpSwitchFilterConfigEntry ::=
+          SEQUENCE {
+               hpSwitchFilterIndex          INTEGER,
+               hpSwitchFilterType           INTEGER,
+               hpSwitchFilterSrcPort        INTEGER,
+               hpSwitchFilterMacAddr        MacAddress,
+               hpSwitchFilterProtocolType   INTEGER,
+	       hpSwitchFilterPortMask       OCTET STRING,
+	       hpSwitchFilterEntryStatus    RowStatus
+          }
+       
+	  hpSwitchFilterIndex OBJECT-TYPE
+	  SYNTAX  INTEGER (1..65535)
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+	    "An index that uniquely identifies a traffic filter for which
+	     this entry contains information."
+          ::= { hpSwitchFilterConfigEntry 1 }
+          
+	  hpSwitchFilterType OBJECT-TYPE
+	  SYNTAX  INTEGER {
+	             multicast(1),
+		     level-3(2),
+		     port(3),
+		     unicast(4)
+		  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The type of filter."
+	  ::= { hpSwitchFilterConfigEntry 2 }
+          
+	  hpSwitchFilterSrcPort OBJECT-TYPE
+	  SYNTAX  INTEGER (1..65535)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+            "This variable is required when a port filter or unicast filter
+	     was configurated. It will be ignored otherwise."
+          ::= { hpSwitchFilterConfigEntry 3 }
+         
+	  hpSwitchFilterMacAddr OBJECT-TYPE
+	  SYNTAX  MacAddress
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+            "This variable is valid only if a unicast or multicast filter
+	     was defined. It will be ignored otherwise."
+          ::= { hpSwitchFilterConfigEntry 4 }
+         
+	  hpSwitchFilterProtocolType OBJECT-TYPE
+	  SYNTAX  INTEGER (1..65535)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+            "This variable is valid only if a level-3 filter was defined.
+	     It will be ignored otherwise. This variable will contain either
+	     a etherType(DIX Ethernet) or SAP(IEEE 802) value of the level-3
+	     protocol."
+          ::= { hpSwitchFilterConfigEntry 5 }
+         
+	  hpSwitchFilterPortMask OBJECT-TYPE
+	  SYNTAX  OCTET STRING 
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "This variable specifies a group of ports whose traffic will be
+	     filtered. Each octet within the value of this object specifies
+	     a set of eight ports, with the first octet specifying ports 1
+	     through 8, the second octet specifying ports 9 through 16, etc.
+	     Within each octet, the most significant bit represents the
+	     lowest numbered port, and the least significant bit represents
+	     the highest numbered port.  Thus, each port of the switch is
+	     represented by a single bit within the value of this object."
+          ::= { hpSwitchFilterConfigEntry 6 }
+
+	  hpSwitchFilterEntryStatus OBJECT-TYPE
+	  SYNTAX  RowStatus
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The status of a filter entry."
+          ::= { hpSwitchFilterConfigEntry 7 }
+
+          
+	  hpSwitchProbeConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 9 }
+
+	  hpSwitchProbeType OBJECT-TYPE
+	  SYNTAX  INTEGER {
+		      ports(1),
+		      vlan(2)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "If the value of this variable is equal to 1, the probe will
+	     monitor those ports specified by hpSwitchProbedPortMask,
+	     otherwise all of the port belong to the virtual LAN specified
+	     by hpSwitchProbedVlanId will be monitored."
+          ::= { hpSwitchProbeConfig 1 }
+
+	  hpSwitchProbedVlanId OBJECT-TYPE
+	  SYNTAX  VlanID
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The probed virtual LAN."
+          ::= { hpSwitchProbeConfig 2 }
+
+	  hpSwitchProbePort OBJECT-TYPE
+	  SYNTAX  INTEGER (1..65535)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The port that every packet passes through those probed ports
+	     will be copied to."
+          ::= { hpSwitchProbeConfig 3 }
+
+	  hpSwitchProbeAdminStatus OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The operational status of the probing function"
+          ::= { hpSwitchProbeConfig 4 }
+
+	  hpSwitchProbedPortMask OBJECT-TYPE
+	  SYNTAX  OCTET STRING
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "This variable specifies a group of ports which will be probed.
+	     Each octet within the value of this object specifies a set of
+	     eight ports, with the first octet specifying ports 1 through 8,
+	     the second octet specifying ports 9 through 16, etc. Within each
+	     octet, the most significant bit represents the lowest numbered
+	     port, and the least significant bit represents the highest
+	     numbered port.  Thus, each port of the switch is represented
+	     by a single bit within the value of this object."
+          ::= { hpSwitchProbeConfig  5 }
+
+        
+          -- The FDDI IP Fragmention Configuration group
+
+          hpSwitchFddiIpFragConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 11 }
+        
+          -- The FDDI IP Fragmention Configuration Table
+        
+          hpSwitchFddiIpFragConfigTable OBJECT-TYPE 
+          SYNTAX  SEQUENCE OF HpSwitchFddiIpFragConfigEntry 
+          ACCESS  not-accessible 
+          STATUS  mandatory
+          DESCRIPTION 
+                "A list of IP fragmentation configuration 
+                parameters for the FDDI cards in the switch." 
+          ::= { hpSwitchFddiIpFragConfig 1 } 
+
+          hpSwitchFddiIpFragConfigEntry OBJECT-TYPE
+          SYNTAX  HpSwitchFddiIpFragConfigEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                " An Fddi IP fragmentation entry which is 
+                containing configurable options for the FDDI 
+                cards in the switch."
+          INDEX   {  hpSwitchFddiIpFragConfigIndex }
+          ::= { hpSwitchFddiIpFragConfigTable 1 }
+
+          HpSwitchFddiIpFragConfigEntry ::=
+          SEQUENCE {
+                hpSwitchFddiIpFragConfigIndex
+                        INTEGER,
+                hpSwitchFddiIpFragConfigStatus
+                        INTEGER
+          }
+          
+          hpSwitchFddiIpFragConfigIndex OBJECT-TYPE
+          SYNTAX  INTEGER (1..65535)
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+                " A unique value for each FDDI Card.  
+                The value for each FDDI card must remain constant 
+                at least from one re-initialization of the entity's 
+                network management system to the next 
+                re-initialization." 
+          ::= { hpSwitchFddiIpFragConfigEntry 1 }
+
+          hpSwitchFddiIpFragConfigStatus OBJECT-TYPE
+          SYNTAX  INTEGER {
+                enable(1),
+                disable(2)
+                }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+                " The operational status of FDDI IP fragmentation
+                for each FDDI card. 
+                enable(1): FDDI card will fragment all packets which
+                        are bigger then the Ethernet packet size 
+                        limitation, 1518 Bytes.
+                disable(2): FDDI card will drop all packets which
+                        are bigger then the Ethernet packet size 
+                        limitation, 1518 Bytes."
+          ::= { hpSwitchFddiIpFragConfigEntry 2 }
+
+          hpSwitchABCConfig OBJECT IDENTIFIER ::= {hpSwitchConfig 12 }
+
+          hpSwitchABCConfigTable OBJECT-TYPE
+          SYNTAX  SEQUENCE OF HpSwitchABCConfigEntry
+          ACCESS  not-accessible
+          STATUS  mandatory
+          DESCRIPTION 
+                "A list of Automatic Broadcast Control (ABC
+                 disable/enable  entries  for  each  VLAN  on  the switch."
+          ::= { hpSwitchABCConfig 1 }
+
+          hpSwitchABCConfigEntry OBJECT-TYPE
+          SYNTAX  HpSwitchABCConfigEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION 
+                "Contains the ABC status for  each  VLAN  on  the switch,
+                 including  IP  RIP  control  and   IPX   RIP/SAP control."
+          INDEX   {  hpSwitchABCConfigVlan }
+          ::= { hpSwitchABCConfigTable 1 }
+
+          HpSwitchABCConfigEntry ::= SEQUENCE {
+                            hpSwitchABCConfigVlan               VlanID,
+                            hpSwitchABCConfigControl            INTEGER,
+                            hpSwitchABCConfigIpRipControl       INTEGER,
+                            hpSwitchABCConfigIpxRipSapControl   INTEGER,
+                            hpSwitchABCConfigVlanBcastLimit     INTEGER,
+                         -- hpSwitchABCConfigVlanBcastPktLimit  INTEGER,
+                            hpSwitchABCConfigAutoGatewayConfig  INTEGER
+                                              }
+
+          hpSwitchABCConfigVlan OBJECT-TYPE
+          SYNTAX  VlanID
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION 
+                "The user is able to enable/disable ABC on a  per VLAN
+                 basis, so the VLAN serves as an  index  into  the ABC
+                 configuration table."
+          ::= { hpSwitchABCConfigEntry 1 }
+
+          hpSwitchABCConfigControl OBJECT-TYPE
+          SYNTAX  INTEGER {
+                        ipipx(1),
+                        ip(2),
+                        ipx(3),
+                        disable(4)
+                          }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION 
+                "ABC control is either IP&IPX or IP or IPX or disabled 
+                 for each  VLAN on the switch."
+          ::= { hpSwitchABCConfigEntry 2 }
+
+          hpSwitchABCConfigIpRipControl OBJECT-TYPE
+          SYNTAX  INTEGER {
+                        enable(1),
+                        disable(2)
+                          }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION 
+                "IP RIP control. If this feature is enabled  then IP RIP
+                packets will only be forwarded on  ports,  within its VLAN
+                domain, that have  heard  RIPs  before.  If  this feature is
+                disabled then IP RIP packets seen by a given port will
+                be  forwarded  to  all  ports  within  its   VLAN domain."
+          ::= { hpSwitchABCConfigEntry 3 }
+
+          hpSwitchABCConfigIpxRipSapControl OBJECT-TYPE
+          SYNTAX  INTEGER {
+                        enable(1),
+                        disable(2)
+                          }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION 
+                "IPX RIP/SAP control. If this feature is  enabled then IPX
+                RIP/SAP packets will only be forwarded on  ports, within
+                its  VLAN  domain,  that  have  previously   seen RIP/SAP
+                packets. If this feature is disabled then IPX RIP and SAP
+                packets seen by a given port will be forwarded to all
+                ports within its VLAN domain."
+          ::= { hpSwitchABCConfigEntry 4 }
+
+          hpSwitchABCConfigVlanBcastLimit OBJECT-TYPE
+	  SYNTAX  INTEGER (0..99)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The percentage of network bandwidth consumed by broadcast
+             traffic through VLAN. If the value of this variable
+	     is 0, there will be no broadcast limit. There is a default
+             value chosen when ABC is enabled."
+          ::= { hpSwitchABCConfigEntry 5 }
+
+          -- hpSwitchABCConfigVlanBcastPktLimit OBJECT-TYPE
+	  -- SYNTAX  INTEGER (0..2147483647)
+          -- ACCESS  read-write
+          -- STATUS  mandatory
+          -- DESCRIPTION
+	  --   "Network bandwidth in packets per second consumed by broadcast
+          --    traffic through VLAN. If the value of this variable
+	  --    is 0, there will be no broadcast limit. There is a default
+          --    value chosen when ABC is enabled."
+          -- ::= { hpSwitchABCConfigEntry 6 }
+
+          hpSwitchABCConfigAutoGatewayConfig OBJECT-TYPE
+          SYNTAX  INTEGER {
+                        enable(1),
+                        disable(2)
+                          }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "If this feature is enabled then DHCP packets both
+	     ucast and bcast with UDP destination port 68 will be
+	     intercepted.  DHCP packets with the router option in
+	     the options field in the DHCP message will be
+	     modified so that the first daddress in the router
+	     option is the same as the clients address.  Thus the
+	     client will be its own default gateway.  If this
+	     feature is disabled DHCP packtes will be forwarded as
+	     usual."
+          ::= { hpSwitchABCConfigEntry 7 }
+
+  	  hpSwitchStpConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 14 }
+
+          hpSwitchStpVlanTable OBJECT-TYPE
+          SYNTAX  SEQUENCE OF HpSwitchStpVlanEntry
+          ACCESS  not-accessible
+          STATUS  mandatory
+          DESCRIPTION
+            "A table that contains vlan-specific information
+             for the Spanning Tree Protocol."
+           ::= { hpSwitchStpConfig 1}
+
+          hpSwitchStpVlanEntry OBJECT-TYPE
+          SYNTAX  HpSwitchStpVlanEntry
+          ACCESS  not-accessible
+          STATUS  mandatory
+          DESCRIPTION
+            "A list of information maintained by every port
+             about the Spanning Tree Protocol state for that
+             port."
+          INDEX   { hpSwitchStpVlan }
+          ::= { hpSwitchStpVlanTable 1 }
+
+          HpSwitchStpVlanEntry ::=
+              SEQUENCE {
+                  hpSwitchStpVlan           VlanID,
+                  hpSwitchStpAdminStatus    INTEGER,
+                  hpSwitchStpPriority       INTEGER,
+                  hpSwitchStpMaxAge         Timeout,
+                  hpSwitchStpHelloTime      Timeout,
+                  hpSwitchStpForwardDelay   Timeout
+              }
+
+          hpSwitchStpVlan OBJECT-TYPE
+          SYNTAX  VlanID
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+	    "The operational status of the spanning tree protocol."
+          ::= { hpSwitchStpVlanEntry 1 }
+
+          hpSwitchStpAdminStatus OBJECT-TYPE
+          SYNTAX  INTEGER {
+                     enable(1),
+                     disable(2)
+                  }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+	    "The operational status of the spanning tree protocol."
+          ::= { hpSwitchStpVlanEntry 2 }
+
+          hpSwitchStpPriority OBJECT-TYPE
+          SYNTAX  INTEGER (0..65535)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+            "The value of the write-able portion of the Bridge
+             ID, i.e., the first two octets of the (8 octet
+             long) Bridge ID.  The other (last) 6 octets of the
+             Bridge ID are given by the value of
+             dot1dBaseBridgeAddress."
+          REFERENCE
+            "IEEE 802.1D-1990: Section 4.5.3.7"
+          ::= { hpSwitchStpVlanEntry 3 }
+
+          hpSwitchStpMaxAge OBJECT-TYPE
+          SYNTAX  Timeout
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+            "The maximum age of Spanning Tree Protocol
+             information learned from the network on any port
+             before it is discarded, in units of hundredths of
+             a second.  This is the actual value that this
+             bridge is currently using."
+          REFERENCE
+            "IEEE 802.1D-1990: Section 4.5.3.4"
+          ::= { hpSwitchStpVlanEntry 4 }
+
+          hpSwitchStpHelloTime OBJECT-TYPE
+          SYNTAX  Timeout
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+            "The amount of time between the transmission of
+             Configuration bridge PDUs by this node on any port
+             when it is the root of the spanning tree or trying
+             to become so, in units of hundredths of a second.
+             This is the actual value that this bridge is
+             currently using."
+          REFERENCE
+            "IEEE 802.1D-1990: Section 4.5.3.5"
+
+          ::= { hpSwitchStpVlanEntry 5 }
+
+          hpSwitchStpForwardDelay OBJECT-TYPE
+          SYNTAX  Timeout
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+            "This time value, measured in units of hundredths
+            of a second, controls how fast a port changes its
+            spanning state when moving towards the Forwarding
+            state.  The value determines how long the port
+            stays in each of the Listening and Learning
+            states, which precede the Forwarding state.  This
+            value is also used, when a topology change has
+            been detected and is underway, to age all dynamic
+            entries in the Forwarding Database.  [Note that
+            this value is the one that this bridge is
+            currently using, in contrast to
+            dot1dBridgeForwardDelay which is the value that
+            this bridge and all others would start using
+            if/when this bridge were to become the root.]"
+          REFERENCE
+            "IEEE 802.1D-1990: Section 4.5.3.6"
+          ::= { hpSwitchStpVlanEntry 6 }
+
+          hpSwitchStpPortTable OBJECT-TYPE
+          SYNTAX  SEQUENCE OF HpSwitchStpPortEntry
+          ACCESS  not-accessible
+          STATUS  mandatory
+          DESCRIPTION
+            "A table that contains port-specific information
+             for the Spanning Tree Protocol."
+           ::= { hpSwitchStpConfig 2 }
+
+          hpSwitchStpPortEntry OBJECT-TYPE
+          SYNTAX  HpSwitchStpPortEntry
+          ACCESS  not-accessible
+          STATUS  mandatory
+          DESCRIPTION
+            "A list of information maintained by every port
+             about the Spanning Tree Protocol state for that
+             port."
+          INDEX   { hpSwitchStpPort }
+          ::= { hpSwitchStpPortTable 1 }
+
+          HpSwitchStpPortEntry ::=
+              SEQUENCE {
+                  hpSwitchStpPort           INTEGER,
+	          hpSwitchStpPortType       IANAifType,
+	          hpSwitchStpPortSrcMac     MacAddress,
+                  hpSwitchStpPortPriority   INTEGER,
+                  hpSwitchStpPortPathCost   INTEGER
+              }
+
+          hpSwitchStpPort OBJECT-TYPE
+          SYNTAX  INTEGER (1..65535)
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+            "The port number of the port for which this entry
+             contains Spanning Tree Protocol management
+             information."
+          REFERENCE
+             "IEEE 802.1D-1990: Section 6.8.2.1.2"
+          ::= { hpSwitchStpPortEntry 1 }
+
+	  hpSwitchStpPortType OBJECT-TYPE
+	  SYNTAX  IANAifType
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+            "The ifType value."
+          ::= { hpSwitchStpPortEntry 2 }
+
+	  hpSwitchStpPortSrcMac OBJECT-TYPE
+	  SYNTAX  MacAddress
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+            "The source MAC address used by the spanning tree protocol."
+          ::= { hpSwitchStpPortEntry 3 }
+
+          hpSwitchStpPortPriority OBJECT-TYPE
+          SYNTAX  INTEGER (0..255)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+            "The value of the priority field which is
+             contained in the first (in network byte order)
+             octet of the (2 octet long) Port ID.  The other
+             octet of the Port ID is given by the value of
+             dot1dStpPort."
+          REFERENCE
+            "IEEE 802.1D-1990: Section 4.5.5.1"
+          ::= { hpSwitchStpPortEntry 4 }
+
+          hpSwitchStpPortPathCost OBJECT-TYPE
+          SYNTAX  INTEGER (1..65535)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+            "The contribution of this port to the path cost of
+             paths towards the spanning tree root which include
+             this port.  802.1D-1990 recommends that the
+             default value of this parameter be in inverse
+             proportion to the speed of the attached LAN."
+          REFERENCE
+            "IEEE 802.1D-1990: Section 4.5.5.3"
+          ::= { hpSwitchStpPortEntry 5 }
+
+          hpSwitchIgmpConfig OBJECT IDENTIFIER ::= { hpSwitchConfig 15 }
+
+          hpSwitchIgmpConfigTable       OBJECT-TYPE
+          SYNTAX SEQUENCE OF HpSwitchIgmpConfigEntry
+          ACCESS  not-accessible
+          STATUS  mandatory
+          DESCRIPTION
+                "A table that contains information about the IGMP
+                Querier capacity on any given vlan on the switch."
+          ::= { hpSwitchIgmpConfig 1 }
+
+          hpSwitchIgmpConfigEntry       OBJECT-TYPE
+          SYNTAX HpSwitchIgmpConfigEntry
+          ACCESS not-accessible
+          STATUS mandatory
+          DESCRIPTION
+                "Information about the IGMP Querier feature associated with
+                a specific virtal LAN in this device."
+          INDEX {hpSwitchIgmpVlanIndex}
+          ::= { hpSwitchIgmpConfigTable 1 }
+
+          HpSwitchIgmpConfigEntry ::= 
+          SEQUENCE {
+           hpSwitchIgmpVlanIndex     VlanID,
+           hpSwitchIgmpState         INTEGER,
+           hpSwitchIgmpQuerierState  INTEGER,
+           hpSwitchIgmpPriorityState INTEGER
+           }
+
+          hpSwitchIgmpVlanIndex     OBJECT-TYPE
+          SYNTAX VlanID
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                "An index that uniquely identifies the IGMP configuration of
+                a virtual LAN for which this entry contains information."
+          ::= { hpSwitchIgmpConfigEntry 1 }
+
+          hpSwitchIgmpState     OBJECT-TYPE
+          SYNTAX INTEGER{
+                   enable(1),
+                   disable(2)
+                   }
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                "The operational status of the IGMP support for
+                this virtual LAN."
+          ::= { hpSwitchIgmpConfigEntry 2 }
+
+          hpSwitchIgmpQuerierState     OBJECT-TYPE
+          SYNTAX INTEGER{
+                   enable(1),
+                   disable(2)
+                   }
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                "The operational status of the IGMP Querier functionality
+	         for this virtual LAN."
+          ::= { hpSwitchIgmpConfigEntry 3 }
+
+          hpSwitchIgmpPriorityState     OBJECT-TYPE
+          SYNTAX INTEGER{
+                   enable(1),
+                   disable(2)
+                   }
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                "The operational status of the IGMP Forward with High
+                Priority mode for  this virtual LAN."
+          ::= { hpSwitchIgmpConfigEntry 4 }
+
+          hpSwitchIgmpPortConfigTable     OBJECT-TYPE
+          SYNTAX  SEQUENCE OF HpSwitchIgmpPortConfigEntry
+          ACCESS  not-accessible
+          STATUS  mandatory
+          DESCRIPTION
+                "A table that contains information about the IGMP port
+                configurations on this switch."
+          ::= { hpSwitchIgmpConfig 2 }
+
+          hpSwitchIgmpPortConfigEntry     OBJECT-TYPE
+          SYNTAX  HpSwitchIgmpPortConfigEntry
+          ACCESS  not-accessible
+          STATUS  mandatory
+          DESCRIPTION
+                "The information associated with each IGMP port configuration."
+          INDEX   { hpSwitchIgmpPortIndex }
+          ::= { hpSwitchIgmpPortConfigTable 1 }
+
+          HpSwitchIgmpPortConfigEntry ::=        
+          SEQUENCE {
+            hpSwitchIgmpPortIndex    INTEGER,
+            hpSwitchIgmpPortType     IANAifType,
+            hpSwitchIgmpIpMcastState INTEGER
+            }
+
+          hpSwitchIgmpPortIndex     OBJECT-TYPE
+          SYNTAX INTEGER (1..65535)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                "The ifIndex value which uniquely identifies a row in the
+                Interfaces Table."
+          ::= { hpSwitchIgmpPortConfigEntry 1 }
+
+          hpSwitchIgmpPortType     OBJECT-TYPE
+          SYNTAX IANAifType
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                "The ifType value."
+          ::= { hpSwitchIgmpPortConfigEntry 2 }
+
+          hpSwitchIgmpIpMcastState     OBJECT-TYPE
+          SYNTAX INTEGER{
+                   auto(1),
+                   blocked(2),
+                   forward(3)
+                   }
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                "The operational status of the IGMP feature for this port or
+                trunk 1 implies that all IP Multicast traffic will be monitored on the
+                port 2 implies that IP Multicast traffic will be dropped on the
+            port and 3 implies that all IP Multicast traffic will be forwarded
+            without the switch examining it."
+          ::= { hpSwitchIgmpPortConfigEntry 3 }
+
+          hpSwitchIgmpPortConfigTable2     OBJECT-TYPE
+          SYNTAX  SEQUENCE OF HpSwitchIgmpPortConfigEntry2
+          ACCESS  not-accessible
+          STATUS  mandatory
+          DESCRIPTION
+                "A table that contains information about the IGMP port
+                configurations on this switch.  This table supercedes
+                hpSwitchIgmpPortConfigTable for products which support
+                multiple VLANs on each port."
+          ::= { hpSwitchIgmpConfig 3 }
+
+          hpSwitchIgmpPortConfigEntry2     OBJECT-TYPE
+          SYNTAX  HpSwitchIgmpPortConfigEntry2
+          ACCESS  not-accessible
+          STATUS  mandatory
+          DESCRIPTION
+                "The information associated with each IGMP port configuration."
+          INDEX   { hpSwitchIgmpPortVlanIndex2, hpSwitchIgmpPortIndex2 }
+          ::= { hpSwitchIgmpPortConfigTable2 1 }
+
+          HpSwitchIgmpPortConfigEntry2 ::=        
+          SEQUENCE {
+	    hpSwitchIgmpPortVlanIndex2 INTEGER,
+            hpSwitchIgmpPortIndex2    INTEGER,
+            hpSwitchIgmpPortType2     IANAifType,
+            hpSwitchIgmpIpMcastState2 INTEGER
+            }
+
+          hpSwitchIgmpPortVlanIndex2     OBJECT-TYPE
+          SYNTAX INTEGER (1..65535)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                "The Vlan Index value which uniquely identifies a row in the
+                Interfaces Table."
+          ::= { hpSwitchIgmpPortConfigEntry2 1 }
+
+          hpSwitchIgmpPortIndex2     OBJECT-TYPE
+          SYNTAX INTEGER (1..65535)
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                "The ifIndex value which uniquely identifies a row in the
+                Interfaces Table."
+          ::= { hpSwitchIgmpPortConfigEntry2 2 }
+
+          hpSwitchIgmpPortType2     OBJECT-TYPE
+          SYNTAX IANAifType
+          ACCESS read-only
+          STATUS mandatory
+          DESCRIPTION
+                "The ifType value."
+          ::= { hpSwitchIgmpPortConfigEntry2 3 }
+
+          hpSwitchIgmpIpMcastState2     OBJECT-TYPE
+          SYNTAX INTEGER{
+                   auto(1),
+                   blocked(2),
+                   forward(3)
+                   }
+          ACCESS read-write
+          STATUS mandatory
+          DESCRIPTION
+                "The operational status of the IGMP feature for this port or
+                trunk 1 implies that all IP Multicast traffic will be monitored on the
+                port 2 implies that IP Multicast traffic will be dropped on the
+            port and 3 implies that all IP Multicast traffic will be forwarded
+            without the switch examining it."
+          ::= { hpSwitchIgmpPortConfigEntry2 4 }
+
+          END

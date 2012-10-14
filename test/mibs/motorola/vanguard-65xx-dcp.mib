@@ -1,0 +1,474 @@
+        -- Version 1.3, modified 02/12/98
+
+        DCP-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+            Counter
+                FROM RFC1155-SMI
+
+            OBJECT-TYPE
+                FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                      codex OBJECT IDENTIFIER ::= { enterprises 449 }
+         cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                    cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+          cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+ cdx6500StatOtherStatsGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 2 }
+
+        -- Textual conventions
+        Counter8 ::=  INTEGER (0..255)
+
+        DisplayString ::= OCTET STRING
+
+        -- the DCP (Data Connection & Protection) group
+
+        -- Implementation of the DCP group is optional for Pegasus BN.
+        -- This group describes managed object used by the Pegasus BN DCP.
+
+        -- The DCP statistics table
+
+        cdx6500OSTDCPTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500DCPStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of Data Connection & Protection(DCP)
+                 statistics parameters for the port with DCP."
+        ::= { cdx6500StatOtherStatsGroup 1 }
+
+        cdx6500DCPStatEntry OBJECT-TYPE
+            SYNTAX Cdx6500DCPStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each DCP parameter entry should be accessed using the
+                 double index, the DCP port number as the primary index,
+                 and the channel number as the secondary index. For PAD
+                 ports the secondary index, channel number must be a zero."
+            INDEX { cdx6500DCPPortNumber, cdx6500DCPChanNumber }
+        ::= { cdx6500OSTDCPTable 1 }  
+
+        Cdx6500DCPStatEntry ::=
+            SEQUENCE {
+                cdx6500DCPPortNumber
+                    INTEGER,
+                cdx6500DCPChanNumber
+                    INTEGER,
+                cdx6500DCPNegProtLevel
+                    DisplayString,
+                cdx6500DCPCurrConnState
+                    DisplayString,
+                cdx6500DCPUnackDataTpdu
+                    Counter8,
+                cdx6500DCPDataTpduQueued
+                    Counter8,
+                cdx6500DCPInboundFlowSt
+                    INTEGER,
+                cdx6500DCPOutboundFlowSt
+                    INTEGER,
+                cdx6500DCPConnReqTx
+                    Counter8,
+                cdx6500DCPConnConfTx
+                    Counter8,
+                cdx6500DCPReconnReqTx
+                    Counter8,
+                cdx6500DCPReconnConfTx
+                    Counter8,
+                cdx6500DCPDiscReqTx
+                    Counter8,
+                cdx6500DCPDiscConfTx
+                    Counter8,
+                cdx6500DCPDataTx
+                    Counter,
+                cdx6500DCPAckTx
+                    Counter,
+                cdx6500DCPIntReqTx
+                    Counter8,
+                cdx6500DCPIntConfTx
+                    Counter8,
+                cdx6500DCPResetReqTx
+                    Counter8,
+                cdx6500DCPResetConfTx
+                    Counter8,
+                cdx6500DCPRejTx
+                    Counter8,
+                cdx6500DCPConnReqRcv
+                    Counter8,
+                cdx6500DCPConnConfRcv
+                    Counter8,
+                cdx6500DCPReconnReqRcv
+                    Counter8,
+                cdx6500DCPReconnConfRcv
+                    Counter8,
+                cdx6500DCPDiscReqRcv
+                    Counter8,
+                cdx6500DCPDiscConfRcv
+                    Counter8,
+                cdx6500DCPDataRcv
+                    Counter,
+                cdx6500DCPAckRcv
+                    Counter,
+                cdx6500DCPIntReqRcv
+                    Counter8,
+                cdx6500DCPIntConfRcv
+                    Counter8,
+                cdx6500DCPResetReqRcv
+                    Counter8,
+                cdx6500DCPResetConfRcv
+                    Counter8,
+                cdx6500DCPRejRcv
+                    Counter8
+                }
+
+        cdx6500DCPPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the port number with DCP enabled, which is 
+                 used as a primary index to access DCP statistics."
+        ::= { cdx6500DCPStatEntry 1 }
+
+        cdx6500DCPChanNumber OBJECT-TYPE
+            SYNTAX INTEGER (0..512)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the channel number with DCP enabled, which is 
+                 used as a secondary index to access DCP statistics.
+                 For PAD ports the secondary index, channel number 
+                 must be a zero."
+        ::= { cdx6500DCPStatEntry 2 }
+
+        cdx6500DCPNegProtLevel OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the currently negotiated level of Data 
+                 Connection Protection for a call. It will differ 
+                 from the configured protection level if the peer 
+                 has negotiated to a lower protection level."
+        ::= { cdx6500DCPStatEntry 3 }
+
+        cdx6500DCPCurrConnState OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates the state of the port with DCP.
+                 OPEN : There is a call.
+                 CLOSE: There is no call."
+        ::= { cdx6500DCPStatEntry 4 }
+
+        cdx6500DCPUnackDataTpdu OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets sent to the peer DCP layer but 
+                 awaiting an acknowledgment packet."
+        ::= { cdx6500DCPStatEntry 5 }
+
+        cdx6500DCPDataTpduQueued OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of data packets queued but not sent."
+        ::= { cdx6500DCPStatEntry 6 }
+
+        cdx6500DCPInboundFlowSt OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0), 
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates whether flow control from the user equipment
+                 (Access Port) to the network is enabled or disabled.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500DCPStatEntry 7 }
+
+        cdx6500DCPOutboundFlowSt OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0), 
+                    enabled        (1),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates whether flow control from the network is 
+                 enabled or disabled.
+                 newvalDisabled : same functionality as 'disabled', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500DCPStatEntry 8 }
+
+        cdx6500DCPConnReqTx OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Connect Request TPDUs(Transport layer 
+                 Protocol Data Unit) sent to the connection at the other
+                 end of this network connection."
+        ::= { cdx6500DCPStatEntry 9 }
+
+        cdx6500DCPConnConfTx OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Connect Confirmation TPDUs(Transport layer 
+                 Protocol Data Unit) sent to the connection at the other
+                 end of this network connection."
+        ::= { cdx6500DCPStatEntry 10 }
+
+        cdx6500DCPReconnReqTx OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Reconnect Request TPDUs(Transport layer 
+                 Protocol Data Unit) sent to the connection at the other
+                 end of this network connection."
+        ::= { cdx6500DCPStatEntry 11 }
+
+        cdx6500DCPReconnConfTx OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Reconnect Confirmation TPDUs(Transport layer
+                 Protocol Data Unit) sent to the connection at the other
+                 end of this network connection."
+        ::= { cdx6500DCPStatEntry 12 }
+
+        cdx6500DCPDiscReqTx OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Disconnect Request TPDUs(Transport layer 
+                 Protocol Data Unit) sent to the connection at the other
+                 end of this network connection."
+        ::= { cdx6500DCPStatEntry 13 }
+
+        cdx6500DCPDiscConfTx OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Disconnect Confirmation TPDUs(Transport layer
+                 Protocol Data Unit) sent to the connection at the other
+                 end of this network connection."
+        ::= { cdx6500DCPStatEntry 14 }
+
+        cdx6500DCPDataTx OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Data TPDUs(Transport layer Protocol Data Unit)
+                 sent to the connection at the other end of this network
+                 connection."
+        ::= { cdx6500DCPStatEntry 15 }
+
+        cdx6500DCPAckTx OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Acknowledgment TPDUs(Transport layer Protocol
+                 Data Unit) sent to the connection at the other end of 
+                 this network connection."
+        ::= { cdx6500DCPStatEntry 16 }
+
+        cdx6500DCPIntReqTx OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Interrupt Request TPDUs(Transport layer 
+                 Protocol Data Unit) sent to the connection at the other
+                 end of this network connection."
+        ::= { cdx6500DCPStatEntry 17 }
+
+        cdx6500DCPIntConfTx OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Interrupt Confirm TPDUs(Transport layer 
+                 Protocol Data Unit) sent to the connection at the other
+                 end of this network connection."
+        ::= { cdx6500DCPStatEntry 18 }
+
+        cdx6500DCPResetReqTx OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Reset Request TPDUs(Transport layer Protocol
+                 Data Unit) sent to the connection at the other end of
+                 this network connection."
+        ::= { cdx6500DCPStatEntry 19 }
+
+        cdx6500DCPResetConfTx OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Reset Confirm TPDUs(Transport layer Protocol 
+                 Data Unit) sent to the connection at the other end of
+                 this network connection."
+        ::= { cdx6500DCPStatEntry 20 }
+
+        cdx6500DCPRejTx OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Reject TPDUs(Transport layer Protocol Data
+                 Unit) sent to the connection at the other end of this
+                 network connection."
+        ::= { cdx6500DCPStatEntry 21 }
+
+        cdx6500DCPConnReqRcv OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Connect Request TPDUs(Transport layer
+                 Protocol Data Unit) received from the connection at
+                 the other end of this network connection."
+        ::= { cdx6500DCPStatEntry 22 }
+
+        cdx6500DCPConnConfRcv OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Connect Confirmation TPDUs(Transport layer
+                 Protocol Data Unit) received from the connection at 
+                 the other end of this network connection."
+        ::= { cdx6500DCPStatEntry 23 }
+
+        cdx6500DCPReconnReqRcv OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Reconnect Request TPDUs(Transport layer
+                 Protocol Data Unit) received from the connection at
+                 the other end of this network connection."
+        ::= { cdx6500DCPStatEntry 24 }
+
+        cdx6500DCPReconnConfRcv OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Reconnect Confirmation TPDUs(Transport layer
+                 Protocol Data Unit) received from the connection at
+                 the other end of this network connection."
+        ::= { cdx6500DCPStatEntry 25 }
+
+        cdx6500DCPDiscReqRcv OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Disconnect Request TPDUs(Transport layer
+                 Protocol Data Unit) received from the connection at
+                 the other end of this network connection."
+        ::= { cdx6500DCPStatEntry 26 }
+
+        cdx6500DCPDiscConfRcv OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Disconnect Confirmation TPDUs(Transport layer
+                 Protocol Data Unit) received from the connection at the
+                 other end of this network connection."
+        ::= { cdx6500DCPStatEntry 27 }
+
+        cdx6500DCPDataRcv OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Data TPDUs(Transport layer Protocol Data Unit)
+                 received from the connection at the other end of this 
+                 network connection."
+        ::= { cdx6500DCPStatEntry 28 }
+
+        cdx6500DCPAckRcv OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Acknowledgment TPDUs(Transport layer Protocol
+                 Data Unit) received from the connection at the other 
+                 end of this network connection."
+        ::= { cdx6500DCPStatEntry 29 }
+
+        cdx6500DCPIntReqRcv OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Interrupt Request TPDUs(Transport layer
+                 Protocol Data Unit) received from the connection at
+                 the other end of this network connection."
+        ::= { cdx6500DCPStatEntry 30 }
+
+        cdx6500DCPIntConfRcv OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Interrupt Confirm TPDUs(Transport layer 
+                 Protocol Data Unit) received from the connection at
+                 the other end of this network connection."
+        ::= { cdx6500DCPStatEntry 31 }
+
+        cdx6500DCPResetReqRcv OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Reset Request TPDUs(Transport layer Protocol
+                 Data Unit) received from the connection at the other
+                 end of this network connection."
+        ::= { cdx6500DCPStatEntry 32 }
+
+        cdx6500DCPResetConfRcv OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Reset Confirm TPDUs(Transport layer Protocol
+                 Data Unit) received from the connection at the other 
+                 end of this network connection."
+        ::= { cdx6500DCPStatEntry 33 }
+
+        cdx6500DCPRejRcv OBJECT-TYPE
+            SYNTAX Counter8
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of Reject TPDUs(Transport layer Protocol Data 
+                 Unit) received from the connection at the other end of
+                 this network connection."
+        ::= { cdx6500DCPStatEntry 34 }
+
+        END

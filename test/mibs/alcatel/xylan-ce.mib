@@ -1,0 +1,1048 @@
+
+     XYLAN-ATM-CE-MIB DEFINITIONS ::= BEGIN
+
+     --  RCSID information
+
+     --  $RCSfile: xylan-ce.mib,v $
+     --  $Revision: 1.8 $		$State: Exp $
+     --  $Date: 1998/10/15 02:37:00 $
+     --  $Author: ytran $
+
+     --  xylan-ce.mib
+     --  Revision: 1.00
+     --  Date: October 22, 1996
+
+     --  Alcatel Internetworking, Inc.
+
+     --  26801 W. Agoura Road
+     --  Calabasas, CA 91301
+     --  (818) 880-3500
+     --  support@ind.alcatel.com
+
+     --  This module provides authoritative definitions for Alcatel Internetworking, Inc.
+     --  enterprise-specific ATM Circuit Emulation MIB.
+
+     --  This module will be extended, as needed.
+
+
+     --  Alcatel Internetworking, Inc. reserves the right to make changes in 
+     --  specification and other information contained in this document 
+     --  without prior notice.  The reader should consult Alcatel Internetworking,
+     --  Inc. to determine whether any such changes have been made.
+
+     --  In no event shall Alcatel Internetworking, Inc. be liable for any incidental, 
+     --  indirect, special, or consequential damages whatsoever (including 
+     --  but not limited to lost profits) arising out of or related to this
+     --  document or the information contained in it, even if Alcatel Internetworking,
+     --  Inc. has been advised of, known, or should have known, the 
+     --  possibility of such damages.
+     --  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+     --  parties a non-exclusive license to use this Specification in connection
+     --  with the management of Alcatel Internetworking, Inc. products.
+
+     --  Copyright (C) 1996, Alcatel Internetworking, Inc. All Rights Reserved.
+
+     
+     	IMPORTS
+		Counter
+	         	FROM RFC1155-SMI
+		OBJECT-TYPE
+			FROM RFC-1212
+                TRAP-TYPE
+                        FROM RFC-1215
+		DisplayString 
+			FROM RFC1213-MIB
+	        xylanAtmArch
+			FROM XYLAN-BASE-MIB 
+			;
+
+        atmxCesGroup         OBJECT IDENTIFIER ::= { xylanAtmArch 10 }
+
+	atmxCesMIBObjects    OBJECT IDENTIFIER ::= { atmxCesGroup 1 }
+
+	atmxCesMIBTraps      OBJECT IDENTIFIER ::= { atmxCesGroup 2 }
+
+        atmxCesService       OBJECT IDENTIFIER ::= { atmxCesMIBObjects 1 }
+
+        atmxCesVccGroup      OBJECT IDENTIFIER ::= { atmxCesMIBObjects 2 }
+
+	atmxCesVccStatsGroup OBJECT IDENTIFIER ::= { atmxCesMIBObjects 3 }
+
+	atmxCesSvcConfigGroup OBJECT IDENTIFIER ::= { atmxCesMIBObjects 4 }
+
+    -- The Service Table
+
+        atmxCesServiceTable   OBJECT-TYPE
+             SYNTAX   SEQUENCE OF AtmxCesServiceEntry
+	     ACCESS   not-accessible
+	     STATUS   mandatory
+	     DESCRIPTION
+                 "This table defines ATM circuit emulation service 
+	          configuration."
+             ::= { atmxCesService 1 }
+
+        atmxCesServiceEntry  OBJECT-TYPE
+             SYNTAX AtmxCesServiceEntry
+             ACCESS not-accessible
+             STATUS mandatory
+             DESCRIPTION
+                 "An entry in the table, containing information about
+                  service configuration of a service interface."
+             INDEX { atmxCesServiceSlotIndex, atmxCesServicePortIndex }
+             ::= { atmxCesServiceTable 1 }
+
+        AtmxCesServiceEntry ::= 
+	     SEQUENCE {
+                 atmxCesServiceSlotIndex
+                     INTEGER,
+	         atmxCesServicePortIndex
+                     INTEGER,
+                 atmxCesServiceDescription
+                     DisplayString,
+	         atmxCesServiceAdminStatus
+	             INTEGER,
+                 atmxCesServiceOperStatus
+	             INTEGER,
+                 atmxCesServiceServiceMode
+                     INTEGER,
+                 atmxCesServiceServiceClock
+                     INTEGER,
+		 atmxCesServiceAvailTimeSlot
+	             OCTET STRING
+	     }
+
+         atmxCesServiceSlotIndex  OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+             ::= { atmxCesServiceEntry 1 }
+
+         atmxCesServicePortIndex   OBJECT-TYPE
+             SYNTAX   INTEGER (1..32)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this port."
+             ::= { atmxCesServiceEntry 2 }
+
+         atmxCesServiceDescription  OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A description for this port."
+             ::= {  atmxCesServiceEntry 3 }
+
+         atmxCesServiceAdminStatus OBJECT-TYPE
+             SYNTAX   INTEGER {
+                        up(1),
+                        down(2)
+	              }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The desired state of this interface."
+             ::= { atmxCesServiceEntry 4 }
+
+         atmxCesServiceOperStatus OBJECT-TYPE
+             SYNTAX   INTEGER {
+                        up(1),
+                        down(2)
+	              }
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The current operational state of this interface."
+             ::= { atmxCesServiceEntry 5 }
+
+         atmxCesServiceServiceMode OBJECT-TYPE
+              SYNTAX INTEGER {
+                     unstructured(1),
+	             structured(2)
+              } 
+              ACCESS  read-write
+	      STATUS  mandatory
+              DESCRIPTION
+		      "Define if this interface as structured or not.  A
+                       structured(2) interface is some nx64 Kbps and passes
+                       data bits and signalling bits through the ATM network.
+	               An unstructured(2) passes all bits including framing
+                       bits through the ATM network."
+              ::= { atmxCesServiceEntry 6 }                  
+
+        atmxCesServiceServiceClock OBJECT-TYPE
+             SYNTAX  INTEGER {
+                        synchronous(1),
+	                srts(2),
+	                adaptive(3)
+                     }
+	     ACCESS  read-write
+	     STATUS  mandatory
+             DESCRIPTION
+                 "This object defines service clocking mode of this 
+                  interface."
+             ::= { atmxCesServiceEntry 7 }
+
+	atmxCesServiceAvailTimeSlot   OBJECT-TYPE
+	     SYNTAX  OCTET STRING(SIZE (32))
+             ACCESS  read-only
+	     STATUS  mandatory
+             DESCRIPTION
+                 "The availiable time slots of this interface.  Each octet
+	          indicates an available time slot (1 to 32 decimal).  It's
+	          terminated by an octet 0xFF if less than 32 time slots 
+	          available."
+	     ::= { atmxCesServiceEntry 8 }
+
+     -- The Virtual Channel Connections Table
+
+         atmxCesVccTable   OBJECT-TYPE
+             SYNTAX   SEQUENCE OF AtmxCesVccEntry 
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+                "A table of ATM virtual channel connections status and 
+                parameter information." 
+                ::= { atmxCesVccGroup 1 }
+
+         atmxCesVccEntry   OBJECT-TYPE
+             SYNTAX   AtmxCesVccEntry
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+                "An entry in the table, containing information about 
+                the ATM circuit emulation virtual channel connections."
+             INDEX   { atmxCesVccSlotIndex, atmxCesVccPortIndex, 
+	               atmxCesVccVci}
+                ::= { atmxCesVccTable 1 }
+
+         AtmxCesVccEntry ::=
+             SEQUENCE {
+                 atmxCesVccSlotIndex
+                     INTEGER,
+                 atmxCesVccPortIndex
+                     INTEGER,
+		 atmxCesVccVpi
+		     INTEGER,
+		 atmxCesVccVci
+		     INTEGER,
+                 atmxCesVccAtmUplinkSlotIndex
+                     INTEGER,
+                 atmxCesVccAtmUplinkPortIndex
+                     INTEGER,
+                 atmxCesVccDescription
+                     DisplayString,
+                 atmxCesVccAdminStatus 
+                     INTEGER,
+                 atmxCesVccOperStatus 
+                     INTEGER,
+                 atmxCesVccConnType
+	             INTEGER,
+	         atmxCesVccPartialFill
+	             INTEGER,
+	         atmxCesVccBufMaxSize   
+	             INTEGER,
+	         atmxCesVccCDVT
+                     INTEGER,
+                 atmxCesVccCellLossIntegrationPeriod
+	             INTEGER,
+	         atmxCesVccIdleCode
+	             INTEGER,
+                 atmxCesVccTimeSlots
+	             OCTET STRING,
+                 atmxCesVccAtmUplinkVccVpi
+                     INTEGER,
+                 atmxCesVccAtmUplinkVccVci
+                     INTEGER,
+	         atmxCesVccLocalAtmAddr
+	             OCTET STRING,
+	         atmxCesVccMulticast
+	             INTEGER,
+	         atmxCesVccMulticastRole
+	             INTEGER
+
+         }
+                        
+         atmxCesVccSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies the HSM board slot
+	         of the service interface."
+             ::= { atmxCesVccEntry 1 }
+
+         atmxCesVccPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..32)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies the service interface 
+	         port."
+             ::= { atmxCesVccEntry 2 }
+
+	 atmxCesVccVpi OBJECT-TYPE
+	     SYNTAX   INTEGER (0..128)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The virtual path identifier associated with this 
+                 virtual connection."
+             ::= { atmxCesVccEntry 3 }
+
+	 atmxCesVccVci OBJECT-TYPE
+	     SYNTAX   INTEGER (1..1023)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The virtual channel identifier associated with the 
+                 virtual connection."
+             ::= { atmxCesVccEntry 4 }
+
+         atmxCesVccAtmUplinkSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies the HSM board slot
+	         of the ATM uplink port."
+             ::= { atmxCesVccEntry 5 }
+
+         atmxCesVccAtmUplinkPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..32)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies the the ATM uplink 
+	         port."
+             ::= { atmxCesVccEntry 6 }
+
+         atmxCesVccDescription OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A description for this virtual connection."
+             ::= { atmxCesVccEntry 7 }
+
+         atmxCesVccAdminStatus OBJECT-TYPE
+             SYNTAX   INTEGER {
+                        up(1),
+                        down(2),
+			delete(3)
+	              }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The desired state of this virtual circuit.  Status delete(3)
+	         deletes the virtual circuit."
+             ::= { atmxCesVccEntry 8 }
+
+         atmxCesVccOperStatus OBJECT-TYPE
+             SYNTAX   INTEGER {
+                        up(1),
+                        down(2)
+	              }
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The current operational state of this virtual circuit."
+             ::= { atmxCesVccEntry 9 }
+
+	 atmxCesVccConnType OBJECT-TYPE
+	     SYNTAX   INTEGER { 
+                         other(1),
+	                 pvc(2),
+                         activeSvc(3),
+	                 passiveSvc(4),
+	                 initialSvc(5)
+		     }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The type of ATM connectivity between associated CES IWF's.
+                 Valid values are:
+                     other - none of the types specified below.
+	             pvc   - supporting connectivity is permanent virtual
+	                     connection.
+	             activeSvc - attempt calls whenever non is established,
+	             passiveSvc - accept calls.
+	             initialSvc - attempt calls initially, but eventually 
+                                  cease"
+             ::= { atmxCesVccEntry 10 }
+
+         atmxCesVccPartialFill OBJECT-TYPE
+            SYNTAX INTEGER (0 .. 47)
+            ACCESS read-write
+	    STATUS mandatory
+            DESCRIPTION
+                "If partial cell fill is used, the number of user octets per
+	         cell must be set with this parameter.  Setting this parameter
+	         to zero disables partial cell fill, and causes all cells to
+		 be completely filled before they are sent."
+            ::= { atmxCesVccEntry 11 }
+
+	 atmxCesVccBufMaxSize OBJECT-TYPE
+             SYNTAX  INTEGER  (1..512)
+ 	     ACCESS  read-write
+	     STATUS  mandatory
+	     DESCRIPTION
+	         "The maximum size of reassembly buffer in frames.  In
+	          unstructured mode, a frame is 256 bits.  In structured
+	          mode, a frame is number of time slots assigned to this 
+                  virtual circuit.  For examples, if 5 time slots assigned
+                  to this virtual circuit and this object is set to 50
+	          then buffer size is 250 octets."
+            ::= { atmxCesVccEntry 12 }
+
+	atmxCesVccCDVT     OBJECT-TYPE
+	     SYNTAX INTEGER (1..2400)
+             ACCESS read-write
+	     STATUS mandatory
+             DESCRIPTION
+	       "This object defines the maximum cell delay variation
+                delay in frame increments that the reassembly process 
+	        will tolerate in the cell stream without producing errors 
+	        on the Circuit Emulation interface.  In structured mode, 
+	        a frame equates to 125 microseconds in T1 or E1.  In 
+	        unstructured mode, a frame equates to 256/rate seconds; where
+	        rate is the line rate of the Circuit Emulation interface."
+	    ::= { atmxCesVccEntry 13 }	     
+
+	atmxCesVccCellLossIntegrationPeriod OBJECT-TYPE
+	     SYNTAX INTEGER (1..64)
+             ACCESS read-write
+	     STATUS mandatory
+	     DESCRIPTION
+	        "The time in seconds for the cell loss integration
+                 period.  If one of more cells is lost for this period of
+	         time, then atmxCesVccCellLossStatus is set to loss(2)."
+             ::= { atmxCesVccEntry 14 }	     
+
+	atmxCesVccIdleCode   OBJECT-TYPE
+	     SYNTAX INTEGER (0..'ff'h)
+	     ACCESS read-write
+	     STATUS mandatory
+	     DESCRIPTION
+	        "The idle character sent to service emulation interface
+                 or to ATM uplink if data is not available."
+             ::= { atmxCesVccEntry 15 }	     	     
+ 	     
+        atmxCesVccTimeSlots    OBJECT-TYPE
+	     SYNTAX OCTET STRING(SIZE (32))
+	     ACCESS read-write
+	     STATUS mandatory
+	     DESCRIPTION
+	        "The list of time slots configured for this virtual 
+	         circuit.  Each octet indicates an available time slot 
+	         (1 to 32 decimal).  It's terminated by an octet 0xFF 
+	         if less than 32 time slots.  If this object only
+                 contains octet 0xff then all free time slots of 
+                 this port are assigned."
+	     ::= { atmxCesVccEntry 16 }
+
+	 atmxCesVccAtmUplinkVccVpi OBJECT-TYPE
+	     SYNTAX   INTEGER (0..255)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The virtual path identifier associated with the
+                 ATM uplink port's virtual connection."
+             ::= { atmxCesVccEntry 17 }
+
+	 atmxCesVccAtmUplinkVccVci OBJECT-TYPE
+	     SYNTAX   INTEGER (1..65535)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The virtual channel identifier associated with the 
+                 ATM uplink port's virtual connection."
+             ::= { atmxCesVccEntry 18 }
+
+	 atmxCesVccLocalAtmAddr OBJECT-TYPE
+	     SYNTAX   OCTET STRING(SIZE (20))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The ATM address of the local CES IWF process.
+                 This object is a 20 bytes hex number."
+             ::= { atmxCesVccEntry 19 }
+
+         atmxCesVccMulticast OBJECT-TYPE
+             SYNTAX   INTEGER {
+                        enabled(1),
+	                disabled(2)
+	              }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION             
+		 "The desired multicast mode of this virtual circuit.  A 
+                  multicast circuit is composed of one Multicast Root and 
+                  one or more Multicast Leaves."
+             ::= { atmxCesVccEntry 20 }
+
+         atmxCesVccMulticastRole OBJECT-TYPE
+             SYNTAX   INTEGER {
+                        root(1),
+	                leaf(2)
+	              }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION             
+		 "The desired multicast mode if this virtual circuit is 
+                  multicast. Multicast root virtual circuit is the
+                  source of circuit emulation traffic.  Multicast leaf
+                  virtual circuit will be sinker of traffic and doesn't
+                  generate cells to ATM networks "
+             ::= { atmxCesVccEntry 21 }
+
+	atmxCesVccStatsTable OBJECT-TYPE
+             SYNTAX   SEQUENCE OF AtmxCesVccStatsEntry
+	     ACCESS   not-accessible
+	     STATUS   mandatory
+	     DESCRIPTION
+                 "The Circuit Emulation Service statistical data table for
+                  virtual circuits."
+             ::= { atmxCesVccStatsGroup 1 }
+
+        atmxCesVccStatsEntry  OBJECT-TYPE
+             SYNTAX AtmxCesVccStatsEntry
+             ACCESS not-accessible
+             STATUS mandatory
+             DESCRIPTION
+                 "An entry in the table, containing statistics of 
+	          CES virtual connection."
+             INDEX { atmxCesVccStatsSlotIndex, atmxCesVccStatsPortIndex,
+	             atmCesVccStatsVci }
+             ::= { atmxCesVccStatsTable 1 }
+
+        AtmxCesVccStatsEntry ::= SEQUENCE {
+	    atmxCesVccStatsSlotIndex
+	         INTEGER,
+	    atmxCesVccStatsPortIndex
+	         INTEGER,
+	    atmCesVccStatsVci
+	         INTEGER,
+	    atmxCesVccStatsTxDataCells
+	        Counter,
+	    atmxCesVccStatsTxCondCells
+	        Counter,
+	    atmxCesVccStatsSuppressedTxCells
+	        Counter,
+	    atmxCesVccStatsRxCells
+	        Counter,
+	    atmxCesVccStatsSnpErrors
+	        Counter,
+            atmxCesVccStatsSeqNumErrors
+                Counter,
+            atmxCesVccStatsDroppedRxCellUnderrun
+	        Counter,
+            atmxCesVccStatsDroppedRxCellOverrun
+	        Counter,
+	    atmxCesVccStatsCellLossStatus
+	        INTEGER
+          }
+
+       atmxCesVccStatsSlotIndex OBJECT-TYPE
+	     SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+	     ::= { atmxCesVccStatsEntry 1 }
+	   
+	atmxCesVccStatsPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..32)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this port."
+             ::= { atmxCesVccStatsEntry 2 } 	
+
+	atmCesVccStatsVci  OBJECT-TYPE
+	    SYNTAX    INTEGER
+	    ACCESS    read-only
+            STATUS    mandatory
+	    DESCRIPTION
+               "The virtual channel identifier associated with the 
+                virtual connection."
+	    ::= { atmxCesVccStatsEntry 3 }
+
+	atmxCesVccStatsTxDataCells  OBJECT-TYPE
+	    SYNTAX  Counter 
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION 
+	      "The total number of successfully transmitted cells
+	       which assembled from actual data instead of conditioned 
+	       data."
+	    ::= { atmxCesVccStatsEntry 4 }
+
+	atmxCesVccStatsTxCondCells  OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+              "The total number of successfully transmitted cells
+	       which assembled from conditioned data."
+	    ::= { atmxCesVccStatsEntry 5 }
+
+	atmxCesVccStatsSuppressedTxCells OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "The total number of cells that are not sent because of
+	        line resynchronization."
+	    ::= { atmxCesVccStatsEntry 6 }
+
+	atmxCesVccStatsRxCells  OBJECT-TYPE 
+            SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "The total number of cells received and played out to
+	        circuit emulation port."
+	    ::= { atmxCesVccStatsEntry 7 }
+
+	atmxCesVccStatsSnpErrors   OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "The total number of cells received with uncorrectable
+	        Sequence Number Protection (SNP)."
+	    ::= { atmxCesVccStatsEntry 8 }
+
+	atmxCesVccStatsSeqNumErrors   OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "The total number of cells received with unexpected
+	        sequence number."
+	    ::= { atmxCesVccStatsEntry 9 }
+	
+	atmxCesVccStatsDroppedRxCellUnderrun  OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "The total number of cells dropped due to receive
+	        queue underrun."
+	    ::= { atmxCesVccStatsEntry 10 }
+	
+	atmxCesVccStatsDroppedRxCellOverrun OBJECT-TYPE
+	   SYNTAX  Counter
+	   ACCESS  read-only
+	   STATUS  mandatory
+	   DESCRIPTION
+	      "The total number of cells dropped due to receive
+	       queue overrun."
+           ::= { atmxCesVccStatsEntry 11 }
+	
+	atmxCesVccStatsCellLossStatus OBJECT-TYPE
+	   SYNTAX INTEGER {
+	          noLoss(1),
+	          loss(2)
+	       }
+	   ACCESS read-only
+	   STATUS mandatory
+	   DESCRIPTION
+	      "When cells are lost for the number of milliseconds specified
+	       be atmxCesVccCellLossIntegrationPeriod, the value is set to
+	       loss(2).  When cells are no longer lost, the value is set
+	       to noLoss(1)."
+	   ::= { atmxCesVccStatsEntry 12 }
+
+
+	atmxCesVccRateTable OBJECT-TYPE
+             SYNTAX   SEQUENCE OF AtmxCesVccRateEntry
+	     ACCESS   not-accessible
+	     STATUS   mandatory
+	     DESCRIPTION
+                 "The Circuit Emulation Service statistical rate for
+                  virtual circuits."
+             ::= { atmxCesVccStatsGroup 2 }
+
+        atmxCesVccRateEntry  OBJECT-TYPE
+             SYNTAX AtmxCesVccRateEntry
+             ACCESS not-accessible
+             STATUS mandatory
+             DESCRIPTION
+                 "An entry in the table, containing statistical rate of 
+	          CES virtual connection."
+             INDEX { atmxCesVccRateSlotIndex, atmxCesVccRatePortIndex,
+	             atmCesVccRateVci }
+             ::= { atmxCesVccRateTable 1 }
+
+        AtmxCesVccRateEntry ::= SEQUENCE {
+	    atmxCesVccRateSlotIndex
+	         INTEGER,
+	    atmxCesVccRatePortIndex
+	         INTEGER,
+	    atmCesVccRateVci
+	         INTEGER,
+	    atmxCesVccRateTxDataCells
+	        Counter,
+	    atmxCesVccRateTxCondCells
+	        Counter,
+	    atmxCesVccRateSuppressedTxCells
+	        Counter,
+	    atmxCesVccRateRxCells
+	        Counter,
+	    atmxCesVccRateSnpErrors
+	        Counter,
+            atmxCesVccRateSeqNumErrors
+                Counter,
+            atmxCesVccRateDroppedRxCellUnderrun
+	        Counter,
+            atmxCesVccRateDroppedRxCellOverrun
+	        Counter
+          }
+
+       atmxCesVccRateSlotIndex OBJECT-TYPE
+	     SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+	     ::= { atmxCesVccRateEntry 1 }
+	   
+	atmxCesVccRatePortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..32)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this port."
+             ::= { atmxCesVccRateEntry 2 } 	
+
+	atmCesVccRateVci  OBJECT-TYPE
+	    SYNTAX    INTEGER
+	    ACCESS    read-only
+            STATUS    mandatory
+	    DESCRIPTION
+               "The virtual channel identifier associated with the 
+                virtual connection."
+	    ::= { atmxCesVccRateEntry 3 }
+
+	atmxCesVccRateTxDataCells  OBJECT-TYPE
+	    SYNTAX  Counter 
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION 
+	      "The rate of successfully transmitted cells
+	       which assembled from actual data instead of conditioned 
+	       data."
+	    ::= { atmxCesVccRateEntry 4 }
+
+	atmxCesVccRateTxCondCells  OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+              "The rate of successfully transmitted cells
+	       which assembled from conditioned data."
+	    ::= { atmxCesVccRateEntry 5 }
+
+	atmxCesVccRateSuppressedTxCells OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "The rate of cells that are not sent because of
+	        line resynchronization."
+	    ::= { atmxCesVccRateEntry 6 }
+
+	atmxCesVccRateRxCells  OBJECT-TYPE 
+            SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "The rate of cells received and played out to
+	        circuit emulation port."
+	    ::= { atmxCesVccRateEntry 7 }
+
+	atmxCesVccRateSnpErrors   OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "The rate of cells received with uncorrectable
+	        Sequence Number Protection (SNP)."
+	    ::= { atmxCesVccRateEntry 8 }
+
+	atmxCesVccRateSeqNumErrors   OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "The rate of cells received with unexpected
+	        sequence number."
+	    ::= { atmxCesVccRateEntry 9 }
+	
+	atmxCesVccRateDroppedRxCellUnderrun  OBJECT-TYPE
+	    SYNTAX  Counter
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+	       "The rate of cells dropped due to receive
+	        queue underrun."
+	    ::= { atmxCesVccRateEntry 10 }
+	
+	atmxCesVccRateDroppedRxCellOverrun OBJECT-TYPE
+	   SYNTAX  Counter
+	   ACCESS  read-only
+	   STATUS  mandatory
+	   DESCRIPTION
+	      "The rate of cells dropped due to receive
+	       queue overrun."
+           ::= { atmxCesVccRateEntry 11 }
+
+	-- CES SVC Table
+        atmxCesSvcConfigTable  OBJECT-TYPE
+    	    SYNTAX      SEQUENCE OF AtmxCesSvcConfigEntry
+	    ACCESS      not-accessible
+	    STATUS      mandatory
+	    DESCRIPTION
+        	"The table used to manage SVCs established across ATM
+         	networks between CES entities."
+	    ::= { atmxCesSvcConfigGroup 1 }
+
+	atmxCesSvcConfigEntry    OBJECT-TYPE
+	    SYNTAX      AtmxCesSvcConfigEntry
+	    ACCESS      not-accessible
+	    STATUS      mandatory
+	    DESCRIPTION
+	        "An entry in the CES SVC table."
+	    INDEX   { atmxCesSvcSlotIndex, atmxCesSvcPortIndex,
+        	      atmxCesSvcVciIndex }
+	    ::= { atmxCesSvcConfigTable 1 }
+
+	AtmxCesSvcConfigEntry ::= 
+	    SEQUENCE  {
+		atmxCesSvcSlotIndex
+		    INTEGER,
+		atmxCesSvcPortIndex
+		    INTEGER,
+		atmxCesSvcVciIndex
+		    INTEGER,
+		atmxCesSvcRemoteAddr
+	            OCTET STRING,
+		atmxCesSvcRemoteVpi
+		    INTEGER,
+		atmxCesSvcRemoteVci
+	            INTEGER,
+	        atmxCesSvcFirstRetryInterval
+                    INTEGER,
+	        atmxCesSvcRetryTimer
+                    INTEGER,
+	        atmxCesSvcRetryLimit
+                    INTEGER,
+	        atmxCesSvcRetryFailures
+                    INTEGER,
+	        atmxCesSvcConfigRestart  
+                    INTEGER,
+	        atmxCesSvcConfigOperStatus
+                    INTEGER,
+	        atmxCesSvcLastReleaseCause 
+                    INTEGER,
+    	        atmxCesSvcLastReleaseDiagnostics
+	            OCTET STRING
+    	}
+
+       atmxCesSvcSlotIndex OBJECT-TYPE
+	     SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+	     ::= { atmxCesSvcConfigEntry 1 }
+	   
+	atmxCesSvcPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..32)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this port."
+	     ::= { atmxCesSvcConfigEntry 2 }
+
+	atmxCesSvcVciIndex  OBJECT-TYPE
+	    SYNTAX    INTEGER
+	    ACCESS    read-only
+            STATUS    mandatory
+	    DESCRIPTION
+               "The virtual channel identifier associated with the 
+                virtual connection."
+	     ::= { atmxCesSvcConfigEntry 3 }
+
+	atmxCesSvcRemoteAddr              OBJECT-TYPE
+	    SYNTAX   OCTET STRING(SIZE (20))
+	    ACCESS        read-write
+	    STATUS        mandatory
+	    DESCRIPTION
+        	"The ATM address supporting the corresponding far end
+	         CES IWF process.  If no address is supplied, no attempts
+        	 to establish the active SVC are initiated."
+	    ::= { atmxCesSvcConfigEntry 4 }
+
+	atmxCesSvcRemoteVpi               OBJECT-TYPE
+	    SYNTAX        INTEGER
+	    ACCESS        read-write
+	    STATUS        mandatory
+	    DESCRIPTION
+        	"The VPI number of the corresponding far end
+	         CES IWF process"
+	    ::= { atmxCesSvcConfigEntry 5 }
+
+	atmxCesSvcRemoteVci               OBJECT-TYPE
+	    SYNTAX        INTEGER
+	    ACCESS        read-write
+	    STATUS        mandatory
+	    DESCRIPTION
+        	"The VCI number of the corresponding far end
+	         CES IWF process"
+	    ::= { atmxCesSvcConfigEntry 6 }
+
+	atmxCesSvcFirstRetryInterval       OBJECT-TYPE
+	    SYNTAX        INTEGER (0..36000)
+	    ACCESS        read-write
+	    STATUS        mandatory
+	    DESCRIPTION
+        	"The time (in 10ths of a second unit) to wait 
+	         before attempting to establish the SVC
+		 after the first failed call attempt.  Zero represents an 
+		 infinite interval indicating no retries."
+	    DEFVAL { 10 }
+	    ::= { atmxCesSvcConfigEntry 7 }
+
+	atmxCesSvcRetryTimer              OBJECT-TYPE
+	    SYNTAX        INTEGER (0..86400)
+	    ACCESS        read-only
+	    STATUS        mandatory
+	    DESCRIPTION
+        	"Indicates the current value of the retry timer (in seconds) for
+	         this connection.  When the value reaches zero an attempt
+        	 will be made to establish the active SVC.  When the timer
+	         is not running, the value zero shall be returned."
+            ::= { atmxCesSvcConfigEntry 8 }
+
+	atmxCesSvcRetryLimit              OBJECT-TYPE
+	    SYNTAX        INTEGER (0..65535)
+	    ACCESS        read-write
+	    STATUS        mandatory
+	    DESCRIPTION
+        	"Sets a maximum limit on how many consecutive unsuccessful
+	         call setup attempts can be made before stopping the attempt
+        	 to set up the connection.  If this limit is reached then
+	         management action will be required (e.g. setting
+        	 atmxCesSvcConfigRestart to 'restart') to initiate a new
+	         attempt to establish the connection.  A value of zero
+	         indicates no limit - the attempts will continue until
+	         successful. If this object is not present, no limit on call
+	         attempts is assumed."
+	    DEFVAL { 0 }
+	    ::= { atmxCesSvcConfigEntry 9 }
+
+	atmxCesSvcRetryFailures           OBJECT-TYPE
+	    SYNTAX        INTEGER
+	    ACCESS        read-only
+	    STATUS        mandatory
+	    DESCRIPTION
+        	"Indicates how many attempts to establish the connection
+	         have failed.  This count is reset whenever a connection
+	         is successfully established or the active SVC is restarted."
+	    ::= { atmxCesSvcConfigEntry 10 }
+
+	atmxCesSvcConfigRestart        OBJECT-TYPE
+	    SYNTAX        INTEGER {
+        	 restart(1),
+                 noop(2)
+            }
+	    ACCESS	  read-write
+	    STATUS        mandatory
+	    DESCRIPTION
+        	"When the value is set to 'restart' the active SVC
+	         is released if necessary and a new setup procedure
+        	 is begun.  As a result of this action, the
+	         atmxCesSvcConfigOperStatus object transitions to
+        	 'establishmentInProgress' (if not already in this state)
+	         and the atmxCesRetryFailures object is cleared.
+
+        	 When the value is set to 'noop' no operation is
+	         performed.  When read, the value 'noop' is returned."
+	    ::= { atmxCesSvcConfigEntry 11 }
+
+	atmxCesSvcConfigOperStatus     OBJECT-TYPE
+	    SYNTAX        INTEGER {
+        	 other(1),
+                 establishmentInProgress(2),
+                 connected(3),
+                 retriesExhausted(4),
+                 noAddressSupplied(5),
+        	 lowerLayerDown(6)
+            }
+	    ACCESS        read-only
+	    STATUS        mandatory
+	    DESCRIPTION
+        	"Describes the status of the active SVC.  Valid values are:
+	            other - none of the types specified below
+        	    establishmentInProgress - connection is not operational,
+                	                      but call attempts are ongoing
+	            connected          - connection is currently operational
+        	    retriesExhausted   - retry limit has been reached and call
+                	                 attempts have ceased
+	            noAddressSupplied  - no remote address has been configured,
+        	                         so no call attempts are initiated
+	            lowerLayerDown     - underlying CES IWF is not operational
+
+        	 When the entry is not 'active', the value of this object is
+	         'other'."
+	    ::= { atmxCesSvcConfigEntry 12 }
+
+	atmxCesSvcLastReleaseCause        OBJECT-TYPE
+	    SYNTAX        INTEGER(1..127)
+	    ACCESS        read-only
+	    STATUS        mandatory
+	    DESCRIPTION
+        	"Value of the Cause field of the Cause information element
+	         in the last RELEASE signalling message received for this
+	         SVC.  Indicates the reason for the release."
+	    ::= { atmxCesSvcConfigEntry 13 }
+
+	atmxCesSvcLastReleaseDiagnostics  OBJECT-TYPE
+	    SYNTAX        OCTET STRING (SIZE(0..8))
+	    ACCESS        read-only
+	    STATUS        mandatory
+	    DESCRIPTION
+        	"Value of the first 8 bytes of diagnostic information
+	         from the Cause field of the Cause information element
+        	 in the last RELEASE signalling message received for this
+	         active SVC."
+	    ::= { atmxCesSvcConfigEntry 14 }
+
+	atmxCesVccTraps OBJECT IDENTIFIER ::= { atmxCesMIBTraps  1 }
+
+	atmCesVccCreate TRAP-TYPE
+	   ENTERPRISE atmxCesVccTraps
+	   VARIABLES { atmxCesVccSlotIndex, atmxCesVccPortIndex,
+	               atmxCesVccVpi, atmxCesVccVci,
+	               atmxCesVccAtmUplinkSlotIndex,
+	               atmxCesVccAtmUplinkPortIndex }
+	   DESCRIPTION
+	       "The ATM circuit emulation virtual circuit is created."
+	   ::= 1
+
+	atmCesVccDelete TRAP-TYPE
+	   ENTERPRISE atmxCesVccTraps
+	   VARIABLES { atmxCesVccSlotIndex, atmxCesVccPortIndex,
+	               atmxCesVccVpi, atmxCesVccVci,
+	               atmxCesVccAtmUplinkSlotIndex,
+	               atmxCesVccAtmUplinkPortIndex }	
+	   DESCRIPTION
+	       "The ATM circuit emulation virtual circuit is deleted."
+	   ::= 2
+
+   END

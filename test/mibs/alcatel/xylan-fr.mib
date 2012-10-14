@@ -1,0 +1,1007 @@
+ 
+     XYLAN-FRAME-RELAY-MIB DEFINITIONS ::= BEGIN
+
+     --  RCSID information
+
+     --  $RCSfile: xylan-fr.mib,v $
+     --  $Revision: 1.8 $		$State: Exp $
+     --  $Date: 1997/04/15 16:26:51 $
+     --  $Author: fr $
+
+
+     --  xylan-fr.mib
+     --  Revision: 0.01
+     --  Date: Jan. 13, 1996
+
+     --  Alcatel Internetworking, Inc.
+     --  26801 W. Agoura Road
+     --  Calabasas, CA 91301
+     --  (818) 880-3500
+     --  support@ind.alcatel.com
+
+     --  This module provides authoritative definitions for Alcatel Internetworking, Inc.
+     --  enterprise-specific fr MIB.
+
+     --  This module will be extended, as needed.
+
+
+     --  Alcatel Internetworking, Inc. reserves the right to make changes in 
+     --  specification and other information contained in this document 
+     --  without prior notice.  The reader should consult Alcatel Internetworking,
+     --  Inc. to determine whether any such changes have been made.
+
+     --  In no event shall Alcatel Internetworking, Inc. be liable for any incidental, 
+     --  indirect, special, or consequential damages whatsoever (including 
+     --  but not limited to lost profits) arising out of or related to this
+     --  document or the information contained in it, even if Alcatel Internetworking,
+     --  Inc. has been advised of, known, or should have known, the 
+     --  possibility of such damages.
+     --  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+     --  parties a non-exclusive license to use this Specification in connection
+     --  with the management of Alcatel Internetworking, Inc. products.
+
+     --  Copyright (C) 1996, Alcatel Internetworking, Inc. All Rights Reserved.
+
+     --  plim 4/29/96, Added BPDU Stat entry to frxVcStatsEntry 
+     --  plim 5/31/96, Remove frxPortDefaultBridgingVcGrouping from frxPortTable
+     --  plim 5/31/96, Added frxVcControlGroup frxVcControlBridgingInUse
+     --  plim 6/25/96, remove page feed control character per spr 3164
+     --  plim 7/30/96, added 8025 and FDDI stats field
+     --  plim 7/30/96, added BridgingMode flag in Service and Default objects 
+     --  plim 8/23/96, added new option for frxServiceAdminStatus to able to delete service
+
+     	IMPORTS
+		Counter
+			FROM RFC1155-SMI
+		OBJECT-TYPE
+			FROM RFC-1212
+		DisplayString 
+			FROM RFC1213-MIB
+                xylanFrArch
+                        FROM XYLAN-BASE-MIB
+			;
+
+     -- Textual Conventions
+
+
+     --
+     --                    The MIB groups
+     --
+     frxPortGroup             OBJECT IDENTIFIER ::= { xylanFrArch 1 }
+     frxVcControlGroup        OBJECT IDENTIFIER ::= { xylanFrArch 2 }
+     frxServiceGroup          OBJECT IDENTIFIER ::= { xylanFrArch 3 }
+     frxVcStatsGroup          OBJECT IDENTIFIER ::= { xylanFrArch 4 }
+     
+
+     --		The Port Group
+
+     -- The Port Table
+
+         frxPortTable   OBJECT-TYPE
+	    SYNTAX   SEQUENCE OF FrxPortEntry 
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"A table of port layer status and parameter information 
+	            for the UNI's physical interface." 
+            ::= { frxPortGroup 1 }
+
+         frxPortEntry   OBJECT-TYPE
+            SYNTAX   FrxPortEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"An entry in the table, containing information about 
+                the physical layer of a UNI interface."
+            INDEX   { frxPortSlotIndex, frxPortPortIndex }
+            ::= { frxPortTable 1 }
+
+         FrxPortEntry ::=
+             SEQUENCE {
+                 frxPortSlotIndex
+                     INTEGER,
+                 frxPortPortIndex
+                     INTEGER,
+                 frxPortDescription
+                     DisplayString,
+                 frxPortDefaultBridgingVLAN
+                     INTEGER,
+                 frxPortDefaultBridgingServiceNumber
+                     INTEGER,
+                 frxPortDefaultRoutingVLAN
+                     INTEGER,
+                 frxPortDefaultCompressionAdminStatus
+                     INTEGER,
+                 frxPortDefaultCompressionPRetryTime
+                     INTEGER,
+                 frxPortDefaultCompressionPRetryCount
+                     INTEGER,
+                 frxPortDefaultBridgingMode
+                     INTEGER
+         }
+
+         frxPortSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+             ::= { frxPortEntry 1 }
+
+         frxPortPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..8)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this WSM submodule port."
+             ::= { frxPortEntry 2 }
+
+         frxPortDescription OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A description for this Frame Relay port."
+             ::= { frxPortEntry 3 }
+
+                           
+         frxPortDefaultBridgingVLAN OBJECT-TYPE
+             SYNTAX   INTEGER (0..65535)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default VLAN for new PVCs that have not been
+                 configured for the Bridging Service.
+
+                 A value of zero(0) indicates that unconfigured VCs will not
+                 perform a bridging service and will discard all
+                 bridged format frames received or transmitted.
+
+                 A non-zero value indicates the bridging VLAN to be used if
+                 the network informs the port of a new VC."
+             ::= { frxPortEntry 4 }
+
+         frxPortDefaultBridgingServiceNumber	OBJECT-TYPE
+	     SYNTAX   INTEGER (0..256)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "If non-zero, this is the unique service number which
+                 unconfigured Bridging Virtual Circuits are added to
+                 if frxPortDefaultBridgingVLAN is non zero (set to a
+                 VLAN ID) and frxPortDefaultBridgingGrouping
+                 is set to groupVCsIntoOneVport.  This allows an unconfigured
+                 VC to be added to an existing configured bridging service
+                 virtual circuit group.
+
+                 If zero, then unconfigured VCs will be added to a newly
+                 created (dynamic) Briding Service instance (i.e. a new
+                 virtual port is created dynamically)."
+             ::= { frxPortEntry 5 }
+
+         frxPortDefaultRoutingVLAN OBJECT-TYPE
+             SYNTAX   INTEGER (0..65535)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default VLAN for new PVCs that have not been
+                 configured for a routing Service.
+
+                 A value of zero(0) indicates that unconfigured VCs will not
+                 perform a routing service and will discard all
+                 routed format frames received or transmitted.
+
+                 A non-zero value indicates the routing VLAN to be used if
+                 the network informs the port of a new VC."
+             ::= { frxPortEntry 6 }
+
+
+	 frxPortDefaultCompressionAdminStatus OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      enable(1),
+                      disable(2)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "This object controls whether or not an unconfigured 
+                 virtual circuit will attempt (enable)
+                 or not attempt (disable) to negotiate
+                 for compression."
+             ::= { frxPortEntry 7 }
+
+         frxPortDefaultCompressionPRetryTime OBJECT-TYPE
+             SYNTAX   INTEGER (1..10)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default P-Retry-Time for negotiating
+                 mode 1 compression as described in Frame
+                 Relay Forum Data Compression Implementation Agreement
+                 FRF.9.
+
+                 This object controls the default value for
+                 P-Retry-Time for an unconfigured (dynamic)
+                 virtual circuit.
+
+                 This object represents the time in seconds
+                 between retransmission of Data Compression
+                 Negotiation Control messages."
+             ::= { frxPortEntry 8 }
+
+         frxPortDefaultCompressionPRetryCount OBJECT-TYPE
+             SYNTAX   INTEGER (3..255)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default P-Retry-Count for negotiating
+                 mode 1 compression as described in Frame
+                 Relay Forum Data Compression Implementation Agreement
+                 FRF.9
+
+                 This object controls the default value for
+                 P-Retry-Count for an unconfigured (dynamic)
+                 virtual circuit.
+
+                 This object represents the number of retries
+                 before giving up on the negotiation phase
+                 and not running compression on the virtual circuit."
+             ::= { frxPortEntry 9 }
+
+         frxPortDefaultBridgingMode OBJECT-TYPE
+	     SYNTAX   INTEGER (0..1) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default Briding Mode,  0 = BRIDGE_ALL, 1 = ETHERNET ONLY"
+             ::= { frxPortEntry 10 }
+
+    
+    -- Frame Relay-Virtual circuit control Table
+
+         frxVcControlTable   OBJECT-TYPE
+             SYNTAX   SEQUENCE OF FrxVcControlEntry 
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+             	"A table of Frame Relay virtual circuit
+                 configuration and control information." 
+             ::= { frxVcControlGroup 1 }
+
+         frxVcControlEntry   OBJECT-TYPE
+             SYNTAX   FrxVcControlEntry
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+                "An entry in the table, containing information about 
+                the Frame Relay virtual circuit statistics."
+             INDEX   { frxVcControlSlotIndex, frxVcControlPortIndex,
+                       frxVcControlDlci }
+             ::= { frxVcControlTable 1 }
+
+         FrxVcControlEntry ::=
+             SEQUENCE {
+                 frxVcControlSlotIndex
+                     INTEGER,
+                 frxVcControlPortIndex
+                     INTEGER,
+                 frxVcControlDlci
+		     INTEGER,
+		 frxVcControlCompressionAdminStatus
+		     INTEGER,
+		 frxVcControlCompressionOperPhase
+		     INTEGER,
+                 frxVcControlCompressionPRetryTime
+                     INTEGER,
+                 frxVcControlCompressionPRetryCount
+                     INTEGER,
+                 frxVcControlBridgingInUse
+                     INTEGER
+         }
+                                                                                        
+
+         frxVcControlSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+             ::= { frxVcControlEntry 1 }
+
+         frxVcControlPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..8)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this WSM submodule port."
+             ::= { frxVcControlEntry 2 }
+
+         frxVcControlDlci OBJECT-TYPE  
+             SYNTAX   INTEGER (1..1024)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this Data Link Connection
+                 Identifier (DLCI) for this Frame Relay Virtual Circuit."
+             ::= { frxVcControlEntry 3 }
+
+	 frxVcControlCompressionAdminStatus OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      enable(1),
+                      disable(2)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "This object controls whether or not the 
+                 virtual circuit will attempt (enable)
+                 or not attemp (disable) to negotiate
+                 for compression.  The current state
+                 of compression for the virtual circuit
+                 is indicated in frxVcControlCompressionOperStatus"
+             ::= { frxVcControlEntry 4 }
+
+	 frxVcControlCompressionOperPhase OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      disabled(1),
+                      initialization(2),
+                      operation(3)
+                      }
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "This object reports the current phase (state)
+                 of compression for this virtual circuit
+                 if the Compression Admin Status is set to enable.
+
+                 If the compression Admin status is set
+                 to disabled, then this object will report
+                 as disabled.  Otherwise the value
+                 reflects whether compression is
+                 currently inactive or failed negotiation (disabled)
+                 is under negotiation (initialization) or
+                 active (operation).  Possible causes of
+                 disabled are a failed negotiation, virtual
+                 circuit inactive, the other side not
+                 supporting compression, etc.
+
+                 For a description of the phases (states), see Frame
+                 Relay Forum Implementation aggreement on
+                 Data Compression (FRF.9)"
+             ::= { frxVcControlEntry 5 }
+
+         frxVcControlCompressionPRetryTime OBJECT-TYPE
+             SYNTAX   INTEGER (1..10)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default P-Retry-Time for negotiating
+                 mode 1 compression as described in Frame
+                 Relay Forum Data Compression Implementation Agreement
+                 FRF.9.
+
+                 This object represents the time in seconds
+                 between retransmission of Data Compression
+                 Negotiation Control messages."
+             ::= { frxVcControlEntry 6 }
+
+         frxVcControlCompressionPRetryCount OBJECT-TYPE
+             SYNTAX   INTEGER (3..255)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default P-Retry-Count for negotiating
+                 mode 1 compression as described in Frame
+                 Relay Forum Data Compression Implementation Agreement
+                 FRF.9
+
+                 This object represents the number of retries
+                 before giving up on the negotiation phase
+                 and not running compression on the virtual circuit."
+             ::= { frxVcControlEntry 7 }
+
+         frxVcControlBridgingInUse OBJECT-TYPE
+             SYNTAX   INTEGER 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "Determine for NMS Manager to see whether VC is already in-use.
+                 1=InUse, 0=Free."
+             ::= { frxVcControlEntry 8 }
+
+  --		The Service Group
+
+     -- The Service Table
+
+         frxServiceTable   OBJECT-TYPE
+             SYNTAX   SEQUENCE OF FrxServiceEntry 
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+             	"A table of Frame Relay services status and
+                 parameter information." 
+             ::= { frxServiceGroup 1 }
+
+         frxServiceEntry   OBJECT-TYPE
+             SYNTAX   FrxServiceEntry
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+                "An entry in the table, containing information about 
+                the Frame Relay services."
+             INDEX   { frxServiceSlotIndex, frxServicePortIndex,
+                       frxServiceNumber, frxServiceType
+                     }
+             ::= { frxServiceTable 1 }
+
+         FrxServiceEntry ::=
+             SEQUENCE {
+                 frxServiceSlotIndex
+                     INTEGER,
+                 frxServicePortIndex
+                     INTEGER,
+                 frxServiceNumber
+                     INTEGER,
+                 frxServiceTableEntryType	
+                     INTEGER,
+                 frxServiceDescription
+                     DisplayString,
+                 frxServiceType
+                     INTEGER,
+                 frxServiceOperStatus
+                     INTEGER,
+                 frxServiceAdminStatus 
+                     INTEGER,
+		 frxServiceVirtualCircuits
+		     OCTET STRING,
+                 frxServiceVlans
+                     OCTET STRING,
+                 frxServiceBridgingMode
+                     INTEGER
+		 }
+ 
+         frxServiceSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+             ::= { frxServiceEntry 1 }
+
+         frxServicePortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..8)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this WSM submodule port."
+             ::= { frxServiceEntry 2 }
+
+         frxServiceNumber	OBJECT-TYPE
+	     SYNTAX   INTEGER (1..256)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The unique service number for this particular slot/port."
+             ::= { frxServiceEntry 3 }
+
+         frxServiceTableEntryType	OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                      static(1),
+                      dynamic(2)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The type of table entry for this Frame Relay Serivce.
+
+                 A static entry is one that is stored in non-volatile
+                 memory.
+
+                 A dynamic entry is one that is automatically created
+                 for an unconfigured virtual circuit based on the
+                 the type of service (bridging or routing) and whether
+                 a default VLAN is defined for the type of service.
+
+                 Changing the value via a write command from dynamic
+                 to static will cause the table entry to be stored 
+                 into non-volatile memory.  Setting a value of dynamic
+                 is not allowed."
+             ::= { frxServiceEntry 4 }
+
+
+         frxServiceDescription OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A description for this Frame Relay service."
+             ::= { frxServiceEntry 5 }
+
+         frxServiceType OBJECT-TYPE  
+	     SYNTAX   INTEGER {
+		trunking(4),
+		routing(5),
+		bridging(6)
+	     }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The service type."
+             ::= { frxServiceEntry 6 }
+
+         frxServiceOperStatus OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                      enable(1),
+                      disable(2)
+                      }
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The service operational status."
+             ::= { frxServiceEntry 7 }
+
+         frxServiceAdminStatus OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                      enable(1),
+                      disable(2),
+                      delete(3)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The service adminstration status."
+             ::= { frxServiceEntry 8 }
+         
+	 frxServiceVirtualCircuits	OBJECT-TYPE
+	     SYNTAX   OCTET STRING (SIZE(0..512))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The virtual circuits for this service. Interpret this as
+                a 16 bit field per connection: Trunking 1, Bridging 1..255,
+                IP 1..255."
+             ::= { frxServiceEntry 9 }
+
+         frxServiceVlans OBJECT-TYPE
+	     SYNTAX   OCTET STRING (SIZE(0..64))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The Vlans for this service. Interpret this as a 16 bit field
+                per vlan: Trunking 1-32, Bridging 1, IP 1"
+             ::= { frxServiceEntry 10 }
+
+         frxServiceBridgingMode OBJECT-TYPE
+	     SYNTAX   INTEGER (0..1) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default Briding Mode,  0 = BRIDGE_ALL, 1 = ETHERNET ONLY"
+             ::= { frxServiceEntry 11 }
+
+
+    -- Frame Relay-Virtual circuit statistics Table
+
+    -- This table only monitors non Management DLCIs.  DLCI 0
+    -- and 1023 are never accessable via this table.  Only
+    -- standard MIB access is allowed for those DLCIs.
+
+
+         frxVcStatsTable   OBJECT-TYPE
+             SYNTAX   SEQUENCE OF FrxVcStatsEntry 
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+             	"A table of Frame Relay virtual circuit
+                 statistics information." 
+             ::= { frxVcStatsGroup 1 }
+
+         frxVcStatsEntry   OBJECT-TYPE
+             SYNTAX   FrxVcStatsEntry
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+                "An entry in the table, containing information about 
+                the Frame Relay virtual circuit statistics."
+             INDEX   { frxVcStatsSlotIndex, frxVcStatsPortIndex,
+                       frxVcStatsDlci }
+             ::= { frxVcStatsTable 1 }
+
+         FrxVcStatsEntry ::=
+             SEQUENCE {
+                 frxVcStatsSlotIndex
+                     INTEGER,
+                 frxVcStatsPortIndex
+                     INTEGER,
+                 frxVcStatsDlci
+		     INTEGER,
+		 frxVcStatsTxIPOctets
+		     Counter,
+		 frxVcStatsTxIPFrames
+		     Counter,
+		 frxVcStatsRxIPOctets
+		     Counter,
+		 frxVcStatsRxIPFrames
+		     Counter,
+		 frxVcStatsTxIPXOctets
+		     Counter,
+		 frxVcStatsTxIPXFrames
+		     Counter,
+		 frxVcStatsRxIPXOctets
+		     Counter,
+		 frxVcStatsRxIPXFrames
+		     Counter,
+		 frxVcStatsTxBPDUOctets
+		     Counter,
+		 frxVcStatsTxBPDUFrames
+		     Counter,
+		 frxVcStatsRxBPDUOctets
+		     Counter,
+		 frxVcStatsRxBPDUFrames
+		     Counter,
+		 frxVcStatsTxEthernetOctets
+		     Counter,
+		 frxVcStatsTxEthernetFrames
+		     Counter,
+		 frxVcStatsRxEthernetOctets
+		     Counter,
+		 frxVcStatsRxEthernetFrames
+		     Counter,
+		 frxVcStatsTx8025Octets
+		     Counter,
+		 frxVcStatsTx8025Frames
+		     Counter,
+		 frxVcStatsRx8025Octets
+		     Counter,
+		 frxVcStatsRx8025Frames
+		     Counter,
+		 frxVcStatsTxFDDIOctets
+		     Counter,
+		 frxVcStatsTxFDDIFrames
+		     Counter,
+		 frxVcStatsRxFDDIOctets
+		     Counter,
+		 frxVcStatsRxFDDIFrames
+		     Counter,
+		 frxVcStatsTxCompressedOctets
+		     Counter,
+		 frxVcStatsTxCompressedFrames
+		     Counter,
+		 frxVcStatsRxCompressedOctets
+		     Counter,
+		 frxVcStatsRxCompressedFrames
+		     Counter,
+		 frxVcStatsTxPrecompressedOctets
+		     Counter,
+		 frxVcStatsRxDecompressedOctets
+		     Counter,
+		 frxVcStatsRxCompressedDiscards
+		     Counter
+         }
+                                                                                        
+
+         frxVcStatsSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+             ::= { frxVcStatsEntry 1 }
+
+         frxVcStatsPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..8)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this WSM submodule port."
+             ::= { frxVcStatsEntry 2 }
+
+         frxVcStatsDlci OBJECT-TYPE  
+             SYNTAX   INTEGER (1..1022)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this Data Link Connection
+                 Identifier (DLCI) for this Frame Relay Virtual Circuit."
+             ::= { frxVcStatsEntry 3 }
+
+	 frxVcStatsTxIPOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within routed IP format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 4 }
+
+	 frxVcStatsTxIPFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted routed IP format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 5 }
+
+	 frxVcStatsRxIPOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within routed IP format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 6 }
+
+	 frxVcStatsRxIPFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received routed IP format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 7 }
+
+	 frxVcStatsTxIPXOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within routed IPX format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 8 }
+
+	 frxVcStatsTxIPXFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted routed IPX format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 9 }
+
+	 frxVcStatsRxIPXOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within routed IPX format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 10 }
+
+	 frxVcStatsRxIPXFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received routed IPX format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 11 }
+
+	 frxVcStatsTxBPDUOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within BPDU frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 12 }
+
+	 frxVcStatsTxBPDUFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted BPDU frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 13 }
+
+	 frxVcStatsRxBPDUOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within BPDU frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 14 }
+
+	 frxVcStatsRxBPDUFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received BPDU frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 15 }
+
+	 frxVcStatsTxEthernetOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within bridged 802.3 format
+                 frames on this virtual circuit."
+             ::= { frxVcStatsEntry 16 }
+
+	 frxVcStatsTxEthernetFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted bridged 802.3 format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 17 }
+
+	 frxVcStatsRxEthernetOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within bridged 802.3 format
+                 frames on this virtual circuit."
+             ::= { frxVcStatsEntry 18 }
+
+	 frxVcStatsRxEthernetFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received bridged 802.3 format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 19 }
+
+	 frxVcStatsTx8025Octets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within 8025 frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 20 }
+
+	 frxVcStatsTx8025Frames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted 8025 frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 21 }
+
+	 frxVcStatsRx8025Octets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within 8025 frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 22 }
+
+	 frxVcStatsRx8025Frames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received 8025 frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 23 }
+
+	 frxVcStatsTxFDDIOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within FDDI frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 24 }
+
+	 frxVcStatsTxFDDIFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted FDDI frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 25 }
+
+	 frxVcStatsRxFDDIOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within FDDI frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 26 }
+
+	 frxVcStatsRxFDDIFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received FDDI frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 27 }
+
+ 
+	 frxVcStatsTxCompressedOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within compressed format
+                 frames on this virtual circuit."
+             ::= { frxVcStatsEntry 28 }
+
+	 frxVcStatsTxCompressedFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted compressed format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 29 }
+
+	 frxVcStatsRxCompressedOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within compressed format
+                 frames on this virtual circuit."
+             ::= { frxVcStatsEntry 30 }
+
+	 frxVcStatsRxCompressedFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received compressed format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 31 }
+ 
+	 frxVcStatsTxPrecompressedOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of octets (including the Frame Relay
+                 Header field) prior to compression of data for
+                 transmission within compressed format frames
+                 on this virtual circuit."
+             ::= { frxVcStatsEntry 32 }
+
+	 frxVcStatsRxDecompressedOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of octets (including the Frame Relay
+                 Header field) after decompression of data received
+                 within compressed format frames on this virtual circuit."
+             ::= { frxVcStatsEntry 33 }
+
+	 frxVcStatsRxCompressedDiscards OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received compressed format frames
+                 on this virtual circuit that were discarded due to
+                 error or lost frames (e.g. out of sequence, decompression
+                 errors, etc.)"
+             ::= { frxVcStatsEntry 34 }
+
+END 

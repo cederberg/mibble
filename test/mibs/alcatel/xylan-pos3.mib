@@ -1,0 +1,226 @@
+     XYLAN-POS3-MIB DEFINITIONS ::= BEGIN
+
+     --  RCSID information
+
+     --  $RCSfile: xylan-pos3.mib,v $
+     --  $Revision: 1.4 $		$State: Exp $
+     --  $Date: 1998/06/05 16:56:14 $
+     --  $Author: eric $
+
+     --  xylan-pos3.mib
+     --  Revision: 1.00
+     --  Date: January 16, 1997
+
+     --  Xylan Corporation, Inc.
+     --  26679 W. Agoura Road
+     --  Calabasas, CA 91302
+     --  (818) 880-3500
+     --  support@xylan.com
+
+     --  This module provides authoritative definitions for Xylan's
+     --  enterprise-specific pos3 physical port parameters MIB.
+
+     --  This module will be extended, as needed.
+
+
+     --  Xylan Corporation reserves the right to make changes in 
+     --  specification and other information contained in this document 
+     --  without prior notice.  The reader should consult Xylan Corporation
+     --  to determine whether any such changes have been made.
+
+     --  In no event shall Xylan Corporation be liable for any incidental, 
+     --  indirect, special, or consequential damages whatsoever (including 
+     --  but not limited to lost profits) arising out of or related to this
+     --  document or the information contained in it, even if Xylan
+     --  Corporation has been advised of, known, or should have known, the 
+     --  possibility of such damages.
+     --  Xylan grants vendors, end-users, and other interested parties
+     --  a non-exclusive license to use this Specification in connection
+     --  with the management of Xylan products.
+
+     --  Copyright (C) 1996, Xylan Corporation. All Rights Reserved.
+     
+     	IMPORTS
+		DisplayString
+			FROM RFC1213-MIB
+		OBJECT-TYPE
+			FROM RFC-1212
+	        xylanPportArch
+			FROM XYLAN-BASE-MIB 
+			;
+
+        sonetPort     OBJECT IDENTIFIER ::= { xylanPportArch 4 }
+
+    --  SONET/SDH POS3 Physical Port Configuration Table
+
+        sonetPortConfigTable   OBJECT-TYPE
+	    SYNTAX   SEQUENCE OF SonetPortConfigEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	   "A table of Sonet physical layer status and parameter 
+                    information."
+            ::= { sonetPort 1 }
+
+        sonetPortConfigEntry   OBJECT-TYPE
+	    SYNTAX   SonetPortConfigEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+                   "An entry in the table, containing information about 
+                    the physical layer of a Sonet interface."
+            INDEX   { sonetPortConfigSlotIndex, sonetPortConfigPortIndex }
+            ::= { sonetPortConfigTable 1 }
+
+        SonetPortConfigEntry ::=
+        SEQUENCE {
+	        sonetPortConfigSlotIndex
+                     INTEGER,
+		    sonetPortConfigPortIndex
+                     INTEGER,
+		    sonetPortDescription
+		             DisplayString,
+		    sonetPortFramingType
+		             INTEGER,
+		    sonetPortLoopbackConfig
+		             INTEGER,
+		    sonetPortTransmitClockSource
+		             INTEGER,
+		    sonetPortPlScramble
+		             INTEGER,
+		    sonetPortStatusChangeTrapEnable
+		             INTEGER,
+		    sonetPortFcsSize
+		             INTEGER
+        }
+
+        sonetPortConfigSlotIndex  OBJECT-TYPE
+            SYNTAX   INTEGER (1..9)
+            ACCESS   read-only
+            STATUS   mandatory
+            DESCRIPTION
+                    "A unique value which identifies this HSM board slot."
+            ::= { sonetPortConfigEntry 1 }
+
+        sonetPortConfigPortIndex   OBJECT-TYPE
+            SYNTAX   INTEGER (1..32)
+            ACCESS   read-only
+            STATUS   mandatory
+            DESCRIPTION
+                    "A unique value which identifies this port."
+            ::= { sonetPortConfigEntry 2 }
+
+	    sonetPortDescription  OBJECT-TYPE
+	        SYNTAX   DisplayString
+            ACCESS   read-write
+            STATUS   mandatory
+            DESCRIPTION
+                    "The name in ascii characters describing the interface"
+ 	        ::= { sonetPortConfigEntry 3 }
+
+	    sonetPortFramingType  OBJECT-TYPE
+	        SYNTAX  INTEGER {
+                         sonet(1),
+                         sdh(2)
+                     }
+            ACCESS  read-write
+            STATUS  mandatory
+            DESCRIPTION
+                    "Physical layer medium type."
+            ::= { sonetPortConfigEntry 4 }
+
+	    sonetPortLoopbackConfig  OBJECT-TYPE
+	        SYNTAX  INTEGER {
+                         sonetNoLoop(1),
+                         sonetPayloadLoop(2),
+                         sonetLineLoop(3),
+                         sonetOtherLoop(4)
+                     }
+            ACCESS  read-write
+            STATUS  mandatory
+            DESCRIPTION
+                "This variable represents the  loopback  confi-
+                guration of the Sonet interface.  Agents support-
+                ing read/write access should return badValue in
+                response to a requested loopback state that the
+                interface does not support.  The values mean:
+
+                sonetNoLoop
+                     Not in the loopback state.  A device  that
+                     is not capable of performing a loopback on
+                     the interface shall always return this  as
+                     it's value.
+
+                sonetPayloadLoop
+                     The received signal at this  interface  is
+                     looped  through  the device. Typically the
+                     received signal is  looped  back  for  re-
+                     transmission  after  it has passed through
+                     the device's framing function.
+
+                sonetLineLoop
+                     The received signal at this interface does
+                     not  go  through the device (minimum pene-
+                     tration) but is looped back out.
+
+                sonetOtherLoop
+                     Loopbacks that are not defined here."
+	         ::= { sonetPortConfigEntry 5 }
+
+	    sonetPortTransmitClockSource  OBJECT-TYPE
+	        SYNTAX  INTEGER {
+			         loopTiming(1),
+			         localTiming(2)
+	             }
+	        ACCESS  read-write
+	        STATUS  mandatory
+	        DESCRIPTION
+		        "The source of Transmit Clock.
+                 'loopTiming' indicates that the recovered  re-
+                 ceive clock is used as the transmit clock.
+                 'localTiming' indicates  that  a  local  clock
+                 source is used."
+	        ::= { sonetPortConfigEntry 6 }
+
+	    sonetPortPlScramble  OBJECT-TYPE
+	        SYNTAX  INTEGER {
+                         enable(1),
+                         disable(2)
+                     }
+            ACCESS  read-write
+            STATUS  mandatory
+            DESCRIPTION
+		        "Payload Scrambling enabled/disabled"
+	        ::= { sonetPortConfigEntry 7 }
+
+	    sonetPortStatusChangeTrapEnable  OBJECT-TYPE
+            SYNTAX  INTEGER {
+                         enabled(1),
+                         disabled(2)
+                     }
+            ACCESS  read-write
+            STATUS  mandatory
+            DESCRIPTION
+                    "Indicates whether traps
+                      should be generated for this interface."
+            DEFVAL { disabled }
+	        ::= { sonetPortConfigEntry 8 }
+
+	    sonetPortFcsSize  OBJECT-TYPE
+	        SYNTAX  INTEGER {
+                         fcs16(1),
+                         fcs32(2)
+                     }
+            ACCESS  read-write
+            STATUS  mandatory
+            DESCRIPTION
+		        "The size of the FCS, in bits."
+	        DEFVAL    { fcs16 }
+	        ::= { sonetPortConfigEntry 9 }
+
+    END
+
+
+
+
+

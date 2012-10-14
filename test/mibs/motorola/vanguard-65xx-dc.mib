@@ -1,0 +1,528 @@
+        -- Version 1.4, modified 02/12/98
+
+        DC-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+            Counter, Gauge
+                FROM RFC1155-SMI
+
+            OBJECT-TYPE
+                FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                      codex OBJECT IDENTIFIER ::= { enterprises 449 }
+         cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                    cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+          cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+ cdx6500StatOtherStatsGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 2 }
+
+            cdx6500Controls OBJECT IDENTIFIER ::= { cdx6500 4 }
+
+        -- Textual Conventions
+
+        DisplayString ::= OCTET STRING
+
+        -- Statistics objects 
+
+        cdx6500DCStatTable OBJECT IDENTIFIER ::= 
+            { cdx6500StatOtherStatsGroup 10 }
+
+        -- General Statistics objects 
+
+        cdx6500DCGenStatTable OBJECT IDENTIFIER ::= { cdx6500DCStatTable 1 }
+
+        cdx6500DCGenStatTableEntry OBJECT IDENTIFIER ::= { cdx6500DCGenStatTable 1 }
+
+        cdx6500DCGenStatDSPStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    down    (1),
+                    up      (2),
+                    missing (3)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies the current status/existence of 
+                 the DC SIMM/DSP on the motherboard.
+                 up      -  DC SIMM/DSP is installed and operational.
+                 down    -  DC SIMM/DSP is non-functional.
+                 missing -  DC SIMM/DSP is missing."
+        ::= { cdx6500DCGenStatTableEntry 1 }
+
+        cdx6500DCGenStatHndlrSWRev OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter displays the DC Handler Software 
+                 Revision Number."
+        ::= { cdx6500DCGenStatTableEntry 2 }
+
+        cdx6500DCGenStatFnctnSWRev OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "DC Function Revision number. For example, revision number 
+                 of DSP firmware."
+        ::= { cdx6500DCGenStatTableEntry 3 }
+
+        cdx6500DCGenStatMaxChannels OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of DC Channels supported."
+        ::= { cdx6500DCGenStatTableEntry 4 }
+
+        cdx6500DCGenStatChanInUse OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of DC Channels in use."
+        ::= { cdx6500DCGenStatTableEntry 5 }
+
+        cdx6500DCGenStatMaxSmltChanUse OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of DC Channels in use simultaneously since 
+                 the last stats reset."
+        ::= { cdx6500DCGenStatTableEntry 6 }
+
+        cdx6500DCGenStatRejectConn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of call requests rejected due to the unavailability 
+                 of DC channels."
+        ::= { cdx6500DCGenStatTableEntry 7 }
+
+        cdx6500DCGenStatAggCRatio OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Ratio of total number of incoming charactersfor all DC 
+                 channels to total number of outgoing characters for all 
+                 channels, for the past minute."
+        ::= { cdx6500DCGenStatTableEntry 8 }
+
+        cdx6500DCGenStatCurrEncQDepth OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current number of frames in the encoder queue, waiting to 
+                 be compressed."
+        ::= { cdx6500DCGenStatTableEntry 9 }
+
+        cdx6500DCGenStatMaxEncQDepth OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of frames that were on the encoder queue 
+                 since the last stats reset."
+        ::= { cdx6500DCGenStatTableEntry 10 }
+
+        cdx6500DCGenStatTmOfMaxEncQDepth OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time when the maximum Encoder Queue Depth is reached."
+        ::= { cdx6500DCGenStatTableEntry 11 }
+
+        cdx6500DCGenStatCurrDecQDepth OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current number of frames in the decoder queue, waiting to be 
+                 decompressed."
+        ::= { cdx6500DCGenStatTableEntry 12 }
+
+        cdx6500DCGenStatMaxDecQDepth OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Maximum number of frames that were on the decoder queue 
+                 waiting to be decompressed."
+        ::= { cdx6500DCGenStatTableEntry 13 }
+
+        cdx6500DCGenStatTmOfMaxDecQDepth OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time when the maximum Decoder Queue Depth is reached."
+        ::= { cdx6500DCGenStatTableEntry 14 }
+
+        -- Channel Statistics objects 
+
+        cdx6500DCChanStatTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500DCChanStatTableEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                 "The Data Compression Channel Statistics Table."
+        ::= { cdx6500DCStatTable 2 }
+
+        cdx6500DCChanStatTableEntry OBJECT-TYPE
+            SYNTAX Cdx6500DCChanStatTableEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each entry in this table pertains to the Data Compression 
+                 Channel statistics."
+            INDEX { cdx6500DCChanStatChanNum }
+        ::= { cdx6500DCChanStatTable 1 }
+
+        Cdx6500DCChanStatTableEntry ::=
+            SEQUENCE {
+                cdx6500DCChanStatChanNum 
+                    INTEGER,
+                cdx6500DCChanStatTmOfLastStatRst
+                    DisplayString,
+                cdx6500DCChanStatChanState
+                    INTEGER,
+                cdx6500DCChanStatSourceChan
+                    DisplayString,
+                cdx6500DCChanStatDestChan
+                    DisplayString,
+                cdx6500DCChanStatXmitCRatio
+                    DisplayString,
+                cdx6500DCChanStatNumOfEncFrames
+                    Counter,
+                cdx6500DCChanStatNumOfCharInToEnc
+                    Counter,
+                cdx6500DCChanStatNumOfCharOutOfEnc
+                    Counter,
+                cdx6500DCChanStatNumOfDecFrames
+                    Counter,
+                cdx6500DCChanStatNumOfCharInToDec
+                    Counter,
+                cdx6500DCChanStatNumOfCharOutOfDec
+                    Counter,
+                cdx6500DCChanStatEncAETrnstnCnt
+                    Counter,
+                cdx6500DCChanStatEncAEFrameCnt
+                    Counter,
+                cdx6500DCChanStatEncAEModeStatus
+                    INTEGER,
+                cdx6500DCChanStatDecAETrnstnCnt
+                    Counter,
+                cdx6500DCChanStatDecAEFrameCnt
+                    Counter,
+                cdx6500DCChanStatDecAEModeStatus
+                    INTEGER,
+                cdx6500DCChanStatDSWithBadFrames
+                    Counter,
+                cdx6500DCChanStatDSWithBadHeaders
+                    Counter,
+                cdx6500DCChanStatDSDueToRstOrCng
+                    Counter
+                }
+
+        cdx6500DCChanStatChanNum  OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Channel number whose statistics were requested."
+        ::= { cdx6500DCChanStatTableEntry 1 }
+
+        cdx6500DCChanStatTmOfLastStatRst OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time when the node restarted or the stats reset by 
+                 CTP/SNMP Manager command."
+        ::= { cdx6500DCChanStatTableEntry 2 }
+
+       cdx6500DCChanStatChanState OBJECT-TYPE
+            SYNTAX INTEGER {
+                    dspDown        (1),
+                    idle           (2),
+                    negotiating    (3),
+                    dataPassing    (4),
+                    flushingData   (5),
+                    flushingDCRing (6),
+                    apClearing     (7),
+                    npClearing     (8),
+                    clearingCall   (9),
+                    flushingOnClr  (10),
+                    clearing       (11)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                 "Activity state of the DC channel.
+                  dspDown        - DSP is down.
+                  idle           - DSP is ready to be assigned to a connection.
+                  negotiating    - Source has accepted the Call Request and is
+                                   waiting for a Call Accept from the 
+                                   destination node.
+                  dataPassing    - Normal data passing state.
+                  apClearing     - Call Clear request arrived from access side.
+                  npClearing     - Call Clear request arrived from network side.
+                  clearingCall   - A call collision or a Call Clear along with a
+                                   X.25 reset or a `start buffer discarding'.
+                  flushingOnClr  - Call has been cleared with FLUSH, waiting
+                                   packets to flush from DC Handler rings.
+                  flushingData   - Waiting for x25 confirm.
+                  flushingDCRing - Waiting for the data on the DC Handler ring
+                                   to be flushed after a x.25 confirm or stop 
+                                   discard.
+                  clearing       - Call has been cleared."
+        ::= { cdx6500DCChanStatTableEntry 3 }
+
+        cdx6500DCChanStatSourceChan OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Access Protocol's identity string."
+        ::= { cdx6500DCChanStatTableEntry 4 }
+
+        cdx6500DCChanStatDestChan OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Network Protocol's identity string."
+        ::= { cdx6500DCChanStatTableEntry 5 }
+
+        cdx6500DCChanStatXmitCRatio OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Actual compression ratio for outgoing data. 
+                 This is a 60 second snapshot. Range is 1 - 9.2"
+        ::= { cdx6500DCChanStatTableEntry 6 }
+
+        cdx6500DCChanStatNumOfEncFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames received from the Access Protocol to 
+                 be compressed."
+        ::= { cdx6500DCChanStatTableEntry 7 }
+
+        cdx6500DCChanStatNumOfCharInToEnc OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of bytes pushed into the encoder to be compressed."
+        ::= { cdx6500DCChanStatTableEntry 8 }
+
+        cdx6500DCChanStatNumOfCharOutOfEnc OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of compressed bytes produced by the encoder."
+        ::= { cdx6500DCChanStatTableEntry 9 }
+
+        cdx6500DCChanStatNumOfDecFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of frames received from the Network Protocol to 
+                 be decompressed."
+        ::= { cdx6500DCChanStatTableEntry 10 }
+
+        cdx6500DCChanStatNumOfCharInToDec OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of bytes pushed into the decoder to be decompressed."
+        ::= { cdx6500DCChanStatTableEntry 11 }
+
+        cdx6500DCChanStatNumOfCharOutOfDec OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of decompressed bytes produced by the decoder."
+        ::= { cdx6500DCChanStatTableEntry 12 }
+
+        cdx6500DCChanStatEncAETrnstnCnt OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of times the encoder switched from compressed 
+                 mode to anti-expansion mode."
+        ::= { cdx6500DCChanStatTableEntry 13 }
+
+        cdx6500DCChanStatEncAEFrameCnt OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of anti-expansion frames sent by the encoder."
+        ::= { cdx6500DCChanStatTableEntry 14 }
+
+        cdx6500DCChanStatEncAEModeStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                     off (1),
+                     on  (2)
+                     }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                 "Anti Expansion mode Status for Encoder :
+                  on  -  Data Compression is in the anti
+                         expansion mode.
+                  off -  Data Compression is out of the anti
+                         expansion mode."
+        ::= { cdx6500DCChanStatTableEntry 15 }
+
+        cdx6500DCChanStatDecAETrnstnCnt OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of times the decoder switched from compressed mode 
+                 to anti-expansion mode."
+        ::= { cdx6500DCChanStatTableEntry 16 }
+
+        cdx6500DCChanStatDecAEFrameCnt OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of anti-expansion frames received by the decoder."
+        ::= { cdx6500DCChanStatTableEntry 17 }
+
+        cdx6500DCChanStatDecAEModeStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off (1),
+                    on  (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                 "Anti Expansion mode Status for Decoder :
+                  on  -  Data Compression is in the anti 
+                         expansion mode.
+                  off -  Data Compression is out of the anti
+                         expansion mode."
+        ::= { cdx6500DCChanStatTableEntry 18 }
+
+        cdx6500DCChanStatDSWithBadFrames OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of decoded frames detected by the decoder to have 
+                 been corrupted. This includes frames with bad headers."
+        ::= { cdx6500DCChanStatTableEntry 19 }
+
+        cdx6500DCChanStatDSWithBadHeaders OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of decoded frames detected by the decoder to have 
+                 a bad header."
+        ::= { cdx6500DCChanStatTableEntry 20 }
+
+        cdx6500DCChanStatDSDueToRstOrCng OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets discarded while processing a X.25 
+                 reset or during node congestion."
+        ::= { cdx6500DCChanStatTableEntry 21 }
+
+        -- Control objects 
+        cdx6500ContDC OBJECT IDENTIFIER ::= { cdx6500Controls 9 }
+
+        cdx6500ContResetAllDCStats OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset   (1),
+                    noreset (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Reset the DC Statistics for all channels."
+        ::= { cdx6500ContDC 1 }
+
+        cdx6500ContDCTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500ContDCTableEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "These resets require the channel number as the index."
+        ::= { cdx6500ContDC 2 }
+
+        cdx6500ContDCTableEntry OBJECT-TYPE
+            SYNTAX Cdx6500ContDCTableEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each entry represents a control parameter used to reset 
+                 Channel Statistics or Channel Vocabulary."
+            INDEX { cdx6500ContDCChanNum }
+        ::= { cdx6500ContDCTable 1 }
+
+        Cdx6500ContDCTableEntry ::=
+            SEQUENCE {
+                cdx6500ContDCChanNum
+                    INTEGER,
+                cdx6500ContResetDCChanStats
+                    INTEGER,
+                cdx6500ContResetDCChanVocab
+                    INTEGER
+                }
+
+        cdx6500ContDCChanNum OBJECT-TYPE
+            SYNTAX INTEGER (1..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Channel number used as the index."
+        ::= { cdx6500ContDCTableEntry 1 }
+
+        cdx6500ContResetDCChanStats OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset   (1),
+                    noreset (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Reset the DC Statistics for this channel."
+        ::= { cdx6500ContDCTableEntry 2 }
+
+        cdx6500ContResetDCChanVocab OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset   (1),
+                    noreset (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "Reset the vocabulary/history buffer for this channel if 
+                 this channel number is active."
+        ::= { cdx6500ContDCTableEntry 3 }
+
+        END
+

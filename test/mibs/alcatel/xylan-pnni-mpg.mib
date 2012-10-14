@@ -1,0 +1,1300 @@
+--  Copyright (C) 1998 Alcatel Internetworking, Inc., All rights reserved.
+--
+--           Alcatel Internetworking, Inc. Private Network-Network Interface MIB ASN.1 Specification
+--
+-- File:        xylan-pnni-mpg.mib
+--
+-- Purpose:     Specifies Alcatel Internetworking, Inc. Proprietary PNNI MIB extensions
+--		for the Omnicell platform. This MIB file is used for MPG release code
+--		This file together with atmf-pnni.mib will be used for manage
+--		PNNI MPG operation
+--
+-- Conformance: Aligned for SNMP V1.
+--
+-- Background:  This MIB specifies additional Alcatel Internetworking, Inc. functionality to the ATM
+--              Forum's PNNI MIB.
+--
+--              It includes the associative name address table as well as 
+--		    enhanced filters for PNNI security.
+--
+--              History
+--              =======
+--               6/1/98 Burt Cyr (Bpc) Created 
+--
+--
+--  Alcatel Internetworking, Inc. reserves the right to make changes in
+--  specification and other information contained in this document
+--  without prior notice.  The reader should consult Alcatel Internetworking,
+--  Inc. to determine whether any such changes have been made.
+--  Current MIBs are available from the following URLs:
+--              ftp://ftp.ind.alcatel.com/pub/products/mibs
+--              http://www.ind.alcatel.com
+--
+--  In no event shall Alcatel Internetworking, Inc. be liable for any incidental,
+--  indirect, special, or consequential damages whatsoever (including
+--  but not limited to lost profits) arising out of or related to this
+--  document or the information contained in it, even if Alcatel Internetworking,
+--  Inc. has been advised of, known, or should have known, the
+--  possibility of such damages.
+--
+--  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+--  parties a non-exclusive license to use this Specification in connection
+--  with the management of Alcatel Internetworking, Inc. products.
+
+
+
+XYLANPNNI-MIB DEFINITIONS ::= BEGIN
+ 
+IMPORTS
+    Unsigned32                  FROM SNMPv2-SMI
+    OBJECT-TYPE                 FROM RFC-1212
+    DisplayString               FROM RFC1213-MIB
+    Counter                     FROM RFC1155-SMI
+    TruthValue                  FROM SNMPv2-TC
+    TimeStamp                   FROM SNMPv2-TC
+    xylanPnni                   FROM XYLAN-BASE-MIB
+    MODULE-IDENTITY             FROM SNMPv2-SMI;
+
+xylanPnniMIB MODULE-IDENTITY
+             LAST-UPDATED    "9810190000Z"
+             ORGANIZATION    "Xylan"
+             CONTACT-INFO
+                 "Alcatel Internetworking, Inc.
+                  26801 W. Agoura Road
+                  Calabasas, CA 91301 USA
+                  Phone: +1 818-878-3500" 
+             DESCRIPTION
+                 "This MIB specifies additional Xylan functionality
+                  to the ATM Forum's PNNI MIB."
+             ::= { xylanPnni 2 }
+
+-- Note that { xylanPnni 1} is now deprecated and no longer supported.
+-- it contained PNNI v1.0 MIB + Xylan corrections + alignment to SNMP v1.
+
+    xylanPnniMIBExtens OBJECT IDENTIFIER ::= { xylanPnniMIB 1 }
+
+    xylanPnniMIBObjs OBJECT IDENTIFIER ::= { xylanPnniMIBExtens 1 }
+
+    XPnniNodeId ::= OCTET STRING (SIZE(22))
+ 
+    XPnniNodeLevel ::= INTEGER (0..104)
+
+    XPnniAtmAddr ::= OCTET STRING (SIZE(0|20))
+    XPnniPortId ::= Unsigned32 
+
+
+    XPnniFiltCallType ::= INTEGER { both-ptop-pmp(0),
+                                ptop(1),
+                                pmp(2) }
+
+    XPnniFiltServiceCategory ::= INTEGER { none-specified(0),
+                                cbr(1),
+                                rtVbr(2),
+                                abr(3) }
+
+    XPnniFiltMetricConstraint ::= INTEGER { none-specified(0),
+                                pcr(1),
+                                min-cr(2),
+                                scr(3),
+                                max-burst(4) }
+ 
+    XPnniFiltExceptionCriteria ::= INTEGER { none-specified(0),
+                                all-addrs-pass-except(1),
+                                no-addrs-pass-except(2) }
+    
+    XPnniFilterPrefixLength ::= INTEGER (0..152)
+
+    XPnniAddrPrefix ::= OCTET STRING (SIZE(19))
+
+ 
+-- The Associative Name Table
+
+xPnniAssociativeNameTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF XPnniNameEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "The xPnniAssociativeNameTable contains attributes that bind 
+             node names to PNNI Node IDs.
+ 
+             There is a single row in this table for each PNNI node
+             in the network. Default names are node1, node2, ... until
+             the administrator specifically configures a different name."
+        ::= { xylanPnniMIBObjs 1 }
+ 
+xPnniNameEntry OBJECT-TYPE
+        SYNTAX  XPnniNameEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a PNNI
+             node in this network."
+        INDEX { xPnniNodeIndex }
+        ::= { xPnniAssociativeNameTable 1 }
+ 
+XPnniNameEntry ::=
+        SEQUENCE {
+                xPnniNodeIndex     INTEGER,
+                xPnniNodeId        XPnniNodeId,
+                xPnniNodeName      DisplayString
+                }
+
+xPnniNodeIndex OBJECT-TYPE
+        SYNTAX  INTEGER (1..65535)
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The index into the associative name table. This index 
+             also corresponds to entries in the nodal map table."
+        ::= { xPnniNameEntry 1 }
+ 
+xPnniNodeId OBJECT-TYPE
+        SYNTAX  XPnniNodeId
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The value of the 22-byte node ID which a switching system uses to 
+             represent itself in the peer-group."
+        ::= { xPnniNameEntry 2 }
+ 
+xPnniNodeName OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The ASCII text string which represents this node. The default
+             node name has the value NODE_n where n is 1..65535."
+        ::= { xPnniNameEntry 3 }
+
+
+
+-- The Address Filter Table
+
+xPnniAddressFilterTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF XPnniAddressFilterEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "The xPnniAddressFilterTable contains attributes that allow
+             an administrator to configure address filters for security.
+             Address filters are specified by the following:
+
+                 the LGN to which the filter applies;
+                 their direction (in, out or both);
+                 their addresses (src, dest or both specified as an
+                     nsap prefix from 2 to 152 bits);
+                 their call type (PTOP, PMP, or both);
+                 their service class (CBR, ABR or RtVBR);
+                 their metric constraints (CBR - metric is PCR threshold, 
+                     ABR - the metric is Min CR, and RtVBR - the metric 
+                     threshold is either PCR, SCR, or Max Burst);
+                 their metric threshold;
+                 their trap threshold;
+                 any exceptions (all/no addresses pass except...)
+                 and the corresponding exception prefix (from 2-152 bits); and
+		     start/stop Time Of Day values:
+
+             There is a single row in this table for each PNNI filter
+             in this switching system."
+        ::= { xylanPnniMIBObjs 2 }
+ 
+xPnniAddressFilterEntry OBJECT-TYPE
+        SYNTAX  XPnniAddressFilterEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a filter
+             in this switching system."
+        INDEX { xPnniFiltIndex }
+        ::= { xPnniAddressFilterTable 1 }
+ 
+XPnniAddressFilterEntry ::=
+        SEQUENCE {
+           xPnniFiltIndex                 INTEGER,
+           xPnniFiltNodeLevel             XPnniNodeLevel,
+           xPnniFiltSrcPrefLen            XPnniFilterPrefixLength,
+           xPnniFiltSrcPrefix             XPnniAddrPrefix,
+           xPnniFiltDestPrefLen           XPnniFilterPrefixLength,
+           xPnniFiltDestPrefix            XPnniAddrPrefix,
+           xPnniFiltCallType              XPnniFiltCallType,
+           xPnniFiltCallSrvCls            XPnniFiltServiceCategory,
+           xPnniFiltCallMtrcConstrnt      XPnniFiltMetricConstraint,
+           xPnniFiltCallMtrcThresh        INTEGER,
+           xPnniFiltTrapThresh            INTEGER,
+           xPnniFiltSrcExceptionCriteria  XPnniFiltExceptionCriteria,
+           xPnniFiltSrcExceptionLen       XPnniFilterPrefixLength,
+           xPnniFiltSrcException          XPnniAddrPrefix,
+           xPnniFiltDestExceptionCriteria XPnniFiltExceptionCriteria,
+           xPnniFiltDestExceptionLen      XPnniFilterPrefixLength,
+           xPnniFiltDestException         XPnniAddrPrefix,
+           xPnniFiltDeniedHitCount        Counter,
+           xPnniFiltExceptionHitCount     Counter,
+           xPnniFiltTODStartHr            INTEGER,
+           xPnniFiltTODStartMin           INTEGER,
+           xPnniFiltTODStartSec           INTEGER,
+           xPnniFiltTODStopHr             INTEGER,
+           xPnniFiltTODStopMin            INTEGER,
+           xPnniFiltTODStopSec            INTEGER
+      }
+
+
+xPnniFiltIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The index into the PNNI Filter Table."
+        ::= { xPnniAddressFilterEntry 1 }
+
+xPnniFiltNodeLevel OBJECT-TYPE
+        SYNTAX  XPnniNodeLevel
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The level of the node within this switching system. Note that
+             filters may be defined for any level. If a node at a specific
+             level is disabled, then corresponding filters become inactive 
+             until the node is re-enabled."
+        DEFVAL { 80 }
+ 
+        ::= { xPnniAddressFilterEntry 2 }
+
+xPnniFiltSrcPrefLen OBJECT-TYPE
+        SYNTAX  XPnniFilterPrefixLength
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The length (in bits) of the source prefix."
+        DEFVAL { 0 }
+        ::= { xPnniAddressFilterEntry 3 }
+
+xPnniFiltSrcPrefix OBJECT-TYPE
+        SYNTAX  XPnniAddrPrefix
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The source prefix to be filtered."
+        ::= { xPnniAddressFilterEntry 4 }
+
+xPnniFiltDestPrefLen OBJECT-TYPE
+        SYNTAX  XPnniFilterPrefixLength
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The length (in bits) of the destination prefix."
+        DEFVAL { 0 }
+        ::= { xPnniAddressFilterEntry 5 }
+
+xPnniFiltDestPrefix OBJECT-TYPE
+        SYNTAX  XPnniAddrPrefix
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The destination prefix to be filtered."
+        ::= { xPnniAddressFilterEntry 6 }
+
+xPnniFiltCallType OBJECT-TYPE
+        SYNTAX  XPnniFiltCallType
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The call type indicates if the filter is to be applied to 
+             point to point calls, point to multi-point calls (add parties),
+             or to both."
+        DEFVAL { both-ptop-pmp }
+        ::= { xPnniAddressFilterEntry 7 }
+
+xPnniFiltCallSrvCls OBJECT-TYPE
+        SYNTAX  XPnniFiltServiceCategory
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The service class (if any) which this filter is active for. If
+            the service class is CBR, then the xPnniFiltCallMtrcConstrnt
+            field below must be set to PCR. 
+
+            If the service class is ABR, then the xPnniFiltCallMtrcConstrnt 
+            field below must be set to Min-CR.
+
+            If the service class is RtVbr, then the xPnniFiltCallMtrcConstrnt 
+            field below must be set to either PCR, SCR or Max-burst.
+
+            Any of the three previous values for xPnniFiltCallSrvCls (CBR, ABR
+            and RtVbr) should result in a non-zero xPnniFiltCallMtrcThresh
+            below.
+
+            Finally, if the service class is set to none-specified, then the
+            fields xPnniFiltCallMtrcConstrnt and xPnniFiltCallMtrcThresh are
+            ignored."
+        DEFVAL { none-specified }
+        ::= { xPnniAddressFilterEntry 8 }
+
+xPnniFiltCallMtrcConstrnt OBJECT-TYPE
+        SYNTAX  XPnniFiltMetricConstraint
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "A metric constraint that is used with xPnniFiltCallSrvCls."
+        DEFVAL { none-specified }
+        ::= { xPnniAddressFilterEntry 9 }
+
+xPnniFiltCallMtrcThresh OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "A metric threshold value that is used with xPnniFiltCallSrvCls.
+            The value 0 is only valid if the xPnniFiltCallSrvCls is 
+            none-specified."
+        ::= { xPnniAddressFilterEntry 10 }
+
+xPnniFiltTrapThresh OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "A threshold which when this number of filter hits are
+            encountered, will cause a trap to be sent to all trap-clients. 
+            The value of 0 causes traps to be inhibited."
+        DEFVAL { 0 }
+        ::= { xPnniAddressFilterEntry 11 }
+
+xPnniFiltSrcExceptionCriteria OBJECT-TYPE
+        SYNTAX  XPnniFiltExceptionCriteria
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The criteria used to cause exceptions to the source address
+            filters. 
+
+            If the value is none-specified, then the fields: 
+            xPnniFiltSrcExceptionLen and xPnniFiltSrcException are ignored.
+
+            If this value is all-addrs-pass-except or no-addrs-pass-except,
+            then the xPnniFiltSrcExceptionLen and xPnniFiltSrcException 
+            attributes contain the source prefix len and prefix which are to
+            be exception handled. 
+
+            This value cannot be set to all-addrs-pass-except or 
+            no-addrs-pass-except if the xPnniFiltSrcPrefLen (above) 
+            is set to 0."
+        DEFVAL { none-specified }
+        ::= { xPnniAddressFilterEntry 12 }
+
+xPnniFiltSrcExceptionLen OBJECT-TYPE
+        SYNTAX  XPnniFilterPrefixLength
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The length (in bits) of the exception address prefix attribute: 
+            xPnniFiltSrcException."
+        ::= { xPnniAddressFilterEntry 13 }
+
+xPnniFiltSrcException OBJECT-TYPE
+        SYNTAX  XPnniAddrPrefix
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The ATM Address Prefix of the source address exception."
+        ::= { xPnniAddressFilterEntry 14 }
+
+xPnniFiltDestExceptionCriteria OBJECT-TYPE
+        SYNTAX  XPnniFiltExceptionCriteria
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The criteria used to cause exceptions to the destination address
+            filters. 
+
+            If the value is none-specified, then the fields: 
+            xPnniFiltDestExceptionLen and xPnniFiltDestException are ignored.
+
+            If this value is all-addrs-pass-except or no-addrs-pass-except,
+            then the xPnniFiltDestExceptionLen and xPnniFiltDestException 
+            attributes contain the destination prefix len and prefix which are 
+            to be exception handled. 
+
+            This value cannot be set to all-addrs-pass-except or 
+            no-addrs-pass-except if the xPnniFiltDestPrefLen (above) 
+            is set to 0."
+        DEFVAL { none-specified }
+        ::= { xPnniAddressFilterEntry 15 }
+
+xPnniFiltDestExceptionLen OBJECT-TYPE
+        SYNTAX  XPnniFilterPrefixLength
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The length (in bits) of the exception address prefix attribute: 
+            xPnniFiltDestException."
+        ::= { xPnniAddressFilterEntry 16 }
+
+xPnniFiltDestException OBJECT-TYPE
+        SYNTAX  XPnniAddrPrefix
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The ATM Address Prefix of the destination address exception."
+        ::= { xPnniAddressFilterEntry 17 }
+
+xPnniFiltDeniedHitCount OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "A counter specifying how many times this filter was activated.
+            Writing a 0 value to this field will cause this counter to be
+            reset for this filter."
+        ::= { xPnniAddressFilterEntry 18 }
+
+xPnniFiltExceptionHitCount OBJECT-TYPE
+        SYNTAX  Counter
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "A counter specifying how many times this filter was activated
+            but an exception was permitted. Writing a 0 value to this field 
+            will cause this counter to be reset for this filter."
+        ::= { xPnniAddressFilterEntry 19 }
+
+-- If the following Start fields are set to 00:00:00, then there is no daily
+-- start time. The same holds true for the stop fields. If either start or
+-- stop fields are 00:00:00, then TOD activity is not enabled for this filter.
+
+xPnniFiltTODStartHr OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The hour of the day (using a 24 hour clock) when the filter is to
+            be activated."
+        DEFVAL { 0 }
+        ::= { xPnniAddressFilterEntry 20 }
+
+xPnniFiltTODStartMin OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The minute of the hour when the filter is to be activated."
+        DEFVAL { 0 }
+        ::= { xPnniAddressFilterEntry 21 }
+
+xPnniFiltTODStartSec OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The second of the minute when the filter is to be activated."
+        DEFVAL { 0 }
+        ::= { xPnniAddressFilterEntry 22 }
+
+xPnniFiltTODStopHr OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The hour of the day (using a 24 hour clock) when the filter is to
+            be de-activated."
+        DEFVAL { 0 }
+        ::= { xPnniAddressFilterEntry 23 }
+
+xPnniFiltTODStopMin OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The minute of the hour when the filter is to be de-activated."
+        DEFVAL { 0 }
+        ::= { xPnniAddressFilterEntry 24 }
+
+xPnniFiltTODStopSec OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The second of the minute when the filter is to be de-activated."
+        DEFVAL { 0 }
+        ::= { xPnniAddressFilterEntry 25 }
+
+-- ILMI Adjacencies
+
+xPnniIAdjMIBObjects OBJECT IDENTIFIER ::= { xylanPnniMIBObjs 3 }
+
+
+-- The adjacency group - there's actually a MIB for the ILMI registered
+-- addresses but that is used exclusively by the switch and end station
+-- functions.
+
+xPnniIAdjGroup OBJECT IDENTIFIER ::= { xPnniIAdjMIBObjects 1 }
+
+xPnniNumIAdj OBJECT-TYPE                           
+        SYNTAX  Counter
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "The number of adjacencies registered via ILMI in PNNIs
+             lowest nodes adjacency table in this switching system."
+        ::= { xPnniIAdjGroup 1 }
+
+
+-- ILMI Adjacency table
+ 
+xPnniIAdjTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF XPnniIAdjEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "The xPnniIAdjTable stores records of adjacencies which ILMI
+             has registered with the lowest level PNNI node in this 
+             network.
+ 
+             There is a single row in this table for each adjacency which
+             ILMI has registered."
+        ::= { xPnniIAdjGroup 2 }
+ 
+xPnniIAdjEntry OBJECT-TYPE
+        SYNTAX  XPnniIAdjEntry
+        ACCESS  not-accessible
+	STATUS  mandatory
+        DESCRIPTION
+            "An entry in the table, containing information about a PNNI
+             logical node in this switching system."
+        INDEX   { xPnniIAdjIndex }
+        ::= { xPnniIAdjTable 1 }
+ 
+XPnniIAdjEntry ::=
+        SEQUENCE {
+                xPnniIAdjIndex                  INTEGER,
+                xPnniIAdjAtmAddress             XPnniAtmAddr,
+                xPnniIAdjSlot                   INTEGER,
+                xPnniIAdjPort                   INTEGER,
+                xPnniIAdjInst                   INTEGER,
+                xPnniIAdjCsmPPort               INTEGER,
+                xPnniIAdjAdvertised             TruthValue,
+                xPnniIAdjSummarized             TruthValue,
+                xPnniIAdjLearned                DisplayString
+                }
+
+xPnniIAdjIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "A value assigned to an ILMI client registered via ILMI in this 
+             switching system that uniquely identifies it in the PNNI ILMI
+             adjacency table."
+        ::= { xPnniIAdjEntry 1 }
+ 
+xPnniIAdjAtmAddress OBJECT-TYPE
+        SYNTAX  XPnniAtmAddr
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "This adjacency's ATM End System Address."
+        ::= { xPnniIAdjEntry 2 }
+ 
+xPnniIAdjSlot OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "The slot in which this adjacency is physically connected to this
+             switching system."
+        ::= { xPnniIAdjEntry 3 }
+ 
+xPnniIAdjPort OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "The port in the slot which this adjacency is physically 
+             connected to this switching system."
+        ::= { xPnniIAdjEntry 4 }
+ 
+xPnniIAdjInst OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "The instance identifier on the slot port pair which this 
+             adjacency is physically connected to this switching system.
+             In the event that this is not a tunnel, this value will be 
+             zero."
+        ::= { xPnniIAdjEntry 5 }
+ 
+xPnniIAdjCsmPPort OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "The unique port id which PNNI has bound to this physical slot,
+             port, and instance tuple."
+        ::= { xPnniIAdjEntry 6 }
+ 
+xPnniIAdjAdvertised OBJECT-TYPE
+        SYNTAX  TruthValue
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Indicates if this ILMI client is advertised by this switching
+            system. Note that if this value is False, the summary address may
+            be used by remote nodes to still reach this ILMI client if
+            xPnniIAdjSummarized is set to True (below)."
+        ::= { xPnniIAdjEntry 7 }
+ 
+xPnniIAdjSummarized OBJECT-TYPE
+        SYNTAX  TruthValue
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Indicates if this ILMI client is summarized by this switching
+            system. Note that if this value is True, other nodes in the 
+            peer group will route to this node's advertised port of 1.
+            Calls terminating at end-systems attached to this node will then
+            be vectored out the xPnniIAdjCsmPPort."
+        ::= { xPnniIAdjEntry 8 }
+ 
+xPnniIAdjLearned OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "This field contains a timestamp of when ILMI registered this
+             adjacency with PNNI."
+        ::= { xPnniIAdjEntry 9 }
+
+
+-- PNNI Test Group
+
+xPnniTestMIBObjects OBJECT IDENTIFIER ::= { xylanPnniMIBObjs 4 }
+
+xPnniRtstMIBGroup OBJECT IDENTIFIER ::= { xPnniTestMIBObjects 1 }
+
+
+-- The Route test group - This is a single-row table that exists to perform
+-- route tests. It may not be written to and get-nexts return NOSUCH.
+-- The only operation allowed on this table is a get.
+--
+-- The route test is performed by getting an Index which specifies the
+-- node index, service class requested, route lookup type as well as 
+-- 20 byte destination address.
+--
+-- The row contents are the following:
+--	Error - 0 = No-error in which case the other columns contain
+--                  non-NULL info;
+--		1 = No route to Destination
+--		2 = DTL Exhaustion 
+--		3 = Unspecified internal failure
+--
+--	Flags - 1 = DtlAdded (in which case the outboundPort, hopCount, DTL,
+--				and curPtr are non-NULL)
+--		2 = Direct (in which case the outboundPort is non-NULL)
+--		3 = Myself (in which case the outboundPort is 0)
+--		4 = DirectEreach (in which case the outboundPort is non-NULL 
+--			and the VPI and E164 address will contain the 
+--			user-configured value)
+--	outboundPort - 0 = Myself
+--		1 = Summary Port
+--		n = pnniPort or csmPort (EG. 128 is 3/1)
+--	vpi	- specified on EReach configurations only
+--	e164Addr- specified on EReach configurations only
+--	e164Addrlen- specified on EReach configurations only
+--	hopCount - specified when flags == DtlAdded
+--	Dtl      - specified when flags == DtlAdded
+--	curPtr   - specified when flags == DtlAdded
+--
+
+-- Route Test table - 1 row only
+ 
+xPnniRtstTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF XPnniRtstEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "The xPnniRtstTable is a single-row table which returns the
+             results of a route test requested by a remote mgmt station.
+             The route test parameters are specified in the INDEX."
+        ::= { xPnniRtstMIBGroup 1 }
+ 
+xPnniRtstEntry OBJECT-TYPE
+        SYNTAX  XPnniRtstEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "An entry in the route test table, containing information 
+             about a route lookup request."
+        INDEX  { xPnniNodeIndex,
+                 xPnniRtstClass,
+                 xPnniRtstType,
+                 xPnniRtstDest }
+        ::= { xPnniRtstTable 1 }
+ 
+XPnniRtstEntry ::=
+        SEQUENCE {
+                xPnniRtstClass          INTEGER,
+                xPnniRtstType           INTEGER,
+                xPnniRtstDest           OCTET STRING,
+                xPnniRtstError          INTEGER,
+                xPnniRtstFlags          INTEGER,
+                xPnniRtstOutboundPort   XPnniPortId,
+                xPnniRtstVPI            INTEGER,
+                xPnniRtstE164           OCTET STRING,
+                xPnniRtstE164len        INTEGER,
+                xPnniRtstHopCount       INTEGER,
+                xPnniRtstDTL            OCTET STRING,
+                xPnniRtstCurPointer     INTEGER
+                }
+
+xPnniRtstClass OBJECT-TYPE
+        SYNTAX  INTEGER { 
+                         ubr(1), 
+                         cbr(2), 
+                         vbrRt(3), 
+                         vbrNrt(4), 
+                         abr(5) }
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "The class the route request is to use."
+        --DEFVAL { 1 }
+        ::= {xPnniRtstEntry 1 }
+
+
+xPnniRtstType OBJECT-TYPE
+        SYNTAX  INTEGER {
+                         ptpt(1), 
+                         pmp(2) }
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "This index specifies the type of call which may be either point
+             to point or point to multi-point."
+        --DEFVAL { 1 }
+        ::= { xPnniRtstEntry 2 }
+
+
+xPnniRtstDest OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE(20))
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "The destination address. This may be specified by the user
+             as an address prefix, but the SNMP manager must pad this
+             out to 20 octets."
+-- may not be defaulted
+        ::= {xPnniRtstEntry 3 }
+
+
+xPnniRtstError OBJECT-TYPE
+        SYNTAX  INTEGER { 
+                         success(0), 
+                         noRouteToDest(1), 
+                         dtlExhaustion(2), 
+                         other(3) }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Indicates if an error has occurred and if so, the nature of the
+             error. If this is set to success, then no error occurred and 
+             the rest of the row contains useful information."
+        ::= {xPnniRtstEntry 4 }
+
+
+xPnniRtstFlags OBJECT-TYPE
+        SYNTAX  INTEGER { 
+                         dtlAdded(1), 
+                         direct(2), 
+                         myself(3), 
+                         directEreach(4) }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "If error is set to success, this flag indicates the nature of
+             the route lookup confirmation. 
+
+             If this flag is set to dtlAdded, then the route request resulted
+             in a DTL being allocated for this request. In this case, the 
+             xPnniRtstOutboundPort, xPnniRtstHopCount, xPnniRtstDTL, and 
+             xPnniRtstCurPointer contain useful information. (Also, after 
+             this information is conveyed back to the manager, the DTL entry
+             is freed.)
+
+             If this flag is set to direct, then the route request is 
+             informing the caller to proceed out a directly attached port.
+             In this case, the xPnniRtstOutboundPort is valid and is either
+             1 (to indicate a match on this node's summary address) or is
+             a reference to the PNNI advertised outbound port.
+
+             If this flag is set to myself, then the route request is 
+             informing the caller that the test call to the node in this 
+             switching system (identified by xPnniNodeIndex) returned a
+             successful match of myself as the destination. In this case,
+             the xPnniRtstOutboundPort is valid and is set to 0 (which 
+             indicates a match on this node's own address).
+             
+             If this flag is set to directEreach, then the route request is 
+             informing the caller that the test call to the destination 
+             resulted in a direct indication. In this case, the 
+             xPnniRtstOutboundPort is valid and is set to the static route's
+             PNNI advertised port ID. If the user also specified a VPI and 
+             E.164 address, then the xPnniRtstVPI and xPnniRtstE164 fields
+             will also be present."
+        ::= {xPnniRtstEntry 5 }
+
+
+
+xPnniRtstOutboundPort OBJECT-TYPE
+        SYNTAX  XPnniPortId
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "If error is set to success, this indicates the outbound port of
+             the route lookup confirmation. 
+
+             If this is set to 0, then this indicates the call was placed to
+             this switching system's xPnniNodeIndex.
+             
+             If this is set to 1, then this indicates the call was placed to
+             a reachability which matched this node's summary address. In 
+             this event, the IAdj table would be consulted to determine the 
+             actual port (if any) where the destination resided.
+
+             If set to any other value, it indicates the PNNI advertised port 
+             of the static route which caused this port to be returned."
+        ::= { xPnniRtstEntry 6 }
+
+
+
+xPnniRtstVPI OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "If error is set to success, and xPnniRtstFlags is set to 
+             directEreach, then this indicates the vpi (if set by the
+             user) used to route the call."
+        ::= {xPnniRtstEntry 7 }
+
+
+xPnniRtstE164 OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE(1..20))
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "If error is set to success, and xPnniRtstFlags is set to 
+             directEreach, then this indicates the E.164 address (if 
+             set by the user) used to route the call."
+        ::= {xPnniRtstEntry 8 }
+
+
+xPnniRtstE164len OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "If error is set to success, and xPnniRtstFlags is set to 
+             directEreach, then this indicates the number of significant
+             octets used in the above E.164 address."
+        ::= {xPnniRtstEntry 9 }
+
+
+xPnniRtstHopCount OBJECT-TYPE
+        SYNTAX  INTEGER (2..50)
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "If error is set to success, and xPnniRtstFlags is set to 
+             dtlAdded, then this indicates the number of hops in the 
+             xPnniRtstDTL."
+--	REFERENCE "ATM Forum PNNI 1.0 Section 6.4.6.4"
+        ::= { xPnniRtstEntry 10 }
+
+
+xPnniRtstDTL OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE(52..1500))
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "If error is set to success, and xPnniRtstFlags is set to 
+             dtlAdded, then this indicates the DTL generated by the
+             route lookup function in the switching system. Note that
+             this is a complete DTL meaning that the DTL IE header is
+             also present.
+
+             It has enough room for 50 entries (50 hops). Each entry
+             has a 22-octet node-ID followed by a 4-octet PnniPortId.
+             Entries therefore are 26 octets each and each entry is
+             contiguous with its predecessor and successor.
+
+             This DTL will not appear in the DTL table since it's freed
+             after generating the reply to the management station."
+--	REFERENCE "ATM Forum PNNI 1.0 Section 6.4.6.4"
+        ::= { xPnniRtstEntry 11 }
+
+
+xPnniRtstCurPointer OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "If error is set to success, and xPnniRtstFlags is set to 
+             dtlAdded, then this indicates the offset (in bytes) into
+             xPnniRtstDTL of the curPtr."
+--	REFERENCE "ATM Forum PNNI 1.0 Section 6.4.6.4"
+        ::= {xPnniRtstEntry 12 }
+
+
+-- The PNNI Analyzer group - for dynamic trace analysis. Prior to start, 
+-- the user should set the BufSiz, Trigger, and node index. Writing a start
+-- value to BufControl causes the capture to begin.
+
+xPnniTrcMIBGroup OBJECT IDENTIFIER ::= { xPnniTestMIBObjects 2 }
+
+xPnniTrcBufSiz OBJECT-TYPE
+        SYNTAX  INTEGER 
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "A value indicating the size of the trace capture buffer."
+--      DEFAULT size is 50KB
+        ::= { xPnniTrcMIBGroup 1 }
+
+xPnniTrcBufTrigger OBJECT-TYPE
+        SYNTAX  INTEGER {
+                         loop (1),
+                         haltOnFull(2) }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "A value indicating action on buffer capacity reached."
+--      DEFAULT is haltOnFull
+        ::= { xPnniTrcMIBGroup 2 }
+ 
+xPnniTrcBufControl OBJECT-TYPE
+        SYNTAX  INTEGER {
+                         start (1),
+                         freeze(2),
+                         stopAndFreeBuf(3) }
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "A value indicating a control action on trace."
+        ::= { xPnniTrcMIBGroup 3 }
+ 
+xPnniTrcNodeIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "This variable indicates the node index within this switching
+             system to be traced."
+        ::= { xPnniTrcMIBGroup 4 }
+ 
+-- The trace analyzer table. Each row corresponds to a frame received.
+ 
+xPnniTrcTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF XPnniTrcEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "The xPnniITrcTable stores records of captured frames from
+             both the AAL-SAP as well as signalled RCCs.
+ 
+             There is a single row in this table for each adjacency which
+             ILMI has registered."
+        ::= { xPnniTrcMIBGroup 5 }
+ 
+
+xPnniTrcEntry OBJECT-TYPE
+        SYNTAX  XPnniTrcEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "An entry in the analyzer table, containing information about 
+             a PNNI received by a node in this switching system."
+        INDEX   { xPnniTrcFrameIndex, xPnniTrcFrameFrag }
+        ::= { xPnniTrcTable 1 }
+ 
+XPnniTrcEntry ::=
+        SEQUENCE {
+                xPnniTrcFrameIndex              INTEGER,
+                xPnniTrcFrameFrag               INTEGER,
+                xPnniTrcDirection               INTEGER,
+                xPnniTrcSlot                    INTEGER,
+                xPnniTrcPort                    INTEGER,
+                xPnniTrcCsmPPort                INTEGER,
+                xPnniTrcFrType                  INTEGER,
+                xPnniTrcFrLen                   INTEGER,
+                xPnniTrcLearned                 TimeStamp,
+                xPnniTrcFrame                   OCTET STRING
+                }
+
+xPnniTrcFrameIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "An index selecting a particular frame."
+        ::= { xPnniTrcEntry 1 }
+
+xPnniTrcFrameFrag OBJECT-TYPE
+        SYNTAX	INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "A fragment within a captured frame."
+        ::= { xPnniTrcEntry 2 }
+
+xPnniTrcDirection OBJECT-TYPE
+        SYNTAX  INTEGER { inbound (1), 
+                          outbound (2) }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Indicates whether the frame was transmitted or received."
+        ::= { xPnniTrcEntry 3 }
+
+xPnniTrcSlot OBJECT-TYPE
+        SYNTAX	INTEGER 
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Indicates the physical slot where the frame was 
+             transmitted or received."
+        ::= { xPnniTrcEntry 4 }
+
+xPnniTrcPort OBJECT-TYPE
+        SYNTAX  INTEGER 
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Indicates the physical port where the frame was 
+             transmitted or received."
+        ::= { xPnniTrcEntry 5 }
+
+
+xPnniTrcCsmPPort OBJECT-TYPE
+        SYNTAX  INTEGER 
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Indicates the advertised PNNI port ID where the frame was 
+             transmitted or received. This is used primarily for signaled 
+             RCCs."
+        ::= { xPnniTrcEntry 6 }
+
+
+xPnniTrcFrType OBJECT-TYPE
+        SYNTAX  INTEGER {
+                         hello (1),
+                         ptsp (2),
+                         ptseAck (3),
+                         dbSumm (4),
+                         ptseReq(5) }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Indicates the type of frame as specified in the ATM-Forum
+             PNNI V1.0 Specification, Section 5.14.4, Table 5-21."
+        ::= { xPnniTrcEntry 7 }
+
+
+xPnniTrcFrLen OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Indicates the overall frame length."
+        ::= { xPnniTrcEntry 8 }
+
+
+xPnniTrcLearned OBJECT-TYPE
+        SYNTAX  TimeStamp
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Indicates the timestamp of when the frame was either 
+             transmitted or received."
+        ::= { xPnniTrcEntry 9 }
+
+
+xPnniTrcFrame OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE(1000))
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "Contains the raw frame contents."
+        ::= { xPnniTrcEntry 10 }
+
+
+-- The Associative Name Table (aka the Alias Name Table)
+
+
+xPnniAliasTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF XPnniAliasEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "This table stores address (prefix) bindings for Display 
+             purposes."
+        ::= { xylanPnniMIBObjs 5 }
+ 
+
+
+xPnniAliasEntry OBJECT-TYPE
+        SYNTAX  XPnniAliasEntry
+        ACCESS  not-accessible
+        STATUS  mandatory
+        DESCRIPTION
+            "An entry in the alias table containing information about 
+             a binding between PNNI address, nodeId or address prefix and 
+             a text string. When referring to a nodeId, this is called a 
+             domain name."
+        INDEX { xPnniAliasIndex }
+        ::= { xPnniAliasTable 1 }
+ 
+XPnniAliasEntry ::=
+        SEQUENCE {
+                xPnniAliasIndex                 INTEGER,
+                xPnniAliasName                  DisplayString,
+                xPnniAliasPrefLen               INTEGER,
+                xPnniAliasPrefixBinding         OCTET STRING
+                }
+
+xPnniAliasIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "An index selecting a particular name-binding."
+        ::= { xPnniAliasEntry 1 }
+
+
+xPnniAliasName OBJECT-TYPE
+        SYNTAX  DisplayString
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The name to be bound to the prefix."
+        ::= { xPnniAliasEntry 2 }
+
+
+xPnniAliasPrefLen OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "An length (in bits) of the prefix binding. A Prefix length of
+             176 bits (22 Octets) implies a node ID. A length of 160 bits
+             implies an ATM Address."
+        ::= { xPnniAliasEntry 3 }
+
+
+xPnniAliasPrefixBinding OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE(22))
+        ACCESS  read-write
+        STATUS  mandatory
+        DESCRIPTION
+            "The prefix binding."
+        ::= { xPnniAliasEntry 4 }
+
+
+-- Object (variables) specifically returned by traps
+
+xPnniTrapMIBObjects OBJECT IDENTIFIER ::= { xylanPnniMIBObjs 6 }
+
+xPnniTrapPnPortId OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "On a trap condition, this identifies the port-related variable."
+        ::= { xPnniTrapMIBObjects 1 }
+
+xPnniTrapRouteAddrAddress OBJECT-TYPE
+        SYNTAX  XPnniAddrPrefix 
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "On a trap condition, this identifies the address prefix-related  
+             variable."
+        ::= { xPnniTrapMIBObjects 2 }
+
+
+xPnniTrapRouteAddrPrefixLength OBJECT-TYPE
+        SYNTAX  XPnniFilterPrefixLength 
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "On a trap condition, this identifies the address prefix length
+             related variable."
+        ::= { xPnniTrapMIBObjects 3 }
+
+
+xPnniTrapFiltIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "On a trap condition, this identifies the filter index  
+             variable."
+        ::= { xPnniTrapMIBObjects 4 }
+
+
+xPnniTrapNeighborId OBJECT-TYPE
+        SYNTAX  XPnniNodeId 
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "On a Neighbor trap condition, this identifies the neighbor node
+             Id-related variable."
+        ::= { xPnniTrapMIBObjects 5 }
+
+
+xPnniTrapNodeId OBJECT-TYPE
+        SYNTAX  XPnniNodeId 
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "On a trap condition, this identifies the local
+             node ID variable which specifies the level and 
+             LGN or lowest level node."
+        ::= { xPnniTrapMIBObjects 6 }
+
+
+xPnniTrapNodeDownReason OBJECT-TYPE
+        SYNTAX INTEGER {
+                        localUiAdmin (1),
+                        remoteTelnet (2),
+                        mgmt (3),
+                        other (4) }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "On a trap condition, this identifies the reason a node
+             has gone down. A value of LocalUiAdmin specifies that a
+             user on the MPM's Console or Modem Port has caused the 
+             action via a UI Shell:phalt command.
+
+             A value of RemoteTelnet indicates that a user logged 
+             in remotely has caused the action via a UI Shell:phalt 
+             command.
+
+             A value of Mgmt indicates that a remote SNMP management entity
+             Has caused the action via a (re)configuration of the PNNI Node 
+             Table."
+        ::= { xPnniTrapMIBObjects 7 }
+
+
+xPnniTrapNodeDownRemoteIPAddr OBJECT-TYPE
+        SYNTAX  INTEGER
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "If the above variable: xPnniTrapNodeDownReason indicates
+             a value of either RemoteTelnet or then this variable indicates
+             the remote IP Address of the entity causing the action."
+        ::= { xPnniTrapMIBObjects 8 }
+
+END

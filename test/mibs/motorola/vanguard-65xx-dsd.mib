@@ -1,0 +1,429 @@
+        -- Version 1.6, modified 02/12/98
+
+        DSD-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+            Counter
+                FROM RFC1155-SMI
+
+            OBJECT-TYPE
+                FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                      codex OBJECT IDENTIFIER ::= { enterprises 449 }
+         cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                    cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+      cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+     cdx6500CfgGeneralGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 2 }
+
+          cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+ cdx6500StatOtherStatsGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 2 }
+
+            cdx6500Controls OBJECT IDENTIFIER ::= { cdx6500 4 }
+         cdx6500dsdControls OBJECT IDENTIFIER ::= { cdx6500Controls 3 }
+
+        -- Textual Conventions
+        DisplayString ::= OCTET STRING
+
+        -- The DSD Configuration Table
+
+        cdx6500GCTDSDTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500dsdCfgEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of DSD configuration entries."
+        ::= { cdx6500CfgGeneralGroup 15 }
+
+        cdx6500dsdCfgEntry OBJECT-TYPE
+            SYNTAX Cdx6500dsdCfgEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "An entry of DSD configuration parameter table, indexed
+                 by the main channel number."
+            INDEX { cdx6500dsdCfgMainChanNum }
+        ::= {cdx6500GCTDSDTable  1 }
+
+        Cdx6500dsdCfgEntry ::=
+            SEQUENCE {
+               cdx6500dsdCfgMainChanNum 
+                   INTEGER,
+               cdx6500dsdMainChanAddr
+                   DisplayString,
+               cdx6500dsdCallControl 
+                   INTEGER,
+               cdx6500dsdMainChanAutocallMnem 
+                   DisplayString,
+               cdx6500dsdAutocallTimeout 
+                   INTEGER,
+               cdx6500dsdMaxAutocallTries 
+                   INTEGER, 
+               cdx6500dsdSubChanAddr
+                   DisplayString,
+               cdx6500dsdNumOfSubChans
+                   INTEGER
+               }
+
+        cdx6500dsdCfgMainChanNum OBJECT-TYPE
+            SYNTAX INTEGER (1..16)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Index for the configuration parameter table. i.e. 
+                 the nth DSD in the Node."
+        ::= { cdx6500dsdCfgEntry 1 }
+
+        cdx6500dsdMainChanAddr OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The main channel subaddress of the DSD."
+        ::= { cdx6500dsdCfgEntry 2}
+
+        cdx6500dsdCallControl OBJECT-TYPE
+            SYNTAX INTEGER {
+            --      callOptNone       (0),
+                    callOptAuto       (1),
+                    newvalCallOptNone (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter specifies the calling activity for the Main 
+                 Channel of this Internal DSD.
+                 callOptNone - No Call Initiation by Main Channel.
+                 callOptAuto - Calls Initiated via Autocall Mnemonic.
+                 newvalCallOptNone - same functionality as 'callOptNone',
+                 new enumeration added for RFC1155 compatibility."
+        ::= { cdx6500dsdCfgEntry 3 }
+
+        cdx6500dsdMainChanAutocallMnem OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This mnemonic name is used if Call Control is configured 
+                 for auto-calling."
+        ::= { cdx6500dsdCfgEntry 4 }
+
+        cdx6500dsdAutocallTimeout OBJECT-TYPE
+            SYNTAX INTEGER (5..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the time interval in seconds between call attempts
+                 when auto-calling"
+        ::= { cdx6500dsdCfgEntry 5 }
+
+        cdx6500dsdMaxAutocallTries OBJECT-TYPE
+            SYNTAX INTEGER (0..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is used to specify the number of times 
+                 that the DSD Main Channel will attempt to call when 
+                 auto-calling is enabled."
+        ::= { cdx6500dsdCfgEntry 6 }
+
+        cdx6500dsdSubChanAddr OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The sub-channel subaddress of the DSD."
+        ::= { cdx6500dsdCfgEntry 7 }   
+
+        cdx6500dsdNumOfSubChans OBJECT-TYPE
+            SYNTAX INTEGER (1..8)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of sub-channels for this DSD."
+        ::= { cdx6500dsdCfgEntry 8 }
+
+        -- DSD Statistics
+
+        -- The cdx6500STDSDGroup contains the DSD Main Channel and Sub-channel 
+        -- statistics tables
+
+        cdx6500OSTDSDGroup OBJECT IDENTIFIER 
+            ::= { cdx6500StatOtherStatsGroup 2 }
+          
+        cdx6500dsdMainChanStatTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500dsdMainChanStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of DSD Main Channel statistics."
+        ::= { cdx6500OSTDSDGroup 1 }
+
+        cdx6500dsdMainChanStatEntry OBJECT-TYPE
+            SYNTAX Cdx6500dsdMainChanStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A DSD Main Channel Statistics Table entry. Each entry
+                 contains the statistics for a single DSD main channel."
+            INDEX { cdx6500dsdStatMainChanNum }
+        ::= { cdx6500dsdMainChanStatTable 1 }
+
+        Cdx6500dsdMainChanStatEntry ::=
+            SEQUENCE {
+                cdx6500dsdStatMainChanNum
+                    INTEGER,
+                cdx6500dsdMainChanType 
+                    INTEGER,
+                cdx6500dsdMainChanState
+                    INTEGER,
+                cdx6500dsdMainChanRemoteAddr 
+                    DisplayString,
+                cdx6500dsdMainChanCharIn
+                    Counter,
+                cdx6500dsdMainChanCharOut
+                    Counter,
+                cdx6500dsdMainChanPktIn
+                    Counter,
+                cdx6500dsdMainChanPktOut
+                    Counter
+                }
+    
+        cdx6500dsdStatMainChanNum OBJECT-TYPE
+            SYNTAX INTEGER (1..16)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Index for statistics parameter table. i.e. the nth DSD in 
+                 the Node."
+        ::= { cdx6500dsdMainChanStatEntry 1 }
+
+        cdx6500dsdMainChanType OBJECT-TYPE
+            SYNTAX INTEGER {
+            --      svc       (0),
+                    pvc       (1),
+                    newvalSvc (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Statistics parameter for DSD main channel type.
+                 newvalSvc : same functionality as 'svc', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500dsdMainChanStatEntry 2 }
+
+        cdx6500dsdMainChanState OBJECT-TYPE
+            SYNTAX INTEGER {
+            --      dsdDisconnected       (0),
+                    dsdCalling            (1),
+                    dsdConnected          (2),
+                    newvalDsdDisconnected (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Statistics parameter for DSD main channel state.
+                 newvalDsdDisconnected : same functionality as 'dsdDisconnected'
+                 new enumeration added for RFC1155 compatibility."
+        ::= { cdx6500dsdMainChanStatEntry 3 }
+
+        cdx6500dsdMainChanRemoteAddr OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Statistics parameter for DSD main channel remote address."
+        ::= { cdx6500dsdMainChanStatEntry 4 }
+
+        cdx6500dsdMainChanCharIn OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received on this DSD main channel."
+        ::= { cdx6500dsdMainChanStatEntry 5 }
+
+        cdx6500dsdMainChanCharOut OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters transmitted on this DSD main channel."
+        ::= { cdx6500dsdMainChanStatEntry 6 }
+
+        cdx6500dsdMainChanPktIn OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets received on this DSD main channel."
+        ::= { cdx6500dsdMainChanStatEntry 7 }
+
+        cdx6500dsdMainChanPktOut OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets transmitted on this DSD main channel."
+        ::= { cdx6500dsdMainChanStatEntry 8 }
+
+
+        cdx6500dsdSubChanStatTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500dsdSubChanStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of DSD Sub Channel statistics."
+        ::= { cdx6500OSTDSDGroup 2 }
+
+        cdx6500dsdSubChanStatEntry OBJECT-TYPE
+            SYNTAX Cdx6500dsdSubChanStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A DSD Sub Channel Statistics Table entry. Each entry
+                 contains the sub-channel statistics for a single DSD."
+            INDEX { cdx6500dsdDropStatMainChanNum, 
+                    cdx6500dsdDropStatSubChanNum }
+        ::= { cdx6500dsdSubChanStatTable 1 }
+
+        Cdx6500dsdSubChanStatEntry ::=
+            SEQUENCE {
+                cdx6500dsdDropStatMainChanNum 
+                    INTEGER,
+                cdx6500dsdDropStatSubChanNum 
+                    INTEGER,
+                cdx6500dsdSubChanType 
+                    INTEGER,
+                cdx6500dsdSubChanState
+                    INTEGER,
+                cdx6500dsdSubChanRemoteAddr 
+                    DisplayString,
+                cdx6500dsdSubChanCharIn
+                    Counter,
+                cdx6500dsdSubChanCharOut
+                    Counter,
+                cdx6500dsdSubChanPktIn
+                    Counter,
+                cdx6500dsdSubChanPktOut
+                    Counter
+                }
+
+        cdx6500dsdDropStatMainChanNum OBJECT-TYPE
+            SYNTAX INTEGER (1..16)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "It is the 1st index for drop statistics table. 
+                 It is the main channel number of DSDs.
+                 i.e. the nth DSD of the node.    "
+        ::= { cdx6500dsdSubChanStatEntry 1 }  
+
+        cdx6500dsdDropStatSubChanNum OBJECT-TYPE
+            SYNTAX INTEGER (1..8)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "It is the 2nd index for drop statistics table.
+                 It is the sub-channel number of this DSD."
+        ::= { cdx6500dsdSubChanStatEntry 2 }  
+
+        cdx6500dsdSubChanType OBJECT-TYPE
+            SYNTAX INTEGER {
+            --      svc       (0),
+                    pvc       (1),
+                    newvalSvc (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Sub-channel type for this DSD sub-channel.
+                 newvalSvc : same functionality as 'svc', new enumeration
+                 added for RFC1155 compatibility."
+        ::= {cdx6500dsdSubChanStatEntry 3 }
+
+        cdx6500dsdSubChanState OBJECT-TYPE
+            SYNTAX INTEGER {
+            --     dsdDisconnected       (0),
+                   dsdCalling            (1),
+                   dsdConnected          (2),
+                   newvalDsdDisconnected (50)
+                   }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current state of this DSD sub-channel.
+                 newvalDsdDisconnected : same functionality as
+                 'dsdDisconnected', new enumeration added for RFC1155 
+                 compatibility."
+        ::= {cdx6500dsdSubChanStatEntry 4 }
+
+        cdx6500dsdSubChanRemoteAddr OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Remote address for this DSD sub-channel."
+        ::= { cdx6500dsdSubChanStatEntry 5 }
+
+        cdx6500dsdSubChanCharIn OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received on this DSD sub-channel."
+        ::= { cdx6500dsdSubChanStatEntry 6 }
+
+        cdx6500dsdSubChanCharOut OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters transmitted on this DSD sub-channel."
+        ::= { cdx6500dsdSubChanStatEntry 7 }
+
+        cdx6500dsdSubChanPktIn OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets received on this DSD sub-channel."
+        ::= { cdx6500dsdSubChanStatEntry 8 }
+
+        cdx6500dsdSubChanPktOut OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of packets transmitted on this DSD sub-channel."
+        ::= { cdx6500dsdSubChanStatEntry 9 }
+
+        -- DSD Controls
+
+        cdx6500dsdBoot OBJECT-TYPE
+            SYNTAX INTEGER {
+                    boot   (1),
+                    noBoot (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "A control object. Setting this object to value 1, will cause
+                 the DSD module to boot."
+        ::= { cdx6500dsdControls 1 }
+
+        cdx6500dsdResetStats OBJECT-TYPE
+            SYNTAX INTEGER {
+                    reset   (1),
+                    noReset (2)
+                    }
+            ACCESS write-only
+            STATUS mandatory
+            DESCRIPTION
+                "A control object which, when set to 1 will cause the
+                 DSD to reset all its statistics."
+        ::= { cdx6500dsdControls 2 }
+
+        END

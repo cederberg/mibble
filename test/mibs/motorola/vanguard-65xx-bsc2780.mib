@@ -1,0 +1,578 @@
+        -- Version 1.6, modified 02/12/98
+
+        BSC2780-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+            Counter
+                FROM RFC1155-SMI
+           OBJECT-TYPE
+                FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                      codex OBJECT IDENTIFIER ::= { enterprises 449 }
+         cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                    cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+      cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+    cdx6500CfgProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 1 }
+cdx6500PCTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 1 }
+
+          cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+   cdx6500StatProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 1 }
+cdx6500PSTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 1 }
+
+        -- Textual conventions
+
+        DisplayString ::= OCTET STRING
+        -- This data type is used to model textual information taken
+        -- from the NVT ASCII character set.  By convention, objects
+        -- with this syntax are declared as having SIZE (0..255)
+
+        -- The BSC2780 group contains the configuration parameters,
+        -- statistics, and control objects used by the BSC2780
+        -- ports and devices.
+
+        -- BSC2780 Port Configuration Table
+
+        cdx6500PPCTBSC2780Table OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500Bsc2780PortConfigEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A table of BSC2780 Port configuration entries."
+        ::= {cdx6500PCTPortProtocolGroup 11  }
+
+        cdx6500bsc2780PortConfigEntry OBJECT-TYPE
+            SYNTAX Cdx6500Bsc2780PortConfigEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A BSC2780 Configuration Table entry. Each entry
+                 contains the configuration parameters for a single
+                 BSC2780 port. "
+            INDEX { cdx6500bsc2780PortNumber }
+        ::= {cdx6500PPCTBSC2780Table 1 }
+
+        Cdx6500Bsc2780PortConfigEntry ::=
+            SEQUENCE {
+                cdx6500bsc2780PortNumber 
+                    INTEGER, 
+                cdx6500bsc2780ClockSource 
+                    INTEGER,
+                cdx6500bsc2780ClockSpeed 
+                    INTEGER,
+                cdx6500bsc2780Contention 
+                    INTEGER,
+                cdx6500bsc2780ErrThreshCount 
+                    INTEGER,
+                cdx6500bsc2780DisConnOnError
+                    INTEGER,
+                cdx6500bsc2780ConnType 
+                    INTEGER,
+                cdx6500bsc2780InterBuffTimeout 
+                    INTEGER,
+                cdx6500bsc2780PortSubAddr 
+                    DisplayString,
+                cdx6500bsc2780ReConnRetry 
+                    INTEGER,
+                cdx6500bsc2780AutocallMnemonic 
+                    DisplayString,
+                cdx6500bsc2780RestrictConnDest 
+                    DisplayString, 
+                cdx6500bsc2780BillRec 
+                    INTEGER,
+                cdx6500bsc2780DSRfollowSVC 
+                    INTEGER,
+                cdx6500bsc2780DSRholdTime 
+                    INTEGER,
+                cdx6500bsc2780PortOption 
+                    INTEGER,
+                cdx6500bsc2780TrafficPriority
+                    INTEGER,
+                cdx6500bsc2780PortOptString 
+                    DisplayString,
+                cdx6500bsc2780IdleDiscTimer
+                    INTEGER
+                }
+
+        cdx6500bsc2780PortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The BSC2780 port number described by this entry."
+        ::= { cdx6500bsc2780PortConfigEntry 1 }
+
+        cdx6500bsc2780ClockSource OBJECT-TYPE
+            SYNTAX INTEGER {
+                    int       (0),
+                    ext       (1),
+                    newvalInt (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "int - internal clock source.
+                 ext - external clock source.
+                 newvalInt - same functionality as 'int', new enumeration
+                       introduced for RFC1155 compatibility."
+        ::= { cdx6500bsc2780PortConfigEntry 2 }
+
+        cdx6500bsc2780ClockSpeed OBJECT-TYPE
+            SYNTAX INTEGER (1200..19200)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the speed of the port in bits per second,
+                 when using internal clocking."
+        ::= { cdx6500bsc2780PortConfigEntry 3 }
+
+        cdx6500bsc2780Contention OBJECT-TYPE
+            SYNTAX INTEGER {
+                    hdx       (0),
+                    fdx       (1),
+                    newvalHdx (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates whether Half Duplex (hdx) or
+                 Full Duplex (fdx) modem signals are being generated. 
+                 Full Duplex indicates communication is occuring
+                 in both directions simultaneously between devices.
+                 Half Duplex indicates transmission is occuring
+                 in both directions, but only in one direction
+                 at a time.
+                 newvalHdx : same functionality as 'hdx', new enumeration
+                 introduced for RFC1155 compatibility."
+        ::= { cdx6500bsc2780PortConfigEntry 4 }
+
+
+        cdx6500bsc2780ErrThreshCount OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates number of consecutive errors that can occur
+                 before a device is considered down."
+        ::= { cdx6500bsc2780PortConfigEntry 5 }
+
+        cdx6500bsc2780DisConnOnError OBJECT-TYPE
+            SYNTAX INTEGER {
+                    no       (0),
+                    yes      (1),
+                    newvalNo (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies whether a session should be disconnected if a 
+                 control unit has not responded once the Error Threshold 
+                 Count has been exceeded.
+                 newvalNo : same functionality as 'no',new enumeration
+                 introduced for RFC1155 compatibility."
+        ::= { cdx6500bsc2780PortConfigEntry 6 }
+        
+        cdx6500bsc2780ConnType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    simp       (0),
+                    emri       (3),
+                    dimo       (5),
+                    v25b       (13),
+                    rs366      (14),
+                    emrih      (16),
+                    dimoh      (19),
+                    newvalSimp (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specify the control signal handshake required for a
+                 connection to be made to this port:
+                 simp  - simple, no control signals required
+                 v25b  - port emulates a dial modem using V.25 bis mode 108/2
+                 rs366 - port emulates data port for the 801 autodialer
+                 emri  - port emulates a dial modem with ring indicator (RI)
+                 dimo  - port handshakes with attached modem
+                 NODE BOOT will be required when this type is changed
+                 to/from rs366 or v25b.
+                 newvalSimp - same functionality as 'simp', new enumeration
+                 introduced for RFC1155 compatibility."
+        ::= { cdx6500bsc2780PortConfigEntry 7 }
+
+        cdx6500bsc2780InterBuffTimeout OBJECT-TYPE
+            SYNTAX INTEGER (1..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the maximum amount of time in seconds the PAD
+                 will wait for the end of a multi-packet message from the
+                 network. If this time limit is exceeded, the PAD will
+                 abort the entire message and request retransmission."
+        ::= { cdx6500bsc2780PortConfigEntry 8 }
+
+
+        cdx6500bsc2780PortSubAddr OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..3))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "0 - 3 Decimal digits
+                 Calls addressed to this node and with this subaddress
+                 will be routed to this port."
+        ::= { cdx6500bsc2780PortConfigEntry 9 }
+
+        cdx6500bsc2780ReConnRetry OBJECT-TYPE
+            SYNTAX INTEGER (0..255)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of times connection will be reattempted after a 
+                 network induced disconnect."
+        ::= { cdx6500bsc2780PortConfigEntry 10 }
+
+        cdx6500bsc2780AutocallMnemonic OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..8))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This mnemonic name is used if this device is configured as a
+                 call originator."
+        ::= {  cdx6500bsc2780PortConfigEntry 11 }
+
+        cdx6500bsc2780RestrictConnDest OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..32))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "All calls originating from this port will be routed to 
+                 the destination specified in this parameter, irrespective 
+                 of route selection table entries.
+                 For example, to route calls to port 1, use P1.  To route
+                 calls to port 2, station 4, use P2S4.
+                 Blank this field to disable this function."
+        ::= {  cdx6500bsc2780PortConfigEntry 12 }
+
+        cdx6500bsc2780BillRec OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off       (0),
+                    on        (1),
+                    newvalOff (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This controls whether billing (accounting) records will be 
+                 created for calls on this port.
+                 off     -  billing (accounting) records will not be created.
+                 on      -  billing (accounting) records will be created.
+                 newvalOff - same functionality as 'off', new enumeration
+                 introduced for RFC1155 compatibility."
+        ::= { cdx6500bsc2780PortConfigEntry 13 }
+
+        cdx6500bsc2780DSRfollowSVC OBJECT-TYPE
+            SYNTAX INTEGER {
+                    no       (0),
+                    yes      (1),
+                    newvalNo (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specify whether DSR on/off required with circuit on/off.
+                 This is only available with connection type SIMP or RS366.
+                 yes = DSR will be ON only while a call is in place,
+                 The DTE connected to the port can not originate a call
+                 no = DSR is always ON.
+                 newvalNo : same functionality as 'no', new enumeration
+                 introduced for RFC1155 compatibility."
+        ::= { cdx6500bsc2780PortConfigEntry 14 }
+
+        cdx6500bsc2780DSRholdTime OBJECT-TYPE
+            SYNTAX INTEGER (50..3000)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Time in steps of 50 ms to drop DSR signal after
+                 the circuit is disconnected in DSR_Follow_SVC mode.
+                 This timer value is ignored otherwise. "
+        ::= { cdx6500bsc2780PortConfigEntry 15 }
+
+        cdx6500bsc2780PortOption OBJECT-TYPE
+            SYNTAX INTEGER {
+                    deprecatedObj (1)
+                    } 
+            ACCESS read-only
+            STATUS deprecated
+            DESCRIPTION
+                "This object has been deprecated, 
+                 It is replaced by cdx6500bsc2780PortOptString."
+        ::= { cdx6500bsc2780PortConfigEntry 16 }
+
+        cdx6500bsc2780TrafficPriority OBJECT-TYPE
+            SYNTAX INTEGER {
+                    lowPriority       (0),
+                    medPriority       (1),
+                    hiPriority        (2),
+                    xpPriority        (3),
+                    newvalLowPriority (50)
+                    } 
+            ACCESS read-only
+            STATUS optional
+            DESCRIPTION
+                "This is the traffic priority of the 2780 device; 
+                 low, medium, high, and expedite.
+                 newvalLowPriority : same functionality as 'lowPriority',
+                 new enumeration introduced for RFC1155 compatibility."
+        ::= { cdx6500bsc2780PortConfigEntry 17 }
+
+        cdx6500bsc2780PortOptString OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(3..32))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the new object for cdx6500bsc2780PortOption.
+                 Specify any of the following port control options:
+                 NONE  - no option specified.
+                 EOT   - EOT will be dropped when no data has been sent
+                         across network.
+                 ACK   - End-to-End Acknowledgements are to be used.
+                 TID   - Host/Terminal ID(0-120 characters) with initial line
+                         Bid/Response is to be exchanged.
+                 NOTTD - does not send a TTD control character.
+                 Any combination of above specified by summing(e.g. ACK+TID)."
+        ::= { cdx6500bsc2780PortConfigEntry 18 }
+
+        cdx6500bsc2780IdleDiscTimer OBJECT-TYPE
+            SYNTAX INTEGER (0..60)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The call on the port will be cleared when this timer
+                 is expired.
+                 This timer will be started when it received an EOT.
+                 0       - Timer Disabled.
+                 1 to 60 - Timer Value in seconds."
+        ::= { cdx6500bsc2780PortConfigEntry 19 }
+
+        -- BSC2780 Port Statistics
+
+        cdx6500PPSTBSC2780Table OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500Bsc2780PortStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A table of BSC2780 port statistics entries."
+        ::= { cdx6500PSTPortProtocolGroup 11 }
+
+        cdx6500bsc2780PortStatEntry OBJECT-TYPE
+            SYNTAX Cdx6500Bsc2780PortStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A BSC2780 Port Statistic Table entry. Each entry
+                 contains the statistics for a single BSC2780 port."
+            INDEX { cdx6500bsc2780StatPortNumber }
+        ::= { cdx6500PPSTBSC2780Table 1 }
+
+        Cdx6500Bsc2780PortStatEntry ::=
+            SEQUENCE {
+                cdx6500bsc2780StatPortNumber
+                    INTEGER,
+                cdx6500bsc2780PortStatus
+                    INTEGER,
+                cdx6500bsc2780PortState
+                    DisplayString,
+                cdx6500bsc2780PortSpeed
+                    INTEGER,
+                cdx6500bsc2780PortUtilIn
+                    INTEGER,
+                cdx6500bsc2780PortUtilOut
+                    INTEGER,
+                cdx6500bsc2780InMsgs
+                    Counter,
+                cdx6500bsc2780OutMsgs
+                    Counter,
+                cdx6500bsc2780InChars
+                    Counter,
+                cdx6500bsc2780OutChars
+                    Counter,
+                cdx6500bsc2780CharRateIn
+                    INTEGER,
+                cdx6500bsc2780CharRateOut
+                    INTEGER,
+                cdx6500bsc2780CrcBccErrs
+                    Counter
+                }
+
+        cdx6500bsc2780StatPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The BSC2780 port number described by this entry."
+        ::= { cdx6500bsc2780PortStatEntry 1 }
+
+        cdx6500bsc2780PortStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    disabled       (0),
+                    enabled        (1),
+                    busyOut        (2),
+                    up             (3),
+                    down           (4),
+                    newvalDisabled (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port Status indicates whether or not the port
+                 is switched on and is ready for operation. This value
+                 may be one of :
+                 up       - Port is up and running.
+                 down     - port is down.
+                 disabled - port has been disabled.
+                 enabled  - port has been enabled, but is not yet Up.
+                 busyOut  - port has been set to be disabled as soon as
+                            last active session is disestablished. No
+                            new sessions will be established.
+                 newvalDisabled - same functionality as 'disabled',
+                 new enumeration introduced for RFC1155 compatibility."
+        ::= { cdx6500bsc2780PortStatEntry 2 }
+
+        cdx6500bsc2780PortState OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(4..10))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port State indicates what the port is actually in the
+                 process of doing. This value may be one of :
+                 DISC       - No call is currently connected to the 
+                              specified port. The port is IDLE.
+                 PENACC     - The specified port is waiting for a call accept.
+                 DATA       - The port is busy. Data is being passed between 
+                              2780/3780 devices.
+                 PENDACK    - The port has sent a message (text) or an 
+                              enquiry (ENQ) and is waiting for an 
+                              acknowledgement (ACK).
+                 EOT        - End of transmission (EOT) is received. The port
+                              is waiting for a new line bid.
+                 DRO        - Outbound Data is restrained.
+                 DRI        - Inbound Data is restrained.
+                 PENDISC    - The port is waiting for disconnection. The 
+                              device sends an EOT perior to accepting a call.
+                 PENDNAK    - The port has sent a message (text) with the 
+                              bad BCC and is waiting for a negative 
+                              acknowledgement (NAK).
+                 PENDEIA    - The port is waiting for connecting to the 
+                              attached device.
+                 PENEIADISC - The port is waiting for receiving all packets
+                              acknowledged from remote before disconnecting
+                              to the local device.
+                 WT4TIMEOUT - The port is waiting for clearing the internal
+                              buffers before dropping the EIA signals.
+                 TTD        - Temporary text delay (TTD) is received. The port
+                              is waiting for sending a negative acknowledgement
+                              (NAK) to the local device.
+                 WTTDNAK    - The port has sent a temporary text delay (TTD) 
+                              and is waiting for a negative acknowledgement
+                              (NAK).
+                 RACK       - The port has sent a message (text) to the remote
+                              and is waiting for an End-to-End acknowledgement.
+                 TID        - The port is waiting for an initial enquiry (ENQ)
+                              or acknowledgement (ACK0) with the host/terminal
+                              ID from the local device.
+                 RTID       - The port is waiting for an initial enquiry (ENQ)
+                              or acknowledgement (ACK0) with the host/terminal 
+                              ID from the remote device."
+        ::= { cdx6500bsc2780PortStatEntry 3 }
+
+        cdx6500bsc2780PortSpeed OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the speed of the port if clock is internal. If
+                 clock is external, this is the detected clock speed. If
+                 Port Speed is 0, clock is external, but clocking is not
+                 being received from attatched device."
+        ::= { cdx6500bsc2780PortStatEntry 4 }
+
+        cdx6500bsc2780PortUtilIn OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Percentage of Port input bandwidth in use."
+        ::= { cdx6500bsc2780PortStatEntry 5 }
+
+        cdx6500bsc2780PortUtilOut OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Percentage of Port output bandwidth in use."
+        ::= { cdx6500bsc2780PortStatEntry 6 }
+
+        cdx6500bsc2780InMsgs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of message received since last node, port, or
+                 statistics reset."
+        ::= { cdx6500bsc2780PortStatEntry 7 }
+
+        cdx6500bsc2780OutMsgs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of message sent since last node, port, or
+                 statistics reset."
+        ::= { cdx6500bsc2780PortStatEntry 8 }
+
+        cdx6500bsc2780InChars OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received since last node, port, or
+                 statistics reset."
+        ::= { cdx6500bsc2780PortStatEntry 9 }
+
+        cdx6500bsc2780OutChars OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters sent since last node, port, or
+                 statistics reset."
+        ::= { cdx6500bsc2780PortStatEntry 10 }
+
+        cdx6500bsc2780CharRateIn OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters received per second."
+        ::= { cdx6500bsc2780PortStatEntry 11 }
+
+        cdx6500bsc2780CharRateOut OBJECT-TYPE
+            SYNTAX INTEGER (0..65535)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of characters sent per second."
+        ::= { cdx6500bsc2780PortStatEntry 12 }
+
+        cdx6500bsc2780CrcBccErrs OBJECT-TYPE
+            SYNTAX Counter
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of CRC errors since last node, port, or
+                 statistics reset."
+        ::= { cdx6500bsc2780PortStatEntry 13 }
+
+        END

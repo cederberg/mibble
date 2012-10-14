@@ -1,0 +1,254 @@
+
+	XYLAN-MGMTSTN-MIB DEFINITIONS ::= BEGIN
+
+	--  RCSID information
+
+	--  $RCSfile: xylan-trapc.mib,v $
+	--  $Revision: 1.7 $
+	--  $Date: 1998/01/15 00:42:38 $
+	--  $Author: eric $
+
+
+	--  xylan-trapc.mib
+	--  Revision: 1.00
+	--  Date: November 10, 1995
+
+	--  Alcatel Internetworking, Inc.
+	--  26801 W. Agoura Road
+	--  Calabasas, CA 91301
+	--  (818) 880-3500
+	--  support@ind.alcatel.com
+
+	--  This module provides authoritative definitions for Alcatel Internetworking, Inc.
+	--  enterprise-specific trap control MIB
+
+	--  This module will be extended, as needed.
+
+
+	--  Alcatel Internetworking, Inc. reserves the right to make changes in 
+	--  specification and other information contained in this document 
+	--  without prior notice.  The reader should consult Alcatel Internetworking,
+	--  Inc. to determine whether any such changes have been made.
+	--  Current MIBs are availible from the following URLs:
+	--		ftp://ftp.ind.alcatel.com/pub/products/mibs
+	--		http://www.ind.alcatel.com
+	--
+	--  In no event shall Alcatel Internetworking, Inc. be liable for any incidental, 
+	--  indirect, special, or consequential damages whatsoever (including 
+	--  but not limited to lost profits) arising out of or related to this
+	--  document or the information contained in it, even if Alcatel Internetworking,
+	--  Inc. has been advised of, known, or should have known, the 
+	--  possibility of such damages.
+
+	--  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+	--  parties a non-exclusive license to use this Specification in connection
+	--  with the management of Alcatel Internetworking, Inc. products.
+
+	--  Copyright (C) 1994, Alcatel Internetworking, Inc. All Rights Reserved
+
+	IMPORTS
+		IpAddress
+			FROM RFC1155-SMI
+		OBJECT-TYPE
+			FROM RFC-1212
+		DisplayString 
+			FROM RFC1213-MIB
+		xylanTrapArch
+			FROM XYLAN-BASE-MIB 
+			;
+
+	--  This MIB module uses the extended OBJECT-TYPE macro as defined in
+	--  RFC 1212
+
+
+
+	--  groups within the xylanTrapArch mib
+
+	mgmtControl		OBJECT IDENTIFIER ::= { xylanTrapArch 1 }
+	trapBindings		OBJECT IDENTIFIER ::= { xylanTrapArch 2 }
+
+
+
+	--  mgmtControl group.  This group contains the management station
+	--  trap mask values. Implimentation of this group is mandantory.
+	--
+	--  This group is used for both status and row creation (ie
+	--  defining and attaching new management stations.). The minimum
+	--  set for row creation is: stationIP. All other values will
+	--  be assigned defaults. (which are noted in the object definitions)
+	--
+	--  Row modifications (and deletions) require the minimum
+	--  of the stationIP.
+	--
+	--  Row creation can be done minimumally by sending the new IP
+	--  address with the table index value of 0.
+	--
+	--  Row deletion can be done by sending the current table index
+	--  to delete and a new IP of 0. OR... you may specifiy the
+	--  stationEnable for that NMS to be delete.....
+	--
+
+	trapTable  OBJECT-TYPE
+	    SYNTAX  SEQUENCE OF TrapEntry
+	    ACCESS  not-accessible
+	    STATUS  mandatory
+	    DESCRIPTION
+		"A list of management stations."
+	    ::= { mgmtControl 1 }
+
+	trapEntry  OBJECT-TYPE
+	    SYNTAX  TrapEntry
+	    ACCESS  not-accessible
+	    STATUS  mandatory
+	    DESCRIPTION
+		"A management station entry."
+	    INDEX { stationIndex }
+	    ::= { trapTable 1 }
+
+	TrapEntry ::= SEQUENCE {
+	    stationIndex
+		INTEGER,
+	    stationIP
+		IpAddress,
+	    stationPort
+		INTEGER,
+	    stationCommunity
+		DisplayString,
+	    stationTrapFlags
+		OCTET STRING,
+	    stationEnable
+		INTEGER,
+	    stationSAPrivs
+		INTEGER
+	    }
+
+	stationIndex  OBJECT-TYPE
+	    SYNTAX  INTEGER (1..11)
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+		"The entry index for a given row. A row create is done
+		 by specifying a row of 0 with the new row values."
+	    ::= { trapEntry 1 }
+
+	stationIP  OBJECT-TYPE
+	    SYNTAX  IpAddress
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+		"The IP address of this management entity. A delete
+		 may be performed by specifying the current row index
+		 with the new IP of 0."
+	    ::= { trapEntry 2 }
+
+	stationPort  OBJECT-TYPE
+	    SYNTAX  INTEGER (1..65535)
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+		"The UDP port used by this management entity. This defaults
+		 to the SNMP-TRAP port 162"
+	    ::= { trapEntry 3 }
+
+	stationCommunity  OBJECT-TYPE
+	    SYNTAX  DisplayString (SIZE (0..31))
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+		"The community string used by this entity. Currently NOT
+		 implimented on a per NMS basis."
+	    ::= { trapEntry 4 }
+ 
+	stationTrapFlags  OBJECT-TYPE
+	    SYNTAX  OCTET STRING (SIZE (16))
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+		"The trap mask flags for this entity. Currently this
+		 is four unsigned ints. The default value is ALL traps
+		 enabled to this entity -> f's. The actual order
+		 of flag words sent is 0->3....
+		 In the Xylan agent implimentation, Enable and SA
+		 are taken from the first two bits in the string."
+	    ::= { trapEntry 5 }
+ 
+	stationEnable  OBJECT-TYPE
+	    SYNTAX  INTEGER
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+		"The enable flag for this NMS. if 1 traps are
+		 not sent to this station, if 2 trap are sent.
+		 3 indicates that a row deletion is desired."
+	    ::= { trapEntry 6 }
+ 
+	stationSAPrivs  OBJECT-TYPE
+	    SYNTAX  INTEGER
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+		"The SA priviledge flag for this NMS. If this is 2,
+		 this NMS can modify and delete any entry in the
+		 NMS table. Otherwise it is 1 and this station can
+		 modify/delete only it's own entry. NOTE: a station
+		 can't create a new entry for itself with the SA mode
+		 set.... (kinda defeats the SA doesn't it?)."
+	    ::= { trapEntry 7 }
+
+
+
+	--  trapBindings group.  This group contains miscellaneous
+	--  trap variable bindings that do NOT exsist in nay other
+	--  defined MIBs. Implimentation of this group is mandantory.
+
+	systemEventTrapNumber  OBJECT-TYPE
+	    SYNTAX  INTEGER
+	    ACCESS  not-accessible
+	    STATUS  mandatory
+	    DESCRIPTION
+		"This variable is bound to the systemEvent trap. It
+		 indicates which system resource is in short supply.
+
+			10      Unspecified log event
+			11      Log file full
+			12      Log file erased
+
+			20      Unspecified memory event
+			21      Memory shortage
+
+			30      Unsepcified CPU event
+			31      Long term CPU overload
+			32      Short term CPU overload
+
+			40      Unspecified ffs event
+			41      Attempt to write to full ffs
+			42      System/user directed purge
+			43      Removed imgs/cfgs
+			44      Exec file removed
+			45      Config file removed
+			46      Exec file updated
+			47      Config file updated
+
+			50      Unspecified chassis event
+			51      Module failed to init
+			52      Module failed to load
+			53      Module startup failed
+			54      Module failed
+			55      Driver failed "
+	    ::= { trapBindings 1 }
+
+	systemEventTrapString  OBJECT-TYPE
+	    SYNTAX  DisplayString (SIZE (0..63))
+	    ACCESS  not-accessible
+	    STATUS  mandatory
+	    DESCRIPTION
+		"This variable is bound to the systemEvent trap. If
+		 it is present it will furthor clarify the specific
+		 system trap."
+	    ::= { trapBindings 2 }
+
+
+
+	END
+
+	--  and so ends the trap control MIB

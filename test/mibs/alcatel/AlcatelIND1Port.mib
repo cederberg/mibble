@@ -1,0 +1,1109 @@
+ALCATEL-IND1-PORT-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+	OBJECT-TYPE, Counter64,         
+        NOTIFICATION-TYPE, MODULE-IDENTITY,
+	TimeTicks, Integer32            FROM SNMPv2-SMI
+        MODULE-COMPLIANCE, OBJECT-GROUP,
+        NOTIFICATION-GROUP              FROM SNMPv2-CONF
+        ifIndex, ifInErrors, ifOutErrors
+					FROM IF-MIB
+	softentIND1Port, cmmEsmDrvTraps
+			   		FROM ALCATEL-IND1-BASE;
+
+alcatelIND1PortMIB MODULE-IDENTITY
+
+   LAST-UPDATED  "2001071601Z"
+   ORGANIZATION  "Alcatel - Architects Of An Internet World"
+   CONTACT-INFO
+        "Please consult with Customer Service to insure the most appropriate
+         version of this document is used with the products in question:
+         
+                    Alcatel Internetworking, Incorporated
+                   (Division 1, Formerly XYLAN Corporation)
+                           26801 West Agoura Road
+                        Agoura Hills, CA  91301-5122
+                          United States Of America
+        
+        Telephone:               North America  +1 800 995 2696
+                                 Latin America  +1 877 919 9526
+                                 Europe         +31 23 556 0100
+                                 Asia           +65 394 7933
+                                 All Other      +1 818 878 4507
+        
+        Electronic Mail:         support@ind.alcatel.com
+        World Wide Web:          http://www.ind.alcatel.com
+        File Transfer Protocol:  ftp://ftp.ind.alcatel.com/pub/products/mibs"
+    
+    DESCRIPTION
+        "This module describes an authoritative enterprise-specific Simple
+         Network Management Protocol (SNMP) Management Information Base (MIB):
+         
+             This group contains the configuration information data
+			for the Ethernet Switching Module.
+         
+         The right to make changes in specification and other information
+         contained in this document without prior notice is reserved.
+         
+         No liability shall be assumed for any incidental, indirect, special, or
+         consequential damages whatsoever arising from or related to this
+         document or the information contained herein.
+         
+         Vendors, end-users, and other interested parties are granted
+         non-exclusive license to use this specification in connection with
+         management of the products for which it is intended to be used.
+         
+           Copyright (C) 1995-2002 Alcatel Internetworking, Incorporated
+                         ALL RIGHTS RESERVED WORLDWIDE"
+
+    REVISION      "2001071601Z"
+    DESCRIPTION
+        "The latest version of this MIB Module."
+
+    ::= { softentIND1Port 1}
+
+alcatelIND1PortMIBObjects OBJECT IDENTIFIER ::= { alcatelIND1PortMIB 1 }
+
+esmConfTrap   OBJECT IDENTIFIER ::= { alcatelIND1PortMIBObjects 1 }
+physicalPort  OBJECT IDENTIFIER ::= { alcatelIND1PortMIBObjects 2 }
+
+-- Ethernet Driver object related to Trap *********************
+
+esmDrvTrapDrops   OBJECT-TYPE
+	SYNTAX  Integer32 
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION "Partitioned port (separated due to errors)."
+	::= { esmConfTrap 1 }
+
+-- Ethernet Driver Tables *****************************
+
+        --  EsmConf group.  This group contains the configuration
+        --  information data for the Ethernet Switching Module.
+        --  Implementation of this group is mandantory.
+        --
+        --  Note that this MIB can NOT be used for row creation (this
+        --  would imply that you could override the actual physical
+        --  characteristics of the physical card!).
+
+        esmConfTable  OBJECT-TYPE
+            SYNTAX  SEQUENCE OF EsmConfEntry
+            MAX-ACCESS  not-accessible
+            STATUS  current
+            DESCRIPTION
+                "A list of ESM Physical Port instances."
+            ::= { physicalPort 1 }
+
+        esmConfEntry  OBJECT-TYPE
+            SYNTAX  EsmConfEntry
+            MAX-ACCESS  not-accessible
+            STATUS  current
+            DESCRIPTION
+                "A ESM Physical Port entry."
+            INDEX { ifIndex }
+            ::= { esmConfTable 1 }
+
+        EsmConfEntry ::= SEQUENCE {
+	    esmPortSlot
+	        Integer32,
+	    esmPortIF
+	        Integer32,
+            esmPortAutoSpeed
+                INTEGER,
+            esmPortAutoDuplexMode
+                INTEGER,
+            esmPortCfgSpeed
+                INTEGER,
+            esmPortCfgDuplexMode
+                INTEGER,
+            esmPortCfgIFG
+                Integer32,
+            esmPortPauseSlotTime
+                Integer32,
+            esmPortMaxFloodRate
+                Integer32,
+            esmPortFloodMcastEnable
+                INTEGER,
+            esmPortCfgMaxFrameSize
+                Integer32,
+            esmPortCfgLongEnable
+                INTEGER,
+            esmPortCfgRuntEnable
+                INTEGER,
+            esmPortCfgRuntSize
+                Integer32,
+		esmPortCfgAutoNegotiation
+			INTEGER,
+		esmPortCfgCrossover
+			INTEGER,
+		esmPortCfgFlow
+			INTEGER
+            }
+
+        esmPortSlot OBJECT-TYPE
+            SYNTAX Integer32
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+            "The physical Slot number for this Ethernet Port.
+	     Slot number has been added to be used by the private Trap."
+        ::= { esmConfEntry 1 }
+
+        esmPortIF OBJECT-TYPE
+            SYNTAX Integer32
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+            "The on-board interface number for this Ethernet Port.
+	     Port Number has been added to be used by the private Trap."
+        ::= { esmConfEntry 2 }
+
+        esmPortAutoSpeed OBJECT-TYPE
+            SYNTAX INTEGER {
+                speed-100(1),
+                speed-10(2),
+                speed-auto(3),
+                unknown(4),
+                speed-1000(5),
+	        speed-10000(6)
+            }
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+            "The automatically detected port line speed
+             of this ESM port."
+        ::= { esmConfEntry 3 }
+
+        esmPortAutoDuplexMode OBJECT-TYPE
+            SYNTAX INTEGER {
+                full-duplex(1),
+                half-duplex(2),
+                auto-duplex(3),
+                unknown(4)
+            }
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+            "The automatically detected port duplex mode
+             of this ESM port.
+
+	     Note: GigaEthernet supports only Full duplex mode.
+	           Default value for 10/100 = Half duplex mode."
+        ::= { esmConfEntry 4 }
+
+        esmPortCfgSpeed OBJECT-TYPE
+            SYNTAX INTEGER {
+                speed-100(1),
+                speed-10(2),
+                speed-auto(3),
+                speed-1000(5),
+	        speed-10000(6)
+            }
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+            "The configured port line speed of this ESM port."
+        ::= { esmConfEntry 5 }
+
+        esmPortCfgDuplexMode OBJECT-TYPE
+            SYNTAX INTEGER {
+                full-duplex(1),
+                half-duplex(2),
+                auto-duplex(3)
+            }
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+            "The configured port duplex mode of this ESM port.
+            Note: GigaEthernet support only full-duplex."
+        ::= { esmConfEntry 6 }
+
+        esmPortCfgIFG OBJECT-TYPE
+            SYNTAX Integer32 
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+            "Contains the setting of Inter-Frame Gap (IFG), in bytes	
+            for receive and transmit.
+	    The range is from 9 to 12 bytes.
+
+	    Note: The default value changed according to the Port type
+	    Default    Bandwidth    value
+	    12 bytes    10Mbps       9600 nsec
+	               100Mbps        960 nsec
+	 	         1Gbps         96 nsec
+			10Gbps        9.6 nsec."
+	    DEFVAL { 12 }
+        ::= { esmConfEntry 7 }
+
+        esmPortPauseSlotTime OBJECT-TYPE
+            SYNTAX Integer32
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+            "Indicates the number of microseconds the other 
+             end-station waits after the reception 
+             of a pause frame.
+
+	     Note: Pause Flow control is not available for 10Mbps.
+	           For 100Mbps, the possible value range is 
+		   5120 nanosec to 0.3 sec.
+	   	   For 1Gbps, the possible value range is
+		   512 nanosec to 0.03 sec."
+        ::= { esmConfEntry 8 }
+ 
+        esmPortMaxFloodRate    OBJECT-TYPE
+            SYNTAX  Integer32
+            MAX-ACCESS  read-write
+            STATUS  current
+            DESCRIPTION
+                 "The value of the maximum flood rate,
+                 in Mbits/sec (the peak rate value in Mbps).
+
+                 Note: This value can apply to multicast too,
+                 according to esmPortFloodMulticastEnable.
+		 The default value changed according to the Port type:
+		 10 Mbps/ 100 Mbps -  47 Mbps  (12 in Coronado Reg)
+		 1Gbps   	   - 500 Mbps  (127)."
+          ::= { esmConfEntry 9 }
+
+        esmPortFloodMcastEnable    OBJECT-TYPE
+            SYNTAX INTEGER {
+                      enable-flood(0),
+                      enable-flood-multicast(1)
+                   } 
+            MAX-ACCESS  read-write
+            STATUS  current
+            DESCRIPTION
+                 "Enable/disable the maximum flood rate
+                  for flood or flood and multicast."
+	    DEFVAL { enable-flood }
+          ::= { esmConfEntry 10 }
+
+        esmPortCfgMaxFrameSize   OBJECT-TYPE
+            SYNTAX Integer32 
+            MAX-ACCESS  read-write
+            STATUS  current
+            DESCRIPTION
+                 "Configure the value of the maximum frame 
+                  size allow.
+		  For 10/100:
+		  It is a range between 1518(untagged) and 1553 bytes.
+		  For GigaEthernet:
+	          It is a range between 1518 and 10240 bytes."
+          ::= { esmConfEntry 11 }
+
+        esmPortCfgLongEnable   OBJECT-TYPE
+            SYNTAX INTEGER {
+                disable(0),
+                enable(1)
+            }
+            MAX-ACCESS  read-write
+            STATUS  current
+            DESCRIPTION
+                 "Allow the user to change the maximun Frame size.
+                  Note: It is not configurable for 10/100 Ethernet port."
+	    DEFVAL { disable }
+          ::= { esmConfEntry 12 }
+
+        esmPortCfgRuntEnable   OBJECT-TYPE
+            SYNTAX INTEGER {
+                disable(2),
+                enable(3)
+            }
+            MAX-ACCESS  read-write
+            STATUS  current
+            DESCRIPTION
+                 "Allow the user to change the minimum Frame size."
+	    DEFVAL { disable }
+          ::= { esmConfEntry 13 }
+
+        esmPortCfgRuntSize   OBJECT-TYPE
+            SYNTAX Integer32
+            MAX-ACCESS  read-write
+            STATUS  current
+            DESCRIPTION
+                 "Configure the value of the minimum frame 
+                  size allow per ports.
+		  The range is 0 to 64."
+	    DEFVAL { 64 }
+          ::= { esmConfEntry 14 }
+
+        esmPortCfgAutoNegotiation   OBJECT-TYPE
+            SYNTAX INTEGER {
+                enable(1),
+                disable(2)
+            }
+            MAX-ACCESS  read-write
+            STATUS  current
+            DESCRIPTION
+                 "Allow the user to enable or disable the port auto negotiation."
+	    DEFVAL { disable }
+          ::= { esmConfEntry 15 }
+
+        esmPortCfgCrossover   OBJECT-TYPE
+            SYNTAX INTEGER {
+                	mdi(1),
+                	mdix(2),
+			auto(3)
+            }
+            MAX-ACCESS  read-write
+            STATUS  current
+            DESCRIPTION
+                 "Allow the user to configure port crossover."
+	    DEFVAL { auto }
+          ::= { esmConfEntry 16 }
+
+        esmPortCfgFlow   OBJECT-TYPE
+            SYNTAX INTEGER {
+                enable(1),
+                disable(2)
+            }
+            MAX-ACCESS  read-write
+            STATUS  current
+            DESCRIPTION
+                 "Allow the user to enable or disable the port flow."
+	    DEFVAL { disable }
+          ::= { esmConfEntry 17 }
+
+
+
+
+          -- The Ethernet Statistics Group
+          --
+          -- The ethernet statistics group contains statistics
+          -- measured by the probe for each monitored interface on
+          -- this device.  These statistics take the form of free
+          -- running counters that start from zero when a valid entry
+          -- is created.
+          --
+          -- This group currently has statistics defined only for
+          -- Ethernet interfaces.  Each alcetherStatsEntry contains
+          -- statistics for one Ethernet interface.  The probe must
+          -- create one alcetherStats entry for each monitored Ethernet
+          -- interface on the device.
+
+          alcetherStatsTable OBJECT-TYPE
+              SYNTAX SEQUENCE OF AlcetherStatsEntry
+              MAX-ACCESS not-accessible
+              STATUS current
+              DESCRIPTION
+                  "A list of Ethernet statistics entries."
+              ::= { physicalPort 2 }
+
+          alcetherStatsEntry OBJECT-TYPE
+              SYNTAX AlcetherStatsEntry
+              MAX-ACCESS not-accessible
+              STATUS current
+              DESCRIPTION
+                  "A collection of statistics kept for a particular
+                  Ethernet interface.  As an example, an instance of the
+                  etherStatsPkts object might be named alcetherStatsPkts.1"
+              INDEX { ifIndex }
+              ::= { alcetherStatsTable 1 }
+
+          AlcetherStatsEntry ::= SEQUENCE {
+	      alcetherClearStats		    INTEGER,
+	      alcetherLastClearStats                TimeTicks,
+              alcetherStatsCRCAlignErrors           Counter64,
+              alcetherStatsRxUndersizePkts          Counter64,
+              alcetherStatsTxUndersizePkts          Counter64,
+              alcetherStatsTxOversizePkts           Counter64,
+              alcetherStatsRxJabbers                Counter64,
+              alcetherStatsRxCollisions             Counter64,
+              alcetherStatsTxCollisions             Counter64,
+              alcetherStatsPkts64Octets             Counter64,
+              alcetherStatsPkts65to127Octets        Counter64,
+              alcetherStatsPkts128to255Octets       Counter64,
+              alcetherStatsPkts256to511Octets       Counter64,
+              alcetherStatsPkts512to1023Octets      Counter64,
+              alcetherStatsPkts1024to1518Octets     Counter64,
+              gigaEtherStatsPkts1519to4095Octets    Counter64,
+              gigaEtherStatsPkts4096to9215Octets    Counter64,
+		alcetherStatsPkts1519to2047Octets 	Counter64,
+		alcetherStatsPkts2048to4095Octets 	Counter64,
+		alcetherStatsPkts4096Octets 		Counter64,
+		alcetherStatsRxGiantPkts 		Counter64,
+		alcetherStatsRxDribbleNibblePkts 	Counter64,
+		alcetherStatsRxLongEventPkts 		Counter64,
+		alcetherStatsRxVlanTagPkts 		Counter64,
+		alcetherStatsRxControlPkts 		Counter64,
+		alcetherStatsRxLenChkErrPkts 		Counter64,
+		alcetherStatsRxCodeErrPkts 		Counter64,
+		alcetherStatsRxDvEventPkts 		Counter64,
+		alcetherStatsRxPrevPktDropped 	Counter64,
+		alcetherStatsTx64Octets 		Counter64,
+		alcetherStatsTx65to127Octets 		Counter64,
+		alcetherStatsTx128to255Octets 	Counter64,
+		alcetherStatsTx256to511Octets 	Counter64,
+		alcetherStatsTx512to1023Octets 	Counter64,
+		alcetherStatsTx1024to1518Octets 	Counter64,
+		alcetherStatsTx1519to2047Octets 	Counter64,
+		alcetherStatsTx2048to4095Octets 	Counter64,
+		alcetherStatsTx4096Octets 		Counter64,
+		alcetherStatsTxRetryCount 		Counter64,
+		alcetherStatsTxVlanTagPkts 		Counter64,
+		alcetherStatsTxControlPkts 		Counter64,
+		alcetherStatsTxLatePkts 		Counter64,
+		alcetherStatsTxTotalBytesOnWire 	Counter64,
+		alcetherStatsTxLenChkErrPkts 		Counter64,
+		alcetherStatsTxExcDeferPkts		Counter64
+		}
+
+          alcetherClearStats OBJECT-TYPE
+              SYNTAX INTEGER
+		{	default(0),
+	 		reset(1)
+		}
+              MAX-ACCESS read-write
+              STATUS current
+              DESCRIPTION
+                  "Used to Clear all Statistics counters.
+		   By default, this object contains zero value."
+              ::= { alcetherStatsEntry 1 }
+
+          alcetherLastClearStats OBJECT-TYPE
+              SYNTAX TimeTicks
+	      MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The value of SysUpTime at the time of all 
+		   the statistics counters are cleared.
+		   By default, this object contains a zero value."
+              ::= { alcetherStatsEntry 2 }
+
+          alcetherStatsCRCAlignErrors OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets received that
+                  had a length (excluding framing bits, but
+                  including FCS octets) of between 64 and 1518
+                  octets, inclusive, but but had either a bad
+                  Frame Check Sequence (FCS) with an integral
+                  number of octets (FCS Error) or a bad FCS with
+                  a non-integral number of octets (Alignment Error)."
+              ::= { alcetherStatsEntry 3 }
+
+          alcetherStatsRxUndersizePkts OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets received that were
+                  less than 64 octets long (excluding framing bits,
+                  but including FCS octets) and were otherwise well
+                  formed."
+              ::= { alcetherStatsEntry 4 }
+
+          alcetherStatsTxUndersizePkts OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets transmitted that were
+                  less than 64 octets long (excluding framing bits,
+                  but including FCS octets) and were otherwise well
+                  formed."
+              ::= { alcetherStatsEntry 5 }
+
+          alcetherStatsTxOversizePkts OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets transmitted that were
+                  longer than 1518 octets long (excluding framing bits,
+                  but including FCS octets) and were otherwise well
+                  formed."
+              ::= { alcetherStatsEntry 6 }
+
+          alcetherStatsRxJabbers OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets received that were
+                  longer than 1518 octets (excluding framing bits,
+                  but including FCS octets), and had either a bad
+                  Frame Check Sequence (FCS) with an integral number
+                  of octets (FCS Error) or a bad FCS with a
+                  non-integral number of octets (Alignment Error).
+
+                  Note that this definition of jabber is different
+                  than the definition in IEEE-802.3 section 8.2.1.5
+                  (10BASE5) and section 10.3.1.4 (10BASE2).  These
+                  documents define jabber as the condition where any
+                  packet exceeds 20 ms.  The allowed range to detect
+                  jabber is between 20 ms and 150 ms."
+              ::= { alcetherStatsEntry 7 }
+
+          alcetherStatsRxCollisions OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The best estimate of the total number of collisions
+                  on this Ethernet segment (in reception).
+		  Only for Ethernet Interfaces.
+
+                  The value returned will depend on the location of
+                  the RMON probe. Section 8.2.1.3 (10BASE-5) and
+                  section 10.3.1.3 (10BASE-2) of IEEE standard 802.3
+                  states that a station must detect a collision, in
+                  the receive mode, if three or more stations are
+                  transmitting simultaneously.  A repeater port must
+                  detect a collision when two or more stations are
+                  transmitting simultaneously.  Thus a probe placed on
+                  a repeater port could record more collisions than a
+                  probe connected to a station on the same segment
+                  would.
+
+                  Probe location plays a much smaller role when
+                  considering 10BASE-T.  14.2.1.4 (10BASE-T) of IEEE
+                  standard 802.3 defines a collision as the
+                  simultaneous presence of signals on the DO and RD
+                  circuits (transmitting and receiving at the same
+                  time).  A 10BASE-T station can only detect
+                  collisions when it is transmitting.  Thus probes
+                  placed on a station and a repeater, should report
+                  the same number of collisions.
+
+                  Note also that an RMON probe inside a repeater
+                  should ideally report collisions between the
+                  repeater and one or more other hosts (transmit
+                  collisions as defined by IEEE 802.3k) plus receiver
+                  collisions observed on any coax segments to which
+                  the repeater is connected."
+              ::= { alcetherStatsEntry 8 }
+
+          alcetherStatsTxCollisions OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The best estimate of the total number of collisions
+                  on this Ethernet segment (in transmition).
+		  Only for Ethernet Interfaces.
+
+                  The value returned will depend on the location of
+                  the RMON probe. Section 8.2.1.3 (10BASE-5) and
+                  section 10.3.1.3 (10BASE-2) of IEEE standard 802.3
+                  states that a station must detect a collision, in
+                  the receive mode, if three or more stations are
+                  transmitting simultaneously.  A repeater port must
+                  detect a collision when two or more stations are
+                  transmitting simultaneously.  Thus a probe placed on
+                  a repeater port could record more collisions than a
+                  probe connected to a station on the same segment
+                  would.
+
+                  Probe location plays a much smaller role when
+                  considering 10BASE-T.  14.2.1.4 (10BASE-T) of IEEE
+                  standard 802.3 defines a collision as the
+                  simultaneous presence of signals on the DO and RD
+                  circuits (transmitting and receiving at the same
+                  time).  A 10BASE-T station can only detect
+                  collisions when it is transmitting.  Thus probes
+                  placed on a station and a repeater, should report
+                  the same number of collisions.
+
+                  Note also that an RMON probe inside a repeater
+                  should ideally report collisions between the
+                  repeater and one or more other hosts (transmit
+                  collisions as defined by IEEE 802.3k) plus receiver
+                  collisions observed on any coax segments to which
+                  the repeater is connected."
+              ::= { alcetherStatsEntry 9 }
+
+          alcetherStatsPkts64Octets OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets (including bad
+                  packets) received that were 64 octets in length
+                  (excluding framing bits but including FCS octets)."
+              ::= { alcetherStatsEntry 10 }
+
+          alcetherStatsPkts65to127Octets OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets (including bad
+                  packets) received that were between
+                  65 and 127 octets in length inclusive
+                  (excluding framing bits but including FCS octets)."
+              ::= { alcetherStatsEntry 11 }
+
+          alcetherStatsPkts128to255Octets OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets (including bad
+                  packets) received that were between
+                  128 and 255 octets in length inclusive
+                  (excluding framing bits but including FCS octets)."
+              ::= { alcetherStatsEntry 12 }
+
+          alcetherStatsPkts256to511Octets OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets (including bad
+                  packets) received that were between
+                  256 and 511 octets in length inclusive
+                  (excluding framing bits but including FCS octets)."
+              ::= { alcetherStatsEntry 13 }
+
+          alcetherStatsPkts512to1023Octets OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets (including bad
+                  packets) received that were between
+                  512 and 1023 octets in length inclusive
+                  (excluding framing bits but including FCS octets)."
+              ::= { alcetherStatsEntry 14 }
+
+          alcetherStatsPkts1024to1518Octets OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets (including bad
+                  packets) received that were between
+                  1024 and 1518 octets in length inclusive
+                  (excluding framing bits but including FCS octets).
+	          For both Ethernet and GigaEthernet."
+              ::= { alcetherStatsEntry 15 }
+
+          gigaEtherStatsPkts1519to4095Octets OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets (including bad
+                  packets) received that were between
+                  1519 and 4095 octets in length inclusive
+                  (excluding framing bits but including FCS octets).
+		  Only for GigaEthernet interfaces"
+              ::= { alcetherStatsEntry 16 }
+
+          gigaEtherStatsPkts4096to9215Octets OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of packets (including bad
+                  packets) received that were between
+                  4096 and 9215 octets in length inclusive
+                  (excluding framing bits but including FCS octets).
+		  Only for GigaEthernet interfaces"
+              ::= { alcetherStatsEntry 17 }
+
+
+		alcetherStatsPkts1519to2047Octets 	OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames(including error packets) received
+		   that were between 1519 and 2047 bytes in length inclusive
+		   (excluding framing bits but including FCS bytes).
+		   "
+              ::= { alcetherStatsEntry 18 }
+
+		alcetherStatsPkts2048to4095Octets 	OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames(including error packets) received
+		   that were between 2048 and 4095 bytes in length inclusive
+		   (excluding framing bits but including FCS bytes).
+		   "
+              ::= { alcetherStatsEntry 19 }
+
+		alcetherStatsPkts4096Octets 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames(including error packets) received
+		   that were greater than or equal to 4096 bytes in length inclusive
+		   (excluding framing bits but including FCS bytes).
+		   "
+              ::= { alcetherStatsEntry 20 }
+
+		alcetherStatsRxGiantPkts 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames that are greater than the specified
+		   Max length value, with a valid CRC, dropped because too long.
+		   "
+              ::= { alcetherStatsEntry 21 }
+
+		alcetherStatsRxDribbleNibblePkts 	OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames for which a dribble nibble has been
+		   received and CRC is correct.
+		   "
+              ::= { alcetherStatsEntry 22 }
+
+		alcetherStatsRxLongEventPkts 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames for which the Carrier sense exceeds
+		   50000 bit times for 10 Mbits/sec or 80000 bit times for 
+		   100 Mbits/sec."
+              ::= { alcetherStatsEntry 23 }
+
+		alcetherStatsRxVlanTagPkts 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames for which Type/Length field 
+		   contains the VLAN protocol identifier (0x8100). "
+              ::= { alcetherStatsEntry 24 }
+
+		alcetherStatsRxControlPkts 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames that were recognized as control frames."
+              ::= { alcetherStatsEntry 25 }
+
+		alcetherStatsRxLenChkErrPkts 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames for which the frame length field value
+		   in the Type/Length field does not match the actual data bytes 
+		    length and is NOT a type field."
+              ::= { alcetherStatsEntry 26 }
+
+		alcetherStatsRxCodeErrPkts 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames for which one or more nibbles were 
+		   signaled as errors during reception of the frame."
+              ::= { alcetherStatsEntry 27 }
+
+		alcetherStatsRxDvEventPkts 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames for which a RX_DV event (packet not
+		   too long enough to be valid packet) has been seen before the 
+		    correct frame."
+              ::= { alcetherStatsEntry 28 }
+
+		alcetherStatsRxPrevPktDropped 	OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames for which a packet has been dropped
+		   (because of too small IFG) before the correct frame."
+              ::= { alcetherStatsEntry 29 }
+
+		alcetherStatsTx64Octets 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of transmitted frames of 64 bytes."
+              ::= { alcetherStatsEntry 30 }
+
+		alcetherStatsTx65to127Octets 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of transmitted frames that were between 
+		   65 and 127 bytes in length inclusive (excluding framing bits
+		    but including FCS bytes)."
+              ::= { alcetherStatsEntry 31 }
+
+		alcetherStatsTx128to255Octets 	OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of transmitted frames that were between 
+		   128 and 255 bytes in length inclusive (excluding framing bits
+		    but including FCS bytes)."
+              ::= { alcetherStatsEntry 32 }
+
+		alcetherStatsTx256to511Octets 	OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of transmitted frames that were between 
+		   256 and 511 bytes in length inclusive (excluding framing bits
+		    but including FCS bytes)."
+              ::= { alcetherStatsEntry 33 }
+
+		alcetherStatsTx512to1023Octets 	OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of transmitted frames that were between 
+		   512 and 1023 bytes in length inclusive (excluding framing bits
+		    but including FCS bytes)."
+              ::= { alcetherStatsEntry 34 }
+
+		alcetherStatsTx1024to1518Octets 	OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of transmitted frames that were between 
+		   1024 and 1518 bytes in length inclusive (excluding framing bits
+		    but including FCS bytes)."
+              ::= { alcetherStatsEntry 35 }
+
+		alcetherStatsTx1519to2047Octets 	OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of transmitted frames that were between 
+		   1519 and 2047 bytes in length inclusive (excluding framing bits
+		    but including FCS bytes)."
+              ::= { alcetherStatsEntry 36 }
+
+		alcetherStatsTx2048to4095Octets 	OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of transmitted frames that were between 
+		   2048 and 4095 bytes in length inclusive (excluding framing bits
+		    but including FCS bytes)."
+              ::= { alcetherStatsEntry 37 }
+
+		alcetherStatsTx4096Octets 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of transmitted frames that were greater than 
+		    or equal to 4096 bytes in length and less than Max frame length
+		    (excluding framing bits but including FCS bytes)."
+              ::= { alcetherStatsEntry 38 }
+
+		alcetherStatsTxRetryCount 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of collisions that the frames faced during
+		   transmission attempts."
+              ::= { alcetherStatsEntry 39 }
+
+		alcetherStatsTxVlanTagPkts 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of transmitted frames for which Type/Length field contains the
+		   VLAN protocol identifier (0x8100)."
+              ::= { alcetherStatsEntry 40 }
+
+		alcetherStatsTxControlPkts 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of transmitted frames that were recognised as control frames."
+              ::= { alcetherStatsEntry 41 }
+
+		alcetherStatsTxLatePkts 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of late collisions that occured beyond the collision window."
+              ::= { alcetherStatsEntry 42 }
+
+		alcetherStatsTxTotalBytesOnWire 	OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of bytes transmitted on wire, including all bytes from collided 
+		  attempts."
+              ::= { alcetherStatsEntry 43 }
+
+		alcetherStatsTxLenChkErrPkts 		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of transmitted frames for which the frame length field value
+		  in the Type/Length field does not match the actual data bytes length and
+		   is NOT a Type field."
+              ::= { alcetherStatsEntry 44 }
+
+		alcetherStatsTxExcDeferPkts		OBJECT-TYPE
+              SYNTAX Counter64
+              MAX-ACCESS read-only
+              STATUS current
+              DESCRIPTION
+                  "The total number of frames that were deferred in excess of 6071 nibble-times
+		   in 100 Mbps, 24287 bit-times in 10 Mbps mode. These frames are dropped.(This 
+		   stat is only in case of Half duplex and excessive defer bit reset)."
+              ::= { alcetherStatsEntry 45 }
+
+
+-- Ethernet Driver Trap *********************
+
+esmDrvTrapDropsLink  NOTIFICATION-TYPE
+    OBJECTS    {  
+                  esmPortSlot,
+		  esmPortIF,
+                  ifInErrors,
+                  ifOutErrors,
+		  esmDrvTrapDrops
+               }
+    STATUS  current
+    DESCRIPTION
+           "When the Ethernet code drops the link because of
+            excessive errors, a Trap is sent."
+    ::= { cmmEsmDrvTraps 0 1 }
+
+-- conformance information
+
+alcatelIND1PortMIBConformance OBJECT IDENTIFIER ::= { alcatelIND1PortMIB 2 }
+alcatelIND1PortMIBCompliances OBJECT IDENTIFIER ::= 
+                                          { alcatelIND1PortMIBConformance 1 }
+alcatelIND1PortMIBGroups      OBJECT IDENTIFIER ::= 
+                                          { alcatelIND1PortMIBConformance 2 }
+
+-- compliance statements
+
+esmConfPortCompliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+            "The compliance statement for the configuration of Ethernet
+            ports."
+    MODULE  -- this module
+        MANDATORY-GROUPS { esmConfMIBGroup, esmDetectedConfMIBGroup }
+
+    ::= { alcatelIND1PortMIBCompliances 1 }
+
+alcEtherStatsCompliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+            "The compliance statement for the Statistics of the Ethernet
+            ports."
+    MODULE  -- this module
+        MANDATORY-GROUPS { alcEtherStatsMIBGroup }
+
+    ::= { alcatelIND1PortMIBCompliances 2 }
+
+-- units of conformance
+
+esmConfMIBGroup OBJECT-GROUP
+    OBJECTS { esmPortCfgSpeed,
+              esmPortCfgDuplexMode, esmPortCfgIFG,
+              esmPortPauseSlotTime, esmPortMaxFloodRate, 
+	      esmPortFloodMcastEnable, esmPortCfgMaxFrameSize, esmPortCfgAutoNegotiation, 
+		esmPortCfgCrossover, esmPortCfgFlow
+            }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects to support the management of global
+            configuration parameters of the Ethernet ports."
+    ::= { alcatelIND1PortMIBGroups 1 }
+
+esmDetectedConfMIBGroup OBJECT-GROUP
+    OBJECTS { esmPortAutoSpeed, esmPortAutoDuplexMode
+            }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects to support the Detected
+            configuration parameters of the Ethernet ports."
+    ::= { alcatelIND1PortMIBGroups 2 }
+
+alcEtherStatsMIBGroup OBJECT-GROUP
+    OBJECTS { alcetherClearStats, alcetherLastClearStats, 
+	      alcetherStatsCRCAlignErrors, alcetherStatsRxUndersizePkts,
+              alcetherStatsTxUndersizePkts, alcetherStatsTxOversizePkts, 
+	      alcetherStatsRxJabbers, alcetherStatsRxCollisions, 
+	      alcetherStatsTxCollisions, alcetherStatsPkts64Octets,
+              alcetherStatsPkts65to127Octets, alcetherStatsPkts128to255Octets, 
+              alcetherStatsPkts256to511Octets, 
+	      alcetherStatsPkts512to1023Octets, 
+	      alcetherStatsPkts1024to1518Octets,
+              gigaEtherStatsPkts1519to4095Octets,
+	      gigaEtherStatsPkts4096to9215Octets,
+		alcetherStatsPkts1519to2047Octets,
+		alcetherStatsPkts2048to4095Octets,
+		alcetherStatsPkts4096Octets,
+		alcetherStatsRxGiantPkts,
+		alcetherStatsRxDribbleNibblePkts,
+		alcetherStatsRxLongEventPkts,
+		alcetherStatsRxVlanTagPkts,
+		alcetherStatsRxControlPkts,
+		alcetherStatsRxLenChkErrPkts,
+		alcetherStatsRxCodeErrPkts,
+		alcetherStatsRxDvEventPkts,
+		alcetherStatsRxPrevPktDropped,
+		alcetherStatsTx64Octets,
+		alcetherStatsTx65to127Octets,
+		alcetherStatsTx128to255Octets,
+		alcetherStatsTx256to511Octets,
+		alcetherStatsTx512to1023Octets,
+		alcetherStatsTx1024to1518Octets,
+		alcetherStatsTx1519to2047Octets,
+		alcetherStatsTx2048to4095Octets,
+		alcetherStatsTx4096Octets,
+		alcetherStatsTxRetryCount,
+		alcetherStatsTxVlanTagPkts,
+		alcetherStatsTxControlPkts,
+		alcetherStatsTxLatePkts,
+		alcetherStatsTxTotalBytesOnWire,
+		alcetherStatsTxLenChkErrPkts,
+		alcetherStatsTxExcDeferPkts
+
+            }
+    STATUS  current
+    DESCRIPTION
+            "A collection of objects to provide all the statistics related
+             to the Ethernet and GigaEthernert ports."
+    ::= { alcatelIND1PortMIBGroups 3 }
+
+alcPortNotificationGroup NOTIFICATION-GROUP
+    NOTIFICATIONS {
+	esmDrvTrapDropsLink
+	}
+    STATUS current
+    DESCRIPTION
+ 	    "The Port MIB Notification Group."
+    ::= { alcatelIND1PortMIBGroups 4 }
+
+	END
+

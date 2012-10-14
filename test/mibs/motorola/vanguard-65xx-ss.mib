@@ -1,0 +1,549 @@
+        -- Version 1.4, modified 02/12/98
+
+        SS-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+            OBJECT-TYPE
+                FROM RFC-1212;
+
+                      codex OBJECT IDENTIFIER ::= { enterprises 449 }
+         cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                    cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+      cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+     cdx6500CfgGeneralGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 2 }
+
+          cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+ cdx6500StatOtherStatsGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 2 }
+
+
+        DisplayString ::= OCTET STRING
+        -- This data type is used to model textual information taken
+        -- from the NVT ASCII character set.  By convention, objects
+        -- with this syntax are declared as having SIZE (0..255)
+
+        -- The Switched Service Unit(SS) group
+
+        -- Implementation of the Switched Service  group is not mandatory 
+
+        -- The Switched Service configuration table contains information 
+        -- on the restoral port. 
+
+        cdx6500GCTLSSTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SSCfgEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of Configuration parameters that makeup
+                 the Switched Service/LBU Table."
+        ::= { cdx6500CfgGeneralGroup 14 }
+
+        cdx6500SSCfgEntry OBJECT-TYPE
+            SYNTAX Cdx6500SSCfgEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each entry contains the Configuration parameters for
+                 each switched Service/backup link."
+            INDEX { cdx6500SSEntryNumber }
+        ::= { cdx6500GCTLSSTable 1 }
+
+        Cdx6500SSCfgEntry ::=
+            SEQUENCE {
+                cdx6500SSEntryNumber
+                    INTEGER,
+                cdx6500SSDestinationName
+                    DisplayString,
+                cdx6500SSCfgMonitoredPort    
+                    DisplayString,
+                cdx6500SSCfgRestoralPort
+                    DisplayString,
+                cdx6500SSDialSequence
+                    DisplayString,
+                cdx6500SSActivationMode
+                    INTEGER,
+                cdx6500SSDeactivationMode
+                    INTEGER,
+                cdx6500SSLinkHoldTime 
+                    INTEGER,
+                cdx6500SSOutBoundPass
+                    DisplayString,
+                cdx6500SSRedialTime
+                    INTEGER,
+                cdx6500SSRedialCounter
+                    INTEGER,
+                cdx6500SSSecurityMode
+                    INTEGER
+                }
+
+        cdx6500SSEntryNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..1024)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This identifies the particular Switched Service/LBU
+                 Table entry being configured. The number of instances
+                 defined by this entry depends on the configured value
+                 of the Maximum Switch Service Entry parameter in the
+                 Node record (upto a maximum of 1024 entries). If this
+                 value is 0, no switched Service/backup links may be
+                 configured i.e. this table will be empty."
+        ::= { cdx6500SSCfgEntry 1 }
+
+        cdx6500SSDestinationName OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..32))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is a unique name that identifies this entry."
+        ::= { cdx6500SSCfgEntry 2 }
+
+        cdx6500SSCfgMonitoredPort OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..32))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The X.25 port to be monitored for link failure.
+                 This is the port whose calls are rerouted in 
+                 the event of port failure. The format must be the 
+                 following: X25-n, FRI-nSm OR BRI-nCp
+                 where n is the port number, m is the station number
+                 and p is BRI channel number."
+        ::= { cdx6500SSCfgEntry 3 }
+
+        cdx6500SSCfgRestoralPort OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..32))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the port or channel that acts as the backup 
+                 when there is a port failure on the port 
+                 specified by the parameter Monitored port, or primary
+                 destination port (activated by call)
+                 The format must be the following:
+                 X25-n or BRI-nCm, 
+                 where n is the port number and m is the channel number."
+        ::= { cdx6500SSCfgEntry 4 }
+
+        cdx6500SSDialSequence OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..30))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies the telephone numbers that 
+                 will be dialed when the backup port is activated.
+                 To enter your own telephone number, use any 
+                 combination of the following characters:
+                 0-9     Decimal
+                 :       Wait Tone
+                 <       Pause
+                 =       Seperator 3
+                 >       Seperator 4
+                 P or p  Dialing to be continued in PULSE mode.
+                 T or t  Dialing to be continued in DTMF mode.
+                 &       Flash
+
+                 To have the modem dial one of its pre-programmed
+                 telephone numbers, enter:
+                 #n      where 'n' identifies the pre-programmed
+                 telephone number stored in the modem."
+        ::= { cdx6500SSCfgEntry 5 }
+
+        cdx6500SSActivationMode OBJECT-TYPE
+            SYNTAX INTEGER {
+                    fail       (0),
+                    call       (1),
+                    either     (2),
+                    newvalFail (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies how the switched service/backup port 
+                 will be activated.
+                 fail   - Activate the backup port upon link failure.
+                 call   - Activate the backup port upon a call request.
+                 either - Activate the backup port upon link 
+                          failure or a call request.
+                 newvalFail - same functionality as 'fail', new enumeration
+                          added for RFC1155 compatibility."
+        ::= { cdx6500SSCfgEntry 6 }
+
+        cdx6500SSDeactivationMode OBJECT-TYPE
+            SYNTAX INTEGER {
+                    none       (0),
+                    busyOut    (1),
+                    imm        (2),
+                    newvalNone (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies how the switched service/backup port is 
+                 deactivated after the original link is up.
+                 none     - Backup port can only be deactivated
+                            by operator intervention.
+                 busyOut  - The backup port is deactivated after 
+                            all the calls on that port are cleared
+                            for a predetermined amount of time. 
+                            This substitutes the value assigned 
+                            to the parameter Link Hold Time with 
+                            the value assigned to the parameter 
+                            Idle Disconnect Time in the X.25 Port 
+                            Record. The Idle Disconnect Time will
+                            then work as described in the Operators 
+                            Guide. 
+                            When Deactivation Mode = BUSY OUT and
+                            Link Hold Time = 0 (zero) the overall 
+                            effect is the same as setting this 
+                            entry to NONE.
+                 imm      - The backup link is terminated 
+                            IMMediately when the monitored port is
+                            restored regardless of how many calls
+                            are present.
+                 newvalNone - same functionality as 'none', new enumeration
+                          added for RFC1155 compatibility."
+        ::= { cdx6500SSCfgEntry 7 }
+
+        cdx6500SSLinkHoldTime OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This replaces the value of the parameter Idle
+                 Disconnect Timer in the X.25 Port Record and 
+                 specifies how long (in seconds) the backup link 
+                 remains active after the original link is back up."
+        ::= { cdx6500SSCfgEntry 8 }
+
+        cdx6500SSOutBoundPass OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..9))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the password used by the remote station to 
+                 determine if dial access is authorized."
+        ::= { cdx6500SSCfgEntry 9 }
+
+        cdx6500SSRedialTime OBJECT-TYPE
+            SYNTAX INTEGER                        
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the time in seconds between dial attempts when 
+                 bringing up a switched service call."
+        ::= { cdx6500SSCfgEntry 10 }
+
+        cdx6500SSRedialCounter OBJECT-TYPE
+            SYNTAX INTEGER                        
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is used to specify the number of times 
+                 that the Switched Service will attempt to redial when 
+                 redial timer is expired. A value of zero will allow 
+                 unlimited attempts."
+        ::= { cdx6500SSCfgEntry 11 }
+
+        cdx6500SSSecurityMode OBJECT-TYPE
+            SYNTAX INTEGER {
+                    none       (0),
+                    password   (1),
+                    callingId  (2),
+                    both       (3),
+                    newvalNone (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This specifies under what conditions the port/channel 
+                 authorizes call request.
+                 none       - A call request not be rejected based on password
+                              of calling party id validation.
+                 password   - A call request will only be accepted if the 
+                              password it provides matches the switched 
+                              services password configured in the node 
+                              record.
+                 callingId  - A call request will only be accepted if 
+                              the calling party id of the caller matches
+                              one of the entries found in the calling
+                              party id table.
+                 both       - A call request is accepted only if both the 
+                              password and the calling party id are valid.
+                 newvalNone - same functionality as 'none', new enumeration
+                              added for RFC1155 compatibility."
+        ::= { cdx6500SSCfgEntry 12}
+
+        cdx6500CallIDTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500CallIDEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of Configuration calling ID that makeup the 
+                 Calling ID Table."
+        ::= { cdx6500CfgGeneralGroup 18 }
+
+        cdx6500CallIDEntry OBJECT-TYPE
+            SYNTAX Cdx6500CallIDEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each entry contains the Configuration Calling ID."
+            INDEX { cdx6500CallIDEntryNumber }
+        ::= { cdx6500CallIDTable 1 }
+
+        Cdx6500CallIDEntry ::=
+            SEQUENCE {
+                cdx6500CallIDEntryNumber
+                    INTEGER,
+                cdx6500CallIDString
+                    DisplayString
+                }
+
+        cdx6500CallIDEntryNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..64)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is not a configurable parameter. 
+                 This identifies the particular calling ID
+                 Table entry being configured by the other 
+                 parameters in the record."
+        ::= { cdx6500CallIDEntry 1 }
+
+        cdx6500CallIDString OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..30))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Each calling id entry is a numeric value which may 
+                 contain periods or dashes. Only calls matching these 
+                 ids will be allowed when calling id security is 
+                 enabled."
+        ::= { cdx6500CallIDEntry 2 }
+
+        -- the Link Backup Statistics Table for a restoral port
+
+        cdx6500OSTSSTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SSStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of statistics parameters for the Switch Service/Link 
+                 Backup port,station,and channel."
+        ::= { cdx6500StatOtherStatsGroup 3 }
+
+        cdx6500SSStatEntry OBJECT-TYPE
+            SYNTAX Cdx6500SSStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each entry on this table pertains to the Switched 
+                 Service/Link Backup port,station and channel, and 
+                 can be accessed using the following index:
+                 the switched/backup port number, switched/backup 
+                 station number and the switched/backup channel number."
+            INDEX { cdx6500SSStatRestoralPort }
+        ::= { cdx6500OSTSSTable 1 }
+
+        Cdx6500SSStatEntry ::=
+            SEQUENCE {
+                cdx6500SSStatRestoralPort
+                    INTEGER,
+                cdx6500SSPortType
+                    DisplayString,
+                cdx6500SSConnType     
+                    DisplayString,
+                cdx6500SSStatus
+                    INTEGER,
+                cdx6500SSReason
+                    INTEGER,
+                cdx6500SSRedial
+                    INTEGER,
+                cdx6500SSLastActivated
+                    DisplayString,
+                cdx6500SSLastPhoneDialed
+                    DisplayString
+                }
+
+        cdx6500SSStatRestoralPort OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the backup port number, used as an index
+                 to access Switched Service/LBU statistics."
+        ::= { cdx6500SSStatEntry 1 }
+
+        cdx6500SSPortType OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The port type of the backup port."
+        ::= { cdx6500SSStatEntry 2 }
+
+        cdx6500SSConnType OBJECT-TYPE     
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The connection type of the backup port."
+        ::= { cdx6500SSStatEntry 3 }
+
+        cdx6500SSStatus OBJECT-TYPE
+            SYNTAX INTEGER {
+                    down         (0),
+                    up           (1),
+                    activating   (2),
+                    redial       (3),
+                    idle         (4),
+                    deactivating (5),
+                    newvalDown   (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The status of the backup port.
+                 newvalDown - same functionality as 'down', new
+                 enumeration added for RFC1155 compatibility."
+        ::= { cdx6500SSStatEntry 4 }
+
+        cdx6500SSReason OBJECT-TYPE
+            SYNTAX INTEGER {
+                    none       (0),
+                    call       (1),
+                    fail       (2),
+                    remote     (3),
+                    ctp        (4),
+                    newvalNone (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION         
+                "The reason that the backup port is active.
+                 none   : Backup port is deactivated.
+                 call   : A call request was made on the backup port.
+                 fail   : Due to a link failure on the monitored port.
+                 remote : A call request was made to the backup port.
+                 ctp    : Backup port was activated from the control terminal.
+                 newvalNone : same functionality as 'none', new
+                          enumeration added for RFC1155 compatibility."
+        ::= { cdx6500SSStatEntry 5 }
+
+        cdx6500SSRedial OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is used to specify the number of times 
+                 that the Switched Service will attempt to redial when 
+                 the redial timer is expired. A value of zero will 
+                 allow unlimited attempts."
+        ::= { cdx6500SSStatEntry 6 }
+
+        cdx6500SSLastActivated OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The last time the backup port was activated."
+        ::= { cdx6500SSStatEntry 7 }
+
+        cdx6500SSLastPhoneDialed OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The phone number dialed the last time the 
+                 backup port was activated."
+        ::= { cdx6500SSStatEntry 8 }
+
+        -- the Link Backup Statistics table for a monitored port
+
+        cdx6500OSTSSMonTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SSMonStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of statistics parameters for the Link Backup's
+                 monitored port."
+        ::= { cdx6500StatOtherStatsGroup 4 }
+
+        cdx6500SSMonStatEntry OBJECT-TYPE
+            SYNTAX Cdx6500SSMonStatEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "Each entry on this table pertains to one of the monitored
+                 ports/station/channel that is monitored by the backup port/
+                 station/channel and should be accessed using the 
+                 following index, 
+                  * the backup port number 
+                  * the backup station number
+                  * the backup channel number 
+                  * the monitored port 
+                  * the monitored station
+                  * the monitored channel."
+            INDEX { cdx6500SSStatRestMonPort, cdx6500SSStatMonitoredPort }
+        ::= { cdx6500OSTSSMonTable 1 }
+
+        Cdx6500SSMonStatEntry ::=
+            SEQUENCE {
+                cdx6500SSStatRestMonPort
+                    INTEGER,
+                cdx6500SSStatMonitoredPort
+                    INTEGER,
+                cdx6500SSMonPortState
+                    INTEGER,
+                cdx6500SSRestPhoneNum
+                    DisplayString
+                }
+
+        cdx6500SSStatRestMonPort OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the backup port number, used as a
+                 primary index to access monitored port statistics."
+        ::= { cdx6500SSMonStatEntry 1 }
+
+        cdx6500SSStatMonitoredPort OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the port being monitored by the backup port,
+                 used as a secondary index to access monitored port 
+                 statistics."
+        ::= { cdx6500SSMonStatEntry 2 }
+
+        cdx6500SSMonPortState OBJECT-TYPE
+            SYNTAX INTEGER {
+                    down         (0),
+                    up           (1),
+                    activating   (2),
+                    redial       (3),
+                    idle         (4),
+                    deactivating (5),
+                    newvalDown   (50)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "State of the monitored port.
+                 newvalDown : same functionality as 'down', new enumeration
+                 added for RFC1155 compatibility."
+        ::= { cdx6500SSMonStatEntry 3 }
+
+        cdx6500SSRestPhoneNum OBJECT-TYPE
+            SYNTAX DisplayString (SIZE(0..30))
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Phone number that the backup port will dial when a 
+                 monitored port has a link failure."
+        ::= { cdx6500SSMonStatEntry 4 }
+
+    END

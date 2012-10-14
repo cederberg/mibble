@@ -1,0 +1,2378 @@
+
+
+ 
+     XYLAN-M013-MIB DEFINITIONS ::= BEGIN
+
+     --  RCSID information
+
+     --  $RCSfile: xylan-m013.mib,v $
+     --  $Revision: 1.2 $		$State: Exp $
+     --  $Date: 1999/04/14 14:09:48 $
+     --  $Author: vdvorkin $
+
+
+     --  xylan-m013.mib
+     --  Revision: 0.01
+     --  Date: May 28, 1996
+
+     --  Alcatel Internetworking, Inc.
+     --  26801 W. Agoura Road
+     --  Calabasas, CA 91301
+     --  (818) 880-3500
+     --  support@ind.alcatel.com
+
+     --  This module provides authoritative definitions for Alcatel Internetworking, Inc.
+     --  enterprise-specific m013 MIB.
+
+     --  This module will be extended, as needed.
+
+
+     --  Alcatel Internetworking, Inc. reserves the right to make changes in 
+     --  specification and other information contained in this document 
+     --  without prior notice.  The reader should consult Alcatel Internetworking,
+     --  Inc. to determine whether any such changes have been made.
+
+     --  In no event shall Alcatel Internetworking, Inc. be liable for any incidental, 
+     --  indirect, special, or consequential damages whatsoever (including 
+     --  but not limited to lost profits) arising out of or related to this
+     --  document or the information contained in it, even if Alcatel Internetworking,
+     --  Inc. has been advised of, known, or should have known, the 
+     --  possibility of such damages.
+     --  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+     --  parties a non-exclusive license to use this Specification in connection
+     --  with the management of Alcatel Internetworking, Inc. products.
+
+     --  Copyright (C) 1998, Alcatel Internetworking, Inc. All Rights Reserved.
+
+
+     	IMPORTS
+		Counter, IpAddress
+			FROM RFC1155-SMI
+		OBJECT-TYPE
+			FROM RFC-1212
+		DisplayString 
+			FROM RFC1213-MIB
+                xylanM013Arch
+                        FROM XYLAN-BASE-MIB
+			;
+
+     -- Textual Conventions
+
+
+     --
+     --                    The MIB groups
+     --
+     m013ProvisioningGroup    OBJECT IDENTIFIER ::= { xylanM013Arch 1 }
+     m013ServiceGroup	      OBJECT IDENTIFIER ::= { xylanM013Arch 2 }
+     m013FrxPortGroup	      OBJECT IDENTIFIER ::= { xylanM013Arch 3 }
+     m013FrxVcControlGroup    OBJECT IDENTIFIER ::= { xylanM013Arch 4 }
+     m013FrxVcStatsGroup      OBJECT IDENTIFIER ::= { xylanM013Arch 5 }
+     m013PppxConfigGroup      OBJECT IDENTIFIER ::= { xylanM013Arch 6 }
+     m013PppxCpGroup          OBJECT IDENTIFIER ::= { xylanM013Arch 7 }
+     m013PppxStatsGroup	      OBJECT IDENTIFIER ::= { xylanM013Arch 8 }
+     m013IPRouterGroup        OBJECT IDENTIFIER ::= { xylanM013Arch 9 }
+     m013Dsx3Group	      OBJECT IDENTIFIER ::= { xylanM013Arch 10 }
+     m013Dsx1Group	      OBJECT IDENTIFIER ::= { xylanM013Arch 11 }
+
+     --		The Provisioning Group
+
+     -- The Provisioning Table
+
+         m013ProvisioningTable  OBJECT-TYPE
+	    SYNTAX   SEQUENCE OF M013ProvisioningEntry 
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"A table of provisioning configuration data used to 
+	         configure an HDLC interface on a DS3 connection."
+            ::= { m013ProvisioningGroup 1 }
+
+         m013ProvisioningEntry   OBJECT-TYPE
+            SYNTAX   M013ProvisioningEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"An entry in the table, containing information about 
+                 provisioning an HDLC channel on a DS3 connection."
+            INDEX   { m013SlotIndex, m013LogicalPortIndex }
+            ::= { m013ProvisioningTable 1 }
+
+         M013ProvisioningEntry ::=
+             SEQUENCE {
+		 m013SlotIndex
+		     INTEGER,
+		 m013LogicalPortIndex
+		     INTEGER,
+                 m013Description
+                     DisplayString,
+                 m013Ds3PortIndex
+                     INTEGER,
+                 m013Ds1Fraction
+                     INTEGER,
+                 m013Ds0Mask
+                     INTEGER,
+	         m013IfIndex
+                     INTEGER,
+		 m013Protocol
+		     INTEGER,
+                 m013EntryStatus
+                     INTEGER
+         }
+
+	 m013SlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "Slot for channel being provisioned."
+             ::= { m013ProvisioningEntry 1 }
+
+	 m013LogicalPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..1024)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A per-slot unique HDLC channel number."
+             ::= { m013ProvisioningEntry 2 }
+
+         m013Description OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A user description of this channel."
+             ::= { m013ProvisioningEntry 3 }
+
+         m013Ds3PortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..4)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "Physical DS3 port for channel being provisioned."
+             ::= { m013ProvisioningEntry 4 }
+
+         m013Ds1Fraction OBJECT-TYPE
+             SYNTAX   INTEGER (0..28)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The DS1 channel within the DS3 circuit that 
+                 is used to create this HDLC channel.  An 
+                 entry of 0 indicates this is a clear 
+                 channel (full DS3 bandwidth) connection."
+             ::= { m013ProvisioningEntry 5 }
+
+         m013Ds0Mask OBJECT-TYPE
+             SYNTAX   INTEGER (1..'ffffff'h)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "This is a bit mask of the DS0 channels within
+                 the selected DS1 fraction that make up the
+                 desired HDLC channel.  If m013Ds1Fraction is
+                 0 this value has no meaning"
+             ::= { m013ProvisioningEntry 6 }
+        
+         m013IfIndex OBJECT-TYPE
+             SYNTAX   INTEGER (10001..18192)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A per-switch unique number for this HDLC channel.
+		 This number is a combination of Slot and Logical
+		 Port numbers."
+             ::= { m013ProvisioningEntry 7 }
+
+	 m013Protocol OBJECT-TYPE
+	     SYNTAX   INTEGER {
+			  fr(1),
+			  ppp(2)
+		      }
+	     ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The L2 protocol that is used on this HDLC channel." 
+             ::= { m013ProvisioningEntry 8 }
+
+         m013EntryStatus OBJECT-TYPE
+             SYNTAX   INTEGER {
+                          valid(1),
+                          createRequest(2),
+                          underCreation(3),
+                          invalid(4),
+                          disable(5) 
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "Value used for the control of the creation of 
+                 this interface."
+             ::= { m013ProvisioningEntry 9 }
+
+  --		M013 Service Group
+
+     -- M013 Service Table
+
+         m013ServiceTable   OBJECT-TYPE
+             SYNTAX   SEQUENCE OF M013ServiceEntry 
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+             	"A table of M013 services status and
+                 parameter information." 
+             ::= { m013ServiceGroup 1 }
+
+         m013ServiceEntry   OBJECT-TYPE
+             SYNTAX   M013ServiceEntry
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+                "An entry in the table, containing information about 
+                the M013 services."
+             INDEX   { m013ServiceSlotIndex, m013ServiceLogicalPortIndex,
+                       m013ServiceNumber, m013ServiceType
+                     }
+             ::= { m013ServiceTable 1 }
+
+         M013ServiceEntry ::=
+             SEQUENCE {
+                 m013ServiceSlotIndex
+                     INTEGER,
+                 m013ServiceLogicalPortIndex
+                     INTEGER,
+                 m013ServiceNumber
+                     INTEGER,
+                 m013ServiceTableEntryType	
+                     INTEGER,
+                 m013ServiceDescription
+                     DisplayString,
+                 m013ServiceType
+                     INTEGER,
+                 m013ServiceOperStatus
+                     INTEGER,
+                 m013ServiceAdminStatus 
+                     INTEGER,
+		 m013ServiceVirtualCircuit
+		     INTEGER,
+                 m013ServiceVlans
+                     OCTET STRING,
+                 m013ServiceBridgingMode
+                     INTEGER
+		 }
+ 
+         m013ServiceSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+             ::= { m013ServiceEntry 1 }
+
+         m013ServiceLogicalPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..1024)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A per-slot unique value which identifies this HDLC logical port."
+             ::= { m013ServiceEntry 2 }
+
+         m013ServiceNumber	OBJECT-TYPE
+	     SYNTAX   INTEGER (1..256)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The unique service number for this particular slot/logical port."
+             ::= { m013ServiceEntry 3 }
+
+         m013ServiceTableEntryType	OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                      static(1),
+                      dynamic(2)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The type of table entry for this M013 Serivce.
+
+                 A static entry is one that is stored in non-volatile
+                 memory.
+
+                 A dynamic entry is one that is automatically created
+                 for an unconfigured virtual circuit based on the
+                 the type of service (bridging or trunking) and whether
+                 a default VLAN is defined for the type of service.
+
+                 Changing the value via a write command from dynamic
+                 to static will cause the table entry to be stored 
+                 into non-volatile memory.  Setting a value of dynamic
+                 is not allowed."
+             ::= { m013ServiceEntry 4 }
+
+
+         m013ServiceDescription OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A description for this M013 service."
+             ::= { m013ServiceEntry 5 }
+
+         m013ServiceType OBJECT-TYPE  
+	     SYNTAX   INTEGER {
+		trunking(4),
+		bridging(6)
+	     }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The service type."
+             ::= { m013ServiceEntry 6 }
+
+         m013ServiceOperStatus OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                      enable(1),
+                      disable(2)
+                      }
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The service operational status."
+             ::= { m013ServiceEntry 7 }
+
+         m013ServiceAdminStatus OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                      enable(1),
+                      disable(2),
+                      delete(3)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The service adminstration status."
+             ::= { m013ServiceEntry 8 }
+         
+	 m013ServiceVirtualCircuit	OBJECT-TYPE
+	     SYNTAX   INTEGER (0..1024)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The virtual circuit for this service. In case of PPP
+		 it should be set to zero, in case of Frame Relay - to the
+		 appropriate DLCI value. "
+             ::= { m013ServiceEntry 9 }
+
+         m013ServiceVlans OBJECT-TYPE
+	     SYNTAX   OCTET STRING (SIZE(0..64))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The Vlans for this service. Interpret this as a 16 bit field
+                per vlan: Trunking 1-32, Bridging 1, IP 1"
+             ::= { m013ServiceEntry 10 }
+
+         m013ServiceBridgingMode OBJECT-TYPE
+	     SYNTAX   INTEGER (0..1) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default Briding Mode,  0 = BRIDGE_ALL, 1 = ETHERNET ONLY"
+             ::= { m013ServiceEntry 11 }
+
+
+     --		M013 Frame Relay Port Group
+
+     -- M013 Frame Relay Port Table
+
+         m013FrxPortTable   OBJECT-TYPE
+	    SYNTAX   SEQUENCE OF M013FrxPortEntry 
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"A table of port layer status and parameter information 
+	            for the UNI's logical interface." 
+            ::= { m013FrxPortGroup 1 }
+
+         m013FrxPortEntry   OBJECT-TYPE
+            SYNTAX   M013FrxPortEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"An entry in the table, containing information about 
+                the logical layer of a UNI interface."
+            INDEX   { m013FrxPortSlotIndex, m013FrxPortPortIndex }
+            ::= { m013FrxPortTable 1 }
+
+         M013FrxPortEntry ::=
+             SEQUENCE {
+                 m013FrxPortSlotIndex
+                     INTEGER,
+                 m013FrxPortPortIndex
+                     INTEGER,
+                 m013FrxPortDescription
+                     DisplayString,
+		 m013FrxPortAdminStatus
+		     INTEGER,		 
+		 m013FrxPortDefaultIpRoutingAdminStatus
+		     INTEGER,
+		 m013FrxPortDefaultBridgingAdminStatus
+                     INTEGER,
+                 m013FrxPortDefaultBridgingVLAN
+                     INTEGER,
+                 m013FrxPortDefaultBridgingMode
+                     INTEGER,
+		 m013FrxPortDynamicVCCreation
+		     INTEGER
+         }
+
+         m013FrxPortSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+             ::= { m013FrxPortEntry 1 }
+
+         m013FrxPortPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..1024)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A per-slot unique value which identifies this HDLC logical port."
+             ::= { m013FrxPortEntry 2 }
+
+         m013FrxPortDescription OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A description for this Frame Relay port."
+             ::= { m013FrxPortEntry 3 }
+
+	 m013FrxPortAdminStatus OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                      enable(1),
+                      disable(2)
+		      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "If set to enabled,  enables Frame Relay Interface.
+		 If set to disabled, disables Frame Relay Interface "
+	     ::= { m013FrxPortEntry 4 }
+
+         m013FrxPortDefaultIpRoutingAdminStatus  OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                      enable(1),
+                      disable(2)
+		      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "If set to enabled,  enables Default IP Routing.
+		 If set to disabled, disables Default IP Routing "
+	     ::= { m013FrxPortEntry 5 }
+
+	 m013FrxPortDefaultBridgingAdminStatus  OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                      enable(1),
+                      disable(2)
+		      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "If set to enabled,  enables Default Bridging.
+		 If set to disabled, disables Default Bridging. "
+	     ::= { m013FrxPortEntry 6 }
+ 
+         m013FrxPortDefaultBridgingVLAN OBJECT-TYPE
+             SYNTAX   INTEGER (0..65535)
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default VLAN for new PVCs that have not been
+                 configured for the Bridging Service.
+
+                 A value of zero(0) indicates that unconfigured VCs will not
+                 perform a bridging service and will discard all
+                 bridged format frames received or transmitted.
+
+                 A non-zero value indicates the bridging VLAN to be used if
+                 the network informs the port of a new VC."
+             ::= { m013FrxPortEntry 7}
+
+         m013FrxPortDefaultBridgingMode OBJECT-TYPE
+	     SYNTAX   INTEGER (0..1) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "The default Briding Mode,  0 = BRIDGE_ALL, 1 = ETHERNET ONLY"
+             ::= { m013FrxPortEntry 8 }
+
+	 m013FrxPortDynamicVCCreation OBJECT-TYPE
+	     SYNTAX   INTEGER {
+                      enable(1),
+                      disable(2)
+		      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "If set to enabled,  enables Dynamic VC creation.
+		 If set to disabled, disables Dynamic VC creation. "
+	     ::= { m013FrxPortEntry 9 }
+
+    -- M013 Frame Relay-Virtual circuit control Table
+
+         m013FrxVcControlTable   OBJECT-TYPE
+             SYNTAX   SEQUENCE OF M013FrxVcControlEntry 
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+             	"A table of Frame Relay virtual circuit
+                 configuration and control information." 
+             ::= { m013FrxVcControlGroup 1 }
+
+         m013FrxVcControlEntry   OBJECT-TYPE
+             SYNTAX   M013FrxVcControlEntry
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+                "An entry in the table, containing information about 
+                the Frame Relay virtual circuit statistics."
+             INDEX   { m013FrxVcControlSlotIndex, m013FrxVcControlPortIndex,
+                       m013FrxVcControlDlci }
+             ::= { m013FrxVcControlTable 1 }
+
+         M013FrxVcControlEntry ::=
+             SEQUENCE {
+                 m013FrxVcControlSlotIndex
+                     INTEGER,
+                 m013FrxVcControlPortIndex
+                     INTEGER,
+                 m013FrxVcControlDlci
+		     INTEGER,
+                 m013FrxVcControlIpRoutingAdminStatus
+                     INTEGER
+         }
+                                                                                        
+
+         m013FrxVcControlSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+             ::= { m013FrxVcControlEntry 1 }
+
+         m013FrxVcControlPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..1024)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A per-slot unique value which identifies this HDLC logical port."
+             ::= { m013FrxVcControlEntry 2 }
+
+         m013FrxVcControlDlci OBJECT-TYPE  
+             SYNTAX   INTEGER (1..1024)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this Data Link Connection
+                 Identifier (DLCI) for this Frame Relay Virtual Circuit."
+             ::= { m013FrxVcControlEntry 3 }
+
+         m013FrxVcControlIpRoutingAdminStatus OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      enable(1),
+                      disable(2)
+		      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "If set to enabled,  enables IP Routing.
+		 If set to disabled, disables IP Routing "
+             ::= { m013FrxVcControlEntry 4 }
+
+
+
+    -- M013 Frame Relay-Virtual circuit statistics Table
+
+    -- This table only monitors non Management DLCIs.  DLCI 0
+    -- and 1023 are never accessable via this table.  Only
+    -- standard MIB access is allowed for those DLCIs.
+
+
+         m013FrxVcStatsTable   OBJECT-TYPE
+             SYNTAX   SEQUENCE OF M013FrxVcStatsEntry 
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+             	"A table of Frame Relay virtual circuit
+                 statistics information." 
+             ::= { m013FrxVcStatsGroup 1 }
+
+         m013FrxVcStatsEntry   OBJECT-TYPE
+             SYNTAX   M013FrxVcStatsEntry
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+                "An entry in the table, containing information about 
+                the Frame Relay virtual circuit statistics."
+             INDEX   { m013FrxVcStatsSlotIndex, m013FrxVcStatsPortIndex,
+                       m013FrxVcStatsDlci }
+             ::= { m013FrxVcStatsTable 1 }
+
+         M013FrxVcStatsEntry ::=
+             SEQUENCE {
+                 m013FrxVcStatsSlotIndex
+                     INTEGER,
+                 m013FrxVcStatsPortIndex
+                     INTEGER,
+                 m013FrxVcStatsDlci
+		     INTEGER,
+		 m013FrxVcStatsTxIPOctets
+		     Counter,
+		 m013FrxVcStatsTxIPFrames
+		     Counter,
+		 m013FrxVcStatsRxIPOctets
+		     Counter,
+		 m013FrxVcStatsRxIPFrames
+		     Counter,
+		 m013FrxVcStatsTxIPXOctets
+		     Counter,
+		 m013FrxVcStatsTxIPXFrames
+		     Counter,
+		 m013FrxVcStatsRxIPXOctets
+		     Counter,
+		 m013FrxVcStatsRxIPXFrames
+		     Counter,
+		 m013FrxVcStatsTxBPDUOctets
+		     Counter,
+		 m013FrxVcStatsTxBPDUFrames
+		     Counter,
+		 m013FrxVcStatsRxBPDUOctets
+		     Counter,
+		 m013FrxVcStatsRxBPDUFrames
+		     Counter,
+		 m013FrxVcStatsTxEthernetOctets
+		     Counter,
+		 m013FrxVcStatsTxEthernetFrames
+		     Counter,
+		 m013FrxVcStatsRxEthernetOctets
+		     Counter,
+		 m013FrxVcStatsRxEthernetFrames
+		     Counter,
+		 m013FrxVcStatsTx8025Octets
+		     Counter,
+		 m013FrxVcStatsTx8025Frames
+		     Counter,
+		 m013FrxVcStatsRx8025Octets
+		     Counter,
+		 m013FrxVcStatsRx8025Frames
+		     Counter,
+		 m013FrxVcStatsTxFDDIOctets
+		     Counter,
+		 m013FrxVcStatsTxFDDIFrames
+		     Counter,
+		 m013FrxVcStatsRxFDDIOctets
+		     Counter,
+		 m013FrxVcStatsRxFDDIFrames
+		     Counter
+         }
+                                                                                        
+
+         m013FrxVcStatsSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+             ::= { m013FrxVcStatsEntry 1 }
+
+         m013FrxVcStatsPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..1024)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A per-slot unique value which identifies this HDLC logical port."
+             ::= { m013FrxVcStatsEntry 2 }
+
+         m013FrxVcStatsDlci OBJECT-TYPE  
+             SYNTAX   INTEGER (1..1022)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this Data Link Connection
+                 Identifier (DLCI) for this Frame Relay Virtual Circuit."
+             ::= { m013FrxVcStatsEntry 3 }
+
+	 m013FrxVcStatsTxIPOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within routed IP format frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 4 }
+
+	 m013FrxVcStatsTxIPFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted routed IP format frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 5 }
+
+	 m013FrxVcStatsRxIPOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within routed IP format frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 6 }
+
+	 m013FrxVcStatsRxIPFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received routed IP format frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 7 }
+
+	 m013FrxVcStatsTxIPXOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within routed IPX format frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 8 }
+
+	 m013FrxVcStatsTxIPXFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted routed IPX format frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 9 }
+
+	 m013FrxVcStatsRxIPXOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within routed IPX format frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 10 }
+
+	 m013FrxVcStatsRxIPXFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received routed IPX format frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 11 }
+
+	 m013FrxVcStatsTxBPDUOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within BPDU frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 12 }
+
+	 m013FrxVcStatsTxBPDUFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted BPDU frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 13 }
+
+	 m013FrxVcStatsRxBPDUOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within BPDU frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 14 }
+
+	 m013FrxVcStatsRxBPDUFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received BPDU frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 15 }
+
+	 m013FrxVcStatsTxEthernetOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within bridged 802.3 format
+                 frames on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 16 }
+
+	 m013FrxVcStatsTxEthernetFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted bridged 802.3 format frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 17 }
+
+	 m013FrxVcStatsRxEthernetOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within bridged 802.3 format
+                 frames on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 18 }
+
+	 m013FrxVcStatsRxEthernetFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received bridged 802.3 format frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 19 }
+
+	 m013FrxVcStatsTx8025Octets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within 8025 frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 20 }
+
+	 m013FrxVcStatsTx8025Frames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted 8025 frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 21 }
+
+	 m013FrxVcStatsRx8025Octets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within 8025 frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 22 }
+
+	 m013FrxVcStatsRx8025Frames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received 8025 frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 23 }
+
+	 m013FrxVcStatsTxFDDIOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the Frame Relay Header field) within FDDI frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 24 }
+
+	 m013FrxVcStatsTxFDDIFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted FDDI frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 25 }
+
+	 m013FrxVcStatsRxFDDIOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the Frame Relay Header field) within FDDI frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 26 }
+
+	 m013FrxVcStatsRxFDDIFrames OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received FDDI frames
+                 on this virtual circuit."
+             ::= { m013FrxVcStatsEntry 27 }
+
+
+     --		M013 PPP Port Group
+
+
+         m013PppxConfigTable   OBJECT-TYPE
+	    SYNTAX   SEQUENCE OF M013PppxConfigEntry 
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"A table of PPP protocol entity configuration information." 
+            ::= { m013PppxConfigGroup 1 }
+
+         m013PppxConfigEntry   OBJECT-TYPE
+            SYNTAX   M013PppxConfigEntry
+            ACCESS   not-accessible
+            STATUS   mandatory
+            DESCRIPTION
+            	"An entry in the PPP Entity Configuration table, 
+                 containing information about PPP protocol configuration." 
+            INDEX   { m013PppxConfigSlotIndex, m013PppxConfigPortIndex }
+            ::= { m013PppxConfigTable 1 }
+
+         M013PppxConfigEntry ::=
+             SEQUENCE {
+                 m013PppxConfigSlotIndex
+                     INTEGER,
+		 m013PppxConfigPortIndex
+		     INTEGER,
+                 m013PppxConfigDescription
+                     DisplayString,
+	         m013PppxConfigAdminStatus
+                     INTEGER,
+                 m013PppxConfigMode
+                     INTEGER,
+                 m013PppxConfigIpConfigAdminStatus
+                     INTEGER,
+                 m013PppxConfigBcpConfigAdminStatus
+                     INTEGER,
+		 m013PppxConfigIpxConfigAdminStatus
+                     INTEGER,
+                 m013PppxConfigRemoteIpAddress
+                     IpAddress,
+                 m013PppxConfigAuthenticationType
+                     INTEGER,
+                 m013PppxConfigUserIdToRemote
+                     DisplayString,
+                 m013PppxConfigPasswordToRemote
+                     DisplayString,
+                 m013PppxConfigUserIdFromRemote
+                     DisplayString,
+                 m013PppxConfigPasswordFromRemote
+                     DisplayString,
+                 m013PppxConfigMaxFailureCount
+	             INTEGER,
+                 m013PppxConfigMaxConfigureCount
+                     INTEGER,
+                 m013PppxConfigMaxTerminateCount
+	             INTEGER,
+                 m013PppxConfigRetryTimeout
+	             INTEGER
+         }
+
+         m013PppxConfigSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot."
+             ::= { m013PppxConfigEntry 1 }
+
+	 m013PppxConfigPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..1024)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A per-slot unique value which identifies this HDLC logical port."
+             ::= { m013PppxConfigEntry 2 }
+
+         m013PppxConfigDescription OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "A description for this PPP port."
+             ::= { m013PppxConfigEntry 3 }
+
+	 m013PppxConfigAdminStatus OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      enabled(1),
+                      disabled(2),
+                      delete(3)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "This object controls the Administrative Status
+                 of this PPP Entity.  Enabled will allow the
+                 PPP Entity to operate.  Disabled will 
+                 disable the PPP Entity without deleting it.
+                 Delete will disable the PPP entity and delete
+                 the PPP configuration record."
+             ::= { m013PppxConfigEntry 4 }
+
+	 m013PppxConfigMode OBJECT-TYPE
+             SYNTAX   INTEGER {
+                      normal(1),
+                      multilink(2)
+                      }
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "This object controls whether or not Multilink PPP will
+                 be used." 
+             ::= { m013PppxConfigEntry 5 }
+
+         m013PppxConfigIpConfigAdminStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {open(1), close(2)}
+             ACCESS    read-write
+             STATUS    mandatory
+             DESCRIPTION
+                "The immediate desired status of the IP network
+                 protocol. Setting this object to open will
+                 inject an administrative open event into the IP
+                 network protocol's finite state machine.
+                 Setting this object to close will inject an
+                 administrative close event into the IP network
+                 protocol's finite state machine."
+             ::= { m013PppxConfigEntry 6 }
+
+         m013PppxConfigBcpConfigAdminStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {open(1), close(2)}
+             ACCESS    read-write
+             STATUS    mandatory
+             DESCRIPTION
+                "The immediate desired status of the BCP network
+                 protocol. Setting this object to open will
+                 inject an administrative open event into the BCP
+                 network protocol's finite state machine.
+                 Setting this object to close will inject an
+                 administrative close event into the IP network
+                 protocol's finite state machine."
+             ::= { m013PppxConfigEntry 7 }
+
+	 m013PppxConfigIpxConfigAdminStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {open(1), close(2)}
+             ACCESS    read-write
+             STATUS    mandatory
+             DESCRIPTION
+                "The immediate desired status of the IPX network
+                 protocol. Setting this object to open will
+                 inject an administrative open event into the IPX
+                 network protocol's finite state machine.
+                 Setting this object to close will inject an
+                 administrative close event into the IP network
+                 protocol's finite state machine."
+             ::= { m013PppxConfigEntry 8 }
+
+         m013PppxConfigRemoteIpAddress OBJECT-TYPE
+            SYNTAX  IpAddress
+            ACCESS  read-write
+            STATUS  mandatory
+            DESCRIPTION
+               "The Remote IP address of the PPP connection.
+
+                If set to 0.0.0.0 and IP routing is enabled
+                then the IP address will be learned during
+                the IP LCP negotiation.  If set to a value
+                then no IP address negotiation will occur."
+             ::= { m013PppxConfigEntry 9 }
+
+         m013PppxConfigAuthenticationType   OBJECT-TYPE
+            SYNTAX  INTEGER {
+                    none(1), 
+                    pap(2),
+                    chap(3)
+                    }
+            ACCESS    read-write
+            STATUS    mandatory
+            DESCRIPTION
+                "The desired Authentication protocol to use for
+                 this PPP connection."
+             ::= { m013PppxConfigEntry 10 }
+
+         m013PppxConfigUserIdToRemote  OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "User ID sent to remote during PAP or
+                 CHAP Authentication.  If this string
+                 is empty, then no local to remote authentication
+                 will occur."
+             ::= { m013PppxConfigEntry 11 }
+
+         m013PppxConfigPasswordToRemote  OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "Password sent to remote during PAP or
+                 CHAP Authentication.  If this string
+                 is empty, then no local to remote authentication
+                 will occur."
+             ::= { m013PppxConfigEntry 12 }
+
+         m013PppxConfigUserIdFromRemote  OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "User ID expected to be received remote during PAP or
+                 CHAP Authentication.  If this string
+                 is empty, then no remote to local authentication
+                 will be required."
+             ::= { m013PppxConfigEntry 13 }
+
+         m013PppxConfigPasswordFromRemote  OBJECT-TYPE
+             SYNTAX   DisplayString (SIZE (0..31))
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "Password expected to be received remote during PAP or
+                 CHAP Authentication.  If this string
+                 is empty, then no remote to local authentication
+                 will be required."
+             ::= { m013PppxConfigEntry 14 }
+
+         m013PppxConfigMaxFailureCount OBJECT-TYPE
+	     SYNTAX   INTEGER (1..65535) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "PPP LCP and NCP Negotiation Maximum Failure Count"
+             REFERENCE "RFC 1661 Section 4.6. Counters and Timers"
+             ::= { m013PppxConfigEntry 15 }
+
+         m013PppxConfigMaxConfigureCount OBJECT-TYPE
+	     SYNTAX   INTEGER (1..65535) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "PPP LCP Negotiation Maximum Configure Count"
+             REFERENCE "RFC 1661 Section 4.6. Counters and Timers"
+             ::= { m013PppxConfigEntry 16 }
+
+         m013PppxConfigMaxTerminateCount OBJECT-TYPE
+	     SYNTAX   INTEGER (1..65535) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "PPP LCP Negotiation Maximum Terminate Count"
+             REFERENCE "RFC 1661 Section 4.6. Counters and Timers"
+             ::= { m013PppxConfigEntry 17 }
+
+         m013PppxConfigRetryTimeout OBJECT-TYPE
+	     SYNTAX   INTEGER (1..65535) 
+             ACCESS   read-write
+             STATUS   mandatory
+             DESCRIPTION
+                "PPP LCP Negotiation Retry Timeout"
+             REFERENCE "RFC 1661 Section 4.6. Counters and Timers"
+             ::= { m013PppxConfigEntry 18 }
+
+    -- M013 PPP Control Protocol status and statistics Table
+
+         m013PppxCpTable   OBJECT-TYPE
+             SYNTAX   SEQUENCE OF M013PppxCpEntry 
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+             	"A table of PPP connection Link Control and Network Control
+                 Protocol status and statistics information." 
+             ::= { m013PppxCpGroup 1 }
+
+         m013PppxCpEntry   OBJECT-TYPE
+             SYNTAX   M013PppxCpEntry
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+                "An entry in the table, containing information about 
+                the PPP LCP and NCP status and statistics."
+             INDEX   { m013PppxCpSlotIndex, m013PppxCpPortIndex }
+             ::= { m013PppxCpTable 1 }
+
+         M013PppxCpEntry ::=
+             SEQUENCE {
+                 m013PppxCpSlotIndex
+                     INTEGER,
+                 m013PppxCpPortIndex
+                     INTEGER,
+                 m013PppxCpIpOperStatus
+                     INTEGER,
+                 m013PppxCpIpxOperStatus
+                     INTEGER,
+                 m013PppxCpBcpOperStatus
+                     INTEGER,
+	         m013PppxCpTxLcpPackets
+                     Counter,
+	         m013PppxCpRxLcpPackets
+                     Counter,
+	         m013PppxCpTxIpcpPackets
+                     Counter,
+	         m013PppxCpRxIpcpPackets
+                     Counter,
+	         m013PppxCpTxIpxcpPackets
+                     Counter,
+	         m013PppxCpRxIpxcpPackets
+                     Counter,
+	         m013PppxCpTxBcpPackets
+                     Counter,
+	         m013PppxCpRxBcpPackets
+                     Counter
+         }
+                                                                                        
+         m013PppxCpSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (0..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+		"A unique value which identifies this WSM board slot
+                 that the PPP Control Protocol Entity is running on."
+             ::= { m013PppxCpEntry 1 }
+
+         m013PppxCpPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..1024)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+		"A per-slot unique value which identifies this HDLC logical port."
+             ::= { m013PppxCpEntry 2 }
+
+	 m013PppxCpIpOperStatus OBJECT-TYPE
+             SYNTAX    INTEGER {opened(1), not-opened(2)}
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The operational status of the IP network
+                 protocol. If the value of this object is up
+                 then the finite state machine for the IP
+                 network protocol has reached the Opened state."
+             ::= { m013PppxCpEntry 3 }
+
+         m013PppxCpIpxOperStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {opened(1), not-opened(2)}
+             ACCESS    read-only
+             STATUS    mandatory
+             DESCRIPTION
+                "The operational status of the IPX network
+                 protocol. If the value of this object is up
+                 then the finite state machine for the IP
+                 network protocol has reached the Opened state."
+             ::= { m013PppxCpEntry 4 }
+
+         m013PppxCpBcpOperStatus   OBJECT-TYPE
+             SYNTAX    INTEGER {opened(1), not-opened(2)}
+             ACCESS    read-only
+             STATUS    mandatory
+             DESCRIPTION
+                "The operational status of the BCP network
+                 protocol. If the value of this object is up
+                 then the finite state machine for the IP
+                 network protocol has reached the Opened state."
+             ::= { m013PppxCpEntry 5 }
+
+	 m013PppxCpTxLcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted Link Control Protocol packets
+                 on this PPP connection."
+             ::= { m013PppxCpEntry 6 }
+
+	 m013PppxCpRxLcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received Link Control Protocol packets
+                 on this PPP connection."
+             ::= { m013PppxCpEntry 7 }
+
+	 m013PppxCpTxIpcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted IP Control Protocol packets
+                 on this PPP connection."
+             ::= { m013PppxCpEntry 8 }
+
+	 m013PppxCpRxIpcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received IP Control Protocol packets
+                 on this PPP connection."
+             ::= { m013PppxCpEntry 9 }
+
+	 m013PppxCpTxIpxcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted IPX Control Protocol packets
+                 on this PPP connection."
+             ::= { m013PppxCpEntry 10 }
+
+	 m013PppxCpRxIpxcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received IPX Control Protocol packets
+                 on this PPP connection."
+             ::= { m013PppxCpEntry 11 }
+
+	 m013PppxCpTxBcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted Bridge Control Protocol packets
+                 on this PPP connection."
+             ::= { m013PppxCpEntry 12 }
+
+	 m013PppxCpRxBcpPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received Bridge Control Protocol packets
+                 on this PPP connection."
+             ::= { m013PppxCpEntry 13 }
+
+    -- M013 PPP connections statistics Table
+
+         m013PppxStatsTable   OBJECT-TYPE
+             SYNTAX   SEQUENCE OF M013PppxStatsEntry 
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+             	"A table of PPP connection
+                 statistics information." 
+             ::= { m013PppxStatsGroup 1 }
+
+         m013PppxStatsEntry   OBJECT-TYPE
+             SYNTAX   M013PppxStatsEntry
+             ACCESS   not-accessible
+             STATUS   mandatory
+             DESCRIPTION
+                "An entry in the table, containing information about 
+                the PPP PPP connection statistics."
+             INDEX   { m013PppxStatsSlotIndex, m013PppxStatsPortIndex }
+             ::= { m013PppxStatsTable 1 }
+
+         M013PppxStatsEntry ::=
+             SEQUENCE {
+                 m013PppxStatsSlotIndex
+                     INTEGER,
+                 m013PppxStatsPortIndex
+                     INTEGER,
+		 m013PppxStatsTxIPOctets
+		     Counter,
+		 m013PppxStatsTxIPPackets
+		     Counter,
+		 m013PppxStatsRxIPOctets
+		     Counter,
+		 m013PppxStatsRxIPPackets
+		     Counter,
+		 m013PppxStatsTxIPXOctets
+		     Counter,
+		 m013PppxStatsTxIPXPackets
+		     Counter,
+		 m013PppxStatsRxIPXOctets
+		     Counter,
+		 m013PppxStatsRxIPXPackets
+		     Counter,
+		 m013PppxStatsTxBPDUOctets
+		     Counter,
+		 m013PppxStatsTxBPDUPackets
+		     Counter,
+		 m013PppxStatsRxBPDUOctets
+		     Counter,
+		 m013PppxStatsRxBPDUPackets
+		     Counter,
+		 m013PppxStatsTxEthernetOctets
+		     Counter,
+		 m013PppxStatsTxEthernetPackets
+		     Counter,
+		 m013PppxStatsRxEthernetOctets
+		     Counter,
+		 m013PppxStatsRxEthernetPackets
+		     Counter,
+		 m013PppxStatsTx8025Octets
+		     Counter,
+		 m013PppxStatsTx8025Packets
+		     Counter,
+		 m013PppxStatsRx8025Octets
+		     Counter,
+		 m013PppxStatsRx8025Packets
+		     Counter,
+		 m013PppxStatsTxFDDIOctets
+		     Counter,
+		 m013PppxStatsTxFDDIPackets
+		     Counter,
+		 m013PppxStatsRxFDDIOctets
+		     Counter,
+		 m013PppxStatsRxFDDIPackets
+		     Counter
+         }
+                                                                                        
+
+         m013PppxStatsSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (0..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A unique value which identifies this HSM board slot
+                 that this PPP link is running on."
+             ::= { m013PppxStatsEntry 1 }
+
+         m013PppxStatsPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..1024)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A per-slot unique value which identifies HDLC channel
+                 that this PPP link is running on."
+             ::= { m013PppxStatsEntry 2 }
+
+	 m013PppxStatsTxIPOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within routed IP format packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 3 }
+
+	 m013PppxStatsTxIPPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted routed IP format packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 4 }
+
+	 m013PppxStatsRxIPOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within routed IP format packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 5 }
+
+	 m013PppxStatsRxIPPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received routed IP format packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 6 }
+
+	 m013PppxStatsTxIPXOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within routed IPX format packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 7 }
+
+	 m013PppxStatsTxIPXPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted routed IPX format packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 8 }
+
+	 m013PppxStatsRxIPXOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within routed IPX format packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 9 }
+
+	 m013PppxStatsRxIPXPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received routed IPX format packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 10 }
+
+	 m013PppxStatsTxBPDUOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within BPDU packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 11 }
+
+	 m013PppxStatsTxBPDUPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted BPDU packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 12 }
+
+	 m013PppxStatsRxBPDUOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within BPDU packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 13 }
+
+	 m013PppxStatsRxBPDUPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received BPDU packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 14 }
+
+	 m013PppxStatsTxEthernetOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within bridged 802.3 format
+                 packets on this PPP connection."
+             ::= { m013PppxStatsEntry 15 }
+
+	 m013PppxStatsTxEthernetPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted bridged 802.3 format packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 16 }
+
+	 m013PppxStatsRxEthernetOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within bridged 802.3 format
+                 packets on this PPP connection."
+             ::= { m013PppxStatsEntry 17 }
+
+	 m013PppxStatsRxEthernetPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received bridged 802.3 format packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 18 }
+
+	 m013PppxStatsTx8025Octets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within 8025 packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 19 }
+
+	 m013PppxStatsTx8025Packets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted 8025 packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 20 }
+
+	 m013PppxStatsRx8025Octets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within 8025 packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 21 }
+
+	 m013PppxStatsRx8025Packets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received 8025 packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 22 }
+
+	 m013PppxStatsTxFDDIOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted octets (including
+                 the PPP Header field) within FDDI packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 23 }
+
+	 m013PppxStatsTxFDDIPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of transmitted FDDI packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 24 }
+
+	 m013PppxStatsRxFDDIOctets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received octets (including
+                 the PPP Header field) within FDDI packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 25 }
+
+	 m013PppxStatsRxFDDIPackets OBJECT-TYPE
+             SYNTAX   Counter
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "The total number of received FDDI packets
+                 on this PPP connection."
+             ::= { m013PppxStatsEntry 26 }
+
+
+	--  m013IPRouterGroup group.  This group contains the global
+	--  M013 IP Router information.
+
+	m013IPRouterIfTable  OBJECT-TYPE
+	    SYNTAX  SEQUENCE OF M013IPRouterIfEntry
+	    ACCESS  not-accessible
+	    STATUS  mandatory
+	    DESCRIPTION
+		"A list of M013 Router instances in this
+		 physical OmniSwitch."
+	    ::= { m013IPRouterGroup 1 }
+
+	m013IPRouterIfEntry  OBJECT-TYPE
+	    SYNTAX  M013IPRouterIfEntry
+	    ACCESS  not-accessible
+	    STATUS  mandatory
+	    DESCRIPTION
+		"A VLAN entry." 
+	    INDEX { m013IPRouterIfSlotIndex, m013IPRouterIfLogicalPortIndex, m013IPRouterIfAddress }
+	    ::= { m013IPRouterIfTable 1 }
+
+	M013IPRouterIfEntry ::= SEQUENCE {
+	    m013IPRouterIfSlotIndex
+		INTEGER,
+	    m013IPRouterIfLogicalPortIndex
+		INTEGER,
+	    m013IPRouterIfAddress
+		IpAddress,
+	    m013IPRouterIfSubNetMask
+		IpAddress,
+	    m013IPRouterIfBcastAddress
+		IpAddress,
+	    m013IPRouterIfDescription
+		DisplayString,
+	    m013IPRouterIfAdmStatus
+		INTEGER,
+	    m013IPRouterIfOperStatus
+		INTEGER,
+            m013IPRouterIfFramingType
+                INTEGER,
+	    m013IPRouterIfMtu
+		INTEGER,
+	    m013IPRouterIfProtocol
+		OCTET STRING
+	    }
+
+	
+	m013IPRouterIfSlotIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..9)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "Slot for channel being provisioned."
+             ::= { m013IPRouterIfEntry 1 }
+
+	m013IPRouterIfLogicalPortIndex OBJECT-TYPE
+             SYNTAX   INTEGER (1..1024)
+             ACCESS   read-only
+             STATUS   mandatory
+             DESCRIPTION
+                "A per-slot unique HDLC channel number."
+             ::= { m013IPRouterIfEntry 2 }
+
+	m013IPRouterIfAddress  OBJECT-TYPE
+	    SYNTAX  IpAddress
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+		 "The IP  address for this IP interface"
+	    ::= { m013IPRouterIfEntry 3 }
+
+	m013IPRouterIfSubNetMask  OBJECT-TYPE
+	    SYNTAX  IpAddress
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+		 "The IP network subnet mask for this IP interface"
+	    ::= { m013IPRouterIfEntry 4 }
+
+	m013IPRouterIfBcastAddress  OBJECT-TYPE
+	    SYNTAX  IpAddress
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+		 "The IP broadcast address for this IP interface"
+	    ::= { m013IPRouterIfEntry 5 }
+
+	m013IPRouterIfDescription  OBJECT-TYPE
+	    SYNTAX  DisplayString (SIZE (0..31))
+	    ACCESS  read-write
+	    STATUS  optional
+	    DESCRIPTION
+		"Textual description of the router instance."
+	    ::= { m013IPRouterIfEntry 6 }
+
+	m013IPRouterIfAdmStatus  OBJECT-TYPE
+	    SYNTAX  INTEGER {
+                      enable(1),
+                      disable(2),
+		      delete(3)
+                      }
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+		"The particular routing environment can be
+		 enable(1) or disable(2) (or delete (3))
+		 upon user's request."
+	    ::= { m013IPRouterIfEntry 7 }
+
+	m013IPRouterIfOperStatus  OBJECT-TYPE
+	    SYNTAX  INTEGER {
+		    active(1),
+		    inactive(2)
+		    }
+	    ACCESS  read-only
+	    STATUS  mandatory
+	    DESCRIPTION
+		"Provide operating status of a particular
+		 router envirnment."
+	    ::= { m013IPRouterIfEntry 8 }
+
+        m013IPRouterIfFramingType  OBJECT-TYPE
+            SYNTAX INTEGER {
+                       ethernet(1),
+                       snap(2) 
+                       }
+            ACCESS  read-write
+            STATUS  mandatory
+            DESCRIPTION
+                "Provides the ability to set the outbound frame type for IP
+                 traffic.  The default frame type is Ethernet.  If the
+                 frame type is incompatible with the transmitting media,
+                 appropriate translation will be performed at egress."
+	    ::= { m013IPRouterIfEntry 9 }
+ 
+	m013IPRouterIfMtu	OBJECT-TYPE
+	    SYNTAX  INTEGER 
+            ACCESS  read-write
+            STATUS  mandatory
+            DESCRIPTION
+                "Provides the ability to set the MTU size for this IP interface.
+		 The default size is 1500"
+	    ::= { m013IPRouterIfEntry 10 }
+ 
+        m013IPRouterIfProtocol  OBJECT-TYPE
+	    SYNTAX  OCTET STRING (SIZE (2))
+	    ACCESS  read-write
+	    STATUS  mandatory
+	    DESCRIPTION
+		"The routing protocol(s) for this m013 router port.		 
+		 Which are:
+
+		 ipOther(1),
+		 ipRip(2),
+		 ipOspf(4),
+		 ipBgp(8),
+		 ipHello(16),
+		 ipIs-is(32)"
+	    ::= { m013IPRouterIfEntry 11 }        
+
+
+	-- m013Dsx3Group This group contains the 
+	--  M013 Ds3 configuration and statustics.
+
+	m013Dsx3ConfigTable OBJECT-TYPE
+                   SYNTAX  SEQUENCE OF M013Dsx3ConfigEntry
+                   ACCESS  not-accessible
+                   STATUS  mandatory
+                   DESCRIPTION
+                           "The DS3 Configuration table."
+                  ::= { m013Dsx3Group 1 }
+
+	m013Dsx3ConfigEntry OBJECT-TYPE
+                  SYNTAX  M013Dsx3ConfigEntry
+                  ACCESS  not-accessible
+                  STATUS  mandatory
+                  DESCRIPTION
+                          "An entry in the DS3 Configuration table."
+                 INDEX   { m013Dsx3LineIndex }
+                 ::= { m013Dsx3ConfigTable 1 }
+
+	M013Dsx3ConfigEntry ::=
+                 SEQUENCE {
+		     m013Dsx3LineIndex
+			INTEGER,
+		     m013Dsx3ChannelizedMode
+			INTEGER,
+		     m013Dsx3MdlEIC
+			OCTET STRING,
+		     m013Dsx3MdlLIC
+			OCTET STRING,
+		     m013Dsx3MdlFIC
+			OCTET STRING,
+		     m013Dsx3MdlUNIT
+			OCTET STRING,
+                     m013Dsx3MdlPFI
+			OCTET STRING,
+		     m013Dsx3MdlPortIdleSignalCode
+			OCTET STRING,
+		     m013Dsx3MdlGenerator
+			OCTET STRING,
+		     m013Dsx3MdlTransmitPath
+			INTEGER,
+		     m013Dsx3MdlTransmitIdleSignal
+			INTEGER,
+		     m013Dsx3MdlTransmitTestSignal
+			INTEGER,
+		     m013Dsx3FEACEnable
+			INTEGER,
+		     m013Dsx3REIEnable
+			INTEGER,
+		     m013Dsx3RxMdlEnable
+			INTEGER,
+		     m013Dsx3RxMdlEIC
+			OCTET STRING,
+		     m013Dsx3RxMdlLIC
+			OCTET STRING,
+		     m013Dsx3RxMdlFIC
+			OCTET STRING,
+		     m013Dsx3RxMdlUNIT
+			OCTET STRING,
+                     m013Dsx3RxMdlPFI
+			OCTET STRING,
+		     m013Dsx3RxMdlPortIdleSignalCode
+			OCTET STRING,
+		     m013Dsx3RxMdlGenerator
+			OCTET STRING,
+		     m013Dsx3RemoteStatus
+			INTEGER,
+		     m013Dsx3RemoteStatusLastChange
+			INTEGER,
+		     m013Dsx3LedStatus
+			INTEGER,
+		     m013Dsx3Ds1StatsEnableMask
+			INTEGER
+             }		
+		     
+	     m013Dsx3LineIndex OBJECT-TYPE
+		 SYNTAX  INTEGER (1..65535)
+                 ACCESS  read-only
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "This object is the identifier of a DS3
+                          port on a managed device."
+                ::= { m013Dsx3ConfigEntry 1 }
+
+	     m013Dsx3ChannelizedMode OBJECT-TYPE
+                 SYNTAX INTEGER {
+                        enable(1),
+                        disable(2)
+                        }
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         " This object controls whether or not DS3 port is
+			   channelized. The default mode is enabled which means
+			   that this port is channelized to 28 T1s."
+                ::= { m013Dsx3ConfigEntry 2 }
+
+	     m013Dsx3MdlEIC OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..10))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "MDL Equipment Identification Code (EIC)." 
+                ::= { m013Dsx3ConfigEntry 3 }
+
+             m013Dsx3MdlLIC OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..11))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+			  "MDL Location Identification Code (LIC)."
+                ::= { m013Dsx3ConfigEntry 4 }
+
+	     m013Dsx3MdlFIC OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..10))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "MDL Frame Identification Code (FIC)."
+                ::= { m013Dsx3ConfigEntry 5 }
+
+	     m013Dsx3MdlUNIT OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..6))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "MDL Unit Identification Code (UNIT)."
+                ::= { m013Dsx3ConfigEntry 6 }
+
+	     m013Dsx3MdlPFI OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..38))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "MDL Path Facility Identification Code (PFI)."
+                ::= { m013Dsx3ConfigEntry 7 }
+
+	     m013Dsx3MdlPortIdleSignalCode OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..38))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "MDL Port Idle Signal Code"
+                ::= { m013Dsx3ConfigEntry 8 }
+
+
+	     m013Dsx3MdlGenerator OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..38))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "MDL Generator."
+                ::= { m013Dsx3ConfigEntry 9 }
+
+	     m013Dsx3MdlTransmitPath OBJECT-TYPE
+                 SYNTAX INTEGER {
+                        enable(1),
+                        disable(2)
+                        }
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "Enables the MDL path message transmission."
+                ::= { m013Dsx3ConfigEntry 10 }
+
+	     m013Dsx3MdlTransmitIdleSignal OBJECT-TYPE
+		 SYNTAX  INTEGER {
+                        enable(1),
+                        disable(2)
+                        }
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "Enables the MDL idle signal message
+			  transmission."
+                ::= { m013Dsx3ConfigEntry 11 }
+
+	     m013Dsx3MdlTransmitTestSignal OBJECT-TYPE
+		 SYNTAX  INTEGER {
+                        enable(1),
+                        disable(2)
+                        }
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "Enables the MDL test signal message
+			  transmission."
+                ::= { m013Dsx3ConfigEntry 12 }
+
+	     m013Dsx3FEACEnable OBJECT-TYPE
+		 SYNTAX  INTEGER {
+                        enable(1),
+                        disable(2)
+                        }
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "Allows the DS3 to send the following alarms
+			  on the FEAC channel when detected locally:
+				- DS3 Equipment Failure
+				- LOS
+				- OOF
+				- AIS Received
+			  ."
+                ::= { m013Dsx3ConfigEntry 13 }
+
+	     m013Dsx3REIEnable OBJECT-TYPE  
+		 SYNTAX  INTEGER {
+                        enable(1),
+                        disable(2)
+                        }              
+		 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "Allows the DS3 to send Remote Error Indications."
+                ::= { m013Dsx3ConfigEntry 14 }
+
+	     m013Dsx3RxMdlEnable OBJECT-TYPE  
+		 SYNTAX  INTEGER {
+                        enable(1),
+                        disable(2)
+                        }              
+		 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "Allows the DS3 to receive MDL messages."
+                ::= { m013Dsx3ConfigEntry 15 }
+
+	     m013Dsx3RxMdlEIC OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..10))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "Received MDL Equipment Identification Code (EIC)." 
+                ::= { m013Dsx3ConfigEntry 16 }
+
+             m013Dsx3RxMdlLIC OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..11))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+			  "Received MDL Location Identification Code (LIC)."
+                ::= { m013Dsx3ConfigEntry 17 }
+
+	     m013Dsx3RxMdlFIC OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..10))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "Received MDL Frame Identification Code (FIC)."
+                ::= { m013Dsx3ConfigEntry 18 }
+
+	     m013Dsx3RxMdlUNIT OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..6))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "Received MDL Unit Identification Code (UNIT)."
+                ::= { m013Dsx3ConfigEntry 19 }
+
+	     m013Dsx3RxMdlPFI OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..38))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "Received MDL Path Facility Identification Code (PFI)."
+                ::= { m013Dsx3ConfigEntry 20 }
+
+	     m013Dsx3RxMdlPortIdleSignalCode OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..38))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "Received MDL Port Idle Signal Code"
+                ::= { m013Dsx3ConfigEntry 21 }
+
+	     m013Dsx3RxMdlGenerator OBJECT-TYPE
+                 SYNTAX  OCTET STRING (SIZE (0..38))
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "Received MDL Generator."
+                ::= { m013Dsx3ConfigEntry 22 }
+
+	     m013Dsx3RemoteStatus  OBJECT-TYPE
+		 SYNTAX  INTEGER (1..1023)
+              	 ACCESS  read-only
+                 STATUS  mandatory
+                 DESCRIPTION
+                 	"This variable indicates the
+                 	Remote Line Status of the interface."
+	        ::= { m013Dsx3ConfigEntry 23 }
+
+	     m013Dsx3RemoteStatusLastChange OBJECT-TYPE
+		 SYNTAX  INTEGER
+                 ACCESS  read-only
+                 STATUS  mandatory
+                 DESCRIPTION
+                      "The value of MIB II's sysUpTime object at the
+                      time the Remote DS3/E3 entered its current line status
+                      state.  If the current state was entered prior to
+                      the last re-initialization of the proxy-agent,
+                      then this object contains a zero value."	 	          
+	        ::= { m013Dsx3ConfigEntry 24 }
+
+	     m013Dsx3LedStatus OBJECT-TYPE
+		 SYNTAX  INTEGER
+                 ACCESS  read-only
+                 STATUS  mandatory
+                 DESCRIPTION
+                      "The LED state for this M013 Port.
+		       M013 module has 5 LEDs per port. The current bit
+		       definitions for the DS3 Port are:
+
+			T3EN	0	- GRN OFF (0 off, 1 on)
+			LOS	1	- RED OFF (0 off, 1 on)
+			OOF	2	- RED OFF (0 off, 1 on)
+			AIS	3	- RED OFF (0 off, 1 on)
+			RAI	4	- YEL OFF (0 off, 1 on)
+			"
+	        ::= { m013Dsx3ConfigEntry 25 }
+
+	     m013Dsx3Ds1StatsEnableMask  OBJECT-TYPE 
+                 SYNTAX  INTEGER 
+                 ACCESS  read-write 
+                 STATUS  mandatory 
+                 DESCRIPTION 
+                      "This is a 28 bit mask which allows selectively
+			enable/disable stats collection on a particular
+			DS1 within DS3 port. Each bit corresponds to one
+			of the 28 DS1 within DS3 port.
+		      " 
+                ::= { m013Dsx3ConfigEntry 26 }
+	     
+	m013Dsx3StatsTable OBJECT-TYPE
+                   SYNTAX  SEQUENCE OF M013Dsx3StatsEntry
+                   ACCESS  not-accessible
+                   STATUS  mandatory
+                   DESCRIPTION
+                           "The DS3 Statistics table."
+                  ::= { m013Dsx3Group 2 }
+
+	m013Dsx3StatsEntry OBJECT-TYPE
+                  SYNTAX  M013Dsx3StatsEntry
+                  ACCESS  not-accessible
+                  STATUS  mandatory
+                  DESCRIPTION
+                          "An entry in the DS3 Statistics table."
+                 INDEX   { m013Dsx3StatsLineIndex }
+                 ::= { m013Dsx3StatsTable 1 }
+
+	M013Dsx3StatsEntry ::=
+                 SEQUENCE {
+		     m013Dsx3StatsLineIndex
+			INTEGER,
+		     m013Dsx3StatsRxREI
+			Counter,
+		     m013Dsx3StatsRxFEAC
+			INTEGER
+             }		
+		     
+	     m013Dsx3StatsLineIndex OBJECT-TYPE
+		 SYNTAX  INTEGER (1..65535)
+                 ACCESS  read-only
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "This object is the identifier of a DS3
+                          port on a managed device."
+                ::= { m013Dsx3StatsEntry 1 }
+	
+	     m013Dsx3StatsRxREI OBJECT-TYPE
+		 SYNTAX  Counter
+		 ACCESS  read-only
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "The number of Remote Error Indications received."
+                ::= { m013Dsx3StatsEntry 2 }
+
+	      m013Dsx3StatsRxFEAC OBJECT-TYPE
+	         SYNTAX  INTEGER {
+                        dsx3NoFEAC (1),
+                        dsx3DS3EquipmentFailure (2),
+                        dsx3DS3LOS (3),
+                        dsx3DS3OutofFrame (4),
+                        dsx3DS3AISreceived (5),
+                        dsx3DS3IDLEreceived (6),
+                        dsx3DS3NonServiceAffectingEquipFailure (7),
+                        dsx3CommonEquipmentFailure (8),
+                        dsx3DS3LoopbackReceived (9),
+                        dsx3DS1ServiceAffectingEquipmentFailure (10),
+                        dsx3DS1NonServiceAffectingEquipFailure (11),
+                        dsx3SingleDS1LOS (12),
+                        dsx3MultipleDS1sLOS (13),
+                        dsx3UnknownCode (14),
+                        dsx3UnsupportedCode (15)
+                    }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+            "This object indicates the presence FEAC being received by
+             this port.  This object only applies to DS3 interface with 
+             framing format configured to C-bit parity.  A value of 
+	     dsx3NoFEAC(1) is returned for other cases."
+		::= { m013Dsx3StatsEntry 3 }
+ 
+	-- m013Dsx1Group This group contains the 
+	--  M013 Ds1 configuration.
+
+	m013Dsx1ConfigTable OBJECT-TYPE
+                   SYNTAX  SEQUENCE OF M013Dsx1ConfigEntry
+                   ACCESS  not-accessible
+                   STATUS  mandatory
+                   DESCRIPTION
+                           "The DS1 Configuration table."
+                  ::= { m013Dsx1Group 1 }
+
+	m013Dsx1ConfigEntry OBJECT-TYPE
+                  SYNTAX  M013Dsx1ConfigEntry
+                  ACCESS  not-accessible
+                  STATUS  mandatory
+                  DESCRIPTION
+                          "An entry in the DS3 Configuration table."
+                 INDEX   { m013Dsx3LineIndex }
+                 ::= { m013Dsx1ConfigTable 1 }
+
+	M013Dsx1ConfigEntry ::=
+                 SEQUENCE {
+		     m013Dsx1LineIndex
+			INTEGER,
+		     m013Dsx1T1BertPattern
+			INTEGER,
+		     m013Dsx1T1BertInterval
+			INTEGER,
+		     m013Dsx1T1BertFraming
+			INTEGER,
+		     m013Dsx1T1BertTestEnable
+			INTEGER,
+		     m013Dsx1RemoteStatus
+			INTEGER,
+		     m013Dsx1RemoteStatusLastChange
+			INTEGER
+             }		
+		     
+	     m013Dsx1LineIndex OBJECT-TYPE
+		 SYNTAX  INTEGER (1..65535)
+                 ACCESS  read-only
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "This object is the identifier of a DS1
+                          port on a managed device."
+                ::= { m013Dsx1ConfigEntry 1 }
+
+	     m013Dsx1T1BertPattern OBJECT-TYPE
+		 SYNTAX  INTEGER (1..6)
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "This variable represents  T1 BERT Pattern configuration. 
+			  The values mean:
+
+			    1 - 2^15-1, pseudo-random O.151 test pattern (32767-bit long)
+			    2 - 2^20-1, pseudo-random O.151 test pattern (1048575-bit long)
+			    3 - 2^20-QRSS, pseudo-random QRSS O.151 test pattern (1048575-bit long)
+			    4 - 2^23-1, pseudo-random O.151 test pattern (8388607-bit long)
+			    5 - 0s, respective test pattern of all zeros
+			    6 - 1s, respective test pattern of all ones
+			  "
+                ::= { m013Dsx1ConfigEntry 2 }
+
+	     m013Dsx1T1BertInterval OBJECT-TYPE
+		 SYNTAX  INTEGER
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "T1 BERT Interval"
+                ::= { m013Dsx1ConfigEntry 3 }
+	     
+	     m013Dsx1T1BertFraming OBJECT-TYPE
+		 SYNTAX  INTEGER {
+			 useframing(1),
+			 noframing(2)
+			 }
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "T1 BERT Framing"
+                ::= { m013Dsx1ConfigEntry 4 }
+
+	     m013Dsx1T1BertTestEnable OBJECT-TYPE
+		 SYNTAX  INTEGER{
+			 enable(1),
+			 disable(2)
+			 }
+                 ACCESS  read-write
+                 STATUS  mandatory
+                 DESCRIPTION
+                         "T1 BERT Start/Stop"
+                ::= { m013Dsx1ConfigEntry 5 }
+
+	     m013Dsx1RemoteStatus  OBJECT-TYPE
+		 SYNTAX  INTEGER (1..1023)
+              	 ACCESS  read-only
+                 STATUS  mandatory
+                 DESCRIPTION
+                 	"This variable indicates the
+                 	Remote Line Status of the interface."
+	        ::= { m013Dsx1ConfigEntry 6 }
+
+	     m013Dsx1RemoteStatusLastChange OBJECT-TYPE
+		 SYNTAX  INTEGER
+                 ACCESS  read-only
+                 STATUS  mandatory
+                 DESCRIPTION
+                      "The value of MIB II's sysUpTime object at the
+                      time the Remote DS1 entered its current line status
+                      state.  If the current state was entered prior to
+                      the last re-initialization of the proxy-agent,
+                      then this object contains a zero value."	 	          
+	        ::= { m013Dsx1ConfigEntry 7 }
+         END

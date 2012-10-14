@@ -1,0 +1,816 @@
+          SONET-MIB DEFINITIONS ::= BEGIN
+
+          IMPORTS
+             Gauge
+                     FROM RFC1155-SMI
+             ifIndex, transmission, DisplayString
+                    FROM RFC1213-MIB
+             TRAP-TYPE
+                     FROM RFC-1215
+             OBJECT-TYPE
+                     FROM RFC-1212;
+
+
+     sonetMIB OBJECT IDENTIFIER ::= { transmission 39 }
+
+
+
+          --  This is the MIB module for the SONET/SDH objects
+
+          sonetObjects      OBJECT IDENTIFIER ::= { sonetMIB 1 }
+
+
+          -- groups in the SONET/SDH MIB module
+
+          sonetMedium       OBJECT IDENTIFIER ::= { sonetObjects 1 }
+
+          sonetSection      OBJECT IDENTIFIER ::= { sonetObjects 2 }
+
+          sonetLine         OBJECT IDENTIFIER ::= { sonetObjects 3 }
+
+          sonetFarEndLine   OBJECT IDENTIFIER ::= { sonetObjects 4 }
+
+
+
+          -- the SONET/SDH Medium group
+
+          -- SONET/SDH interfaces for some applications may be
+          -- electrical interfaces and not optical interfaces.
+          -- This group handles the configuration information for
+          -- both optical SONET/SDH interfaces and electrical
+          -- SONET/SDH interfaces.
+
+          sonetMediumTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF SonetMediumEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                 "The SONET/SDH Medium table."
+               ::= { sonetMedium 1 }
+
+          sonetMediumEntry OBJECT-TYPE
+              SYNTAX  SonetMediumEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                 "An entry in the SONET/SDH Medium table."
+              INDEX   { ifIndex }
+               ::= { sonetMediumTable 1 }
+
+          SonetMediumEntry ::=
+              SEQUENCE {
+                   sonetMediumType               INTEGER,
+                   sonetMediumTimeElapsed        INTEGER,
+                   sonetMediumValidIntervals     INTEGER,
+                   sonetMediumLineCoding         INTEGER,
+                   sonetMediumLineType           INTEGER,
+                   sonetMediumCircuitIdentifier  DisplayString,
+                   sonetMediumStatusChangeTrapEnable INTEGER
+
+              }
+
+
+          sonetMediumType OBJECT-TYPE
+              SYNTAX  INTEGER  {
+                         sonet(1),
+                         sdh(2)
+                      }
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "This variable identifies whether a SONET
+                 or a SDH signal is used across this interface."
+              ::= { sonetMediumEntry 1 }
+
+          sonetMediumTimeElapsed OBJECT-TYPE
+              SYNTAX  INTEGER (1..900)
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "The number of seconds, including partial
+                 seconds, that have elapsed since the beginning of
+                 the current error-measurement period."
+              ::= { sonetMediumEntry 2 }
+
+          sonetMediumValidIntervals OBJECT-TYPE
+              SYNTAX  INTEGER (0..96)
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "The number of previous intervals for which valid
+                 data has been stored.  A SONET device must support
+                 at least n intervals.
+                 The minimum value of n is 4.
+                 The default of n is 32.
+                 The maximum value of n is 96.
+                 The value of this object will be n unless
+                 the device was brought online within the last
+                 (nx15) minutes, in which case the value will be the
+                 number of complete 15 minute intervals the device has
+                 been online."
+              ::= { sonetMediumEntry 3 }
+
+          sonetMediumLineCoding OBJECT-TYPE
+              SYNTAX  INTEGER {
+                          sonetMediumOther(1),
+                          sonetMediumB3ZS(2),
+                          sonetMediumCMI(3),
+                          sonetMediumNRZ(4),
+                          sonetMediumRZ(5)
+                      }
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "This variable describes the line coding for
+                 this interface. The B3ZS and CMI are used for
+                 electrical SONET/SDH signals (STS-1 and STS-3).
+                 The Non-Return to Zero (NRZ) and the Return
+                 to Zero are used for optical SONET/SDH signals."
+              ::= { sonetMediumEntry 4 }
+
+          sonetMediumLineType OBJECT-TYPE
+              SYNTAX  INTEGER {
+                          sonetOther(1),
+                          sonetShortSingleMode(2),
+                          sonetLongSingleMode(3),
+                          sonetMultiMode(4),
+                          sonetCoax(5),
+                          sonetUTP(6)
+                      }
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "This variable describes the line type for
+                 this interface. The line types are
+                 Short and Long Range
+                 Single Mode fiber or Multi-Mode fiber interfaces,
+                 and coax and UTP for electrical interfaces.  The
+                 value sonetOther should be used when the Line Type is
+                 not one of the listed values."
+              ::= { sonetMediumEntry 5 }
+          sonetMediumStatusChangeTrapEnable  OBJECT-TYPE
+               SYNTAX   INTEGER {
+                           enabled(1),
+                           disabled(2)
+                        }
+               ACCESS  read-write
+               STATUS  mandatory
+               DESCRIPTION
+                      "Indicates whether sonetLineStatusChange traps
+                      should be generated for this interface."
+               DEFVAL { disabled }
+               ::= { sonetMediumEntry 6 }
+
+
+          sonetMediumCircuitIdentifier OBJECT-TYPE
+              SYNTAX  DisplayString (SIZE (0..255))
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "This variable contains the transmission
+                 vendor's circuit identifier, for the
+                 purpose of facilitating troubleshooting."
+              ::= { sonetMediumEntry 7 }
+
+
+          -- the SONET/SDH Section group
+
+          -- this group consists of 2 tables:
+          -- - the SONET/SDH Section Current Table
+          -- - the SONET/SDH Section Interval Table
+
+
+
+          -- the SONET/SDH Section Current Table
+
+          -- The SONET/SDH Section
+          -- current table contains various statistics
+          -- being collected for the current 15 minute interval.
+
+          sonetSectionCurrentTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF SonetSectionCurrentEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                 "The SONET/SDH Section Current table."
+               ::= { sonetSection 1 }
+
+          sonetSectionCurrentEntry OBJECT-TYPE
+              SYNTAX  SonetSectionCurrentEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                 "An entry in the SONET/SDH Section Current table."
+              INDEX   { ifIndex }
+               ::= { sonetSectionCurrentTable 1 }
+
+          SonetSectionCurrentEntry ::=
+              SEQUENCE {
+                  sonetSectionCurrentStatus   INTEGER,
+                  sonetSectionCurrentESs      Gauge,
+                  sonetSectionCurrentSESs     Gauge,
+                  sonetSectionCurrentSEFSs    Gauge,
+                  sonetSectionCurrentCVs      Gauge
+              }
+
+
+          sonetSectionCurrentStatus OBJECT-TYPE
+              SYNTAX  INTEGER (1..6)
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "This variable indicates the
+                 status of the interface.
+                 The sonetSectionCurrentStatus
+                 is a bit map represented
+                 as a sum, therefore,
+                 it can represent multiple defects
+                 simultaneously.
+                 The sonetSectionNoDefect should be
+                 set if and only if
+                 no other flag is set.
+
+                 The various bit positions are:
+                       1   sonetSectionNoDefect
+                       2   sonetSectionLOS
+                       4   sonetSectionLOF"
+               ::= { sonetSectionCurrentEntry 1 }
+
+          sonetSectionCurrentESs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "The counter associated with the number of Errored
+                 Seconds encountered by a SONET/SDH
+                 Section in the current 15 minute interval."
+               ::= { sonetSectionCurrentEntry 2 }
+
+          sonetSectionCurrentSESs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "The counter associated with the number of
+                 Severely Errored Seconds
+                 encountered by a SONET/SDH Section in the current 15
+                 minute interval."
+               ::= { sonetSectionCurrentEntry 3 }
+
+          sonetSectionCurrentSEFSs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "The counter associated with the number of
+                 Severely Errored Framing Seconds
+                 encountered by a SONET/SDH Section in the current
+                 15 minute interval."
+              ::= { sonetSectionCurrentEntry 4 }
+
+          sonetSectionCurrentCVs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "The counter associated with the number of Coding
+                 Violations encountered by a
+                 SONET/SDH Section in the current 15 minute interval."
+               ::= { sonetSectionCurrentEntry 5 }
+
+
+          -- the SONET/SDH Section Interval Table
+
+          -- The SONET/SDH Section Interval Table
+          -- contains various statistics
+          -- collected by each system over a maximum
+          -- of the previous 24 hours of
+          -- operation.  The past 24 hours may be broken into 96
+          -- completed 15 minute intervals.
+          -- A system is required to store at
+          -- least 4 completed 15 minute interval.
+          -- The default value is 32 intervals.
+
+          sonetSectionIntervalTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF SonetSectionIntervalEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                 "The SONET/SDH Section Interval table."
+               ::= { sonetSection 2 }
+
+          sonetSectionIntervalEntry OBJECT-TYPE
+              SYNTAX  SonetSectionIntervalEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                 "An entry in the SONET/SDH Section Interval table."
+              INDEX   { ifIndex,
+                        sonetSectionIntervalNumber }
+               ::= { sonetSectionIntervalTable 1 }
+
+          SonetSectionIntervalEntry ::=
+              SEQUENCE {
+                   sonetSectionIntervalNumber  INTEGER,
+                   sonetSectionIntervalESs     Gauge,
+                   sonetSectionIntervalSESs    Gauge,
+                   sonetSectionIntervalSEFSs   Gauge,
+                   sonetSectionIntervalCVs     Gauge
+              }
+
+
+          sonetSectionIntervalNumber OBJECT-TYPE
+              SYNTAX  INTEGER (1..96)
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                "A number between 1 and 96, which identifies the
+                interval for which the set of statistics is available.
+                The interval identified by 1 is the most recently
+                completed 15 minute interval,
+                and the interval identified
+                by N is the interval immediately preceding the
+                one identified
+                by N-1."
+               ::= { sonetSectionIntervalEntry 1 }
+
+          sonetSectionIntervalESs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "The counter associated with the number of
+                 Errored Seconds encountered
+                 by a SONET/SDH Section in a
+                 particular 15-minute interval
+                 in the past 24 hours."
+               ::= { sonetSectionIntervalEntry 2 }
+
+          sonetSectionIntervalSESs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "The counter associated with the number of
+                 Severely Errored Seconds
+                 encountered by a SONET/SDH Section in a
+                 particular 15-minute interval
+                 in the past 24 hours."
+              ::= { sonetSectionIntervalEntry 3 }
+
+          sonetSectionIntervalSEFSs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "The counter associated with the number of
+                 Severely Errored Framing Seconds
+                 encountered by a SONET/SDH Section in a
+                 particular 15-minute interval
+                 in the past 24 hours."
+              ::= { sonetSectionIntervalEntry 4 }
+
+          sonetSectionIntervalCVs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "The counter associated with the number of Coding
+                 Violations encountered by a
+                 SONET/SDH Section in a particular 15-minute interval
+                 in the past 24 hours."
+              ::= { sonetSectionIntervalEntry 5 }
+
+
+          -- the SONET/SDH Line group
+
+          -- this group consists of 2 tables:
+          -- - the SONET/SDH Line Current Table
+          -- - the SONET/SDH Line Interval Table
+
+
+          -- the SONET/SDH Line Current Table
+
+          -- The SONET/SDH Line
+          -- current table contains various statistics
+          -- being collected for the current 15 minute interval.
+
+          sonetLineCurrentTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF SonetLineCurrentEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                "The SONET/SDH Line Current table."
+              ::= { sonetLine 1 }
+
+          sonetLineCurrentEntry OBJECT-TYPE
+              SYNTAX  SonetLineCurrentEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                "An entry in the SONET/SDH Line Current table."
+              INDEX   { ifIndex }
+              ::= { sonetLineCurrentTable 1 }
+
+          SonetLineCurrentEntry ::=
+              SEQUENCE {
+                   sonetLineCurrentStatus    INTEGER,
+                   sonetLineCurrentESs       Gauge,
+                   sonetLineCurrentSESs      Gauge,
+                   sonetLineCurrentCVs       Gauge,
+                   sonetLineCurrentUASs      Gauge
+               }
+
+
+          sonetLineCurrentStatus OBJECT-TYPE
+              SYNTAX  INTEGER (1..6)
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "This variable indicates the
+                 status of the interface.
+                 The sonetLineCurrentStatus
+                 is a bit map represented
+                 as a sum, therefore,
+                 it can represent multiple defects
+                 simultaneously.
+                 The sonetLineNoDefect should be
+                 set if and only if
+                 no other flag is set.
+
+                 The various bit positions are:
+                  1   sonetLineNoDefect
+                  2   sonetLineAIS
+                  4   sonetLineRDI"
+               ::= { sonetLineCurrentEntry 1 }
+
+          sonetLineCurrentESs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+               "The counter associated with the number of Errored
+               Seconds encountered by a SONET/SDH
+               Line in the current 15 minute interval."
+              ::= { sonetLineCurrentEntry 2 }
+
+          sonetLineCurrentSESs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+               "The counter associated with the number of
+               Severely Errored Seconds
+               encountered by a SONET/SDH Line in the current 15
+               minute
+               interval."
+              ::= { sonetLineCurrentEntry 3 }
+
+          sonetLineCurrentCVs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+               "The counter associated with the number of Coding
+               Violations encountered by a
+               SONET/SDH Line in the current 15 minute interval."
+              ::= { sonetLineCurrentEntry 4 }
+
+          sonetLineCurrentUASs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+               "The counter associated with the number of
+               Unavailable Seconds
+               encountered by a SONET/SDH Line in the current 15
+               minute
+               interval."
+              ::= { sonetLineCurrentEntry 5 }
+
+
+          -- the SONET/SDH Line Interval Table
+
+          -- The SONET/SDH Line Interval Table
+          -- contains various statistics
+          -- collected by each system over a maximum
+          -- of the previous 24 hours of
+          -- operation.  The past 24 hours may be broken into 96
+          -- completed 15 minute intervals.
+          -- A system is required to store at
+          -- least 4 completed 15 minute interval.
+          -- The default value is 32 intervals.
+
+          sonetLineIntervalTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF SonetLineIntervalEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                 "The SONET/SDH Line Interval table."
+               ::= { sonetLine 2 }
+
+          sonetLineIntervalEntry OBJECT-TYPE
+              SYNTAX  SonetLineIntervalEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                 "An entry in the SONET/SDH Line Interval table."
+             INDEX   { ifIndex,
+                       sonetLineIntervalNumber }
+             ::= { sonetLineIntervalTable 1 }
+
+          SonetLineIntervalEntry ::=
+              SEQUENCE {
+                  sonetLineIntervalNumber    INTEGER,
+                  sonetLineIntervalESs       Gauge,
+                  sonetLineIntervalSESs      Gauge,
+                  sonetLineIntervalCVs       Gauge,
+                  sonetLineIntervalUASs      Gauge
+              }
+
+
+          sonetLineIntervalNumber OBJECT-TYPE
+              SYNTAX  INTEGER (1..96)
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                  "A number between 1 and 96, which identifies the
+                  interval for which the set of statistics is available.
+                  The interval identified by 1 is the most recently
+                  completed 15 minute interval,
+                  and the interval identified
+                  by N is the interval immediately preceding the
+                  one identified
+                  by N-1."
+               ::= { sonetLineIntervalEntry 1 }
+
+          sonetLineIntervalESs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "The counter associated with the number of
+                 Errored Seconds encountered
+                 by a SONET/SDH Line in a
+                 particular 15-minute interval
+                 in the past 24 hours."
+               ::= { sonetLineIntervalEntry 2 }
+
+          sonetLineIntervalSESs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                 "The counter associated with the number of
+                 Severely Errored Seconds
+                 encountered by a SONET/SDH Line in a
+                 particular 15-minute interval
+                 in the past 24 hours."
+                ::= { sonetLineIntervalEntry 3 }
+
+          sonetLineIntervalCVs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                "The counter associated with the number of Coding
+                Violations encountered by a
+                SONET/SDH Line in a
+                particular 15-minute interval
+                in the past 24 hours."
+              ::= { sonetLineIntervalEntry 4 }
+
+          sonetLineIntervalUASs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                "The counter associated with the
+                number of Unavailable Seconds
+                encountered by a SONET/SDH Line in
+                a particular 15-minute interval
+                in the past 24 hours."
+              ::= { sonetLineIntervalEntry 5 }
+
+
+          -- The SONET/SDH Far End Line group.
+          -- This group may only be implemented by SONET/SDH (LTEs)
+          -- systems that provide for a far end block error (FEBE)
+          -- information at the SONET/SDH Line Layer.
+
+          -- This group consists of two tables:
+          --    SONET/SDH Far End Line Current Table
+          --    SONET/SDH Far End Line Interval Table
+
+
+
+          -- The SONET/SDH Far End Line Current Table
+
+          -- The SONET/SDH Far End Line Current table contains
+          -- various statistics being
+          -- collected for the current 15 minute interval.
+          -- The statistics are collected from the far end
+          -- block error code (FEBE)
+          -- within the third Z2 byte of the Line Overhead
+          -- in Broadband ISDN applications.
+          -- The definitions are the same as described for
+          -- the near-end information.
+
+          sonetFarEndLineCurrentTable OBJECT-TYPE
+              SYNTAX  SEQUENCE OF SonetFarEndLineCurrentEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                "The SONET/SDH Far End Line Current table."
+              ::= { sonetFarEndLine 1 }
+
+          sonetFarEndLineCurrentEntry OBJECT-TYPE
+              SYNTAX  SonetFarEndLineCurrentEntry
+              ACCESS  not-accessible
+              STATUS  mandatory
+              DESCRIPTION
+                "An entry in the SONET/SDH Far End Line Current table."
+              INDEX   { ifIndex }
+              ::= { sonetFarEndLineCurrentTable 1 }
+
+          SonetFarEndLineCurrentEntry ::=
+              SEQUENCE {
+                  sonetFarEndLineCurrentESs       Gauge,
+                  sonetFarEndLineCurrentSESs      Gauge,
+                  sonetFarEndLineCurrentCVs       Gauge,
+                  sonetFarEndLineCurrentUASs      Gauge
+                 }
+
+
+          sonetFarEndLineCurrentESs OBJECT-TYPE
+             SYNTAX  Gauge
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+                 "The counter associated with the number of Far
+                 Far End Errored Seconds encountered by a SONET/SDH
+                 interface in the current 15 minute interval."
+             ::= { sonetFarEndLineCurrentEntry 1 }
+
+          sonetFarEndLineCurrentSESs OBJECT-TYPE
+             SYNTAX  Gauge
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+                 "The counter associated with the number of
+                 Far End Severely Errored Seconds
+                 encountered by a SONET/SDH Medium/Section/Line
+                 interface in the current 15 minute
+                 interval."
+             ::= { sonetFarEndLineCurrentEntry 2 }
+
+          sonetFarEndLineCurrentCVs OBJECT-TYPE
+             SYNTAX  Gauge
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+                 "The counter associated with the number of
+                 Far End Coding Violations reported via
+                 the far end block error count
+                 encountered by a
+                 SONET/SDH Medium/Section/Line
+                 interface in the current 15 minute interval."
+             ::= { sonetFarEndLineCurrentEntry 3 }
+
+          sonetFarEndLineCurrentUASs OBJECT-TYPE
+             SYNTAX  Gauge
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+                 "The counter associated with the number of
+                 Far End Unavailable Seconds
+                 encountered by a
+                 SONET/SDH Medium/Section/Line
+                 interface in the current 15 minute interval."
+             ::= { sonetFarEndLineCurrentEntry 4 }
+
+
+          -- The SONET/SDH Far End Line Interval Table
+
+          -- The SONET/SDH Far End Line Interval Table
+          -- contains various statistics
+          -- collected by each system over a maximum
+          -- of the previous 24 hours of
+          -- operation.  The past 24 hours may be broken into 96
+          -- completed 15 minute intervals.
+          -- A system is required to store at
+          -- least 4 completed 15 minute interval.
+          -- The default value is 32 intervals.
+
+          sonetFarEndLineIntervalTable OBJECT-TYPE
+             SYNTAX  SEQUENCE OF SonetFarEndLineIntervalEntry
+             ACCESS  not-accessible
+             STATUS  mandatory
+             DESCRIPTION
+                "The SONET/SDH Far End Line Interval table."
+             ::= { sonetFarEndLine 2 }
+
+          sonetFarEndLineIntervalEntry OBJECT-TYPE
+             SYNTAX  SonetFarEndLineIntervalEntry
+             ACCESS  not-accessible
+             STATUS  mandatory
+             DESCRIPTION
+               "An entry in the SONET/SDH Far
+               End Line Interval table."
+             INDEX   { ifIndex,
+                       sonetFarEndLineIntervalNumber }
+             ::= { sonetFarEndLineIntervalTable 1 }
+
+          SonetFarEndLineIntervalEntry ::=
+              SEQUENCE {
+                   sonetFarEndLineIntervalNumber    INTEGER,
+                   sonetFarEndLineIntervalESs       Gauge,
+                   sonetFarEndLineIntervalSESs      Gauge,
+                   sonetFarEndLineIntervalCVs       Gauge,
+                   sonetFarEndLineIntervalUASs      Gauge
+              }
+
+
+          sonetFarEndLineIntervalNumber OBJECT-TYPE
+             SYNTAX  INTEGER (1..96)
+             ACCESS  not-accessible
+             STATUS  mandatory
+             DESCRIPTION
+                   "A number between 1 and 96, which identifies the
+                   interval for which the set of statistics is available.
+                   The interval identified by 1 is the most recently
+                   completed 15 minute interval,
+                   and the interval identified
+                   by N is the interval immediately preceding the
+                   one identified
+                   by N-1."
+             ::= { sonetFarEndLineIntervalEntry 1 }
+
+          sonetFarEndLineIntervalESs OBJECT-TYPE
+             SYNTAX  Gauge
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+                  "The counter associated with the number of
+                  Far End Errored Seconds encountered
+                  by a SONET/SDH Line
+                  interface in a particular 15-minute interval
+                  in the past 24 hours."
+            ::= { sonetFarEndLineIntervalEntry 2 }
+
+          sonetFarEndLineIntervalSESs OBJECT-TYPE
+             SYNTAX  Gauge
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+                  "The counter associated with the number of
+                  Far End Severely Errored Seconds
+                  encountered by a SONET/SDH Line
+                  interface in a particular 15-minute interval
+                  in the past 24 hours."
+            ::= { sonetFarEndLineIntervalEntry 3 }
+
+          sonetFarEndLineIntervalCVs OBJECT-TYPE
+              SYNTAX  Gauge
+              ACCESS  read-only
+              STATUS  mandatory
+              DESCRIPTION
+                   "The counter associated with the number of
+                   Far End Coding Violations reported via
+                   the far end block error count
+                   encountered by a
+                   SONET/SDH Line
+                   interface in a particular 15-minute interval
+                   in the past 24 hours."
+              ::= { sonetFarEndLineIntervalEntry 4 }
+
+          sonetFarEndLineIntervalUASs OBJECT-TYPE
+             SYNTAX  Gauge
+             ACCESS  read-only
+             STATUS  mandatory
+             DESCRIPTION
+                 "The counter associated with the number of
+                 Far End Unavailable Seconds
+                 encountered by a
+                 SONET/SDH Line
+                 interface in a particular 15-minute interval
+                 in the past 24 hours."
+             ::= { sonetFarEndLineIntervalEntry 5 }
+
+
+           -- Sonet TRAPS
+ 
+          sonetTraps OBJECT IDENTIFIER ::= { sonetObjects 5 }
+ 
+          sonetMediumStatusChange TRAP-TYPE
+              ENTERPRISE sonetTraps
+              VARIABLES  { sonetSectionCurrentStatus, sonetLineCurrentStatus }
+              DESCRIPTION
+                      "A sonetMediumStatusChange trap is sent when the
+                      value of an instance sonetSectionCurrentStatus or
+                      sonetLineCurrentStatus changes. It
+                      can be utilized by an NMS to trigger polls."
+               ::= 1
+ 
+
+          END

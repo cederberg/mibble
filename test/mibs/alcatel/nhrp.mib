@@ -1,0 +1,1658 @@
+NHRP-MIB DEFINITIONS ::= BEGIN
+
+-- MIB created 5/29/97 13:00:24, by
+--   SMIC (the next generation) version 1.6.29, November 22, 1994.
+-- From file: "nhrp.mi2"
+-- Compile options "G A T M"
+
+IMPORTS
+    experimental, Integer32, Counter32, Gauge32
+            FROM SNMPv2-SMI
+    OBJECT-TYPE
+            FROM RFC-1212
+    TruthValue, RowStatus
+            FROM SNMPv2-TC
+    ifIndex
+            FROM RFC1213-MIB;
+
+nhrpMIB OBJECT IDENTIFIER ::= { experimental  9999   }
+-- MODULE-IDENTITY
+--  LastUpdated
+--    9606191200Z
+--  OrgName
+--    Internetworking Over NBMA (ion) Working Group
+--  ContactInfo
+--    Maria Greene (greene@nexen.com)
+--     Ascom Nexion
+--    
+--     Jim Luciani (luciani@baynetworks.com)
+--     Bay Networks
+--  Descr
+--    This MIB contains managed object definitions for the Next Hop
+--    Resolution Procol, NHRP, as defined in
+--    draft-ietf-rolc-nhrp-08.txt.
+
+nhrpObjects     OBJECT IDENTIFIER ::= { nhrpMIB 1 }
+nhrpGeneralObjects OBJECT IDENTIFIER ::= { nhrpObjects 1 }
+nhrpClientObjects OBJECT IDENTIFIER ::= { nhrpObjects 2 }
+nhrpServerObjects OBJECT IDENTIFIER ::= { nhrpObjects 3 }
+nhrpConformance OBJECT IDENTIFIER ::= { nhrpMIB 2 }
+nhrpCompliances OBJECT IDENTIFIER ::= { nhrpConformance 1 }
+nhrpGroups      OBJECT IDENTIFIER ::= { nhrpConformance 2 }
+
+NhrpIANAAddrFamily ::= INTEGER {
+        other(0),
+        ipV4(1),
+        ipV6(2),
+        nsap(3),
+        hdlc(4),
+        bbn1822(5),
+        ieee802(6),
+        e163(7),
+        e164(8),
+        f69(9),
+        x121(10),
+        ipx(11),
+        appleTalk(12),
+        decnetIV(13),
+        banyanVines(14),
+        e164WithNsap(15)
+        }
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    An address family. Values are defined in Assigned Numbers,
+--    RFC1700. Note that not all these values make sense in all
+--    contexts where this type is used in this MIB, but they are
+--    included for completeness.
+--  Refer
+--    Assigned Numbers, RFC1700, ADDRESS FAMILY NUMBERS
+
+NhrpGenAddr ::= OCTET STRING(SIZE(0..60))
+-- TEXTUAL-CONVENTION
+--  Status
+--    mandatory
+--  Descr
+--    The value of an internetwork layer or NBMA address.
+
+nhrpNextHopResTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF NhrpNextHopResEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains mappings between internetwork layer
+        addresses and NBMA subnetwork layer addresses."
+    ::= { nhrpGeneralObjects 1 }
+
+nhrpNextHopResEntry OBJECT-TYPE
+    SYNTAX NhrpNextHopResEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A cached mapping between an internetwork layer address and an
+        NBMA address. Entries can be created by the network
+        administrator using the nhrpNextHopResRowStatus column, or
+        they may be added dynamically based on protocol operation
+        (including NHRP, SCSP, and others such as ATMARP)."
+    INDEX { ifIndex, nhrpNextHopResInternetworkAddrType, nhrpNextHopResDestAddr, nhrpNextHopResPrefixLength }
+    ::= { nhrpNextHopResTable 1 }
+
+NhrpNextHopResEntry ::= SEQUENCE {
+    nhrpNextHopResInternetworkAddrType NhrpIANAAddrFamily,
+    nhrpNextHopResDestAddr NhrpGenAddr,
+    nhrpNextHopResPrefixLength Integer32,
+    nhrpNextHopResNextHopAddr NhrpGenAddr,
+    nhrpNextHopResNbmaAddrType NhrpIANAAddrFamily,
+    nhrpNextHopResNbmaAddr NhrpGenAddr,
+    nhrpNextHopResNbmaSubaddr NhrpGenAddr,
+    nhrpNextHopResEntryType INTEGER,
+    nhrpNextHopResEntryState INTEGER,
+    nhrpNextHopResNegotiatedMtu Integer32,
+    nhrpNextHopResRowStatus RowStatus
+    }
+
+nhrpNextHopResInternetworkAddrType OBJECT-TYPE
+    SYNTAX NhrpIANAAddrFamily
+--    Rsyntax INTEGER {
+--        other(0),
+--        ipV4(1),
+--        ipV6(2),
+--        nsap(3),
+--        hdlc(4),
+--        bbn1822(5),
+--        ieee802(6),
+--        e163(7),
+--        e164(8),
+--        f69(9),
+--        x121(10),
+--        ipx(11),
+--        appleTalk(12),
+--        decnetIV(13),
+--        banyanVines(14),
+--        e164WithNsap(15)
+--        }
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The internetwork layer address type of this Next Hop
+        Resolution Cache entry. The value of this object indicates how
+        to interpret the values of nhrpNextHopResDestAddr and
+        nhrpNextHopResNextHopAddr."
+    ::= { nhrpNextHopResEntry 1 }
+
+nhrpNextHopResDestAddr OBJECT-TYPE
+    SYNTAX NhrpGenAddr
+--    Rsyntax OCTET STRING(SIZE(0..60))
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The value of the internetwork address of the destination."
+    ::= { nhrpNextHopResEntry 2 }
+
+nhrpNextHopResPrefixLength OBJECT-TYPE
+    SYNTAX Integer32(0..65535)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The number of bits that define the internetwork layer prefix
+        associated with the nhrpNextHopResDestAddr."
+    ::= { nhrpNextHopResEntry 3 }
+
+nhrpNextHopResNextHopAddr OBJECT-TYPE
+    SYNTAX NhrpGenAddr
+--    Rsyntax OCTET STRING(SIZE(0..60))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The value of the internetwork address of the next hop."
+    ::= { nhrpNextHopResEntry 4 }
+
+nhrpNextHopResNbmaAddrType OBJECT-TYPE
+    SYNTAX NhrpIANAAddrFamily
+--    Rsyntax INTEGER {
+--        other(0),
+--        ipV4(1),
+--        ipV6(2),
+--        nsap(3),
+--        hdlc(4),
+--        bbn1822(5),
+--        ieee802(6),
+--        e163(7),
+--        e164(8),
+--        f69(9),
+--        x121(10),
+--        ipx(11),
+--        appleTalk(12),
+--        decnetIV(13),
+--        banyanVines(14),
+--        e164WithNsap(15)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The NBMA address type of this Next Hop Resolution Cache
+        entry. The value of this object indicates how to interpret the
+        values of nhrpNextHopResNbmaAddr and nhrpNextHopResNbmaSubaddr."
+    ::= { nhrpNextHopResEntry 5 }
+
+nhrpNextHopResNbmaAddr OBJECT-TYPE
+    SYNTAX NhrpGenAddr
+--    Rsyntax OCTET STRING(SIZE(0..60))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The value of the NBMA subnetwork address of the next hop."
+    ::= { nhrpNextHopResEntry 6 }
+
+nhrpNextHopResNbmaSubaddr OBJECT-TYPE
+    SYNTAX NhrpGenAddr
+--    Rsyntax OCTET STRING(SIZE(0..60))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The value of the NBMA subaddress of the next hop. If there is
+        no subaddress concept for the NBMA address family, this value
+        will be a zero-length OCTET STRING."
+    ::= { nhrpNextHopResEntry 7 }
+
+nhrpNextHopResEntryType OBJECT-TYPE
+    SYNTAX INTEGER {
+        register(1),
+        resolve(2),
+        transit(3),
+        staticVolatile(4),
+        staticNonVolatile(5),
+        atmarp(6),
+        other(7)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "An indication of how this Next Hop Resolution Cache entry was
+        created. The values are:
+            'register(1)' In a server, added based on a client
+                          registration.
+        
+            'resolve(2)'  In a client, added based on receiving a NHRP
+                          Resolution Reply.
+        
+            'transit(3)'  In a transit server, added by examining a
+                          forwarded NHRP packet.
+        
+            'staticVolatile(4)' In a client or server, manually added
+                                by the administrator. The entry is
+                                volatile and will not be restored
+                                after a reset.
+        
+            'staticNonVolatile(5)' In a client or server, manually
+                                added by the administrator. The entry
+                                is non-volatile and will be restored
+                                after a reset.
+        
+            'atmarp(6)'         The entry was added by ATMARP.
+        
+            'other(7)'          The entry was added by some other means.
+        
+        When the entry is under creation using the
+        nhrpNextHopResRowStatus column, the only values that can be
+        specified by the administrator are 'staticVolatile(4)' and
+        'staticNonVolatile(5)'. Attempting to set any other value will
+        cause an error. This value cannot be modified once the entry
+        is active."
+    DEFVAL { staticVolatile }
+    ::= { nhrpNextHopResEntry 8 }
+
+nhrpNextHopResEntryState OBJECT-TYPE
+    SYNTAX INTEGER {
+        incomplete(1),
+        completePos(2),
+        completeNeg(3)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "An indication of the state of this entry. The values are:
+        
+            'incomplete(1)' The client has sent a NHRP Resolution
+                            Request but has not yet received the NHRP
+                            Resolution Reply.
+        
+            'completePos(2)' For a client or server, this is a cached
+                             valid mapping.
+        
+            'completeNeg(3)' For a server, this is a cached negative
+                             mapping."
+    ::= { nhrpNextHopResEntry 9 }
+
+nhrpNextHopResNegotiatedMtu OBJECT-TYPE
+    SYNTAX Integer32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The maximum transmission unit (MTU) that was negotiated or
+        registered for this entity."
+    ::= { nhrpNextHopResEntry 10 }
+
+nhrpNextHopResRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "An object that allows entries in this table to be created and
+        deleted using the RowStatus convention."
+    REFERENCE
+        "Textual Conventions for Version 2 of the Simple Network
+        Management Protocol (SNMPv2), RFC1903."
+    ::= { nhrpNextHopResEntry 11 }
+
+nhrpClientTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF NhrpClientEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about NHRP clients (NHCs) managed by this agent."
+    ::= { nhrpClientObjects 1 }
+
+nhrpClientEntry OBJECT-TYPE
+    SYNTAX NhrpClientEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about a single NHC."
+    INDEX { nhrpClientIndex }
+    ::= { nhrpClientTable 1 }
+
+NhrpClientEntry ::= SEQUENCE {
+    nhrpClientIndex Integer32,
+    nhrpClientInternetworkAddrType NhrpIANAAddrFamily,
+    nhrpClientInternetworkAddr NhrpGenAddr,
+    nhrpClientNbmaAddrType NhrpIANAAddrFamily,
+    nhrpClientNbmaAddr NhrpGenAddr,
+    nhrpClientNbmaSubaddr NhrpGenAddr,
+    nhrpClientRegistration INTEGER,
+    nhrpClientRequestTimeout Integer32,
+    nhrpClientRequestRetries Integer32,
+    nhrpClientDefaultMtu Integer32,
+    nhrpClientHoldTime Integer32,
+    nhrpClientRequestID Integer32,
+    nhrpClientRowStatus RowStatus
+    }
+
+nhrpClientIndex OBJECT-TYPE
+    SYNTAX Integer32(0..65535)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An identifier for the NHRP client that is unique within the
+        scope of this agent."
+    ::= { nhrpClientEntry 1 }
+
+nhrpClientInternetworkAddrType OBJECT-TYPE
+    SYNTAX NhrpIANAAddrFamily
+--    Rsyntax INTEGER {
+--        other(0),
+--        ipV4(1),
+--        ipV6(2),
+--        nsap(3),
+--        hdlc(4),
+--        bbn1822(5),
+--        ieee802(6),
+--        e163(7),
+--        e164(8),
+--        f69(9),
+--        x121(10),
+--        ipx(11),
+--        appleTalk(12),
+--        decnetIV(13),
+--        banyanVines(14),
+--        e164WithNsap(15)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The type of the internetwork layer address of this
+        client. This object indicates how the value of
+        nhrpClientInternetworkAddr is to be interpreted."
+    ::= { nhrpClientEntry 2 }
+
+nhrpClientInternetworkAddr OBJECT-TYPE
+    SYNTAX NhrpGenAddr
+--    Rsyntax OCTET STRING(SIZE(0..60))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The value of the internetwork layer address of this client."
+    ::= { nhrpClientEntry 3 }
+
+nhrpClientNbmaAddrType OBJECT-TYPE
+    SYNTAX NhrpIANAAddrFamily
+--    Rsyntax INTEGER {
+--        other(0),
+--        ipV4(1),
+--        ipV6(2),
+--        nsap(3),
+--        hdlc(4),
+--        bbn1822(5),
+--        ieee802(6),
+--        e163(7),
+--        e164(8),
+--        f69(9),
+--        x121(10),
+--        ipx(11),
+--        appleTalk(12),
+--        decnetIV(13),
+--        banyanVines(14),
+--        e164WithNsap(15)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The type of the NBMA subnetwork address of this client. This
+        object indicates how the values of nhrpClientNbmaAddr and
+        nhrpClientNbmaSubaddr are to be interpreted."
+    ::= { nhrpClientEntry 4 }
+
+nhrpClientNbmaAddr OBJECT-TYPE
+    SYNTAX NhrpGenAddr
+--    Rsyntax OCTET STRING(SIZE(0..60))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The NBMA subnetwork address of this client."
+    ::= { nhrpClientEntry 5 }
+
+nhrpClientNbmaSubaddr OBJECT-TYPE
+    SYNTAX NhrpGenAddr
+--    Rsyntax OCTET STRING(SIZE(0..60))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The NBMA subnetwork subaddress of this client. For NBMA
+        address families without a subaddress concept, this will be a
+        zero-length OCTET STRING."
+    ::= { nhrpClientEntry 6 }
+
+nhrpClientRegistration OBJECT-TYPE
+    SYNTAX INTEGER {
+        notRegistered(1),
+        registering(2),
+        registered(3),
+        reRegisteringFault(4)
+        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The registration state of this client."
+    ::= { nhrpClientEntry 7 }
+
+nhrpClientRequestTimeout OBJECT-TYPE
+    SYNTAX Integer32(1..900)
+--  Units
+--    seconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The number of seconds that the client will wait before timing
+        out an NHRP request."
+    DEFVAL { 10 }
+    ::= { nhrpClientEntry 8 }
+
+nhrpClientRequestRetries OBJECT-TYPE
+    SYNTAX Integer32(0..65535)
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The number of times the client will retry the request before
+        failure. A value of 0 means don't retry. A value of 65535
+        means retry forever."
+    DEFVAL { 3 }
+    ::= { nhrpClientEntry 9 }
+
+nhrpClientDefaultMtu OBJECT-TYPE
+    SYNTAX Integer32
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The default maximum transmission unit (MTU) of the
+        client. This will be initialized by the agent to the MTU of
+        the LIS/LAG if no value is specified during creation."
+    DEFVAL { 9180 }
+    ::= { nhrpClientEntry 10 }
+
+nhrpClientHoldTime OBJECT-TYPE
+    SYNTAX Integer32
+--  Units
+--    seconds
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The hold time the client will register."
+    DEFVAL { 900 }
+    ::= { nhrpClientEntry 11 }
+
+nhrpClientRequestID OBJECT-TYPE
+    SYNTAX Integer32
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The Request ID used to register this client with its server."
+    ::= { nhrpClientEntry 12 }
+
+nhrpClientRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "An object that allows entries in this table to be created and
+        deleted using the RowStatus convention."
+    REFERENCE
+        "Textual Conventions for Version 2 of the Simple Network
+        Management Protocol (SNMPv2), RFC1903."
+    ::= { nhrpClientEntry 13 }
+
+nhrpClientNhsTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF NhrpClientNhsEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A table of NHSes that are available for use by this NHC
+        (client). By default, the agent will add an entry to this
+        table that corresponds to the client's default router."
+    ::= { nhrpClientObjects 2 }
+
+nhrpClientNhsEntry OBJECT-TYPE
+    SYNTAX NhrpClientNhsEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An NHS that may be used by an NHC."
+    INDEX { nhrpClientIndex, nhrpClientNhsIndex }
+    ::= { nhrpClientNhsTable 1 }
+
+NhrpClientNhsEntry ::= SEQUENCE {
+    nhrpClientNhsIndex Integer32,
+    nhrpClientNhsNbmaAddr NhrpGenAddr,
+    nhrpClientNhsNbmaSubaddr NhrpGenAddr,
+    nhrpClientNhsInUse TruthValue,
+    nhrpClientNhsRowStatus RowStatus
+    }
+
+nhrpClientNhsIndex OBJECT-TYPE
+    SYNTAX Integer32
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An identifier for an NHS available to a NHC."
+    ::= { nhrpClientNhsEntry 1 }
+
+nhrpClientNhsNbmaAddr OBJECT-TYPE
+    SYNTAX NhrpGenAddr
+--    Rsyntax OCTET STRING(SIZE(0..60))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The NBMA subnetwork address of the NHS. The type of the
+        address is indicated by the corresponding value of
+        nhrpClientNbmaAddrType."
+    ::= { nhrpClientNhsEntry 2 }
+
+nhrpClientNhsNbmaSubaddr OBJECT-TYPE
+    SYNTAX NhrpGenAddr
+--    Rsyntax OCTET STRING(SIZE(0..60))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The NBMA subnetwork subaddress of the NHS. For NMBA address
+        families that do not have the concept of subaddress, this will
+        be a zero-length OCTET STRING."
+    ::= { nhrpClientNhsEntry 3 }
+
+nhrpClientNhsInUse OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "An indication of whether this NHS is in use by the NHC."
+    ::= { nhrpClientNhsEntry 4 }
+
+nhrpClientNhsRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "An object that allows entries in this table to be created and
+        deleted using the RowStatus convention."
+    REFERENCE
+        "Textual Conventions for Version 2 of the Simple Network
+        Management Protocol (SNMPv2), RFC1903."
+    ::= { nhrpClientNhsEntry 5 }
+
+nhrpClientStatTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF NhrpClientStatEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains statistics collected by NHRP clients."
+    ::= { nhrpClientObjects 3 }
+
+nhrpClientStatEntry OBJECT-TYPE
+    SYNTAX NhrpClientStatEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Statistics collected by a NHRP client."
+    INDEX { nhrpClientIndex }
+    ::= { nhrpClientStatTable 1 }
+
+NhrpClientStatEntry ::= SEQUENCE {
+    nhrpClientStatTxResolveReq Counter32,
+    nhrpClientStatRxResolveReplyAck Counter32,
+    nhrpClientStatRxResolveReplyNakNoBinding Counter32,
+    nhrpClientStatRxResolveReplyNakNotUnique Counter32,
+    nhrpClientStatTxRegisterReq Counter32,
+    nhrpClientStatRxRegisterAck Counter32,
+    nhrpClientStatRxRegisterNakCantServe Counter32,
+    nhrpClientStatRxRegisterNakOverflow Counter32,
+    nhrpClientStatRxRegisterNakAlreadyReg Counter32,
+    nhrpClientStatRxPurgeReq Counter32,
+    nhrpClientStatTxPurgeReq Counter32,
+    nhrpClientStatRxPurgeReply Counter32,
+    nhrpClientStatTxPurgeReply Counter32,
+    nhrpClientStatTxError Counter32,
+    nhrpClientStatRxErrUnrecognizedExtension Counter32,
+    nhrpClientStatRxErrSubnetworkIDMismatch Counter32,
+    nhrpClientStatRxErrLoopDetected Counter32,
+    nhrpClientStatRxErrProtoAddrUnreachable Counter32,
+    nhrpClientStatRxErrProtoError Counter32,
+    nhrpClientStatRxErrSduSizeExceeded Counter32,
+    nhrpClientStatRxErrInvalidExtension Counter32,
+    nhrpClientStatRxErrAuthenticationFailure Counter32,
+    nhrpClientStatRxErrHopCountExceeded Counter32
+    }
+
+nhrpClientStatTxResolveReq OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Resolution Requests transmitted by this
+        client."
+    ::= { nhrpClientStatEntry 1 }
+
+nhrpClientStatRxResolveReplyAck OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of positively acknowledged NHRP Resolution Replies
+        received by this client."
+    ::= { nhrpClientStatEntry 2 }
+
+nhrpClientStatRxResolveReplyNakNoBinding OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NAKed NHRP Resolution Replies received by this
+        client that contained the code indicating 'No Internetworking
+        Layer Address to NBMA Address Binding Exists'."
+    ::= { nhrpClientStatEntry 3 }
+
+nhrpClientStatRxResolveReplyNakNotUnique OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NAKed NHRP Resolution Replies received by this
+        client that contained the code indicating 'Binding Exists But
+        Is Not Unique'."
+    ::= { nhrpClientStatEntry 4 }
+
+nhrpClientStatTxRegisterReq OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Registration Requests transmitted by this
+        client."
+    ::= { nhrpClientStatEntry 5 }
+
+nhrpClientStatRxRegisterAck OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of positively acknowledged NHRP Registration
+        Replies received by this client."
+    ::= { nhrpClientStatEntry 6 }
+
+nhrpClientStatRxRegisterNakCantServe OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NAKed NHRP Registration Replies received by
+        this client that contained the code indicating 'Can't Serve
+        This Address'."
+    ::= { nhrpClientStatEntry 7 }
+
+nhrpClientStatRxRegisterNakOverflow OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NAKed NHRP Registration Replies received by
+        this client that contained the code indicating 'Registration
+        Overflow'."
+    ::= { nhrpClientStatEntry 8 }
+
+nhrpClientStatRxRegisterNakAlreadyReg OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NAKed NHRP Registration Replies received by
+        this client that contained the code indicating 'Unique
+        Internetworking Layer Address Already Registered'."
+    ::= { nhrpClientStatEntry 9 }
+
+nhrpClientStatRxPurgeReq OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Purge Requests received by this client."
+    ::= { nhrpClientStatEntry 10 }
+
+nhrpClientStatTxPurgeReq OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Purge Requests transmitted by this
+        client."
+    ::= { nhrpClientStatEntry 11 }
+
+nhrpClientStatRxPurgeReply OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Purge Replies received by this client."
+    ::= { nhrpClientStatEntry 12 }
+
+nhrpClientStatTxPurgeReply OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Purge Replies transmitted by this client."
+    ::= { nhrpClientStatEntry 13 }
+
+nhrpClientStatTxError OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets transmitted by
+        this client."
+    ::= { nhrpClientStatEntry 14 }
+
+nhrpClientStatRxErrUnrecognizedExtension OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        client with the error code 'Unrecognized Extension'."
+    ::= { nhrpClientStatEntry 15 }
+
+nhrpClientStatRxErrSubnetworkIDMismatch OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        client with the error code 'Subnetwork ID Mismatch'."
+    ::= { nhrpClientStatEntry 16 }
+
+nhrpClientStatRxErrLoopDetected OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        client with the error code 'NHRP Loop Detected'."
+    ::= { nhrpClientStatEntry 17 }
+
+nhrpClientStatRxErrProtoAddrUnreachable OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        client with the error code 'Protocol Address Unreachable'."
+    ::= { nhrpClientStatEntry 18 }
+
+nhrpClientStatRxErrProtoError OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        client with the error code 'Protocol Error'."
+    ::= { nhrpClientStatEntry 19 }
+
+nhrpClientStatRxErrSduSizeExceeded OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        client with the error code 'NHRP SDU Size Exceeded'."
+    ::= { nhrpClientStatEntry 20 }
+
+nhrpClientStatRxErrInvalidExtension OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        client with the error code 'Invalid Extension'."
+    ::= { nhrpClientStatEntry 21 }
+
+nhrpClientStatRxErrAuthenticationFailure OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        client with the error code 'Authentication Failure'."
+    ::= { nhrpClientStatEntry 22 }
+
+nhrpClientStatRxErrHopCountExceeded OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        client with the error code 'Hop Count Exceeded'."
+    ::= { nhrpClientStatEntry 23 }
+
+nhrpServerTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF NhrpServerEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table contains information for a set of NHSes associated
+        with this agent."
+    ::= { nhrpServerObjects 1 }
+
+nhrpServerEntry OBJECT-TYPE
+    SYNTAX NhrpServerEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Information about a single NHS."
+    INDEX { nhrpServerIndex }
+    ::= { nhrpServerTable 1 }
+
+NhrpServerEntry ::= SEQUENCE {
+    nhrpServerIndex Integer32,
+    nhrpServerInternetworkAddrType NhrpIANAAddrFamily,
+    nhrpServerInternetworkAddr NhrpGenAddr,
+    nhrpServerNbmaAddrType NhrpIANAAddrFamily,
+    nhrpServerNbmaAddr NhrpGenAddr,
+    nhrpServerNbmaSubaddr NhrpGenAddr,
+    nhrpServerNbmaSubnetworkID Integer32,
+    nhrpServerAuthentication INTEGER,
+    nhrpServerCurrentClients Gauge32,
+    nhrpServerMaxClients Integer32,
+    nhrpServerRowStatus RowStatus
+    }
+
+nhrpServerIndex OBJECT-TYPE
+    SYNTAX Integer32(0..65536)
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "An identifier for the server that is unique within the scope
+        of this agent."
+    ::= { nhrpServerEntry 1 }
+
+nhrpServerInternetworkAddrType OBJECT-TYPE
+    SYNTAX NhrpIANAAddrFamily
+--    Rsyntax INTEGER {
+--        other(0),
+--        ipV4(1),
+--        ipV6(2),
+--        nsap(3),
+--        hdlc(4),
+--        bbn1822(5),
+--        ieee802(6),
+--        e163(7),
+--        e164(8),
+--        f69(9),
+--        x121(10),
+--        ipx(11),
+--        appleTalk(12),
+--        decnetIV(13),
+--        banyanVines(14),
+--        e164WithNsap(15)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The type of the internetwork layer address of this
+        
+        
+        
+        
+        
+        
+        
+        server. This object is used to interpret the value of
+        nhrpServerInternetworkAddr."
+    ::= { nhrpServerEntry 2 }
+
+nhrpServerInternetworkAddr OBJECT-TYPE
+    SYNTAX NhrpGenAddr
+--    Rsyntax OCTET STRING(SIZE(0..60))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The value of the internetwork layer address of this server."
+    ::= { nhrpServerEntry 3 }
+
+nhrpServerNbmaAddrType OBJECT-TYPE
+    SYNTAX NhrpIANAAddrFamily
+--    Rsyntax INTEGER {
+--        other(0),
+--        ipV4(1),
+--        ipV6(2),
+--        nsap(3),
+--        hdlc(4),
+--        bbn1822(5),
+--        ieee802(6),
+--        e163(7),
+--        e164(8),
+--        f69(9),
+--        x121(10),
+--        ipx(11),
+--        appleTalk(12),
+--        decnetIV(13),
+--        banyanVines(14),
+--        e164WithNsap(15)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The type of the NBMA subnetwork address of this server. This
+        object is used to interpret the value of nhrpServerNbmaAddr."
+    ::= { nhrpServerEntry 4 }
+
+nhrpServerNbmaAddr OBJECT-TYPE
+    SYNTAX NhrpGenAddr
+--    Rsyntax OCTET STRING(SIZE(0..60))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The value of the NBMA subnetwork address of this server."
+    ::= { nhrpServerEntry 5 }
+
+nhrpServerNbmaSubaddr OBJECT-TYPE
+    SYNTAX NhrpGenAddr
+--    Rsyntax OCTET STRING(SIZE(0..60))
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The value of the NBMA subnetwork subaddress of this
+        server. For NBMA address families without a subaddress
+        concept, this will be a zero-length OCTET STRING."
+    ::= { nhrpServerEntry 6 }
+
+nhrpServerNbmaSubnetworkID OBJECT-TYPE
+    SYNTAX Integer32
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The NBMA subnetwork identifier associated with this server."
+    ::= { nhrpServerEntry 7 }
+
+nhrpServerAuthentication OBJECT-TYPE
+    SYNTAX INTEGER {
+        none(1),
+        password(2),
+        keyedMd5(3),
+        other(4)
+        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The type of authentication supported by this NHRP entity."
+    ::= { nhrpServerEntry 8 }
+
+nhrpServerCurrentClients OBJECT-TYPE
+    SYNTAX Gauge32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of client currently registered with this server."
+    ::= { nhrpServerEntry 9 }
+
+nhrpServerMaxClients OBJECT-TYPE
+    SYNTAX Integer32
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The administrative maximum number of clients that this server
+        will allow to register with it."
+    ::= { nhrpServerEntry 10 }
+
+nhrpServerRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+--    Rsyntax INTEGER {
+--        active(1),
+--        notInService(2),
+--        notReady(3),
+--        createAndGo(4),
+--        createAndWait(5),
+--        destroy(6)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "An object that allows entries in this table to be created and
+        deleted using the RowStatus convention."
+    REFERENCE
+        "Textual Conventions for Version 2 of the Simple Network
+        Management Protocol (SNMPv2), RFC1903."
+    ::= { nhrpServerEntry 11 }
+
+nhrpServerNextHopResTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF NhrpServerNextHopResEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "This table extends the Next Host Resolution Cache Table for
+        NHSes."
+    ::= { nhrpServerObjects 2 }
+
+nhrpServerNextHopResEntry OBJECT-TYPE
+    SYNTAX NhrpServerNextHopResEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Additional information kept by a NHS for each Next Hop
+        Resolution Cache entry."
+    INDEX { ifIndex, nhrpNextHopResInternetworkAddrType, nhrpNextHopResDestAddr, nhrpNextHopResPrefixLength }
+    ::= { nhrpServerNextHopResTable 1 }
+
+NhrpServerNextHopResEntry ::= SEQUENCE {
+    nhrpServerNextHopResAuthoritative TruthValue,
+    nhrpServerNextHopResUniqueness TruthValue,
+    nhrpServerNextHopResScsp TruthValue
+    }
+
+nhrpServerNextHopResAuthoritative OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "An indication of whether this Next Hop Resolution Cache entry
+        is authoritative, which means the entry was added because of a
+        direct registration request with this server or by Server
+        Cache Synchronization Protocol (SCSP) from an authoritative
+        source."
+    ::= { nhrpServerNextHopResEntry 1 }
+
+nhrpServerNextHopResUniqueness OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-write
+    STATUS mandatory
+    DESCRIPTION
+        "The Uniqueness indicator for this Next Hop Resolution Cache
+        entry used in duplicate address detection. This value cannot
+        
+        
+        
+        
+        
+        
+        
+        be changed after the entry is active."
+    ::= { nhrpServerNextHopResEntry 2 }
+
+nhrpServerNextHopResScsp OBJECT-TYPE
+    SYNTAX TruthValue
+--    Rsyntax INTEGER {
+--        true(1),
+--        false(2)
+--        }
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "This object indicates if the entry was added via the Server
+        Cache Synchronization Protocol (SCSP)."
+    ::= { nhrpServerNextHopResEntry 3 }
+
+nhrpServerStatTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF NhrpServerStatEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Statistics collected by Next Hop Servers."
+    ::= { nhrpServerObjects 3 }
+
+nhrpServerStatEntry OBJECT-TYPE
+    SYNTAX NhrpServerStatEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "Statistics for a particular NHS. The statistics are broken
+        into received (Rx), transmitted (Tx) and forwarded (Fw)..."
+    INDEX { nhrpServerIndex }
+    ::= { nhrpServerStatTable 1 }
+
+NhrpServerStatEntry ::= SEQUENCE {
+    nhrpServerStatRxResoveReq Counter32,
+    nhrpServerStatTxResolveReplyAck Counter32,
+    nhrpServerStatTxResolveReplyNakNoBinding Counter32,
+    nhrpServerStatTxResolveReplyNakNotUnique Counter32,
+    nhrpServerStatRxRegisterReq Counter32,
+    nhrpServerStatTxRegisterAck Counter32,
+    nhrpServerStatTxRegisterNakCantServe Counter32,
+    nhrpServerStatTxRegisterNakOverflow Counter32,
+    nhrpServerStatTxRegisterNakAlreadyReg Counter32,
+    nhrpServerStatRxPurgeReq Counter32,
+    nhrpServerStatTxPurgeReq Counter32,
+    nhrpServerStatRxPurgeReply Counter32,
+    nhrpServerStatTxPurgeReply Counter32,
+    nhrpServerStatRxErrUnrecognizedExtension Counter32,
+    nhrpServerStatRxErrSubnetworkIDMismatch Counter32,
+    nhrpServerStatRxErrLoopDetected Counter32,
+    nhrpServerStatRxErrProtoAddrUnreachable Counter32,
+    nhrpServerStatRxErrProtoError Counter32,
+    nhrpServerStatRxErrSduSizeExceeded Counter32,
+    nhrpServerStatRxErrInvalidExtension Counter32,
+    nhrpServerStatRxErrAuthenticationFailure Counter32,
+    nhrpServerStatRxErrHopCountExceeded Counter32,
+    nhrpServerStatTxErrUnrecognizedExtension Counter32,
+    nhrpServerStatTxErrSubnetworkIDMismatch Counter32,
+    nhrpServerStatTxErrLoopDetected Counter32,
+    nhrpServerStatTxErrProtoAddrUnreachable Counter32,
+    nhrpServerStatTxErrProtoError Counter32,
+    nhrpServerStatTxErrSduSizeExceeded Counter32,
+    nhrpServerStatTxErrInvalidExtension Counter32,
+    nhrpServerStatTxErrAuthenticationFailure Counter32,
+    nhrpServerStatTxErrHopCountExceeded Counter32,
+    nhrpServerStatFwResolveReq Counter32,
+    nhrpServerStatFwResolveReply Counter32,
+    nhrpServerStatFwRegisterReq Counter32,
+    nhrpServerStatFwRegisterReply Counter32,
+    nhrpServerStatFwPurgeReq Counter32,
+    nhrpServerStatFwPurgeReply Counter32,
+    nhrpServerStatFwError Counter32
+    }
+
+nhrpServerStatRxResoveReq OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Resolution Requests received by this
+        server."
+    ::= { nhrpServerStatEntry 1 }
+
+nhrpServerStatTxResolveReplyAck OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of positively acknowledged NHRP Resolution Replies
+        transmitted by this server."
+    ::= { nhrpServerStatEntry 2 }
+
+nhrpServerStatTxResolveReplyNakNoBinding OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NAKed NHRP Resolution Replies transmitted by
+        this server with the code 'No Internetworking Layer Address to
+        NBMA Address Binding Exists'."
+    ::= { nhrpServerStatEntry 3 }
+
+nhrpServerStatTxResolveReplyNakNotUnique OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NAKed NHRP Resolution Replies transmitted by
+        this server with the code 'Binding Exists But Is Not Unique'."
+    ::= { nhrpServerStatEntry 4 }
+
+nhrpServerStatRxRegisterReq OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Registration Requests received by this
+        server."
+    ::= { nhrpServerStatEntry 5 }
+
+nhrpServerStatTxRegisterAck OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of positively acknowledge NHRP Registration
+        Replies transmitted by this server."
+    ::= { nhrpServerStatEntry 6 }
+
+nhrpServerStatTxRegisterNakCantServe OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NAKed NHRP Registration Replies transmitted by
+        this server with the code 'Can't Serve This Address'."
+    ::= { nhrpServerStatEntry 7 }
+
+nhrpServerStatTxRegisterNakOverflow OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NAKed NHRP Registration Replies transmitted by
+        this server with the code 'Registration Overflow'."
+    ::= { nhrpServerStatEntry 8 }
+
+nhrpServerStatTxRegisterNakAlreadyReg OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NAKed NHRP Registration Replies transmitted by
+        this server with the code 'Unique Internetworking Layer
+        Address Already Registered'."
+    ::= { nhrpServerStatEntry 9 }
+
+nhrpServerStatRxPurgeReq OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Purge Requests received by this server."
+    ::= { nhrpServerStatEntry 10 }
+
+nhrpServerStatTxPurgeReq OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Purge Requests transmitted by this
+        server."
+    ::= { nhrpServerStatEntry 11 }
+
+nhrpServerStatRxPurgeReply OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Purge Replies received by this server."
+    ::= { nhrpServerStatEntry 12 }
+
+nhrpServerStatTxPurgeReply OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Purge Replies transmitted by this server."
+    ::= { nhrpServerStatEntry 13 }
+
+nhrpServerStatRxErrUnrecognizedExtension OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        server with the error code 'Unrecognized Extension'."
+    ::= { nhrpServerStatEntry 14 }
+
+nhrpServerStatRxErrSubnetworkIDMismatch OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        server with the error code 'Subnetwork ID Mismatch'."
+    ::= { nhrpServerStatEntry 15 }
+
+nhrpServerStatRxErrLoopDetected OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        server with the error code 'NHRP Loop Detected'."
+    ::= { nhrpServerStatEntry 16 }
+
+nhrpServerStatRxErrProtoAddrUnreachable OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        server with the error code 'Protocol Address Unreachable'."
+    ::= { nhrpServerStatEntry 17 }
+
+nhrpServerStatRxErrProtoError OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        server with the error code 'Protocol Error'."
+    ::= { nhrpServerStatEntry 18 }
+
+nhrpServerStatRxErrSduSizeExceeded OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        server with the error code 'NHRP SDU Size Exceeded'."
+    ::= { nhrpServerStatEntry 19 }
+
+nhrpServerStatRxErrInvalidExtension OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        server with the error code 'Invalid Extension'."
+    ::= { nhrpServerStatEntry 20 }
+
+nhrpServerStatRxErrAuthenticationFailure OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        server with the error code 'Authentication Failure'."
+    ::= { nhrpServerStatEntry 21 }
+
+nhrpServerStatRxErrHopCountExceeded OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets received by this
+        server with the error code 'Hop Count Exceeded'."
+    ::= { nhrpServerStatEntry 22 }
+
+nhrpServerStatTxErrUnrecognizedExtension OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets transmitted by
+        this server with the error code 'Unrecognized Extension'."
+    ::= { nhrpServerStatEntry 23 }
+
+nhrpServerStatTxErrSubnetworkIDMismatch OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets transmitted by
+        this server with the error code 'Subnetwork ID Mismatch'."
+    ::= { nhrpServerStatEntry 24 }
+
+nhrpServerStatTxErrLoopDetected OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets transmitted by
+        this server with the error code 'NHRP Loop Detected'."
+    ::= { nhrpServerStatEntry 25 }
+
+nhrpServerStatTxErrProtoAddrUnreachable OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets transmitted by
+        this server with the error code 'Protocol Address
+        Unreachable'."
+    ::= { nhrpServerStatEntry 26 }
+
+nhrpServerStatTxErrProtoError OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets transmitted by
+        this server with the error code 'Protocol Error'."
+    ::= { nhrpServerStatEntry 27 }
+
+nhrpServerStatTxErrSduSizeExceeded OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets transmitted by
+        
+        
+        
+        
+        
+        
+        
+        this server with the error code 'NHRP SDU Size Exceeded'."
+    ::= { nhrpServerStatEntry 28 }
+
+nhrpServerStatTxErrInvalidExtension OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets transmitted by
+        this server with the error code 'Invalid Extension'."
+    ::= { nhrpServerStatEntry 29 }
+
+nhrpServerStatTxErrAuthenticationFailure OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets transmitted by
+        this server with the error code 'Authentication Failure'."
+    ::= { nhrpServerStatEntry 30 }
+
+nhrpServerStatTxErrHopCountExceeded OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets transmitted by
+        this server with the error code 'Hop Count Exceeded'."
+    ::= { nhrpServerStatEntry 31 }
+
+nhrpServerStatFwResolveReq OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Resolution Requests forwarded by this
+        server acting as a transit NHS."
+    ::= { nhrpServerStatEntry 32 }
+
+nhrpServerStatFwResolveReply OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Resolution Replies forwarded by this
+        server acting as a transit NHS."
+    ::= { nhrpServerStatEntry 33 }
+
+nhrpServerStatFwRegisterReq OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Registration Requests forwarded by this
+        server acting as a transit NHS."
+    ::= { nhrpServerStatEntry 34 }
+
+nhrpServerStatFwRegisterReply OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Registration Replies forwarded by this
+        server acting as a transit NHS."
+    ::= { nhrpServerStatEntry 35 }
+
+nhrpServerStatFwPurgeReq OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Purge Requests forwarded by this server
+        acting as a transit NHS."
+    ::= { nhrpServerStatEntry 36 }
+
+nhrpServerStatFwPurgeReply OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Purge Replies forwarded by this server
+        acting as a transit NHS."
+    ::= { nhrpServerStatEntry 37 }
+
+nhrpServerStatFwError OBJECT-TYPE
+    SYNTAX Counter32
+    ACCESS read-only
+    STATUS mandatory
+    DESCRIPTION
+        "The number of NHRP Error Indication packets forwarded by this
+        server acting as a transit NHS."
+    ::= { nhrpServerStatEntry 38 }
+
+nhrpGeneralGroup OBJECT IDENTIFIER ::= { nhrpGroups 1 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Objects that apply to both NHRP clients and NHRP servers.
+--  objects
+--    nhrpNextHopResNextHopAddr, nhrpNextHopResNbmaAddrType, 
+--    nhrpNextHopResNbmaAddr, nhrpNextHopResNbmaSubaddr, 
+--    nhrpNextHopResEntryType, nhrpNextHopResEntryState, 
+--    nhrpNextHopResNegotiatedMtu, nhrpNextHopResRowStatus
+
+nhrpClientGroup OBJECT IDENTIFIER ::= { nhrpGroups 2 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Objects that apply only to NHRP clients.
+--  objects
+--    nhrpClientInternetworkAddrType, nhrpClientInternetworkAddr, 
+--    nhrpClientNbmaAddrType, nhrpClientNbmaAddr, 
+--    nhrpClientNbmaSubaddr, nhrpClientRegistration, 
+--    nhrpClientRequestTimeout, nhrpClientRequestRetries, 
+--    nhrpClientDefaultMtu, nhrpClientHoldTime, nhrpClientRequestID, 
+--    nhrpClientRowStatus, nhrpClientNhsNbmaAddr, 
+--    nhrpClientNhsNbmaSubaddr, nhrpClientNhsInUse, 
+--    nhrpClientNhsRowStatus, nhrpClientStatTxResolveReq, 
+--    nhrpClientStatRxResolveReplyAck, 
+--    nhrpClientStatRxResolveReplyNakNoBinding, 
+--    nhrpClientStatRxResolveReplyNakNotUnique, 
+--    nhrpClientStatTxRegisterReq, nhrpClientStatRxRegisterAck, 
+--    nhrpClientStatRxRegisterNakCantServe, 
+--    nhrpClientStatRxRegisterNakOverflow, 
+--    nhrpClientStatRxRegisterNakAlreadyReg, 
+--    nhrpClientStatRxPurgeReq, nhrpClientStatTxPurgeReq, 
+--    nhrpClientStatRxPurgeReply, nhrpClientStatTxPurgeReply, 
+--    nhrpClientStatTxError, 
+--    nhrpClientStatRxErrUnrecognizedExtension, 
+--    nhrpClientStatRxErrSubnetworkIDMismatch, 
+--    nhrpClientStatRxErrLoopDetected, 
+--    nhrpClientStatRxErrProtoAddrUnreachable, 
+--    nhrpClientStatRxErrProtoError, 
+--    nhrpClientStatRxErrSduSizeExceeded, 
+--    nhrpClientStatRxErrInvalidExtension, 
+--    nhrpClientStatRxErrAuthenticationFailure, 
+--    nhrpClientStatRxErrHopCountExceeded
+
+nhrpServerGroup OBJECT IDENTIFIER ::= { nhrpGroups 3 }
+-- OBJECT-GROUP
+--  Status
+--    mandatory
+--  Descr
+--    Objects that apply only to NHRP servers.
+--  objects
+--    nhrpServerInternetworkAddrType, nhrpServerInternetworkAddr, 
+--    nhrpServerNbmaAddrType, nhrpServerNbmaAddr, 
+--    nhrpServerNbmaSubaddr, nhrpServerNbmaSubnetworkID, 
+--    nhrpServerAuthentication, nhrpServerCurrentClients, 
+--    nhrpServerMaxClients, nhrpServerRowStatus, 
+--    nhrpServerNextHopResAuthoritative, 
+--    nhrpServerNextHopResUniqueness, nhrpServerNextHopResScsp, 
+--    nhrpServerStatRxResoveReq, nhrpServerStatTxResolveReplyAck, 
+--    nhrpServerStatTxResolveReplyNakNoBinding, 
+--    nhrpServerStatTxResolveReplyNakNotUnique, 
+--    nhrpServerStatRxRegisterReq, nhrpServerStatTxRegisterAck, 
+--    nhrpServerStatTxRegisterNakCantServe, 
+--    nhrpServerStatTxRegisterNakOverflow, 
+--    nhrpServerStatTxRegisterNakAlreadyReg, 
+--    nhrpServerStatRxPurgeReq, nhrpServerStatTxPurgeReq, 
+--    nhrpServerStatRxPurgeReply, nhrpServerStatTxPurgeReply, 
+--    nhrpServerStatRxErrUnrecognizedExtension, 
+--    nhrpServerStatRxErrSubnetworkIDMismatch, 
+--    nhrpServerStatRxErrLoopDetected, 
+--    nhrpServerStatRxErrProtoAddrUnreachable, 
+--    nhrpServerStatRxErrProtoError, 
+--    nhrpServerStatRxErrSduSizeExceeded, 
+--    nhrpServerStatRxErrInvalidExtension, 
+--    nhrpServerStatRxErrAuthenticationFailure, 
+--    nhrpServerStatRxErrHopCountExceeded, 
+--    nhrpServerStatTxErrUnrecognizedExtension, 
+--    nhrpServerStatTxErrSubnetworkIDMismatch, 
+--    nhrpServerStatTxErrLoopDetected, 
+--    nhrpServerStatTxErrProtoAddrUnreachable, 
+--    nhrpServerStatTxErrProtoError, 
+--    nhrpServerStatTxErrSduSizeExceeded, 
+--    nhrpServerStatTxErrInvalidExtension, 
+--    nhrpServerStatTxErrAuthenticationFailure, 
+--    nhrpServerStatTxErrHopCountExceeded, 
+--    nhrpServerStatFwResolveReq, nhrpServerStatFwResolveReply, 
+--    nhrpServerStatFwRegisterReq, nhrpServerStatFwRegisterReply, 
+--    nhrpServerStatFwPurgeReq, nhrpServerStatFwPurgeReply, 
+--    nhrpServerStatFwError
+
+nhrpModuleCompliance OBJECT IDENTIFIER ::= { nhrpCompliances 1 }
+-- MODULE-COMPLIANCE
+--  Status
+--    mandatory
+--  Descr
+--    The compliance statement for the NHRP MIB.
+--  Module
+--    >>current<<
+--   MandGroup
+--    nhrpGeneralGroup
+--   OptGroup
+--    nhrpClientGroup
+--   ObjVar
+--    nhrpClientRowStatus
+--   OptGroup
+--    nhrpServerGroup
+--   ObjVar
+--    nhrpServerRowStatus
+
+
+END
+

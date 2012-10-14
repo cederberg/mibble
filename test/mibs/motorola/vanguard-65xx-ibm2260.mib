@@ -1,0 +1,598 @@
+        -- Version 1.6, modified 02/12/98
+
+        IBM2260-OPT-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+            Counter
+                FROM RFC1155-SMI
+
+            OBJECT-TYPE
+                FROM RFC-1212;
+
+        -- Codex MIB Group definitions
+
+                      codex OBJECT IDENTIFIER ::= { enterprises 449 }
+         cdxProductSpecific OBJECT IDENTIFIER ::= { codex 2 }
+                    cdx6500 OBJECT IDENTIFIER ::= { cdxProductSpecific 1 }
+
+      cdx6500Configuration  OBJECT IDENTIFIER ::= { cdx6500 2 }
+    cdx6500CfgProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Configuration 1 }
+cdx6500PCTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 1 }
+cdx6500PCTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500CfgProtocolGroup 3 }
+
+          cdx6500Statistics OBJECT IDENTIFIER ::= { cdx6500 3 }
+   cdx6500StatProtocolGroup OBJECT IDENTIFIER ::= { cdx6500Statistics 1 }
+cdx6500PSTPortProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 1 }
+cdx6500PSTStationProtocolGroup OBJECT IDENTIFIER ::= { cdx6500StatProtocolGroup 3 }
+
+            cdx6500Controls OBJECT IDENTIFIER ::= { cdx6500 4 }
+
+        -- Textual Conventions
+        DisplayString ::= OCTET STRING
+
+        -- IBM2260 Port Objects
+
+        -- The 6500 IBM2260 Port Configuration Sub-group
+        -- This sub-group belongs to the 6500 Port Protocol Configuration
+        -- sub-group. It holds configuration parameters peculiar to the 6500
+        -- implementation of the IBM2260 protocol
+  
+        cdx6500PPCTIBM2260PortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500IBM2260ConfigEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of IBM2260 Port configuration entries."
+        ::= { cdx6500PCTPortProtocolGroup 20 }
+
+        cdx6500PPCTIBM2260PortEntry OBJECT-TYPE
+            SYNTAX Cdx6500IBM2260ConfigEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "An IBM2260 Configuration Table entry. Each entry
+                 contains the configuration parameters for a single
+                 IBM2260 port. "
+            INDEX { cdx6500IBM2260CfgPortNumber }
+        ::= { cdx6500PPCTIBM2260PortTable 1 }
+
+        Cdx6500IBM2260ConfigEntry ::=
+            SEQUENCE {
+                cdx6500IBM2260CfgPortNumber
+                  INTEGER,
+                cdx6500IBM2260CfgPadType
+                    INTEGER,
+                cdx6500IBM2260CfgPortSpeed
+                    INTEGER,
+                cdx6500IBM2260CfgConnType
+                    INTEGER,
+                cdx6500IBM2260CfgNumDevice
+                    INTEGER,
+                cdx6500IBM2260CfgServiceTimer
+                    INTEGER,
+                cdx6500IBM2260CfgThreshCtr
+                    INTEGER,
+                cdx6500IBM2260CfgRespTimeout
+                    INTEGER,
+                cdx6500IBM2260CfgPortSubAddr
+                    DisplayString,
+                cdx6500IBM2260CfgPortOpt
+                    DisplayString,
+                cdx6500IBM2260CfgRestConnDest
+                    DisplayString,
+                cdx6500IBM2260CfgBillRec
+                    DisplayString
+                }
+
+        cdx6500IBM2260CfgPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The port number corresponding to this port."
+        ::= { cdx6500PPCTIBM2260PortEntry 1 }
+
+        cdx6500IBM2260CfgPadType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    tpad (1),
+                    hpad (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates whether the port is functioning as a Terminal 
+                 PAD (TPAD) or a Host PAD (HPAD)."
+        ::= { cdx6500PPCTIBM2260PortEntry 2 }
+
+        cdx6500IBM2260CfgPortSpeed OBJECT-TYPE
+            SYNTAX INTEGER {
+                    speed1200  (4),
+                    speed1800  (8),
+                    speed2400  (13),
+                    speed4800  (14),
+                    speed9600  (15),
+                    speed19200 (16),
+                    speed7200  (99)
+                    }
+                                                
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the speed of the port in bits per second, when using
+                 internal clocking."
+        ::= { cdx6500PPCTIBM2260PortEntry 3 }
+
+        cdx6500IBM2260CfgConnType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    simp  (1),
+                    simpa (16)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specify the control signal handshake required for a
+                 connection to be made to this port:
+                 simp  - simple, no control signals required.
+                 simpa - CTS follows RTS, but no control signals required."
+        ::= { cdx6500PPCTIBM2260PortEntry 4 }
+
+        cdx6500IBM2260CfgNumDevice OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the number of IBM2260 stations on this line."
+        ::= { cdx6500PPCTIBM2260PortEntry 5 }
+
+        cdx6500IBM2260CfgServiceTimer OBJECT-TYPE
+            SYNTAX INTEGER 
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The Service Timer specifies the interval of time in 
+                 seconds between periodic servicing. Such servicing 
+                 includes intervals between attempts to establish network 
+                 connections, intervals between attempts in TPAD to poll 
+                 terminals that previously failed to respond, and in HPAD 
+                 this timer is also used to detect host inactivity
+                 (i.e. when the host stops polling the station(s))."
+        ::= { cdx6500PPCTIBM2260PortEntry 6 }
+
+        cdx6500IBM2260CfgThreshCtr OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Indicates number of consecutive errors that can occur 
+                 before a station is considered down."
+        ::= { cdx6500PPCTIBM2260PortEntry 7 }
+
+        cdx6500IBM2260CfgRespTimeout OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Specifies the amount of time in msec the PAD allows
+                 a terminal, printer or host to respond. As a result,
+                 the TPAD may re-transmit the previous message or abort
+                 the current procedure.
+                 The HPAD aborts the current procedure as though EOT
+                 was received, allowing this HPAD station to disconnect
+                 it's SVC if the host malfunctions. An HPAD with
+                 a response timeout shorter than the hosts ability to respond
+                 may result in Inbound Errors."
+        ::= { cdx6500PPCTIBM2260PortEntry 8 }
+
+        cdx6500IBM2260CfgPortSubAddr OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Calls addressed to this node and with this subaddress 
+                 will be routed to this port."
+        ::= { cdx6500PPCTIBM2260PortEntry 9 }
+
+        cdx6500IBM2260CfgPortOpt OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Select options on this IBM2260 port as follows:
+                 NONE - No option specified
+                 ORG  - Originate calls from this port
+                 ACK  - DSP End-to-End Acknowledgements are to be used
+                 Any combination of above specified by summing (e.g. ORG+ACK)."
+        ::= { cdx6500PPCTIBM2260PortEntry 10 }
+
+        cdx6500IBM2260CfgRestConnDest OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "All calls originating from this port will be routed to the
+                 destination specified in this parameter, irrespective of route
+                 selection table entries.
+                 For example, to route calls to port 1, use P1.  To route
+                 calls to port 2, station 4, use P2S4.
+                 Blank this field to disable this function."
+        ::= { cdx6500PPCTIBM2260PortEntry 11 }
+
+        cdx6500IBM2260CfgBillRec OBJECT-TYPE
+            SYNTAX INTEGER {
+                    off (1),
+                    on  (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This controls whether billing (accounting) records will be
+                 created for calls on this port."
+        ::= { cdx6500PPCTIBM2260PortEntry 12 }
+
+        -- The 6500 IBM2260 Port Statistics Sub-group
+        -- This sub-group belongs to the 6500 Port Protocol Statistics
+        -- group. It holds statistics  peculiar to the 6500
+        -- implementation of the IBM2260 protocol
+
+        cdx6500PPSTIBM2260PortTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500PPSTIBM2260PortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A list of IBM2260 Port statistics."
+        ::= { cdx6500PSTPortProtocolGroup 19 }
+
+        cdx6500PPSTIBM2260PortEntry OBJECT-TYPE
+            SYNTAX Cdx6500PPSTIBM2260PortEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "An IBM2260 Statistics Table entry. Each entry
+                 contains the statistics for a single IBM2260 port. "
+              INDEX { cdx6500IBM2260StatPortNumber }
+        ::= { cdx6500PPSTIBM2260PortTable 1 }
+
+        Cdx6500PPSTIBM2260PortEntry ::=
+            SEQUENCE {
+                cdx6500IBM2260StatPortNumber
+                    INTEGER,
+                cdx6500IBM2260StatPortStatus
+                    DisplayString,
+                cdx6500IBM2260StatPortState
+                    DisplayString,
+                cdx6500IBM2260StatPortSpeed
+                    DisplayString,
+                cdx6500IBM2260StatPortUtilin
+                    INTEGER,
+                cdx6500IBM2260StatPortUtilOut
+                    INTEGER,
+                cdx6500IBM2260StatParityErrors
+                    INTEGER,
+                cdx6500IBM2260StatOverrunErrors
+                    INTEGER,
+                cdx6500IBM2260StatFramingErrors
+                    INTEGER,
+                cdx6500IBM2260StatBCCErrors
+                    INTEGER,
+                cdx6500IBM2260StatNoResponse
+                    INTEGER,
+                cdx6500IBM2260StatCharInTotal
+                    INTEGER,
+                cdx6500IBM2260StatCharOutTotal
+                    INTEGER,
+                cdx6500IBM2260StatCharInSecond
+                    INTEGER,
+                cdx6500IBM2260StatCharOutSecond
+                    INTEGER,
+                cdx6500IBM2260StatPosAckIn
+                    INTEGER,
+                cdx6500IBM2260StatPosAckOut
+                    INTEGER,
+                cdx6500IBM2260StatNegAckIn
+                    INTEGER,
+                cdx6500IBM2260StatNegAckOut
+                    INTEGER,
+                cdx6500IBM2260StatMsgRetran
+                    INTEGER
+                }
+
+        cdx6500IBM2260StatPortNumber OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Physical port number"
+        ::= { cdx6500PPSTIBM2260PortEntry 1 }
+
+        cdx6500IBM2260StatPortStatus OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Operational Status of the port. 
+                 The different operational statuses are:
+                 UP       : At least 1 station is responding to polls.
+                 DOWN     : None of the stations are responding to polls.
+                 DISABLED : The port is disabled by the user."
+        ::= { cdx6500PPSTIBM2260PortEntry 2 }
+
+        cdx6500IBM2260StatPortState OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Current State of this port."
+        ::= { cdx6500PPSTIBM2260PortEntry 3 }
+
+        cdx6500IBM2260StatPortSpeed OBJECT-TYPE
+            SYNTAX INTEGER {
+                    speed1200  (1),
+                    speed1800  (2),
+                    speed2400  (3),
+                    speed4800  (4),
+                    speed7200  (5),
+                    speed9600  (6),
+                    speed19200 (7)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The measured port speed in bits per second."
+        ::= { cdx6500PPSTIBM2260PortEntry 4 }
+
+        cdx6500IBM2260StatPortUtilin  OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The amount of the port's bandwidth that is being utilized;
+                 because IBM2260 is a half-duplex protocol the utilization 
+                 is calculated as the sum of the receive and transmit 
+                 utilization."
+        ::= { cdx6500PPSTIBM2260PortEntry 5 }
+
+        cdx6500IBM2260StatPortUtilOut OBJECT-TYPE
+            SYNTAX INTEGER (0..100)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The amount of the port's bandwidth that is being utilized;
+                 because IBM2260 is a half-duplex protocol the utilization 
+                 is calculated as the sum of the receive and transmit 
+                 utilization."
+        ::= { cdx6500PPSTIBM2260PortEntry 6 }
+
+        cdx6500IBM2260StatParityErrors OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of character parity errors counted by the I/O 
+                 driver."
+        ::= { cdx6500PPSTIBM2260PortEntry 7 }
+
+        cdx6500IBM2260StatOverrunErrors OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of received character overruns counted 
+                 by the I/O driver."
+        ::= { cdx6500PPSTIBM2260PortEntry 8 }
+
+        cdx6500IBM2260StatFramingErrors OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of asynchronous chracters received which violated 
+                 the character framing of start and stop bits. 
+                 Note, this statistic is only valid if the port is configured
+                 for ASYNC line interface."
+        ::= { cdx6500PPSTIBM2260PortEntry 9 }
+
+        cdx6500IBM2260StatBCCErrors OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of BCC errors counted by the I/O driver."
+        ::= { cdx6500PPSTIBM2260PortEntry 10 }
+
+        cdx6500IBM2260StatNoResponse OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "The number of times the response timer has expired."
+        ::= { cdx6500PPSTIBM2260PortEntry 11 }
+
+        cdx6500IBM2260StatCharInTotal OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of chracters received to present."
+        ::= { cdx6500PPSTIBM2260PortEntry 12 }
+
+        cdx6500IBM2260StatCharOutTotal OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Total number of chracters transmitted to present."
+        ::= { cdx6500PPSTIBM2260PortEntry 13 }
+
+        cdx6500IBM2260StatCharInSecond OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of characters received to present."
+        ::= { cdx6500PPSTIBM2260PortEntry 14 }
+
+        cdx6500IBM2260StatCharOutSecond OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Average number of characters transmitted to present."
+        ::= { cdx6500PPSTIBM2260PortEntry 15 }
+
+        cdx6500IBM2260StatPosAckIn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of ACKs received."
+        ::= { cdx6500PPSTIBM2260PortEntry 16 }
+
+        cdx6500IBM2260StatPosAckOut OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of ACKs transmitted."
+        ::= { cdx6500PPSTIBM2260PortEntry 17 }
+
+        cdx6500IBM2260StatNegAckIn OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of NAKs received."
+        ::= { cdx6500PPSTIBM2260PortEntry 18 }
+
+        cdx6500IBM2260StatNegAckOut OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of NAKs transmitted."
+        ::= { cdx6500PPSTIBM2260PortEntry 19 }
+
+        cdx6500IBM2260StatMsgRetran OBJECT-TYPE
+            SYNTAX INTEGER
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Number of messages retransmitted due to NAKs or timeouts 
+                 to present."
+        ::= { cdx6500PPSTIBM2260PortEntry 20 }
+
+        -- The IBM2260 Station Configuration Table
+        -- This table contains Configuration paramaters 
+        -- for the IBM2260 Station table.
+  
+        cdx6500SPCTIBM2260StationTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF Cdx6500SPCTIBM2260StationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "All of the configuration parameters relevant
+                 to the IBM2260 Station table."
+        ::= { cdx6500PCTStationProtocolGroup 6 }
+  
+        cdx6500SPCTIBM2260StationEntry OBJECT-TYPE
+            SYNTAX Cdx6500SPCTIBM2260StationEntry
+            ACCESS not-accessible
+            STATUS mandatory
+            DESCRIPTION
+                "A row of IBM2260 station configuration parameters."
+            INDEX { cdx6500IBM2260sCfgPortNum, cdx6500IBM2260sCfgStationNum }
+        ::= { cdx6500SPCTIBM2260StationTable 1 }
+  
+        Cdx6500SPCTIBM2260StationEntry ::=
+            SEQUENCE {
+                cdx6500IBM2260sCfgPortNum
+                    INTEGER,
+                cdx6500IBM2260sCfgStationNum
+                    INTEGER,
+                cdx6500IBM2260sType
+                    INTEGER,
+                cdx6500IBM2260sStationAddr1
+                    DisplayString,
+                cdx6500IBM2260sStationAddr2
+                    INTEGER,
+                cdx6500IBM2260sCallMnem
+                    DisplayString,
+                cdx6500IBM2260sStationEnable
+                    INTEGER
+                }
+  
+        cdx6500IBM2260sCfgPortNum OBJECT-TYPE
+            SYNTAX INTEGER (1..54)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Port number."
+        ::= { cdx6500SPCTIBM2260StationEntry 1 }
+  
+        cdx6500IBM2260sCfgStationNum OBJECT-TYPE
+            SYNTAX INTEGER (1..32)
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "Station number."
+        ::= { cdx6500SPCTIBM2260StationEntry 2 }
+  
+        cdx6500IBM2260sType OBJECT-TYPE
+            SYNTAX INTEGER {
+                    single (1),
+                    group  (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "single - configures a single station addressable by 
+                          the ADDR1-ADDR2 address pair.
+                 group  - configures a group of stations addressable 
+                          by the ADDR1 address character, but ADDR2 is 
+                          assumed to be 40H, 41H, 42H and 43H.
+                          This type is intended for support of DataTroll
+                          devices.
+                 NOTE:  `group' Station should not be used when the
+                 BSC3270-IBM2260 protocol Interoperation is being used."
+        ::= { cdx6500SPCTIBM2260StationEntry 3 }
+
+        cdx6500IBM2260sStationAddr1 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the first byte of this Station's address.
+                 The Station address consists of two hexadecimal digits.
+                 The valid range for a digit is: 20-7F;"
+        ::= { cdx6500SPCTIBM2260StationEntry 4 }
+
+        cdx6500IBM2260sStationAddr2 OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This is the second byte of this Station's address.
+                 The Station address consists of two hexadecimal digits.
+                 The valid range for a digit is: 20-7F"
+        ::= { cdx6500SPCTIBM2260StationEntry 5 }
+  
+        cdx6500IBM2260sCallMnem OBJECT-TYPE
+            SYNTAX DisplayString
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This mnemonic name is used if this port is 
+                 configured for originating connection requests."
+        ::= { cdx6500SPCTIBM2260StationEntry 6 }
+  
+        cdx6500IBM2260sStationEnable OBJECT-TYPE
+            SYNTAX INTEGER {
+                    no  (1),
+                    yes (2)
+                    }
+            ACCESS read-only
+            STATUS mandatory
+            DESCRIPTION
+                "This parameter is used to disable/enable a station."
+        ::= { cdx6500SPCTIBM2260StationEntry 7 }
+
+        END

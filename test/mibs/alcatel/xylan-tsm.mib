@@ -1,0 +1,749 @@
+TSMEXT-MIB DEFINITIONS ::= BEGIN
+--  This module provides authoritative definitions for the    
+--  Token Ring Switching Module Extensions to the 
+--  enterprise specific MIB.
+
+--  This module will be extended, as needed.
+
+-- ----------------------------------------------------------------------------
+-- MIB Imported Definitions                           
+-- ----------------------------------------------------------------------------
+IMPORTS
+   OBJECT-TYPE
+      FROM RFC-1212
+   xylanTsmArch
+      FROM XYLAN-BASE-MIB;
+
+          -- All representations of MAC addresses in this MIB Module
+          -- use, as a textual convention (i.e. this convention does
+          -- not affect their encoding), the data type:
+
+          MacAddress ::= OCTET STRING (SIZE (6))    -- a 6 octet
+                                                    -- address in the
+                                                    -- "canonical" order
+          -- defined by IEEE 802.1a, i.e., as if it were transmitted
+          -- least significant bit first, even though 802.5 (in
+          -- contrast to other 802.x protocols) requires MAC addresses
+          -- to be transmitted most significant bit first.
+          --
+          -- 16-bit addresses, if needed, are represented by setting
+          -- their upper 4 octets to all 0's, i.e., AAFF would be
+          -- represented as 00000000AAFF.
+
+
+-- ----------------------------------------------------------------------------
+-- MIB Anchor Points and Groups of the TSM Extensions MIB
+-- ----------------------------------------------------------------------------
+   tsmExtensions          OBJECT IDENTIFIER ::= { xylanTsmArch   1 }
+   tsmAdmin               OBJECT IDENTIFIER ::= { tsmExtensions  1 }
+   tsmOper                OBJECT IDENTIFIER ::= { tsmExtensions  2 } 
+
+-- ----------------------------------------------------------------------------
+-- TSM Administrative Group 
+--    This MIB branch contains Token Ring Switch Module (TSM)
+--    Configuration Information.  It consists of a:
+--    - TSM Port Configuration Table                 
+--    - TSM Switching Mode Configuration Table                
+-- ----------------------------------------------------------------------------
+           
+-- TSM Port Configuration Table      
+   tsmAdminPortTable  OBJECT-TYPE
+      SYNTAX  SEQUENCE OF TsmAdminPortEntry
+      ACCESS  not-accessible
+      STATUS  mandatory
+      DESCRIPTION
+          "TSM Port Configuration Table."
+      ::= { tsmAdmin 1 }
+
+   tsmAdminPortEntry  OBJECT-TYPE
+      SYNTAX  TsmAdminPortEntry
+      ACCESS  not-accessible
+      STATUS  mandatory
+      DESCRIPTION
+          "A TSM Port Configuration Entry."
+      INDEX { tsmAdminPortSlotNumber,
+              tsmAdminPortNumber   }
+      ::= { tsmAdminPortTable 1 }
+
+   TsmAdminPortEntry ::= SEQUENCE {
+      tsmAdminPortSlotNumber              INTEGER,
+      tsmAdminPortNumber                  INTEGER,
+      tsmAdminPortState                   INTEGER,
+      tsmAdminPortActiveMon               INTEGER,
+      tsmAdminPortAcBitSet                INTEGER,
+      tsmAdminPortConfigType              INTEGER,
+      tsmAdminPortRingSpeed               INTEGER,
+      tsmAdminPortPortMode                INTEGER,
+      tsmAdminPortDuplex                  INTEGER,
+      tsmAdminPortSwMode                  INTEGER,
+      tsmAdminPortReset                   INTEGER 
+   }
+
+   tsmAdminPortSlotNumber OBJECT-TYPE
+      SYNTAX INTEGER 
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The slot number of the Token Ring Switching Module."
+      ::= { tsmAdminPortEntry 1 }
+
+   tsmAdminPortNumber OBJECT-TYPE
+      SYNTAX INTEGER 
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The port number of the Token Ring Switching Module."
+      ::= { tsmAdminPortEntry 2 }
+
+   tsmAdminPortState  OBJECT-TYPE
+      SYNTAX INTEGER {
+                       enable(1),
+                       disable(2)
+                     }
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "The configured state of the port.
+         1 = enable.
+         2 = disable." 
+      ::= { tsmAdminPortEntry 3 }
+
+   tsmAdminPortActiveMon  OBJECT-TYPE
+      SYNTAX INTEGER {
+                       yes(1),
+                       no(2)
+                     }
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "The configured active monitor participation of the port.
+         1 = yes.
+             Participate in the active monitor selection process.
+         2 = no.
+             Do NOT participate in the active monitor selection process."
+      ::= { tsmAdminPortEntry 4 }
+
+   tsmAdminPortAcBitSet   OBJECT-TYPE
+      SYNTAX INTEGER {
+                       nonLocal(1),
+                       repeat(2),
+                       always(3),
+                       never(4)
+                     }
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "The configured control mode for handling the ARI/FCI Bits of
+         the port.
+         1 = nonLocal.
+             Set ARI/FCI bits on all non-local LLC frames
+             repeated by the port.  For local frames
+             repeat the ARI/FCI bits just as they are received.
+         2 = repeat.
+             Repeat ARI/FCI bit on all LLC frames just as
+             they are received.
+         3 = always.
+             Set ARI/FCI bits on all LLC frames repeated by
+             the port.
+         4 = never. 
+             Do not set ARI/FCI bits on any LLC frames repeated by
+             the port."
+      ::= { tsmAdminPortEntry 5 }
+
+   tsmAdminPortConfigType OBJECT-TYPE
+      SYNTAX INTEGER {
+                       auto(1),
+                       fixed(2)
+                     }
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "The configured config-type of the port.
+         1 = auto.
+             Automatically set the port's ring speed, mode, duplex 
+             and switching mode parameters.                        
+         2 = fixed.
+             Use customer defined values for the port's ring speed,
+             mode, duplex and switching mode parameters."
+      ::= { tsmAdminPortEntry 6 }
+
+   tsmAdminPortRingSpeed  OBJECT-TYPE
+      SYNTAX INTEGER {
+                       auto(1),
+                       fourMegabit(2),
+                       sixteenMegabit(3)
+                     }
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "The configured ring speed of the port.
+         1 = auto.
+             Automatically set the port's ring speed.          
+         2 = fourMegabit.
+             Always set the port's ring speed at four megabits.
+         3 = sixteenMegabit.
+             Always set the port's ring speed at sixteen megabits.
+
+         This object may ONLY be set if the value of port's 
+         tsmAdminPortConfigType is fixed(1)."                         
+      ::= { tsmAdminPortEntry 7 }
+
+   tsmAdminPortPortMode  OBJECT-TYPE
+      SYNTAX INTEGER {
+                       auto(1),         
+                       portMode(2),
+                       adapterMode(3)
+                     }
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "The configured port mode of the port.
+         1 = auto.      
+             Automatically sense the port mode.  This value is set by
+             the switch when the tsmAdminPortConfigMode is set to auto.
+             This object CANNOT be changed to auto by an SNMP SET.
+         2 = portMode.
+             Only a dedicated connection to a station is supported.
+         3 = adapterMode.
+             The port operates like a station.  The connection can
+             be either dedicated or shared.
+
+         This object may ONLY be set if the value of port's 
+         tsmAdminPortConfigType is fixed(1).
+
+         auto(1) is NOT a valid SET value."
+      ::= { tsmAdminPortEntry 8 }
+
+   tsmAdminPortDuplex    OBJECT-TYPE
+      SYNTAX INTEGER {
+                       auto(1),
+                       halfDuplex(2),
+                       fullDuplex(3) 
+                     }
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "The configured duplex mode of the port.
+         1 = auto.
+             Automatically set the port's duplex mode.        
+         2 = halfDuplex.
+             Alway run the port in half duplex mode.        
+         3 = fullDuplex.                                     
+             Alway run the port in full duplex mode.        
+
+         This object may ONLY be set if the value of port's
+         tsmAdminPortConfigType is fixed(1)."
+      ::= { tsmAdminPortEntry 9 }
+
+   tsmAdminPortSwMode  OBJECT-TYPE
+      SYNTAX INTEGER {
+                       cutThrough(1),
+                       storeAndForward(2),
+                       adaptive(3) 
+                     }
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "The configured duplex mode of the port.
+         1 = cutThrough.  
+             A scheme that allows frame transmission to begin at the
+             output port prior to end-of-frame reception at
+             the input port.
+         2 = storeAndForward.
+             The entire packet is received and stored before
+             switching begins.
+         3 = adaptive.
+             Alternate between cut-through and store-and-forward
+             base on the specified error threshold."
+      ::= { tsmAdminPortEntry 10 }
+
+   tsmAdminPortReset OBJECT-TYPE
+      SYNTAX INTEGER {
+                       ready(1),
+                       reset(2)
+                     }
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "This object is used to reset the port.        
+         1 = ready.
+             The port is ready to be reset.
+         2 = reset.
+             Reset the port."
+      ::= { tsmAdminPortEntry 11 }
+
+-- TSM Switching Mode Configuration Table                
+   tsmAdminSwModeTable  OBJECT-TYPE
+      SYNTAX  SEQUENCE OF TsmAdminSwModeEntry
+      ACCESS  not-accessible
+      STATUS  mandatory
+      DESCRIPTION
+          "TSM Switching Mode Configuration Table."
+      ::= { tsmAdmin 2 }
+
+   tsmAdminSwModeEntry  OBJECT-TYPE
+      SYNTAX  TsmAdminSwModeEntry
+      ACCESS  not-accessible
+      STATUS  mandatory
+      DESCRIPTION
+          "A TSM Switching Mode Configuration Entry."
+      INDEX { tsmAdminSwModeSlotNumber }
+      ::= { tsmAdminSwModeTable 1 }
+
+   TsmAdminSwModeEntry ::= SEQUENCE {
+      tsmAdminSwModeSlotNumber            INTEGER,
+      tsmAdminSwModeHiErrThresh           INTEGER,
+      tsmAdminSwModeLoErrThresh           INTEGER,
+      tsmAdminSwModeTrendThresh           INTEGER,
+      tsmAdminSwModeSamplePeriod          INTEGER,
+      tsmAdminSwModeReset                 INTEGER 
+   }
+
+   tsmAdminSwModeSlotNumber OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+        "The slot number of the Token Ring Switching Module."
+      ::= { tsmAdminSwModeEntry 1 }
+
+   tsmAdminSwModeHiErrThresh OBJECT-TYPE
+      SYNTAX INTEGER (0..100)
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "The high error threshold in percent for all ports associated with 
+         the TSM which are configured to run in adaptive mode.  If the  
+         percentage of errors in a sampling period meets or exceeds
+         this value, the port's switching mode will change from
+         cut-through to store-and-forward mode."  
+      ::= { tsmAdminSwModeEntry 2 }
+
+   tsmAdminSwModeLoErrThresh OBJECT-TYPE
+      SYNTAX INTEGER (0..100)
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "The low error threshold in percent for all ports associated with 
+         the TSM which are configured to run in adaptive mode.  If the  
+         percentage of errors in a sampling period falls below     
+         this value, the port's switching mode will change from
+         store-and-forward to cut-through mode."  
+      ::= { tsmAdminSwModeEntry 3 }
+
+   tsmAdminSwModeTrendThresh OBJECT-TYPE
+      SYNTAX INTEGER (0..100)
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "The error rate trend threshold in percent for all ports associated 
+         with the TSM which are configured to run in adaptive mode.  When the
+         percentage of errors is between the high and low error thresholds
+         AND the port is currently running in cut-through mode, the   
+         error rate trend which is the difference in errors between 
+         two sampling periods is compared to the error rate trend threshold.
+         If the error rate trend is greater than this value, the port's 
+         switching mode will change from cut-through mode to 
+         store-and-forward.
+
+         The error rate trend threshold should be no greater than the
+         difference between the high and low threshold values."
+      ::= { tsmAdminSwModeEntry 4 }
+
+   tsmAdminSwModeSamplePeriod OBJECT-TYPE
+      SYNTAX INTEGER (5..120)
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "The sampling period in seconds for all ports associated with the
+         TSM which are configured to run in adaptive mode." 
+      ::= { tsmAdminSwModeEntry 5 }
+
+   tsmAdminSwModeReset OBJECT-TYPE
+      SYNTAX INTEGER {
+                       ready(1),
+                       reset(2)
+                     }
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+        "This object is used to reset the TSM. 
+         1 = ready.
+             The TSM is ready to be reset.
+         2 = reset.
+             Reset the TSM."
+      ::= { tsmAdminSwModeEntry 6 }
+
+-- TSM Ring Switching Status 
+   tsmAdminRingSwitchingStatus OBJECT-TYPE
+      SYNTAX INTEGER {
+		       enable(1),
+		       disable(2)
+                     }
+      ACCESS read-write
+      STATUS mandatory
+      DESCRIPTION
+	"The current status of Ring Switching.  A change of this object
+	 does not take effect until the device is rebooted."
+      ::= { tsmAdmin 3 }
+
+-- ----------------------------------------------------------------------------
+-- TSM Operational Group 
+--    This MIB branch contains Token Ring Switch Module (TSM)
+--    Current Operational Information.  It consists of a:
+--      - TSM Port Operational Table                 
+--      - TSM Switching Mode Operational Table                
+-- ----------------------------------------------------------------------------
+           
+-- TSM Port Operational Table                 
+   tsmOperPortTable  OBJECT-TYPE
+      SYNTAX  SEQUENCE OF TsmOperPortEntry
+      ACCESS  not-accessible
+      STATUS  mandatory
+      DESCRIPTION
+          "TSM Port Operational Table."
+      ::= { tsmOper  1 }
+
+   tsmOperPortEntry  OBJECT-TYPE
+      SYNTAX  TsmOperPortEntry
+      ACCESS  not-accessible
+      STATUS  mandatory
+      DESCRIPTION
+          "A TSM Port Operational Entry."
+      INDEX { tsmOperPortSlotNumber,
+              tsmOperPortNumber   }
+      ::= { tsmOperPortTable 1 }
+
+   TsmOperPortEntry ::= SEQUENCE {
+      tsmOperPortSlotNumber               INTEGER,
+      tsmOperPortNumber                   INTEGER,
+      tsmOperPortState                    INTEGER,
+      tsmOperPortActiveMon                INTEGER,
+      tsmOperPortAcBitSet                 INTEGER,
+      tsmOperPortConfigType               INTEGER,
+      tsmOperPortRingSpeed                INTEGER,
+      tsmOperPortPortMode                 INTEGER,
+      tsmOperPortDuplex                   INTEGER,
+      tsmOperPortSwMode                   INTEGER,
+      tsmOperPortAdaptSwMode              INTEGER,
+      tsmOperPortAdaptErrRate             INTEGER,
+      tsmOperPortAdaptTrend               INTEGER,
+      tsmOperPortOpenState                INTEGER,   
+      tsmOperPortUpStream		  MacAddress
+   }
+
+   tsmOperPortSlotNumber OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+        "The slot number of the Token Ring Switching Module."
+      ::= { tsmOperPortEntry 1 }
+
+   tsmOperPortNumber OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+        "The port number of the Token Ring Switching Module."
+      ::= { tsmOperPortEntry 2 }
+
+   tsmOperPortState  OBJECT-TYPE
+      SYNTAX INTEGER {
+                       enable(1),
+                       disable(2)
+                     }
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The operational state of the port.
+         1 = enable.
+         2 = disable."
+      ::= { tsmOperPortEntry 3 }
+
+   tsmOperPortActiveMon  OBJECT-TYPE
+      SYNTAX INTEGER {
+                       yes(1),
+                       no(2)
+                     }
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The operational active monitor participation of the port.
+         1 = yes.
+             Participate in the active monitor selection process.
+         2 = no.
+             Do NOT participate in the active monitor selection process."
+      ::= { tsmOperPortEntry 4 }
+
+   tsmOperPortAcBitSet   OBJECT-TYPE
+      SYNTAX INTEGER {
+                       nonLocal(1),
+                       repeat(2),
+                       always(3),
+                       never(4)
+                     }
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The operational control mode for handling the ARI/FCI Bits of
+         the port.
+         1 = nonLocal.
+             Set ARI/FCI bits on all non-local LLC frames
+             repeated by the port.  For local frames
+             repeat the ARI/FCI bits just as they are received.
+         2 = repeat.
+             Repeat ARI/FCI bit on all LLC frames just as
+             they are received.
+         3 = always.
+             Set ARI/FCI bits on all LLC frames repeated by
+             the port.
+         4 = never. 
+             Do not set ARI/FCI bits on any LLC frames repeated by
+             the port."
+      ::= { tsmOperPortEntry 5 }
+
+   tsmOperPortConfigType OBJECT-TYPE
+      SYNTAX INTEGER {
+                       auto(1),
+                       fixed(2)
+                     }
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The operational config-type of the port.
+         1 = auto.
+             Automatically set the port's ring speed, mode and
+             duplex parameters.
+         2 = fixed.
+             Use customer defined values for the port's ring speed,
+             mode and duplex parameters."
+      ::= { tsmOperPortEntry 6 }
+
+   tsmOperPortRingSpeed  OBJECT-TYPE
+      SYNTAX INTEGER {
+                       auto(1),
+                       fourMegabit(2),
+                       sixteenMegabit(3)
+                     }
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The operational ring speed of the port.
+         1 = auto.
+             The port has not yet automatically set the ring speed. 
+         2 = fourMegabit.
+         3 = sixteenMegabit."
+      ::= { tsmOperPortEntry 7 }
+
+   tsmOperPortPortMode  OBJECT-TYPE
+      SYNTAX INTEGER {
+                       auto(1),         
+                       portMode(2),
+                       adapterMode(3)
+                     }
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The operational port mode of the port.
+         1 = auto.      
+             Automatically sense the port mode.  
+         2 = portMode.
+             Only a dedicated connection to a station is supported.
+         3 = adapterMode.
+             The port operates like a station.  The connection can
+             be either dedicated or shared."
+      ::= { tsmOperPortEntry 8 }
+
+   tsmOperPortDuplex    OBJECT-TYPE
+      SYNTAX INTEGER {
+                       auto(1),
+                       halfDuplex(2),
+                       fullDuplex(3)
+                     }
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The configured duplex mode of the port.
+         1 = auto.
+             The port has not yet automatically set the port's duplex mode. 
+         2 = halfDuplex.
+         3 = fullDuplex."
+      ::= { tsmOperPortEntry 9 }
+
+   tsmOperPortSwMode  OBJECT-TYPE
+      SYNTAX INTEGER {
+                       cutThrough(1),
+                       storeAndForward(2),
+                       adaptive(3)
+                     }
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The configured switch mode of the port.
+         1 = cutThrough.
+             A scheme that allows frame transmission to begin at the
+             output port prior to end-of-frame reception at
+             the input port.
+         2 = storeAndForward.
+             The entire packet is received and stored before
+             switching begins.
+         3 = adaptive.
+             Alternate between cut-through and store-and-forward
+             base on the specified error threshold."
+      ::= { tsmOperPortEntry 10 }
+
+   tsmOperPortAdaptSwMode  OBJECT-TYPE
+      SYNTAX INTEGER {
+                       cutThrough(1),
+                       storeAndForward(2),
+                       notAdaptive(3)
+                     }
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The operational adaptive switch mode of the port.
+         1 = cutThrough.
+             A scheme that allows frame transmission to begin at the
+             output port prior to end-of-frame reception at
+             the input port.
+         2 = storeAndForward.
+             The entire packet is received and stored before
+             switching begins.
+         3 = notAdaptive.
+             The port is not running in adaptive mode."
+      ::= { tsmOperPortEntry 11 }
+
+
+   tsmOperPortAdaptErrRate  OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+        "The operational adaptive error rate in percent of the port.
+         This value is the percent of errors in the last sampling period."
+      ::= { tsmOperPortEntry 12 }
+
+   tsmOperPortAdaptTrend  OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+        "The operational adaptive error rate trend in percent of the port.
+         This value is the difference in errors between the last two
+         sampling periods."
+      ::= { tsmOperPortEntry 13 }
+
+   tsmOperPortOpenState   OBJECT-TYPE
+      SYNTAX INTEGER {
+                       opened(1),
+                       closed(2),
+                       opening(3),
+                       closing(4),
+                       openFailure(5),
+                       ringFailure(6)
+                     }
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+        "The operational open status of the port.
+          1 = opened
+          2 = closed  
+          3 = opening 
+          4 = closing    
+          5 = openFailure   
+          6 = ringFailure"
+      ::= { tsmOperPortEntry 14 }
+
+   tsmOperPortUpStream OBJECT-TYPE
+      SYNTAX MacAddress
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+	" The operational MAC Address of the up stream neighbour
+	  in the ring. "
+      ::= { tsmOperPortEntry 15 }
+
+-- TSM Switching Mode Operational Table                
+   tsmOperSwModeTable  OBJECT-TYPE
+      SYNTAX  SEQUENCE OF TsmOperSwModeEntry
+      ACCESS  not-accessible
+      STATUS  mandatory
+      DESCRIPTION
+          "TSM Switch Mode Operational Table."
+      ::= { tsmOper 2 }
+
+   tsmOperSwModeEntry  OBJECT-TYPE
+      SYNTAX  TsmOperSwModeEntry
+      ACCESS  not-accessible
+      STATUS  mandatory
+      DESCRIPTION
+          "A TSM Port Operational Entry."
+      INDEX { tsmOperSwModeSlotNumber }
+      ::= { tsmOperSwModeTable 1 }
+
+   TsmOperSwModeEntry ::= SEQUENCE {
+      tsmOperSwModeSlotNumber             INTEGER,
+      tsmOperSwModeHiErrThresh            INTEGER,
+      tsmOperSwModeLoErrThresh            INTEGER,
+      tsmOperSwModeTrendThresh            INTEGER,
+      tsmOperSwModeSamplePeriod           INTEGER
+   }
+
+   tsmOperSwModeSlotNumber OBJECT-TYPE
+      SYNTAX INTEGER
+      ACCESS read-only
+      STATUS mandatory
+      DESCRIPTION
+        "The slot number of the Token Ring Switching Module."
+      ::= { tsmOperSwModeEntry 1 }
+
+   tsmOperSwModeHiErrThresh OBJECT-TYPE
+      SYNTAX INTEGER (0..100)
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The operational high error threshold for all ports associated with
+         the TSM which are configured to run in adaptive mode.  If the
+         percentage of errors in a sampling period meets or exceeds
+         this value, the port's switching mode will change from
+         cut-through to store-and-forward mode."
+      ::= { tsmOperSwModeEntry 2 }
+
+   tsmOperSwModeLoErrThresh OBJECT-TYPE
+      SYNTAX INTEGER (0..100)
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The operational low error threshold for all ports associated with 
+         the TSM which are configured to run in adaptive mode.  If the
+         percentage of errors in a sampling period falls below
+         this value, the port's switching mode will change from
+         store-and-forward to cut-through mode."
+      ::= { tsmOperSwModeEntry 3 }
+
+   tsmOperSwModeTrendThresh OBJECT-TYPE
+      SYNTAX INTEGER (0..100)
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The operational error rate trend threshold in percent for all ports
+         associated with the TSM which are configured to run in adaptive mode.
+         When the percentage of errors is between the high and low error 
+         thresholds AND the port is currently running in cut-through mode, the
+         error rate trend which is the difference in errors between two 
+         sampling periods is compared to the error rate trend threshold.
+         If the error rate trend is greater than this value, the port's
+         switching mode will change from cut-through mode to
+         store-and-forward."
+      ::= { tsmOperSwModeEntry 4 }
+
+   tsmOperSwModeSamplePeriod OBJECT-TYPE
+      SYNTAX INTEGER (5..120)
+      ACCESS read-only 
+      STATUS mandatory
+      DESCRIPTION
+        "The operational sampling period in seconds for all ports associated
+         with the TSM which are configured to run in adaptive mode."
+      ::= { tsmOperSwModeEntry 5 }
+END
