@@ -189,6 +189,7 @@ public class ObjectIdentifierValue extends MibValue {
             }
         }
         location = null;
+        cachedNumericValue = null;
         if (parent instanceof ObjectIdentifierValue) {
             return ((ObjectIdentifierValue) parent).getChildByValue(value);
         } else {
