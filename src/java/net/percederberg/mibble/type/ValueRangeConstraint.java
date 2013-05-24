@@ -114,7 +114,7 @@ public class ValueRangeConstraint implements Constraint {
             upper = upper.initialize(log, type);
         }
         if (location != null && !isCompatible(type)) {
-            message = "Value range constraint not compatible with " +
+            message = "value range constraint not compatible with " +
                       "this type";
             log.addWarning(location, message);
         }

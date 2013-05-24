@@ -82,7 +82,7 @@ public class SizeConstraint implements Constraint {
 
         values.initialize(new IntegerType(), log);
         if (location != null && !isCompatible(type)) {
-            message = "Size constraint not compatible with this type";
+            message = "size constraint not compatible with this type";
             log.addWarning(location, message);
         }
         location = null;
