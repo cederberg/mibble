@@ -233,7 +233,10 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitQuotedString(Token node) {
         String str = node.getImage();
-        str = str.substring(1, str.length() - 1).replace("\"\"", "\"");
+        str = str.substring(1, str.length() - 1);
+        if (str.indexOf("\"\"") >= 0) {
+            str = str.replace("\"\"", "\"");
+        }
         node.addValue(str);
         return node;
     }
