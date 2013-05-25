@@ -162,7 +162,7 @@ public class SnmpObjectGroup extends SnmpType {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append(super.toString());
         buffer.append(" (");
         buffer.append("\n  Objects: ");

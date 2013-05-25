@@ -231,7 +231,7 @@ public class MibLoaderLog {
      * @since 2.2
      */
     public void printTo(PrintWriter output, int margin) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < entries.size(); i++) {
             LogEntry entry = entries.get(i);
             buffer.setLength(0);
@@ -321,7 +321,7 @@ public class MibLoaderLog {
      * @return the new formatted string
      */
     private String linebreakString(String str, String prefix, int length) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         while (str.length() + prefix.length() > length) {
             int pos = str.lastIndexOf(' ', length - prefix.length());
             if (pos < 0) {

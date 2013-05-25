@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -33,7 +33,7 @@ import net.percederberg.mibble.value.StringValue;
  * A string MIB type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.10
  * @since    2.0
  */
 public class StringType extends MibType {
@@ -114,8 +114,7 @@ public class StringType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        StringType  type = new StringType(false, constraint);
-
+        StringType type = new StringType(false, constraint);
         type.setTag(true, getTag());
         return type;
     }
@@ -137,8 +136,7 @@ public class StringType extends MibType {
      * @since 2.2
      */
     public MibType createReference(Constraint constraint) {
-        StringType  type = new StringType(false, constraint);
-
+        StringType type = new StringType(false, constraint);
         type.setTag(true, getTag());
         return type;
     }
@@ -200,8 +198,7 @@ public class StringType extends MibType {
      * @return a string representation of this type
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuilder  buffer = new StringBuilder();
         buffer.append(super.toString());
         if (constraint != null) {
             buffer.append(" (");

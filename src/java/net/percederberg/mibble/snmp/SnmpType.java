@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -29,7 +29,7 @@ import net.percederberg.mibble.MibType;
  * that are valid across all SNMP macro types.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.10
  * @since    2.5
  */
 public abstract class SnmpType extends MibType {
@@ -50,15 +50,13 @@ public abstract class SnmpType extends MibType {
      * @return the processed string
      */
     protected static String removeIndent(String str) {
-        StringBuffer  buffer = new StringBuffer();
-        int           indent = -1;
-        int           pos;
-
+        StringBuilder buffer = new StringBuilder();
         if (str == null) {
             return null;
         }
+        int indent = -1;
         while (str.length() > 0) {
-            pos = str.indexOf("\n");
+            int pos = str.indexOf("\n");
             if (pos < 0) {
                 buffer.append(removeIndent(str, indent));
                 str = "";
@@ -105,12 +103,11 @@ public abstract class SnmpType extends MibType {
      * @return the unindented string
      */
     private static String removeIndent(String str, int indent) {
-        int  pos = 0;
-
         str = replaceTabs(str);
         if (indent < 0) {
             return str.trim();
         }
+        int pos = 0;
         for (pos = 0; pos < str.length() && pos < indent; pos++) {
             if (str.charAt(pos) != ' ') {
                 break;
@@ -127,12 +124,10 @@ public abstract class SnmpType extends MibType {
      * @return the new string without tab characters
      */
     private static String replaceTabs(String str) {
-        StringBuffer  buffer;
-
         if (str.indexOf('\t') < 0) {
             return str;
         } else {
-            buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             for (int i = 0; i < str.length(); i++) {
                 if (str.charAt(i) == '\t') {
                     buffer.append("        ");
@@ -210,18 +205,15 @@ public abstract class SnmpType extends MibType {
      *         null if no description has been set
      */
     protected String getDescription(String indent) {
-        StringBuffer  buffer;
-        String        str = getDescription();
-        int           pos;
-
+        String str = getDescription();
         if (str == null) {
             return null;
         }
-        pos = str.indexOf("\n");
+        int pos = str.indexOf("\n");
         if (pos < 0) {
             return str;
         } else {
-            buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             buffer.append(str.substring(0, pos + 1));
             str = str.substring(pos + 1);
             while (pos >= 0) {

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -33,7 +33,7 @@ import net.percederberg.mibble.MibValue;
  * name.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.10
  * @since    2.0
  */
 public class ElementType extends MibType {
@@ -130,8 +130,7 @@ public class ElementType extends MibType {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuilder  buffer = new StringBuilder();
         buffer.append(super.toString());
         if (name != null) {
             buffer.append(name);

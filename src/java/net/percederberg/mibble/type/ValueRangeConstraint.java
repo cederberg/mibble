@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2008 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -36,7 +36,7 @@ import net.percederberg.mibble.value.StringValue;
  * range in a set of value constraints.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.9
+ * @version  2.10
  * @since    2.0
  */
 public class ValueRangeConstraint implements Constraint {
@@ -105,8 +105,6 @@ public class ValueRangeConstraint implements Constraint {
     public void initialize(MibType type, MibLoaderLog log)
         throws MibException {
 
-        String  message;
-
         if (lower != null) {
             lower = lower.initialize(log, type);
         }
@@ -114,9 +112,8 @@ public class ValueRangeConstraint implements Constraint {
             upper = upper.initialize(log, type);
         }
         if (location != null && !isCompatible(type)) {
-            message = "value range constraint not compatible with " +
-                      "this type";
-            log.addWarning(location, message);
+            String msg = "value range constraint not compatible with this type";
+            log.addWarning(location, msg);
         }
         location = null;
     }
@@ -161,12 +158,11 @@ public class ValueRangeConstraint implements Constraint {
      * @since 2.9
      */
     public boolean isCompatible(Number value) {
-        Number  low = null;
-        Number  high = null;
-
+        Number low = null;
         if (lower instanceof NumberValue) {
             low = (Number) lower.toObject();
         }
+        Number high = null;
         if (upper instanceof NumberValue) {
             high = (Number) upper.toObject();
         }
@@ -296,8 +292,7 @@ public class ValueRangeConstraint implements Constraint {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuilder buffer = new StringBuilder();
         if (lower == null) {
             buffer.append("MIN");
         } else {
@@ -315,7 +310,6 @@ public class ValueRangeConstraint implements Constraint {
         } else {
             buffer.append(upper);
         }
-
         return buffer.toString();
     }
 }

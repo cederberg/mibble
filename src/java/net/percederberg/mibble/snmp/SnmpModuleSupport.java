@@ -135,7 +135,7 @@ public class SnmpModuleSupport {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         if (module != null) {
             buffer.append(module);
         }

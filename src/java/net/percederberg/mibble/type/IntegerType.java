@@ -351,7 +351,7 @@ public class IntegerType extends MibType implements MibContext {
      * @return a string representation of this type
      */
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append(super.toString());
         if (symbols.size() > 0) {
             buffer.append(" { ");

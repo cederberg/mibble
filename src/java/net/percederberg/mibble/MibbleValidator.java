@@ -192,7 +192,7 @@ public class MibbleValidator {
      * @param e              the detailed exception
      */
     private static void printError(String file, FileNotFoundException e) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("Error: couldn't open file:");
         buffer.append("\n    ");
         buffer.append(file);
@@ -206,7 +206,7 @@ public class MibbleValidator {
      * @param e              the detailed exception
      */
     private static void printError(String url, IOException e) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("Error: couldn't open URL:");
         buffer.append("\n    ");
         buffer.append(url);
@@ -248,7 +248,7 @@ public class MibbleValidator {
         if (!file.canRead() || !file.isFile()) {
             return false;
         }
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         BufferedReader in = null;
         try {
             in = new BufferedReader(new FileReader(file));

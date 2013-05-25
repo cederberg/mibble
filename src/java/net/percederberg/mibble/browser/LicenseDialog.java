@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.browser;
@@ -41,7 +41,7 @@ import javax.swing.JTextArea;
  * The MIB browser license dialog.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.10
  * @since    2.5
  */
 public class LicenseDialog extends JDialog {
@@ -61,7 +61,7 @@ public class LicenseDialog extends JDialog {
      * Initializes the dialog components.
      */
     private void initialize() {
-        StringBuffer        license = new StringBuffer();
+        StringBuilder       license = new StringBuilder();
         URL                 url;
         InputStreamReader   in;
         BufferedReader      reader;

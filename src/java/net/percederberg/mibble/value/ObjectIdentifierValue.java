@@ -592,7 +592,7 @@ public class ObjectIdentifierValue extends MibValue {
      */
     public String toString() {
         if (cachedNumericValue == null) {
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             if (parent != null) {
                 buffer.append(parent.toString());
                 buffer.append(".");
@@ -611,7 +611,7 @@ public class ObjectIdentifierValue extends MibValue {
      * @return a detailed string representation of this value
      */
     public String toDetailString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         if (parent instanceof ObjectIdentifierValue) {
             buffer.append(((ObjectIdentifierValue) parent).toDetailString());
             buffer.append(".");
@@ -636,7 +636,7 @@ public class ObjectIdentifierValue extends MibValue {
      * @since 2.6
      */
     public String toAsn1String() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         if (parent instanceof ObjectIdentifierValue) {
             ObjectIdentifierValue ref = (ObjectIdentifierValue) parent;
             if (ref.getSymbol() == null) {

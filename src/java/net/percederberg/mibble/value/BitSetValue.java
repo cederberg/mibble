@@ -244,7 +244,7 @@ public class BitSetValue extends MibValue {
      * @since 2.8
      */
     public String toAsn1String(MibValueSymbol[] values) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < value.size(); i++) {
             if (value.get(i)) {
                 if (buffer.length() > 0) {

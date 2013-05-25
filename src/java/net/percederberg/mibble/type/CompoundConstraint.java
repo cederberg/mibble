@@ -137,7 +137,7 @@ public class CompoundConstraint implements Constraint {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append(first.toString());
         buffer.append(" | ");
         buffer.append(second.toString());

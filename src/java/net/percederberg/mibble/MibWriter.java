@@ -630,9 +630,7 @@ public class MibWriter {
      * @param comp           the module compliance statement
      * @param smiVersion     the SMI version to use
      */
-    private void printModuleCompliance(SnmpCompliance comp,
-                                       int smiVersion) {
-
+    private void printModuleCompliance(SnmpCompliance comp, int smiVersion) {
         printComment(comp.getComment(), "    ", true);
         if (comp.isGroup()) {
             os.print("    GROUP           ");
@@ -968,8 +966,8 @@ public class MibWriter {
      * @return the reformatted string
      */
     private String reflow(String str, int maxLen) {
-        StringBuffer src = new StringBuffer(str);
-        StringBuffer res = new StringBuffer();
+        StringBuilder src = new StringBuilder(str);
+        StringBuilder res = new StringBuilder();
         while (src.length() > 0) {
             int pos = src.indexOf("\n");
             boolean fillNext = false;
@@ -1061,7 +1059,7 @@ public class MibWriter {
      * @return a correct ASN.1 string syntax
      */
     private String getQuote(String str) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append('"');
         for (int i = 0; i < str.length(); i++) {
             if (str.charAt(i) == '"') {

@@ -293,7 +293,7 @@ public class SnmpTextualConvention extends SnmpType implements MibContext {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append(super.toString());
         buffer.append(" (");
         if (displayHint != null) {

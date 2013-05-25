@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2007 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -33,7 +33,7 @@ import net.percederberg.mibble.MibValue;
  * @see SnmpModule
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.9
+ * @version  2.10
  * @since    2.0
  */
 public class SnmpCompliance {
@@ -243,8 +243,7 @@ public class SnmpCompliance {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuilder buffer = new StringBuilder();
         buffer.append(value);
         if (syntax != null) {
             buffer.append("\n      Syntax: ");

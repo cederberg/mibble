@@ -291,7 +291,7 @@ public class MibblePrinter {
      * @param e              the detailed exception
      */
     private static void printError(String file, FileNotFoundException e) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("couldn't open file:\n    ");
         buffer.append(file);
         printError(buffer.toString());
@@ -304,7 +304,7 @@ public class MibblePrinter {
      * @param e              the detailed exception
      */
     private static void printError(String url, IOException e) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("couldn't open URL:\n    ");
         buffer.append(url);
         printError(buffer.toString());

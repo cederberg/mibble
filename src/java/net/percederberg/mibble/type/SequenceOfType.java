@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -33,7 +33,7 @@ import net.percederberg.mibble.MibValue;
  * as an array.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.10
  * @since    2.0
  */
 public class SequenceOfType extends MibType {
@@ -128,8 +128,7 @@ public class SequenceOfType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        SequenceOfType  type = new SequenceOfType(false, base, constraint);
-
+        SequenceOfType type = new SequenceOfType(false, base, constraint);
         type.setTag(true, getTag());
         return type;
     }
@@ -151,8 +150,7 @@ public class SequenceOfType extends MibType {
      * @since 2.2
      */
     public MibType createReference(Constraint constraint) {
-        SequenceOfType  type = new SequenceOfType(false, base, constraint);
-
+        SequenceOfType type = new SequenceOfType(false, base, constraint);
         type.setTag(true, getTag());
         return type;
     }
@@ -214,8 +212,7 @@ public class SequenceOfType extends MibType {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuilder  buffer = new StringBuilder();
         buffer.append(super.toString());
         buffer.append(" ");
         if (constraint != null) {

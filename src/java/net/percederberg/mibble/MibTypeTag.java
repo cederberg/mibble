@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -31,7 +31,7 @@ package net.percederberg.mibble;
  * EXPLICIT or IMPLICIT keywords in the MIB file.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.10
  * @since    2.2
  */
 public class MibTypeTag {
@@ -149,10 +149,8 @@ public class MibTypeTag {
      *         false otherwise
      */
     public boolean equals(Object obj) {
-        MibTypeTag  tag;
-
         if (obj instanceof MibTypeTag) {
-            tag = (MibTypeTag) obj;
+            MibTypeTag tag = (MibTypeTag) obj;
             return equals(tag.category, tag.value);
         } else {
             return false;
@@ -239,8 +237,7 @@ public class MibTypeTag {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuilder  buffer = new StringBuilder();
         buffer.append("[");
         if (category == UNIVERSAL_CATEGORY) {
             buffer.append("UNIVERSAL ");

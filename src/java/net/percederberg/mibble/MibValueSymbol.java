@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -32,7 +32,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * an object identifier.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.10
  * @since    2.0
  */
 public class MibValueSymbol extends MibSymbol {
@@ -87,8 +87,6 @@ public class MibValueSymbol extends MibSymbol {
      *             initialization
      */
     public void initialize(MibLoaderLog log) throws MibException {
-        ObjectIdentifierValue  oid;
-
         if (type != null) {
             try {
                 type = type.initialize(this, log);
@@ -110,7 +108,7 @@ public class MibValueSymbol extends MibSymbol {
                          "value is not compatible with type");
         }
         if (value instanceof ObjectIdentifierValue) {
-            oid = (ObjectIdentifierValue) value;
+            ObjectIdentifierValue oid = (ObjectIdentifierValue) value;
             if (oid.getSymbol() == null) {
                 oid.setSymbol(this);
             }
@@ -169,10 +167,8 @@ public class MibValueSymbol extends MibSymbol {
      * @since 2.5
      */
     public boolean isTable() {
-        MibType  syntax;
-
         if (type instanceof SnmpObjectType) {
-            syntax = ((SnmpObjectType) type).getSyntax();
+            MibType syntax = ((SnmpObjectType) type).getSyntax();
             return syntax instanceof SequenceOfType;
         } else {
             return false;
@@ -195,10 +191,8 @@ public class MibValueSymbol extends MibSymbol {
      * @since 2.5
      */
     public boolean isTableRow() {
-        MibType  syntax;
-
         if (type instanceof SnmpObjectType) {
-            syntax = ((SnmpObjectType) type).getSyntax();
+            MibType syntax = ((SnmpObjectType) type).getSyntax();
             return syntax instanceof SequenceType;
         } else {
             return false;
@@ -221,8 +215,7 @@ public class MibValueSymbol extends MibSymbol {
      * @since 2.5
      */
     public boolean isTableColumn() {
-        MibValueSymbol  parent = getParent();
-
+        MibValueSymbol parent = getParent();
         return type instanceof SnmpObjectType
             && parent != null
             && parent.isTableRow();
@@ -259,10 +252,8 @@ public class MibValueSymbol extends MibSymbol {
      * @since 2.5
      */
     public MibValueSymbol getParent() {
-        ObjectIdentifierValue  oid;
-
         if (value instanceof ObjectIdentifierValue) {
-            oid = ((ObjectIdentifierValue) value).getParent();
+            ObjectIdentifierValue oid = ((ObjectIdentifierValue) value).getParent();
             if (oid != null) {
                 return oid.getSymbol();
             }
@@ -304,10 +295,8 @@ public class MibValueSymbol extends MibSymbol {
      * @since 2.6
      */
     public MibValueSymbol getChild(int index) {
-        ObjectIdentifierValue  oid;
-
         if (value instanceof ObjectIdentifierValue) {
-            oid = ((ObjectIdentifierValue) value).getChild(index);
+            ObjectIdentifierValue oid = ((ObjectIdentifierValue) value).getChild(index);
             if (oid != null) {
                 return oid.getSymbol();
             }
@@ -328,19 +317,16 @@ public class MibValueSymbol extends MibSymbol {
      * @since 2.6
      */
     public MibValueSymbol[] getChildren() {
-        ObjectIdentifierValue  oid;
-        MibValueSymbol         children[];
-
         if (value instanceof ObjectIdentifierValue) {
-            oid = (ObjectIdentifierValue) value;
-            children = new MibValueSymbol[oid.getChildCount()];
+            ObjectIdentifierValue oid = (ObjectIdentifierValue) value;
+            MibValueSymbol[] children = new MibValueSymbol[oid.getChildCount()];
             for (int i = 0; i < oid.getChildCount(); i++) {
                 children[i] = oid.getChild(i).getSymbol();
             }
+            return children;
         } else {
-            children = new MibValueSymbol[0];
+            return new MibValueSymbol[0];
         }
-        return children;
     }
 
     /**
@@ -349,8 +335,7 @@ public class MibValueSymbol extends MibSymbol {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuilder buffer = new StringBuilder();
         buffer.append("VALUE ");
         buffer.append(getName());
         buffer.append(" ");

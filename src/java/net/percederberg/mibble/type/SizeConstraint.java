@@ -173,7 +173,7 @@ public class SizeConstraint implements Constraint {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("SIZE (");
         buffer.append(values);
         buffer.append(")");

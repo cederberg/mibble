@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -26,7 +26,7 @@ package net.percederberg.mibble;
  * type assignment, i.e. a defined type name.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.10
  * @since    2.0
  */
 public class MibTypeSymbol extends MibSymbol {
@@ -105,8 +105,7 @@ public class MibTypeSymbol extends MibSymbol {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuilder buffer = new StringBuilder();
         buffer.append("TYPE ");
         buffer.append(getName());
         buffer.append(" ::= ");

@@ -156,7 +156,7 @@ class MibAnalyzerUtil {
             }
             token = token.getPreviousToken();
         }
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (int i = comments.size() - 1; i >= 0; i--) {
             buffer.append(comments.get(i));
         }
@@ -179,7 +179,7 @@ class MibAnalyzerUtil {
         if (token != null) {
             token = token.getNextToken();
         }
-        StringBuffer comment = new StringBuffer();
+        StringBuilder comment = new StringBuilder();
         while (token != null) {
             if (token.getId() == Asn1Constants.WHITESPACE) {
                 comment.append(getLineBreaks(token.getImage()));
@@ -208,7 +208,7 @@ class MibAnalyzerUtil {
      *         null if no comments were found
      */
     private static String getCommentsInside(Node node) {
-        StringBuffer comment = new StringBuffer();
+        StringBuilder comment = new StringBuilder();
         Token token = getFirstToken(node);
         Token last = getLastToken(node);
         while (token != null && token != last) {
@@ -297,10 +297,10 @@ class MibAnalyzerUtil {
      * @return a string containing zero or more line breaks
      */
     private static String getLineBreaks(String str) {
-        StringBuffer res = new StringBuffer();
         if (str == null) {
             return null;
         }
+        StringBuilder res = new StringBuilder();
         for (int i = 0; i < str.length(); i++) {
             if (str.charAt(i) == '\n') {
                 res.append('\n');

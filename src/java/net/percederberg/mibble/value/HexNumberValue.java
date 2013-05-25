@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2005-2008 Per Cederberg. All rights reserved.
+ * Copyright (c) 2005-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
@@ -30,7 +30,7 @@ import net.percederberg.mibble.MibValue;
  * A hexadecimal numeric MIB value.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.9
+ * @version  2.10
  * @since    2.6
  */
 public class HexNumberValue extends NumberValue {
@@ -93,11 +93,9 @@ public class HexNumberValue extends NumberValue {
      * @return a string representation of this value
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-        String        value;
-
+        StringBuilder buffer = new StringBuilder();
         buffer.append("'");
-        value = toHexString();
+        String value = toHexString();
         if (value.equals("0")) {
             value = "";
         }
@@ -115,8 +113,7 @@ public class HexNumberValue extends NumberValue {
      * @return a hexadecimal representation of this value
      */
     private String toHexString() {
-        Number  num = (Number) toObject();
-
+        Number num = (Number) toObject();
         if (num instanceof BigInteger) {
             return ((BigInteger) num).toString(16).toUpperCase();
         } else if (num instanceof Long) {

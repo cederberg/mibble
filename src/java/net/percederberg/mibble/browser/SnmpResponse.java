@@ -148,7 +148,7 @@ public class SnmpResponse {
      * @return a string representation of the OID and value map
      */
     public String getOidsAndValues() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < oids.size(); i++) {
             String oid = oids.get(i).toString();
             buffer.append(oid);
@@ -165,7 +165,7 @@ public class SnmpResponse {
      * @return a string representation of this response
      */
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append(getOidsAndValues());
         buffer.append("Error status: ");
         buffer.append(errorStatus);
