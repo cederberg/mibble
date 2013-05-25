@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -34,7 +34,7 @@ import net.percederberg.mibble.MibValue;
  * union.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.10
  * @since    2.0
  */
 public class ChoiceType extends MibType {
@@ -42,14 +42,14 @@ public class ChoiceType extends MibType {
     /**
      * The choice elements.
      */
-    private ArrayList elements;
+    private ArrayList<ElementType> elements;
 
     /**
      * Creates a new choice MIB type.
      *
      * @param elements       the list of element types
      */
-    public ChoiceType(ArrayList elements) {
+    public ChoiceType(ArrayList<ElementType> elements) {
         this(true, elements);
     }
 
@@ -59,7 +59,7 @@ public class ChoiceType extends MibType {
      * @param primitive      the primitive type flag
      * @param elements       the list of element types
      */
-    private ChoiceType(boolean primitive, ArrayList elements) {
+    private ChoiceType(boolean primitive, ArrayList<ElementType> elements) {
         super("CHOICE", primitive);
         this.elements = elements;
     }
@@ -87,11 +87,8 @@ public class ChoiceType extends MibType {
     public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
-        ElementType  elem;
-
         for (int i = 0; i < elements.size(); i++) {
-            elem = (ElementType) elements.get(i);
-            elem.initialize(symbol, log);
+            elements.get(i).initialize(symbol, log);
         }
         return this;
     }
@@ -110,8 +107,7 @@ public class ChoiceType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        ChoiceType  type = new ChoiceType(false, elements);
-
+        ChoiceType type = new ChoiceType(false, elements);
         type.setTag(true, getTag());
         return type;
     }
@@ -127,11 +123,8 @@ public class ChoiceType extends MibType {
      *         false otherwise
      */
     public boolean isCompatible(MibValue value) {
-        ElementType  elem;
-
         for (int i = 0; i < elements.size(); i++) {
-            elem = (ElementType) elements.get(i);
-            if (elem.isCompatible(value)) {
+            if (elements.get(i).isCompatible(value)) {
                 return true;
             }
         }
@@ -147,11 +140,8 @@ public class ChoiceType extends MibType {
      * @since 2.2
      */
     public ElementType[] getAllElements() {
-        ElementType[]  res;
-
-        res = new ElementType[elements.size()];
-        elements.toArray(res);
-        return res;
+        ElementType[] res = new ElementType[elements.size()];
+        return elements.toArray(res);
     }
 
     /**

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -37,7 +37,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * @see SnmpModuleSupport
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.10
  * @since    2.0
  */
 public class SnmpVariation {
@@ -65,7 +65,7 @@ public class SnmpVariation {
     /**
      * The cell values required for creation.
      */
-    private ArrayList requiredCells;
+    private ArrayList<MibValue> requiredCells;
 
     /**
      * The default value.
@@ -92,7 +92,7 @@ public class SnmpVariation {
                          MibType syntax,
                          MibType writeSyntax,
                          SnmpAccess access,
-                         ArrayList requiredCells,
+                         ArrayList<MibValue> requiredCells,
                          MibValue defaultValue,
                          String description) {
 
@@ -118,9 +118,7 @@ public class SnmpVariation {
      *             initialization
      */
     void initialize(MibLoaderLog log) throws MibException {
-        ArrayList  list = new ArrayList();
-        MibType    type = null;
-
+        MibType type = null;
         value = value.initialize(log, null);
         if (getBaseSymbol() != null) {
             // TODO: use utility function to retrieve correct base type here
@@ -139,9 +137,8 @@ public class SnmpVariation {
             writeSyntax = writeSyntax.initialize(null, log);
         }
         for (int i = 0; i < requiredCells.size(); i++) {
-            list.add(((MibValue) requiredCells.get(i)).initialize(log, type));
+            requiredCells.set(i, requiredCells.get(i).initialize(log, type));
         }
-        this.requiredCells = list;
         if (defaultValue != null) {
             defaultValue = defaultValue.initialize(log, type);
         }
@@ -209,7 +206,7 @@ public class SnmpVariation {
      *
      * @see net.percederberg.mibble.MibValue
      */
-    public ArrayList getRequiredCells() {
+    public ArrayList<MibValue> getRequiredCells() {
         return requiredCells;
     }
 

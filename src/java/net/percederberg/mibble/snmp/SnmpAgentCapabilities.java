@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -38,7 +38,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * @see <a href="http://www.ietf.org/rfc/rfc2580.txt">RFC 2580 (SNMPv2-CONF)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.10
  * @since    2.0
  */
 public class SnmpAgentCapabilities extends SnmpType {
@@ -61,7 +61,7 @@ public class SnmpAgentCapabilities extends SnmpType {
     /**
      * The list of supported modules.
      */
-    private ArrayList modules;
+    private ArrayList<SnmpModuleSupport> modules;
 
     /**
      * Creates a new agent capabilities.
@@ -76,7 +76,7 @@ public class SnmpAgentCapabilities extends SnmpType {
                                  SnmpStatus status,
                                  String description,
                                  String reference,
-                                 ArrayList modules) {
+                                 ArrayList<SnmpModuleSupport> modules) {
 
         super("AGENT-CAPABILITIES", description);
         this.productRelease = productRelease;
@@ -114,7 +114,7 @@ public class SnmpAgentCapabilities extends SnmpType {
                                    getName() + " type");
         }
         for (int i = 0; i < modules.size(); i++) {
-            ((SnmpModuleSupport) modules.get(i)).initialize(log);
+            modules.get(i).initialize(log);
         }
         return this;
     }
@@ -169,7 +169,7 @@ public class SnmpAgentCapabilities extends SnmpType {
      *
      * @see SnmpModuleSupport
      */
-    public ArrayList getModules() {
+    public ArrayList<SnmpModuleSupport> getModules() {
         return modules;
     }
 
@@ -179,8 +179,7 @@ public class SnmpAgentCapabilities extends SnmpType {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         buffer.append(super.toString());
         buffer.append(" (");
         buffer.append("\n  Product Release: ");

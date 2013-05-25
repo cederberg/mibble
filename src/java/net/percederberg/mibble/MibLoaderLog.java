@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -36,7 +36,7 @@ import net.percederberg.grammatica.parser.ParserLogException;
  * from loading a MIB file and all imports not previously loaded.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.10
  * @since    2.0
  */
 public class MibLoaderLog {
@@ -44,7 +44,7 @@ public class MibLoaderLog {
     /**
      * The log entries.
      */
-    private ArrayList entries = new ArrayList();
+    private ArrayList<LogEntry> entries = new ArrayList<LogEntry>();
 
     /**
      * The log error count.
@@ -171,7 +171,7 @@ public class MibLoaderLog {
      */
     public void addAll(MibLoaderLog log) {
         for (int i = 0; i < log.entries.size(); i++) {
-            add((LogEntry) log.entries.get(i));
+            add(log.entries.get(i));
         }
     }
 
@@ -200,7 +200,7 @@ public class MibLoaderLog {
      *
      * @since 2.2
      */
-    public Iterator entries() {
+    public Iterator<LogEntry> entries() {
         return entries.iterator();
     }
 
@@ -231,12 +231,9 @@ public class MibLoaderLog {
      * @since 2.2
      */
     public void printTo(PrintWriter output, int margin) {
-        StringBuffer  buffer = new StringBuffer();
-        LogEntry      entry;
-        String        str;
-
+        StringBuffer buffer = new StringBuffer();
         for (int i = 0; i < entries.size(); i++) {
-            entry = (LogEntry) entries.get(i);
+            LogEntry entry = entries.get(i);
             buffer.setLength(0);
             switch (entry.getType()) {
             case LogEntry.ERROR:
@@ -256,7 +253,7 @@ public class MibLoaderLog {
                 buffer.append(entry.getLineNumber());
             }
             buffer.append(":\n");
-            str = linebreakString(entry.getMessage(), "    ", margin);
+            String str = linebreakString(entry.getMessage(), "    ", margin);
             buffer.append(str);
             str = entry.readLine();
             if (str != null && str.length() >= entry.getColumnNumber()) {
@@ -288,15 +285,12 @@ public class MibLoaderLog {
      *         the absolute name otherwise
      */
     private String relativeFilename(File file) {
-        String  currentPath;
-        String  filePath;
-
         if (file == null) {
             return "<unknown file>";
         }
         try {
-            currentPath = new File(".").getCanonicalPath();
-            filePath = file.getCanonicalPath();
+            String currentPath = new File(".").getCanonicalPath();
+            String filePath = file.getCanonicalPath();
             if (filePath.startsWith(currentPath)) {
                 filePath = filePath.substring(currentPath.length());
                 if (filePath.charAt(0) == '/'
@@ -327,11 +321,9 @@ public class MibLoaderLog {
      * @return the new formatted string
      */
     private String linebreakString(String str, String prefix, int length) {
-        StringBuffer  buffer = new StringBuffer();
-        int           pos;
-
+        StringBuffer buffer = new StringBuffer();
         while (str.length() + prefix.length() > length) {
-            pos = str.lastIndexOf(' ', length - prefix.length());
+            int pos = str.lastIndexOf(' ', length - prefix.length());
             if (pos < 0) {
                 pos = str.indexOf(' ');
                 if (pos < 0) {
@@ -347,7 +339,6 @@ public class MibLoaderLog {
         buffer.append(str);
         return buffer.toString();
     }
-
 
 
     /**

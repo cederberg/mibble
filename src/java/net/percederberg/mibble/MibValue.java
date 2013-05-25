@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -28,10 +28,10 @@ package net.percederberg.mibble;
  * be used.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.10
  * @since    2.0
  */
-public abstract class MibValue implements Comparable {
+public abstract class MibValue implements Comparable<Object> {
 
     /**
      * The value name.
@@ -141,12 +141,10 @@ public abstract class MibValue implements Comparable {
      * @since 2.2
      */
     public boolean isReferenceTo(String module, String name) {
-        Mib  mib;
-
         if (reference == null) {
             return false;
         }
-        mib = reference.getMib();
+        Mib mib = reference.getMib();
         if (mib.getName().equals(module)
          && reference.getName().equals(name)) {
 

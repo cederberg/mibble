@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -34,7 +34,7 @@ import net.percederberg.mibble.MibValue;
  * @see SnmpAgentCapabilities
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.10
  * @since    2.0
  */
 public class SnmpModuleSupport {
@@ -47,12 +47,12 @@ public class SnmpModuleSupport {
     /**
      * The list of included group values.
      */
-    private ArrayList groups;
+    private ArrayList<MibValue> groups;
 
     /**
      * The list of variations.
      */
-    private ArrayList variations;
+    private ArrayList<SnmpVariation> variations;
 
     /**
      * Creates a new module support declaration.
@@ -62,8 +62,8 @@ public class SnmpModuleSupport {
      * @param variations     the list of variations
      */
     public SnmpModuleSupport(String module,
-                             ArrayList groups,
-                             ArrayList variations) {
+                             ArrayList<MibValue> groups,
+                             ArrayList<SnmpVariation> variations) {
 
         this.module = module;
         this.groups = groups;
@@ -83,16 +83,12 @@ public class SnmpModuleSupport {
      *             initialization
      */
     void initialize(MibLoaderLog log) throws MibException {
-        ArrayList  list = new ArrayList();
-        int        i;
-
-        for (i = 0; i < groups.size(); i++) {
-            list.add(((MibValue) groups.get(i)).initialize(log, null));
+        for (int i = 0; i < groups.size(); i++) {
+            groups.set(i, groups.get(i).initialize(log, null));
         }
-        this.groups = list;
-        for (i = 0; i < variations.size(); i++) {
+        for (int i = 0; i < variations.size(); i++) {
             try {
-                ((SnmpVariation) variations.get(i)).initialize(log);
+                variations.get(i).initialize(log);
             } catch (MibException e) {
                 log.addError(e.getLocation(), e.getMessage());
             }
@@ -117,7 +113,7 @@ public class SnmpModuleSupport {
      *
      * @see net.percederberg.mibble.MibValue
      */
-    public ArrayList getGroups() {
+    public ArrayList<MibValue> getGroups() {
         return groups;
     }
 
@@ -129,7 +125,7 @@ public class SnmpModuleSupport {
      *
      * @see SnmpVariation
      */
-    public ArrayList getVariations() {
+    public ArrayList<SnmpVariation> getVariations() {
         return variations;
     }
 
@@ -139,8 +135,7 @@ public class SnmpModuleSupport {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         if (module != null) {
             buffer.append(module);
         }

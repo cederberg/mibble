@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2009 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.browser;
@@ -69,7 +69,7 @@ import net.percederberg.mibble.MibbleBrowser;
  * The main MIB browser application window (frame).
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.9
+ * @version  2.10
  * @since    2.5
  */
 public class BrowserFrame extends JFrame {
@@ -133,10 +133,8 @@ public class BrowserFrame extends JFrame {
      * @param browser        the browser application
      */
     public BrowserFrame(MibbleBrowser browser) {
-        String   dir;
-
         this.browser = browser;
-        dir = System.getProperty("user.dir");
+        String dir = System.getProperty("user.dir");
         if (dir != null) {
             currentDir = new File(dir);
         }
@@ -147,16 +145,13 @@ public class BrowserFrame extends JFrame {
      * Initializes the frame components.
      */
     private void initialize() {
-        Rectangle           bounds = new Rectangle();
-        Dimension           size;
-        JSplitPane          horizontalSplitPane = new JSplitPane();
-        JSplitPane          verticalSplitPane = new JSplitPane();
         GridBagConstraints  c;
 
         // Set title, size and menus
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setTitle("Mibble MIB Browser");
-        size = Toolkit.getDefaultToolkit().getScreenSize();
+        Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
+        Rectangle bounds = new Rectangle();
         bounds.width = (int) (size.width * 0.75);
         bounds.height = (int) (size.height * 0.75);
         bounds.x = (size.width - bounds.width) / 2;
@@ -167,6 +162,7 @@ public class BrowserFrame extends JFrame {
         getContentPane().setLayout(new GridBagLayout());
 
         // Add horizontal split pane
+        JSplitPane horizontalSplitPane = new JSplitPane();
         horizontalSplitPane.setDividerLocation((int) (bounds.width * 0.35));
         c = new GridBagConstraints();
         c.weightx = 1.0d;
@@ -191,6 +187,7 @@ public class BrowserFrame extends JFrame {
         horizontalSplitPane.setLeftComponent(new JScrollPane(mibTree));
 
         // Add description area & SNMP panel
+        JSplitPane verticalSplitPane = new JSplitPane();
         verticalSplitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         verticalSplitPane.setDividerLocation((int) (bounds.height * 0.40));
         verticalSplitPane.setOneTouchExpandable(true);
@@ -205,9 +202,8 @@ public class BrowserFrame extends JFrame {
      * Initializes the frame menu.
      */
     private void initializeMenu() {
-        Menu              menu;
-        MenuItem          item;
-        CheckboxMenuItem  checkBox;
+        Menu      menu;
+        MenuItem  item;
 
         // Create file menu
         menu = new Menu("File");
@@ -295,7 +291,7 @@ public class BrowserFrame extends JFrame {
         });
         menu.add(snmpV3Item);
         menu.addSeparator();
-        checkBox = new CheckboxMenuItem("Show result in tree");
+        CheckboxMenuItem checkBox = new CheckboxMenuItem("Show result in tree");
         checkBox.setState(true);
         checkBox.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
@@ -327,7 +323,8 @@ public class BrowserFrame extends JFrame {
 
         // Fix Mac OS specific menus
         if (MacUIHelper.IS_MAC_OS) {
-            new MacUIHelper(this);
+            @SuppressWarnings("unused")
+            Object tmp = new MacUIHelper(this);
         }
     }
 
@@ -349,20 +346,15 @@ public class BrowserFrame extends JFrame {
      * Opens the load MIB dialog.
      */
     protected void loadMib() {
-        FileDialog  dialog = new FileDialog(this, "Select MIB File");
-        Loader      loader;
-        String      file;
-        File[]      files;
-
+        FileDialog dialog = new FileDialog(this, "Select MIB File");
         dialog.setDirectory(currentDir.getAbsolutePath());
         dialog.setVisible(true);
-        file = dialog.getFile();
+        String file = dialog.getFile();
         if (file != null) {
-            files = new File[] { new File(dialog.getDirectory(), file) };
+            File[] files = new File[] { new File(dialog.getDirectory(), file) };
             currentDir = files[0].getParentFile();
             descriptionArea.setText("");
-            loader = new Loader(files);
-            loader.start();
+            new Loader(files).start();
         }
     }
 
@@ -372,9 +364,7 @@ public class BrowserFrame extends JFrame {
      * @param src            the MIB file or URL
      */
     public void loadMib(String src) {
-        ByteArrayOutputStream  output;
-        String                 message = null;
-
+        String message = null;
         setStatus("Loading " + src + "...");
         try {
             browser.loadMib(src);
@@ -384,7 +374,7 @@ public class BrowserFrame extends JFrame {
             message = "Failed to load " + src + ": " + e.getMessage();
         } catch (MibLoaderException e) {
             message = "Failed to load " + src;
-            output = new ByteArrayOutputStream();
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
             e.getLog().printTo(new PrintStream(output));
             descriptionArea.append(output.toString());
         }
@@ -401,8 +391,7 @@ public class BrowserFrame extends JFrame {
      * Unloads the MIB file from the currently selected symbol.
      */
     protected void unloadMib() {
-        MibNode  node = getSelectedNode();
-
+        MibNode node = getSelectedNode();
         if (node == null) {
             return;
         }
@@ -475,15 +464,13 @@ public class BrowserFrame extends JFrame {
      * @param oid            the OID to select
      */
     public void setSelectedNode(String oid) {
-        MibNode         node = getSelectedNode();
-        MibValueSymbol  symbol;
-        TreePath        path;
 
         // Find matching symbol
+        MibNode node = getSelectedNode();
         if (node == null || node.getSymbol() == null) {
             return;
         }
-        symbol = node.getSymbol().getMib().getSymbolByOid(oid);
+        MibValueSymbol symbol = node.getSymbol().getMib().getSymbolByOid(oid);
         if (symbol == null) {
             mibTree.clearSelection();
             return;
@@ -491,7 +478,7 @@ public class BrowserFrame extends JFrame {
 
         // Select tree node
         node = MibTreeBuilder.getInstance().getNode(symbol);
-        path = new TreePath(node.getPath());
+        TreePath path = new TreePath(node.getPath());
         mibTree.expandPath(path);
         mibTree.scrollPathToVisible(path);
         mibTree.setSelectionPath(path);
@@ -515,8 +502,7 @@ public class BrowserFrame extends JFrame {
      * Shows the about dialog.
      */
     protected void showAbout() {
-        AboutDialog  dialog = new AboutDialog(this, browser.getBuildInfo());
-
+        AboutDialog dialog = new AboutDialog(this, browser.getBuildInfo());
         dialog.setVisible(true);
     }
 
@@ -524,8 +510,7 @@ public class BrowserFrame extends JFrame {
      * Shows the license dialog.
      */
     protected void showLicense() {
-        LicenseDialog  dialog = new LicenseDialog(this);
-
+        LicenseDialog dialog = new LicenseDialog(this);
         dialog.setVisible(true);
     }
 
@@ -540,8 +525,7 @@ public class BrowserFrame extends JFrame {
      * Updates the tree selection.
      */
     protected void updateTreeSelection() {
-        MibNode  node = getSelectedNode();
-
+        MibNode node = getSelectedNode();
         if (node == null) {
             descriptionArea.setText("");
         } else {
@@ -577,11 +561,8 @@ public class BrowserFrame extends JFrame {
          * Starts the background loading thread.
          */
         public void start() {
-            Thread  thread;
-
             if (files.length > 0) {
-                thread = new Thread(this);
-                thread.start();
+                new Thread(this).start();
             }
         }
 

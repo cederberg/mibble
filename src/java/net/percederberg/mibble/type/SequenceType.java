@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -35,7 +35,7 @@ import net.percederberg.mibble.MibValue;
  * struct.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.2
+ * @version  2.10
  * @since    2.0
  */
 public class SequenceType extends MibType {
@@ -43,14 +43,14 @@ public class SequenceType extends MibType {
     /**
      * The sequence elements.
      */
-    private ArrayList elements;
+    private ArrayList<ElementType> elements;
 
     /**
      * Creates a new sequence MIB type.
      *
      * @param elements       the list of element types
      */
-    public SequenceType(ArrayList elements) {
+    public SequenceType(ArrayList<ElementType> elements) {
         this(true, elements);
     }
 
@@ -60,7 +60,7 @@ public class SequenceType extends MibType {
      * @param primitive      the primitive type flag
      * @param elements       the list of element types
      */
-    private SequenceType(boolean primitive, ArrayList elements) {
+    private SequenceType(boolean primitive, ArrayList<ElementType> elements) {
         super("SEQUENCE", primitive);
         this.elements = elements;
         setTag(true, MibTypeTag.SEQUENCE);
@@ -89,11 +89,8 @@ public class SequenceType extends MibType {
     public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
-        ElementType  elem;
-
         for (int i = 0; i < elements.size(); i++) {
-            elem = (ElementType) elements.get(i);
-            elem.initialize(symbol, log);
+            elements.get(i).initialize(symbol, log);
         }
         return this;
     }
@@ -112,8 +109,7 @@ public class SequenceType extends MibType {
      * @since 2.2
      */
     public MibType createReference() {
-        SequenceType  type = new SequenceType(false, elements);
-
+        SequenceType type = new SequenceType(false, elements);
         type.setTag(true, getTag());
         return type;
     }
@@ -141,11 +137,8 @@ public class SequenceType extends MibType {
      * @since 2.2
      */
     public ElementType[] getAllElements() {
-        ElementType[]  res;
-
-        res = new ElementType[elements.size()];
-        elements.toArray(res);
-        return res;
+        ElementType[] res = new ElementType[elements.size()];
+        return elements.toArray(res);
     }
 
     /**

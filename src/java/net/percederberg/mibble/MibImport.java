@@ -16,20 +16,19 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 /**
  * A MIB import list. This class contains a referenc to another MIB
  * and a number of symbols in it.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.10
  * @since    2.6
  */
 public class MibImport implements MibContext {
@@ -57,7 +56,7 @@ public class MibImport implements MibContext {
     /**
      * The imported MIB symbol names.
      */
-    private ArrayList symbols;
+    private List<String> symbols;
 
     /**
      * Creates a new MIB import.
@@ -71,7 +70,7 @@ public class MibImport implements MibContext {
     MibImport(MibLoader loader,
               FileLocation location,
               String name,
-              ArrayList symbols) {
+              List<String> symbols) {
 
         this.loader = loader;
         this.location = location;
@@ -89,19 +88,17 @@ public class MibImport implements MibContext {
      *             initialization
      */
     public void initialize(MibLoaderLog log) throws MibException {
-        String  message;
-
         mib = loader.getMib(name);
         if (mib == null) {
-            message = "couldn't find referenced MIB '" + name + "'";
-            throw new MibException(location, message);
+            String msg = "couldn't find referenced MIB '" + name + "'";
+            throw new MibException(location, msg);
         }
         if (symbols != null) {
             for (int i = 0; i < symbols.size(); i++) {
                 if (mib.getSymbol(symbols.get(i).toString()) == null) {
-                    message = "couldn't find imported symbol '" +
-                              symbols.get(i) + "' in MIB '" + name + "'";
-                    throw new MibException(location, message);
+                    String msg = "couldn't find imported symbol '" +
+                                 symbols.get(i) + "' in MIB '" + name + "'";
+                    throw new MibException(location, msg);
                 }
             }
         }
@@ -140,7 +137,7 @@ public class MibImport implements MibContext {
      *
      * @return a collection of the imported MIB symbol names
      */
-    public Collection getAllSymbolNames() {
+    public List<String> getAllSymbolNames() {
         return symbols;
     }
 

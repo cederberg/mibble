@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2005 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -38,7 +38,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.6
+ * @version  2.10
  * @since    2.0
  */
 public class SnmpModuleIdentity extends SnmpType {
@@ -61,7 +61,7 @@ public class SnmpModuleIdentity extends SnmpType {
     /**
      * The list of SNMP revision objects.
      */
-    private ArrayList revisions;
+    private ArrayList<SnmpRevision> revisions;
 
     /**
      * Creates a new SNMP module identity.
@@ -76,7 +76,7 @@ public class SnmpModuleIdentity extends SnmpType {
                               String organization,
                               String contactInfo,
                               String description,
-                              ArrayList revisions) {
+                              ArrayList<SnmpRevision> revisions) {
 
         super("MODULE-IDENTITY", description);
         this.lastUpdated = lastUpdated;
@@ -108,16 +108,13 @@ public class SnmpModuleIdentity extends SnmpType {
     public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
-        SnmpRevision  rev;
-
         if (!(symbol instanceof MibValueSymbol)) {
             throw new MibException(symbol.getLocation(),
                                    "only values can have the " +
                                    getName() + " type");
         }
         for (int i = 0; i < revisions.size(); i++) {
-            rev = (SnmpRevision) revisions.get(i);
-            rev.initialize(log);
+            revisions.get(i).initialize(log);
         }
         return this;
     }
@@ -190,7 +187,7 @@ public class SnmpModuleIdentity extends SnmpType {
      *
      * @see SnmpRevision
      */
-    public ArrayList getRevisions() {
+    public ArrayList<SnmpRevision> getRevisions() {
         return revisions;
     }
 
@@ -200,8 +197,7 @@ public class SnmpModuleIdentity extends SnmpType {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         buffer.append(super.toString());
         buffer.append(" (");
         buffer.append("\n  Last Updated: ");

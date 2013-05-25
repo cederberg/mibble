@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -39,7 +39,7 @@ import net.percederberg.mibble.type.Constraint;
  * @see <a href="http://www.ietf.org/rfc/rfc2579.txt">RFC 2579 (SNMPv2-TC)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.10
  * @since    2.0
  */
 public class SnmpTextualConvention extends SnmpType implements MibContext {
@@ -203,7 +203,7 @@ public class SnmpTextualConvention extends SnmpType implements MibContext {
      *
      * @since 2.2
      */
-    public MibType createReference(ArrayList values)
+    public MibType createReference(ArrayList<?> values)
         throws UnsupportedOperationException {
 
         return syntax.createReference(values);
@@ -293,8 +293,7 @@ public class SnmpTextualConvention extends SnmpType implements MibContext {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         buffer.append(super.toString());
         buffer.append(" (");
         if (displayHint != null) {

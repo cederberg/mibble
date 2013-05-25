@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2008 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -38,7 +38,7 @@ import java.util.ArrayList;
  * failures as its exit code.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.9
+ * @version  2.10
  * @since    2.0
  */
 public class MibbleValidator {
@@ -67,25 +67,19 @@ public class MibbleValidator {
      * @param args           the command-line parameters
      */
     public static void main(String[] args) {
-        MibLoader  loader = new MibLoader();
-        Mib        mib;
-        ArrayList  queue = new ArrayList();
-        File       file;
-        Object     src;
-        int        errors = 0;
-        int        warnings = 0;
 
         // Check command-line arguments
         if (args.length < 1) {
             printHelp("No file(s) specified");
             System.exit(1);
         }
+        ArrayList<Object> queue = new ArrayList<Object>();
         for (int i = 0; i < args.length; i++) {
             try {
                 if (args[0].contains(":")) {
                     queue.add(new URL(args[0]));
                 } else {
-                    file = new File(args[i]);
+                    File file = new File(args[i]);
                     if (!file.exists()) {
                         System.out.println("Warning: Skipping " + args[i] +
                                            ": file not found");
@@ -102,8 +96,11 @@ public class MibbleValidator {
         }
 
         // Parse MIB files
+        MibLoader loader = new MibLoader();
+        int errors = 0;
+        int warnings = 0;
         for (int i = 0; i < queue.size(); i++) {
-            src = queue.get(i);
+            Object src = queue.get(i);
             System.out.print(i);
             System.out.print("/");
             System.out.print(queue.size());
@@ -111,11 +108,12 @@ public class MibbleValidator {
             System.out.flush();
             try {
                 loader.unloadAll();
+                Mib mib = null;
                 if (src instanceof URL) {
                     loader.removeAllDirs();
                     mib = loader.load((URL) src);
                 } else {
-                    file = (File) src;
+                    File file = (File) src;
                     if (!loader.hasDir(file.getParentFile())) {
                         loader.removeAllDirs();
                         loader.addDir(file.getParentFile());
@@ -194,8 +192,7 @@ public class MibbleValidator {
      * @param e              the detailed exception
      */
     private static void printError(String file, FileNotFoundException e) {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         buffer.append("Error: couldn't open file:");
         buffer.append("\n    ");
         buffer.append(file);
@@ -209,8 +206,7 @@ public class MibbleValidator {
      * @param e              the detailed exception
      */
     private static void printError(String url, IOException e) {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         buffer.append("Error: couldn't open URL:");
         buffer.append("\n    ");
         buffer.append(url);
@@ -225,9 +221,8 @@ public class MibbleValidator {
      *
      * @since 2.9
      */
-    private static void addMibs(File dir, ArrayList queue) {
-        File[]  files = dir.listFiles();
-
+    private static void addMibs(File dir, ArrayList<Object> queue) {
+        File[] files = dir.listFiles();
         for (int i = 0; i < files.length; i++) {
             if (files[i].isHidden()) {
                 // Hidden file or directories are ignored
@@ -250,16 +245,15 @@ public class MibbleValidator {
      * @since 2.9
      */
     private static boolean isMib(File file) {
-        BufferedReader  in = null;
-        StringBuffer    buffer = new StringBuffer();
-        String          str;
-        int             line = 0;
-
         if (!file.canRead() || !file.isFile()) {
             return false;
         }
+        StringBuffer buffer = new StringBuffer();
+        BufferedReader in = null;
         try {
             in = new BufferedReader(new FileReader(file));
+            String str;
+            int line = 0;
             while (line++ < 100 && (str = in.readLine()) != null) {
                 buffer.append(str);
             }

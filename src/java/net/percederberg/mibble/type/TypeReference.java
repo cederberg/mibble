@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -42,7 +42,7 @@ import net.percederberg.mibble.MibValue;
  * <strong>NOT</strong> use or reference this class.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.10
  * @since    2.0
  */
 public class TypeReference extends MibType implements MibContext {
@@ -75,7 +75,7 @@ public class TypeReference extends MibType implements MibContext {
     /**
      * The additional defined symbols.
      */
-    private ArrayList values = null;
+    private ArrayList<?> values = null;
 
     /**
      * The MIB type tag to set on the referenced type.
@@ -132,7 +132,7 @@ public class TypeReference extends MibType implements MibContext {
     public TypeReference(FileLocation location,
                          MibContext context,
                          String name,
-                         ArrayList values) {
+                         ArrayList<?> values) {
 
         this(location, context, name);
         this.values = values;
@@ -161,24 +161,21 @@ public class TypeReference extends MibType implements MibContext {
     public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
-        MibSymbol  sym;
-        String     message;
-
-        sym = getSymbol(log);
+        MibSymbol sym = getSymbol(log);
         if (sym instanceof MibTypeSymbol) {
             type = initializeReference(symbol, log, (MibTypeSymbol) sym);
             if (type == null) {
-                message = "referenced symbol '" + sym.getName() +
-                          "' contains undefined type";
-                throw new MibException(location, message);
+                String msg = "referenced symbol '" + sym.getName() +
+                             "' contains undefined type";
+                throw new MibException(location, msg);
             }
             return type;
         } else if (sym == null) {
-            message = "undefined symbol '" + name + "'";
-            throw new MibException(location, message);
+            String msg = "undefined symbol '" + name + "'";
+            throw new MibException(location, msg);
         } else {
-            message = "referenced symbol '" + name + "' is not a type";
-            throw new MibException(location, message);
+            String msg = "referenced symbol '" + name + "' is not a type";
+            throw new MibException(location, msg);
         }
     }
 
@@ -203,8 +200,7 @@ public class TypeReference extends MibType implements MibContext {
                                         MibTypeSymbol ref)
         throws MibException {
 
-        MibType  type = ref.getType();
-
+        MibType type = ref.getType();
         if (type != null) {
             type = type.initialize(symbol, log);
         }
@@ -274,14 +270,11 @@ public class TypeReference extends MibType implements MibContext {
      * @return the referenced symbol
      */
     private MibSymbol getSymbol(MibLoaderLog log) {
-        MibSymbol  sym;
-        String     message;
-
-        sym = context.findSymbol(name, false);
+        MibSymbol sym = context.findSymbol(name, false);
         if (sym == null) {
             sym = context.findSymbol(name, true);
             if (sym != null && log != null) {
-                message = "missing import for '" + name + "', using " +
+                String message = "missing import for '" + name + "', using " +
                           sym.getMib().getName();
                 log.addWarning(location, message);
             }

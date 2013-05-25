@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2005-2007 Per Cederberg. All rights reserved.
+ * Copyright (c) 2005-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -26,8 +26,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import net.percederberg.mibble.snmp.SnmpAgentCapabilities;
 import net.percederberg.mibble.snmp.SnmpCompliance;
@@ -65,7 +65,7 @@ import net.percederberg.mibble.value.StringValue;
  * translation).
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.9
+ * @version  2.10
  * @since    2.6
  */
 public class MibWriter {
@@ -134,9 +134,6 @@ public class MibWriter {
      * @param mib            the MIB to print
      */
     public void print(Mib mib) {
-        Collection  coll;
-        Iterator    iter;
-
         printComment(mib.getHeaderComment(), "", true);
         if (mib.getHeaderComment() != null) {
             os.println();
@@ -144,12 +141,12 @@ public class MibWriter {
         os.print(mib.getName());
         os.println(" DEFINITIONS ::= BEGIN");
         os.println();
-        coll = mib.getAllImports();
-        if (coll.size() > 0) {
+        List<MibImport> imps = mib.getAllImports();
+        if (imps.size() > 0) {
             os.println("IMPORTS");
-            iter = coll.iterator();
+            Iterator<MibImport> iter = imps.iterator();
             while (iter.hasNext()) {
-                printImport((MibImport) iter.next());
+                printImport(iter.next());
                 if (iter.hasNext()) {
                     os.println();
                 }
@@ -157,9 +154,9 @@ public class MibWriter {
             os.println(";");
             os.println();
         }
-        iter = mib.getAllSymbols().iterator();
+        Iterator<MibSymbol> iter = mib.getAllSymbols().iterator();
         while (iter.hasNext()) {
-            printSymbol((MibSymbol) iter.next(), mib.getSmiVersion());
+            printSymbol(iter.next(), mib.getSmiVersion());
         }
         os.println("END");
         printComment(mib.getFooterComment(), "", true);
@@ -175,14 +172,12 @@ public class MibWriter {
      * @param header         the header comment flag
      */
     private void printComment(String comment, String indent, boolean header) {
-        int  pos;
-
         if (comment != null) {
             if (header) {
                 printIndent(indent + "-- ", comment);
                 os.println();
             } else if (comment.indexOf("\n") >= 0) {
-                pos = comment.indexOf("\n");
+                int pos = comment.indexOf("\n");
                 os.print(" -- ");
                 os.print(comment.substring(0, pos));
                 os.println();
@@ -200,13 +195,10 @@ public class MibWriter {
      * @param imp            the MIB import
      */
     private void printImport(MibImport imp) {
-        Iterator  iter;
-        String    str;
-        int       pos = 0;
-
-        iter = imp.getAllSymbolNames().iterator();
+        Iterator<String> iter = imp.getAllSymbolNames().iterator();
         while (iter.hasNext()) {
-            str = iter.next().toString();
+            String str = iter.next().toString();
+            int pos = 0;
             if (pos <= 0) {
                 pos = str.length();
                 os.print("    ");
@@ -258,22 +250,16 @@ public class MibWriter {
      * @param smiVersion     the SMI version to use
      */
     private void printType(MibType type, String indent, int smiVersion) {
-        MibType         refType;
-        Constraint      refCons;
-        Constraint      typeCons;
-        SequenceType    seqType;
-        SequenceOfType  seqOfType;
-
         if (type.getReferenceSymbol() != null) {
             os.print(type.getReferenceSymbol().getName());
-            refType = type.getReferenceSymbol().getType();
-            refCons = getConstraint(refType);
-            typeCons = getConstraint(type);
+            MibType refType = type.getReferenceSymbol().getType();
+            Constraint refCons = getConstraint(refType);
+            Constraint typeCons = getConstraint(type);
             if (typeCons != null && typeCons != refCons) {
                 printConstraint(type, indent);
             }
         } else if (type instanceof SequenceType) {            
-            seqType = (SequenceType) type;
+            SequenceType seqType = (SequenceType) type;
             os.println("SEQUENCE {");
             printTypeElements(seqType.getAllElements(),
                               indent + "    ",
@@ -282,7 +268,7 @@ public class MibWriter {
             os.print(indent);
             os.print("}");
         } else if (type instanceof SequenceOfType) {            
-            seqOfType = (SequenceOfType) type;
+            SequenceOfType seqOfType = (SequenceOfType) type;
             os.print("SEQUENCE ");
             if (seqOfType.getConstraint() != null) {
                  os.print("(");
@@ -335,9 +321,6 @@ public class MibWriter {
      * @param indent         the indentation to use on new lines
      */
     private void printType(SnmpModuleIdentity type, String indent) {
-        ArrayList     list;
-        SnmpRevision  rev;
-
         os.println("MODULE-IDENTITY");
         os.print("    LAST-UPDATED    ");
         os.println(getQuote(type.getLastUpdated()));
@@ -347,9 +330,9 @@ public class MibWriter {
         printIndent("            ", getQuote(type.getContactInfo()));
         os.println();
         printDescription(type.getDescription());
-        list = type.getRevisions();
+        ArrayList<SnmpRevision> list = type.getRevisions();
         for (int i = 0; i < list.size(); i++) {
-            rev = (SnmpRevision) list.get(i);
+            SnmpRevision rev = list.get(i);
             os.println();
             if (rev.getComment() != null) {
                 os.println();
@@ -568,9 +551,6 @@ public class MibWriter {
                            String indent,
                            int smiVersion) {
 
-        SnmpModule  module;
-        ArrayList   list;
-
         os.println("MODULE-COMPLIANCE");
         os.print("    STATUS          ");
         os.println(type.getStatus());
@@ -581,7 +561,7 @@ public class MibWriter {
             os.print(getQuote(type.getReference()));
         }
         for (int i = 0; i < type.getModules().size(); i++) {
-            module = (SnmpModule) type.getModules().get(i);
+            SnmpModule module = type.getModules().get(i);
             os.println();
             printComment(module.getComment(), "    ", true);
             os.print("    MODULE          ");
@@ -596,12 +576,11 @@ public class MibWriter {
                 printReferenceList(module.getGroups(),
                                    "                    ");
             }
-            list = module.getCompliances();
+            ArrayList<SnmpCompliance> list = module.getCompliances();
             for (int j = 0; j < list.size(); j++) {
                 os.println();
                 os.println();
-                printModuleCompliance((SnmpCompliance) list.get(j),
-                                      smiVersion);
+                printModuleCompliance(list.get(j), smiVersion);
             }
         }
     }
@@ -617,9 +596,6 @@ public class MibWriter {
                            String indent,
                            int smiVersion) {
 
-        SnmpModuleSupport  module;
-        ArrayList          list;
-
         os.println("AGENT-CAPABILITIES");
         os.print("    PRODUCT-RELEASE ");
         os.println(getQuote(type.getProductRelease()));
@@ -632,18 +608,18 @@ public class MibWriter {
             os.print(getQuote(type.getReference()));
         }
         for (int i = 0; i < type.getModules().size(); i++) {
-            module = (SnmpModuleSupport) type.getModules().get(i);
+            SnmpModuleSupport module = type.getModules().get(i);
             os.println();
             os.print("    SUPPORTS        ");
             os.println(module.getModule());
             os.print("    INCLUDES        ");
             printReferenceList(module.getGroups(),
                                "                    ");
-            list = module.getVariations();
+            ArrayList<SnmpVariation> list = module.getVariations();
             for (int j = 0; j < list.size(); j++) {
                 os.println();
                 os.println();
-                printVariation((SnmpVariation) list.get(j), smiVersion);
+                printVariation(list.get(j), smiVersion);
             }
         }
     }
@@ -757,19 +733,17 @@ public class MibWriter {
                                    String indent,
                                    int smiVersion) {
 
-        int     column = 20;
-        String  typeIndent = indent;
-        int     i;
-
-        for (i = 0; i < elems.length; i++) {
+        int column = 20;
+        for (int i = 0; i < elems.length; i++) {
             if (elems[i].getName().length() + 2 > column) {
                 column = elems[i].getName().length() + 2;
             }
         }
-        for (i = 0; i < column; i++) {
+        String typeIndent = indent;
+        for (int i = 0; i < column; i++) {
             typeIndent += " ";
         }
-        for (i = 0; i < elems.length; i++) {
+        for (int i = 0; i < elems.length; i++) {
             if (i > 0) {
                 os.println(",");
             }
@@ -791,12 +765,8 @@ public class MibWriter {
      * @param indent         the indentation to use
      */
     private void printConstraint(MibType type, String indent) {
-        IntegerType     intType;
-        BitSetType      bitType;
-        StringType      strType;
-
         if (type instanceof IntegerType) {
-            intType = (IntegerType) type;
+            IntegerType intType = (IntegerType) type;
             if (intType.hasSymbols()) {
                 os.println(" {");
                 printEnumeration(intType.getAllSymbols(),
@@ -810,7 +780,7 @@ public class MibWriter {
                 os.print(")");
             }
         } else if (type instanceof BitSetType) {
-            bitType = (BitSetType) type;
+            BitSetType bitType = (BitSetType) type;
             if (bitType.hasSymbols()) {
                 os.println(" {");
                 printEnumeration(bitType.getAllSymbols(),
@@ -824,7 +794,7 @@ public class MibWriter {
                 os.print(")");
             }
         } else if (type instanceof StringType) {
-            strType = (StringType) type;
+            StringType strType = (StringType) type;
             if (strType.hasConstraint()) {
                 os.print(" (");
                 os.print(strType.getConstraint());
@@ -910,7 +880,7 @@ public class MibWriter {
      * @param list           the list of type or value objects
      * @param indent         the indentation to use
      */
-    private void printReferenceList(ArrayList list, String indent) {
+    private void printReferenceList(ArrayList<?> list, String indent) {
         if (list.size() == 1) {
             printReference(list.get(0));
         } else {
@@ -937,15 +907,13 @@ public class MibWriter {
      * @param obj            the type or value object
      */
     private void printReferenceEntry(Object obj) {
-        ObjectIdentifierValue  oid;
-
         if (obj instanceof SnmpIndex) {
             if (((SnmpIndex) obj).isImplied()) {
                 os.print("IMPLIED ");
             }
             printReferenceEntry(((SnmpIndex) obj).getTypeOrValue());
         } else if (obj instanceof ObjectIdentifierValue) {
-            oid = (ObjectIdentifierValue) obj;
+            ObjectIdentifierValue oid = (ObjectIdentifierValue) obj;
             if (oid.getSymbol() != null) {
                 os.print(oid.getSymbol().getName());
             } else {
@@ -968,11 +936,10 @@ public class MibWriter {
      * @param str            the string to print
      */
     private void printIndent(String indent, String str) {
-        int  pos;
-
         if (margin > 0) {
             str = reflow(str, margin - indent.length());
         }
+        int pos = -1;
         while (str != null && (pos = str.indexOf('\n')) >= 0) {
             if (pos == 0) {
                 os.println();
@@ -1001,14 +968,11 @@ public class MibWriter {
      * @return the reformatted string
      */
     private String reflow(String str, int maxLen) {
-        StringBuffer  src = new StringBuffer(str);
-        StringBuffer  res = new StringBuffer();
-        int           pos;
-        boolean       fillNext = false;
-        int           temp;
-
+        StringBuffer src = new StringBuffer(str);
+        StringBuffer res = new StringBuffer();
         while (src.length() > 0) {
-            pos = src.indexOf("\n");
+            int pos = src.indexOf("\n");
+            boolean fillNext = false;
             if (fillNext && pos > 0) {
                 fillNext = false;
                 src.setCharAt(pos, ' ');
@@ -1022,7 +986,7 @@ public class MibWriter {
                     pos = src.length();
                 }
                 while (pos > maxLen) {
-                    temp = src.lastIndexOf(" ", pos - 1);
+                    int temp = src.lastIndexOf(" ", pos - 1);
                     if (temp < 0) {
                         break;
                     }
@@ -1097,8 +1061,7 @@ public class MibWriter {
      * @return a correct ASN.1 string syntax
      */
     private String getQuote(String str) {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         buffer.append('"');
         for (int i = 0; i < str.length(); i++) {
             if (str.charAt(i) == '"') {

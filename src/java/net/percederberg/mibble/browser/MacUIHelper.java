@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2009 Per Cederberg. All rights reserved.
+ * Copyright (c) 2009-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.browser;
@@ -30,7 +30,7 @@ import java.lang.reflect.Proxy;
  * reflection in order to be compilable everywhere.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.9
+ * @version  2.10
  * @since    2.9
  */
 class MacUIHelper implements InvocationHandler {
@@ -55,19 +55,12 @@ class MacUIHelper implements InvocationHandler {
      * @param frame          the main application frame
      */
     public MacUIHelper(BrowserFrame frame) {
-        ClassLoader  cl = getClass().getClassLoader();
-        Class        appCls;
-        Class        lstnCls;
-        Object       app;
-        Method       method;
-        Object       proxy;
-
         this.frame = frame;
         try {
-            appCls = Class.forName("com.apple.eawt.Application");
-            lstnCls = Class.forName("com.apple.eawt.ApplicationListener");
-            method = appCls.getMethod("getApplication", new Class[] {});
-            app = method.invoke(null, new Object[] {});
+            Class<?> appCls = Class.forName("com.apple.eawt.Application");
+            Class<?> lstnCls = Class.forName("com.apple.eawt.ApplicationListener");
+            Method method = appCls.getMethod("getApplication", new Class[] {});
+            Object app = method.invoke(null, new Object[] {});
             method = appCls.getMethod("addAboutMenuItem", new Class[] {});
             method.invoke(app, new Object[] {});
             method = appCls.getMethod("removePreferencesMenuItem",
@@ -75,7 +68,8 @@ class MacUIHelper implements InvocationHandler {
             method.invoke(app, new Object[] {});
             method = appCls.getMethod("addApplicationListener",
                                       new Class[] { lstnCls });
-            proxy = Proxy.newProxyInstance(cl, new Class[] { lstnCls }, this);
+            ClassLoader cl = getClass().getClassLoader();
+            Object proxy = Proxy.newProxyInstance(cl, new Class[] { lstnCls }, this);
             method.invoke(app, new Object[] { proxy });
         } catch (Exception e) {
             System.err.println("Failed to initialize Mac OS Application:");
@@ -93,7 +87,7 @@ class MacUIHelper implements InvocationHandler {
      *
      * @return the call response
      */
-    public Object invoke(Object p, Method m, Object[] args) throws Throwable {
+    public Object invoke(Object p, Method m, Object[] args) {
         if (m.getName().equals("handleAbout")) {
             setHandled(args[0]);
             frame.showAbout();
@@ -110,11 +104,9 @@ class MacUIHelper implements InvocationHandler {
      * @param event          the event object instance
      */
     private void setHandled(Object event) {
-        Class   cls = event.getClass();
-        Method  method;
-
         try {
-            method = cls.getMethod("setHandled", new Class[] { boolean.class });
+            Class<?> cls = event.getClass();
+            Method method = cls.getMethod("setHandled", new Class[] { boolean.class });
             method.invoke(event, new Object[] { Boolean.TRUE });
         } catch (Exception e) {
             System.err.println("Failed to invoke ApplicationEvent.setHandled(true):");

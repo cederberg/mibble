@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -40,7 +40,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.10
  * @since    2.0
  */
 public class SnmpNotificationType extends SnmpType {
@@ -48,7 +48,7 @@ public class SnmpNotificationType extends SnmpType {
     /**
      * The value objects.
      */
-    private ArrayList objects;
+    private ArrayList<MibValue> objects;
 
     /**
      * The notification type status.
@@ -68,7 +68,7 @@ public class SnmpNotificationType extends SnmpType {
      * @param description    the notification type description
      * @param reference      the notification type reference, or null
      */
-    public SnmpNotificationType(ArrayList objects,
+    public SnmpNotificationType(ArrayList<MibValue> objects,
                                 SnmpStatus status,
                                 String description,
                                 String reference) {
@@ -102,19 +102,14 @@ public class SnmpNotificationType extends SnmpType {
     public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
-        ArrayList  list = new ArrayList();
-        MibValue   value;
-
         if (!(symbol instanceof MibValueSymbol)) {
             throw new MibException(symbol.getLocation(),
                                    "only values can have the " +
                                    getName() + " type");
         }
         for (int i = 0; i < objects.size(); i++) {
-            value = (MibValue) objects.get(i);
-            list.add(value.initialize(log, null));
+            objects.set(i, objects.get(i).initialize(log, null));
         }
-        this.objects = list;
         return this;
     }
 
@@ -140,7 +135,7 @@ public class SnmpNotificationType extends SnmpType {
      *
      * @see net.percederberg.mibble.MibValue
      */
-    public ArrayList getObjects() {
+    public ArrayList<MibValue> getObjects() {
         return objects;
     }
 
@@ -169,8 +164,7 @@ public class SnmpNotificationType extends SnmpType {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         buffer.append(super.toString());
         buffer.append(" (");
         buffer.append("\n  Objects: ");

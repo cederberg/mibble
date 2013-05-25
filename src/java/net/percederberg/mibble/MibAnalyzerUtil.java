@@ -16,13 +16,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2007 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 
 import net.percederberg.grammatica.parser.Node;
 import net.percederberg.grammatica.parser.Production;
@@ -33,18 +33,18 @@ import net.percederberg.mibble.asn1.Asn1Constants;
  * Helper and utility functions for the MIB file analyzer.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.9
+ * @version  2.10
  * @since    2.9
  */
 class MibAnalyzerUtil {
 
     /**
-     * An internal hash map containing all the used comment tokens.
+     * An internal hash set containing all the used comment tokens.
      * When a comment string is returned by the getComments() method,
-     * the corresponding tokens will be added to this hash map and
-     * not returned on subsequent calls.
+     * the corresponding tokens will be added to this set and not
+     * returned on subsequent calls.
      */
-    private static HashMap commentTokens = new HashMap();
+    private static HashSet<Token> commentTokens = new HashSet<Token>();
 
     /**
      * Checks if a node corresponds to a bit value. This method is
@@ -87,11 +87,8 @@ class MibAnalyzerUtil {
      *         null if no comments were found
      */
     static String getComments(Node node) {
-        String  comment = "";
-        String  str;
-        Token   token;
-
-        str = getCommentsBefore(node);
+        String comment = "";
+        String str = getCommentsBefore(node);
         if (str != null) {
             comment = str;
         }
@@ -102,7 +99,7 @@ class MibAnalyzerUtil {
             }
             comment += str;
         }
-        token = getCommentTokenSameLine(node);
+        Token token = getCommentTokenSameLine(node);
         if (token != null) {
             if (comment.length() > 0) {
                 comment += "\n\n";
@@ -125,8 +122,7 @@ class MibAnalyzerUtil {
      *         null if no comments were found
      */
     static String getCommentsFooter(Node node) {
-        String  comment = getCommentsAfter(node);
-
+        String comment = getCommentsAfter(node);
         commentTokens.clear();
         return comment;
     }
@@ -142,31 +138,29 @@ class MibAnalyzerUtil {
      *         null if no comments were found
      */
     private static String getCommentsBefore(Node node) {
-        Token         token = getFirstToken(node);
-        ArrayList     comments = new ArrayList();
-        StringBuffer  buffer = new StringBuffer();
-        String        res = "";
-
+        Token token = getFirstToken(node);
         if (token != null) {
             token = token.getPreviousToken();
         }
+        ArrayList<String> comments = new ArrayList<String>();
         while (token != null) {
             if (token.getId() == Asn1Constants.WHITESPACE) {
                 comments.add(getLineBreaks(token.getImage()));
             } else if (token.getId() == Asn1Constants.COMMENT &&
-                       !commentTokens.containsKey(token)) {
+                       !commentTokens.contains(token)) {
 
-                commentTokens.put(token, null);
+                commentTokens.add(token);
                 comments.add(token.getImage().substring(2).trim());
             } else {
                 break;
             }
             token = token.getPreviousToken();
         }
+        StringBuffer buffer = new StringBuffer();
         for (int i = comments.size() - 1; i >= 0; i--) {
             buffer.append(comments.get(i));
         }
-        res = buffer.toString().trim();
+        String res = buffer.toString().trim();
         return res.length() <= 0 ? null : res;
     }
 
@@ -181,27 +175,25 @@ class MibAnalyzerUtil {
      *         null if no comments were found
      */
     private static String getCommentsAfter(Node node) {
-        Token         token = getLastToken(node);
-        StringBuffer  comment = new StringBuffer();
-        String        res;
-
+        Token token = getLastToken(node);
         if (token != null) {
             token = token.getNextToken();
         }
+        StringBuffer comment = new StringBuffer();
         while (token != null) {
             if (token.getId() == Asn1Constants.WHITESPACE) {
                 comment.append(getLineBreaks(token.getImage()));
             } else if (token.getId() == Asn1Constants.COMMENT &&
-                       !commentTokens.containsKey(token)) {
+                       !commentTokens.contains(token)) {
 
-                commentTokens.put(token, null);
+                commentTokens.add(token);
                 comment.append(token.getImage().substring(2).trim());
             } else {
                 break;
             }
             token = token.getNextToken();
         }
-        res = comment.toString().trim();
+        String res = comment.toString().trim();
         return res.length() <= 0 ? null : res;
     }
 
@@ -216,22 +208,20 @@ class MibAnalyzerUtil {
      *         null if no comments were found
      */
     private static String getCommentsInside(Node node) {
-        Token         token = getFirstToken(node);
-        Token         last = getLastToken(node);
-        StringBuffer  comment = new StringBuffer();
-        String        res;
-
+        StringBuffer comment = new StringBuffer();
+        Token token = getFirstToken(node);
+        Token last = getLastToken(node);
         while (token != null && token != last) {
             if (token.getId() == Asn1Constants.COMMENT &&
-                !commentTokens.containsKey(token)) {
+                !commentTokens.contains(token)) {
 
-                commentTokens.put(token, null);
+                commentTokens.add(token);
                 comment.append(token.getImage().substring(2).trim());
                 comment.append("\n");
             }
             token = token.getNextToken();
         }
-        res = comment.toString().trim();
+        String res = comment.toString().trim();
         return res.length() <= 0 ? null : res;
     }
 
@@ -243,13 +233,11 @@ class MibAnalyzerUtil {
      * @return the first comment token on the same line
      */
     private static Token getCommentTokenSameLine(Node node) {
-        Token  last = getLastToken(node);
-        Token  token;
-
+        Token last = getLastToken(node);
         if (last == null) {
             return null;
         }
-        token = last.getNextToken();
+        Token token = last.getNextToken();
         while (token != null) {
             switch (token.getId()) {
             case Asn1Constants.WHITESPACE:
@@ -309,8 +297,7 @@ class MibAnalyzerUtil {
      * @return a string containing zero or more line breaks
      */
     private static String getLineBreaks(String str) {
-        StringBuffer  res = new StringBuffer();
-
+        StringBuffer res = new StringBuffer();
         if (str == null) {
             return null;
         }

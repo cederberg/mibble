@@ -16,15 +16,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 import net.percederberg.mibble.value.NumberValue;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
@@ -37,7 +37,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * {@link MibLoader MIB loader}.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.10
  * @since    2.0
  *
  * @see <a href="http://www.ietf.org/rfc/rfc3411.txt">RFC 3411 - An
@@ -90,19 +90,19 @@ public class Mib implements MibContext {
     /**
      * The references to imported MIB files.
      */
-    private ArrayList imports = new ArrayList();
+    private ArrayList<MibImport> imports = new ArrayList<MibImport>();
 
     /**
      * The MIB symbol list. This list contains the MIB symbol objects
      * in the order they were added (i.e. present in the file).
      */
-    private ArrayList symbolList = new ArrayList();
+    private ArrayList<MibSymbol> symbolList = new ArrayList<MibSymbol>();
 
     /**
      * The MIB symbol name map. This maps the symbol names to their
      * respective MIB symbol objects.
      */
-    private HashMap symbolNameMap = new HashMap();
+    private HashMap<String,MibSymbol> symbolNameMap = new HashMap<String,MibSymbol>();
 
     /**
      * The MIB symbol value map. This maps the symbol values to their
@@ -110,7 +110,7 @@ public class Mib implements MibContext {
      * either a number or an object identifier value is present in
      * this map.
      */
-    private HashMap symbolValueMap = new HashMap();
+    private HashMap<String,MibSymbol> symbolValueMap = new HashMap<String,MibSymbol>();
 
     /**
      * Creates a new MIB module. This will NOT read the actual MIB
@@ -144,14 +144,12 @@ public class Mib implements MibContext {
      * @see #validate()
      */
     void initialize() throws MibLoaderException {
-        MibImport  imp;
-        int        errors = log.errorCount();
 
         // Resolve imported MIB files
+        int  errors = log.errorCount();
         for (int i = 0; i < imports.size(); i++) {
-            imp = (MibImport) imports.get(i);
             try {
-                imp.initialize(log);
+                imports.get(i).initialize(log);
             } catch (MibException e) {
                 log.addError(e.getLocation(), e.getMessage());
             }
@@ -176,20 +174,18 @@ public class Mib implements MibContext {
      * @see #initialize()
      */
     void validate() throws MibLoaderException {
-        MibSymbol       symbol;
-        MibValueSymbol  value;
-        int             errors = log.errorCount();
 
         // Validate all symbols
+        int errors = log.errorCount();
         for (int i = 0; i < symbolList.size(); i++) {
-            symbol = (MibSymbol) symbolList.get(i);
+            MibSymbol symbol = symbolList.get(i);
             try {
                 symbol.initialize(log);
             } catch (MibException e) {
                 log.addError(e.getLocation(), e.getMessage());
             }
             if (symbol instanceof MibValueSymbol) {
-                value = (MibValueSymbol) symbol;
+                MibValueSymbol value = (MibValueSymbol) symbol;
                 if (value.getValue() instanceof NumberValue
                  || value.getValue() instanceof ObjectIdentifierValue) {
 
@@ -220,7 +216,7 @@ public class Mib implements MibContext {
         imports = null;
         if (symbolList != null) {
             for (int i = 0; i < symbolList.size(); i++) {
-                ((MibSymbol) symbolList.get(i)).clear();
+                symbolList.get(i).clear();
             }
             symbolList.clear();
         }
@@ -419,18 +415,16 @@ public class Mib implements MibContext {
     /**
      * Returns all MIB import references.
      *
-     * @return a collection of all imports
+     * @return a list of all imports
      *
      * @see MibImport
      *
      * @since 2.6
      */
-    public Collection getAllImports() {
-        ArrayList  res = new ArrayList();
-        MibImport  imp;
-
+    public List<MibImport> getAllImports() {
+        ArrayList<MibImport> res = new ArrayList<MibImport>();
         for (int i = 0; i < imports.size(); i++) {
-            imp = (MibImport) imports.get(i);
+            MibImport imp = imports.get(i);
             if (imp.hasSymbols()) {
                 res.add(imp);
             }
@@ -447,10 +441,8 @@ public class Mib implements MibContext {
      *         null if not found
      */
     MibImport getImport(String name) {
-        MibImport  imp;
-
         for (int i = 0; i < imports.size(); i++) {
-            imp = (MibImport) imports.get(i);
+            MibImport imp = imports.get(i);
             if (imp.getName().equals(name)) {
                 return imp;
             }
@@ -479,27 +471,24 @@ public class Mib implements MibContext {
      * @since 2.7
      */
     public Mib[] getImportingMibs() {
-        ArrayList  res = new ArrayList();
-        Mib[]      mibs = loader.getAllMibs();
-
+        ArrayList<Mib> res = new ArrayList<Mib>();
+        Mib[] mibs = loader.getAllMibs();
         for (int i = 0; i < mibs.length; i++) {
             if (mibs[i] != this && mibs[i].getImport(name) != null) {
                 res.add(mibs[i]);
             }
         }
-        mibs = new Mib[res.size()];
-        res.toArray(mibs);
-        return mibs;
+        return res.toArray(new Mib[res.size()]);
     }
 
     /**
      * Returns all symbols in this MIB.
      *
-     * @return a collection of the MIB symbols
+     * @return a list of the MIB symbols
      *
      * @see MibSymbol
      */
-    public Collection getAllSymbols() {
+    public List<MibSymbol> getAllSymbols() {
         return symbolList;
     }
 
@@ -511,7 +500,7 @@ public class Mib implements MibContext {
      * @return the MIB symbol, or null if not found
      */
     public MibSymbol getSymbol(String name) {
-        return (MibSymbol) symbolNameMap.get(name);
+        return symbolNameMap.get(name);
     }
 
     /**
@@ -554,11 +543,9 @@ public class Mib implements MibContext {
      * @since 2.5
      */
     public MibValueSymbol getSymbolByOid(String oid) {
-        MibValueSymbol  sym;
-        int             pos;
-
+        int pos = 0;
         do {
-            sym = getSymbolByValue(oid);
+            MibValueSymbol sym = getSymbolByValue(oid);
             if (sym != null) {
                 return sym;
             }
@@ -580,15 +567,14 @@ public class Mib implements MibContext {
      * @since 2.6
      */
     public MibValueSymbol getRootSymbol() {
-        MibValueSymbol  root = null;
-        MibValueSymbol  parent;
-
+        MibValueSymbol root = null;
         for (int i = 0; i < symbolList.size(); i++) {
             if (symbolList.get(i) instanceof MibValueSymbol) {
                 root = (MibValueSymbol) symbolList.get(i);
                 break;
             }
         }
+        MibValueSymbol parent = null;
         while (root != null && (parent = root.getParent()) != null) {
             if (!root.getMib().equals(parent.getMib())) {
                 break;

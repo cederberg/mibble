@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
@@ -36,7 +36,7 @@ import net.percederberg.mibble.MibValueSymbol;
  * identifier values in a tree hierarchy.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.10
  * @since    2.0
  */
 public class ObjectIdentifierValue extends MibValue {
@@ -59,7 +59,7 @@ public class ObjectIdentifierValue extends MibValue {
     /**
      * The component children.
      */
-    private ArrayList children = new ArrayList();
+    private ArrayList<ObjectIdentifierValue> children = new ArrayList<ObjectIdentifierValue>();
 
     /**
      * The object identifier component name.
@@ -169,9 +169,7 @@ public class ObjectIdentifierValue extends MibValue {
     public MibValue initialize(MibLoaderLog log, MibType type)
         throws MibException {
 
-        ValueReference         ref = null;
-        ObjectIdentifierValue  oid;
-
+        ValueReference ref = null;
         if (parent == null) {
             return this;
         } else if (parent instanceof ValueReference) {
@@ -180,7 +178,7 @@ public class ObjectIdentifierValue extends MibValue {
         parent = parent.initialize(log, type);
         if (ref != null) {
             if (parent instanceof ObjectIdentifierValue) {
-                oid = (ObjectIdentifierValue) parent;
+                ObjectIdentifierValue oid = (ObjectIdentifierValue) parent;
                 oid.addChild(log, location, this);
             } else {
                 throw new MibException(ref.getLocation(),
@@ -223,16 +221,13 @@ public class ObjectIdentifierValue extends MibValue {
      * only be called by the MIB loader.
      */
     protected void clear() {
-        Mib                    mib;
-        ArrayList              copy;
-        ObjectIdentifierValue  child;
 
         // Recursively clear all children in same MIB
         if (children != null) {
-            mib = getMib();
-            copy = (ArrayList) children.clone();
+            Mib mib = getMib();
+            ArrayList<ObjectIdentifierValue> copy = new ArrayList<ObjectIdentifierValue>(children);
             for (int i = 0; i < copy.size(); i++) {
-                child = (ObjectIdentifierValue) copy.get(i);
+                ObjectIdentifierValue child = copy.get(i);
                 if (mib == null || mib == child.getMib()) {
                     child.clear();
                 }
@@ -381,7 +376,7 @@ public class ObjectIdentifierValue extends MibValue {
      *         null if not found
      */
     public ObjectIdentifierValue getChild(int index) {
-        return (ObjectIdentifierValue) children.get(index);
+        return children.get(index);
     }
 
     /**
@@ -399,10 +394,8 @@ public class ObjectIdentifierValue extends MibValue {
      * @since 2.5
      */
     public ObjectIdentifierValue getChildByName(String name) {
-        ObjectIdentifierValue  child;
-
         for (int i = 0; i < children.size(); i++) {
-            child = (ObjectIdentifierValue) children.get(i);
+            ObjectIdentifierValue child = children.get(i);
             if (name.equals(child.getName())) {
                 return child;
             }
@@ -423,11 +416,9 @@ public class ObjectIdentifierValue extends MibValue {
      * @since 2.5
      */
     public ObjectIdentifierValue getChildByValue(int value) {
-        ObjectIdentifierValue  child;
-        int                    low = 0;
-        int                    high = children.size();
-        int                    pos;
-
+        int low = 0;
+        int high = children.size();
+        int pos;
         if (low < value && value <= high) {
             // Default to that the value is really the index - 1 
             pos = value - 1;
@@ -436,7 +427,7 @@ public class ObjectIdentifierValue extends MibValue {
             pos = (low + high) / 2;
         }
         while (low < high) {
-            child = (ObjectIdentifierValue) children.get(pos);
+            ObjectIdentifierValue child = children.get(pos);
             if (child.getValue() == value) {
                 return child;
             } else if (child.getValue() < value) {
@@ -486,13 +477,11 @@ public class ObjectIdentifierValue extends MibValue {
                                            ObjectIdentifierValue child)
         throws MibException {
 
-        ObjectIdentifierValue  value;
-        int                    i = children.size();
-
         // Insert child in value order, searching backwards to 
         // optimize the most common case (ordered insertion)
+        int i = children.size();
         while (i > 0) {
-            value = (ObjectIdentifierValue) children.get(i - 1);
+            ObjectIdentifierValue value = children.get(i - 1);
             if (value.getValue() == child.getValue()) {
                 value = value.merge(log, location, child);
                 children.set(i - 1, value);
@@ -527,14 +516,11 @@ public class ObjectIdentifierValue extends MibValue {
                              ObjectIdentifierValue parent)
         throws MibException {
 
-        ObjectIdentifierValue  child;
-        String                 msg;
-
         if (name == null) {
             name = parent.name;
         } else if (parent.name != null && !parent.name.equals(name)) {
-            msg = "OID component '" + parent.name + "' was previously " +
-                  "defined as '" + name + "'";
+            String msg = "OID component '" + parent.name + "' was previously " +
+                         "defined as '" + name + "'";
             if (log == null) {
                 throw new MibException(location, msg);
             } else {
@@ -547,7 +533,7 @@ public class ObjectIdentifierValue extends MibValue {
                                    "symbol reference already set");
         }
         for (int i = 0; i < parent.children.size(); i++) {
-            child = (ObjectIdentifierValue) parent.children.get(i);
+            ObjectIdentifierValue child = parent.children.get(i);
             child.parent = this;
             addChild(log, location, child);
         }
@@ -605,10 +591,8 @@ public class ObjectIdentifierValue extends MibValue {
      * @return a string representation of this value
      */
     public String toString() {
-        StringBuffer  buffer;
-
         if (cachedNumericValue == null) {
-            buffer = new StringBuffer();
+            StringBuffer buffer = new StringBuffer();
             if (parent != null) {
                 buffer.append(parent.toString());
                 buffer.append(".");
@@ -627,8 +611,7 @@ public class ObjectIdentifierValue extends MibValue {
      * @return a detailed string representation of this value
      */
     public String toDetailString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         if (parent instanceof ObjectIdentifierValue) {
             buffer.append(((ObjectIdentifierValue) parent).toDetailString());
             buffer.append(".");
@@ -653,11 +636,9 @@ public class ObjectIdentifierValue extends MibValue {
      * @since 2.6
      */
     public String toAsn1String() {
-        StringBuffer           buffer = new StringBuffer();
-        ObjectIdentifierValue  ref;
-
+        StringBuffer buffer = new StringBuffer();
         if (parent instanceof ObjectIdentifierValue) {
-            ref = (ObjectIdentifierValue) parent;
+            ObjectIdentifierValue ref = (ObjectIdentifierValue) parent;
             if (ref.getSymbol() == null) {
                 buffer.append(ref.toAsn1String());
             } else {

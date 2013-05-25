@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -39,7 +39,7 @@ import net.percederberg.mibble.value.NumberValue;
  * An integer MIB type.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.10
  * @since    2.0
  */
 public class IntegerType extends MibType implements MibContext {
@@ -52,7 +52,7 @@ public class IntegerType extends MibType implements MibContext {
     /**
      * The additional defined symbols.
      */
-    private LinkedHashMap symbols = new LinkedHashMap();
+    private LinkedHashMap<String,MibValueSymbol> symbols = new LinkedHashMap<String,MibValueSymbol>();
 
     /**
      * Creates a new integer MIB type.
@@ -75,7 +75,7 @@ public class IntegerType extends MibType implements MibContext {
      *
      * @param values         the additional defined symbols
      */
-    public IntegerType(ArrayList values) {
+    public IntegerType(ArrayList<?> values) {
         this(true, null, null);
         createValueConstraints(values);
     }
@@ -89,7 +89,7 @@ public class IntegerType extends MibType implements MibContext {
      */
     private IntegerType(boolean primitive,
                         Constraint constraint,
-                        LinkedHashMap symbols) {
+                        LinkedHashMap<String,MibValueSymbol> symbols) {
 
         super("INTEGER", primitive);
         if (constraint != null) {
@@ -124,18 +124,15 @@ public class IntegerType extends MibType implements MibContext {
     public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
-        Iterator        iter = symbols.values().iterator();
-        MibValueSymbol  sym;
-        String          message;
-
         if (constraint != null) {
             constraint.initialize(this, log);
         }
+        Iterator<MibValueSymbol> iter = symbols.values().iterator();
         while (iter.hasNext()) {
-            sym = (MibValueSymbol) iter.next();
+            MibValueSymbol sym = iter.next();
             sym.initialize(log);
             if (!isCompatibleType(sym.getValue())) {
-                message = "value is not compatible with type";
+                String message = "value is not compatible with type";
                 throw new MibException(sym.getLocation(), message);
             }
         }
@@ -156,8 +153,7 @@ public class IntegerType extends MibType implements MibContext {
      * @since 2.2
      */
     public MibType createReference() {
-        IntegerType  type = new IntegerType(false, constraint, symbols);
-
+        IntegerType type = new IntegerType(false, constraint, symbols);
         type.setTag(true, getTag());
         return type;
     }
@@ -179,8 +175,7 @@ public class IntegerType extends MibType implements MibContext {
      * @since 2.2
      */
     public MibType createReference(Constraint constraint) {
-        IntegerType  type = new IntegerType(false, constraint, null);
-
+        IntegerType type = new IntegerType(false, constraint, null);
         type.setTag(true, getTag());
         return type;
     }
@@ -201,10 +196,8 @@ public class IntegerType extends MibType implements MibContext {
      *
      * @since 2.2
      */
-    public MibType createReference(ArrayList values) {
-        IntegerType  type;
-
-        type = new IntegerType(false, null, null);
+    public MibType createReference(ArrayList<?> values) {
+        IntegerType type = new IntegerType(false, null, null);
         type.createValueConstraints(values);
         type.setTag(true, getTag());
         return type;
@@ -216,16 +209,13 @@ public class IntegerType extends MibType implements MibContext {
      *
      * @param values         the list of value symbols
      */
-    private void createValueConstraints(ArrayList values) {
-        MibValueSymbol   sym;
-        ValueConstraint  c;
-
+    private void createValueConstraints(ArrayList<?> values) {
         for (int i = 0; i < values.size(); i++) {
             if (values.get(i) instanceof MibValueSymbol) {
-                sym = (MibValueSymbol) values.get(i);
+                MibValueSymbol sym = (MibValueSymbol) values.get(i);
                 symbols.put(sym.getName(), sym);
                 // TODO: check value constraint compability
-                c = new ValueConstraint(null, sym.getValue());
+                ValueConstraint c = new ValueConstraint(null, sym.getValue());
                 if (constraint == null) {
                     constraint = c;
                 } else {
@@ -313,7 +303,7 @@ public class IntegerType extends MibType implements MibContext {
      *         null if not found
      */
     public MibValueSymbol getSymbol(String name) {
-        return (MibValueSymbol) symbols.get(name);
+        return symbols.get(name);
     }
 
     /**
@@ -329,14 +319,8 @@ public class IntegerType extends MibType implements MibContext {
      * @since 2.2
      */
     public MibValueSymbol[] getAllSymbols() {
-        MibValueSymbol[]  res;
-        Iterator          iter = symbols.values().iterator();
-
-        res = new MibValueSymbol[symbols.size()];
-        for (int i = 0; iter.hasNext(); i++) {
-            res[i] = (MibValueSymbol) iter.next();
-        }
-        return res;
+        MibValueSymbol[] res = new MibValueSymbol[symbols.size()];
+        return symbols.values().toArray(res);
     }
 
     /**
@@ -367,16 +351,13 @@ public class IntegerType extends MibType implements MibContext {
      * @return a string representation of this type
      */
     public String toString() {
-        StringBuffer    buffer = new StringBuffer();
-        Iterator        iter;
-        MibValueSymbol  symbol;
-
+        StringBuffer buffer = new StringBuffer();
         buffer.append(super.toString());
         if (symbols.size() > 0) {
             buffer.append(" { ");
-            iter = symbols.values().iterator();
+            Iterator<MibValueSymbol> iter = symbols.values().iterator();
             while (iter.hasNext()) {
-                symbol = (MibValueSymbol) iter.next();
+                MibValueSymbol symbol = iter.next();
                 buffer.append(symbol.getName());
                 buffer.append("(");
                 buffer.append(symbol.getValue());

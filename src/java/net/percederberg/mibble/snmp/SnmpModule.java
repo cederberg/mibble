@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2007 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -34,7 +34,7 @@ import net.percederberg.mibble.MibValue;
  * @see SnmpModuleCompliance
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.9
+ * @version  2.10
  * @since    2.0
  */
 public class SnmpModule {
@@ -47,12 +47,12 @@ public class SnmpModule {
     /**
      * The list of mandatory group values.
      */
-    private ArrayList groups;
+    private ArrayList<MibValue> groups;
 
     /**
      * The list of compliances.
      */
-    private ArrayList compliances;
+    private ArrayList<SnmpCompliance> compliances;
 
     /**
      * The module comment.
@@ -67,8 +67,8 @@ public class SnmpModule {
      * @param compliances    the list of compliances
      */
     public SnmpModule(String module,
-                      ArrayList groups,
-                      ArrayList compliances) {
+                      ArrayList<MibValue> groups,
+                      ArrayList<SnmpCompliance> compliances) {
 
         this.module = module;
         this.groups = groups;
@@ -90,15 +90,11 @@ public class SnmpModule {
     void initialize(MibLoaderLog log)
         throws MibException {
 
-        ArrayList  list = new ArrayList();
-        int        i;
-
-        for (i = 0; i < groups.size(); i++) {
-            list.add(((MibValue) groups.get(i)).initialize(log, null));
+        for (int i = 0; i < groups.size(); i++) {
+            groups.set(i, groups.get(i).initialize(log, null));
         }
-        this.groups = list;
-        for (i = 0; i < compliances.size(); i++) {
-            ((SnmpCompliance) compliances.get(i)).initialize(log);
+        for (int i = 0; i < compliances.size(); i++) {
+            compliances.get(i).initialize(log);
         }
     }
 
@@ -120,7 +116,7 @@ public class SnmpModule {
      *
      * @see net.percederberg.mibble.MibValue
      */
-    public ArrayList getGroups() {
+    public ArrayList<MibValue> getGroups() {
         return groups;
     }
 
@@ -132,7 +128,7 @@ public class SnmpModule {
      *
      * @see SnmpCompliance
      */
-    public ArrayList getCompliances() {
+    public ArrayList<SnmpCompliance> getCompliances() {
         return compliances;
     }
 
@@ -167,8 +163,7 @@ public class SnmpModule {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         if (module != null) {
             buffer.append(module);
         }

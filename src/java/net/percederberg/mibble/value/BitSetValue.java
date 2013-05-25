@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
@@ -34,7 +34,7 @@ import net.percederberg.mibble.MibValueSymbol;
  * A bit set MIB value.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.10
  * @since    2.0
  */
 public class BitSetValue extends MibValue {
@@ -47,7 +47,7 @@ public class BitSetValue extends MibValue {
     /**
      * The additional value references.
      */
-    private ArrayList references;
+    private ArrayList<ValueReference> references;
 
     /**
      * Creates a new bit set MIB value.
@@ -64,7 +64,7 @@ public class BitSetValue extends MibValue {
      * @param value          the bit set value
      * @param references     the additional referenced bit values
      */
-    public BitSetValue(BitSet value, ArrayList references) {
+    public BitSetValue(BitSet value, ArrayList<ValueReference> references) {
         super("BIT STRING");
         this.value = value;
         this.references = references;
@@ -93,7 +93,7 @@ public class BitSetValue extends MibValue {
 
         if (references != null) {
             for (int i = 0; i < references.size(); i++) {
-                initialize(log, type, (ValueReference) references.get(i));
+                initialize(log, type, references.get(i));
             }
             references = null;
         }
@@ -132,8 +132,7 @@ public class BitSetValue extends MibValue {
     private void initialize(MibLoaderLog log, MibType type, ValueReference ref)
         throws MibException {
 
-        MibValue  value = ref.initialize(log, type);
-
+        MibValue value = ref.initialize(log, type);
         if (value instanceof NumberValue) {
             this.value.set(((Number) value.toObject()).intValue());
         } else {
@@ -162,9 +161,8 @@ public class BitSetValue extends MibValue {
      *
      * @return the number values for all bits in this bit set
      */
-    public ArrayList getBits() {
-        ArrayList  components = new ArrayList();
-
+    public ArrayList<NumberValue> getBits() {
+        ArrayList<NumberValue> components = new ArrayList<NumberValue>(value.size());
         for (int i = 0; i < value.size(); i++) {
             if (value.get(i)) {
                 components.add(new NumberValue(new Integer(i)));
@@ -246,8 +244,7 @@ public class BitSetValue extends MibValue {
      * @since 2.8
      */
     public String toAsn1String(MibValueSymbol[] values) {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         for (int i = 0; i < value.size(); i++) {
             if (value.get(i)) {
                 if (buffer.length() > 0) {

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.browser;
@@ -33,7 +33,7 @@ import uk.co.westhawk.snmp.stack.varbind;
  *
  * @author   Watsh Rajneesh
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.5
+ * @version  2.10
  * @since    2.5
  */
 public class SnmpResponse {
@@ -56,12 +56,12 @@ public class SnmpResponse {
     /**
      * The list of response OIDs.
      */
-    public ArrayList oids = new ArrayList();
+    public ArrayList<String> oids = new ArrayList<String>();
 
     /**
      * The map of all value, indexed by OID.
      */
-    private HashMap values = new HashMap();
+    private HashMap<String,String> values = new HashMap<String,String>();
 
     /**
      * Creates a new SNMP response container.
@@ -113,7 +113,7 @@ public class SnmpResponse {
      *
      * @return an iterator with all the OIDs
      */
-    public Iterator getOids() {
+    public Iterator<String> getOids() {
         return oids.iterator();
     }
 
@@ -139,7 +139,7 @@ public class SnmpResponse {
      *         null if not found
      */
     public String getValue(String oid) {
-        return (String) values.get(oid);
+        return values.get(oid);
     }
 
     /**
@@ -148,11 +148,9 @@ public class SnmpResponse {
      * @return a string representation of the OID and value map
      */
     public String getOidsAndValues() {
-        StringBuffer  buffer = new StringBuffer();
-        String        oid;
-
+        StringBuffer buffer = new StringBuffer();
         for (int i = 0; i < oids.size(); i++) {
-            oid = oids.get(i).toString();
+            String oid = oids.get(i).toString();
             buffer.append(oid);
             buffer.append(": ");
             buffer.append(getValue(oid));
@@ -167,8 +165,7 @@ public class SnmpResponse {
      * @return a string representation of this response
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         buffer.append(getOidsAndValues());
         buffer.append("Error status: ");
         buffer.append(errorStatus);

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2009 Per Cederberg. All rights reserved.
+ * Copyright (c) 2009-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
  * penalty of its creation.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.9
+ * @version  2.10
  * @since    2.9
  */
 class MibDirectoryCache {
@@ -56,16 +56,16 @@ class MibDirectoryCache {
     private File dir;
 
     /**
-     * The file name cache. This cache is indexed by upper-case MIB
-     * name and links to the directory file.
+     * The file name cache. This cache is indexed by upper-case file
+     * name (without extension) and links to the actual file.
      */
-    private HashMap nameCache = null;
+    private HashMap<String,File> nameCache = null;
 
     /**
-     * The content cache. This cache is indexed by the actual MIB
-     * name read from the file and links to the directory file.
+     * The content cache. This cache is indexed by the MIB name read
+     * from the file and links to the actual file.
      */
-    private HashMap contentCache = null;
+    private HashMap<String,File> contentCache = null;
 
     /**
      * Creates a new MIB search directory cache.
@@ -99,21 +99,18 @@ class MibDirectoryCache {
         if (nameCache == null) {
             initNameCache();
         }
-        return (File) nameCache.get(mibName.toUpperCase());
+        return nameCache.get(mibName.toUpperCase());
     }
 
     /**
      * Initializes the name cache.
      */
     private void initNameCache() {
-        File[]   files = dir.listFiles();
-        String   name;
-        Matcher  m;
-
-        nameCache = new HashMap();
+        nameCache = new HashMap<String,File>();
+        File[] files = dir.listFiles();
         for (int i = 0; files != null && i < files.length; i++) {
-            name = files[i].getName();
-            m = NAME.matcher(name);
+            String name = files[i].getName();
+            Matcher m = NAME.matcher(name);
             if (m.lookingAt() && files[i].isFile()) {
                 nameCache.put(m.group().toUpperCase(), files[i]);
             }
@@ -135,19 +132,17 @@ class MibDirectoryCache {
         if (contentCache == null) {
             initContentCache();
         }
-        return (File) contentCache.get(mibName);
+        return contentCache.get(mibName);
     }
 
     /**
      * Initializes the content cache.
      */
     private void initContentCache() {
-        File[]   files = dir.listFiles();
-        String   name;
-
-        contentCache = new HashMap();
+        contentCache = new HashMap<String,File>();
+        File[] files = dir.listFiles();
         for (int i = 0; i < files.length; i++) {
-            name = readMibName(files[i]);
+            String name = readMibName(files[i]);
             if (name != null) {
                 contentCache.put(name, files[i]);
             }
@@ -164,23 +159,20 @@ class MibDirectoryCache {
      *         null if no name was found
      */
     private String readMibName(File file) {
-        BufferedReader  in = null;
-        String          str;
-        Matcher         m;
-
         if (!file.canRead() || !file.isFile()) {
             return null;
         }
+        BufferedReader in = null;
         try {
             in = new BufferedReader(new FileReader(file));
             while (true) {
-                str = in.readLine();
+                String str = in.readLine();
                 if (str == null) {
                     break;
                 }
                 str = str.trim();
                 if (!str.equals("") && !str.startsWith("--")) {
-                    m = NAME.matcher(str);
+                    Matcher m = NAME.matcher(str);
                     return m.lookingAt() ? m.group() : null;
                 }
             }

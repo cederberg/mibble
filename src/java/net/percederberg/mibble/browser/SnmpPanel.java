@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.browser;
@@ -48,7 +48,7 @@ import net.percederberg.mibble.snmp.SnmpObjectType;
  *
  * @author   Per Cederberg, <per at percederberg dot net>
  * @author   Watsh Rajneesh
- * @version  2.5
+ * @version  2.10
  * @since    2.5
  */
 public class SnmpPanel extends JPanel {
@@ -170,7 +170,7 @@ public class SnmpPanel extends JPanel {
     /**
      * The authentication type combo box.
      */
-    private JComboBox authTypeCombo = new JComboBox();
+    private JComboBox<String> authTypeCombo = new JComboBox<String>();
 
     /**
      * The authentication password label.
@@ -191,7 +191,7 @@ public class SnmpPanel extends JPanel {
     /**
      * The privacy type combo box.
      */
-    private JComboBox privacyTypeCombo = new JComboBox();
+    private JComboBox<String> privacyTypeCombo = new JComboBox<String>();
 
     /**
      * The privacy password label.
@@ -276,7 +276,6 @@ public class SnmpPanel extends JPanel {
      */
     private void initialize() {
         GridBagConstraints  c;
-        DocumentListener    l;
 
         // Component initialization
         setLayout(new GridBagLayout());
@@ -339,7 +338,7 @@ public class SnmpPanel extends JPanel {
         updateAuthentication();
 
         // Add text change listeners
-        l = new DocumentListener() {
+        DocumentListener l = new DocumentListener() {
             public void changedUpdate(DocumentEvent e) {
                 updateStatus();
             }
@@ -649,8 +648,7 @@ public class SnmpPanel extends JPanel {
      * @return the panel containing the buttons
      */
     private JPanel initializeButtons() {
-        JPanel  panel = new JPanel();
-
+        JPanel panel = new JPanel();
         panel.setLayout(new FlowLayout());
         getButton.setToolTipText("Perform SNMP get operation");
         getButton.addActionListener(new ActionListener() {
@@ -742,8 +740,7 @@ public class SnmpPanel extends JPanel {
      * tree.
      */
     public void updateOid() {
-        MibNode  node = frame.getSelectedNode();
-
+        MibNode node = frame.getSelectedNode();
         if (node == null) {
             oidField.setText("");
         } else if (node.getSymbol() != null
@@ -781,23 +778,19 @@ public class SnmpPanel extends JPanel {
      * selected or when the UI has been blocked or unblocked.
      */
     public void updateStatus() {
-        MibNode         node = frame.getSelectedNode();
-        SnmpObjectType  type = null;
-        boolean         allowOperation;
-        boolean         allowGet;
-        boolean         allowSet;
-
+        SnmpObjectType type = null;
+        MibNode node = frame.getSelectedNode();
         if (node != null) {
             type = node.getSnmpObjectType();
         }
-        allowOperation = !blocked
-                      && hostField.getText().length() > 0
-                      && portField.getText().length() > 0;
-        allowGet = allowOperation
-                && oidField.getText().length() > 0;
-        allowSet = allowOperation
-                && type != null
-                && type.getAccess().canWrite();
+        boolean allowOperation = !blocked
+                                 && hostField.getText().length() > 0
+                                 && portField.getText().length() > 0;
+        boolean allowGet = allowOperation
+                           && oidField.getText().length() > 0;
+        boolean allowSet = allowOperation
+                           && type != null
+                           && type.getAccess().canWrite();
         oidLabel.setEnabled(allowOperation);
         oidField.setEnabled(allowOperation);
         valueLabel.setEnabled(allowSet);
@@ -813,9 +806,7 @@ public class SnmpPanel extends JPanel {
      * Updates the authentication UI components on change.
      */
     protected void updateAuthentication() {
-        boolean  useAuth;
-        
-        useAuth = authTypeCombo.getSelectedIndex() != 0;
+        boolean useAuth = authTypeCombo.getSelectedIndex() != 0;
         authPasswordLabel.setEnabled(useAuth);
         authPasswordField.setEnabled(useAuth);
         privacyTypeLabel.setEnabled(useAuth);
@@ -939,70 +930,57 @@ public class SnmpPanel extends JPanel {
      *         null if none could be created
      */
     private Operation createOperation(boolean read) {
-        String              host = hostField.getText();
-        int                 port;
-        String              community = null;
-        String              contextName = null;
-        String              contextEngine = null;
-        String              userName = null;
-        String              type;
-        String              password;
-        SnmpAuthentication  auth = null;
-        SnmpPrivacy         privacy = null;
-        String              oid = oidField.getText();
-        SnmpManager         manager;
-        SnmpRequest         request;
-        SnmpObjectType      objectType;
-        String              value;
-        String              message;
 
         // Validate port number
+        String host = hostField.getText();
+        int port = 0;
         try {
             port = Integer.parseInt(portField.getText());
         } catch (NumberFormatException ignore) {
-            port = 0;
+            // Do nothing here
         }
         if (port <= 0 || port >= 65536) {
             portField.requestFocus();
-            message = "Provide valid (numeric) port number in the " +
-                      "range [1..65535].";
+            String msg = "Provide valid (numeric) port number in the " +
+                         "range [1..65535].";
             JOptionPane.showMessageDialog(frame,
-                                          message,
+                                          msg,
                                           "Port Number Error",
                                           JOptionPane.ERROR_MESSAGE);
             return null;
         }
 
-        // Get SNMP manager parameters
-        if (version < 3) {
-            if (read) {
-                community = new String(readCommunityField.getPassword());
-            } else {
-                community = new String(writeCommunityField.getPassword());
-            }
-        } else {
-            contextName = contextNameField.getText();
-            contextEngine = contextEngineField.getText();
-            userName = userNameField.getText();
-            if (authTypeCombo.getSelectedIndex() > 0) {
-                type = authTypeCombo.getSelectedItem().toString();
-                password = new String(authPasswordField.getPassword());
-                auth = new SnmpAuthentication(type, password);
-            }
-            if (privacyTypeCombo.getSelectedIndex() > 0) {
-                type = privacyTypeCombo.getSelectedItem().toString();
-                password = new String(privacyPasswordField.getPassword());
-                privacy = new SnmpPrivacy(type, password);
-            }
-        }
-
         // Create SNMP manager
+        SnmpManager manager = null;
         try {
-            if (version == 1) {
-                manager = SnmpManager.createSNMPv1(host, port, community);
-            } else if (version == 2) {
-                manager = SnmpManager.createSNMPv2c(host, port, community);
+            if (version < 3) {
+                String community = null;
+                if (read) {
+                    community = new String(readCommunityField.getPassword());
+                } else {
+                    community = new String(writeCommunityField.getPassword());
+                }
+                if (version == 1) {
+                    manager = SnmpManager.createSNMPv1(host, port, community);
+                } else {
+                    manager = SnmpManager.createSNMPv2c(host, port, community);
+                }
             } else {
+                String contextName = contextNameField.getText();
+                String contextEngine = contextEngineField.getText();
+                String userName = userNameField.getText();
+                SnmpAuthentication auth = null;
+                if (authTypeCombo.getSelectedIndex() > 0) {
+                    String type = authTypeCombo.getSelectedItem().toString();
+                    String password = new String(authPasswordField.getPassword());
+                    auth = new SnmpAuthentication(type, password);
+                }
+                SnmpPrivacy privacy = null;
+                if (privacyTypeCombo.getSelectedIndex() > 0) {
+                    String type = privacyTypeCombo.getSelectedItem().toString();
+                    String password = new String(privacyPasswordField.getPassword());
+                    privacy = new SnmpPrivacy(type, password);
+                }
                 manager = SnmpManager.createSNMPv3(host,
                                                    port,
                                                    contextName,
@@ -1020,12 +998,14 @@ public class SnmpPanel extends JPanel {
         }
 
         // Create request
+        SnmpRequest request = null;
+        String oid = oidField.getText();
         if (read) {
             request = new SnmpRequest(oid);
         } else {
-            objectType = frame.getSelectedNode().getSnmpObjectType();
-            value = valueField.getText();
-            request = new SnmpRequest(oid, objectType.getSyntax(), value);
+            SnmpObjectType type = frame.getSelectedNode().getSnmpObjectType();
+            String value = valueField.getText();
+            request = new SnmpRequest(oid, type.getSyntax(), value);
         }
 
         return new Operation(manager, request, feedback);
@@ -1116,9 +1096,7 @@ public class SnmpPanel extends JPanel {
          * Starts the background thread.
          */
         private void start() {
-            Thread  thread = new Thread(this);
-
-            thread.start();
+            new Thread(this).start();
         }
 
         /**
@@ -1133,17 +1111,15 @@ public class SnmpPanel extends JPanel {
          * the thread created through a call to start().
          */
         public void run() {
-            SnmpResponse  response = null;
-            String        message;
-
-            message = "Performing " + operation + " on " +
-                      request.getOid() + "...";
-            setOperationStatus(message);
+            String msg = "Performing " + operation + " on " +
+                         request.getOid() + "...";
+            setOperationStatus(msg);
             try {
                 if (operation.equals("GET ALL")) {
                     runGetAll();
                 } else {
                     appendResults(operation + ": ");
+                    SnmpResponse response = null;
                     if (operation.equals("GET")) {
                         response = manager.get(request.getOid());
                     } else if (operation.equals("GET NEXT")) {
@@ -1176,11 +1152,9 @@ public class SnmpPanel extends JPanel {
          *             operation
          */
         private void runGetAll() throws SnmpException {
-            SnmpResponse  response = null;
-            String        oid = request.getOid();
-
+            String oid = request.getOid();
             do {
-                response = manager.getNext(oid);
+                SnmpResponse response = manager.getNext(oid);
                 oid = response.getOid(0);
                 if (oid.startsWith(request.getOid())) {
                     appendResults("GET NEXT: ");

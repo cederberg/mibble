@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2010 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -40,7 +40,7 @@ import net.percederberg.mibble.value.NumberValue;
  * @see <a href="http://www.ietf.org/rfc/rfc1215.txt">RFC 1215 (RFC-1215)</a>
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.8
+ * @version  2.10
  * @since    2.0
  */
 public class SnmpTrapType extends SnmpType {
@@ -53,7 +53,7 @@ public class SnmpTrapType extends SnmpType {
     /**
      * The list of MIB values.
      */
-    private ArrayList variables;
+    private ArrayList<MibValue> variables;
 
     /**
      * The type reference.
@@ -69,7 +69,7 @@ public class SnmpTrapType extends SnmpType {
      * @param reference      the type reference, or null
      */
     public SnmpTrapType(MibValue enterprise,
-                        ArrayList variables,
+                        ArrayList<MibValue> variables,
                         String description,
                         String reference) {
 
@@ -102,8 +102,6 @@ public class SnmpTrapType extends SnmpType {
     public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
-        ArrayList  list = new ArrayList();
-
         if (!(symbol instanceof MibValueSymbol)) {
             throw new MibException(symbol.getLocation(),
                                    "only values can have the " +
@@ -111,9 +109,8 @@ public class SnmpTrapType extends SnmpType {
         }
         enterprise = enterprise.initialize(log, null);
         for (int i = 0; i < variables.size(); i++) {
-            list.add(((MibValue) variables.get(i)).initialize(log, null));
+            variables.set(i, variables.get(i).initialize(log, null));
         }
-        variables = list;
         return this;
     }
 
@@ -148,7 +145,7 @@ public class SnmpTrapType extends SnmpType {
      *
      * @see net.percederberg.mibble.MibValue
      */
-    public ArrayList getVariables() {
+    public ArrayList<MibValue> getVariables() {
         return variables;
     }
 
@@ -168,8 +165,7 @@ public class SnmpTrapType extends SnmpType {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         buffer.append(super.toString());
         buffer.append(" (");
         buffer.append("\n  Enterprise: ");

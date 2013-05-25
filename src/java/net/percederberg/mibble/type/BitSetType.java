@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -41,7 +41,7 @@ import net.percederberg.mibble.value.NumberValue;
  * a set of bit values
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.7
+ * @version  2.10
  * @since    2.0
  */
 public class BitSetType extends MibType implements MibContext {
@@ -54,7 +54,7 @@ public class BitSetType extends MibType implements MibContext {
     /**
      * The additional defined symbols.
      */
-    private LinkedHashMap symbols = new LinkedHashMap();
+    private LinkedHashMap<String,MibValueSymbol> symbols = new LinkedHashMap<String,MibValueSymbol>();
 
     /**
      * Creates a new bit set MIB type.
@@ -77,7 +77,7 @@ public class BitSetType extends MibType implements MibContext {
      *
      * @param values         the additional defined symbols
      */
-    public BitSetType(ArrayList values) {
+    public BitSetType(ArrayList<?> values) {
         this(true, null, null);
         createValueConstraints(values);
     }
@@ -91,7 +91,7 @@ public class BitSetType extends MibType implements MibContext {
      */
     private BitSetType(boolean primitive,
                        Constraint constraint,
-                       LinkedHashMap symbols) {
+                       LinkedHashMap<String,MibValueSymbol> symbols) {
 
         super("BITS", primitive);
         if (constraint != null) {
@@ -126,18 +126,15 @@ public class BitSetType extends MibType implements MibContext {
     public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
-        Iterator        iter = symbols.values().iterator();
-        MibValueSymbol  sym;
-        String          message;
-
         if (constraint != null) {
             constraint.initialize(this, log);
         }
+        Iterator<MibValueSymbol> iter = symbols.values().iterator();
         while (iter.hasNext()) {
-            sym = (MibValueSymbol) iter.next();
+            MibValueSymbol sym = iter.next();
             sym.initialize(log);
             if (!(sym.getValue() instanceof NumberValue)) {
-                message = "value is not compatible with type";
+                String message = "value is not compatible with type";
                 throw new MibException(sym.getLocation(), message);
             }
         }
@@ -158,8 +155,7 @@ public class BitSetType extends MibType implements MibContext {
      * @since 2.2
      */
     public MibType createReference() {
-        BitSetType  type =  new BitSetType(false, constraint, symbols);
-
+        BitSetType type =  new BitSetType(false, constraint, symbols);
         type.setTag(true, getTag());
         return type;
     }
@@ -181,8 +177,7 @@ public class BitSetType extends MibType implements MibContext {
      * @since 2.2
      */
     public MibType createReference(Constraint constraint) {
-        BitSetType  type =  new BitSetType(false, constraint, null);
-
+        BitSetType type =  new BitSetType(false, constraint, null);
         type.setTag(true, getTag());
         return type;
     }
@@ -203,10 +198,8 @@ public class BitSetType extends MibType implements MibContext {
      *
      * @since 2.2
      */
-    public MibType createReference(ArrayList values) {
-        BitSetType  type;
-
-        type = new BitSetType(false, null, null);
+    public MibType createReference(ArrayList<?> values) {
+        BitSetType type = new BitSetType(false, null, null);
         type.createValueConstraints(values);
         type.setTag(false, getTag());
         return type;
@@ -218,16 +211,13 @@ public class BitSetType extends MibType implements MibContext {
      *
      * @param values         the list of value symbols
      */
-    private void createValueConstraints(ArrayList values) {
-        MibValueSymbol   sym;
-        ValueConstraint  c;
-
+    private void createValueConstraints(ArrayList<?> values) {
         for (int i = 0; i < values.size(); i++) {
             if (values.get(i) instanceof MibValueSymbol) {
-                sym = (MibValueSymbol) values.get(i);
+                MibValueSymbol sym = (MibValueSymbol) values.get(i);
                 symbols.put(sym.getName(), sym);
                 // TODO: check value constraint compability
-                c = new ValueConstraint(null, sym.getValue());
+                ValueConstraint c = new ValueConstraint(null, sym.getValue());
                 if (constraint == null) {
                     constraint = c;
                 } else {
@@ -283,14 +273,12 @@ public class BitSetType extends MibType implements MibContext {
      *         false otherwise
      */
     public boolean isCompatible(BitSetValue value) {
-        ArrayList  bits;
-
         if (constraint == null) {
             return true;
         }
-        bits = value.getBits();
+        ArrayList<NumberValue> bits = value.getBits();
         for (int i = 0; i < bits.size(); i++) {
-            if (!constraint.isCompatible((MibValue) bits.get(i))) {
+            if (!constraint.isCompatible(bits.get(i))) {
                 return false;
             }
         }
@@ -327,7 +315,7 @@ public class BitSetType extends MibType implements MibContext {
      *         null if not found
      */
     public MibValueSymbol getSymbol(String name) {
-        return (MibValueSymbol) symbols.get(name);
+        return symbols.get(name);
     }
 
     /**
@@ -343,14 +331,8 @@ public class BitSetType extends MibType implements MibContext {
      * @since 2.2
      */
     public MibValueSymbol[] getAllSymbols() {
-        MibValueSymbol[]  res;
-        Iterator          iter = symbols.values().iterator();
-
-        res = new MibValueSymbol[symbols.size()];
-        for (int i = 0; iter.hasNext(); i++) {
-            res[i] = (MibValueSymbol) iter.next();
-        }
-        return res;
+        MibValueSymbol[] res = new MibValueSymbol[symbols.size()];
+        return symbols.values().toArray(res);
     }
 
     /**
@@ -381,16 +363,13 @@ public class BitSetType extends MibType implements MibContext {
      * @return a string representation of this type
      */
     public String toString() {
-        StringBuffer    buffer = new StringBuffer();
-        Iterator        iter;
-        MibValueSymbol  symbol;
-
+        StringBuffer buffer = new StringBuffer();
         buffer.append(super.toString());
         if (symbols.size() > 0) {
             buffer.append(" { ");
-            iter = symbols.values().iterator();
+            Iterator<MibValueSymbol> iter = symbols.values().iterator();
             while (iter.hasNext()) {
-                symbol = (MibValueSymbol) iter.next();
+                MibValueSymbol symbol = iter.next();
                 buffer.append(symbol.getName());
                 buffer.append("(");
                 buffer.append(symbol.getValue());

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2008 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -35,7 +35,7 @@ import net.percederberg.mibble.value.StringValue;
  * A MIB type size constraint.
  *
  * @author   Per Cederberg, <per at percederberg dot net>
- * @version  2.9
+ * @version  2.10
  * @since    2.0
  */
 public class SizeConstraint implements Constraint {
@@ -78,11 +78,9 @@ public class SizeConstraint implements Constraint {
     public void initialize(MibType type, MibLoaderLog log)
         throws MibException {
 
-        String  message;
-
         values.initialize(new IntegerType(), log);
         if (location != null && !isCompatible(type)) {
-            message = "size constraint not compatible with this type";
+            String message = "size constraint not compatible with this type";
             log.addWarning(location, message);
         }
         location = null;
@@ -114,10 +112,8 @@ public class SizeConstraint implements Constraint {
      *         false otherwise
      */
     public boolean isCompatible(MibValue value) {
-        Integer  size;
-
         if (value instanceof StringValue) {
-            size = new Integer(value.toString().length());
+            Integer size = new Integer(value.toString().length());
             return values.isCompatible(new NumberValue(size));
         }
         return false;
@@ -128,13 +124,11 @@ public class SizeConstraint implements Constraint {
      *
      * @return a list of the value constraints
      */
-    public ArrayList getValues() {
-        ArrayList  list;
-
+    public ArrayList<Constraint> getValues() {
         if (values instanceof CompoundConstraint) {
             return ((CompoundConstraint) values).getConstraintList();
         } else {
-            list = new ArrayList();
+            ArrayList<Constraint> list = new ArrayList<Constraint>();
             list.add(values);
             return list;
         }
@@ -153,13 +147,11 @@ public class SizeConstraint implements Constraint {
      * @since 2.9
      */
     public int nextValue(int start) {
-        ArrayList   list = getValues();
-        Constraint  c;
-        Object      obj = null;
- 
         // TODO: the constraint list should be sorted
+        ArrayList<Constraint> list = getValues();
         for (int i = 0; i < list.size(); i++) {
-            c = (Constraint) list.get(i);
+            Constraint c = list.get(i);
+            Object obj = null;
             if (c instanceof ValueConstraint) {
                 obj = ((ValueConstraint) c).getValue().toObject();
             } else if (c instanceof ValueRangeConstraint) {
@@ -181,12 +173,10 @@ public class SizeConstraint implements Constraint {
      * @return a string representation of this object
      */
     public String toString() {
-        StringBuffer  buffer = new StringBuffer();
-
+        StringBuffer buffer = new StringBuffer();
         buffer.append("SIZE (");
         buffer.append(values);
         buffer.append(")");
-
         return buffer.toString();
     }
 }
