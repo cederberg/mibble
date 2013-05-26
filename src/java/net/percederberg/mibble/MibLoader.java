@@ -337,11 +337,15 @@ public class MibLoader {
     }
 
     /**
-     * Returns the root object identifier value (OID). This OID is
-     * the "iso" symbol.
+     * Returns the "iso" root object identifier value (OID). This OID
+     * is the root for SNMP objects. Note that "ccitt" and
+     * "joint-iso-ccitt" are also roots of the OID tree, but not
+     * returned by this method (use a search in the default context
+     * to find them).
      *
-     * @return the root object identifier value
+     * @return the root object identifier value ("iso" OID)
      *
+     * @see #getDefaultContext()
      * @since 2.7
      */
     public ObjectIdentifierValue getRootOid() {
