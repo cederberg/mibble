@@ -465,19 +465,15 @@ public class BrowserFrame extends JFrame {
      */
     public void setSelectedNode(String oid) {
 
-        // Find matching symbol
-        MibNode node = getSelectedNode();
-        if (node == null || node.getSymbol() == null) {
-            return;
-        }
-        MibValueSymbol symbol = node.getSymbol().getMib().getSymbolByOid(oid);
-        if (symbol == null) {
+        // Find tree node
+        MibValueSymbol symbol = browser.findMibSymbol(oid);
+        MibNode node = MibTreeBuilder.getInstance().getNode(symbol);
+        if (node == null) {
             mibTree.clearSelection();
             return;
         }
 
         // Select tree node
-        node = MibTreeBuilder.getInstance().getNode(symbol);
         TreePath path = new TreePath(node.getPath());
         mibTree.expandPath(path);
         mibTree.scrollPathToVisible(path);

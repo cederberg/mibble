@@ -31,6 +31,7 @@ import javax.swing.UIManager;
 
 import net.percederberg.mibble.browser.BrowserFrame;
 import net.percederberg.mibble.browser.MibTreeBuilder;
+import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * A program for browsing MIB files in a GUI.
@@ -72,7 +73,7 @@ public class MibbleBrowser {
     /**
      * The MIB loader to use.
      */
-    private MibLoader loader = new MibLoader();
+    public MibLoader loader = new MibLoader();
 
     /**
      * The application main entry point.
@@ -251,6 +252,25 @@ public class MibbleBrowser {
         removeFilePrefs();
         loader.unloadAll();
         MibTreeBuilder.getInstance().unloadAllMibs();
+    }
+
+    /**
+     * Searches the OID tree from the loaded MIB files for the best
+     * matching value. The returned OID symbol will have the longest
+     * matching OID value, but doesn't have to be an exact match. The
+     * search requires the full numeric OID value (from the root).
+     *
+     * @param oid            the numeric OID string to search for
+     *
+     * @return the best matching OID symbol, or
+     *         null if no partial match was found
+     *
+     * @see MibLoader#getOid(String)
+     * @since 2.10
+     */
+    public MibValueSymbol findMibSymbol(String oid) {
+        ObjectIdentifierValue match = loader.getOid(oid);
+        return (match == null) ? null : match.getSymbol();
     }
 
     /**
