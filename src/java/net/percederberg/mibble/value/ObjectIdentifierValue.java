@@ -406,7 +406,10 @@ public class ObjectIdentifierValue extends MibValue {
     /**
      * Returns a child object identifier value. The children are
      * searched by their numerical value. This method uses binary
-     * search and therefore has time complexity O(log(n)).
+     * search and therefore has time complexity O(log(n)) for the
+     * worst case. Special handling of the common case (a child
+     * array without numeric gaps), allow for O(1) performance most
+     * of the time.
      *
      * @param value          the child value
      *
@@ -416,21 +419,20 @@ public class ObjectIdentifierValue extends MibValue {
      * @since 2.5
      */
     public ObjectIdentifierValue getChildByValue(int value) {
+        if (value > 0 && value <= children.size()) {
+            ObjectIdentifierValue child = children.get(value - 1);
+            if (child.value == value) {
+                return child;
+            }
+        }
         int low = 0;
         int high = children.size();
-        int pos;
-        if (low < value && value <= high) {
-            // Default to that the value is really the index - 1 
-            pos = value - 1;
-        } else {
-            // Otherwise use normal interval midpoint
-            pos = (low + high) / 2;
-        }
+        int pos = (low + high) / 2;
         while (low < high) {
             ObjectIdentifierValue child = children.get(pos);
-            if (child.getValue() == value) {
+            if (child.value == value) {
                 return child;
-            } else if (child.getValue() < value) {
+            } else if (child.value < value) {
                 low = pos + 1;
             } else {
                 high = pos;
