@@ -460,6 +460,102 @@ public class ObjectIdentifierValue extends MibValue {
     }
 
     /**
+     * Searches the OID tree for the best match. The returned OID
+     * value may be either an ancestor or a descendant node (or this
+     * node itself). The search requires the full numeric OID value
+     * (from the root).
+     *
+     * @param oid            the numeric OID string to search for
+     *
+     * @return the best matching OID value, or
+     *         null if no partial match was found
+     *
+     * @since 2.10
+     */
+    public ObjectIdentifierValue find(String oid) {
+        if (oid.startsWith(".")) {
+            oid = oid.substring(1);
+        }
+        if (oid.length() > 0 && toString().startsWith(oid)) {
+            return findAncestor(oid);
+        } else if (oid.startsWith(toString())) {
+            return findDescendant(oid);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Searches the OID tree for the best matching ancestor. The
+     * returned OID will be an exact match of this node or one of its
+     * parents. The search requires the full numeric OID value (from
+     * the root).
+     *
+     * @param oid            the numeric OID string to search for
+     *
+     * @return the matching ancestor OID value, or
+     *         null if no match was found
+     *
+     * @since 2.10
+     */
+    public ObjectIdentifierValue findAncestor(String oid) {
+        if (oid.startsWith(".")) {
+            oid = oid.substring(1);
+        }
+        ObjectIdentifierValue ancestor = this;
+        while (ancestor != null && !ancestor.toString().equals(oid)) {
+            ancestor = ancestor.getParent();
+        }
+        return ancestor;
+    }
+
+    /**
+     * Searches the OID tree for the best matching descendant. The
+     * returned OID value will be the longest matching child node (or
+     * this node itself), but doesn't have to be an exact match. The
+     * search requires the full numeric OID value (from the root).
+     *
+     * @param oid            the numeric OID string to search for
+     *
+     * @return the best matching descendant OID value, or
+     *         null if no match was found
+     *
+     * @since 2.10
+     */
+    public ObjectIdentifierValue findDescendant(String oid) {
+        if (oid.startsWith(".")) {
+            oid = oid.substring(1);
+        }
+        if (!oid.startsWith(toString())) {
+            return null;
+        }
+        oid = oid.substring(toString().length());
+        if (oid.startsWith(".")) {
+            oid = oid.substring(1);
+        }
+        ObjectIdentifierValue parent = this;
+        ObjectIdentifierValue child = this;
+        while (child != null && oid.length() > 0) {
+            int value = -1;
+            try {
+                int pos = oid.indexOf('.');
+                if (pos > 0) {
+                    value = Integer.parseInt(oid.substring(0, pos));
+                    oid = oid.substring(pos + 1);
+                } else {
+                    value = Integer.parseInt(oid);
+                    oid = "";
+                }
+            } catch (NumberFormatException ignore) {
+                oid = "";
+            }
+            parent = child;
+            child = child.getChildByValue(value);
+        }
+        return (child == null) ? parent : child;
+    }
+
+    /**
      * Adds a child component. The children will be inserted in the
      * value order. If a child with the same value has already been
      * added, the new child will be merged with the previous one (if

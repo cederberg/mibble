@@ -113,6 +113,33 @@ class DefaultContext implements MibContext {
     }
 
     /**
+     * Searches the OID tree for the best matching value. The
+     * returned OID value will be the longest matching OID value, but
+     * doesn't have to be an exact match. The search requires the
+     * full numeric OID value (from the root).
+     *
+     * @param oid            the numeric OID string to search for
+     *
+     * @return the best matching OID value, or
+     *         null if no partial match was found
+     *
+     * @since 2.10
+     */
+    public ObjectIdentifierValue findOid(String oid) {
+        MibValue value = ((MibValueSymbol) symbols.get(ISO)).getValue();
+        ObjectIdentifierValue match = ((ObjectIdentifierValue) value).find(oid);
+        if (match == null) {
+            value = ((MibValueSymbol) symbols.get(CCITT)).getValue();
+            match = ((ObjectIdentifierValue) value).find(oid);
+        }
+        if (match == null) {
+            value = ((MibValueSymbol) symbols.get(JOINT_ISO_CCITT)).getValue();
+            match = ((ObjectIdentifierValue) value).find(oid);
+        }
+        return match;
+    }
+
+    /**
      * Returns a string representation of this object.
      *
      * @return a string representation of this object

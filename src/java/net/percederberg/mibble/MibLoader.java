@@ -337,6 +337,24 @@ public class MibLoader {
     }
 
     /**
+     * Searches the OID tree from the loaded MIB files for the best
+     * matching value. The returned OID value will be the longest
+     * matching OID value, but doesn't have to be an exact match. The
+     * search requires the full numeric OID value (from the root).
+     *
+     * @param oid            the numeric OID string to search for
+     *
+     * @return the best matching OID value, or
+     *         null if no partial match was found
+     *
+     * @see ObjectIdentifierValue#find(String)
+     * @since 2.10
+     */
+    public ObjectIdentifierValue getOid(String oid) {
+        return context.findOid(oid);
+    }
+
+    /**
      * Returns the "iso" root object identifier value (OID). This OID
      * is the root for SNMP objects. Note that "ccitt" and
      * "joint-iso-ccitt" are also roots of the OID tree, but not
@@ -345,6 +363,7 @@ public class MibLoader {
      *
      * @return the root object identifier value ("iso" OID)
      *
+     * @see #getOid(String)
      * @see #getDefaultContext()
      * @since 2.7
      */
