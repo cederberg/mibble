@@ -511,6 +511,9 @@ public class Mib implements MibContext {
      * @return the MIB value symbol, or null if not found
      */
     public MibValueSymbol getSymbolByValue(String value) {
+        if (value.startsWith(".")) {
+            value = value.substring(1);
+        }
         return (MibValueSymbol) symbolValueMap.get(value);
     }
 
@@ -543,6 +546,9 @@ public class Mib implements MibContext {
      * @since 2.5
      */
     public MibValueSymbol getSymbolByOid(String oid) {
+        if (oid.startsWith(".")) {
+            oid = oid.substring(1);
+        }
         int pos = 0;
         do {
             MibValueSymbol sym = getSymbolByValue(oid);
