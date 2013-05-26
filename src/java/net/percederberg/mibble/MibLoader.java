@@ -29,7 +29,10 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.percederberg.grammatica.parser.ParserCreationException;
 import net.percederberg.grammatica.parser.ParserLogException;
@@ -86,11 +89,11 @@ public class MibLoader {
     private ArrayList<String> resources = new ArrayList<String>();
 
     /**
-     * The MIB files loaded. This list contains all MIB file loaded
-     * with this loader, in order to avoid loading some MIB files
-     * multiple times (and thus duplicating import symbols).
+     * The MIB files loaded. This maps the MIB names to the loaded
+     * MIB objects (loaded with this loaded). This is used to avoid
+     * loading duplicate MIB files.
      */
-    private ArrayList<Mib> mibs = new ArrayList<Mib>();
+    private LinkedHashMap<String,Mib> mibs = new LinkedHashMap<String,Mib>();
 
     /**
      * The queue of MIB files to load. This queue contains either
@@ -358,13 +361,7 @@ public class MibLoader {
      *         null otherwise
      */
     public Mib getMib(String name) {
-        for (int i = 0; i < mibs.size(); i++) {
-            Mib mib = mibs.get(i);
-            if (mib.equals(name)) {
-                return mib;
-            }
-        }
-        return null;
+        return mibs.get(name);
     }
 
     /**
@@ -381,13 +378,26 @@ public class MibLoader {
      * @since 2.3
      */
     public Mib getMib(File file) {
-        for (int i = 0; i < mibs.size(); i++) {
-            Mib mib = mibs.get(i);
+        Iterator<Mib> iter = mibs.values().iterator();
+        while (iter.hasNext()) {
+            Mib mib = iter.next();
             if (mib.equals(file)) {
                 return mib;
             }
         }
         return null;
+    }
+
+    /**
+     * Returns a map of all MIB names and MIB files. If no MIB files
+     * have been loaded an empty map will be returned.
+     *
+     * @return a map of MIB names to MIB objects
+     *
+     * @since 2.10
+     */
+    public Map<String,Mib> getMibs() {
+        return mibs;
     }
 
     /**
@@ -399,7 +409,7 @@ public class MibLoader {
      * @since 2.2
      */
     public Mib[] getAllMibs() {
-        return mibs.toArray(new Mib[mibs.size()]);
+        return mibs.values().toArray(new Mib[mibs.size()]);
     }
 
     /**
@@ -513,18 +523,13 @@ public class MibLoader {
      * @return the first MIB module loaded
      *
      * @throws IOException if the MIB couldn't be found
-     * @throws MibLoaderException if the MIB couldn't be loaded
-     *             correctly
+     * @throws MibLoaderException if one of the MIB:s couldn't be
+     *             loaded correctly
      */
     private Mib load(MibSource src) throws IOException, MibLoaderException {
-        int position = mibs.size();
         queue.clear();
         queue.add(src);
-        MibLoaderLog log = loadQueue();
-        if (log.errorCount() > 0) {
-            throw new MibLoaderException(log);
-        }
-        return mibs.get(position);
+        return loadQueue();
     }
 
     /**
@@ -546,13 +551,7 @@ public class MibLoader {
      * @since 2.3
      */
     public void unload(String name) throws MibLoaderException {
-        for (int i = 0; i < mibs.size(); i++) {
-            Mib mib = mibs.get(i);
-            if (mib.equals(name)) {
-                unload(mib);
-                return;
-            }
-        }
+        unload(getMib(name));
     }
 
     /**
@@ -574,8 +573,9 @@ public class MibLoader {
      * @since 2.3
      */
     public void unload(File file) throws MibLoaderException {
-        for (int i = 0; i < mibs.size(); i++) {
-            Mib mib = mibs.get(i);
+        Iterator<Mib> iter = mibs.values().iterator();
+        while (iter.hasNext()) {
+            Mib mib = iter.next();
             if (mib.equals(file)) {
                 unload(mib);
                 return;
@@ -602,15 +602,14 @@ public class MibLoader {
      * @since 2.3
      */
     public void unload(Mib mib) throws MibLoaderException {
-        int pos = mibs.indexOf(mib);
-        if (pos >= 0) {
+        if (mib != null) {
             Mib[] referers = mib.getImportingMibs();
             if (referers.length > 0) {
                 String msg = "cannot be unloaded due to reference in " +
                              referers[0];
                 throw new MibLoaderException(mib.getFile(), msg);
             }
-            mib = mibs.remove(pos);
+            mibs.remove(mib.getName());
             mib.clear();
         }
     }
@@ -632,8 +631,9 @@ public class MibLoader {
      * @since 2.9
      */
     public void unloadAll() {
-        for (int i = 0; i < mibs.size(); i++) {
-            mibs.get(i).clear();
+        Iterator<Mib> iter = mibs.values().iterator();
+        while (iter.hasNext()) {
+            iter.next().clear();
         }
         reset();
     }
@@ -659,16 +659,18 @@ public class MibLoader {
      * importing other MIB files. This method will either load all
      * MIB files in the queue or none (if errors were encountered).
      *
-     * @return the loader log for the whole queue
+     * @return the first MIB module loaded
      *
-     * @throws IOException if the MIB file in the queue couldn't be
-     *             found
+     * @throws IOException if the MIB couldn't be found
+     * @throws MibLoaderException if one of the MIB:s couldn't be
+     *             loaded correctly
      */
-    private MibLoaderLog loadQueue() throws IOException {
+    private Mib loadQueue() throws IOException, MibLoaderException {
 
         // Parse MIB files in queue
         MibLoaderLog log = new MibLoaderLog();
         ArrayList<Mib> processed = new ArrayList<Mib>();
+        Mib firstMib = null;
         while (queue.size() > 0) {
             try {
                 boolean loaded = false;
@@ -683,9 +685,13 @@ public class MibLoader {
                 if (src != null && getMib(src.getFile()) == null) {
                     List<Mib> list = src.parseMib(this, log);
                     for (int i = 0; i < list.size(); i++) {
-                        list.get(i).setLoaded(loaded);
+                        Mib mib = list.get(i);
+                        mib.setLoaded(loaded);
+                        mibs.put(mib.getName(), mib);
+                        if (firstMib == null) {
+                            firstMib = mib;
+                        }
                     }
-                    mibs.addAll(list);
                     processed.addAll(list);
                 }
             } catch (MibLoaderException e) {
@@ -714,10 +720,15 @@ public class MibLoader {
 
         // Handle errors
         if (log.errorCount() > 0) {
-            mibs.removeAll(processed);
+            for (int i = 0; i < processed.size(); i++) {
+                Mib mib = processed.get(i);
+                mibs.remove(mib.getName());
+                mib.clear();
+            }
+            throw new MibLoaderException(log);
         }
 
-        return log;
+        return firstMib;
     }
 
     /**
