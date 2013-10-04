@@ -165,7 +165,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
     /**
      * Returns the list of MIB modules found during analysis.
-     *  
+     *
      * @return a list of MIB modules
      */
     public ArrayList<Mib> getMibs() {

@@ -237,7 +237,7 @@ public class MibblePrinter {
     }
 
     /**
-     * Prints the detailed OID tree starting in the specified OID. 
+     * Prints the detailed OID tree starting in the specified OID.
      *
      * @param oid            the OID node to print
      */
@@ -283,7 +283,7 @@ public class MibblePrinter {
         System.err.print("Error: ");
         System.err.println(message);
     }
-    
+
     /**
      * Prints a file not found error message.
      *

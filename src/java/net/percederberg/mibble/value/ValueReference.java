@@ -166,7 +166,7 @@ public class ValueReference extends MibValue {
                 log.addWarning(location, message);
             }
         }
-        return sym; 
+        return sym;
     }
 
     /**

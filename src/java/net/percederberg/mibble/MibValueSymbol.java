@@ -242,7 +242,7 @@ public class MibValueSymbol extends MibSymbol {
     /**
      * Returns the parent symbol in the OID tree. This is a
      * convenience method for value symbols that have object
-     * identifier values. 
+     * identifier values.
      *
      * @return the parent symbol in the OID tree, or
      *         null for none or if not applicable
@@ -264,7 +264,7 @@ public class MibValueSymbol extends MibSymbol {
     /**
      * Returns the number of child symbols in the OID tree. This is a
      * convenience method for value symbols that have object
-     * identifier values. 
+     * identifier values.
      *
      * @return the number of child symbols in the OID tree, or
      *         zero (0) if not applicable
@@ -283,7 +283,7 @@ public class MibValueSymbol extends MibSymbol {
     /**
      * Returns a specific child symbol in the OID tree. This is a
      * convenience method for value symbols that have object
-     * identifier values. 
+     * identifier values.
      *
      * @param index          the child position, 0 <= index < count
      *
@@ -307,7 +307,7 @@ public class MibValueSymbol extends MibSymbol {
     /**
      * Returns all child symbols in the OID tree. This is a
      * convenience method for value symbols that have object
-     * identifier values. 
+     * identifier values.
      *
      * @return the array of child symbols in the OID tree, or
      *         an empty array if not applicable

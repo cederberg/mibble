@@ -279,7 +279,7 @@ public class TypeReference extends MibType implements MibContext {
                 log.addWarning(location, message);
             }
         }
-        return sym; 
+        return sym;
     }
 
     /**

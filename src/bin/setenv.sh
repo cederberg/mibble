@@ -32,7 +32,7 @@ function is_java_dir {
         return 1
     fi
     if [[ (! -d "$DIR/jre") && (! -d "$DIR/lib") ]] ; then
-        return 2 
+        return 2
     fi
     VERSION=`java_version "$DIR" | awk '{ print substr($1, 1, 3); }' | sed -e 's;\.;0;g'`
     if [[ "$VERSION" == "" ]] ; then

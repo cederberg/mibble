@@ -43,7 +43,7 @@ public class SnmpRequest {
     private MibType type;
 
     /**
-     * The SET request data value. 
+     * The SET request data value.
      */
     private String value;
 
@@ -74,7 +74,7 @@ public class SnmpRequest {
     /**
      * The request OID.
      *
-     * @return the request OID 
+     * @return the request OID
      */
     public String getOid() {
         return oid;

@@ -240,7 +240,7 @@ public class BitSetValue extends MibValue {
      * @param values         the defined symbol values
      *
      * @return an ASN.1 representation of this value
-     * 
+     *
      * @since 2.8
      */
     public String toAsn1String(MibValueSymbol[] values) {

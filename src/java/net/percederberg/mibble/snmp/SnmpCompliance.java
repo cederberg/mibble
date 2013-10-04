@@ -39,7 +39,7 @@ import net.percederberg.mibble.MibValue;
 public class SnmpCompliance {
 
     /**
-     * The compliance group flag. 
+     * The compliance group flag.
      */
     private boolean group;
 

@@ -92,7 +92,7 @@ public class SnmpPanel extends JPanel {
     /**
      * The host IP address label.
      */
-    private JLabel hostLabel = new JLabel("Host IP Address;"); 
+    private JLabel hostLabel = new JLabel("Host IP Address;");
 
     /**
      * The host IP address field.
@@ -461,7 +461,7 @@ public class SnmpPanel extends JPanel {
         c.insets = DEFAULT_INSETS;
         fieldPanel.add(valueField, c);
     }
-    
+
     /**
      * Initializes the field panel for SNMP version 3.
      */
@@ -641,7 +641,7 @@ public class SnmpPanel extends JPanel {
         c.insets = DEFAULT_INSETS;
         fieldPanel.add(valueField, c);
     }
-    
+
     /**
      * Creates and initializes the operation buttons.
      *

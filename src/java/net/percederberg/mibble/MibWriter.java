@@ -258,7 +258,7 @@ public class MibWriter {
             if (typeCons != null && typeCons != refCons) {
                 printConstraint(type, indent);
             }
-        } else if (type instanceof SequenceType) {            
+        } else if (type instanceof SequenceType) {
             SequenceType seqType = (SequenceType) type;
             os.println("SEQUENCE {");
             printTypeElements(seqType.getAllElements(),
@@ -267,7 +267,7 @@ public class MibWriter {
             os.println();
             os.print(indent);
             os.print("}");
-        } else if (type instanceof SequenceOfType) {            
+        } else if (type instanceof SequenceOfType) {
             SequenceOfType seqOfType = (SequenceOfType) type;
             os.print("SEQUENCE ");
             if (seqOfType.getConstraint() != null) {
@@ -860,7 +860,7 @@ public class MibWriter {
     private void printReference(Object obj, MibValueSymbol[] values) {
         if (obj instanceof BitSetValue) {
             obj = ((BitSetValue) obj).toAsn1String(values);
-        } else if (values != null) { 
+        } else if (values != null) {
             for (int i = 0; i < values.length; i++) {
                 if (values[i].getValue().equals(obj)) {
                     printReference(values[i].getName());

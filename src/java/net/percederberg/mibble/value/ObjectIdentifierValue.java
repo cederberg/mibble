@@ -234,7 +234,7 @@ public class ObjectIdentifierValue extends MibValue {
             }
         }
 
-        // Remove parent reference if all children were cleared 
+        // Remove parent reference if all children were cleared
         if (getChildCount() <= 0) {
             if (parent != null) {
                 getParent().children.remove(this);
@@ -575,7 +575,7 @@ public class ObjectIdentifierValue extends MibValue {
                                            ObjectIdentifierValue child)
         throws MibException {
 
-        // Insert child in value order, searching backwards to 
+        // Insert child in value order, searching backwards to
         // optimize the most common case (ordered insertion)
         int i = children.size();
         while (i > 0) {
@@ -730,7 +730,7 @@ public class ObjectIdentifierValue extends MibValue {
      * contain references to any parent OID value that can be found.
      *
      * @return an ASN.1 representation of this value
-     * 
+     *
      * @since 2.6
      */
     public String toAsn1String() {

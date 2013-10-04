@@ -61,9 +61,9 @@ import net.percederberg.mibble.type.Constraint;
  *    if (tag.getCategory() == MibTypeTag.UNIVERSAL) {
  *        // Set BER and DER identifier bits 8 &amp; 7 to 00
  *    } else if (tag.getCategory() == MibTypeTag.APPLICATION) {
- *        // Set BER and DER identifier bits 8 &amp; 7 to 01 
+ *        // Set BER and DER identifier bits 8 &amp; 7 to 01
  *    }
- *    ... 
+ *    ...
  *    if (!type.isPrimitive()) {
  *        // Set BER and DER constructed bit
  *    }</pre>

@@ -13,7 +13,7 @@ MIBBLE README
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
   separate LICENCE.txt file for more details.
-  
+
   Please see http://www.mibble.org/ for more information.
 
 

@@ -116,7 +116,7 @@ public class MibNode extends DefaultMutableTreeNode {
      */
     public SnmpObjectType getSnmpObjectType() {
         MibValueSymbol  symbol = getSymbol();
-        
+
         if (symbol != null && symbol.getType() instanceof SnmpObjectType) {
             return (SnmpObjectType) symbol.getType();
         } else {

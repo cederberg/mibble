@@ -275,7 +275,7 @@ public class MibTreeBuilder {
          */
         public String getToolTipText(MouseEvent e) {
             if (getRowForLocation(e.getX(), e.getY()) == -1) {
-                return null;    
+                return null;
             }
             TreePath path = getPathForLocation(e.getX(), e.getY());
             MibNode node = (MibNode) path.getLastPathComponent();

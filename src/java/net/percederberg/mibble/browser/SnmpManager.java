@@ -162,7 +162,7 @@ public class SnmpManager {
             pool.setUseAuthentication(auth != null);
             pool.setUsePrivacy(auth != null && privacy != null);
             if (auth != null) {
-                type = auth.getType(); 
+                type = auth.getType();
                 if (type.equals(SnmpAuthentication.MD5_TYPE)) {
                     protocol = SnmpContextv3Face.MD5_PROTOCOL;
                     pool.setAuthenticationProtocol(protocol);
