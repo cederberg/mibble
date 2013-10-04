@@ -28,3 +28,4 @@ del reg1.txt 2> nul
 echo ERROR: Windows 98 or previous is not supported.
 
 :DONE
+
