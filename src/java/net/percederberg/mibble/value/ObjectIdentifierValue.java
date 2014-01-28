@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2014 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
@@ -250,8 +250,9 @@ public class ObjectIdentifierValue extends MibValue {
 
     /**
      * Compares this object with the specified object for order. This
-     * method will only compare the string representations with each
-     * other.
+     * method will only attempt to compare each numerical OID part with
+     * the other value, but may fall back to comparing the string
+     * representations.
      *
      * @param obj            the object to compare to
      *
@@ -262,7 +263,35 @@ public class ObjectIdentifierValue extends MibValue {
      * @since 2.6
      */
     public int compareTo(Object obj) {
-        return toString().compareTo(obj.toString());
+        if (obj instanceof ObjectIdentifierValue) {
+            return compareToOid((ObjectIdentifierValue) obj);
+        } else {
+            return toString().compareTo(obj.toString());
+        }
+    }
+
+    /**
+     * Compares this object with the specified OID for order.
+     *
+     * @param oid            the OID to compare to
+     *
+     * @return less than zero if this OID is less than the specified,
+     *         zero if the OIDs are equal, or
+     *         greater than zero otherwise
+     *
+     * @since 2.10
+     */
+    private int compareToOid(ObjectIdentifierValue oid) {
+        int[] one = getParentValues();
+        int[] two = oid.getParentValues();
+        for (int i = 0; i < one.length; i++) {
+            if (i >= two.length) {
+                return 1;
+            } else if (one[i] != two[i]) {
+                return one[i] - two[i];
+            }
+        }
+        return (one.length == two.length) ? 0 : -1;
     }
 
     /**
@@ -294,11 +323,44 @@ public class ObjectIdentifierValue extends MibValue {
      *         null if no parent exists
      */
     public ObjectIdentifierValue getParent() {
-        if (parent != null && parent instanceof ObjectIdentifierValue) {
+        if (parent instanceof ObjectIdentifierValue) {
             return (ObjectIdentifierValue) parent;
         } else {
             return null;
         }
+    }
+
+    /**
+     * Returns an array of all the numeric values the OID chain. The root
+     * ancestor value is placed at index zero.
+     *
+     * @return an array of the numeric OID values
+     *
+     * @since 2.10
+     */
+    public int[] getParentValues() {
+        return getParentValuesInternal(1);
+    }
+
+    /**
+     * Returns an array of all the numeric values the OID chain. The root
+     * ancestor value is placed at index zero.
+     *
+     * @param length         the minimum array length
+     *
+     * @return an array of the numeric OID values
+     *
+     * @since 2.10
+     */
+    private int[] getParentValuesInternal(int length) {
+        int[] res;
+        if (parent instanceof ObjectIdentifierValue) {
+            res = ((ObjectIdentifierValue) parent).getParentValuesInternal(length + 1);
+        } else {
+            res = new int[length];
+        }
+        res[res.length - length] = value;
+        return res;
     }
 
     /**
