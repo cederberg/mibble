@@ -170,7 +170,7 @@ public class SnmpPanel extends JPanel {
     /**
      * The authentication type combo box.
      */
-    private JComboBox<String> authTypeCombo = new JComboBox<String>();
+    private JComboBox authTypeCombo = new JComboBox();
 
     /**
      * The authentication password label.
@@ -191,7 +191,7 @@ public class SnmpPanel extends JPanel {
     /**
      * The privacy type combo box.
      */
-    private JComboBox<String> privacyTypeCombo = new JComboBox<String>();
+    private JComboBox privacyTypeCombo = new JComboBox();
 
     /**
      * The privacy password label.
