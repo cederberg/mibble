@@ -129,6 +129,7 @@ public class MibbleBrowser {
         // Load command-line & preference MIBs
         frame.setBlocked(true);
         ArrayList<String> list = getFilePrefs();
+        removeFilePrefs();
         for (int i = 0; i < args.length; i++) {
             list.add(args[i]);
         }
