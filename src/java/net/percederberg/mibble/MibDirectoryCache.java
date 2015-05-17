@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
  * used only as a secondary alternative due to the performance
  * penalty of its creation.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.9
  */

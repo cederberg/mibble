@@ -30,7 +30,7 @@ import java.io.IOException;
  * A file location. This class contains a reference to an exact
  * location inside a text file.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.0
  */

@@ -32,7 +32,7 @@ import uk.co.westhawk.snmp.stack.varbind;
  * An SNMP response container.
  *
  * @author   Watsh Rajneesh
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.5
  */

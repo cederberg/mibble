@@ -68,7 +68,7 @@ import net.percederberg.mibble.type.Constraint;
  *        // Set BER and DER constructed bit
  *    }</pre>
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.0
  */

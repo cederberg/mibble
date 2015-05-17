@@ -37,7 +37,7 @@ import java.util.ArrayList;
  * output. The program will also return the number of validation
  * failures as its exit code.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.0
  */

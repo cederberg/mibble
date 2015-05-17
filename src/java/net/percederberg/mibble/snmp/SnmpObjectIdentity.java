@@ -35,7 +35,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  *
  * @see <a href="http://www.ietf.org/rfc/rfc2578.txt">RFC 2578 (SNMPv2-SMI)</a>
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.0
  */

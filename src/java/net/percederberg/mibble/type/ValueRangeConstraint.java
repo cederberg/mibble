@@ -35,7 +35,7 @@ import net.percederberg.mibble.value.StringValue;
  * A MIB type value range constraint. This class represents a value
  * range in a set of value constraints.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.0
  */

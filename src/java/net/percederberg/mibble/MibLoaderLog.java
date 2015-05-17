@@ -35,7 +35,7 @@ import net.percederberg.grammatica.parser.ParserLogException;
  * A MIB loader log. This class contains error and warning messages
  * from loading a MIB file and all imports not previously loaded.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.0
  */
@@ -345,7 +345,7 @@ public class MibLoaderLog {
      * A log entry. This class holds all the details in an error or a
      * warning log entry.
      *
-     * @author   Per Cederberg, <per at percederberg dot net>
+     * @author   Per Cederberg
      * @version  2.2
      * @since    2.2
      */

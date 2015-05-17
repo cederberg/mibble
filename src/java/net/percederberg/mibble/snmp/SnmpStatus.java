@@ -29,7 +29,7 @@ package net.percederberg.mibble.snmp;
  * comments for each individual constant regarding the support for
  * different SMI versions.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.2
  * @since    2.0
  */

@@ -39,7 +39,7 @@ import net.percederberg.mibble.value.NumberValue;
  * @see SnmpNotificationType
  * @see <a href="http://www.ietf.org/rfc/rfc1215.txt">RFC 1215 (RFC-1215)</a>
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.0
  */

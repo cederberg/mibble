@@ -27,7 +27,7 @@ import java.io.File;
  * A MIB exception. This exception is used to report processing
  * errors for operations on MIB types and values.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.0
  * @since    2.0
  */

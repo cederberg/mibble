@@ -25,7 +25,7 @@ package net.percederberg.mibble;
  * A MIB type symbol. This class holds information relevant to a MIB
  * type assignment, i.e. a defined type name.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.0
  */

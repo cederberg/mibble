@@ -34,7 +34,7 @@ import net.percederberg.mibble.MibValue;
  *
  * @see SnmpObjectType
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.8
  * @since    2.6
  */

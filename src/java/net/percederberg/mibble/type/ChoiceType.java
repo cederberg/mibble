@@ -33,7 +33,7 @@ import net.percederberg.mibble.MibValue;
  * A choice MIB type. In some other languages this is known as a
  * union.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.0
  */

@@ -34,7 +34,7 @@ import net.percederberg.mibble.type.StringType;
 /**
  * A numeric MIB value.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.9
  * @since    2.0
  */

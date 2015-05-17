@@ -26,7 +26,7 @@ package net.percederberg.mibble;
  * Each symbol is typically identified by it's name, which must be
  * unique within the MIB file. All symbols also have a data type.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.7
  * @since    2.0
  */

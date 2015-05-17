@@ -27,7 +27,7 @@ import java.util.List;
  * A MIB import list. This class contains a referenc to another MIB
  * and a number of symbols in it.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.6
  */

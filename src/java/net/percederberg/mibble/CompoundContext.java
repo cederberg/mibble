@@ -26,7 +26,7 @@ package net.percederberg.mibble;
  * with either one of two MIB contexts, one of which will have
  * priority.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.4
  * @since    2.0
  */

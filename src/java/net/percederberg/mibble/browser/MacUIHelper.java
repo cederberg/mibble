@@ -29,7 +29,7 @@ import java.lang.reflect.Proxy;
  * Provides UI glue for the Mac OS X platform. This class uses Java
  * reflection in order to be compilable everywhere.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.9
  */

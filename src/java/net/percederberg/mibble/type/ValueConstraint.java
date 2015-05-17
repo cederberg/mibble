@@ -33,7 +33,7 @@ import net.percederberg.mibble.value.StringValue;
  * A MIB type value constraint. This class represents a single value
  * in a set of value constraints.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.8
  * @since    2.0
  */

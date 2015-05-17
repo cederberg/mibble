@@ -29,7 +29,7 @@ package net.percederberg.mibble.snmp;
  * Please see the comments for each individual constant regarding the
  * support for different SNMP versions.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.5
  * @since    2.0
  */

@@ -36,7 +36,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  *
  * @see SnmpModuleSupport
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.0
  */

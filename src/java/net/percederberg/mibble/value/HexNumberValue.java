@@ -29,7 +29,7 @@ import net.percederberg.mibble.MibValue;
 /**
  * A hexadecimal numeric MIB value.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.10
  * @since    2.6
  */
