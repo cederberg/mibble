@@ -432,7 +432,7 @@ public class ObjectIdentifierValue extends MibValue {
      * ordered by their value, not necessarily in the order in which
      * they appear in the original MIB file.
      *
-     * @param index          the child position, 0 <= index < count
+     * @param index          the child position, starting from 0
      *
      * @return the child object identifier value, or
      *         null if not found

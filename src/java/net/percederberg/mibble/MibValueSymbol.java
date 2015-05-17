@@ -285,7 +285,7 @@ public class MibValueSymbol extends MibSymbol {
      * convenience method for value symbols that have object
      * identifier values.
      *
-     * @param index          the child position, 0 <= index < count
+     * @param index          the child position, starting from 0
      *
      * @return the child symbol in the OID tree, or
      *         null if not found or not applicable
