@@ -1,0 +1,105 @@
+/*
+ * build.gradle
+ *
+ * This work is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or (at your option) any later version.
+ *
+ * This work is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+ * USA
+ *
+ * Copyright (c) 2004 Per Cederberg. All rights reserved.
+ */
+
+apply plugin: 'java'
+apply plugin: 'pmd'
+apply plugin: 'findbugs'
+
+ant.importBuild 'build.xml'
+
+repositories {
+    jcenter()
+    flatDir {
+        dirs 'lib'
+    }
+}
+
+// Common (project specific) Configuration
+dependencies {
+    compile name: 'grammatica-1.6'
+    compile name: 'snmp6_0'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/java'
+        }
+    }
+}
+
+
+// PMD (https://pmd.github.io/) Configuration
+pmd {
+    ignoreFailures = true
+    sourceSets = [sourceSets.main]
+    reportsDir = file("$project.buildDir/reports/pmd")
+    ruleSets = [
+            'java-basic',
+            /** ignoring currently as code is analysed more will be enabled
+             'java-braces',
+             'java-clone',
+             'java-codesize',
+             'java-comments',
+             'java-controversial',
+             'java-coupling',
+             'java-design',
+             'java-empty',
+             'java-finalizers',
+             'java-imports',
+             'java-j2ee',
+             'java-javabeans',
+             'java-junit',
+             'java-logging-jakarta-commons',
+             'java-logging-java',
+             'java-migrating',
+             'java-naming',
+             'java-optimizations',
+             'java-strictexception',
+             'java-strings',
+             'java-sunsecure',
+             'java-typeresolution',
+             'java-unnecessary',
+             'java-unusedcode' **/
+    ]
+}
+
+tasks.withType(Pmd) {
+    exclude "**/Asn1*", "**/MibAnalyzer*"
+}
+
+
+// Findbugs (http://findbugs.sourceforge.net/) Configuration
+findbugs {
+    ignoreFailures = true
+    sourceSets = [sourceSets.main]
+}
+
+
+tasks.withType(FindBugs) {
+    exclude "**/Asn1*", "**/MibAnalyzer*"
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
+
