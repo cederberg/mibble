@@ -150,7 +150,7 @@ public class ValueRangeConstraint implements Constraint {
      * Checks if the specified value is compatible with this
      * constraint.
      *
-     * @param value          the value to check
+     * @param value          the (integer) value to check
      *
      * @return true if the value is compatible, or
      *         false otherwise
@@ -215,6 +215,9 @@ public class ValueRangeConstraint implements Constraint {
                                Number value1,
                                Number value2) {
 
+        // The floating-point comparisons are only here to handle the
+        // INFINTIY ranges from ASN.1. These are only used as marker values,
+        // so no "real" floating-point comparison is supported.
         if (value1 instanceof Float) {
             return value1.floatValue() == Float.NEGATIVE_INFINITY;
         } else if (value2 instanceof Float) {
