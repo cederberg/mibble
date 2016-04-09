@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -204,7 +204,7 @@ public class Mib implements MibContext {
      * Clears and prepares this MIB for garbage collection. This method
      * will recursively clear all associated symbols, making sure that
      * no data structures references symbols from this MIB. Obviously,
-     * this method shouldn't be called unless all dependant MIBs have
+     * this method shouldn't be called unless all dependent MIBs have
      * been cleared first.
      */
     void clear() {

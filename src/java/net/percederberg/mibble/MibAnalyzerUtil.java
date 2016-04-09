@@ -16,12 +16,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 
 import net.percederberg.grammatica.parser.Node;
@@ -88,24 +87,23 @@ class MibAnalyzerUtil {
      */
     static String getComments(Node node) {
         String comment = "";
-        String str = getCommentsBefore(node);
+        String str = processComments(findCommentTokenBefore(node));
         if (str != null) {
             comment = str;
         }
-        str = getCommentsInside(node);
+        str = processCommentsInside(node);
         if (str != null) {
             if (comment.length() > 0) {
                 comment += "\n\n";
             }
             comment += str;
         }
-        Token token = getCommentTokenSameLine(node);
-        if (token != null) {
+        str = processComments(findCommentTokenAfter(node, true));
+        if (str != null) {
             if (comment.length() > 0) {
                 comment += "\n\n";
             }
-            token = token.getPreviousToken();
-            comment += getCommentsAfter(token);
+            comment += str;
         }
         return comment.length() <= 0 ? null : comment;
     }
@@ -122,140 +120,64 @@ class MibAnalyzerUtil {
      *         null if no comments were found
      */
     static String getCommentsFooter(Node node) {
-        String comment = getCommentsAfter(node);
+        String comment = processComments(findCommentTokenAfter(node, false));
         commentTokens.clear();
         return comment;
     }
 
     /**
-     * Returns all the comments before the specified node. If
-     * there are multiple comment lines possibly separated by
-     * whitespace, they will be concatenated into one string.
+     * Reads comment tokens (and whitespace). Reading is stopped on
+     * the first non-comment or whitespace token, or if a token is
+     * marked as already consumed.
      *
-     * @param node          the production or token node
+     * @param token          the starting comment token
      *
-     * @return the comment string, or
-     *         null if no comments were found
+     * @return the comment text (without '--' prefixes), or
+     *         null if no comment text remained after trimming
      */
-    private static String getCommentsBefore(Node node) {
-        Token token = getFirstToken(node);
-        if (token != null) {
-            token = token.getPreviousToken();
-        }
-        ArrayList<String> comments = new ArrayList<String>();
-        while (token != null) {
-            if (token.getId() == Asn1Constants.WHITESPACE) {
-                comments.add(getLineBreaks(token.getImage()));
-            } else if (token.getId() == Asn1Constants.COMMENT &&
-                       !commentTokens.contains(token)) {
-
+    private static String processComments(Token token) {
+        StringBuilder buffer = new StringBuilder();
+        while (token != null && !commentTokens.contains(token)) {
+            if (token.getId() == Asn1Constants.COMMENT) {
                 commentTokens.add(token);
-                comments.add(token.getImage().substring(2).trim());
+                buffer.append(token.getImage().substring(2).trim());
+            } else if (token.getId() == Asn1Constants.WHITESPACE) {
+                buffer.append(getLineBreaks(token.getImage()));
             } else {
                 break;
             }
-            token = token.getPreviousToken();
-        }
-        StringBuilder buffer = new StringBuilder();
-        for (int i = comments.size() - 1; i >= 0; i--) {
-            buffer.append(comments.get(i));
+            token = token.getNextToken();
         }
         String res = buffer.toString().trim();
         return res.length() <= 0 ? null : res;
     }
 
     /**
-     * Returns all the comments after the specified node. If
-     * there are multiple comment lines possibly separated by
-     * whitespace, they will be concatenated into one string.
-     *
-     * @param node           the production or token node
-     *
-     * @return the comment string, or
-     *         null if no comments were found
-     */
-    private static String getCommentsAfter(Node node) {
-        Token token = getLastToken(node);
-        if (token != null) {
-            token = token.getNextToken();
-        }
-        StringBuilder comment = new StringBuilder();
-        while (token != null) {
-            if (token.getId() == Asn1Constants.WHITESPACE) {
-                comment.append(getLineBreaks(token.getImage()));
-            } else if (token.getId() == Asn1Constants.COMMENT &&
-                       !commentTokens.contains(token)) {
-
-                commentTokens.add(token);
-                comment.append(token.getImage().substring(2).trim());
-            } else {
-                break;
-            }
-            token = token.getNextToken();
-        }
-        String res = comment.toString().trim();
-        return res.length() <= 0 ? null : res;
-    }
-
-    /**
-     * Returns all the unhandled comments inside the specified node.
+     * Reads all unmarked comment tokens inside the specified node.
      * Note that only comment tokens not present in the token cache
      * will be returned by this method.
      *
      * @param node           the production or token node
      *
-     * @return the comment string, or
+     * @return the comment text (without '--' prefixes), or
      *         null if no comments were found
      */
-    private static String getCommentsInside(Node node) {
-        StringBuilder comment = new StringBuilder();
-        Token token = getFirstToken(node);
-        Token last = getLastToken(node);
+    private static String processCommentsInside(Node node) {
+        StringBuilder buffer = new StringBuilder();
+        Token token = findFirstToken(node);
+        Token last = findLastToken(node);
         while (token != null && token != last) {
             if (token.getId() == Asn1Constants.COMMENT &&
                 !commentTokens.contains(token)) {
 
                 commentTokens.add(token);
-                comment.append(token.getImage().substring(2).trim());
-                comment.append("\n");
+                buffer.append(token.getImage().substring(2).trim());
+                buffer.append("\n");
             }
             token = token.getNextToken();
         }
-        String res = comment.toString().trim();
+        String res = buffer.toString().trim();
         return res.length() <= 0 ? null : res;
-    }
-
-    /**
-     * Returns the first comment token on the same line.
-     *
-     * @param node           the production node
-     *
-     * @return the first comment token on the same line
-     */
-    private static Token getCommentTokenSameLine(Node node) {
-        Token last = getLastToken(node);
-        if (last == null) {
-            return null;
-        }
-        Token token = last.getNextToken();
-        while (token != null) {
-            switch (token.getId()) {
-            case Asn1Constants.WHITESPACE:
-            case Asn1Constants.COMMA:
-                // Skip to next
-                break;
-            case Asn1Constants.COMMENT:
-                if (last.getEndLine() == token.getStartLine()) {
-                    return token;
-                } else {
-                    return null;
-                }
-            default:
-                return null;
-            }
-            token = token.getNextToken();
-        }
-        return null;
     }
 
     /**
@@ -266,7 +188,7 @@ class MibAnalyzerUtil {
      * @return the first token in the production, or
      *         null if none was found
      */
-    private static Token getFirstToken(Node node) {
+    private static Token findFirstToken(Node node) {
         while (node instanceof Production) {
             node = node.getChildAt(0);
         }
@@ -281,11 +203,73 @@ class MibAnalyzerUtil {
      * @return the last token in the production, or
      *         null if none was found
      */
-    private static Token getLastToken(Node node) {
+    private static Token findLastToken(Node node) {
         while (node instanceof Production) {
             node = node.getChildAt(node.getChildCount() - 1);
         }
         return (Token) node;
+    }
+
+    /**
+     * Returns the first comment token before the specified node.
+     *
+     * @param node           the production node
+     *
+     * @return the first comment token found, or
+     *         null if no comment token found
+     */
+    private static Token findCommentTokenBefore(Node node) {
+        Token comment = null;
+        Token token = findFirstToken(node);
+        if (token == null) {
+            return null;
+        }
+        token = token.getPreviousToken();
+        while (token != null && !commentTokens.contains(token)) {
+            if (token.getId() == Asn1Constants.COMMENT) {
+                comment = token;
+            } else if (token.getId() == Asn1Constants.WHITESPACE) {
+                // Ignore token, check next
+            } else {
+                break;
+            }
+            token = token.getPreviousToken();
+        }
+        return comment;
+    }
+
+
+    /**
+     * Returns the first comment token after the specified node.
+     * Optionally, only tokens on the same line are checked.
+     *
+     * @param node           the production node
+     * @param sameline       the same line number flag
+     *
+     * @return the first comment token found, or
+     *         null if no comment token found
+     */
+    private static Token findCommentTokenAfter(Node node, boolean sameline) {
+        Token token = findLastToken(node);
+        if (token == null) {
+            return null;
+        }
+        int lineNo = token.getEndLine();
+        token = token.getNextToken();
+        while (token != null && !commentTokens.contains(token)) {
+            if (sameline && lineNo != token.getStartLine()) {
+                return null;
+            } else if (token.getId() == Asn1Constants.COMMENT) {
+                return token;
+            } else if (token.getId() == Asn1Constants.WHITESPACE ||
+                       token.getId() == Asn1Constants.COMMA) {
+                // Ignore token, check next
+            } else {
+                return null;
+            }
+            token = token.getNextToken();
+        }
+        return null;
     }
 
     /**
