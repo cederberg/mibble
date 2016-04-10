@@ -23,6 +23,7 @@ package net.percederberg.mibble.browser;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import net.percederberg.mibble.Mib;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.snmp.SnmpObjectType;
@@ -45,9 +46,19 @@ public class MibNode extends DefaultMutableTreeNode {
     private String name;
 
     /**
-     * The MIB node object identifier (oid) value.
+     * The MIB node value.
      */
-    private ObjectIdentifierValue value;
+    private Object value;
+
+    /**
+     * The MIB node MIB value (if applicable).
+     */
+    private Mib mib;
+
+    /**
+     * The MIB node object identifier (oid) value (if applicable).
+     */
+    private ObjectIdentifierValue oid;
 
     /**
      * Creates a new MIB tree node.
@@ -55,10 +66,15 @@ public class MibNode extends DefaultMutableTreeNode {
      * @param name           the node name
      * @param value          the node object identifier value
      */
-    public MibNode(String name, ObjectIdentifierValue value) {
+    public MibNode(String name, Object value) {
         super(name);
         this.name = name;
         this.value = value;
+        if (value instanceof Mib) {
+            this.mib = (Mib) value;
+        } else if (value instanceof ObjectIdentifierValue) {
+            this.oid = (ObjectIdentifierValue) value;
+        }
     }
 
     /**
@@ -71,12 +87,12 @@ public class MibNode extends DefaultMutableTreeNode {
     }
 
     /**
-     * Returns the node object identifier value.
+     * Returns the node  value.
      *
-     * @return the node object identifier value, or
+     * @return the node value, or
      *         null if no value is present
      */
-    public ObjectIdentifierValue getValue() {
+    public Object getValue() {
         return value;
     }
 
@@ -84,14 +100,10 @@ public class MibNode extends DefaultMutableTreeNode {
      * Returns the object identifier (oid) associated with the node.
      *
      * @return the node object identifier (oid), or
-     *         an empty string if no object identifier is present
+     *         null if no object identifier is present
      */
-    public String getOid() {
-        if (value == null) {
-            return "";
-        } else {
-            return value.toString();
-        }
+    public ObjectIdentifierValue getOid() {
+        return oid;
     }
 
     /**
@@ -101,10 +113,10 @@ public class MibNode extends DefaultMutableTreeNode {
      *         null for none
      */
     public MibValueSymbol getSymbol() {
-        if (value == null) {
+        if (oid == null) {
             return null;
         } else {
-            return value.getSymbol();
+            return oid.getSymbol();
         }
     }
 
@@ -130,8 +142,10 @@ public class MibNode extends DefaultMutableTreeNode {
      * @return the detailed node description
      */
     public String getDescription() {
-        if (value != null  && value.getSymbol() != null) {
-            return value.getSymbol().toString();
+        if (oid != null  && oid.getSymbol() != null) {
+            return oid.getSymbol().getText();
+        } else if (mib != null) {
+            return mib.getText();
         } else {
             return "";
         }
@@ -146,8 +160,8 @@ public class MibNode extends DefaultMutableTreeNode {
         MibType  type;
         String   str;
 
-        if (value != null  && value.getSymbol() != null) {
-            type = value.getSymbol().getType();
+        if (oid != null  && oid.getSymbol() != null) {
+            type = oid.getSymbol().getType();
             if (type instanceof SnmpType) {
                 str = ((SnmpType) type).getDescription();
                 if (str.indexOf('.') > 0) {

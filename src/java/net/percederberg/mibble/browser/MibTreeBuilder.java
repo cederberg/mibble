@@ -130,7 +130,7 @@ public class MibTreeBuilder {
 
         // Add sub tree root to MIB tree
         MibNode root = (MibNode) mibTree.getModel().getRoot();
-        node = new MibNode(mib.getName(), null);
+        node = new MibNode(mib.getName(), mib);
         node.add((MibNode) valueTree.getModel().getRoot());
         root.add(node);
     }
@@ -217,7 +217,7 @@ public class MibTreeBuilder {
         Enumeration<MibNode> e = root.preorderEnumeration();
         while (e.hasMoreElements()) {
             MibNode tmp = e.nextElement();
-            if (tmp.getValue() == null && tmp.getName().equals(mibName)) {
+            if (tmp.getName().equals(mibName)) {
                 removeNodes(tmp);
                 model.removeNodeFromParent(tmp);
                 return true;

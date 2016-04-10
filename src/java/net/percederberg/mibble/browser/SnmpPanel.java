@@ -741,14 +741,14 @@ public class SnmpPanel extends JPanel {
      */
     public void updateOid() {
         MibNode node = frame.getSelectedNode();
-        if (node == null) {
+        if (node == null || node.getOid() == null) {
             oidField.setText("");
         } else if (node.getSymbol() != null
                 && node.getSymbol().isScalar()) {
 
-            oidField.setText(node.getOid() + ".0");
+            oidField.setText(node.getOid().toString() + ".0");
         } else {
-            oidField.setText(node.getOid());
+            oidField.setText(node.getOid().toString());
         }
     }
 
