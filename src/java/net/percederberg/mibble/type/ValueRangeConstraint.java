@@ -16,15 +16,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
 
 import java.math.BigInteger;
 
-import net.percederberg.mibble.FileLocation;
 import net.percederberg.mibble.MibException;
+import net.percederberg.mibble.MibFileRef;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
@@ -42,10 +42,10 @@ import net.percederberg.mibble.value.StringValue;
 public class ValueRangeConstraint implements Constraint {
 
     /**
-     * The constraint location. This value is reset to null once the
-     * constraint has been initialized.
+     * The constraint MIB file location. This value is reset to null
+     * once the constraint has been initialized.
      */
-    private FileLocation location;
+    private MibFileRef fileRef;
 
     /**
      * The lower bound value.
@@ -70,19 +70,19 @@ public class ValueRangeConstraint implements Constraint {
     /**
      * Creates a new value range constraint.
      *
-     * @param location       the constraint location
+     * @param fileRef        the constraint MIB file location
      * @param lower          the lower bound, or null for minimum
      * @param strictLower    the strict lower bound (less than) flag
      * @param upper          the upper bound, or null for maximum
      * @param strictUpper    the strict upper bound (greater than) flag
      */
-    public ValueRangeConstraint(FileLocation location,
+    public ValueRangeConstraint(MibFileRef fileRef,
                                 MibValue lower,
                                 boolean strictLower,
                                 MibValue upper,
                                 boolean strictUpper) {
 
-        this.location = location;
+        this.fileRef = fileRef;
         this.lower = lower;
         this.upper = upper;
         this.strictLower = strictLower;
@@ -111,11 +111,11 @@ public class ValueRangeConstraint implements Constraint {
         if (upper != null) {
             upper = upper.initialize(log, type);
         }
-        if (location != null && !isCompatible(type)) {
+        if (fileRef != null && !isCompatible(type)) {
             String msg = "value range constraint not compatible with this type";
-            log.addWarning(location, msg);
+            log.addWarning(fileRef, msg);
         }
-        location = null;
+        fileRef = null;
     }
 
     /**

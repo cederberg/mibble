@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -39,19 +39,15 @@ public class MibTypeSymbol extends MibSymbol {
     /**
      * Creates a new type symbol
      *
-     * @param location       the symbol location
+     * @param fileRef        the MIB file reference
      * @param mib            the symbol MIB file
      * @param name           the symbol name
      * @param type           the symbol type
      *
      * @since 2.2
      */
-    MibTypeSymbol(FileLocation location,
-                  Mib mib,
-                  String name,
-                  MibType type) {
-
-        super(location, mib, name);
+    MibTypeSymbol(MibFileRef fileRef, Mib mib, String name, MibType type) {
+        super(fileRef, mib, name);
         this.type = type;
     }
 
@@ -74,7 +70,7 @@ public class MibTypeSymbol extends MibSymbol {
             try {
                 type = type.initialize(this, log);
             } catch (MibException e) {
-                log.addError(e.getLocation(), e.getMessage());
+                log.addError(e);
                 type = null;
             }
         }

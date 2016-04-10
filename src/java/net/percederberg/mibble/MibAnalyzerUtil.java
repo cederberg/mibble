@@ -21,6 +21,7 @@
 
 package net.percederberg.mibble;
 
+import java.io.File;
 import java.util.HashSet;
 
 import net.percederberg.grammatica.parser.Node;
@@ -70,6 +71,26 @@ class MibAnalyzerUtil {
             }
             return false;
         }
+    }
+
+    /**
+     * Returns the MIB file reference for a production node.
+     *
+     * @param file           the MIB file
+     * @param node           the production or token node
+     *
+     * @return the MIB file reference
+     */
+    static MibFileRef getFileRef(File file, Node node) {
+        MibFileRef ref = new MibFileRef(file,
+                                        node.getStartLine(),
+                                        node.getStartColumn());
+        Token comment = findCommentTokenBefore(node);
+        if (comment != null) {
+            ref.lineCommentStart = comment.getStartLine();
+        }
+        ref.lineEnd = node.getEndLine();
+        return ref;
     }
 
     /**

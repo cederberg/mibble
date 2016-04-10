@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -630,7 +630,7 @@ public class MibLoader {
             if (referers.length > 0) {
                 String msg = "cannot be unloaded due to reference in " +
                              referers[0];
-                throw new MibLoaderException(mib.getFile(), msg);
+                throw new MibLoaderException(msg);
             }
             mibs.remove(mib.getName());
             mib.clear();
@@ -958,7 +958,7 @@ public class MibLoader {
             } catch (ParserCreationException e) {
                 String msg = "parser creation error in ASN.1 parser: " +
                              e.getMessage();
-                log.addInternalError(file, msg);
+                log.addInternalError(msg);
                 throw new MibLoaderException(log);
             } catch (ParserLogException e) {
                 log.addAll(file, e);

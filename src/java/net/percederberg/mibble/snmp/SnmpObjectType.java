@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -179,7 +179,7 @@ public class SnmpObjectType extends SnmpType {
         throws MibException {
 
         if (!(symbol instanceof MibValueSymbol)) {
-            throw new MibException(symbol.getLocation(),
+            throw new MibException(symbol.getFileRef(),
                                    "only values can have the " +
                                    getName() + " type");
         }
@@ -255,7 +255,7 @@ public class SnmpObjectType extends SnmpType {
         Mib mib = symbol.getMib();
         MibSymbol elementSymbol = mib.getSymbol(element.getName());
         if (elementSymbol == null) {
-            log.addWarning(symbol.getLocation(),
+            log.addWarning(symbol.getFileRef(),
                            "sequence element " + name + " is undefined " +
                            "in MIB, a default symbol will be created");
             name = element.getName();
@@ -271,18 +271,18 @@ public class SnmpObjectType extends SnmpType {
                                               new ArrayList<SnmpIndex>(0),
                                               null);
             ObjectIdentifierValue value = (ObjectIdentifierValue) symbol.getValue();
-            value = new ObjectIdentifierValue(symbol.getLocation(),
+            value = new ObjectIdentifierValue(symbol.getFileRef(),
                                               value,
                                               element.getName(),
                                               pos);
-            elementSymbol = new MibValueSymbol(symbol.getLocation(),
+            elementSymbol = new MibValueSymbol(symbol.getFileRef(),
                                                mib,
                                                name,
                                                type,
                                                value);
             elementSymbol.initialize(log);
         } else if (elementSymbol instanceof MibTypeSymbol) {
-            throw new MibException(symbol.getLocation(),
+            throw new MibException(symbol.getFileRef(),
                                    "sequence element " + name +
                                    " does not refer to a value, but " +
                                    "to a type");

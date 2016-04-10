@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.snmp;
@@ -109,7 +109,7 @@ public class SnmpModuleIdentity extends SnmpType {
         throws MibException {
 
         if (!(symbol instanceof MibValueSymbol)) {
-            throw new MibException(symbol.getLocation(),
+            throw new MibException(symbol.getFileRef(),
                                    "only values can have the " +
                                    getName() + " type");
         }

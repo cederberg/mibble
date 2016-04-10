@@ -16,15 +16,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
 
 import java.util.ArrayList;
 
-import net.percederberg.mibble.FileLocation;
 import net.percederberg.mibble.MibException;
+import net.percederberg.mibble.MibFileRef;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
@@ -41,10 +41,10 @@ import net.percederberg.mibble.value.StringValue;
 public class SizeConstraint implements Constraint {
 
     /**
-     * The constraint location. This value is reset to null once the
-     * constraint has been initialized.
+     * The constraint MIB file location. This value is reset to null
+     * once the constraint has been initialized.
      */
-    private FileLocation location;
+    private MibFileRef fileRef;
 
     /**
      * The constrained size values.
@@ -54,11 +54,11 @@ public class SizeConstraint implements Constraint {
     /**
      * Creates a new size constraint.
      *
-     * @param location       the constraint location
+     * @param fileRef        the constraint MIB file location
      * @param values         the constrained size values
      */
-    public SizeConstraint(FileLocation location, Constraint values) {
-        this.location = location;
+    public SizeConstraint(MibFileRef fileRef, Constraint values) {
+        this.fileRef = fileRef;
         this.values = values;
     }
 
@@ -79,11 +79,11 @@ public class SizeConstraint implements Constraint {
         throws MibException {
 
         values.initialize(new IntegerType(), log);
-        if (location != null && !isCompatible(type)) {
+        if (fileRef != null && !isCompatible(type)) {
             String message = "size constraint not compatible with this type";
-            log.addWarning(location, message);
+            log.addWarning(fileRef, message);
         }
-        location = null;
+        fileRef = null;
     }
 
     /**

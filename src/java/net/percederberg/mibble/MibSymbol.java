@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -27,15 +27,15 @@ package net.percederberg.mibble;
  * unique within the MIB file. All symbols also have a data type.
  *
  * @author   Per Cederberg
- * @version  2.7
+ * @version  2.10
  * @since    2.0
  */
 public abstract class MibSymbol {
 
     /**
-     * The symbol location.
+     * The MIB file reference.
      */
-    private FileLocation location;
+    private MibFileRef fileRef;
 
     /**
      * The MIB containing this symbol.
@@ -56,14 +56,14 @@ public abstract class MibSymbol {
      * Creates a new symbol with the specified name. The symbol will
      * also be added to the MIB file.
      *
-     * @param location       the symbol location
+     * @param fileRef        the MIB file reference
      * @param mib            the symbol MIB file
      * @param name           the symbol name
      *
      * @since 2.2
      */
-    MibSymbol(FileLocation location, Mib mib, String name) {
-        this.location = location;
+    MibSymbol(MibFileRef fileRef, Mib mib, String name) {
+        this.fileRef = fileRef;
         this.mib = mib;
         this.name = name;
         if (mib != null) {
@@ -96,12 +96,26 @@ public abstract class MibSymbol {
     abstract void clear();
 
     /**
+     * Returns the MIB file reference.
+     *
+     * <strong>NOTE:</strong> This is an internal method that is used
+     * for extracting MIB source text.
+     *
+     * @return the MIB file reference
+     */
+    public MibFileRef getFileRef() {
+        return fileRef;
+    }
+
+    /**
      * Returns the file location.
      *
      * @return the file location
+     *
+     * @deprecated Use the getFileRef() method instead.
      */
     public FileLocation getLocation() {
-        return location;
+        return fileRef;
     }
 
     /**

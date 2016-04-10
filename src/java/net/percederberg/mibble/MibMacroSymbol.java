@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2005-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2005-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -34,12 +34,12 @@ public class MibMacroSymbol extends MibSymbol {
     /**
      * Creates a new macro symbol
      *
-     * @param location       the symbol location
+     * @param fileRef        the MIB file reference
      * @param mib            the symbol MIB file
      * @param name           the symbol name
      */
-    MibMacroSymbol(FileLocation location, Mib mib, String name) {
-        super(location, mib, name);
+    MibMacroSymbol(MibFileRef fileRef, Mib mib, String name) {
+        super(fileRef, mib, name);
     }
 
     /**

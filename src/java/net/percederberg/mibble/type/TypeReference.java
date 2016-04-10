@@ -16,16 +16,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
 
 import java.util.ArrayList;
 
-import net.percederberg.mibble.FileLocation;
 import net.percederberg.mibble.MibContext;
 import net.percederberg.mibble.MibException;
+import net.percederberg.mibble.MibFileRef;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibSymbol;
 import net.percederberg.mibble.MibType;
@@ -48,9 +48,9 @@ import net.percederberg.mibble.MibValue;
 public class TypeReference extends MibType implements MibContext {
 
     /**
-     * The reference location.
+     * The reference MIB file location.
      */
-    private FileLocation location;
+    private MibFileRef fileRef;
 
     /**
      * The reference context.
@@ -90,16 +90,16 @@ public class TypeReference extends MibType implements MibContext {
     /**
      * Creates a new type reference.
      *
-     * @param location       the reference location
+     * @param fileRef        the reference MIB file location
      * @param context        the reference context
      * @param name           the reference name
      */
-    public TypeReference(FileLocation location,
+    public TypeReference(MibFileRef fileRef,
                          MibContext context,
                          String name) {
 
         super("ReferenceToType(" + name + ")", false);
-        this.location = location;
+        this.fileRef = fileRef;
         this.context = context;
         this.name = name;
     }
@@ -107,34 +107,34 @@ public class TypeReference extends MibType implements MibContext {
     /**
      * Creates a new type reference.
      *
-     * @param location       the reference location
+     * @param fileRef        the reference MIB file location
      * @param context        the reference context
      * @param name           the reference name
      * @param constraint     the additional type constraint
      */
-    public TypeReference(FileLocation location,
+    public TypeReference(MibFileRef fileRef,
                          MibContext context,
                          String name,
                          Constraint constraint) {
 
-        this(location, context, name);
+        this(fileRef, context, name);
         this.constraint = constraint;
     }
 
     /**
      * Creates a new type reference.
      *
-     * @param location       the reference location
+     * @param fileRef        the reference MIB file location
      * @param context        the reference context
      * @param name           the reference name
      * @param values         the additional defined symbols
      */
-    public TypeReference(FileLocation location,
+    public TypeReference(MibFileRef fileRef,
                          MibContext context,
                          String name,
                          ArrayList<?> values) {
 
-        this(location, context, name);
+        this(fileRef, context, name);
         this.values = values;
     }
 
@@ -167,15 +167,15 @@ public class TypeReference extends MibType implements MibContext {
             if (type == null) {
                 String msg = "referenced symbol '" + sym.getName() +
                              "' contains undefined type";
-                throw new MibException(location, msg);
+                throw new MibException(fileRef, msg);
             }
             return type;
         } else if (sym == null) {
             String msg = "undefined symbol '" + name + "'";
-            throw new MibException(location, msg);
+            throw new MibException(fileRef, msg);
         } else {
             String msg = "referenced symbol '" + name + "' is not a type";
-            throw new MibException(location, msg);
+            throw new MibException(fileRef, msg);
         }
     }
 
@@ -217,7 +217,7 @@ public class TypeReference extends MibType implements MibContext {
             }
             type = type.initialize(symbol, log);
         } catch (UnsupportedOperationException e) {
-            throw new MibException(location, e.getMessage());
+            throw new MibException(fileRef, e.getMessage());
         }
         type.setReferenceSymbol(ref);
         initializeTypeTag(type, tag);
@@ -245,12 +245,12 @@ public class TypeReference extends MibType implements MibContext {
     }
 
     /**
-     * Returns the file containing the reference.
+     * Returns the reference MIB file location.
      *
-     * @return the file containing the reference
+     * @return the reference MIB file location
      */
-    public FileLocation getLocation() {
-        return location;
+    public MibFileRef getFileRef() {
+        return fileRef;
     }
 
     /**
@@ -276,7 +276,7 @@ public class TypeReference extends MibType implements MibContext {
             if (sym != null && log != null) {
                 String message = "missing import for '" + name + "', using " +
                           sym.getMib().getName();
-                log.addWarning(location, message);
+                log.addWarning(fileRef, message);
             }
         }
         return sym;

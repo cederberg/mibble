@@ -90,7 +90,7 @@ public class SnmpModuleSupport {
             try {
                 variations.get(i).initialize(log);
             } catch (MibException e) {
-                log.addError(e.getLocation(), e.getMessage());
+                log.addError(e);
             }
         }
     }

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
@@ -133,7 +133,7 @@ public class IntegerType extends MibType implements MibContext {
             sym.initialize(log);
             if (!isCompatibleType(sym.getValue())) {
                 String message = "value is not compatible with type";
-                throw new MibException(sym.getLocation(), message);
+                throw new MibException(sym.getFileRef(), message);
             }
         }
         return this;

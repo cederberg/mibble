@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -24,7 +24,7 @@ package net.percederberg.mibble;
 import java.util.List;
 
 /**
- * A MIB import list. This class contains a referenc to another MIB
+ * A MIB import list. This class contains a reference to another MIB
  * and a number of symbols in it.
  *
  * @author   Per Cederberg
@@ -46,7 +46,7 @@ public class MibImport implements MibContext {
     /**
      * The import location.
      */
-    private FileLocation location;
+    private MibFileRef fileRef;
 
     /**
      * The imported MIB name.
@@ -68,12 +68,12 @@ public class MibImport implements MibContext {
      *                       null for all symbols
      */
     MibImport(MibLoader loader,
-              FileLocation location,
+              MibFileRef fileRef,
               String name,
               List<String> symbols) {
 
         this.loader = loader;
-        this.location = location;
+        this.fileRef = fileRef;
         this.name = name;
         this.symbols = symbols;
     }
@@ -91,14 +91,14 @@ public class MibImport implements MibContext {
         mib = loader.getMib(name);
         if (mib == null) {
             String msg = "couldn't find referenced MIB '" + name + "'";
-            throw new MibException(location, msg);
+            throw new MibException(fileRef, msg);
         }
         if (symbols != null) {
             for (int i = 0; i < symbols.size(); i++) {
                 if (mib.getSymbol(symbols.get(i).toString()) == null) {
                     String msg = "couldn't find imported symbol '" +
                                  symbols.get(i) + "' in MIB '" + name + "'";
-                    throw new MibException(location, msg);
+                    throw new MibException(fileRef, msg);
                 }
             }
         }

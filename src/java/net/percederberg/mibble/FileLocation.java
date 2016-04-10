@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -39,17 +39,17 @@ public class FileLocation {
     /**
      * The file name.
      */
-    private File file;
+    protected File file;
 
     /**
      * The line number.
      */
-    private int line;
+    protected int line;
 
     /**
      * The column number.
      */
-    private int column;
+    protected int column;
 
     /**
      * Creates a new file location without an exact line or column

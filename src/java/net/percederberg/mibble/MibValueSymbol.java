@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -53,7 +53,7 @@ public class MibValueSymbol extends MibSymbol {
      * <strong>NOTE:</strong> This is an internal constructor that
      * should only be called by the MIB loader.
      *
-     * @param location       the symbol location
+     * @param fileRef        the MIB file reference
      * @param mib            the symbol MIB file
      * @param name           the symbol name
      * @param type           the symbol type
@@ -61,13 +61,13 @@ public class MibValueSymbol extends MibSymbol {
      *
      * @since 2.2
      */
-    public MibValueSymbol(FileLocation location,
+    public MibValueSymbol(MibFileRef fileRef,
                           Mib mib,
                           String name,
                           MibType type,
                           MibValue value) {
 
-        super(location, mib, name);
+        super(fileRef, mib, name);
         this.type = type;
         this.value = value;
     }
@@ -91,7 +91,7 @@ public class MibValueSymbol extends MibSymbol {
             try {
                 type = type.initialize(this, log);
             } catch (MibException e) {
-                log.addError(e.getLocation(), e.getMessage());
+                log.addError(e);
                 type = null;
             }
         }
@@ -99,12 +99,12 @@ public class MibValueSymbol extends MibSymbol {
             try {
                 value = value.initialize(log, type);
             } catch (MibException e) {
-                log.addError(e.getLocation(), e.getMessage());
+                log.addError(e);
                 value = null;
             }
         }
         if (type != null && value != null && !type.isCompatible(value)) {
-            log.addError(getLocation(),
+            log.addError(getFileRef(),
                          "value is not compatible with type");
         }
         if (value instanceof ObjectIdentifierValue) {

@@ -16,13 +16,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.type;
 
-import net.percederberg.mibble.FileLocation;
 import net.percederberg.mibble.MibException;
+import net.percederberg.mibble.MibFileRef;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
@@ -34,16 +34,16 @@ import net.percederberg.mibble.value.StringValue;
  * in a set of value constraints.
  *
  * @author   Per Cederberg
- * @version  2.8
+ * @version  2.10
  * @since    2.0
  */
 public class ValueConstraint implements Constraint {
 
     /**
-     * The constraint location. This value is reset to null once the
-     * constraint has been initialized.
+     * The constraint MIB file location. This value is reset to null
+     * once the constraint has been initialized.
      */
-    private FileLocation location;
+    private MibFileRef fileRef;
 
     /**
      * The constraint value.
@@ -53,11 +53,11 @@ public class ValueConstraint implements Constraint {
     /**
      * Creates a new value constraint.
      *
-     * @param location       the constraint location
+     * @param fileRef        the constraint MIB file location
      * @param value          the constraint value
      */
-    public ValueConstraint(FileLocation location, MibValue value) {
-        this.location = location;
+    public ValueConstraint(MibFileRef fileRef, MibValue value) {
+        this.fileRef = fileRef;
         this.value = value;
     }
 
@@ -80,11 +80,11 @@ public class ValueConstraint implements Constraint {
         String  message;
 
         value = value.initialize(log, type);
-        if (location != null && !isCompatible(type)) {
+        if (fileRef != null && !isCompatible(type)) {
             message = "value constraint not compatible with this type";
-            log.addWarning(location, message);
+            log.addWarning(fileRef, message);
         }
-        location = null;
+        fileRef = null;
     }
 
     /**

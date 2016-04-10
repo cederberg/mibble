@@ -151,7 +151,7 @@ public class Mib implements MibContext {
             try {
                 imports.get(i).initialize(log);
             } catch (MibException e) {
-                log.addError(e.getLocation(), e.getMessage());
+                log.addError(e);
             }
         }
 
@@ -182,7 +182,7 @@ public class Mib implements MibContext {
             try {
                 symbol.initialize(log);
             } catch (MibException e) {
-                log.addError(e.getLocation(), e.getMessage());
+                log.addError(e);
             }
             if (symbol instanceof MibValueSymbol) {
                 MibValueSymbol value = (MibValueSymbol) symbol;

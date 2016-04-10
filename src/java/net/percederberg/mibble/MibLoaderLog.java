@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2013 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;
@@ -101,67 +101,39 @@ public class MibLoaderLog {
      * only issued when possible bugs are encountered. They are
      * counted as errors.
      *
-     * @param location       the file location
      * @param message        the error message
      */
-    public void addInternalError(FileLocation location, String message) {
-        add(new LogEntry(LogEntry.INTERNAL_ERROR, location, message));
-    }
-
-    /**
-     * Adds an internal error message to the log. Internal errors are
-     * only issued when possible bugs are encountered. They are
-     * counted as errors.
-     *
-     * @param file           the file affected
-     * @param message        the error message
-     */
-    public void addInternalError(File file, String message) {
-        addInternalError(new FileLocation(file), message);
+    public void addInternalError(String message) {
+        add(new LogEntry(LogEntry.INTERNAL_ERROR, new MibFileRef(), message));
     }
 
     /**
      * Adds an error message to the log.
      *
-     * @param location       the file location
-     * @param message        the error message
+     * @param e              the MIB exception cause
      */
-    public void addError(FileLocation location, String message) {
-        add(new LogEntry(LogEntry.ERROR, location, message));
+    public void addError(MibException e) {
+        add(new LogEntry(LogEntry.ERROR, e.getFileRef(), e.getMessage()));
     }
 
     /**
      * Adds an error message to the log.
      *
-     * @param file           the file affected
-     * @param line           the line number
-     * @param column         the column number
+     * @param fileRef        the MIB file location
      * @param message        the error message
      */
-    public void addError(File file, int line, int column, String message) {
-        addError(new FileLocation(file, line, column), message);
+    public void addError(MibFileRef fileRef, String message) {
+        add(new LogEntry(LogEntry.ERROR, fileRef, message));
     }
 
     /**
      * Adds a warning message to the log.
      *
-     * @param location       the file location
+     * @param fileRef        the MIB file location
      * @param message        the warning message
      */
-    public void addWarning(FileLocation location, String message) {
-        add(new LogEntry(LogEntry.WARNING, location, message));
-    }
-
-    /**
-     * Adds a warning message to the log.
-     *
-     * @param file           the file affected
-     * @param line           the line number
-     * @param column         the column number
-     * @param message        the warning message
-     */
-    public void addWarning(File file, int line, int column, String message) {
-        addWarning(new FileLocation(file, line, column), message);
+    public void addWarning(MibFileRef fileRef, String message) {
+        add(new LogEntry(LogEntry.WARNING, fileRef, message));
     }
 
     /**
@@ -182,11 +154,10 @@ public class MibLoaderLog {
      * @param log            the parser log exception
      */
     void addAll(File file, ParserLogException log) {
-        ParseException  e;
-
         for (int i = 0; i < log.getErrorCount(); i++) {
-            e = log.getError(i);
-            addError(file, e.getLine(), e.getColumn(), e.getErrorMessage());
+            ParseException e = log.getError(i);
+            MibFileRef ref = new MibFileRef(file, e.getLine(), e.getColumn());
+            addError(ref, e.getErrorMessage());
         }
     }
 
@@ -374,7 +345,7 @@ public class MibLoaderLog {
         /**
          * The log entry file reference.
          */
-        private FileLocation location;
+        private MibFileRef fileRef;
 
         /**
          * The log entry message.
@@ -385,15 +356,15 @@ public class MibLoaderLog {
          * Creates a new log entry.
          *
          * @param type           the log entry type
-         * @param location       the log entry file reference
+         * @param fileRef        the log entry file reference
          * @param message        the log entry message
          */
-        public LogEntry(int type, FileLocation location, String message) {
+        public LogEntry(int type, MibFileRef fileRef, String message) {
             this.type = type;
-            if (location == null || location.getFile() == null) {
-                this.location = new FileLocation(new File("<unknown file>"));
+            if (fileRef == null || fileRef.getFile() == null) {
+                this.fileRef = new MibFileRef(new File("<unknown file>"), -1, -1);
             } else {
-                this.location = location;
+                this.fileRef = fileRef;
             }
             this.message = message;
         }
@@ -437,7 +408,7 @@ public class MibLoaderLog {
          * @return the file affected
          */
         public File getFile() {
-            return location.getFile();
+            return fileRef.getFile();
         }
 
         /**
@@ -446,7 +417,7 @@ public class MibLoaderLog {
          * @return the line number
          */
         public int getLineNumber() {
-            return location.getLineNumber();
+            return fileRef.getLineNumber();
         }
 
         /**
@@ -455,7 +426,7 @@ public class MibLoaderLog {
          * @return the column number
          */
         public int getColumnNumber() {
-            return location.getColumnNumber();
+            return fileRef.getColumnNumber();
         }
 
         /**
@@ -476,7 +447,7 @@ public class MibLoaderLog {
          *         null if not found
          */
         public String readLine() {
-            return location.readLine();
+            return fileRef.readLine();
         }
     }
 }

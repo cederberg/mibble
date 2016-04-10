@@ -397,7 +397,8 @@ class MibAnalyzer extends Asn1Analyzer {
             //       import, but without any named symbols (triggering
             //       warnings for each symbol used).
             List<String> empty = Collections.<String> emptyList();
-            MibImport imp = new MibImport(loader, getLocation(node), "RFC1155-SMI", empty);
+            MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+            MibImport imp = new MibImport(loader, ref, "RFC1155-SMI", empty);
             loader.scheduleLoad(imp.getName());
             currentMib.addImport(imp);
             imports.add(imp);
@@ -434,7 +435,8 @@ class MibAnalyzer extends Asn1Analyzer {
         }
         child = getChildAt(node, 2);
         String module = getStringValue(child, 0);
-        MibImport imp = new MibImport(loader, getLocation(child), module, symbols);
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        MibImport imp = new MibImport(loader, ref, module, symbols);
 
         // Schedule MIB loading
         loader.scheduleLoad(module);
@@ -494,9 +496,8 @@ class MibAnalyzer extends Asn1Analyzer {
         }
 
         // Create macro symbol
-        MibMacroSymbol symbol = new MibMacroSymbol(getLocation(node),
-                                                   currentMib,
-                                                   name);
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        MibMacroSymbol symbol = new MibMacroSymbol(ref, currentMib, name);
         symbol.setComment(MibAnalyzerUtil.getComments(node));
 
         return null;
@@ -528,6 +529,7 @@ class MibAnalyzer extends Asn1Analyzer {
         throws ParseException {
 
         // Check type name
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
         String name = getStringValue(getChildAt(node, 0), 0);
         if (currentMib.getSymbol(name) != null) {
             throw new ParseException(
@@ -537,17 +539,14 @@ class MibAnalyzer extends Asn1Analyzer {
                 node.getStartColumn());
         }
         if (!Character.isUpperCase(name.charAt(0))) {
-            log.addWarning(getLocation(node),
+            log.addWarning(ref,
                            "type identifier '" + name + "' doesn't " +
                            "start with an uppercase character");
         }
 
         // Create type symbol
         MibType type = (MibType) getValue(getChildAt(node, 2), 0);
-        MibTypeSymbol symbol = new MibTypeSymbol(getLocation(node),
-                                                 currentMib,
-                                                 name,
-                                                 type);
+        MibTypeSymbol symbol = new MibTypeSymbol(ref, currentMib, name, type);
         symbol.setComment(MibAnalyzerUtil.getComments(node));
 
         return null;
@@ -604,13 +603,13 @@ class MibAnalyzer extends Asn1Analyzer {
                 // Ignored node
             }
         }
-        FileLocation loc = getLocation(node);
+        MibFileRef fileRef = MibAnalyzerUtil.getFileRef(file, node);
         if (value instanceof Constraint) {
-            value = new TypeReference(loc, local, name, (Constraint) value);
+            value = new TypeReference(fileRef, local, name, (Constraint) value);
         } else if (value instanceof ArrayList<?>) {
-            value = new TypeReference(loc, local, name, (ArrayList<?>) value);
+            value = new TypeReference(fileRef, local, name, (ArrayList<?>) value);
         } else {
-            value = new TypeReference(loc, local, name);
+            value = new TypeReference(fileRef, local, name);
         }
         node.addValue(value);
         return node;
@@ -793,8 +792,8 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitSetType(Production node) {
         // TODO: implement set type support
-        log.addError(getLocation(node),
-                     "SET type currently unsupported");
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        log.addError(ref, "SET type currently unsupported");
         node.addValue(new NullType());
         return node;
     }
@@ -809,8 +808,8 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitSetOfType(Production node) {
         // TODO: implement set of type support
-        log.addError(getLocation(node),
-                     "SET OF type currently unsupported");
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        log.addError(ref, "SET OF type currently unsupported");
         node.addValue(new NullType());
         return node;
     }
@@ -837,8 +836,8 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitEnumeratedType(Production node) {
         // TODO: implement enumerated type support
-        log.addError(getLocation(node),
-                     "ENUMERATED type currently unsupported");
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        log.addError(ref, "ENUMERATED type currently unsupported");
         node.addValue(new NullType());
         return node;
     }
@@ -853,8 +852,8 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitSelectionType(Production node) {
         // TODO: implement selection type support
-        log.addError(getLocation(node),
-                     "selection type currently unsupported");
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        log.addError(ref, "selection type currently unsupported");
         node.addValue(new NullType());
         return node;
     }
@@ -961,8 +960,8 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitAnyType(Production node) {
         // TODO: implement any type support
-        log.addError(getLocation(node),
-                     "ANY type currently unsupported");
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        log.addError(ref, "ANY type currently unsupported");
         node.addValue(new NullType());
         return node;
     }
@@ -1019,9 +1018,8 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitOptionalOrDefaultElement(Production node) {
         // TODO: implement this method?
-        log.addError(getLocation(node),
-                     "optional and default elements are currently " +
-                     "unsupported");
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        log.addError(ref, "optional and default elements are currently unsupported");
         return null;
     }
 
@@ -1069,13 +1067,10 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitNamedNumber(Production node)
         throws ParseException {
 
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
         String name = getStringValue(getChildAt(node, 0), 0);
         MibValue value = (MibValue) getValue(getChildAt(node, 2), 0);
-        MibValueSymbol symbol = new MibValueSymbol(getLocation(node),
-                                                   null,
-                                                   name,
-                                                   null,
-                                                   value);
+        MibValueSymbol symbol = new MibValueSymbol(ref, null, name, null, value);
         node.addValue(symbol);
         return node;
     }
@@ -1152,6 +1147,7 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitValueConstraint(Production node)
         throws ParseException {
 
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
         ArrayList<?> list = getChildValues(node);
         if (list.size() == 0) {
             throw new ParseException(
@@ -1161,7 +1157,7 @@ class MibAnalyzer extends Asn1Analyzer {
                 node.getStartColumn());
         } else if (list.size() == 1) {
             MibValue val = (MibValue) list.get(0);
-            node.addValue(new ValueConstraint(getLocation(node), val));
+            node.addValue(new ValueConstraint(ref, val));
         } else {
             MibValue lower = null;
             MibValue upper = null;
@@ -1185,7 +1181,7 @@ class MibAnalyzer extends Asn1Analyzer {
             if (strictUpper == null) {
                 strictUpper = Boolean.FALSE;
             }
-            node.addValue(new ValueRangeConstraint(getLocation(node),
+            node.addValue(new ValueRangeConstraint(ref,
                                                    lower,
                                                    strictLower.booleanValue(),
                                                    upper,
@@ -1268,8 +1264,9 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitSizeConstraint(Production node)
         throws ParseException {
 
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
         Constraint c = (Constraint) getValue(getChildAt(node, 1), 0);
-        node.addValue(new SizeConstraint(getLocation(node), c));
+        node.addValue(new SizeConstraint(ref, c));
         return node;
     }
 
@@ -1283,8 +1280,8 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitAlphabetConstraint(Production node) {
         // TODO: implement alphabet constraints
-        log.addError(getLocation(node),
-                     "FROM constraints are currently unsupported");
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        log.addError(ref, "FROM constraints are currently unsupported");
         return null;
     }
 
@@ -1298,8 +1295,8 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitContainedTypeConstraint(Production node) {
         // TODO: implement contained type constraints
-        log.addError(getLocation(node),
-                     "INCLUDES constraints are currently unsupported");
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        log.addError(ref, "INCLUDES constraints are currently unsupported");
         return null;
     }
 
@@ -1313,9 +1310,8 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitInnerTypeConstraint(Production node) {
         // TODO: implement inner type constraints
-        log.addError(getLocation(node),
-                     "WITH COMPONENT(S) constraints are currently " +
-                     "unsupported");
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        log.addError(ref, "WITH COMPONENT(S) constraints are currently unsupported");
         return null;
     }
 
@@ -1333,6 +1329,7 @@ class MibAnalyzer extends Asn1Analyzer {
         throws ParseException {
 
         // Check value name
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
         String name = getStringValue(getChildAt(node, 0), 0);
         if (currentMib.getSymbol(name) != null) {
             throw new ParseException(
@@ -1342,7 +1339,7 @@ class MibAnalyzer extends Asn1Analyzer {
                 node.getStartColumn());
         }
         if (!Character.isLowerCase(name.charAt(0))) {
-            log.addWarning(getLocation(node),
+            log.addWarning(ref,
                            "value identifier '" + name + "' doesn't " +
                            "start with a lowercase character");
         }
@@ -1350,11 +1347,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // Create value symbol
         MibType type = (MibType) getValue(getChildAt(node, 1), 0);
         MibValue value = (MibValue) getValue(getChildAt(node, 3), 0);
-        MibValueSymbol symbol = new MibValueSymbol(getLocation(node),
-                                                   currentMib,
-                                                   name,
-                                                   type,
-                                                   value);
+        MibValueSymbol symbol = new MibValueSymbol(ref, currentMib, name, type, value);
         symbol.setComment(MibAnalyzerUtil.getComments(node));
 
         return null;
@@ -1401,8 +1394,9 @@ class MibAnalyzer extends Asn1Analyzer {
         }
 
         // Create value reference
+        MibFileRef fileRef = MibAnalyzerUtil.getFileRef(file, node);
         String name = getStringValue(child, 0);
-        ValueReference ref = new ValueReference(getLocation(node), local, name);
+        ValueReference ref = new ValueReference(fileRef, local, name);
         node.addValue(ref);
         return node;
     }
@@ -1625,37 +1619,32 @@ class MibAnalyzer extends Asn1Analyzer {
         }
 
         // Analyze components
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
         MibValue parent = null;
         for (int i = 0; i < components.size(); i++) {
             NamedNumber number = components.get(i);
             if (number.hasNumber()) {
                 int value = number.getNumber().intValue();
                 if (parent == null && value == 0) {
-                    parent = new ValueReference(getLocation(node),
-                                                getContext(),
-                                                DefaultContext.CCITT);
+                    parent = new ValueReference(ref, getContext(), DefaultContext.CCITT);
                 } else if (parent == null && value == 1) {
-                    parent = new ValueReference(getLocation(node),
-                                                getContext(),
-                                                DefaultContext.ISO);
+                    parent = new ValueReference(ref, getContext(), DefaultContext.ISO);
                 } else if (parent == null && value == 2) {
-                    parent = new ValueReference(getLocation(node),
-                                                getContext(),
-                                                DefaultContext.JOINT_ISO_CCITT);
+                    parent = new ValueReference(ref, getContext(), DefaultContext.JOINT_ISO_CCITT);
                 } else if (parent instanceof ObjectIdentifierValue) {
                     try {
                         parent = new ObjectIdentifierValue(
-                                        getLocation(node),
+                                        ref,
                                         (ObjectIdentifierValue) parent,
                                         number.getName(),
                                         value);
                     } catch (MibException e) {
-                        log.addError(e.getLocation(), e.getMessage());
+                        log.addError(e);
                         parent = null;
                     }
                 } else {
                     parent = new ObjectIdentifierValue(
-                                        getLocation(node),
+                                        ref,
                                         (ValueReference) parent,
                                         number.getName(),
                                         value);
@@ -1719,7 +1708,8 @@ class MibAnalyzer extends Asn1Analyzer {
         if (obj instanceof Number) {
             node.addValue(new NamedNumber((Number) obj));
         } else if (obj instanceof String) {
-            ValueReference ref = new ValueReference(getLocation(node),
+            MibFileRef fileRef = MibAnalyzerUtil.getFileRef(file, node);
+            ValueReference ref = new ValueReference(fileRef,
                                                     getContext(),
                                                     (String) obj);
             node.addValue(new NamedNumber((String) obj, ref));
@@ -2594,7 +2584,8 @@ class MibAnalyzer extends Asn1Analyzer {
         loader.scheduleLoad(module);
 
         // Create module reference and context
-        MibImport imp = new MibImport(loader, getLocation(node), module, null);
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        MibImport imp = new MibImport(loader, ref, module, null);
         currentMib.addImport(imp);
         pushContextExtension(imp);
 
@@ -2851,20 +2842,6 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitSnmpCreationPart(Production node) {
         node.addValue(getChildValues(node));
         return node;
-    }
-
-
-    /**
-     * Returns the location of a specified node.
-     *
-     * @param node           the parse tree node
-     *
-     * @return the file location of the node
-     */
-    private FileLocation getLocation(Node node) {
-        return new FileLocation(file,
-                                node.getStartLine(),
-                                node.getStartColumn());
     }
 
     /**

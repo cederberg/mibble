@@ -16,14 +16,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  *
- * Copyright (c) 2004-2006 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.value;
 
-import net.percederberg.mibble.FileLocation;
 import net.percederberg.mibble.MibContext;
 import net.percederberg.mibble.MibException;
+import net.percederberg.mibble.MibFileRef;
 import net.percederberg.mibble.MibLoaderLog;
 import net.percederberg.mibble.MibSymbol;
 import net.percederberg.mibble.MibType;
@@ -39,15 +39,17 @@ import net.percederberg.mibble.MibValueSymbol;
  * <strong>NOT</strong> use or reference this class.
  *
  * @author   Per Cederberg
- * @version  2.8
+ * @version  2.10
  * @since    2.0
  */
 public class ValueReference extends MibValue {
 
     /**
-     * The reference location.
+     * The declaration file location.
+     *
+     * @since 2.10
      */
-    private FileLocation location;
+    private MibFileRef fileRef;
 
     /**
      * The reference context.
@@ -62,16 +64,13 @@ public class ValueReference extends MibValue {
     /**
      * Creates a new value reference.
      *
-     * @param location       the reference location
+     * @param fileRef        the reference MIB file location
      * @param context        the reference context
      * @param name           the reference name
      */
-    public ValueReference(FileLocation location,
-                          MibContext context,
-                          String name) {
-
+    public ValueReference(MibFileRef fileRef, MibContext context, String name) {
         super("ReferenceToValue(" + name + ")");
-        this.location = location;
+        this.fileRef = fileRef;
         this.context = context;
         this.name = name;
     }
@@ -113,7 +112,7 @@ public class ValueReference extends MibValue {
             try {
                 value = value.createReference();
             } catch (UnsupportedOperationException e) {
-                throw new MibException(location, e.getMessage());
+                throw new MibException(fileRef, e.getMessage());
             }
             if (!(value instanceof ObjectIdentifierValue)) {
                 value.setReferenceSymbol((MibValueSymbol) sym);
@@ -121,20 +120,20 @@ public class ValueReference extends MibValue {
             return value;
         } else if (sym == null) {
             message = "undefined symbol '" + name + "'";
-            throw new MibException(location, message);
+            throw new MibException(fileRef, message);
         } else {
             message = "referenced symbol '" + name + "' is not a value";
-            throw new MibException(location, message);
+            throw new MibException(fileRef, message);
         }
     }
 
     /**
-     * Returns the reference location.
+     * Returns the reference MIB file location.
      *
-     * @return the reference location
+     * @return the reference MIB file location
      */
-    public FileLocation getLocation() {
-        return location;
+    public MibFileRef getFileRef() {
+        return fileRef;
     }
 
     /**
@@ -163,7 +162,7 @@ public class ValueReference extends MibValue {
             if (sym != null && log != null) {
                 message = "missing import for '" + name + "', using " +
                           sym.getMib().getName();
-                log.addWarning(location, message);
+                log.addWarning(fileRef, message);
             }
         }
         return sym;
