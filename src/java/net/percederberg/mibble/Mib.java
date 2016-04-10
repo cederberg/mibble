@@ -46,11 +46,6 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
 public class Mib implements MibContext {
 
     /**
-     * The MIB file.
-     */
-    private File file;
-
-    /**
      * The loader used for this MIB.
      */
     private MibLoader loader;
@@ -59,6 +54,11 @@ public class Mib implements MibContext {
      * The loader log used for loading this MIB.
      */
     private MibLoaderLog log;
+
+    /**
+     * The MIB file reference.
+     */
+    private MibFileRef fileRef = null;
 
     /**
      * The explicitly loaded flag. This flag is set when a MIB is
@@ -86,6 +86,11 @@ public class Mib implements MibContext {
      * The MIB file footer comment.
      */
     private String footerComment = null;
+
+    /**
+     * The MIB source text (split into lines).
+     */
+    private ArrayList<String> text = new ArrayList<String>();
 
     /**
      * The references to imported MIB files.
@@ -120,14 +125,12 @@ public class Mib implements MibContext {
      * A separate call to initialize() must be made once all
      * referenced MIB modules have also been loaded.
      *
-     * @param file           the MIB file name
      * @param loader         the MIB loader to use for imports
      * @param log            the MIB log to use for errors
      *
      * @see #initialize()
      */
-    Mib(File file, MibLoader loader, MibLoaderLog log) {
-        this.file = file;
+    Mib(MibLoader loader, MibLoaderLog log) {
         this.loader = loader;
         this.log = log;
     }
@@ -244,8 +247,8 @@ public class Mib implements MibContext {
     public boolean equals(Object obj) {
         if (obj instanceof String) {
             return name.equals(obj);
-        } else if (file != null && obj instanceof File) {
-            return file.equals(obj);
+        } else if (fileRef.file != null && obj instanceof File) {
+            return fileRef.file.equals(obj);
         } else if (obj instanceof Mib) {
             return obj.equals(name);
         } else {
@@ -309,9 +312,6 @@ public class Mib implements MibContext {
      */
     void setName(String name) {
         this.name = name;
-        if (file == null) {
-            file = new File(name);
-        }
     }
 
     /**
@@ -320,7 +320,20 @@ public class Mib implements MibContext {
      * @return the MIB file
      */
     public File getFile() {
-        return file;
+        return fileRef.getFile();
+    }
+
+    /**
+     * Sets the MIB file reference. This method should only be called
+     * by the MIB analysis classes.
+     *
+     * @param fileRef        the MIB file reference
+     */
+    void setFileRef(MibFileRef fileRef) {
+        this.fileRef = fileRef;
+        if (fileRef.file == null) {
+            fileRef.file = new File(name);
+        }
     }
 
     /**
@@ -364,6 +377,58 @@ public class Mib implements MibContext {
      */
     void setSmiVersion(int version) {
         this.smiVersion = version;
+    }
+
+    /**
+     * Returns the unparsed input MIB text.
+     *
+     * @return the raw MIB file text
+     *
+     * @since 2.10
+     */
+    public String getText() {
+        StringBuilder buffer = new StringBuilder();
+        for (String line : text) {
+            buffer.append(line);
+            buffer.append('\n');
+        }
+        return buffer.toString();
+    }
+
+    /**
+     * Returns the unparsed input MIB text for a reference.
+     *
+     * @param ref            the MIB file reference
+     *
+     * @return the raw MIB text for the reference
+     *
+     * @since 2.10
+     */
+    String getText(MibFileRef ref) {
+        int from = ref.lineCommentStart - this.fileRef.lineCommentStart;
+        int to = ref.lineEnd - this.fileRef.lineCommentStart;
+        StringBuilder buffer = new StringBuilder();
+        for (int i = from; i <= to; i++) {
+            buffer.append(text.get(i));
+            buffer.append('\n');
+        }
+        return buffer.toString();
+    }
+
+    /**
+     * Sets the unparsed input MIB text. This method should only be
+     * called by the MIB analysis classes.
+     *
+     * @param text           the raw MIB file text
+     *
+     * @since 2.10
+     */
+    void setText(String text) {
+        this.text.clear();
+        String[] lines = text.split("[ \\t\\r]*\\n");
+        for (String line : lines) {
+            this.text.add(line);
+        }
     }
 
     /**

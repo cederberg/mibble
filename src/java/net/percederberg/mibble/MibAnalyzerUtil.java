@@ -94,6 +94,34 @@ class MibAnalyzerUtil {
     }
 
     /**
+     * Returns a string containing the raw input text for a node.
+     * This is created by concatenating the sequence of tokens that
+     * makes up the production.
+     *
+     * @param node           the production or token node
+     *
+     * @return the input string
+     *
+     * @since 2.10
+     */
+    static String getText(Node node) {
+        StringBuilder buffer = new StringBuilder();
+        Token token = findCommentTokenBefore(node);
+        if (token == null) {
+            token = findFirstToken(node);
+        }
+        Token lastToken = findLastToken(node);
+        while (token != null && token != lastToken) {
+            buffer.append(token.getImage());
+            token = token.getNextToken();
+        }
+        if (lastToken != null) {
+            buffer.append(lastToken.getImage());
+        }
+        return buffer.toString();
+    }
+
+    /**
      * Returns all the comments associated with a specified node. If
      * there are multiple comment lines, these will be concatenated
      * into a single string. This method handles comments before,

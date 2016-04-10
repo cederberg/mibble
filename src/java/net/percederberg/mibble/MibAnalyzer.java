@@ -294,7 +294,7 @@ class MibAnalyzer extends Asn1Analyzer {
      * @param node           the node being entered
      */
     protected void enterModuleDefinition(Production node) {
-        currentMib = new Mib(file, loader, log);
+        currentMib = new Mib(loader, log);
         baseContext = loader.getDefaultContext();
         baseContext = new CompoundContext(currentMib, baseContext);
         pushContext(baseContext);
@@ -313,7 +313,10 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitModuleDefinition(Production node)
         throws ParseException {
 
+        MibFileRef fileRef = MibAnalyzerUtil.getFileRef(file, node);
         currentMib.setName(getStringValue(getChildAt(node, 0), 0));
+        currentMib.setFileRef(fileRef);
+        currentMib.setText(MibAnalyzerUtil.getText(node));
         currentMib.setHeaderComment(MibAnalyzerUtil.getComments(node));
         mibs.add(currentMib);
         return node;

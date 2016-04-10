@@ -140,6 +140,17 @@ public abstract class MibSymbol {
     }
 
     /**
+     * Returns the unparsed input MIB text.
+     *
+     * @return the raw MIB file text
+     *
+     * @since 2.10
+     */
+    public String getText() {
+        return mib.getText(fileRef);
+    }
+
+    /**
      * Returns the symbol comment.
      *
      * @return the symbol comment, or
