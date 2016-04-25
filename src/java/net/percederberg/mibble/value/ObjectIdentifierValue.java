@@ -240,7 +240,7 @@ public class ObjectIdentifierValue extends MibValue {
                 getParent().children.remove(this);
                 parent = null;
             }
-            children = null;
+            children = new ArrayList<ObjectIdentifierValue>()
         }
 
         // Clear other value data
@@ -697,7 +697,7 @@ public class ObjectIdentifierValue extends MibValue {
             child.parent = this;
             addChild(log, fileRef, child);
         }
-        parent.children = null;
+        parent.children = new ArrayList<ObjectIdentifierValue>();
     }
 
     /**
