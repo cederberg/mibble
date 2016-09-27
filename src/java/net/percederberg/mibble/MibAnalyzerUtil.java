@@ -32,7 +32,7 @@ import net.percederberg.mibble.asn1.Asn1Constants;
 /**
  * Helper and utility functions for the MIB file analyzer.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.9
  * @since    2.9
  */

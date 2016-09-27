@@ -30,7 +30,7 @@ package net.percederberg.mibble;
  * Whether to replace or to chain a type tag is determined by the
  * EXPLICIT or IMPLICIT keywords in the MIB file.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.6
  * @since    2.2
  */

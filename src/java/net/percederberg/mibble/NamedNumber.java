@@ -27,7 +27,7 @@ import net.percederberg.mibble.value.ValueReference;
  * A named number. This class is used for storing intermediate values
  * during the parsing.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.0
  * @since    2.0
  */

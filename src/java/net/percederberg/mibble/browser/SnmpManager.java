@@ -51,7 +51,7 @@ import net.percederberg.mibble.MibTypeTag;
  * @see uk.co.westhawk.snmp.stack.SnmpContextPool
  *
  * @author   Watsh Rajneesh
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.5
  * @since    2.5
  */

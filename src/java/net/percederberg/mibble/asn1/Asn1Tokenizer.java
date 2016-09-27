@@ -32,7 +32,7 @@ import net.percederberg.grammatica.parser.Tokenizer;
 /**
  * A character stream tokenizer.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.9
  */
 public class Asn1Tokenizer extends Tokenizer {

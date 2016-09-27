@@ -32,7 +32,7 @@ import net.percederberg.mibble.MibValue;
  *
  * @see SnmpModule
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.9
  * @since    2.0
  */

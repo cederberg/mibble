@@ -44,7 +44,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * the parsed MIB. A singleton class.
  *
  * @author   Watsh Rajneesh
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.9
  * @since    2.3
  */

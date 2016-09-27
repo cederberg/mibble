@@ -35,7 +35,7 @@ import net.percederberg.mibble.browser.MibTreeBuilder;
 /**
  * A program for browsing MIB files in a GUI.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.9
  * @since    2.3
  */

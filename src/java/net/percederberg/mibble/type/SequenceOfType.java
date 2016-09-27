@@ -32,7 +32,7 @@ import net.percederberg.mibble.MibValue;
  * An sequence of a MIB type. In some other languages this is known
  * as an array.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.6
  * @since    2.0
  */

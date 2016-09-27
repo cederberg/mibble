@@ -68,7 +68,7 @@ import net.percederberg.mibble.MibbleBrowser;
 /**
  * The main MIB browser application window (frame).
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.9
  * @since    2.5
  */

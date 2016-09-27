@@ -28,7 +28,7 @@ package net.percederberg.mibble;
  * <strong>Note:</strong> This interface is internal to Mibble and
  * only exposed to make it available in different packages.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.4
  * @since    2.0
  */

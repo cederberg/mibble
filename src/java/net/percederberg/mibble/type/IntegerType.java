@@ -38,7 +38,7 @@ import net.percederberg.mibble.value.NumberValue;
 /**
  * An integer MIB type.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.7
  * @since    2.0
  */

@@ -28,7 +28,7 @@ import java.io.File;
  * couldn't be loaded properly, normally due to syntactical or
  * semantical errors in the file.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.3
  * @since    2.0
  */

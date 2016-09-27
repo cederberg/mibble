@@ -24,7 +24,7 @@ package net.percederberg.mibble.browser;
 /**
  * An SNMP privacy (encryption) parameter container.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.5
  * @since    2.5
  */

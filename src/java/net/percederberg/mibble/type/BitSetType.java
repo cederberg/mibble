@@ -40,7 +40,7 @@ import net.percederberg.mibble.value.NumberValue;
  * A bit set MIB type. This is the equivalent of a bit string, i.e.
  * a set of bit values
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.7
  * @since    2.0
  */

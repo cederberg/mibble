@@ -34,7 +34,7 @@ import net.percederberg.mibble.MibValue;
  * true. Effectively this class represents an OR composition of the
  * two constraints.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.6
  * @since    2.0
  */

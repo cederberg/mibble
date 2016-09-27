@@ -34,7 +34,7 @@ import net.percederberg.mibble.MibValue;
  * A sequence MIB type. In some other languages this is known as a
  * struct.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.2
  * @since    2.0
  */

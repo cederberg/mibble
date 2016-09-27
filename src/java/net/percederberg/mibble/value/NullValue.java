@@ -28,7 +28,7 @@ import net.percederberg.mibble.MibValue;
 /**
  * A null MIB value.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.8
  * @since    2.0
  */

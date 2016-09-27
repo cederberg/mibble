@@ -28,7 +28,7 @@ import net.percederberg.mibble.MibType;
  * only exist instances of subclasses. It exists to provide methods
  * that are valid across all SNMP macro types.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.5
  * @since    2.5
  */

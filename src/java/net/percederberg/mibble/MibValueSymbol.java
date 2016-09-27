@@ -31,7 +31,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * value assignment, i.e. a type and a value. Normally the value is
  * an object identifier.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.8
  * @since    2.0
  */

@@ -85,7 +85,7 @@ import net.percederberg.mibble.value.ValueReference;
  * type and value references will be created whenever an identifier
  * is encountered.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.9
  * @since    2.0
  */

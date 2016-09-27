@@ -29,7 +29,7 @@ import net.percederberg.mibble.MibValue;
 /**
  * A MIB type constraint.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.6
  * @since    2.0
  */

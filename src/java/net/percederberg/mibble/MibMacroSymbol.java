@@ -25,7 +25,7 @@ package net.percederberg.mibble;
  * A MIB macro symbol. This class holds information relevant to a MIB
  * macro definition, i.e. a defined macro name.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.7
  * @since    2.6
  */

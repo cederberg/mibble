@@ -32,7 +32,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
 /**
  * A MIB tree node.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @author   Watsh Rajneesh
  * @version  2.5
  * @since    2.3

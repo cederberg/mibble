@@ -46,7 +46,7 @@ import net.percederberg.mibble.snmp.SnmpObjectType;
 /**
  * The SNMP operations panel.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @author   Watsh Rajneesh
  * @version  2.5
  * @since    2.5

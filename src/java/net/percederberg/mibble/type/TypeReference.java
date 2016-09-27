@@ -41,7 +41,7 @@ import net.percederberg.mibble.MibValue;
  * references will have been resolved to other MIB types. Do
  * <strong>NOT</strong> use or reference this class.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.8
  * @since    2.0
  */

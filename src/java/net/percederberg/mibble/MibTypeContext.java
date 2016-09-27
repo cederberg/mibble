@@ -29,7 +29,7 @@ import net.percederberg.mibble.value.ValueReference;
  * A MIB type context. This class attempts to resolve all symbols as
  * defined enumeration values in the contained MIB type.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.8
  * @since    2.8
  */

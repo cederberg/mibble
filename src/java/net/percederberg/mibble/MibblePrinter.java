@@ -36,7 +36,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * not supported, an error message will be printed to the standard
  * output.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.7
  * @since    2.0
  */

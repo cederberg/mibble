@@ -64,7 +64,7 @@ import net.percederberg.mibble.value.StringValue;
  * SMIv1 MIB:s to be printed correctly (but still without any
  * translation).
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.9
  * @since    2.6
  */

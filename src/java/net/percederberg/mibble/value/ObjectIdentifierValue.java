@@ -35,7 +35,7 @@ import net.percederberg.mibble.MibValueSymbol;
  * An object identifier value. This class stores the component
  * identifier values in a tree hierarchy.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.8
  * @since    2.0
  */

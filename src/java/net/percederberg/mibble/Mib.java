@@ -36,7 +36,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * although that is not very common. MIB files are loaded through a
  * {@link MibLoader MIB loader}.
  *
- * @author   Per Cederberg, <per at percederberg dot net>
+ * @author   Per Cederberg
  * @version  2.7
  * @since    2.0
  *
