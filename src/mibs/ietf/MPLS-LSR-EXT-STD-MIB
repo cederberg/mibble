@@ -1,0 +1,258 @@
+MPLS-LSR-EXT-STD-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+   MODULE-IDENTITY, OBJECT-TYPE
+      FROM SNMPv2-SMI                                 -- RFC 2578
+   MODULE-COMPLIANCE, OBJECT-GROUP
+      FROM SNMPv2-CONF                                -- RFC 2580
+   mplsStdMIB
+      FROM MPLS-TC-STD-MIB                            -- RFC 3811
+   RowPointer
+      FROM SNMPv2-TC                                  -- RFC 2579
+   mplsXCIndex, mplsXCInSegmentIndex, mplsXCOutSegmentIndex,
+   mplsInterfaceGroup, mplsInSegmentGroup, mplsOutSegmentGroup,
+   mplsXCGroup, mplsLsrNotificationGroup
+      FROM MPLS-LSR-STD-MIB;                          -- RFC 3813
+
+mplsLsrExtStdMIB MODULE-IDENTITY
+   LAST-UPDATED
+      "201502020000Z" -- February 2, 2015
+   ORGANIZATION
+      "Multiprotocol Label Switching (MPLS) Working Group"
+   CONTACT-INFO
+      "
+             Venkatesan Mahalingam
+             Dell Inc,
+             5450 Great America Parkway,
+             Santa Clara, CA 95054, USA
+       Email: venkat.mahalingams@gmail.com
+
+
+
+
+
+
+             Kannan KV Sampath
+             Redeem,
+             India
+       Email: kannankvs@gmail.com
+
+             Sam Aldrin
+             Huawei Technologies
+             2330 Central Express Way,
+             Santa Clara, CA 95051, USA
+       Email:  aldrin.ietf@gmail.com
+
+             Thomas D. Nadeau
+       Email: tnadeau@lucidvision.com
+     "
+   DESCRIPTION
+     "This MIB module contains generic object definitions for
+      MPLS LSRs in transport networks.
+
+      Copyright (c) 2015 IETF Trust and the persons identified as
+      authors of the code.  All rights reserved.
+
+      Redistribution and use in source and binary forms, with or
+      without modification, is permitted pursuant to, and subject to
+      the license terms contained in, the Simplified BSD License set
+      forth in Section 4.c of the IETF Trust's Legal Provisions
+      Relating to IETF Documents
+      (http://trustee.ietf.org/license-info)."
+
+   -- Revision history.
+
+   REVISION
+      "201502020000Z" -- February 2, 2015
+   DESCRIPTION
+        "MPLS LSR-specific MIB objects extension"
+
+   ::= { mplsStdMIB 19 }
+
+-- notifications
+mplsLsrExtNotifications OBJECT IDENTIFIER ::= { mplsLsrExtStdMIB 0 }
+
+-- tables, scalars
+mplsLsrExtObjects       OBJECT IDENTIFIER
+                         ::= { mplsLsrExtStdMIB 1 }
+-- conformance
+mplsLsrExtConformance   OBJECT IDENTIFIER
+                         ::= { mplsLsrExtStdMIB 2 }
+
+-- MPLS LSR common objects
+
+
+mplsXCExtTable  OBJECT-TYPE
+    SYNTAX        SEQUENCE OF MplsXCExtEntry
+    MAX-ACCESS    not-accessible
+    STATUS        current
+    DESCRIPTION
+       "This table sparse augments the mplsXCTable of
+        MPLS-LSR-STD-MIB (RFC 3813) to provide MPLS-TP-specific
+        information about associated tunnel information"
+    REFERENCE
+       "Multiprotocol Label Switching (MPLS) Label Switching
+        Router (LSR) Management Information Base (MIB), RFC 3813."
+::= { mplsLsrExtObjects 1 }
+
+mplsXCExtEntry  OBJECT-TYPE
+    SYNTAX        MplsXCExtEntry
+    MAX-ACCESS    not-accessible
+
+    STATUS        current
+    DESCRIPTION
+       "An entry in this table sparsely extends the cross-connect
+        information represented by an entry in
+        the mplsXCTable in MPLS-LSR-STD-MIB (RFC 3813) through
+        a sparse augmentation.  An entry can be created by
+        a network operator via SNMP SET commands or in
+        response to signaling protocol events."
+    REFERENCE
+       "Multiprotocol Label Switching (MPLS) Label Switching
+        Router (LSR) Management Information Base (MIB), RFC 3813."
+
+  INDEX { mplsXCIndex, mplsXCInSegmentIndex,
+        mplsXCOutSegmentIndex }
+ ::= { mplsXCExtTable 1 }
+
+MplsXCExtEntry ::= SEQUENCE {
+   mplsXCExtTunnelPointer        RowPointer,
+   mplsXCExtOppositeDirXCPtr     RowPointer
+}
+
+mplsXCExtTunnelPointer OBJECT-TYPE
+    SYNTAX        RowPointer
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+       "This read-only object indicates the back pointer to
+        the tunnel entry segment.
+        The only valid value for Tunnel Pointer is
+        mplsTunnelTable entry."
+
+
+
+    REFERENCE
+       "Multiprotocol Label Switching (MPLS) Label Switching
+        Router (LSR) Management Information Base (MIB), RFC 3813."
+ ::= { mplsXCExtEntry 1 }
+
+mplsXCExtOppositeDirXCPtr OBJECT-TYPE
+    SYNTAX        RowPointer
+    MAX-ACCESS    read-create
+    STATUS        current
+    DESCRIPTION
+       "This object indicates the pointer to the opposite-
+        direction XC entry.  This object cannot be modified if
+        mplsXCRowStatus for the corresponding entry in the
+        mplsXCTable is active(1).  If this pointer is not set or
+        removed, mplsXCOperStatus should be set to down(2)."
+    REFERENCE
+       "Multiprotocol Label Switching (MPLS) Label Switching
+        Router (LSR) Management Information Base (MIB), RFC 3813."
+ ::= { mplsXCExtEntry 2 }
+
+ mplsLsrExtCompliances
+    OBJECT IDENTIFIER ::= { mplsLsrExtConformance 1 }
+
+ mplsLsrExtGroups
+    OBJECT IDENTIFIER ::= { mplsLsrExtConformance 2 }
+
+ -- Compliance requirement for fully compliant implementations.
+
+ mplsLsrExtModuleFullCompliance MODULE-COMPLIANCE
+     STATUS current
+     DESCRIPTION
+        "Compliance statement for agents that provide full support
+         for MPLS-LSR-EXT-STD-MIB.
+         The mandatory group has to be implemented by all LSRs
+         that originate, terminate, or act as transit for
+         TE-LSPs/tunnels.
+         In addition, depending on the type of tunnels supported,
+         other groups become mandatory as explained below."
+
+  MODULE MPLS-LSR-STD-MIB -- The MPLS-LSR-STD-MIB, RFC 3813
+
+  MANDATORY-GROUPS {
+    mplsInSegmentGroup,
+    mplsOutSegmentGroup,
+    mplsXCGroup,
+    mplsLsrNotificationGroup
+  }
+
+
+
+  MODULE -- this module
+
+  MANDATORY-GROUPS    {
+    mplsXCExtGroup
+  }
+
+  ::= { mplsLsrExtCompliances 1 }
+
+ -- Compliance requirement for implementations that provide
+ -- read-only access.
+
+  mplsLsrExtModuleReadOnlyCompliance MODULE-COMPLIANCE
+    STATUS current
+    DESCRIPTION
+       "Compliance requirement for implementations that only
+        provide read-only support for MPLS-LSR-EXT-STD-MIB.
+        Such devices can then be monitored but cannot be
+        configured using this MIB module."
+
+  MODULE MPLS-LSR-STD-MIB
+
+  MANDATORY-GROUPS {
+      mplsInterfaceGroup,
+      mplsInSegmentGroup,
+      mplsOutSegmentGroup
+  }
+
+  MODULE -- this module
+
+  GROUP mplsXCExtReadOnlyObjectsGroup
+  DESCRIPTION
+        "This group is mandatory for devices that support
+         opposite-direction XC configuration of tunnels."
+
+  -- mplsXCExtTable
+       OBJECT mplsXCExtOppositeDirXCPtr
+       MIN-ACCESS   read-only
+       DESCRIPTION
+           "Write access is not required.
+            This object indicates the pointer to the opposite-
+            direction XC entry.  The only valid value for XC
+            Pointer is mplsXCTable entry."
+       ::= { mplsLsrExtCompliances 2 }
+
+  -- Units of conformance.
+
+
+
+
+
+  mplsXCExtGroup  OBJECT-GROUP
+  OBJECTS {
+      mplsXCExtTunnelPointer,
+      mplsXCExtOppositeDirXCPtr
+  }
+  STATUS  current
+  DESCRIPTION
+      "This object should be supported in order to access
+      the tunnel entry from the XC entry."
+  ::= { mplsLsrExtGroups 1 }
+
+  mplsXCExtReadOnlyObjectsGroup OBJECT-GROUP
+  OBJECTS {
+      mplsXCExtTunnelPointer,
+      mplsXCExtOppositeDirXCPtr
+  }
+  STATUS  current
+  DESCRIPTION
+      "This Object is needed to associate the opposite-direction
+      (forward/reverse) XC entry."
+  ::= { mplsLsrExtGroups 2 }
+
+ -- MPLS-LSR-EXT-STD-MIB module ends
+ END

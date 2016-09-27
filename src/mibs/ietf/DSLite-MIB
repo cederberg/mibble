@@ -1,0 +1,832 @@
+DSLite-MIB DEFINITIONS  ::=  BEGIN
+
+     IMPORTS
+        MODULE-IDENTITY, OBJECT-TYPE, mib-2,
+        NOTIFICATION-TYPE,  Integer32,
+        Counter64, Unsigned32
+           FROM SNMPv2-SMI
+
+        OBJECT-GROUP, MODULE-COMPLIANCE,
+        NOTIFICATION-GROUP
+           FROM SNMPv2-CONF
+
+        SnmpAdminString
+           FROM SNMP-FRAMEWORK-MIB
+
+        ifIndex
+           FROM IF-MIB
+
+       InetAddress, InetAddressType, InetAddressPrefixLength,
+       InetPortNumber
+             FROM INET-ADDRESS-MIB
+
+       ProtocolNumber, Natv2InstanceIndex, Natv2SubscriberIndex
+            FROM NATV2-MIB;
+
+     dsliteMIB MODULE-IDENTITY
+     LAST-UPDATED "201605110000Z"          -- May 11, 2016
+     ORGANIZATION "IETF Softwire Working Group"
+     CONTACT-INFO
+        "Yu Fu
+         CNNIC
+         No.4 South 4th Street, Zhongguancun
+         Hai-Dian District, Beijing  100090
+         China
+         Email: fuyu@cnnic.cn
+
+         Sheng Jiang
+         Huawei Technologies Co., Ltd
+         Huawei Building, 156 Beiqing Rd.
+         Hai-Dian District, Beijing  100095
+         China
+         Email: jiangsheng@huawei.com
+
+
+
+
+
+
+
+         Jiang Dong
+         Tsinghua University
+         Department of Computer Science, Tsinghua University
+         Beijing  100084
+         China
+         Email: knight.dongjiang@gmail.com
+
+         Yuchi Chen
+         Tsinghua University
+         Department of Computer Science, Tsinghua University
+         Beijing  100084
+         China
+         Email: flashfoxmx@gmail.com "
+
+     DESCRIPTION
+        "The MIB module is defined for management of objects in the
+        DS-Lite scenario.
+
+       Copyright (c) 2016 IETF Trust and the persons identified as
+       authors of the code.  All rights reserved.
+
+       Redistribution and use in source and binary forms, with or
+       without modification, is permitted pursuant to, and subject
+       to the license terms contained in, the Simplified BSD License
+       set forth in Section 4.c of the IETF Trust's Legal Provisions
+       Relating to IETF Documents
+       (http://trustee.ietf.org/license-info)."
+     REVISION    "201605110000Z"
+     DESCRIPTION
+        "Initial version.  Published as RFC 7870."
+        ::=  {  mib-2 240  }
+
+
+  --Top-level components of this MIB module
+
+     dsliteMIBObjects OBJECT IDENTIFIER
+        ::=  { dsliteMIB 1 }
+     dsliteTunnel   OBJECT IDENTIFIER
+        ::=  { dsliteMIBObjects 1 }
+
+     dsliteNAT   OBJECT IDENTIFIER
+        ::=  { dsliteMIBObjects 2 }
+
+     dsliteInfo   OBJECT IDENTIFIER
+        ::=  { dsliteMIBObjects 3 }
+
+  --Notifications section
+
+
+
+
+     dsliteNotifications  OBJECT IDENTIFIER
+        ::=  { dsliteMIB 0 }
+
+
+  --dsliteTunnel
+
+  --dsliteTunnelTable
+
+     dsliteTunnelTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF DsliteTunnelEntry
+        MAX-ACCESS  not-accessible
+        STATUS     current
+        DESCRIPTION
+           "The (conceptual) table containing information on
+            configured tunnels.  This table can be used to map
+            a B4 address to the associated AFTR address.  It can
+            also be used for row creation."
+        REFERENCE
+           "B4, AFTR: RFC 6333."
+        ::=  { dsliteTunnel 1 }
+
+     dsliteTunnelEntry OBJECT-TYPE
+        SYNTAX     DsliteTunnelEntry
+        MAX-ACCESS  not-accessible
+        STATUS     current
+        DESCRIPTION
+           "Each entry in this table contains the information on a
+            particular configured tunnel."
+            INDEX   { dsliteTunnelAddressType,
+                      dsliteTunnelStartAddress,
+                      dsliteTunnelEndAddress,
+                      ifIndex }
+        ::=  { dsliteTunnelTable 1 }
+
+     DsliteTunnelEntry  ::=
+        SEQUENCE {
+         dsliteTunnelAddressType         InetAddressType,
+         dsliteTunnelStartAddress        InetAddress,
+         dsliteTunnelEndAddress          InetAddress,
+         dsliteTunnelStartAddPreLen      InetAddressPrefixLength
+     }
+
+      dsliteTunnelAddressType OBJECT-TYPE
+         SYNTAX     InetAddressType
+         MAX-ACCESS not-accessible
+         STATUS     current
+         DESCRIPTION
+            "This object MUST be set to the value of ipv6(2).
+
+
+
+             It describes the address type of the IPv4-in-IPv6
+             tunnel initiator and endpoint."
+         REFERENCE
+           "ipv6(2): RFC 4001."
+         ::= { dsliteTunnelEntry 1 }
+
+     dsliteTunnelStartAddress OBJECT-TYPE
+         SYNTAX     InetAddress (SIZE (0..16))
+         MAX-ACCESS not-accessible
+         STATUS     current
+         DESCRIPTION
+            "The IPv6 address of the initiator of the tunnel.
+             The address type is given by dsliteTunnelAddressType."
+         ::= { dsliteTunnelEntry 2 }
+
+     dsliteTunnelEndAddress OBJECT-TYPE
+         SYNTAX     InetAddress (SIZE (0..16))
+         MAX-ACCESS not-accessible
+         STATUS     current
+         DESCRIPTION
+            "The IPv6 address of the endpoint of the tunnel.
+             The address type is given by dsliteTunnelAddressType."
+         ::= { dsliteTunnelEntry 3 }
+
+     dsliteTunnelStartAddPreLen OBJECT-TYPE
+         SYNTAX InetAddressPrefixLength
+         MAX-ACCESS read-only
+         STATUS current
+         DESCRIPTION
+            "The IPv6 prefix length of the IP address for the
+             initiator of the tunnel(dsliteTunnelStartAddress)."
+         ::= { dsliteTunnelEntry 4 }
+
+
+   --dsliteNATBindTable(according to the NAPT scheme)
+
+      dsliteNATBindTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF DsliteNATBindEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+           "This table contains information about currently
+            active NAT binds in the NAT of the AFTR.  This table
+            adds the IPv6 address of a B4 to the natv2PortMapTable
+            defined in NATV2-MIB (RFC 7659)."
+        REFERENCE
+             "NATV2-MIB: Section 4 of RFC 7659."
+        ::=  { dsliteNAT 1 }
+
+
+
+     dsliteNATBindEntry OBJECT-TYPE
+        SYNTAX     DsliteNATBindEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+           "The entry in this table holds the mapping relationship
+            between tunnel information and NAT bind information.
+            Each entry in this table not only needs to match a
+            corresponding entry in the natv2PortMapTable, but
+            also a corresponding entry in the dsliteTunnelTable.
+            So, the INDEX of the entry needs to match a corresponding
+            value in the natv2PortMapTable INDEX and a corresponding
+            value in the dsliteTunnelTable INDEX.  These entries are
+            lost upon agent restart."
+        REFERENCE
+             "natv2PortMapTable: Section 4 of RFC 7659."
+        INDEX   { dsliteNATBindMappingInstanceIndex,
+                  dsliteNATBindMappingProto,
+                  dsliteNATBindMappingExtRealm,
+                  dsliteNATBindMappingExtAddressType,
+                  dsliteNATBindMappingExtAddress,
+                  dsliteNATBindMappingExtPort,
+                  ifIndex,
+                  dsliteTunnelStartAddress }
+        ::=  {  dsliteNATBindTable 1   }
+
+    DsliteNATBindEntry  ::=
+        SEQUENCE {
+        dsliteNATBindMappingInstanceIndex  Natv2InstanceIndex,
+        dsliteNATBindMappingProto          ProtocolNumber,
+        dsliteNATBindMappingExtRealm       SnmpAdminString,
+        dsliteNATBindMappingExtAddressType InetAddressType,
+        dsliteNATBindMappingExtAddress     InetAddress,
+        dsliteNATBindMappingExtPort        InetPortNumber,
+        dsliteNATBindMappingIntRealm       SnmpAdminString,
+        dsliteNATBindMappingIntAddressType InetAddressType,
+        dsliteNATBindMappingIntAddress     InetAddress,
+        dsliteNATBindMappingIntPort        InetPortNumber,
+        dsliteNATBindMappingPool           Unsigned32,
+        dsliteNATBindMappingMapBehavior    INTEGER,
+        dsliteNATBindMappingFilterBehavior INTEGER,
+        dsliteNATBindMappingAddressPooling INTEGER
+        }
+
+     dsliteNATBindMappingInstanceIndex OBJECT-TYPE
+         SYNTAX Natv2InstanceIndex
+         MAX-ACCESS not-accessible
+         STATUS current
+
+
+
+         DESCRIPTION
+            "Index of the NAT instance that created this port
+             map entry."
+      ::= { dsliteNATBindEntry 1 }
+
+     dsliteNATBindMappingProto OBJECT-TYPE
+         SYNTAX      ProtocolNumber
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+            "This object specifies the mapping's transport protocol
+             number."
+         ::= { dsliteNATBindEntry 2 }
+
+    dsliteNATBindMappingExtRealm OBJECT-TYPE
+         SYNTAX     SnmpAdminString (SIZE(0..32))
+         MAX-ACCESS not-accessible
+         STATUS     current
+         DESCRIPTION
+            "The realm to which dsliteNATBindMappingExtAddress
+            belongs."
+         ::= { dsliteNATBindEntry 3 }
+
+     dsliteNATBindMappingExtAddressType OBJECT-TYPE
+         SYNTAX InetAddressType
+         MAX-ACCESS not-accessible
+         STATUS current
+         DESCRIPTION
+           "Address type for the mapping's external address.
+            This object MUST be set to the value of iPv4(1).
+            The values of ipv6(2), ipv4z(3), and ipv6z(4) are
+            not allowed."
+         REFERENCE
+           "ipv4(1), ipv6(2), iPv4z(3), and ipv6z(4): RFC 4001."
+         ::= { dsliteNATBindEntry 4 }
+
+    dsliteNATBindMappingExtAddress OBJECT-TYPE
+         SYNTAX InetAddress (SIZE (0..4))
+         MAX-ACCESS not-accessible
+         STATUS current
+         DESCRIPTION
+           "The mapping's external address.  This is the source
+            address for translated outgoing packets.  The address
+            type is given by dsliteNATBindMappingExtAddressType."
+         ::= { dsliteNATBindEntry 5 }
+
+     dsliteNATBindMappingExtPort OBJECT-TYPE
+         SYNTAX InetPortNumber
+
+
+
+         MAX-ACCESS not-accessible
+         STATUS current
+         DESCRIPTION
+           "The mapping's assigned external port number.
+            This is the source port for translated outgoing
+            packets.  This MUST be a non-zero value."
+         ::= { dsliteNATBindEntry 6 }
+
+      dsliteNATBindMappingIntRealm OBJECT-TYPE
+         SYNTAX SnmpAdminString (SIZE(0..32))
+         MAX-ACCESS read-only
+         STATUS current
+         DESCRIPTION
+           "The realm to which natMappingIntAddress belongs.  This
+            realm defines the IPv6 address space from which the
+            tunnel source address is taken.  The realm of the
+            encapsulated IPv4 address is restricted in scope to
+            the tunnel, so there is no point in identifying it
+            separately."
+         ::= { dsliteNATBindEntry 7 }
+
+   dsliteNATBindMappingIntAddressType OBJECT-TYPE
+         SYNTAX InetAddressType
+         MAX-ACCESS read-only
+         STATUS current
+         DESCRIPTION
+            "Address type of the mapping's internal address.
+            This object MUST be set to the value of iPv4z(3).
+            The values of ipv4(1), ipv6(2), and ipv6z(4) are
+            not allowed."
+         REFERENCE
+           "ipv4(1), ipv6(2), iPv4z(3), and ipv6z(4): RFC 4001."
+         ::= { dsliteNATBindEntry 8 }
+
+     dsliteNATBindMappingIntAddress OBJECT-TYPE
+         SYNTAX InetAddress
+         MAX-ACCESS read-only
+         STATUS current
+         DESCRIPTION
+           "The mapping's internal address.  It is the IPv6 tunnel
+            source address.  The address type is given by
+            dsliteNATBindMappingIntAddressType."
+         ::= { dsliteNATBindEntry 9 }
+
+     dsliteNATBindMappingIntPort OBJECT-TYPE
+         SYNTAX InetPortNumber
+         MAX-ACCESS read-only
+         STATUS current
+
+
+
+         DESCRIPTION
+          "The mapping's internal port number.  This MUST be a
+           non-zero value."
+          ::= { dsliteNATBindEntry 10 }
+
+     dsliteNATBindMappingPool OBJECT-TYPE
+         SYNTAX Unsigned32 (0|1..4294967295)
+         MAX-ACCESS read-only
+         STATUS current
+         DESCRIPTION
+           "Index of the pool that contains this mapping's external
+            address and port.  If zero, no pool is associated with
+            this mapping."
+         ::= { dsliteNATBindEntry 11 }
+
+     dsliteNATBindMappingMapBehavior OBJECT-TYPE
+         SYNTAX INTEGER{
+         endpointIndependent (0),
+         addressDependent(1),
+         addressAndPortDependent (2)
+         }
+         MAX-ACCESS read-only
+         STATUS current
+         DESCRIPTION
+           "Mapping behavior as described in Section 4.1 of RFC 4787.
+
+            endpointIndependent(0), the behavior REQUIRED by
+            RFC 4787, REQ-1 maps the source address and port to
+            the same external address and port for all destination
+            address and port combinations reached through the same
+            external realm and using the given protocol.
+
+            addressDependent(1) maps to the same external address
+            and port for all destination ports at the same
+            destination address reached through the same external
+            realm and using the given protocol.
+
+            addressAndPortDependent(2) maps to a separate external
+            address and port combination for each different
+            destination address and port combination reached
+            through the same external realm.
+
+            For the DS-Lite scenario, it must be
+            addressAndPortDependent(2)."
+         REFERENCE
+           "Mapping behavior: Section 4.1 of RFC 4787.
+            DS-Lite: RFC 6333."
+         ::= { dsliteNATBindEntry 12 }
+
+
+
+     dsliteNATBindMappingFilterBehavior OBJECT-TYPE
+         SYNTAX INTEGER{
+         endpointIndependent (0),
+         addressDependent(1),
+         addressAndPortDependent (2)
+         }
+         MAX-ACCESS read-only
+         STATUS current
+         DESCRIPTION
+           "Filtering behavior as described in Section 5 of RFC 4787.
+
+            endpointIndependent(0) accepts for translation packets
+            from all combinations of remote address and port
+            destined to the mapped external address and port via
+            the given external realm and using the given protocol.
+
+            addressDependent(1) accepts for translation packets from
+            all remote ports from the same remote source address
+            destined to the mapped external address and port via the
+            given external realm and using the given protocol.
+
+            addressAndPortDependent(2) accepts for translation only
+            those packets with the same remote source address, port,
+            and protocol incoming from the same external realm as
+            identified when the applicable port map entry was
+            created.
+
+            RFC 4787, REQ-8 recommends either endpointIndependent(0)
+            or addressDependent(1) filtering behavior, depending on
+            whether application friendliness or security takes
+            priority.
+
+            For the DS-Lite scenario, it must be
+            addressAndPortDependent(2)."
+         REFERENCE
+           "Filtering behavior: Section 5 of RFC 4787.
+            DS-Lite: RFC 6333."
+         ::= { dsliteNATBindEntry 13 }
+
+     dsliteNATBindMappingAddressPooling OBJECT-TYPE
+         SYNTAX INTEGER{
+         arbitrary (0),
+         paired (1)
+         }
+         MAX-ACCESS read-only
+         STATUS current
+
+
+
+
+
+         DESCRIPTION
+           "Type of address pooling behavior that was used to create
+            this mapping.
+
+            arbitrary(0) pooling behavior means that the NAT instance
+            may create the new port mapping using any address in the
+            pool that has a free port for the protocol concerned.
+
+            paired(1) pooling behavior, the behavior RECOMMENDED by RFC
+            4787, REQ-2 means that once a given internal address has
+            been mapped to a particular address in a particular pool,
+            further mappings of the same internal address to that pool
+            will reuse the previously assigned pool member address."
+         REFERENCE
+           "Pooling behavior: Section 4.1 of RFC 4787."
+         ::= { dsliteNATBindEntry 14 }
+
+
+     --dsliteInfo
+
+     dsliteAFTRAlarmScalar OBJECT IDENTIFIER ::= { dsliteInfo 1 }
+
+     dsliteAFTRAlarmB4AddrType OBJECT-TYPE
+        SYNTAX  InetAddressType
+        MAX-ACCESS accessible-for-notify
+        STATUS current
+        DESCRIPTION
+           "This object indicates the address type of
+            the B4, which will send an alarm."
+        ::= { dsliteAFTRAlarmScalar 1 }
+
+     dsliteAFTRAlarmB4Addr OBJECT-TYPE
+        SYNTAX  InetAddress
+        MAX-ACCESS accessible-for-notify
+        STATUS current
+        DESCRIPTION
+           "This object indicates the IP address of
+            B4, which will send an alarm.  The address type is
+            given by dsliteAFTRAlarmB4AddrType."
+        ::= { dsliteAFTRAlarmScalar 2 }
+
+     dsliteAFTRAlarmProtocolType OBJECT-TYPE
+        SYNTAX INTEGER{
+        tcp (0),
+        udp (1),
+        icmp (2),
+        total (3)
+        }
+
+
+
+        MAX-ACCESS accessible-for-notify
+        STATUS current
+        DESCRIPTION
+           "This object indicates the transport protocol type
+            of alarm.
+
+            tcp (0) means that the transport protocol type of
+            alarm is tcp.
+
+            udp (1) means that the transport protocol type of
+            alarm is udp.
+
+            icmp (2) means that the transport protocol type of
+            alarm is icmp.
+
+            total (3) means that the transport protocol type of
+            alarm is total."
+        ::= { dsliteAFTRAlarmScalar 3 }
+
+   dsliteAFTRAlarmSpecificIPAddrType OBJECT-TYPE
+        SYNTAX InetAddressType
+        MAX-ACCESS accessible-for-notify
+        STATUS current
+        DESCRIPTION
+           "This object indicates the address type of the IP address
+            whose port usage has reached the threshold."
+        ::= { dsliteAFTRAlarmScalar 4 }
+
+    dsliteAFTRAlarmSpecificIP OBJECT-TYPE
+        SYNTAX InetAddress
+        MAX-ACCESS accessible-for-notify
+        STATUS current
+        DESCRIPTION
+           "This object indicates the IP address whose port usage
+            has reached the threshold.  The address type is given by
+            dsliteAFTRAlarmSpecificIPAddrType."
+        ::= { dsliteAFTRAlarmScalar 5 }
+
+     dsliteAFTRAlarmConnectNumber OBJECT-TYPE
+        SYNTAX Integer32 (60..90)
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+           "This object indicates the notification threshold
+            of the DS-Lite tunnels that is active in
+            the AFTR device."
+         REFERENCE
+           "AFTR: Section 6 of RFC 6333."
+
+
+
+        DEFVAL
+            { 60 }
+        ::= { dsliteAFTRAlarmScalar 6 }
+
+     dsliteAFTRAlarmSessionNumber OBJECT-TYPE
+        SYNTAX Integer32
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+           "This object indicates the notification threshold of
+            the IPv4 session for the user."
+         REFERENCE
+           "AFTR: Section 6 of RFC 6333
+            B4: Section 5 of RFC 6333."
+        DEFVAL
+            { -1 }
+        ::= { dsliteAFTRAlarmScalar 7 }
+
+    dsliteAFTRAlarmPortNumber OBJECT-TYPE
+        SYNTAX Integer32
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+           "This object indicates the notification threshold of the NAT
+            ports that have been used by the user."
+        DEFVAL
+            { -1 }
+        ::= { dsliteAFTRAlarmScalar 8 }
+
+     dsliteStatisticsTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF DsliteStatisticsEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+           "This table provides statistical information
+            about DS-Lite."
+        ::= { dsliteInfo 2 }
+
+     dsliteStatisticsEntry OBJECT-TYPE
+        SYNTAX DsliteStatisticsEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+           "Each entry in this table provides statistical information
+            about DS-Lite."
+        INDEX { dsliteStatisticsSubscriberIndex }
+        ::= { dsliteStatisticsTable 1 }
+
+
+
+
+     DsliteStatisticsEntry ::=
+        SEQUENCE {
+      dsliteStatisticsSubscriberIndex        Natv2SubscriberIndex,
+      dsliteStatisticsDiscards               Counter64,
+      dsliteStatisticsSends                  Counter64,
+      dsliteStatisticsReceives               Counter64,
+      dsliteStatisticsIpv4Session            Counter64,
+      dsliteStatisticsIpv6Session            Counter64
+     }
+
+    dsliteStatisticsSubscriberIndex OBJECT-TYPE
+       SYNTAX Natv2SubscriberIndex
+       MAX-ACCESS not-accessible
+       STATUS current
+       DESCRIPTION
+          "Index of the subscriber or host.  A unique value,
+           greater than zero, for each subscriber in the
+           managed system."
+        ::= { dsliteStatisticsEntry 1 }
+
+     dsliteStatisticsDiscards OBJECT-TYPE
+        SYNTAX Counter64
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+           "This object indicates the number of packets
+            discarded from this subscriber."
+       ::= { dsliteStatisticsEntry 2 }
+
+      dsliteStatisticsSends  OBJECT-TYPE
+        SYNTAX Counter64
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+           "This object indicates the number of packets that is
+             sent to this subscriber."
+        ::= { dsliteStatisticsEntry 3 }
+
+      dsliteStatisticsReceives  OBJECT-TYPE
+        SYNTAX Counter64
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+           "This object indicates the number of packets that is
+             received from this subscriber."
+        ::= { dsliteStatisticsEntry 4 }
+
+
+
+
+
+     dsliteStatisticsIpv4Session OBJECT-TYPE
+        SYNTAX Counter64
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+           "This object indicates the number of the
+            current IPv4 Sessions."
+        REFERENCE
+            "Session: Paragraph 2 in Section 11 of RFC 6333.
+            (The AFTR should have the capability to log the
+             tunnel-id, protocol, ports/IP addresses, and
+             the creation time of the NAT binding to uniquely
+             identify the user sessions)."
+        ::= { dsliteStatisticsEntry 5 }
+
+     dsliteStatisticsIpv6Session OBJECT-TYPE
+        SYNTAX Counter64
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+           "This object indicates the number of the
+            current IPv6 session.  Because the AFTR is
+            also a dual-stack device, it will also
+            forward normal IPv6 packets for the
+            inbound and outbound direction."
+        REFERENCE
+            "Session: Paragraph 2 in Section 11 of RFC 6333.
+            (The AFTR should have the capability to log the
+             tunnel-id, protocol, ports/IP addresses, and
+             the creation time of the NAT binding to uniquely
+             identify the user sessions)."
+       ::= { dsliteStatisticsEntry 6 }
+
+  ---dslite Notifications
+
+     dsliteTunnelNumAlarm NOTIFICATION-TYPE
+        OBJECTS { dsliteAFTRAlarmProtocolType,
+                  dsliteAFTRAlarmB4AddrType,
+                  dsliteAFTRAlarmB4Addr }
+        STATUS current
+        DESCRIPTION
+           "This trap is triggered when the number of
+            current DS-Lite tunnels exceeds the value of
+            the dsliteAFTRAlarmConnectNumber."
+        ::= { dsliteNotifications 1 }
+
+
+
+
+
+
+     dsliteAFTRUserSessionNumAlarm NOTIFICATION-TYPE
+        OBJECTS { dsliteAFTRAlarmProtocolType,
+               dsliteAFTRAlarmB4AddrType,
+               dsliteAFTRAlarmB4Addr }
+        STATUS current
+        DESCRIPTION
+           "This trap is triggered when user sessions
+            reach the threshold.  The threshold
+            is specified by the dsliteAFTRAlarmSessionNumber."
+        REFERENCE
+            "Session: Paragraph 2 in Section 11 of RFC 6333.
+            (The AFTR should have the capability to log the
+             tunnel-id, protocol, ports/IP addresses, and
+             the creation time of the NAT binding to uniquely
+             identify the user sessions)."
+        ::= { dsliteNotifications 2 }
+
+       dsliteAFTRPortUsageOfSpecificIpAlarm NOTIFICATION-TYPE
+        OBJECTS { dsliteAFTRAlarmSpecificIPAddrType,
+                   dsliteAFTRAlarmSpecificIP }
+        STATUS current
+        DESCRIPTION
+           "This trap is triggered when the used NAT
+            ports of map address reach the threshold.
+            The threshold is specified by the
+            dsliteAFTRAlarmPortNumber."
+        ::= { dsliteNotifications 3 }
+
+  --Module Conformance statement
+
+     dsliteConformance   OBJECT IDENTIFIER
+        ::=  { dsliteMIB 2 }
+
+     dsliteCompliances OBJECT IDENTIFIER ::= { dsliteConformance 1 }
+
+     dsliteGroups OBJECT IDENTIFIER ::= { dsliteConformance 2 }
+
+  -- compliance statements
+
+     dsliteCompliance MODULE-COMPLIANCE
+         STATUS current
+         DESCRIPTION
+             "Describes the minimal requirements for conformance
+              to the DS-Lite MIB."
+         MODULE -- this module
+             MANDATORY-GROUPS { dsliteNATBindGroup,
+                 dsliteTunnelGroup,
+                 dsliteStatisticsGroup,
+
+
+
+                 dsliteNotificationsGroup,
+                 dsliteAFTRAlarmScalarGroup }
+         ::= { dsliteCompliances 1 }
+
+     dsliteNATBindGroup OBJECT-GROUP
+        OBJECTS {
+                 dsliteNATBindMappingIntRealm,
+                 dsliteNATBindMappingIntAddressType,
+                 dsliteNATBindMappingIntAddress,
+                 dsliteNATBindMappingIntPort,
+                 dsliteNATBindMappingPool,
+                 dsliteNATBindMappingMapBehavior,
+                 dsliteNATBindMappingFilterBehavior,
+                 dsliteNATBindMappingAddressPooling }
+        STATUS current
+        DESCRIPTION
+            "A collection of objects to support basic
+             management of NAT binds in the NAT of the AFTR."
+         ::= { dsliteGroups 1 }
+
+     dsliteTunnelGroup OBJECT-GROUP
+        OBJECTS { dsliteTunnelStartAddPreLen }
+        STATUS current
+        DESCRIPTION
+            "A collection of objects to support management
+             of DS-Lite tunnels."
+        ::= { dsliteGroups 2 }
+
+     dsliteStatisticsGroup OBJECT-GROUP
+        OBJECTS { dsliteStatisticsDiscards,
+                  dsliteStatisticsSends,
+                  dsliteStatisticsReceives,
+                  dsliteStatisticsIpv4Session,
+                  dsliteStatisticsIpv6Session }
+       STATUS current
+       DESCRIPTION
+          " A collection of objects to support management
+            of statistical information for AFTR devices."
+         ::= { dsliteGroups 3 }
+
+     dsliteNotificationsGroup NOTIFICATION-GROUP
+        NOTIFICATIONS { dsliteTunnelNumAlarm,
+                        dsliteAFTRUserSessionNumAlarm,
+                        dsliteAFTRPortUsageOfSpecificIpAlarm }
+        STATUS current
+        DESCRIPTION
+           "A collection of objects to support management
+            of trap information for AFTR devices."
+
+
+
+        ::= { dsliteGroups 4 }
+
+      dsliteAFTRAlarmScalarGroup OBJECT-GROUP
+        OBJECTS { dsliteAFTRAlarmB4AddrType,
+             dsliteAFTRAlarmB4Addr,
+             dsliteAFTRAlarmProtocolType,
+             dsliteAFTRAlarmSpecificIPAddrType,
+             dsliteAFTRAlarmSpecificIP,
+             dsliteAFTRAlarmConnectNumber,
+             dsliteAFTRAlarmSessionNumber,
+             dsliteAFTRAlarmPortNumber}
+        STATUS current
+        DESCRIPTION
+            "A collection of objects to support management of
+            the information about the AFTR alarming scalar."
+        ::= { dsliteGroups 5 }
+
+            END

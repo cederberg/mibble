@@ -1,0 +1,1159 @@
+MPLS-OAM-ID-STD-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+       MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
+       Unsigned32
+          FROM SNMPv2-SMI                   -- RFC 2578
+       MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+          FROM SNMPv2-CONF                  -- RFC 2580
+       RowStatus, RowPointer, StorageType
+          FROM SNMPv2-TC                    -- RFC 2579
+       SnmpAdminString
+          FROM SNMP-FRAMEWORK-MIB           -- RFC 3411
+       IndexIntegerNextFree
+          FROM DIFFSERV-MIB                 -- RFC 3289
+       mplsStdMIB
+          FROM MPLS-TC-STD-MIB              -- RFC 3811
+       InterfaceIndexOrZero, ifGeneralInformationGroup,
+       ifCounterDiscontinuityGroup
+          FROM IF-MIB;                      -- RFC 2863
+
+   mplsOamIdStdMIB MODULE-IDENTITY
+      LAST-UPDATED
+         "201601070000Z" -- January 07, 2016
+      ORGANIZATION
+         "Multiprotocol Label Switching (MPLS) Working Group"
+      CONTACT-INFO
+         "Sam Aldrin
+          Google, Inc.
+          1600 Amphitheatre Parkway
+          Mountain View, CA  94043
+          USA
+          Email: aldrin.ietf@gmail.com
+
+          Thomas D. Nadeau
+          Email: tnadeau@lucidvision.com
+
+          Venkatesan Mahalingam
+          Dell, Inc.
+          5450 Great America Parkway
+          Santa Clara, CA  95054
+          USA
+          Email: venkat.mahalingams@gmail.com
+
+
+
+
+
+
+
+          Kannan KV Sampath
+          Redeem
+          India
+          Email: kannankvs@gmail.com
+
+          Ping Pan
+          Infinera
+
+          Sami Boutros
+          VMware, Inc.
+          3401 Hillview Ave.
+          Palo Alto, CA  94304
+          USA
+          Email: sboutros@vmware.com"
+
+      DESCRIPTION
+         "Copyright (c) 2016 IETF Trust and the persons identified
+          as authors of the code.  All rights reserved.
+
+          Redistribution and use in source and binary forms, with or
+          without modification, is permitted pursuant to, and subject
+          to the license terms contained in, the Simplified BSD
+          License set forth in Section 4.c of the IETF Trust's
+          Legal Provisions Relating to IETF Documents
+          (http://trustee.ietf.org/license-info).
+
+          This MIB module contains generic object definitions for
+          MPLS OAM identifiers."
+
+      -- Revision history
+
+      REVISION
+         "201601070000Z" -- January 07, 2016
+      DESCRIPTION
+         "MPLS OAM Identifiers MIB objects for Tunnels, LSPs,
+          Pseudowires, and Sections."
+
+      ::= { mplsStdMIB 21 }
+
+   -- Top-level components of this MIB module
+
+   -- notifications
+   mplsOamIdNotifications
+                OBJECT IDENTIFIER ::= { mplsOamIdStdMIB 0 }
+   -- tables, scalars
+   mplsOamIdObjects  OBJECT IDENTIFIER ::= { mplsOamIdStdMIB 1 }
+
+
+
+
+
+   -- conformance
+   mplsOamIdConformance
+                OBJECT IDENTIFIER ::= { mplsOamIdStdMIB 2 }
+
+    -- Start of MPLS Transport Profile MEG table
+
+   mplsOamIdMegIndexNext OBJECT-TYPE
+      SYNTAX        IndexIntegerNextFree (0..4294967295)
+      MAX-ACCESS    read-only
+      STATUS        current
+      DESCRIPTION
+        "This object contains an unused value for
+         mplsOamIdMegIndex, or a zero to indicate
+         that none exist.  Negative values are not allowed,
+         as they do not correspond to valid values of
+         mplsOamIdMegIndex."
+      ::= { mplsOamIdObjects 1 }
+
+   mplsOamIdMegTable OBJECT-TYPE
+      SYNTAX        SEQUENCE OF MplsOamIdMegEntry
+      MAX-ACCESS    not-accessible
+      STATUS        current
+      DESCRIPTION
+        "This table contains information about the Maintenance
+         Entity Groups (MEGs).
+
+         A MEG, as mentioned in the MPLS-TP OAM framework, defines
+         a set of one or more Maintenance Entities (MEs).
+         MEs define a relationship between any two points of a
+         transport path in an OAM domain to which maintenance and
+         monitoring operations apply."
+      ::= { mplsOamIdObjects 2 }
+
+    mplsOamIdMegEntry OBJECT-TYPE
+       SYNTAX        MplsOamIdMegEntry
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "An entry in this table represents an MPLS-TP MEG.
+          An entry can be created by a network administrator
+          or by an SNMP agent as instructed by an MPLS-TP OAM
+          framework.
+
+          When a new entry is created with
+          mplsOamIdMegOperatorType set to ipCompatible (1),
+          then as per RFC 6370 (MEG_ID for an LSP is LSP_ID, and
+          MEG_ID for a PW is PW_Path_ID), MEP_ID can be
+          automatically formed.
+
+
+
+          For a co-routed bidirectional LSP, MEG_ID is
+          A1-{Global_ID::Node_ID::Tunnel_Num}::Z9-{Global_ID::
+          Node_ID::Tunnel_Num}::LSP_Num.
+
+          For an associated bidirectional LSP, MEG_ID is
+          A1-{Global_ID::Node_ID::Tunnel_Num::LSP_Num}::
+          Z9-{Global_ID::Node_ID::Tunnel_Num::LSP_Num}.
+
+          For an LSP, MEP_ID is formed using
+          Global_ID::Node_ID::Tunnel_Num::LSP_Num.
+
+          For a PW, MEG_ID is formed using AGI::
+          A1-{Global_ID::Node_ID::AC_ID}::
+          Z9-{Global_ID::Node_ID::AC_ID}.
+
+          For a PW, MEP_ID is formed using
+          AGI::Global_ID::Node_ID::AC_ID.
+
+          MEP_ID is retrieved from the mplsOamIdMegServicePointer
+          object based on the mplsOamIdMegServicePointerType value.
+          The ICC MEG_ID for an LSP and a PW is formed using the
+          objects mplsOamIdMegIdIcc and mplsOamIdMegIdUmc.
+
+          MEP_ID can be formed using MEG_ID::MEP_Index."
+       REFERENCE
+         "1. RFC 5860: Requirements for Operations, Administration,
+             and Maintenance (OAM) in MPLS Transport Networks,
+             May 2010.
+          2. RFC 6371: Operations, Administration, and Maintenance
+             Framework for MPLS-Based Transport Networks,
+             September 2011, Section 3.
+          3. RFC 6370: MPLS Transport Profile (MPLS-TP) Identifiers,
+             September 2011.
+          4. RFC 6923: MPLS Transport Profile (MPLS-TP) Identifiers
+             Following ITU-T Conventions, May 2013."
+       INDEX { mplsOamIdMegIndex }
+       ::= { mplsOamIdMegTable 1 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       MplsOamIdMegEntry ::= SEQUENCE {
+          mplsOamIdMegIndex                 Unsigned32,
+          mplsOamIdMegName                  SnmpAdminString,
+          mplsOamIdMegOperatorType          INTEGER,
+          mplsOamIdMegIdCc                  SnmpAdminString,
+          mplsOamIdMegIdIcc                 SnmpAdminString,
+          mplsOamIdMegIdUmc                 SnmpAdminString,
+          mplsOamIdMegServicePointerType    INTEGER,
+          mplsOamIdMegMpLocation            INTEGER,
+          mplsOamIdMegPathFlow              INTEGER,
+          mplsOamIdMegOperStatus            INTEGER,
+          mplsOamIdMegSubOperStatus         BITS,
+          mplsOamIdMegRowStatus             RowStatus,
+          mplsOamIdMegStorageType           StorageType
+    }
+
+    mplsOamIdMegIndex  OBJECT-TYPE
+       SYNTAX        Unsigned32 (1..4294967295)
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "Index for the conceptual row identifying a MEG within
+          this MEG table.  Managers should obtain new values for row
+          creation in this table by reading mplsOamIdMegIndexNext."
+       ::= { mplsOamIdMegEntry 1 }
+
+    mplsOamIdMegName  OBJECT-TYPE
+       SYNTAX        SnmpAdminString (SIZE(0..48))
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Each MEG has a unique name amongst all those used or
+          available to a service provider or operator.  It
+          facilitates easy identification of administrative
+          responsibility for each MEG."
+       ::= { mplsOamIdMegEntry 2 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    mplsOamIdMegOperatorType OBJECT-TYPE
+       SYNTAX        INTEGER {
+                         ipCompatible (1),
+                         iccBased (2)
+                     }
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Indicates the operator type for the MEG.  Conceptual rows
+          having 'iccBased' as the operator type MUST have valid
+          values for the objects mplsOamIdMegIdIcc and
+          mplsOamIdMegIdUmc when the row status is active."
+       REFERENCE
+         "1. RFC 6370: MPLS Transport Profile (MPLS-TP) Identifiers,
+             September 2011.
+          2. RFC 6923: MPLS Transport Profile (MPLS-TP) Identifiers
+             Following ITU-T Conventions, May 2013, Section 3.1."
+       DEFVAL { ipCompatible }
+       ::= { mplsOamIdMegEntry 3 }
+
+    mplsOamIdMegIdCc OBJECT-TYPE
+       SYNTAX        SnmpAdminString (SIZE(0..2))
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Global uniqueness is assured by concatenating the ICC
+          with a Country Code (CC).  The Country Code (alpha-2)
+          is a string of two alphabetic characters represented
+          with uppercase letters (i.e., A-Z).
+
+          This object MUST contain a non-null value if
+          the MplsOamIdMegOperatorType value is iccBased (2);
+          otherwise, a null value with octet size 0
+          should be assigned."
+       REFERENCE
+         "RFC 6923: MPLS Transport Profile (MPLS-TP) Identifiers
+          Following ITU-T Conventions, May 2013, Section 3."
+       DEFVAL {""}
+       ::= { mplsOamIdMegEntry 4 }
+
+
+
+
+
+
+
+
+
+
+
+
+    mplsOamIdMegIdIcc OBJECT-TYPE
+       SYNTAX        SnmpAdminString (SIZE(0..6))
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Unique code assigned to a network operator or service
+          provider; maintained by the ITU-T.  This is the
+          ITU Carrier Code used to form the MEGID.
+
+          This object MUST contain a non-null value if
+          the MplsOamIdMegOperatorType value is iccBased (2);
+          otherwise, a null value with octet size 0
+          should be assigned."
+       REFERENCE
+         "RFC 6923: MPLS Transport Profile (MPLS-TP) Identifiers
+          Following ITU-T Conventions, May 2013, Section 3.1."
+       DEFVAL {""}
+       ::= { mplsOamIdMegEntry 5 }
+
+    mplsOamIdMegIdUmc OBJECT-TYPE
+       SYNTAX        SnmpAdminString (SIZE(0..7))
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Unique code assigned by a network operator or service
+          provider.  This code is appended to mplsOamIdMegIdIcc to
+          form the MEGID.
+          This object MUST contain a non-null value if
+          the MplsOamIdMegOperatorType value is iccBased (2);
+          otherwise, a null value with octet size 0
+          should be assigned."
+       REFERENCE
+         "RFC 6923: MPLS Transport Profile (MPLS-TP) Identifiers
+          Following ITU-T Conventions, May 2013, Section 7.1."
+       DEFVAL {""}
+       ::= { mplsOamIdMegEntry 6 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    mplsOamIdMegServicePointerType OBJECT-TYPE
+       SYNTAX        INTEGER {
+                         tunnel (1),
+                         lsp (2),
+                         pseudowire (3),
+                         section (4)
+                     }
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Indicates the service type for the MEG.
+          If the service type indicates tunnel (1), the service
+          pointer in the mplsOamIdMeTable points to an entry in
+          the point-to-point mplsTunnelTable (RFC 3812).
+
+          If the service type indicates lsp (2), the service pointer
+          in the mplsOamIdMeTable points to an entry in
+          the co-routed or associated bidirectional mplsTunnelTable.
+
+          If the value is the pseudowire (3) service type, the
+          service pointer in the mplsOamIdMeTable points to an entry
+          in the pwTable (RFC 5601).
+
+          If the value is the section (4) service type, the service
+          pointer in the mplsOamIdMeTable points to an entry in
+          the mplsTunnelTable (RFC 3812)."
+       REFERENCE
+         "1. RFC 3812: Multiprotocol Label Switching (MPLS)
+             Traffic Engineering (TE) Management Information
+             Base (MIB), June 2004.
+          2. RFC 5601: Pseudowire (PW) Management Information
+             Base (MIB), July 2009."
+       DEFVAL { lsp }
+       ::= { mplsOamIdMegEntry 7 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    mplsOamIdMegMpLocation OBJECT-TYPE
+       SYNTAX        INTEGER {
+                         perNode (1),
+                         perInterface (2)
+                     }
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Indicates the MP location type for this MEG.
+
+          If the value is perNode, then the MEG in the LSR supports
+          only perNode MEPs/MIPs, i.e., only one MEP/MIP in an LSR.
+
+          If the value is perInterface, then the MEG in the LSR
+          supports perInterface MEPs/MIPs, i.e., two MEPs/MIPs in
+          an LSR."
+       REFERENCE
+         "RFC 6371: Operations, Administration, and Maintenance
+          Framework for MPLS-Based Transport Networks,
+          September 2011."
+       DEFVAL { perNode }
+       ::= { mplsOamIdMegEntry 8 }
+
+    mplsOamIdMegPathFlow OBJECT-TYPE
+       SYNTAX        INTEGER {
+                         unidirectionalPointToPoint (1),
+                         coRoutedBidirectionalPointToPoint (2),
+                         associatedBidirectionalPointToPoint (3),
+                         unidirectionalPointToMultiPoint (4)
+                     }
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Indicates the transport path flow for this MEG.
+          In the case of a unidirectional point-to-point transport
+          path, a single unidirectional ME is defined to monitor it.
+          In the case of associated bidirectional point-to-point
+          transport paths, two independent unidirectional MEs are
+          defined to independently monitor each direction.
+          In the case of co-routed bidirectional point-to-point
+          transport paths, a single bidirectional ME is defined to
+          monitor both directions congruently.
+          In the case of unidirectional point-to-multipoint transport
+          paths, a single unidirectional ME for each leaf is defined
+          to monitor the transport path from the root to that leaf."
+
+
+
+
+
+
+       REFERENCE
+         "RFC 6371: Operations, Administration, and Maintenance
+          Framework for MPLS-Based Transport Networks,
+          September 2011."
+       DEFVAL { coRoutedBidirectionalPointToPoint }
+       ::= { mplsOamIdMegEntry 9 }
+
+    mplsOamIdMegOperStatus OBJECT-TYPE
+       SYNTAX       INTEGER {
+                        up (1),
+                        down (2)
+                    }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "This object specifies the operational status of the
+          Maintenance Entity Group (MEG).  This object is used to
+          send the notification to the SNMP manager about the MEG.
+
+          The value up (1) indicates that the MEG and its monitored
+          path are operationally up.  The value down (2) indicates
+          that the MEG is operationally down.
+
+          When the value of mplsOamIdMegOperStatus is up (1),
+          all the bits of mplsOamIdMegSubOperStatus must be cleared.
+          When the value of mplsOamIdMegOperStatus is down (2),
+          at least one bit of mplsOamIdMegSubOperStatus must be set."
+       ::= { mplsOamIdMegEntry 10 }
+
+    mplsOamIdMegSubOperStatus OBJECT-TYPE
+       SYNTAX       BITS {
+                     megDown (0),
+                     meDown (1),
+                     oamAppDown (2),
+                     pathDown (3)
+                    }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "This object specifies the reason why the MEG operational
+          status, as indicated by the object mplsOamIdMegOperStatus,
+          is down.  This object is used to send the notification to
+          the SNMP manager about the MEG.
+
+          The bit 0 (megDown) indicates that the MEG is down.
+          The bit 1 (meDown) indicates that the ME table is down.
+          The bit 2 (oamAppDown) indicates that the OAM application
+          (LSP or PW) monitored by this MEG is down.  Currently, BFD
+
+
+
+          is the only supported OAM application.
+          The bit 3 (pathDown) indicates that the underlying
+          LSP or PW is down."
+       ::= { mplsOamIdMegEntry 11 }
+
+    mplsOamIdMegRowStatus OBJECT-TYPE
+       SYNTAX        RowStatus
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+          "This variable is used to create, modify, and/or delete
+           a row in this table.  When a row in this table is in the
+           active(1) state, no objects in that row can be modified
+           by the agent except mplsOamIdMegRowStatus."
+       ::= { mplsOamIdMegEntry 12 }
+
+    mplsOamIdMegStorageType OBJECT-TYPE
+       SYNTAX        StorageType
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "This variable indicates the storage type for this
+          object.
+          Conceptual rows having the value 'permanent'
+          need not allow write access to any columnar
+          objects in the row."
+       DEFVAL { volatile }
+       ::= { mplsOamIdMegEntry 13 }
+
+    -- End of MPLS Transport Profile MEG table
+
+
+    -- Start of MPLS Transport Profile ME table
+
+    mplsOamIdMeIndexNext OBJECT-TYPE
+       SYNTAX        IndexIntegerNextFree (0..4294967295)
+       MAX-ACCESS    read-only
+       STATUS        current
+       DESCRIPTION
+         "This object contains an unused value for
+          mplsOamIdMeIndex, or a zero to indicate
+          that none exist.  Negative values are not allowed,
+          as they do not correspond to valid values of
+          mplsOamIdMeIndex."
+       ::= { mplsOamIdObjects 3 }
+
+
+
+
+
+
+    mplsOamIdMeMpIndexNext OBJECT-TYPE
+       SYNTAX        IndexIntegerNextFree (0..4294967295)
+       MAX-ACCESS    read-only
+       STATUS        current
+       DESCRIPTION
+         "This object contains an unused value for
+          mplsOamIdMeMpIndex, or a zero to indicate
+          that none exist.  Negative values are not allowed,
+          as they do not correspond to valid values of
+          mplsOamIdMeMpIndex."
+       ::= { mplsOamIdObjects 4 }
+
+    mplsOamIdMeTable OBJECT-TYPE
+       SYNTAX        SEQUENCE OF MplsOamIdMeEntry
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "This table contains MPLS-TP ME information.
+
+          The ME is some portion of a transport path that requires
+          management bounded by two points (called MEPs), and the
+          relationship between those points to which maintenance
+          and monitoring operations apply.
+
+          This table is generic enough to handle MEP and MIP
+          information within a MEG."
+       ::= { mplsOamIdObjects 5 }
+
+    mplsOamIdMeEntry OBJECT-TYPE
+       SYNTAX        MplsOamIdMeEntry
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "An entry in this table represents an MPLS-TP ME.  This
+          entry represents the ME if the source and sink MEPs are
+          defined.
+
+          An ME is a point-to-point entity.  One ME has two such
+          MEPs.  A MEG is a group of one or more MEs.  One MEG can
+          have two or more MEPs.
+
+          For a point-to-point LSP, one MEG has one ME, and this ME
+          is associated with two MEPs (source and sink MEPs) within
+          a MEG.  Each mplsOamIdMeIndex value denotes the ME within
+          a MEG.
+
+
+
+
+
+
+          In the case of unidirectional point-to-point transport
+          paths, a single unidirectional ME is defined to monitor
+          it, and mplsOamIdMeServicePointer points to a
+          unidirectional point-to-point path.
+
+          In the case of associated bidirectional point-to-point
+          transport paths, two independent unidirectional
+          MEs are defined to independently monitor each direction,
+          and each mplsOamIdMeServicePointer MIB object points to a
+          unique unidirectional transport path.
+          This has implications for transactions that terminate at
+          or query a MIP, as a return path from a MIP to a source
+          MEP does not necessarily exist within the MEG.
+
+          In the case of co-routed bidirectional point-to-point
+          transport paths, a single bidirectional ME is defined to
+          monitor both directions congruently, and the
+          mplsOamIdMeServicePointer MIB object points to a co-routed
+          bidirectional point-to-point transport path.
+
+          In the case of unidirectional point-to-multipoint transport
+          paths, a single unidirectional ME for each leaf is defined
+          to monitor the transport path from the root to that leaf,
+          and each leaf has different transport path information in
+          the mplsOamIdMeServicePointer MIB object.  Note that the
+          MplsOamIdMeEntry should be created manually once the MEG
+          is configured for OAM operations."
+          INDEX { mplsOamIdMegIndex,
+                  mplsOamIdMeIndex,
+                  mplsOamIdMeMpIndex
+                }
+          ::= { mplsOamIdMeTable 1 }
+
+        MplsOamIdMeEntry ::= SEQUENCE {
+           mplsOamIdMeIndex                  Unsigned32,
+           mplsOamIdMeMpIndex                Unsigned32,
+           mplsOamIdMeName                   SnmpAdminString,
+           mplsOamIdMeMpIfIndex              InterfaceIndexOrZero,
+           mplsOamIdMeSourceMepIndex         Unsigned32,
+           mplsOamIdMeSinkMepIndex           Unsigned32,
+           mplsOamIdMeMpType                 INTEGER,
+           mplsOamIdMeMepDirection           INTEGER,
+           mplsOamIdMeServicePointer         RowPointer,
+           mplsOamIdMeRowStatus              RowStatus,
+           mplsOamIdMeStorageType            StorageType
+     }
+
+
+
+
+
+    mplsOamIdMeIndex  OBJECT-TYPE
+       SYNTAX        Unsigned32 (1..4294967295)
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "Uniquely identifies an ME index within a MEG.  Managers
+          should obtain new values for row creation in this table by
+          reading mplsOamIdMeIndexNext."
+       ::= { mplsOamIdMeEntry 1 }
+
+    mplsOamIdMeMpIndex  OBJECT-TYPE
+       SYNTAX        Unsigned32 (1..4294967295)
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "Indicates the Maintenance Point (MP) index that is used to
+          create multiple MEPs in a node of a single ME.  The value
+          of this object can be the MEP index or the MIP index.
+          Managers should obtain new values for row creation in this
+          table by reading mplsOamIdMeMpIndexNext."
+       ::= { mplsOamIdMeEntry 2 }
+
+    mplsOamIdMeName  OBJECT-TYPE
+       SYNTAX        SnmpAdminString (SIZE(1..48))
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "This object denotes the ME name.  Each ME has a unique
+          name within a MEG."
+       ::= { mplsOamIdMeEntry 3 }
+
+    mplsOamIdMeMpIfIndex OBJECT-TYPE
+       SYNTAX        InterfaceIndexOrZero
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Indicates the MP interface.
+          If the mplsOamIdMegMpLocation object value
+          is perNode (1), the MP interface index should point
+          to the incoming interface or outgoing interface, or
+          be zero (to indicate that the MP OAM packets are initiated
+          from the forwarding engine).
+
+          If the mplsOamIdMegMpLocation object value is
+          perInterface (2), the MP interface index should point to
+          the incoming interface or outgoing interface."
+
+
+
+
+
+       REFERENCE
+         "1. RFC 6371: Operations, Administration, and Maintenance
+             Framework for MPLS-Based Transport Networks,
+             September 2011.
+          2. RFC 2863: The Interfaces Group MIB, June 2000."
+       DEFVAL { 0 }
+       ::= { mplsOamIdMeEntry 4 }
+
+    mplsOamIdMeSourceMepIndex  OBJECT-TYPE
+       SYNTAX        Unsigned32
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Indicates the source MEP index of the ME.  This object
+          should be configured if the mplsOamIdMegOperatorType object
+          in the mplsOamIdMegEntry is configured as iccBased (2).
+          If the MEG is configured for an IP-based operator,
+          the value of this object should be set to zero, and the
+          MEP ID will be automatically derived from the service
+          identifiers (MPLS-TP LSP/PW Identifier)."
+       DEFVAL { 0 }
+       ::= { mplsOamIdMeEntry 5 }
+
+    mplsOamIdMeSinkMepIndex  OBJECT-TYPE
+       SYNTAX        Unsigned32
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Indicates the sink MEP index of the ME.  This object
+          should be configured if the mplsOamIdMegOperatorType object
+          in the mplsOamIdMegEntry is configured as iccBased (2).
+          If the MEG is configured for an IP-based operator,
+          the value of this object should be set to zero, and the
+          MEP ID will be automatically derived from the service
+          identifiers (MPLS-TP LSP/PW Identifier)."
+       DEFVAL { 0 }
+       ::= { mplsOamIdMeEntry 6 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    mplsOamIdMeMpType OBJECT-TYPE
+       SYNTAX        INTEGER {
+                         mep (1),
+                         mip (2)
+                     }
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Indicates the MP type within the MEG.
+
+          The object should have the value mep (1) only in the
+          ingress or egress nodes of the transport path.
+
+          The object can have the value mip (2) in the
+          intermediate nodes and possibly in the egress nodes
+          of the transport path."
+       DEFVAL { mep }
+       ::= { mplsOamIdMeEntry 7 }
+
+    mplsOamIdMeMepDirection OBJECT-TYPE
+       SYNTAX        INTEGER {
+                         up (1),
+                         down (2),
+                         notApplicable (3)
+                     }
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "Indicates the direction of the MEP.  This object
+          should be configured if mplsOamIdMeMpType is configured
+          as mep (1); otherwise, notApplicable (3) is set."
+       DEFVAL { down }
+       ::= { mplsOamIdMeEntry 8 }
+
+    mplsOamIdMeServicePointer OBJECT-TYPE
+       SYNTAX        RowPointer
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "This variable represents a pointer to the MPLS-TP
+          transport path.  This value MUST point at an entry in the
+          mplsTunnelEntry if mplsOamIdMegServicePointerType
+          is configured as tunnel (1), lsp (2), or section (4),
+          or at an entry in the pwEntry if
+          mplsOamIdMegServicePointerType is configured
+          as pseudowire (3).
+
+
+
+
+
+          Note: This service pointer object is placed in the ME table
+          instead of the MEG table, since it will be useful in the
+          point-to-multipoint case, where each ME will point to
+          different branches of a point-to-multipoint tree."
+       ::= { mplsOamIdMeEntry 9 }
+
+    mplsOamIdMeRowStatus OBJECT-TYPE
+       SYNTAX        RowStatus
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "This variable is used to create, modify, and/or delete
+          a row in this table.  When a row in this table is in the
+          active(1) state, no objects in that row can be modified
+          by the agent except mplsOamIdMeRowStatus."
+       ::= { mplsOamIdMeEntry 10 }
+
+    mplsOamIdMeStorageType OBJECT-TYPE
+       SYNTAX        StorageType
+       MAX-ACCESS    read-create
+       STATUS        current
+       DESCRIPTION
+         "This variable indicates the storage type for this object.
+          Conceptual rows having the value 'permanent'
+          need not allow write access to any columnar
+          objects in the row."
+       DEFVAL { volatile }
+       ::= { mplsOamIdMeEntry 11 }
+
+    -- End of MPLS Transport Profile ME table
+
+    -- End of MPLS-TP OAM tables
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Notification definitions of MPLS-TP identifiers
+
+    mplsOamIdDefectCondition NOTIFICATION-TYPE
+       OBJECTS      {
+                      mplsOamIdMegName,
+                      mplsOamIdMeName,
+                      mplsOamIdMegOperStatus,
+                      mplsOamIdMegSubOperStatus
+                    }
+       STATUS       current
+       DESCRIPTION
+         "This notification is sent whenever the operational
+          status of the MEG is changed."
+       ::= { mplsOamIdNotifications 1 }
+
+-- End of notifications
+
+
+-- Module compliance
+
+mplsOamIdCompliances
+   OBJECT IDENTIFIER ::= { mplsOamIdConformance 1 }
+
+mplsOamIdGroups
+   OBJECT IDENTIFIER ::= { mplsOamIdConformance 2 }
+
+-- Compliance requirement for fully compliant implementations
+
+mplsOamIdModuleFullCompliance MODULE-COMPLIANCE
+   STATUS       current
+   DESCRIPTION "Compliance statement for agents that provide full
+                support for the MPLS-TP-OAM-STD-MIB.  Such devices
+                can then be monitored and also be configured
+                using this MIB module."
+
+   MODULE IF-MIB -- The Interfaces Group MIB, RFC 2863
+   MANDATORY-GROUPS {
+      ifGeneralInformationGroup,
+      ifCounterDiscontinuityGroup
+   }
+
+   MODULE -- this module
+   MANDATORY-GROUPS {
+         mplsOamIdMegGroup,
+         mplsOamIdMeGroup
+   }
+
+
+
+
+
+   GROUP        mplsOamIdNotificationObjectsGroup
+   DESCRIPTION "This group is only mandatory for those
+                implementations that can efficiently implement
+                the notifications contained in this group."
+
+   GROUP        mplsOamIdNotificationGroup
+   DESCRIPTION "This group is only mandatory for those
+                implementations that can efficiently implement
+                the notifications contained in this group."
+
+   ::= { mplsOamIdCompliances 1 }
+
+     -- Compliance requirement for read-only implementations
+
+      mplsOamIdModuleReadOnlyCompliance MODULE-COMPLIANCE
+         STATUS current
+         DESCRIPTION
+             "Compliance statement for agents that only provide
+              read-only support for the MPLS-TP-OAM-STD-MIB module."
+
+         MODULE -- this module
+
+      MANDATORY-GROUPS    {
+         mplsOamIdMegGroup,
+         mplsOamIdMeGroup
+      }
+
+
+   GROUP        mplsOamIdNotificationObjectsGroup
+   DESCRIPTION "This group is only mandatory for those
+                implementations that can efficiently implement
+                the notifications contained in this group."
+
+   GROUP        mplsOamIdNotificationGroup
+   DESCRIPTION "This group is only mandatory for those
+                implementations that can efficiently implement
+                the notifications contained in this group."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      -- mplsOamIdMegTable
+
+      OBJECT      mplsOamIdMegName
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMegOperatorType
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMegIdCc
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMegIdIcc
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMegIdUmc
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMegServicePointerType
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMegMpLocation
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMegPathFlow
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMegRowStatus
+      SYNTAX      RowStatus { active(1) }
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+
+
+
+      OBJECT      mplsOamIdMegStorageType
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      -- mplsOamIdMeTable
+
+      OBJECT      mplsOamIdMeName
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMeMpIfIndex
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMeSourceMepIndex
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMeSinkMepIndex
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMeMpType
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMeMepDirection
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMeServicePointer
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+      OBJECT      mplsOamIdMeRowStatus
+      SYNTAX      RowStatus { active(1) }
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+
+
+
+      OBJECT      mplsOamIdMeStorageType
+      MIN-ACCESS  read-only
+      DESCRIPTION
+            "Write access is not required."
+
+   ::= { mplsOamIdCompliances 2 }
+
+-- Units of conformance
+
+mplsOamIdMegGroup OBJECT-GROUP
+   OBJECTS {
+      mplsOamIdMegIndexNext,
+      mplsOamIdMegName,
+      mplsOamIdMegOperatorType,
+      mplsOamIdMegIdCc,
+      mplsOamIdMegIdIcc,
+      mplsOamIdMegIdUmc,
+      mplsOamIdMegServicePointerType,
+      mplsOamIdMegMpLocation,
+      mplsOamIdMegOperStatus,
+      mplsOamIdMegSubOperStatus,
+      mplsOamIdMegPathFlow,
+      mplsOamIdMegRowStatus,
+      mplsOamIdMegStorageType
+   }
+
+   STATUS  current
+   DESCRIPTION
+         "Collection of objects needed for MPLS MEG information."
+   ::= { mplsOamIdGroups 1 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mplsOamIdMeGroup  OBJECT-GROUP
+   OBJECTS {
+      mplsOamIdMeIndexNext,
+      mplsOamIdMeMpIndexNext,
+      mplsOamIdMeName,
+      mplsOamIdMeMpIfIndex,
+      mplsOamIdMeSourceMepIndex,
+      mplsOamIdMeSinkMepIndex,
+      mplsOamIdMeMpType,
+      mplsOamIdMeMepDirection,
+      mplsOamIdMeServicePointer,
+      mplsOamIdMeRowStatus,
+      mplsOamIdMeStorageType
+   }
+   STATUS  current
+   DESCRIPTION
+         "Collection of objects needed for MPLS ME information."
+   ::= { mplsOamIdGroups 2 }
+
+mplsOamIdNotificationObjectsGroup  OBJECT-GROUP
+   OBJECTS {
+      mplsOamIdMegOperStatus,
+      mplsOamIdMegSubOperStatus
+   }
+   STATUS  current
+   DESCRIPTION
+         "Collection of objects needed to implement notifications."
+   ::= { mplsOamIdGroups 3 }
+
+mplsOamIdNotificationGroup NOTIFICATION-GROUP
+   NOTIFICATIONS {
+       mplsOamIdDefectCondition
+   }
+   STATUS  current
+   DESCRIPTION
+         "Set of notifications implemented in this module."
+   ::= { mplsOamIdGroups 4 }
+
+END
