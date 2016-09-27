@@ -1,0 +1,374 @@
+SOFTWIRE-MESH-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, mib-2 FROM SNMPv2-SMI
+
+    OBJECT-GROUP, MODULE-COMPLIANCE             FROM SNMPv2-CONF
+
+    InetAddress, InetAddressType, InetAddressPrefixLength
+
+    FROM INET-ADDRESS-MIB
+
+    ifIndex                                FROM IF-MIB
+
+    IANAtunnelType                         FROM IANAifType-MIB;
+
+    swmMIB MODULE-IDENTITY
+    LAST-UPDATED "201605110000Z"        -- May 11, 2016
+    ORGANIZATION "Softwire Working Group"
+    CONTACT-INFO
+             "Yong Cui
+              Email:  yong@csnet1.cs.tsinghua.edu.cn
+
+              Jiang Dong
+              Email:  knight.dongjiang@gmail.com
+
+              Peng Wu
+              Email:  weapon9@gmail.com
+
+              Mingwei Xu
+              Email:  xmw@cernet.edu.cn
+
+              Antti Yla-Jaaski
+              Email:  antti.yla-jaaski@aalto.fi
+
+              Email comments directly to the Softwire WG Mailing
+              List at softwires@ietf.org
+             "
+    DESCRIPTION
+           "This MIB module contains managed object definitions for
+            the softwire mesh framework.
+
+            Copyright (c) 2016 IETF Trust and the persons
+            identified as authors of the code.  All rights reserved.
+
+            Redistribution and use in source and binary forms, with
+            or without modification, is permitted pursuant to, and
+
+
+
+            subject to the license terms contained in, the Simplified
+            BSD License set forth in Section 4.c of the IETF Trust's
+            Legal Provisions Relating to IETF Documents
+            (http://trustee.ietf.org/license-info)."
+    REVISION    "201605110000Z"
+    DESCRIPTION "Initial version, published as RFC 7856"
+    ::= { mib-2 239 }
+
+swmObjects OBJECT IDENTIFIER ::= { swmMIB 1 }
+
+-- swmSupportedTunnelTable
+swmSupportedTunnelTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwmSupportedTunnelEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table of objects that show what kinds of tunnels
+        can be supported by the AFBR."
+    ::= { swmObjects 1 }
+
+swmSupportedTunnelEntry  OBJECT-TYPE
+    SYNTAX      SwmSupportedTunnelEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A set of objects that show what kinds of tunnels
+        can be supported in the AFBR.  If the AFBR supports
+        multiple tunnel types, the swmSupportedTunnelTable
+        would have several entries."
+    INDEX { swmSupportedTunnelType }
+    ::= { swmSupportedTunnelTable 1 }
+
+SwmSupportedTunnelEntry ::= SEQUENCE {
+    swmSupportedTunnelType              IANAtunnelType
+}
+
+swmSupportedTunnelType OBJECT-TYPE
+    SYNTAX      IANAtunnelType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Represents the tunnel type that can be used for softwire
+        mesh scenarios, such as L2TPv3 over IP, GRE, Transmit
+        tunnel endpoint, IPsec in Tunnel-mode, IP in IP tunnel with
+        IPsec Transport Mode, MPLS-in-IP tunnel with IPsec Transport
+        Mode, and IP in IP.  There is no restriction on the tunnel
+        type the softwire mesh can use."
+     REFERENCE
+
+
+
+        "L2TPv3 over IP, GRE, and IP in IP in RFC 5512.
+        Transmit tunnel endpoint, IPsec in Tunnel-mode, IP in IP
+        tunnel with IPsec Transport Mode, MPLS-in-IP tunnel with
+        IPsec Transport Mode in RFC 5566."
+    ::= { swmSupportedTunnelEntry 1 }
+
+-- end of swmSupportedTunnelTable
+
+--swmEncapsTable
+swmEncapsTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwmEncapsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table of objects that display the
+        softwire mesh encapsulation information."
+    ::= { swmObjects 2 }
+
+swmEncapsEntry  OBJECT-TYPE
+    SYNTAX      SwmEncapsEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table of objects that manage the softwire mesh I-IP
+         encapsulation destination based on the E-IP destination
+         prefix."
+    INDEX { ifIndex,
+            swmEncapsEIPDstType,
+            swmEncapsEIPDst,
+            swmEncapsEIPPrefixLength
+          }
+    ::= { swmEncapsTable 1 }
+
+SwmEncapsEntry ::=      SEQUENCE {
+    swmEncapsEIPDstType       InetAddressType,
+    swmEncapsEIPDst           InetAddress,
+    swmEncapsEIPPrefixLength  InetAddressPrefixLength,
+    swmEncapsIIPDstType       InetAddressType,
+    swmEncapsIIPDst           InetAddress
+}
+
+swmEncapsEIPDstType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This object specifies the address type used for
+        swmEncapsEIPDst.  It is different from the
+
+
+
+        tunnelIfAddressType in the tunnelIfTable.  The
+        swmEncapsEIPDstType is IPv6 (2) if it is IPv6-over-IPv4
+        tunneling.  The swmEncapsEIPDstType is
+        IPv4 (1) if it is IPv4-over-IPv6 tunneling."
+    REFERENCE
+        "IPv4 and IPv6 in RFC 4001."
+    ::= { swmEncapsEntry 1 }
+
+swmEncapsEIPDst OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The E-IP destination prefix, which is
+        used for I-IP encapsulation destination looking up.
+        The type of this address is determined by the
+        value of swmEncapsEIPDstType"
+    REFERENCE
+        "E-IP and I-IP in RFC 5565."
+    ::= { swmEncapsEntry 2 }
+
+swmEncapsEIPPrefixLength OBJECT-TYPE
+    SYNTAX      InetAddressPrefixLength
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The prefix length of the E-IP destination prefix."
+    ::= { swmEncapsEntry 3 }
+
+swmEncapsIIPDstType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object specifies the address type used for
+         swmEncapsIIPDst.  It is the same as the tunnelIfAddressType
+         in the tunnelIfTable."
+    REFERENCE
+        "IPv4 and IPv6 in RFC 4001."
+    ::= { swmEncapsEntry 4 }
+
+swmEncapsIIPDst OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The I-IP destination address, which is used as the
+        encapsulation destination for the corresponding E-IP
+
+
+
+        prefix.  Since the tunnelIfRemoteInetAddress in the
+        tunnelIfTable should be 0.0.0.0 or ::, swmEncapIIPDst
+        should be the destination address used in the outer
+        IP header."
+    REFERENCE
+        "E-IP and I-IP in RFC 5565."
+    ::= { swmEncapsEntry 5 }
+-- End of swmEncapsTable
+
+-- swmBGPNeighborTable
+swmBGPNeighborTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwmBGPNeighborEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table of objects that display the softwire mesh
+        BGP neighbor information."
+    ::= { swmObjects 3 }
+
+swmBGPNeighborEntry  OBJECT-TYPE
+    SYNTAX      SwmBGPNeighborEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A set of objects that display the softwire mesh
+        BGP neighbor information."
+    INDEX {
+            ifIndex,
+            swmBGPNeighborInetAddressType,
+            swmBGPNeighborInetAddress
+          }
+    ::= { swmBGPNeighborTable 1 }
+
+SwmBGPNeighborEntry ::= SEQUENCE {
+        swmBGPNeighborInetAddressType    InetAddressType,
+        swmBGPNeighborInetAddress        InetAddress,
+        swmBGPNeighborTunnelType         IANAtunnelType
+}
+
+swmBGPNeighborInetAddressType OBJECT-TYPE
+    SYNTAX      InetAddressType
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This object specifies the address type used for
+         swmBGPNeighborInetAddress."
+    ::= { swmBGPNeighborEntry 1 }
+
+
+
+
+swmBGPNeighborInetAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The address of the AFBR's BGP neighbor.  The
+        address type is the same as the tunnelIfAddressType
+        in the tunnelIfTable."
+    ::= { swmBGPNeighborEntry 2 }
+
+swmBGPNeighborTunnelType OBJECT-TYPE
+    SYNTAX      IANAtunnelType
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Represents the type of tunnel that the AFBR
+        chooses to transmit traffic with another AFBR/BGP
+        neighbor."
+    ::= { swmBGPNeighborEntry 3 }
+-- End of swmBGPNeighborTable
+
+
+-- conformance information
+swmConformance
+                    OBJECT IDENTIFIER ::= { swmMIB 2 }
+swmCompliances
+                    OBJECT IDENTIFIER ::= { swmConformance 1 }
+swmGroups
+                    OBJECT IDENTIFIER ::= { swmConformance 2 }
+
+ -- compliance statements
+swmCompliance MODULE-COMPLIANCE
+   STATUS current
+   DESCRIPTION
+       "Describes the requirements for conformance to the Softwire
+       Mesh MIB.
+
+       The following index objects cannot be added as OBJECT
+       clauses but nevertheless have compliance requirements:
+       "
+       -- OBJECT  swmEncapsEIPDstType
+       -- SYNTAX  InetAddressType { ipv4(1), ipv6(2) }
+       -- DESCRIPTION
+       -- "An implementation is required to support
+       --  global IPv4 and/or IPv6 addresses, depending
+       --  on its support for IPv4 and IPv6."
+
+       -- OBJECT  swmEncapsEIPDst
+
+
+
+       -- SYNTAX  InetAddress (SIZE(4|16))
+       -- DESCRIPTION
+       -- "An implementation is required to support
+       --  global IPv4 and/or IPv6 addresses, depending
+       --  on its support for IPv4 and IPv6."
+
+       -- OBJECT  swmEncapsEIPPrefixLength
+       -- SYNTAX  InetAddressPrefixLength (Unsigned32 (0..128))
+       -- DESCRIPTION
+       -- "An implementation is required to support
+       --  global IPv4 and/or IPv6 addresses, depending
+       --  on its support for IPv4 and IPv6."
+
+       -- OBJECT  swmBGPNeighborInetAddressType
+       -- SYNTAX  InetAddressType { ipv4(1), ipv6(2) }
+       -- DESCRIPTION
+       -- "An implementation is required to support
+       --  global IPv4 and/or IPv6 addresses, depending
+       --  on its support for IPv4 and IPv6."
+
+       -- OBJECT  swmBGPNeighborInetAddress
+       -- SYNTAX  InetAddress (SIZE(4|16))
+       -- DESCRIPTION
+       -- "An implementation is required to support
+       --  global IPv4 and/or IPv6 addresses, depending
+       --  on its support for IPv4 and IPv6."
+
+   MODULE -- this module
+   MANDATORY-GROUPS    {
+                         swmSupportedTunnelGroup,
+                         swmEncapsGroup,
+                         swmBGPNeighborGroup
+                       }
+   ::= { swmCompliances 1 }
+
+swmSupportedTunnelGroup    OBJECT-GROUP
+   OBJECTS {
+       swmSupportedTunnelType
+   }
+   STATUS  current
+   DESCRIPTION
+       "The collection of objects that are used to show
+       what kind of tunnel the AFBR supports."
+   ::= { swmGroups 1 }
+
+swmEncapsGroup    OBJECT-GROUP
+   OBJECTS {
+        swmEncapsIIPDst,
+
+
+
+        swmEncapsIIPDstType
+   }
+   STATUS  current
+   DESCRIPTION
+       "The collection of objects that are used to display
+       softwire mesh encapsulation information."
+   ::= { swmGroups 2 }
+
+swmBGPNeighborGroup    OBJECT-GROUP
+   OBJECTS {
+        swmBGPNeighborTunnelType
+   }
+   STATUS  current
+   DESCRIPTION
+       "The collection of objects that are used to display
+        softwire mesh BGP neighbor information."
+   ::= { swmGroups 3 }
+
+END

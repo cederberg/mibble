@@ -1,7 +1,8 @@
 NHDP-MIB DEFINITIONS ::= BEGIN
 
 -- This MIB module defines objects for the management of
--- NHDP (RFC 6130) - The Neighborhood Discovery Protocol,
+-- NHDP (RFC 6130) - Mobile Ad Hoc Network (MANET)
+-- Neighborhood Discovery Protocol (NHDP),
 -- Clausen, T., Dearlove, C., and J. Dean, January 2011.
 
 IMPORTS
@@ -18,15 +19,18 @@ IMPORTS
     MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
                  FROM SNMPv2-CONF  -- STD 58
 
-
-
-
     SnmpAdminString
                  FROM SNMP-FRAMEWORK-MIB  -- RFC 3411
+
+
+
+
+
 
     InetAddressType, InetAddress,
     InetAddressPrefixLength
                  FROM INET-ADDRESS-MIB  -- RFC 4001
+
     InterfaceIndex
                  FROM IF-MIB  -- RFC 2863
 
@@ -35,71 +39,67 @@ IMPORTS
     ;
 
 nhdpMIB MODULE-IDENTITY
-       LAST-UPDATED "201210221000Z" -- 22 October 2012
+       LAST-UPDATED "201607120000Z" -- 12 July 2016
        ORGANIZATION "IETF MANET Working Group"
        CONTACT-INFO
-       "WG E-Mail: manet@ietf.org
-
-        WG Chairs: sratliff@cisco.com
-                   jmacker@nrl.navy.mil
-
+       "WG Email: manet@ietf.org
+        WG web page: https://datatracker.ietf.org/wg/manet
 
         Editors:   Ulrich Herberg
-                   LIX, Ecole Polytechnique
-                   91128 Palaiseau Cedex
-                   France
-
+                   United States of America
                    ulrich@herberg.name
                    http://www.herberg.name/
-
 
                    Robert G. Cole
                    US Army CERDEC
                    Space and Terrestrial Communications
                    6010 Frankford Street
-                   Bldg 6010, Room 453H
                    Aberdeen Proving Ground, Maryland 21005
-                   USA
+                   United States of America
                    +1 443 395-8744
-
                    robert.g.cole@us.army.mil
                    http://www.cs.jhu.edu/~rgcole/
 
-
-
-
-
-
-
-
                    Ian D Chakeres
-                   DRS CenGen
-                   9250 Bendix Road North
-                   Columbia, Maryland  21045
-                   USA
-
+                   Delvin
+                   Ellicott City, Maryland 21042
+                   United States of America
                    ian.chakeres@gmail.com
-                   http://www.ianchak.com/"
+                   http://www.ianchak.com/
+
+                   Thomas Heide Clausen
+                   Ecole Polytechnique
+                   LIX
+                   91128 Palaiseau Cedex
+                   France
+                   Email: T.Clausen@computer.org
+                   URI: http://www.thomasclausen.org/"
+
+
+
 
        DESCRIPTION
            "This NHDP-MIB module is applicable to routers
-            implementing the Neighborhood Discovery Protocol
+            implementing the Mobile Ad Hoc Network (MANET)
+            Neighborhood Discovery Protocol (NHDP)
             defined in RFC 6130.
 
-            Copyright (c) 2012 IETF Trust and the persons
-            identified as authors of the code.  All rights reserved.
+            Copyright (c) 2016 IETF Trust and the persons identified
+            as authors of the code.  All rights reserved.
 
             Redistribution and use in source and binary forms, with
             or without modification, is permitted pursuant to, and
             subject to the license terms contained in, the Simplified
             BSD License set forth in Section 4.c of the IETF Trust's
             Legal Provisions Relating to IETF Documents
-            (http://trustee.ietf.org/license-info).
-
-            This version of this MIB module is part of RFC 6779; see
-            the RFC itself for full legal notices."
+            (http://trustee.ietf.org/license-info)."
 
        -- revision
+       REVISION "201607120000Z" -- 12 July 2016
+       DESCRIPTION
+            "Updated version of this MIB module,
+             including updates made to NHDP by
+             RFC 7466, published as RFC 7939."
        REVISION "201210221000Z" -- 22 October 2012
        DESCRIPTION
             "Initial version of this MIB module,
@@ -120,15 +120,15 @@ nhdpConformance   OBJECT IDENTIFIER ::= { nhdpMIB 2 }
    -- this MIB module for indexing into the following
    -- tables and indexing into other tables in other MIB modules.
    -- This was necessary because NHDP manages and
-
-
-
    -- indexes based upon dynamic address tuples, i.e.,
    -- address sets, while SMI requires statically
    -- defined indexes for accessing its table rows.
    -- The NeighborIfIndex defines a unique (to the local router)
    -- index referencing a discovered virtual interface on another
    -- neighbor within the MANET.  The NeighborRouterIndex defines a
+
+
+
    -- unique (to the local router) index referencing a discovered
    -- virtual neighbor within the MANET.
    --
@@ -147,8 +147,9 @@ nhdpConformance   OBJECT IDENTIFIER ::= { nhdpMIB 2 }
    -- associated with a NeighborRouterIndex.  Throughout
    -- the nhdpStateObjGroup, the
    -- NeighborIfIndex and the NeighborRouterIndex are used
-   -- to define the set of IpAddrs related to a virtual
+   -- to define the set of IP Addresses related to a virtual
    -- neighbor interface or virtual neighbor under discussion.
+
 
 NeighborIfIndex ::= TEXTUAL-CONVENTION
    DISPLAY-HINT "d"
@@ -170,16 +171,15 @@ NeighborIfIndex ::= TEXTUAL-CONVENTION
        All objects of type NeighborIfIndex are assigned by the agent
        out of a common number space.
 
-
-
-
-
        The value for each discovered virtual neighbor
        interface may not remain constant from
        one re-initialization of the entity's network management
        agent to the next re-initialization.  If the
        local router gains information associating two virtual
        interfaces on a neighbor as a common interface,
+
+
+
        then the agent MUST aggregate the two address sets to
        a single index chosen from the set of aggregated indexes,
        and it MUST update all tables in this
@@ -221,12 +221,15 @@ NeighborRouterIndex ::= TEXTUAL-CONVENTION
        and re-created.
 
        The specific value is meaningful only within a given SNMP
-       entity.  A NeighborRouterIndex value MUST not be reused
-
-
-
+       entity.  A NeighborRouterIndex value MUST NOT be reused
        until the next agent restart."
     SYNTAX       Unsigned32 (1..2147483647)
+
+
+
+
+
+
 
 --
 -- nhdpObjects
@@ -235,7 +238,6 @@ NeighborRouterIndex ::= TEXTUAL-CONVENTION
 --    1) Configuration Objects Group
 --    2) State Objects Group
 --    3) Performance Objects Group
-
 --
 -- nhdpConfigurationObjGrp
 --
@@ -243,6 +245,7 @@ NeighborRouterIndex ::= TEXTUAL-CONVENTION
 -- Contains the NHDP objects that configure specific options
 -- that determine the overall performance and operation of
 -- NHDP.
+
 
 nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
 
@@ -257,32 +260,31 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
           As such, this table 'sparse augments' the ifTable
           specifically when NHDP is to be configured to
           operate over this interface.  The interface is
-          identified by the ifIndex from the interfaces
-          group defined in the Interfaces Group MIB module.
+          identified by the ifIndex from the Interfaces
+          Group defined in the Interfaces Group MIB module.
 
           A conceptual row in this table exists if and only
-          if either a manager has explicitly created the row
+          if the row has been administratively created
           or there is an interface on the managed device
           that supports and runs NHDP.
 
-          The manager can create a row by setting
+          A row can be administratively created by setting
           rowStatus to 'createAndGo' or 'createAndWait'.
-          Row objects having associated DEFVAL clauses are
-          automatically defined by the agent with these
-          values during row creation, unless the manager
-          explicitly defines these object values during the
-          row creation.
+          During the row creation, objects having associated
+          DEFVAL clauses are automatically defined by
+          the agent if not explicitly administratively defined.
+
+          For each entry in the nhdpInterfaceTable, there is a
+          corresponding entry in the Interface Table where
+          nhdpIfIndex and ifIndex are equal.  If that corresponding
+          entry in the Interface Table is deleted, then the entry in
+          the nhdpInterfaceTable is automatically deleted,
 
 
 
-
-          If the corresponding entry with ifIndex value
-          is deleted from the Interface Table, then the entry
-          in this table is automatically deleted,
-          NHDP is disabled on this interface,
-          and all configuration and state information
-          related to this interface is to be removed
-          from memory."
+          NHDP is disabled on this interface, and all configuration
+          and state information related to this interface is to be
+          removed from memory."
       REFERENCE
          "RFC 2863 - The Interfaces Group MIB, McCloghrie,
           K., and F. Kastenholtz, June 2000"
@@ -300,7 +302,7 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
 
           The objects in this table are persistent, and when
           written, the device SHOULD save the change to
-          non-volatile storage.  For further information
+          nonvolatile storage.  For further information
           on the storage behavior for these objects, refer
           to the description for the nhdpIfRowStatus
           object."
@@ -324,12 +326,13 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
          nhdpLHoldTime
             Unsigned32,
          nhdpHHoldTime
-
-
-
             Unsigned32,
          nhdpHystAcceptQuality
             Float32TC,
+
+
+
+
          nhdpHystRejectQuality
             Float32TC,
          nhdpInitialQuality
@@ -378,6 +381,9 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
 
 
 
+
+
+
       DESCRIPTION
          "nhdpIfStatus indicates whether this interface is
           currently running NHDP.  A value of 'true(1)' indicates
@@ -392,6 +398,7 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
    --
    -- Interface Parameters - Message Intervals
    --
+
 
    nhdpHelloInterval  OBJECT-TYPE
       SYNTAX      Unsigned32
@@ -423,12 +430,14 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       UNITS       "milliseconds"
       MAX-ACCESS  read-create
       STATUS      current
+
+
+
+
+
       DESCRIPTION
          "nhdpHelloMinInterval corresponds to
           HELLO_MIN_INTERVAL of NHDP and represents
-
-
-
           the minimum interval between transmission
           of two successive HELLO messages on this
           MANET interface.
@@ -474,12 +483,12 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
    -- Interface Parameters - Information Validity times
    --
 
+
+
+
    nhdpLHoldTime  OBJECT-TYPE
       SYNTAX      Unsigned32
       UNITS       "milliseconds"
-
-
-
       MAX-ACCESS  read-create
       STATUS      current
       DESCRIPTION
@@ -525,12 +534,16 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
           value significantly greater than the refresh interval
           held by nhdpRefreshInterval and must be representable
           as described in RFC 5497."
+
+
+
       REFERENCE
-         "Section 5 on Protocol Parameters and
+         "RFC 5497 - Representing Multi-Value Time in Mobile Ad
+          Hoc Networks (MANETs), Clausen, T., and C. Dearlove,
+          March 2009.
+
+          Section 5 on Protocol Parameters and
           Constraints of RFC 6130 - Mobile Ad Hoc Network
-
-
-
           (MANET) Neighborhood Discovery Protocol (NHDP),
           Clausen, T., Dearlove, C., and J. Dean, April 2011"
       DEFVAL { 6000 }
@@ -572,6 +585,9 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
           (MANET) Neighborhood Discovery Protocol (NHDP),
           Clausen, T., Dearlove, C., and J. Dean, April 2011"
 --    DEFVAL { 1.0 }   see DESCRIPTION
+
+
+
    ::= { nhdpInterfaceEntry 9 }
 
    nhdpHystRejectQuality  OBJECT-TYPE
@@ -579,9 +595,6 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       MAX-ACCESS  read-create
       STATUS      current
       DESCRIPTION
-
-
-
          "nhdpHystRejectQuality corresponds to
           HYST_REJECT of NHDP and represents the
           link quality threshold below which a
@@ -623,6 +636,9 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
 
           Guidance for setting this object may be found
           in Section 5 of the NHDP specification (RFC 6130),
+
+
+
           which indicates that:
              o 0 <= nhdpInitialQuality <= 1.0
 
@@ -630,9 +646,6 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
           RFC 6340:
              Since these textual conventions are defined in terms
              of the OCTET STRING type, the SMI's mechanisms for
-
-
-
              formally setting range constraints are not available.
              MIB designers using these textual conventions will need
              to use DESCRIPTION clauses to spell out any applicable
@@ -674,6 +687,9 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       DEFVAL { false }
    ::= { nhdpInterfaceEntry 12 }
 
+
+
+
    --
    -- Interface Parameters - Jitter
    --
@@ -681,9 +697,6 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       SYNTAX      Unsigned32
       UNITS       "milliseconds"
       MAX-ACCESS  read-create
-
-
-
       STATUS      current
       DESCRIPTION
          "nhdpHpMaxJitter corresponds to
@@ -708,6 +721,7 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       DEFVAL { 500 }
    ::= { nhdpInterfaceEntry 13 }
 
+
    nhdpHtMaxJitter  OBJECT-TYPE
       SYNTAX      Unsigned32
       UNITS       "milliseconds"
@@ -723,6 +737,10 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
           Guidance for setting this object may be found
           in Section 5 of RFC 5148, which indicates that:
              o nhdpHtMaxJitter <= nhdpHelloInterval / 2
+
+
+
+
              o nhdpHtMaxJitter should not be greater
                than nhdpHelloInterval / 4
              o If nhdpMinHelloInterval > 0, then
@@ -732,9 +750,6 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       REFERENCE
          "Section 5 of RFC 5148 - Jitter Considerations in
           Mobile Ad Hoc Networks (MANETs),
-
-
-
           Clausen, T., Dearlove, C., and B. Adamson, February 2008"
       DEFVAL { 500 }
    ::= { nhdpInterfaceEntry 14 }
@@ -757,22 +772,26 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
           does not need to specify the value of this object in order
           for the row to transit to the 'active(1)' state; the default
           value for this object is used.  For objects that do not
-          have DEFVAL clauses, then the network manager MUST
-          specify the value of this object prior to this row
-          transitioning to the 'active(1)' state.
+          have DEFVAL clauses, the value of this object prior
+          to this row transitioning to the 'active(1)' state MUST be
+          administratively specified.
+
 
           When this object transitions to 'active(1)', all objects
-          in this row SHOULD be written to non-volatile (stable)
+          in this row SHOULD be written to nonvolatile (stable)
           storage.  Read-create objects in this row MAY be modified.
           When an object in a row with nhdpIfRowStatus of 'active(1)'
           is changed, then the updated value MUST be reflected in NHDP,
-          and this new object value MUST be written to non-volatile
+          and this new object value MUST be written to nonvolatile
           storage.
 
           If the value of this object is not equal to 'active(1)',
           all associated entries in the nhdpLibLocalIfSetTable,
           nhdpInterfaceStateTable, nhdpIibLinkSetTable, and
           nhdpInterfacePerfTable MUST be deleted."
+
+
+
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
@@ -780,12 +799,10 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       DEFVAL { active }
    ::= { nhdpInterfaceEntry 15 }
 
+
    --
    -- Router Parameters - Information Validity Time
    --
-
-
-
    nhdpNHoldTime  OBJECT-TYPE
       SYNTAX      Unsigned32
       UNITS       "milliseconds"
@@ -802,7 +819,7 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
 
           This object is persistent, and when written,
           the entity SHOULD save the change to
-          non-volatile storage."
+          nonvolatile storage."
       REFERENCE
          "Section 5 on Protocol Parameters and
           Constraints of RFC 6130 - Mobile Ad Hoc Network
@@ -822,23 +839,23 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
           for which a recently used local interface network
           address is recorded.
 
+
+
+
+
           This object is persistent, and when written,
           the entity SHOULD save the change to
-          non-volatile storage."
+          nonvolatile storage."
       REFERENCE
          "Section 5 on Protocol Parameters and
           Constraints of RFC 6130 - Mobile Ad Hoc Network
           (MANET) Neighborhood Discovery Protocol (NHDP),
           Clausen, T., Dearlove, C., and J. Dean, April 2011"
       DEFVAL { 6000 }
-
    ::= { nhdpConfigurationObjGrp 3 }
 
 
-
-
    -- A router's Local Information Base (LIB)
-
    --
    -- Local Interface Set Table
    --
@@ -863,9 +880,8 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
           related to the interface).
 
           A conceptual row in this table exists if and only
-          if a manager has explicitly created the row.  The
-          manager can create a row by setting rowStatus
-          to 'createAndGo' or 'createAndWait'.
+          if one has been administratively created.  This can be done
+          by setting rowStatus to 'createAndGo' or 'createAndWait'.
 
           Further guidance on the addition or removal of
           local addresses and network addresses is found
@@ -876,21 +892,20 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
            C., and J. Dean, April 2011"
    ::= { nhdpConfigurationObjGrp 4 }
 
+
+
    nhdpLibLocalIfSetEntry  OBJECT-TYPE
       SYNTAX      NhdpLibLocalIfSetEntry
       MAX-ACCESS  not-accessible
       STATUS      current
       DESCRIPTION
          "A router's Local Interface Set consists
-          of Configured Interface Address Tuples for each network
+          of Local Interface Tuples for each network
           interface.
-
-
-
 
           The objects in this table are persistent, and when
           written, the device SHOULD save the change to
-          non-volatile storage.  For further information
+          nonvolatile storage.  For further information
           on the storage behavior for these objects, refer
           to the description for the nhdpLibLocalIfSetRowStatus
           object."
@@ -925,6 +940,11 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
          "The index for this table.  Necessary
           because multiple addresses may be associated
           with a given nhdpIfIndex."
+
+
+
+
+
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
@@ -936,9 +956,6 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       MAX-ACCESS  read-only
       STATUS      current
       DESCRIPTION
-
-
-
          "Specifies the local nhdpIfIndex for which this
           IP address was added."
       REFERENCE
@@ -974,6 +991,11 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
 
           This object is interpreted according to
           the setting of nhdpLibLocalIfSetIpAddrType."
+
+
+
+
+
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
@@ -987,9 +1009,6 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       DESCRIPTION
          "Indicates the number of leading one bits that
           form the mask.  The mask is logically ANDed
-
-
-
           to the nhdpLibLocalIfSetIpAddr to determine
           the address prefix.  A row match is true
           if the address used as an index falls within
@@ -1021,11 +1040,14 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
           transitioning to the 'active(1)' state.
 
           When this object transitions to 'active(1)', all objects
-          in this row SHOULD be written to non-volatile (stable)
+          in this row SHOULD be written to nonvolatile (stable)
           storage.  Read-create objects in this row MAY be modified.
           When an object in a row with nhdpIfRowStatus of 'active(1)'
           is changed, then the updated value MUST be reflected in NHDP,
-          and this new object value MUST be written to non-volatile
+
+
+
+          and this new object value MUST be written to nonvolatile
           storage."
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
@@ -1034,12 +1056,11 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       DEFVAL { notReady }
     ::= { nhdpLibLocalIfSetEntry 6 }
 
+
+
    --
    -- Removed Interface Addr Set Table
    --
-
-
-
 
    nhdpLibRemovedIfAddrSetTable OBJECT-TYPE
       SYNTAX      SEQUENCE OF NhdpLibRemovedIfAddrSetEntry
@@ -1071,10 +1092,17 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
           (IR_local_iface_addr, IR_time)
 
           The association between these addresses and the
-          router's Interface is found in the Standard MIB II's
-          IP address table (RFC 1213)."
+          router's Interface is found in RFC 4293 (ipAddressTable)"
+
+
+
+
+
       REFERENCE
-         "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
+         "RFC 4293 - Management Information Base for the Internet
+          Protocol (IP), S. Routhier, Ed., April 2006.
+
+          RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
           C., and J. Dean, April 2011"
       INDEX { nhdpLibRemovedIfAddrSetIndex }
@@ -1089,9 +1117,6 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
          nhdpLibRemovedIfAddrSetIpAddr
             InetAddress,
          nhdpLibRemovedIfAddrSetIpAddrPrefixLen
-
-
-
             InetAddressPrefixLength,
          nhdpLibRemovedIfAddrSetIfIndex
             InterfaceIndex,
@@ -1121,6 +1146,9 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
          "The type of the nhdpLibRemovedIfAddrSetIpAddr
           in the InetAddress MIB (RFC 4001).
 
+
+
+
           Only the values 'ipv4(1)' and
           'ipv6(2)' are supported."
       REFERENCE
@@ -1140,9 +1168,6 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
-
-
-
           C., and J. Dean, April 2011"
    ::= { nhdpLibRemovedIfAddrSetEntry 3 }
 
@@ -1171,6 +1196,10 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       DESCRIPTION
          "Specifies the local IfIndex from which this
           IP address was recently removed."
+
+
+
+
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
@@ -1183,16 +1212,13 @@ nhdpConfigurationObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 1 }
       STATUS      current
       DESCRIPTION
          "nhdpLibRemovedIfAddrSetIRTime specifies the value
-          of sysUptime when this entry should expire and be
+          of sysUpTime when this entry should expire and be
           removed from the nhdpLibRemovedIfAddrSetTable."
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
           C., and J. Dean, April 2011"
    ::= { nhdpLibRemovedIfAddrSetEntry 6 }
-
-
-
 
 --
 -- nhdpStateObjGrp
@@ -1220,15 +1246,17 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
          "nhdpInterfaceStateTable lists state information
           related to specific interfaces of this router.
           The value of nhdpIfIndex is an ifIndex from the
-          interfaces group defined in the Interfaces Group
+          Interfaces Group defined in the Interfaces Group
           MIB.
+
+
 
           The objects in this table are persistent, and when
           written, the entity SHOULD save the change to
-          non-volatile storage."
+          nonvolatile storage."
       REFERENCE
          "RFC 2863 - The Interfaces Group MIB, McCloghrie,
-          K., and F. Kastenholtz, June 2000."
+          K., and F. Kastenholtz, June 2000"
    ::= { nhdpStateObjGrp 2 }
 
    nhdpInterfaceStateEntry  OBJECT-TYPE
@@ -1241,9 +1269,6 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
           its nhdpIfIndex."
       INDEX { nhdpIfIndex }
    ::= { nhdpInterfaceStateTable 1 }
-
-
-
 
    NhdpInterfaceStateEntry ::=
       SEQUENCE {
@@ -1261,6 +1286,7 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
           MANET interface."
    ::= { nhdpInterfaceStateEntry 1 }
 
+
    --
    -- This table allows for the mapping between discovered
    -- remote interfaces and routers and their addresses.
@@ -1273,6 +1299,9 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
       DESCRIPTION
          "A router's set of discovered interfaces on
           neighboring routers."
+
+
+
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
@@ -1293,9 +1322,6 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
           the remote interface address sets
           through this table.  It does not need
           to be unique across the MANET but MUST
-
-
-
           be locally unique within this router."
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
@@ -1324,6 +1350,9 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
       SYNTAX      Integer32 (0..65535)
       MAX-ACCESS  not-accessible
       STATUS      current
+
+
+
       DESCRIPTION
          "The index for this table.  Necessary
           because multiple addresses may be associated
@@ -1344,9 +1373,6 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
           indexing into other NHDP tables and other
           MIB modules."
       REFERENCE
-
-
-
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
           C., and J. Dean, April 2011"
@@ -1375,6 +1401,9 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
          "The type of the nhdpDiscIfSetIpAddr
           in the InetAddress MIB (RFC 4001).
 
+
+
+
           Only the values 'ipv4(1)' and
           'ipv6(2)' are supported."
       REFERENCE
@@ -1395,9 +1424,6 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
           C., and J. Dean, April 2011"
-
-
-
    ::= { nhdpDiscIfSetEntry 5 }
 
    nhdpDiscIfSetIpAddrPrefixLen  OBJECT-TYPE
@@ -1418,11 +1444,16 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
           C., and J. Dean, April 2011"
    ::= { nhdpDiscIfSetEntry 6 }
 
+
    -- Interface Information Base (IIB)
 
    --
    -- Link Set
    --
+
+
+
+
 
    nhdpIibLinkSetTable  OBJECT-TYPE
       SYNTAX      SEQUENCE OF NhdpIibLinkSetEntry
@@ -1447,8 +1478,6 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
           representing a single link indexed by the
           local and remote interface pair:
 
-
-
           (L_neighbor_iface_addr_list, L_HEARD_time,
            L_SYM_time, L_quality, L_pending,
            L_lost, L_time).
@@ -1470,6 +1499,12 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
       INDEX { nhdpIfIndex,
               nhdpDiscIfIndex }
    ::= { nhdpIibLinkSetTable 1 }
+
+
+
+
+
+
 
    NhdpIibLinkSetEntry ::=
       SEQUENCE {
@@ -1497,9 +1532,6 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
           not considering link quality."
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
-
-
-
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
           C., and J. Dean, April 2011"
    ::= { nhdpIibLinkSetEntry 1 }
@@ -1519,6 +1551,11 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
           C., and J. Dean, April 2011"
    ::= { nhdpIibLinkSetEntry 2 }
+
+
+
+
+
 
    nhdpIibLinkSetLPending  OBJECT-TYPE
       SYNTAX      TruthValue
@@ -1548,9 +1585,6 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
-
-
-
           C., and J. Dean, April 2011"
    ::= { nhdpIibLinkSetEntry 4 }
 
@@ -1560,13 +1594,19 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
       STATUS      current
       DESCRIPTION
          "nhdpIibLinkSetLTime specifies the value
-          of sysUptime when this entry should expire and be
+          of sysUpTime when this entry should expire and be
           removed from the nhdpIibLinkSetTable."
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
           C., and J. Dean, April 2011"
    ::= { nhdpIibLinkSetEntry 5 }
+
+
+
+
+
+
 
    --
    -- 2-Hop Set
@@ -1592,31 +1632,44 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
       MAX-ACCESS  not-accessible
       STATUS      current
       DESCRIPTION
-         "nhdpIib2HopSetTable consists of 2-Hop Tuples,
-          each representing a single network address of
-          a symmetric 2-hop neighbor and a single MANET
-          interface of a symmetric 1-hop neighbor.
+         "nhdpIib2HopSetTable consists of 2-Hop Tuples, each
+          representing a single network address of a symmetric
+          2-hop neighbor and a single MANET interface of a
+          symmetric 1-hop neighbor.
 
           (N2_neighbor_iface_addr_list,
-           N2_2hop_addr, N2_time).
+           N2_2hop_addr, N2_lost, N2_time).
+
+          The entries include:
+            - the 2-hop neighbor addresses
+              ('N2_neighbor_iface_addr_list'), which
+              act as the table index,
+            - the associated symmetric 1-hop
+              neighbor address set ('N2_2hop_addr'), designated
+              through nhdpDiscIfIndex,
+            - a flag indicating if the 1-hop neighbor
+              through which this 2-hop neighbor is reachable
+              ('N2_lost') is considered lost due to link quality,
+              or not,
+            - and the expiration time ('N2_time').
+
+          The nhdpIfIndex in the INDEX is the interface index of
+          the local interface through which these 2-hop addresses
+          are accessible.  The nhdpDiscIfIndex in the INDEX
 
 
 
-          The entries include the 2-hop neighbor addresses,
-          which act as the table index, and associated
-          1-hop symmetric link address set, designated
-          through nhdpDiscIfIndex, and an expiration time.
-          The nhdpIfIndex in the INDEX is the
-          interface index of the local interface
-          through which these 2-hop addresses are
-          accessible.  The nhdpDiscIfIndex in the
-          INDEX represents the 1-hop neighbor interface
-          through which these 2-hop addresses are
-          reachable."
+          represents the 1-hop neighbor interface through which
+          these 2-hop neighbor addresses are reachable."
+
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
-          C., and J. Dean, April 2011"
+          C., and J. Dean, April 2011
+          and
+          RFC 7466 - An Optimization for the Mobile Ad Hoc
+          Network (MANET) Neighborhood Discovery Protocol (NHDP),
+          Dearlove, C., and T. Clausen, March 2015"
       INDEX { nhdpIfIndex,
               nhdpDiscIfIndex,
               nhdpIib2HopSetIpAddressType,
@@ -1635,7 +1688,9 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
          nhdpIib2HopSet1HopIfIndex
             NeighborIfIndex,
          nhdpIib2HopSetN2Time
-            TimeStamp
+            TimeStamp,
+         nhdpIib2HopSetN2Lost
+            TruthValue
       }
 
    nhdpIib2HopSetIpAddressType  OBJECT-TYPE
@@ -1648,11 +1703,15 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
 
           Only the values 'ipv4(1)' and
           'ipv6(2)' are supported."
+
+
+
+
+
+
+
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
-
-
-
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
           C., and J. Dean, April 2011"
    ::= { nhdpIib2HopSetEntry 1 }
@@ -1699,11 +1758,11 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
       DESCRIPTION
          "nhdpIib2HopSet1HopIfIndex is
           nhdpDiscIfIndex of the 1-hop
+
+
+
           neighbor that communicated the ipAddress
           of the 2-hop neighbor in this row entry."
-
-
-
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
@@ -1716,7 +1775,7 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
       STATUS      current
       DESCRIPTION
          "nhdpIib2HopSetN2Time specifies the value
-          of sysUptime when this entry should expire and be
+          of sysUpTime when this entry should expire and be
           removed from the nhdpIib2HopSetTable."
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
@@ -1724,12 +1783,34 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
           C., and J. Dean, April 2011"
    ::= { nhdpIib2HopSetEntry 5 }
 
+
+      nhdpIib2HopSetN2Lost OBJECT-TYPE
+      SYNTAX          TruthValue
+      MAX-ACCESS      read-only
+      STATUS          current
+      DESCRIPTION
+         "nhdpIib2HopSetN2Lost corresponds to N2_lost of NHDP and
+          is a boolean flag, describing if for a 2-Hop Tuple, the
+          corresponding Link Tuple currently is considered lost
+          due to link quality."
+
+      REFERENCE
+         "RFC 7466 - An Optimization for the Mobile Ad Hoc
+          Network (MANET) Neighborhood Discovery Protocol (NHDP),
+          Dearlove, C., and T. Clausen, March 2015"
+   ::= {nhdpIib2HopSetEntry 6}
+
+
    --
    -- Neighbor Information Base (NIB)
    --
    -- Each router maintains a Neighbor Information Base
    -- that records information about addresses of
    -- current and recently symmetric 1-hop neighbors.
+
+
+
+
 
    --
    -- Neighbor Set
@@ -1752,8 +1833,6 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
           C., and J. Dean, April 2011"
    ::= { nhdpStateObjGrp 6 }
-
-
 
    nhdpNibNeighborSetEntry  OBJECT-TYPE
       SYNTAX      NhdpNibNeighborSetEntry
@@ -1781,6 +1860,9 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
    nhdpNibNeighborSetNSymmetric  OBJECT-TYPE
       SYNTAX      TruthValue
       MAX-ACCESS  read-only
+
+
+
       STATUS      current
       DESCRIPTION
          "nhdpNibNeighborNSymmetric corresponds
@@ -1791,6 +1873,7 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
           C., and J. Dean, April 2011"
    ::= { nhdpNibNeighborSetEntry 1 }
+
 
    --
    -- Lost Neighbor Set
@@ -1803,9 +1886,6 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
          "A router's Lost Neighbor Set records network
           addresses of routers that were recently
           symmetric 1-hop neighbors but are now
-
-
-
           advertised as lost."
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
@@ -1830,6 +1910,10 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
       INDEX { nhdpDiscRouterIndex }
    ::= { nhdpNibLostNeighborSetTable 1 }
 
+
+
+
+
    NhdpNibLostNeighborSetEntry ::=
       SEQUENCE {
          nhdpNibLostNeighborSetNLTime
@@ -1842,7 +1926,7 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
       STATUS      current
       DESCRIPTION
          "nhdpNibLostNeighborSetNLTime
-          specifies the value of sysUptime when this entry
+          specifies the value of sysUpTime when this entry
           should expire and be removed from the
           nhdpNibLostNeighborSetTable."
       REFERENCE
@@ -1851,12 +1935,10 @@ nhdpStateObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 2 }
           C., and J. Dean, April 2011"
    ::= { nhdpNibLostNeighborSetEntry 1 }
 
+
 --
 -- nhdpPerformanceObjGrp
 --
-
-
-
 -- Contains objects that help to characterize the performance of
 -- the NHDP process, typically counters.
 --
@@ -1872,7 +1954,17 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
       STATUS      current
       DESCRIPTION
          "This table summarizes performance objects that are
-          measured per local NHDP interface."
+          measured per local NHDP interface.
+          nhdpIfPerfCounterDiscontinuityTime indicates
+          the most recent occasion at which any one or more
+          of this interface's counters listed in this table
+          suffered a discontinuity."
+
+
+
+
+
+
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
@@ -1887,7 +1979,6 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
          "A single entry contains performance counters for
           a local NHDP interface."
       INDEX { nhdpIfIndex }
-
    ::= { nhdpInterfacePerfTable 1 }
 
    NhdpInterfacePerfEntry ::=
@@ -1905,14 +1996,13 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
          nhdpIfHelloMessagePeriodicXmits
             Counter32,
          nhdpIfHelloMessageXmitAccumulatedSymmetricNeighborCount
-
-
-
             Counter32,
          nhdpIfHelloMessageXmitAccumulatedHeardNeighborCount
             Counter32,
          nhdpIfHelloMessageXmitAccumulatedLostNeighborCount
-            Counter32
+            Counter32,
+         nhdpIfPerfCounterDiscontinuityTime
+            TimeStamp
       }
 
    nhdpIfHelloMessageXmits  OBJECT-TYPE
@@ -1923,6 +2013,9 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
       DESCRIPTION
          "A counter is incremented each time a HELLO
           message has been transmitted on that interface."
+
+
+
    ::= { nhdpInterfacePerfEntry 1 }
 
    nhdpIfHelloMessageRecvd  OBJECT-TYPE
@@ -1931,8 +2024,8 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
       MAX-ACCESS  read-only
       STATUS      current
       DESCRIPTION
-         "A counter is incremented each time a
-          HELLO message has been received on that interface."
+         "A counter is incremented each time a HELLO
+          message has been received on that interface."
    ::= { nhdpInterfacePerfEntry 2 }
 
    nhdpIfHelloMessageXmitAccumulatedSize  OBJECT-TYPE
@@ -1942,8 +2035,7 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
       STATUS      current
       DESCRIPTION
          "A counter is incremented by the number of octets in
-          a HELLO message each time a
-          HELLO message has been sent."
+          a HELLO message each time a HELLO message has been sent."
    ::= { nhdpInterfacePerfEntry 3 }
 
    nhdpIfHelloMessageRecvdAccumulatedSize  OBJECT-TYPE
@@ -1953,11 +2045,8 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
       STATUS      current
       DESCRIPTION
          "A counter is incremented by the number of octets in
-          a HELLO message each time a
-          HELLO message has been received."
+          a HELLO message each time a HELLO message has been received."
    ::= { nhdpInterfacePerfEntry 4 }
-
-
 
    nhdpIfHelloMessageTriggeredXmits  OBJECT-TYPE
       SYNTAX      Counter32
@@ -1975,6 +2064,9 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
       MAX-ACCESS  read-only
       STATUS      current
       DESCRIPTION
+
+
+
          "A counter is incremented each time a periodic
           HELLO message has been sent."
    ::= { nhdpInterfacePerfEntry 6 }
@@ -2007,13 +2099,24 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
       MAX-ACCESS  read-only
       STATUS      current
       DESCRIPTION
-
-
-
          "A counter is incremented by the number of advertised
           lost neighbors in a HELLO each time a HELLO
           message has been sent."
    ::= { nhdpInterfacePerfEntry 9 }
+
+   nhdpIfPerfCounterDiscontinuityTime  OBJECT-TYPE
+      SYNTAX      TimeStamp
+      MAX-ACCESS  read-only
+      STATUS      current
+      DESCRIPTION
+         "The value of sysUpTime on the most recent occasion at which
+          any one or more of this interface's counters suffered a
+          discontinuity.  If no such discontinuities have occurred
+          since the last reinitialization of the local management
+          subsystem, then this object contains a zero value."
+   ::= { nhdpInterfacePerfEntry 10 }
+
+
 
    --
    -- Objects per discovered neighbor interface
@@ -2058,14 +2161,14 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
       UNITS       "packets"
       MAX-ACCESS  read-only
       STATUS      current
-
-
-
       DESCRIPTION
          "This counter increments each
           time this router receives a packet from that interface
           of the neighbor."
       REFERENCE
+
+
+
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
          C., and J. Dean, April 2011"
@@ -2088,6 +2191,7 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
           C., and J. Dean, April 2011"
    ::= { nhdpDiscIfSetPerfEntry 2 }
 
+
    --
    -- Objects concerning the Neighbor Set
    --
@@ -2103,17 +2207,19 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
           a Neighbor Tuple has been modified."
    ::= { nhdpPerformanceObjGrp 3 }
 
+
    --
    -- Objects per discovered neighbor
    --
-
    nhdpDiscNeighborSetPerfTable OBJECT-TYPE
       SYNTAX       SEQUENCE OF NhdpDiscNeighborSetPerfEntry
-
-
-
       MAX-ACCESS   not-accessible
       STATUS       current
+
+
+
+
+
       DESCRIPTION
          "A router's set of discovered neighbors and
           their properties."
@@ -2160,23 +2266,19 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
-
-
-
           C., and J. Dean, April 2011"
    ::= { nhdpDiscNeighborSetPerfEntry 1 }
+
+
 
    nhdpDiscNeighborNibNeighborSetUpTime  OBJECT-TYPE
       SYNTAX      TimeStamp
       MAX-ACCESS  read-only
       STATUS      current
       DESCRIPTION
-         "This object returns the sysUpTime when
-          the neighbor becomes 'nbrup'.  A neighbor is
-          said to become 'nbrup' if a new nhdpNibNeighborSetEntry
-          is created for a particular nhdpNibNeighborSetRouterIndex.
-          It becomes 'nbrdown' if the entry for that neighbor
-          has been deleted."
+         "This object returns the sysUpTime when a new
+          nhdpNibNeighborSetEntry has been created for a
+          particular nhdpNibNeighborSetRouterIndex."
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
@@ -2201,6 +2303,7 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
           C., and J. Dean, April 2011"
    ::= { nhdpDiscNeighborSetPerfEntry 3 }
 
+
    --
    -- Objects per discovered 2-hop neighbor
    --
@@ -2211,14 +2314,13 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
       DESCRIPTION
          "This table contains performance objects per
           discovered 2-hop neighbor."
-
-
-
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
           C., and J. Dean, April 2011"
    ::= { nhdpPerformanceObjGrp 5 }
+
+
 
    nhdpIib2HopSetPerfEntry  OBJECT-TYPE
       SYNTAX      NhdpIib2HopSetPerfEntry
@@ -2262,19 +2364,21 @@ nhdpPerformanceObjGrp  OBJECT IDENTIFIER ::= { nhdpObjects 3 }
       SYNTAX      TimeStamp
       MAX-ACCESS  read-only
       STATUS      current
-
-
-
       DESCRIPTION
          "This object returns the sysUpTime
           when the 2-Hop Tuple
           corresponding to the given 2-hop neighbor IP address
           was registered in the nhdpIib2HopSetTable."
+
+
+
+
       REFERENCE
          "RFC 6130 - Mobile Ad Hoc Network (MANET) Neighborhood
           Discovery Protocol (NHDP), Clausen, T., Dearlove,
           C., and J. Dean, April 2011"
    ::= { nhdpIib2HopSetPerfEntry 2 }
+
 
 --
 -- nhdpNotifications
@@ -2287,8 +2391,7 @@ nhdpNotificationsStates  OBJECT IDENTIFIER ::= { nhdpNotifications 2 }
    -- nhdpNotificationsObjects
 
    nhdpNbrStateChange  NOTIFICATION-TYPE
-      OBJECTS { nhdpIfName,  -- The originator of
-                             --     the notification.
+      OBJECTS { nhdpIfName,  -- The originator of the notification.
                nhdpNbrState  -- The new state
       }
       STATUS       current
@@ -2309,10 +2412,15 @@ nhdpNotificationsStates  OBJECT IDENTIFIER ::= { nhdpNotifications 2 }
       DESCRIPTION
          "nhdp2HopNbrStateChange is a notification sent
           when more than nhdp2HopNbrStateChangeThreshold 2-hop
-          neighbors change their status (i.e., 'down(0)' or
-          'up(1)') within a time window of
+          neighbors change their nhdp2HopNbrState
+          within a time window of
           nhdp2HopNbrStateChangeWindow."
    ::= { nhdpNotificationsObjects 2 }
+
+
+
+
+
 
 
 
@@ -2413,10 +2521,12 @@ nhdpNotificationsStates  OBJECT IDENTIFIER ::= { nhdpNotifications 2 }
       DEFVAL { 1000 }
    ::= { nhdpNotificationsControl 4 }
 
+
+
+
+
+
     -- nhdpNotificationStates
-
-
-
 
    nhdpNbrState OBJECT-TYPE
       SYNTAX      INTEGER {
@@ -2437,20 +2547,23 @@ nhdpNotificationsStates  OBJECT IDENTIFIER ::= { nhdpNotifications 2 }
           nhdpNibLostNeighborSetTable."
    ::= { nhdpNotificationsStates 1 }
 
-   nhdp2HopNbrState  OBJECT-TYPE
-      SYNTAX      INTEGER {
-                     down(0),
-                     up(1)
-                  }
-      MAX-ACCESS  read-only
-      STATUS      current
-      DESCRIPTION
-         "NHDP 2-hop neighbor states.  In NHDP, it is not
-          necessary to remove Protocol Tuples from Protocol Sets
-          at the exact time indicated, only to behave as if the
-          Protocol Tuples were removed at that time.  This case is
-          indicated here as 'down(0)'; otherwise, it is 'up(1)'."
-   ::= { nhdpNotificationsStates 2 }
+  nhdp2HopNbrState  OBJECT-TYPE
+     SYNTAX      INTEGER {
+                    down(0),
+                    up(1),
+                    notconsidered(2)
+                 }
+     MAX-ACCESS  read-only
+     STATUS      current
+     DESCRIPTION
+        "NHDP 2-hop neighbor states.  In NHDP, it is not necessary
+         to remove Protocol Tuples from Protocol Sets at the
+         exact time indicated, only to behave as if the Protocol
+         Tuples were removed at that time.  This case is indicated
+         here as 'down(0)'; otherwise, it is either 'up(1)', if
+         N2_lost for the 2-Hop Tuple is equal to false, or
+         'notconsidered(2)' otherwise."
+     ::= { nhdpNotificationsStates 2 }
 
 --
 -- nhdpConformance information
@@ -2459,6 +2572,11 @@ nhdpNotificationsStates  OBJECT IDENTIFIER ::= { nhdpNotifications 2 }
 nhdpCompliances       OBJECT IDENTIFIER ::= { nhdpConformance 1 }
 nhdpMIBGroups         OBJECT IDENTIFIER ::= { nhdpConformance 2 }
 
+
+
+
+
+
    -- Compliance Statements
    nhdpBasicCompliance  MODULE-COMPLIANCE
       STATUS      current
@@ -2466,14 +2584,11 @@ nhdpMIBGroups         OBJECT IDENTIFIER ::= { nhdpConformance 2 }
          "The basic implementation requirements for
           managed network entities that implement
           NHDP."
-
-
-
       MODULE -- this module
       MANDATORY-GROUPS { nhdpConfigurationGroup }
    ::= { nhdpCompliances 1 }
 
-   nhdpFullCompliance  MODULE-COMPLIANCE
+   nhdpFullCompliance2  MODULE-COMPLIANCE
       STATUS      current
       DESCRIPTION
          "The full implementation requirements for
@@ -2481,12 +2596,13 @@ nhdpMIBGroups         OBJECT IDENTIFIER ::= { nhdpConformance 2 }
           NHDP."
       MODULE -- this module
       MANDATORY-GROUPS { nhdpConfigurationGroup,
-                         nhdpStateGroup,
+                         nhdpStateGroup2,
                          nhdpNotificationObjectGroup,
                          nhdpNotificationGroup,
                          nhdpPerformanceGroup
       }
-   ::= { nhdpCompliances 2 }
+   ::= { nhdpCompliances 3 }
+
 
 --
 -- Units of Conformance
@@ -2509,6 +2625,9 @@ nhdpMIBGroups         OBJECT IDENTIFIER ::= { nhdpConformance 2 }
          nhdpHtMaxJitter,
          nhdpNHoldTime,
          nhdpIHoldTime,
+
+
+
          nhdpIfRowStatus,
          nhdpLibLocalIfSetIfIndex,
          nhdpLibLocalIfSetIpAddrType,
@@ -2517,9 +2636,6 @@ nhdpMIBGroups         OBJECT IDENTIFIER ::= { nhdpConformance 2 }
          nhdpLibLocalIfSetRowStatus,
          nhdpLibRemovedIfAddrSetIpAddrType,
          nhdpLibRemovedIfAddrSetIpAddr,
-
-
-
          nhdpLibRemovedIfAddrSetIpAddrPrefixLen,
          nhdpLibRemovedIfAddrSetIfIndex,
          nhdpLibRemovedIfAddrSetIRTime
@@ -2529,32 +2645,6 @@ nhdpMIBGroups         OBJECT IDENTIFIER ::= { nhdpConformance 2 }
          "Set of NHDP configuration objects implemented
           in this module."
    ::= { nhdpMIBGroups 2 }
-
-   nhdpStateGroup  OBJECT-GROUP
-      OBJECTS {
-         nhdpUpTime,
-         nhdpIfStateUpTime,
-         nhdpDiscRouterIndex,
-         nhdpDiscIfIndex,
-         nhdpDiscIfSetIpAddrType,
-         nhdpDiscIfSetIpAddr,
-         nhdpDiscIfSetIpAddrPrefixLen,
-         nhdpIibLinkSetLHeardTime,
-         nhdpIibLinkSetLSymTime,
-         nhdpIibLinkSetLPending,
-         nhdpIibLinkSetLLost,
-         nhdpIibLinkSetLTime,
-         nhdpIib2HopSetIpAddrPrefixLen,
-         nhdpIib2HopSet1HopIfIndex,
-         nhdpIib2HopSetN2Time,
-         nhdpNibNeighborSetNSymmetric,
-         nhdpNibLostNeighborSetNLTime
-      }
-      STATUS      current
-      DESCRIPTION
-         "Set of NHDP state objects implemented
-          in this module."
-   ::= { nhdpMIBGroups 3 }
 
    nhdpPerformanceGroup  OBJECT-GROUP
       OBJECTS {
@@ -2567,10 +2657,8 @@ nhdpMIBGroups         OBJECT IDENTIFIER ::= { nhdpConformance 2 }
          nhdpIfHelloMessageXmitAccumulatedSymmetricNeighborCount,
          nhdpIfHelloMessageXmitAccumulatedHeardNeighborCount,
          nhdpIfHelloMessageXmitAccumulatedLostNeighborCount,
+         nhdpIfPerfCounterDiscontinuityTime,
          nhdpDiscIfRecvdPackets,
-
-
-
          nhdpDiscIfExpectedPackets,
          nhdpNibNeighborSetChanges,
          nhdpDiscNeighborNibNeighborSetChanges,
@@ -2584,6 +2672,12 @@ nhdpMIBGroups         OBJECT IDENTIFIER ::= { nhdpConformance 2 }
          "Set of NHDP performance objects implemented
           in this module."
    ::= { nhdpMIBGroups 4 }
+
+
+
+
+
+
 
    nhdpNotificationObjectGroup  OBJECT-GROUP
       OBJECTS {
@@ -2611,6 +2705,91 @@ nhdpMIBGroups         OBJECT IDENTIFIER ::= { nhdpConformance 2 }
          "Set of NHDP notifications implemented
           in this module."
    ::= { nhdpMIBGroups 6 }
+
+   nhdpStateGroup2  OBJECT-GROUP
+      OBJECTS {
+         nhdpUpTime,
+         nhdpIfStateUpTime,
+         nhdpDiscRouterIndex,
+         nhdpDiscIfIndex,
+         nhdpDiscIfSetIpAddrType,
+         nhdpDiscIfSetIpAddr,
+         nhdpDiscIfSetIpAddrPrefixLen,
+         nhdpIibLinkSetLHeardTime,
+         nhdpIibLinkSetLSymTime,
+         nhdpIibLinkSetLPending,
+         nhdpIibLinkSetLLost,
+         nhdpIibLinkSetLTime,
+         nhdpIib2HopSetIpAddrPrefixLen,
+         nhdpIib2HopSet1HopIfIndex,
+         nhdpIib2HopSetN2Time,
+         nhdpIib2HopSetN2Lost,
+         nhdpNibNeighborSetNSymmetric,
+         nhdpNibLostNeighborSetNLTime
+      }
+
+
+
+      STATUS      current
+      DESCRIPTION
+         "Set of NHDP state objects implemented
+          in this module."
+   ::= { nhdpMIBGroups 7 }
+
+
+--
+-- Deprecated compliance statements and groups
+--
+
+   nhdpFullCompliance  MODULE-COMPLIANCE
+      STATUS      deprecated
+      DESCRIPTION
+         "The full implementation requirements for
+          managed network entities that implement
+          NHDP.
+
+          For version-independence, this compliance statement
+          is deprecated in favor of nhdpFullCompliance2."
+      MODULE -- this module
+      MANDATORY-GROUPS { nhdpConfigurationGroup,
+                         nhdpStateGroup,
+                         nhdpNotificationObjectGroup,
+                         nhdpNotificationGroup,
+                         nhdpPerformanceGroup
+      }
+   ::= { nhdpCompliances 2 }
+
+   nhdpStateGroup  OBJECT-GROUP
+      OBJECTS {
+         nhdpUpTime,
+         nhdpIfStateUpTime,
+         nhdpDiscRouterIndex,
+         nhdpDiscIfIndex,
+         nhdpDiscIfSetIpAddrType,
+         nhdpDiscIfSetIpAddr,
+         nhdpDiscIfSetIpAddrPrefixLen,
+         nhdpIibLinkSetLHeardTime,
+         nhdpIibLinkSetLSymTime,
+         nhdpIibLinkSetLPending,
+         nhdpIibLinkSetLLost,
+         nhdpIibLinkSetLTime,
+         nhdpIib2HopSetIpAddrPrefixLen,
+         nhdpIib2HopSet1HopIfIndex,
+         nhdpIib2HopSetN2Time,
+         nhdpNibNeighborSetNSymmetric,
+         nhdpNibLostNeighborSetNLTime
+
+
+
+      }
+      STATUS      deprecated
+      DESCRIPTION
+         "Set of NHDP state objects implemented
+          in this module.
+
+          For version-independence, this compliance statement
+          is deprecated in favor of nhdpStateGroup2."
+   ::= { nhdpMIBGroups 3 }
 
 
 END
