@@ -13,6 +13,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import net.percederberg.grammatica.parser.Node;
@@ -126,6 +127,13 @@ class MibAnalyzer extends Asn1Analyzer {
     private boolean implicitTags = true;
 
     /**
+     * An internal hash set containing processed comment tokens. When
+     * a comment string is processed method, the corresponding tokens
+     * will be added to this set and not processed again.
+     */
+    private HashSet<Token> commentTokens = new HashSet<Token>();
+
+    /**
      * Creates a new MIB file analyzer.
      *
      * @param file           the MIB file being analyzed
@@ -148,6 +156,7 @@ class MibAnalyzer extends Asn1Analyzer {
         baseContext = null;
         contextStack.clear();
         implicitTags = true;
+        commentTokens.clear();
     }
 
     /**
@@ -268,7 +277,7 @@ class MibAnalyzer extends Asn1Analyzer {
      * @return the node to add to the parse tree
      */
     protected Node exitStart(Production node) {
-        String comment = MibAnalyzerUtil.getCommentsFooter(node);
+        String comment = MibAnalyzerUtil.getCommentsFooter(node, commentTokens);
         if (currentMib != null) {
             currentMib.setFooterComment(comment);
         }
@@ -304,7 +313,8 @@ class MibAnalyzer extends Asn1Analyzer {
         currentMib.setName(getStringValue(getChildAt(node, 0), 0));
         currentMib.setFileRef(fileRef);
         currentMib.setText(MibAnalyzerUtil.getText(node));
-        currentMib.setHeaderComment(MibAnalyzerUtil.getComments(node));
+        String str = MibAnalyzerUtil.getComments(node, commentTokens);
+        currentMib.setHeaderComment(str);
         mibs.add(currentMib);
         return node;
     }
@@ -488,7 +498,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // Create macro symbol
         MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
         MibMacroSymbol symbol = new MibMacroSymbol(ref, currentMib, name);
-        symbol.setComment(MibAnalyzerUtil.getComments(node));
+        symbol.setComment(MibAnalyzerUtil.getComments(node, commentTokens));
 
         return null;
     }
@@ -537,7 +547,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // Create type symbol
         MibType type = (MibType) getValue(getChildAt(node, 2), 0);
         MibTypeSymbol symbol = new MibTypeSymbol(ref, currentMib, name, type);
-        symbol.setComment(MibAnalyzerUtil.getComments(node));
+        symbol.setComment(MibAnalyzerUtil.getComments(node, commentTokens));
 
         return null;
     }
@@ -994,7 +1004,7 @@ class MibAnalyzer extends Asn1Analyzer {
                 child.getStartColumn());
         }
         MibType type = new ElementType(name, (MibType) getValue(child, 0));
-        type.setComment(MibAnalyzerUtil.getComments(node));
+        type.setComment(MibAnalyzerUtil.getComments(node, commentTokens));
         node.addValue(type);
         return node;
     }
@@ -1038,7 +1048,8 @@ class MibAnalyzer extends Asn1Analyzer {
             Node child = node.getChildAt(i);
             if (child.getId() == Asn1Constants.NAMED_NUMBER) {
                 MibValueSymbol symbol = (MibValueSymbol) child.getValue(0);
-                symbol.setComment(MibAnalyzerUtil.getComments(child));
+                String str = MibAnalyzerUtil.getComments(child, commentTokens);
+                symbol.setComment(str);
             }
         }
         node.addValue(getChildValues(node));
@@ -1338,7 +1349,7 @@ class MibAnalyzer extends Asn1Analyzer {
         MibType type = (MibType) getValue(getChildAt(node, 1), 0);
         MibValue value = (MibValue) getValue(getChildAt(node, 3), 0);
         MibValueSymbol symbol = new MibValueSymbol(ref, currentMib, name, type, value);
-        symbol.setComment(MibAnalyzerUtil.getComments(node));
+        symbol.setComment(MibAnalyzerUtil.getComments(node, commentTokens));
 
         return null;
     }
@@ -1858,7 +1869,7 @@ class MibAnalyzer extends Asn1Analyzer {
                 if (syntax instanceof MibContext) {
                     popContext();
                 }
-                syntax.setComment(MibAnalyzerUtil.getComments(child));
+                syntax.setComment(MibAnalyzerUtil.getComments(child, commentTokens));
                 break;
             case Asn1Constants.SNMP_UNITS_PART:
                 units = getStringValue(child, 0);
@@ -2024,7 +2035,7 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             case Asn1Constants.SNMP_SYNTAX_PART:
                 syntax = (MibType) getValue(child, 0);
-                syntax.setComment(MibAnalyzerUtil.getComments(child));
+                syntax.setComment(MibAnalyzerUtil.getComments(child, commentTokens));
                 break;
             default:
                 // Ignore other nodes
@@ -2243,7 +2254,7 @@ class MibAnalyzer extends Asn1Analyzer {
         MibValue value = (MibValue) getValue(getChildAt(node, 1), 0);
         String desc = getStringValue(getChildAt(node, 3), 0);
         SnmpRevision rev = new SnmpRevision(value, desc);
-        rev.setComment(MibAnalyzerUtil.getComments(node));
+        rev.setComment(MibAnalyzerUtil.getComments(node, commentTokens));
         node.addValue(rev);
         return node;
     }
@@ -2532,7 +2543,7 @@ class MibAnalyzer extends Asn1Analyzer {
             Node child = node.getChildAt(i);
             switch (child.getId()) {
             case Asn1Constants.MODULE:
-                comment = MibAnalyzerUtil.getComments(child);
+                comment = MibAnalyzerUtil.getComments(child, commentTokens);
                 break;
             case Asn1Constants.SNMP_MODULE_IMPORT:
                 name = getStringValue(child, 0);
@@ -2623,7 +2634,7 @@ class MibAnalyzer extends Asn1Analyzer {
         MibValue value = (MibValue) getValue(getChildAt(node, 1), 0);
         String desc = getStringValue(getChildAt(node, 2), 0);
         SnmpCompliance comp = new SnmpCompliance(true, value, null, null, null, desc);
-        comp.setComment(MibAnalyzerUtil.getComments(node));
+        comp.setComment(MibAnalyzerUtil.getComments(node, commentTokens));
         node.addValue(comp);
         return node;
     }
@@ -2653,11 +2664,11 @@ class MibAnalyzer extends Asn1Analyzer {
                 break;
             case Asn1Constants.SNMP_SYNTAX_PART:
                 syntax = (MibType) getValue(child, 0);
-                syntax.setComment(MibAnalyzerUtil.getComments(child));
+                syntax.setComment(MibAnalyzerUtil.getComments(child, commentTokens));
                 break;
             case Asn1Constants.SNMP_WRITE_SYNTAX_PART:
                 write = (MibType) getValue(child, 0);
-                write.setComment(MibAnalyzerUtil.getComments(child));
+                write.setComment(MibAnalyzerUtil.getComments(child, commentTokens));
                 break;
             case Asn1Constants.SNMP_ACCESS_PART:
                 access = (SnmpAccess) getValue(child, 0);
@@ -2670,7 +2681,7 @@ class MibAnalyzer extends Asn1Analyzer {
             }
         }
         SnmpCompliance comp = new SnmpCompliance(false, value, syntax, write, access, desc);
-        comp.setComment(MibAnalyzerUtil.getComments(node));
+        comp.setComment(MibAnalyzerUtil.getComments(node, commentTokens));
         node.addValue(comp);
         return node;
     }
@@ -2790,11 +2801,11 @@ class MibAnalyzer extends Asn1Analyzer {
                 if (syntax instanceof MibContext) {
                     popContext();
                 }
-                syntax.setComment(MibAnalyzerUtil.getComments(child));
+                syntax.setComment(MibAnalyzerUtil.getComments(child, commentTokens));
                 break;
             case Asn1Constants.SNMP_WRITE_SYNTAX_PART:
                 write = (MibType) getValue(child, 0);
-                write.setComment(MibAnalyzerUtil.getComments(child));
+                write.setComment(MibAnalyzerUtil.getComments(child, commentTokens));
                 break;
             case Asn1Constants.SNMP_ACCESS_PART:
                 access = (SnmpAccess) getValue(child, 0);
