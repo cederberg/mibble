@@ -74,6 +74,7 @@ public class MibTreeBuilder {
         int mode = TreeSelectionModel.SINGLE_TREE_SELECTION;
         mibTree.getSelectionModel().setSelectionMode(mode);
         mibTree.setRootVisible(false);
+        mibTree.setShowsRootHandles(true);
     }
 
     /**
