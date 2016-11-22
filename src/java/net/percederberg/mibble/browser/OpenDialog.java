@@ -24,11 +24,16 @@ import java.util.jar.JarFile;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import net.percederberg.mibble.MibLoader;
@@ -87,6 +92,34 @@ public class OpenDialog extends JDialog {
         setTitle("Load MIB");
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         getContentPane().setLayout(new GridBagLayout());
+
+        // Add filter label
+        JLabel label = new JLabel("Filter:");
+        c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(4, 5, 4, 5);
+        getContentPane().add(label, c);
+
+        // Add filter field
+        final JTextField textField = new JTextField(15);
+        textField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) {
+                filterTree(textField.getText());
+            }
+            public void removeUpdate(DocumentEvent e) {
+                filterTree(textField.getText());
+            }
+            public void changedUpdate(DocumentEvent e) {
+                filterTree(textField.getText());
+            }
+        });
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.weightx = 1.0;
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = new Insets(4, 5, 4, 5);
+        getContentPane().add(textField, c);
 
         // Add tree view
         tree = new JTree();
@@ -168,6 +201,48 @@ public class OpenDialog extends JDialog {
             }
         }
         ((DefaultTreeModel) tree.getModel()).reload();
+    }
+
+    /**
+     * Modifies the tree to only include matching MIB modules.
+     *
+     * @param text           the partial MIB name to match
+     */
+    protected void filterTree(String text) {
+        text = text.toUpperCase().trim();
+        if (text.isEmpty()) {
+            ((DefaultTreeModel) tree.getModel()).setRoot(root);
+        } else {
+            TreeNode newRoot = filterTreeNode(text, root);
+            ((DefaultTreeModel) tree.getModel()).setRoot(newRoot);
+            for (int i = 0; i < tree.getRowCount(); i++) {
+                tree.expandRow(i);
+            }
+        }
+    }
+
+    /**
+     * Creates a copy of a tree node with only matching child nodes.
+     *
+     * @param text           the partial MIB name to match
+     * @param parent         the parent tree node
+     *
+     * @return a new tree node with only matching children
+     */
+    private DefaultMutableTreeNode filterTreeNode(String text, TreeNode parent) {
+        DefaultMutableTreeNode newParent = new DefaultMutableTreeNode(parent.toString());
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            TreeNode child = parent.getChildAt(i);
+            if (child.getChildCount() > 0) {
+                DefaultMutableTreeNode newChild = filterTreeNode(text, child);
+                if (newChild.getChildCount() > 0) {
+                    newParent.add(newChild);
+                }
+            } else if (child.toString().toUpperCase().contains(text)) {
+                newParent.add(new DefaultMutableTreeNode(child.toString()));
+            }
+        }
+        return newParent;
     }
 
     /**
