@@ -11,7 +11,6 @@ package net.percederberg.mibble.browser;
 import java.awt.CheckboxMenuItem;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FileDialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -29,7 +28,6 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -110,21 +108,12 @@ public class BrowserFrame extends JFrame {
     private SnmpPanel snmpPanel = null;
 
     /**
-     * The current MIB file directory.
-     */
-    private File currentDir = new File(".");
-
-    /**
      * Creates a new Mibble browser frame.
      *
      * @param browser        the browser application
      */
     public BrowserFrame(MibbleBrowser browser) {
         this.browser = browser;
-        String dir = System.getProperty("user.dir");
-        if (dir != null) {
-            currentDir = new File(dir);
-        }
         initialize();
     }
 
@@ -333,15 +322,11 @@ public class BrowserFrame extends JFrame {
      * Opens the load MIB dialog.
      */
     protected void loadMib() {
-        FileDialog dialog = new FileDialog(this, "Select MIB File");
-        dialog.setDirectory(currentDir.getAbsolutePath());
+        OpenDialog dialog = new OpenDialog(this, browser);
         dialog.setVisible(true);
-        String file = dialog.getFile();
-        if (file != null) {
-            File[] files = new File[] { new File(dialog.getDirectory(), file) };
-            currentDir = files[0].getParentFile();
+        if (dialog.mibs != null) {
             descriptionArea.setText("");
-            new Loader(files).start();
+            new Loader(dialog.mibs).start();
         }
     }
 
@@ -521,30 +506,30 @@ public class BrowserFrame extends JFrame {
 
     /**
      * A background MIB loader. This class is needed in order to
-     * implement the runnable interface to be able to load MIB files
-     * in a background thread.
+     * implement the runnable interface to be able to load MIB
+     * modules in a background thread.
      */
     private class Loader implements Runnable {
 
         /**
-         * The MIB files to load.
+         * The MIB modules or files to load.
          */
-        private File[] files;
+        private String[] mibs;
 
         /**
          * Creates a new background MIB loader.
          *
-         * @param files          the MIB files to load
+         * @param mibs           the MIB modules or files to load
          */
-        public Loader(File[] files) {
-            this.files = files;
+        public Loader(String[] mibs) {
+            this.mibs = mibs;
         }
 
         /**
          * Starts the background loading thread.
          */
         public void start() {
-            if (files.length > 0) {
+            if (mibs.length > 0) {
                 new Thread(this).start();
             }
         }
@@ -555,8 +540,8 @@ public class BrowserFrame extends JFrame {
          */
         public void run() {
             setBlocked(true);
-            for (int i = 0; i < files.length; i++) {
-                loadMib(files[i].toString());
+            for (int i = 0; i < mibs.length; i++) {
+                loadMib(mibs[i]);
             }
             refreshTree();
             setBlocked(false);
