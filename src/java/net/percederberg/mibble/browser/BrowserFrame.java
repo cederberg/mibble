@@ -324,18 +324,18 @@ public class BrowserFrame extends JFrame {
     protected void loadMib() {
         OpenDialog dialog = new OpenDialog(this, browser);
         dialog.setVisible(true);
-        if (dialog.mibs != null) {
-            descriptionArea.setText("");
-            new Loader(dialog.mibs).start();
-        }
+        loadMibsAsync(dialog.mibs);
     }
 
     /**
      * Loads a MIB file from a specified source.
      *
      * @param src            the MIB file or URL
+     *
+     * @return true if the MIB loaded successfully, or
+     *         false otherwise
      */
-    public void loadMib(String src) {
+    protected boolean loadMib(String src) {
         String message = null;
         setStatus("Loading " + src + "...");
         try {
@@ -357,6 +357,19 @@ public class BrowserFrame extends JFrame {
                                           JOptionPane.ERROR_MESSAGE);
         }
         setStatus(null);
+        return message == null;
+    }
+
+    /**
+     * Loads one or more MIB modules or files in the background.
+     *
+     * @param srcs           the MIB modules, files or URLs
+     */
+    public void loadMibsAsync(String[] srcs) {
+        if (srcs != null && srcs.length > 0) {
+            descriptionArea.setText("");
+            new Loader(srcs).start();
+        }
     }
 
     /**

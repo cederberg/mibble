@@ -114,24 +114,22 @@ public class MibbleBrowser {
         frame.setVisible(true);
 
         // Load command-line & preference MIBs
-        frame.setBlocked(true);
         ArrayList<String> list = getFilePrefs();
         removeFilePrefs();
         for (int i = 0; i < args.length; i++) {
             list.add(args[i]);
         }
-        for (int i = 0; i < list.size(); i++) {
-            frame.loadMib(list.get(i).toString());
+        if (list.size() > 0) {
+            frame.loadMibsAsync(list.toArray(new String[list.size()]));
+        } else {
+            frame.loadMibsAsync(new String[] {
+                "RFC1155-SMI",
+                "RFC1213-MIB",
+                "SNMPv2-SMI",
+                "SNMPv2-TC",
+                "HOST-RESOURCES-MIB"
+            });
         }
-        if (list.size() <= 0) {
-            frame.loadMib("RFC1155-SMI");
-            frame.loadMib("RFC1213-MIB");
-            frame.loadMib("SNMPv2-SMI");
-            frame.loadMib("SNMPv2-TC");
-            frame.loadMib("HOST-RESOURCES-MIB");
-        }
-        frame.refreshTree();
-        frame.setBlocked(false);
     }
 
     /**
