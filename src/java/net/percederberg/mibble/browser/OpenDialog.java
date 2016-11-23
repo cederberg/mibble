@@ -19,6 +19,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -38,6 +39,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import net.percederberg.mibble.MibDirectory;
 import net.percederberg.mibble.MibLoader;
 import net.percederberg.mibble.MibbleBrowser;
 
@@ -46,7 +48,7 @@ import net.percederberg.mibble.MibbleBrowser;
  *
  * @author   Per Cederberg
  * @version  2.10
- * @since    2.3
+ * @since    2.10
  */
 public class OpenDialog extends JDialog {
 
@@ -209,6 +211,16 @@ public class OpenDialog extends JDialog {
                 root.add(node);
             }
         }
+        MibDirectory mibDir = new MibDirectory(new File(lastDir));
+        ArrayList<File> files = new ArrayList<File>(mibDir.getContentMap().values());
+        if (files.size() > 0) {
+            Collections.sort(files);
+            DefaultMutableTreeNode node = new DefaultMutableTreeNode(lastDir);
+            for (int i = 0; i < files.size(); i++) {
+                node.add(new FileTreeNode(files.get(i)));
+            }
+            root.add(node);
+        }
         ((DefaultTreeModel) tree.getModel()).reload();
     }
 
@@ -248,7 +260,12 @@ public class OpenDialog extends JDialog {
                     newParent.add(newChild);
                 }
             } else if (child.toString().toUpperCase().contains(text)) {
-                newParent.add(new DefaultMutableTreeNode(child.toString()));
+                if (child instanceof DefaultMutableTreeNode) {
+                    Object obj = ((DefaultMutableTreeNode) child).clone();
+                    newParent.add((DefaultMutableTreeNode) obj);
+                } else {
+                    newParent.add(new DefaultMutableTreeNode(child.toString()));
+                }
             }
         }
         return newParent;
@@ -297,7 +314,7 @@ public class OpenDialog extends JDialog {
             DefaultMutableTreeNode node =
                 (DefaultMutableTreeNode) paths[i].getLastPathComponent();
             if (node.isLeaf()) {
-                res.add(node.toString());
+                res.add(node.getUserObject().toString());
             }
         }
         if (!res.isEmpty()) {
@@ -320,5 +337,48 @@ public class OpenDialog extends JDialog {
             mibs = new String[] { file.getAbsolutePath() };
         }
         this.dispose();
+    }
+
+
+    /**
+     * A simple file tree node that only prints the file name.
+     */
+    private class FileTreeNode extends DefaultMutableTreeNode {
+
+        /**
+         * Creates a new file tree node.
+         *
+         * @param file       the file to show
+         */
+        public FileTreeNode(File file) {
+            super(file);
+        }
+
+        /**
+         * Clones this object.
+         *
+         * @return a clone of this object
+         */
+        public Object clone() {
+            return new FileTreeNode(getFile());
+        }
+
+        /**
+         * Returns the file name (no path).
+         *
+         * @return the file name
+         */
+        public String toString() {
+            return getFile().getName();
+        }
+
+        /**
+         * Returns the file.
+         *
+         * @return the file
+         */
+        public File getFile() {
+            return (File) getUserObject();
+        }
     }
 }
