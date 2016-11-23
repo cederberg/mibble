@@ -14,6 +14,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
@@ -126,6 +128,13 @@ public class OpenDialog extends JDialog {
         ((DefaultTreeModel) tree.getModel()).setRoot(root);
         tree.setRootVisible(false);
         tree.setShowsRootHandles(true);
+        tree.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() > 1) {
+                    loadMibs();
+                }
+            }
+        });
         c = new GridBagConstraints();
         c.gridy = 1;
         c.gridwidth = 4;
@@ -284,7 +293,7 @@ public class OpenDialog extends JDialog {
     protected void loadMibs() {
         ArrayList<String> res = new ArrayList<String>();
         TreePath[] paths = tree.getSelectionPaths();
-        for (int i = 0; i < paths.length; i++) {
+        for (int i = 0; paths != null && i < paths.length; i++) {
             DefaultMutableTreeNode node =
                 (DefaultMutableTreeNode) paths[i].getLastPathComponent();
             if (node.isLeaf()) {
