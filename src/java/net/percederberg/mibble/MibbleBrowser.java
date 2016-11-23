@@ -190,10 +190,9 @@ public class MibbleBrowser {
     public void loadMib(String src) throws IOException, MibLoaderException {
         Mib mib = null;
         File file = new File(src);
-        if (file.exists()) {
-            if (loader.getMib(file) != null) {
-                return;
-            }
+        if (loader.getMib(src) != null || loader.getMib(file) != null) {
+            return; // Already loaded
+        } else if (file.exists()) {
             if (!loader.hasDir(file.getParentFile())) {
                 loader.removeAllDirs();
                 loader.addDir(file.getParentFile());
