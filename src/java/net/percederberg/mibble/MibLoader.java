@@ -65,7 +65,7 @@ public class MibLoader {
      * cache. If a MIB isn't found among these directories, the
      * resource directories will be attempted.
      */
-    private ArrayList<MibDirectoryCache> dirCaches = new ArrayList<MibDirectoryCache>();
+    private ArrayList<MibDirectory> dirCaches = new ArrayList<MibDirectory>();
 
     /**
      * The MIB file resource directories. This is a list of Java class
@@ -125,7 +125,7 @@ public class MibLoader {
             dir = dir.getParentFile();
         }
         for (int i = 0; i < dirCaches.size(); i++) {
-            MibDirectoryCache cache = dirCaches.get(i);
+            MibDirectory cache = dirCaches.get(i);
             if (cache.getDir().equals(dir)) {
                 return true;
             }
@@ -145,7 +145,7 @@ public class MibLoader {
     public File[] getDirs() {
         File[] res = new File[dirCaches.size()];
         for (int i = 0; i < dirCaches.size(); i++) {
-            MibDirectoryCache cache = dirCaches.get(i);
+            MibDirectory cache = dirCaches.get(i);
             res[i] = cache.getDir();
         }
         return res;
@@ -162,7 +162,7 @@ public class MibLoader {
             dir = new File(".");
         }
         if (!hasDir(dir) && dir.isDirectory()) {
-            dirCaches.add(new MibDirectoryCache(dir));
+            dirCaches.add(new MibDirectory(dir));
         }
     }
 
@@ -204,7 +204,7 @@ public class MibLoader {
      */
     public void removeDir(File dir) {
         for (int i = 0; i < dirCaches.size(); i++) {
-            MibDirectoryCache cache = dirCaches.get(i);
+            MibDirectory cache = dirCaches.get(i);
             if (cache.getDir().equals(dir)) {
                 dirCaches.remove(i--);
             }
@@ -806,7 +806,7 @@ public class MibLoader {
      */
     private MibSource locate(String name) {
         for (int i = 0; i < dirCaches.size(); i++) {
-            MibDirectoryCache cache = dirCaches.get(i);
+            MibDirectory cache = dirCaches.get(i);
             File file = cache.findByName(name);
             if (file != null) {
                 return new MibSource(file);
@@ -820,7 +820,7 @@ public class MibLoader {
             }
         }
         for (int i = 0; i < dirCaches.size(); i++) {
-            MibDirectoryCache cache = dirCaches.get(i);
+            MibDirectory cache = dirCaches.get(i);
             File file = cache.findByContent(name);
             if (file != null) {
                 return new MibSource(file);
