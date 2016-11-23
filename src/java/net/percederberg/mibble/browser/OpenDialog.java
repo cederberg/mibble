@@ -146,7 +146,7 @@ public class OpenDialog extends JDialog {
         getContentPane().add(new JScrollPane(tree), c);
 
         // Add open file button
-        button = new JButton("Open File...");
+        button = new JButton("Import MIB File...");
         button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 openFile();

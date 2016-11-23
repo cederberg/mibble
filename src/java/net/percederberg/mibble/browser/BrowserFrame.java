@@ -183,7 +183,7 @@ public class BrowserFrame extends JFrame {
 
         // Create file menu
         menu = new Menu("File");
-        item = new MenuItem("Load MIB...", new MenuShortcut(KeyEvent.VK_O));
+        item = new MenuItem("Load/Import MIB...", new MenuShortcut(KeyEvent.VK_O));
         item.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 loadMib();
