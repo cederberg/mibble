@@ -384,7 +384,7 @@ public class BrowserFrame extends JFrame {
             node = (MibNode) node.getParent();
         }
         browser.unloadMib(node.getName());
-        refreshTree();
+        refreshTree(false);
     }
 
     /**
@@ -392,15 +392,24 @@ public class BrowserFrame extends JFrame {
      */
     protected void unloadAllMibs() {
         browser.unloadAllMibs();
-        refreshTree();
+        refreshTree(false);
     }
 
     /**
      * Refreshes the MIB tree.
+     *
+     * @param selectAdded    the select added rows flag
      */
-    public void refreshTree() {
+    protected void refreshTree(boolean selectAdded) {
+        for (int i = mibTree.getRowCount() - 1; i >= 0; i--) {
+            mibTree.collapseRow(i);
+        }
+        int rows = mibTree.getRowCount();
         ((DefaultTreeModel) mibTree.getModel()).reload();
         mibTree.repaint();
+        if (selectAdded && mibTree.getRowCount() > rows) {
+            mibTree.setSelectionRow(rows);
+        }
     }
 
     /**
@@ -552,11 +561,12 @@ public class BrowserFrame extends JFrame {
          * the thread created through a call to start().
          */
         public void run() {
+            boolean success = true;
             setBlocked(true);
             for (int i = 0; i < mibs.length; i++) {
-                loadMib(mibs[i]);
+                success = success && loadMib(mibs[i]);
             }
-            refreshTree();
+            refreshTree(success);
             setBlocked(false);
         }
     }
