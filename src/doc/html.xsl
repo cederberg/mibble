@@ -77,7 +77,7 @@
         <xsl:value-of select="$date" />
         <xsl:text>). See the</xsl:text>
         &newline;&indent;&indent;
-        <a href="http://www.mibble.org/">Mibble web site</a>
+        <a href="https://www.mibble.org/">Mibble web site</a>
         &newline;&indent;&indent;
         <xsl:text>for more information.</xsl:text>
       </p>
@@ -168,7 +168,7 @@
       <xsl:when test="@issue != ''">
         <a>
           <xsl:attribute name="href">
-            <xsl:text>http://github.com/cederberg/mibble/issues/</xsl:text>
+            <xsl:text>https://github.com/cederberg/mibble/issues/</xsl:text>
             <xsl:value-of select="@issue" />
           </xsl:attribute>
           <xsl:text>Issue #</xsl:text>

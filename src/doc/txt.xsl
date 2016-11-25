@@ -51,7 +51,7 @@ Mibble </xsl:text>
     <xsl:value-of select="$version" />
     <xsl:text> (</xsl:text>
     <xsl:value-of select="$date" />
-    <xsl:text>). See http://www.mibble.org/ for more
+    <xsl:text>). See https://www.mibble.org/ for more
 information.
 
 Copyright (c) 2002-</xsl:text>
