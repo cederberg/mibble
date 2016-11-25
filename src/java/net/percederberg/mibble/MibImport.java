@@ -49,7 +49,7 @@ public class MibImport implements MibContext {
      * Creates a new MIB import.
      *
      * @param loader         the MIB loader to use
-     * @param location       the import location
+     * @param fileRef        the MIB file reference
      * @param name           the imported MIB name
      * @param symbols        the imported MIB symbol names, or
      *                       null for all symbols
