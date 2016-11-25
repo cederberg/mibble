@@ -382,8 +382,11 @@ public class MibLoader {
     /**
      * Returns a previously loaded MIB file. If the MIB file hasn't
      * been loaded, null will be returned. The MIB is identified by
-     * it's file name. Note that if the file contained several MIB
-     * modules, this method will only return the first one.
+     * it's file name.<p>
+     *
+     * Note that if the file contained several MIB modules, this
+     * method will only return the first one. Use getMibs(File) to
+     * retrieve all.
      *
      * @param file           the MIB file
      *
@@ -393,9 +396,7 @@ public class MibLoader {
      * @since 2.3
      */
     public Mib getMib(File file) {
-        Iterator<Mib> iter = mibs.values().iterator();
-        while (iter.hasNext()) {
-            Mib mib = iter.next();
+        for (Mib mib : mibs.values()) {
             if (mib.equals(file)) {
                 return mib;
             }
@@ -405,7 +406,8 @@ public class MibLoader {
 
     /**
      * Returns a map of all MIB names and MIB files. If no MIB files
-     * have been loaded an empty map will be returned.
+     * have been loaded, an empty map will be returned. The map is
+     * ordered by load order.
      *
      * @return a map of MIB names to MIB objects
      *
@@ -413,6 +415,51 @@ public class MibLoader {
      */
     public Map<String,Mib> getMibs() {
         return mibs;
+    }
+
+    /**
+     * Returns a map of all MIBs from a file. Normally, this is only
+     * a single MIB, but some files may contain multiple MIBs. If the
+     * file hasn't been loaded, an empty map will be returned. The
+     * map is ordered by load order.
+     *
+     * @param file           the MIB file
+     *
+     * @return a map of MIB names to MIB objects
+     *
+     * @since 2.10
+     */
+    public Map<String,Mib> getMibs(File file) {
+        LinkedHashMap<String,Mib> res = new LinkedHashMap<String,Mib>();
+        for (Mib mib : mibs.values()) {
+            if (mib.equals(file)) {
+                res.put(mib.getName(), mib);
+            }
+        }
+        return res;
+    }
+
+    /**
+     * Returns a map of all MIBs explicitly (or implicitly) loaded.
+     * If no MIB files have been loaded, an empty map will be
+     * returned. The map is ordered by load order.
+     *
+     * @param loaded         the explicitly loaded MIB flag
+     *
+     * @return a map of MIB names to MIB objects
+     *
+     * @since 2.10
+     *
+     * @see Mib#isLoaded()
+     */
+    public Map<String,Mib> getMibs(boolean loaded) {
+        LinkedHashMap<String,Mib> res = new LinkedHashMap<String,Mib>();
+        for (Mib mib : mibs.values()) {
+            if (mib.isLoaded() == loaded) {
+                res.put(mib.getName(), mib);
+            }
+        }
+        return res;
     }
 
     /**
@@ -463,9 +510,11 @@ public class MibLoader {
      * Loads a MIB file. This method will also load all imported MIB:s
      * if not previously loaded by this loader. If a MIB with the same
      * file name has already been loaded, it will be returned directly
-     * instead of reloading it. Note that if a file contains several
-     * MIB modules, this method will only return the first one
-     * (although all are loaded).
+     * instead of reloading it.<p>
+     *
+     * Note that if a file contains several MIB modules, this method
+     * will only return the first one (although all are loaded). Use
+     * getMibs(File) to retrieve all.
      *
      * @param file           the MIB file
      *
@@ -476,20 +525,24 @@ public class MibLoader {
      *             correctly
      */
     public Mib load(File file) throws IOException, MibLoaderException {
-        Mib mib = getMib(file);
-        if (mib == null) {
-            mib = load(new MibSource(file));
-        } else {
+        Map<String, Mib> found = getMibs(file);
+        for (Mib mib : found.values()) {
             mib.setLoaded(true);
         }
-        return mib;
+        if (found.size() <= 0) {
+            return load(new MibSource(file));
+        } else {
+            return found.values().iterator().next();
+        }
     }
 
     /**
      * Loads a MIB file from the specified URL. This method will also
      * load all imported MIB:s if not previously loaded by this
-     * loader. Note that if the URL data contains several MIB modules,
-     * this method will only return the first one (although all are
+     * loader.<p>
+     *
+     * Note that if the URL data contains several MIB modules, this
+     * method will only return the first one (although all are
      * loaded).
      *
      * @param url            the URL containing the MIB
@@ -509,9 +562,11 @@ public class MibLoader {
     /**
      * Loads a MIB file from the specified input reader. This method
      * will also load all imported MIB:s if not previously loaded by
-     * this loader. Note that if the input data contains several MIB
-     * modules, this method will only return the first one (although
-     * all are loaded).
+     * this loader.<p>
+     *
+     * Note that if the input data contains several MIB modules, this
+     * method will only return the first one (although all are
+     * loaded).
      *
      * @param input          the input stream containing the MIB
      *
@@ -529,9 +584,11 @@ public class MibLoader {
 
     /**
      * Loads a MIB. This method will also load all imported MIB:s if
-     * not previously loaded by this loader. Note that if the source
-     * contains several MIB modules, this method will only return the
-     * first one (although all are loaded).
+     * not previously loaded by this loader.<p>
+     *
+     * Note that if the source contains several MIB modules, this
+     * method will only return the first one (although all are
+     * loaded).
      *
      * @param src            the MIB source
      *
