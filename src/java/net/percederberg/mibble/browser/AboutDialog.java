@@ -39,8 +39,7 @@ public class AboutDialog extends JDialog {
         "Written by Watsh Rajneesh & Per Cederberg.\n" +
         "Thanks to Charles F. Schatz, and to Tex Clayton\n" +
         "at Dartware LLC, for valuable additions.\n" +
-        "This software uses the Westhawk SNMP Stack.\n" +
-        "See http://snmp.westhawk.co.uk/ for info.";
+        "This software uses the Westhawk SNMP Stack.";
 
     /**
      * The copyright text.
