@@ -60,7 +60,7 @@ public class MibbleValidator {
             printHelp("No file(s) specified");
             System.exit(1);
         }
-        ArrayList<Object> queue = new ArrayList<Object>();
+        ArrayList<Object> queue = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
             try {
                 if (args[0].contains(":")) {

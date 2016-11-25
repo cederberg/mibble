@@ -43,12 +43,12 @@ public class SnmpResponse {
     /**
      * The list of response OIDs.
      */
-    public ArrayList<String> oids = new ArrayList<String>();
+    public ArrayList<String> oids = new ArrayList<>();
 
     /**
      * The map of all value, indexed by OID.
      */
-    private HashMap<String,String> values = new HashMap<String,String>();
+    private HashMap<String,String> values = new HashMap<>();
 
     /**
      * Creates a new SNMP response container.

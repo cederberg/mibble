@@ -39,7 +39,7 @@ public class IntegerType extends MibType implements MibContext {
     /**
      * The additional defined symbols.
      */
-    private LinkedHashMap<String,MibValueSymbol> symbols = new LinkedHashMap<String,MibValueSymbol>();
+    private LinkedHashMap<String,MibValueSymbol> symbols = new LinkedHashMap<>();
 
     /**
      * Creates a new integer MIB type.

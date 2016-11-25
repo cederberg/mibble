@@ -65,7 +65,7 @@ public class MibLoader {
      * cache. If a MIB isn't found among these directories, the
      * resource directories will be attempted.
      */
-    private ArrayList<MibDirectory> dirCaches = new ArrayList<MibDirectory>();
+    private ArrayList<MibDirectory> dirCaches = new ArrayList<>();
 
     /**
      * The MIB file resource directories. This is a list of Java class
@@ -73,20 +73,20 @@ public class MibLoader {
      * directories can be used to store MIB files as resources inside
      * a JAR file.
      */
-    private ArrayList<String> resources = new ArrayList<String>();
+    private ArrayList<String> resources = new ArrayList<>();
 
     /**
      * The MIB files loaded. This maps the MIB names to the loaded
      * MIB objects (loaded with this loaded). This is used to avoid
      * loading duplicate MIB files.
      */
-    private LinkedHashMap<String,Mib> mibs = new LinkedHashMap<String,Mib>();
+    private LinkedHashMap<String,Mib> mibs = new LinkedHashMap<>();
 
     /**
      * The queue of MIB files to load. This queue contains either
      * MIB module names or MibSource objects.
      */
-    private ArrayList<Object> queue = new ArrayList<Object>();
+    private ArrayList<Object> queue = new ArrayList<>();
 
     /**
      * The default MIB context.
@@ -430,7 +430,7 @@ public class MibLoader {
      * @since 2.10
      */
     public Map<String,Mib> getMibs(File file) {
-        LinkedHashMap<String,Mib> res = new LinkedHashMap<String,Mib>();
+        LinkedHashMap<String,Mib> res = new LinkedHashMap<>();
         for (Mib mib : mibs.values()) {
             if (mib.equals(file)) {
                 res.put(mib.getName(), mib);
@@ -453,7 +453,7 @@ public class MibLoader {
      * @see Mib#isLoaded()
      */
     public Map<String,Mib> getMibs(boolean loaded) {
-        LinkedHashMap<String,Mib> res = new LinkedHashMap<String,Mib>();
+        LinkedHashMap<String,Mib> res = new LinkedHashMap<>();
         for (Mib mib : mibs.values()) {
             if (mib.isLoaded() == loaded) {
                 res.put(mib.getName(), mib);
@@ -741,7 +741,7 @@ public class MibLoader {
 
         // Parse MIB files in queue
         MibLoaderLog log = new MibLoaderLog();
-        ArrayList<Mib> processed = new ArrayList<Mib>();
+        ArrayList<Mib> processed = new ArrayList<>();
         Mib firstMib = null;
         while (queue.size() > 0) {
             try {

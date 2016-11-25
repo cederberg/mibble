@@ -149,7 +149,7 @@ public class BitSetValue extends MibValue {
      * @return the number values for all bits in this bit set
      */
     public ArrayList<NumberValue> getBits() {
-        ArrayList<NumberValue> components = new ArrayList<NumberValue>(value.size());
+        ArrayList<NumberValue> components = new ArrayList<>(value.size());
         for (int i = 0; i < value.size(); i++) {
             if (value.get(i)) {
                 components.add(new NumberValue(new Integer(i)));

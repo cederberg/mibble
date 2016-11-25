@@ -84,7 +84,7 @@ public class MibDirectory {
      */
     public Map<String,File> getNameMap() {
         if (nameCache == null) {
-            nameCache = new HashMap<String,File>();
+            nameCache = new HashMap<>();
             File[] files = dir.listFiles();
             for (int i = 0; files != null && i < files.length; i++) {
                 String name = files[i].getName();
@@ -109,7 +109,7 @@ public class MibDirectory {
      */
     public Map<String,File> getContentMap() {
         if (contentCache == null) {
-            contentCache = new HashMap<String,File>();
+            contentCache = new HashMap<>();
             File[] files = dir.listFiles();
             for (int i = 0; i < files.length; i++) {
                 String name = readMibName(files[i]);

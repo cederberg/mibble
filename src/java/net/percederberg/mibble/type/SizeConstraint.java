@@ -115,7 +115,7 @@ public class SizeConstraint implements Constraint {
         if (values instanceof CompoundConstraint) {
             return ((CompoundConstraint) values).getConstraintList();
         } else {
-            ArrayList<Constraint> list = new ArrayList<Constraint>();
+            ArrayList<Constraint> list = new ArrayList<>();
             list.add(values);
             return list;
         }

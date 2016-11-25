@@ -41,7 +41,7 @@ public class BitSetType extends MibType implements MibContext {
     /**
      * The additional defined symbols.
      */
-    private LinkedHashMap<String,MibValueSymbol> symbols = new LinkedHashMap<String,MibValueSymbol>();
+    private LinkedHashMap<String,MibValueSymbol> symbols = new LinkedHashMap<>();
 
     /**
      * Creates a new bit set MIB type.

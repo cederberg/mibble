@@ -294,7 +294,7 @@ public class MibbleBrowser {
      * @return the list of MIB files to load
      */
     private ArrayList<String> getFilePrefs() {
-        ArrayList<String> list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             String str = prefs.get("file" + i, null);
             if (str != null) {

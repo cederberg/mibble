@@ -40,7 +40,7 @@ class DefaultContext implements MibContext {
     /**
      * The map of default symbols.
      */
-    private HashMap<String,MibSymbol> symbols = new HashMap<String,MibSymbol>();
+    private HashMap<String,MibSymbol> symbols = new HashMap<>();
 
     /**
      * Creates a new default context.

@@ -137,7 +137,7 @@ public class SnmpObjectType extends SnmpType {
         this.access = access;
         this.status = status;
         this.reference = reference;
-        this.index = new ArrayList<SnmpIndex>(0);
+        this.index = new ArrayList<>(0);
         this.augments = augments;
         this.defaultValue = defaultValue;
     }

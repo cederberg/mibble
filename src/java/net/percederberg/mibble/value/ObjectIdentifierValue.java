@@ -46,7 +46,7 @@ public class ObjectIdentifierValue extends MibValue {
     /**
      * The component children.
      */
-    private ArrayList<ObjectIdentifierValue> children = new ArrayList<ObjectIdentifierValue>();
+    private ArrayList<ObjectIdentifierValue> children = new ArrayList<>();
 
     /**
      * The object identifier component name.
@@ -212,7 +212,7 @@ public class ObjectIdentifierValue extends MibValue {
         // Recursively clear all children in same MIB
         if (children != null) {
             Mib mib = getMib();
-            ArrayList<ObjectIdentifierValue> copy = new ArrayList<ObjectIdentifierValue>(children);
+            ArrayList<ObjectIdentifierValue> copy = new ArrayList<>(children);
             for (int i = 0; i < copy.size(); i++) {
                 ObjectIdentifierValue child = copy.get(i);
                 if (mib == null || mib == child.getMib()) {
@@ -227,7 +227,7 @@ public class ObjectIdentifierValue extends MibValue {
                 getParent().children.remove(this);
                 parent = null;
             }
-            children = new ArrayList<ObjectIdentifierValue>();
+            children = new ArrayList<>();
         }
 
         // Clear other value data
@@ -684,7 +684,7 @@ public class ObjectIdentifierValue extends MibValue {
             child.parent = this;
             addChild(log, fileRef, child);
         }
-        parent.children = new ArrayList<ObjectIdentifierValue>();
+        parent.children = new ArrayList<>();
     }
 
     /**

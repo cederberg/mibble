@@ -51,7 +51,7 @@ public class MibTreeBuilder {
     /**
      * The MIB node map. This is indexed by the MIB symbol.
      */
-    private HashMap<MibSymbol,MibNode> nodes = new HashMap<MibSymbol,MibNode>();
+    private HashMap<MibSymbol,MibNode> nodes = new HashMap<>();
 
     /**
      * Returns the single instance of this class.

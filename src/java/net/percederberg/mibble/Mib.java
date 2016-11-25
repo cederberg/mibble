@@ -77,24 +77,24 @@ public class Mib implements MibContext {
     /**
      * The MIB source text (split into lines).
      */
-    private ArrayList<String> text = new ArrayList<String>();
+    private ArrayList<String> text = new ArrayList<>();
 
     /**
      * The references to imported MIB files.
      */
-    private ArrayList<MibImport> imports = new ArrayList<MibImport>();
+    private ArrayList<MibImport> imports = new ArrayList<>();
 
     /**
      * The MIB symbol list. This list contains the MIB symbol objects
      * in the order they were added (i.e. present in the file).
      */
-    private ArrayList<MibSymbol> symbolList = new ArrayList<MibSymbol>();
+    private ArrayList<MibSymbol> symbolList = new ArrayList<>();
 
     /**
      * The MIB symbol name map. This maps the symbol names to their
      * respective MIB symbol objects.
      */
-    private HashMap<String,MibSymbol> symbolNameMap = new HashMap<String,MibSymbol>();
+    private HashMap<String,MibSymbol> symbolNameMap = new HashMap<>();
 
     /**
      * The MIB symbol value map. This maps the symbol values to their
@@ -102,7 +102,7 @@ public class Mib implements MibContext {
      * either a number or an object identifier value is present in
      * this map.
      */
-    private HashMap<String,MibSymbol> symbolValueMap = new HashMap<String,MibSymbol>();
+    private HashMap<String,MibSymbol> symbolValueMap = new HashMap<>();
 
     /**
      * Creates a new MIB module. This will NOT read the actual MIB
@@ -474,7 +474,7 @@ public class Mib implements MibContext {
      * @since 2.6
      */
     public List<MibImport> getAllImports() {
-        ArrayList<MibImport> res = new ArrayList<MibImport>();
+        ArrayList<MibImport> res = new ArrayList<>();
         for (int i = 0; i < imports.size(); i++) {
             MibImport imp = imports.get(i);
             if (imp.hasSymbols()) {
@@ -523,7 +523,7 @@ public class Mib implements MibContext {
      * @since 2.7
      */
     public Mib[] getImportingMibs() {
-        ArrayList<Mib> res = new ArrayList<Mib>();
+        ArrayList<Mib> res = new ArrayList<>();
         Mib[] mibs = loader.getAllMibs();
         for (int i = 0; i < mibs.length; i++) {
             if (mibs[i] != this && mibs[i].getImport(name) != null) {

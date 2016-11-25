@@ -84,7 +84,7 @@ class MibAnalyzer extends Asn1Analyzer {
     /**
      * The list of MIB modules found.
      */
-    private ArrayList<Mib> mibs = new ArrayList<Mib>();
+    private ArrayList<Mib> mibs = new ArrayList<>();
 
     /**
      * The MIB file being analyzed.
@@ -119,7 +119,7 @@ class MibAnalyzer extends Asn1Analyzer {
      *
      * @see #getContext()
      */
-    private ArrayList<MibContext> contextStack = new ArrayList<MibContext>();
+    private ArrayList<MibContext> contextStack = new ArrayList<>();
 
     /**
      * The implicit tags flag.
@@ -131,7 +131,7 @@ class MibAnalyzer extends Asn1Analyzer {
      * a comment string is processed method, the corresponding tokens
      * will be added to this set and not processed again.
      */
-    private HashSet<Token> commentTokens = new HashSet<Token>();
+    private HashSet<Token> commentTokens = new HashSet<>();
 
     /**
      * Creates a new MIB file analyzer.
@@ -151,7 +151,7 @@ class MibAnalyzer extends Asn1Analyzer {
      * all references to parsed data.
      */
     public void reset() {
-        mibs = new ArrayList<Mib>();
+        mibs = new ArrayList<>();
         currentMib = null;
         baseContext = null;
         contextStack.clear();
@@ -1583,7 +1583,7 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitBitValue(Production node) throws ParseException {
         BitSet bits = new BitSet();
-        ArrayList<ValueReference> values = new ArrayList<ValueReference>();
+        ArrayList<ValueReference> values = new ArrayList<>();
         ArrayList<NamedNumber> components = getChildValues(node);
         for (int i = 0; i < components.size(); i++) {
             NamedNumber number = components.get(i);
@@ -1783,7 +1783,7 @@ class MibAnalyzer extends Asn1Analyzer {
         String org = getStringValue(getChildAt(node, 2), 0);
         String contact = getStringValue(getChildAt(node, 3), 0);
         String desc = getStringValue(getChildAt(node, 4), 0);
-        ArrayList<SnmpRevision> revisions = new ArrayList<SnmpRevision>();
+        ArrayList<SnmpRevision> revisions = new ArrayList<>();
         for (int i = 5; i < node.getChildCount(); i++) {
             revisions.add((SnmpRevision) getValue(getChildAt(node, i), 0));
         }
@@ -1931,7 +1931,7 @@ class MibAnalyzer extends Asn1Analyzer {
         throws ParseException {
 
         currentMib.setSmiVersion(2);
-        ArrayList<MibValue> objects = new ArrayList<MibValue>();
+        ArrayList<MibValue> objects = new ArrayList<>();
         SnmpStatus status = null;
         String desc = null;
         String ref = null;
@@ -1974,7 +1974,7 @@ class MibAnalyzer extends Asn1Analyzer {
         throws ParseException {
 
         MibValue enterprise = null;
-        ArrayList<MibValue> vars = new ArrayList<MibValue>();
+        ArrayList<MibValue> vars = new ArrayList<>();
         String desc = null;
         String ref = null;
         for (int i = 0; i < node.getChildCount(); i++) {
@@ -2115,7 +2115,7 @@ class MibAnalyzer extends Asn1Analyzer {
         SnmpStatus status = null;
         String desc = null;
         String ref = null;
-        ArrayList<SnmpModule> modules = new ArrayList<SnmpModule>();
+        ArrayList<SnmpModule> modules = new ArrayList<>();
         currentMib.setSmiVersion(2);
         for (int i = 0; i < node.getChildCount(); i++) {
             Node child = node.getChildAt(i);
@@ -2159,7 +2159,7 @@ class MibAnalyzer extends Asn1Analyzer {
         SnmpStatus status = null;
         String desc = null;
         String ref = null;
-        ArrayList<SnmpModuleSupport> modules = new ArrayList<SnmpModuleSupport>();
+        ArrayList<SnmpModuleSupport> modules = new ArrayList<>();
         currentMib.setSmiVersion(2);
         for (int i = 0; i < node.getChildCount(); i++) {
             Node child = node.getChildAt(i);
@@ -2536,8 +2536,8 @@ class MibAnalyzer extends Asn1Analyzer {
         throws ParseException {
 
         String name = null;
-        ArrayList<MibValue> groups = new ArrayList<MibValue>();
-        ArrayList<SnmpCompliance> compliances = new ArrayList<SnmpCompliance>();
+        ArrayList<MibValue> groups = new ArrayList<>();
+        ArrayList<SnmpCompliance> compliances = new ArrayList<>();
         String comment = null;
         for (int i = 0; i < node.getChildCount(); i++) {
             Node child = node.getChildAt(i);
@@ -2724,7 +2724,7 @@ class MibAnalyzer extends Asn1Analyzer {
 
         String module = null;
         ArrayList<MibValue>  groups = null;
-        ArrayList<SnmpVariation> vars = new ArrayList<SnmpVariation>();
+        ArrayList<SnmpVariation> vars = new ArrayList<>();
         for (int i = 0; i < node.getChildCount(); i++) {
             Node child = node.getChildAt(i);
             switch (child.getId()) {
@@ -2786,7 +2786,7 @@ class MibAnalyzer extends Asn1Analyzer {
         MibType syntax = null;
         MibType write = null;
         SnmpAccess access = null;
-        ArrayList<MibValue> reqs = new ArrayList<MibValue>();
+        ArrayList<MibValue> reqs = new ArrayList<>();
         MibValue defVal = null;
         String desc = null;
         for (int i = 0; i < node.getChildCount(); i++) {

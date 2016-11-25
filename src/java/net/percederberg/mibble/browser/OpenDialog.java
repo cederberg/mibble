@@ -212,7 +212,7 @@ public class OpenDialog extends JDialog {
             }
         }
         MibDirectory mibDir = new MibDirectory(new File(lastDir));
-        ArrayList<File> files = new ArrayList<File>(mibDir.getContentMap().values());
+        ArrayList<File> files = new ArrayList<>(mibDir.getContentMap().values());
         if (files.size() > 0) {
             Collections.sort(files);
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(lastDir);
@@ -279,7 +279,7 @@ public class OpenDialog extends JDialog {
      * @return the list of resource files found
      */
     private ArrayList<String> findResourceFiles(String prefix) {
-        ArrayList<String> res = new ArrayList<String>();
+        ArrayList<String> res = new ArrayList<>();
         URL url = MibLoader.class.getClassLoader().getResource(prefix);
         if (url != null) {
             String file = url.toString();
@@ -308,7 +308,7 @@ public class OpenDialog extends JDialog {
      * Loads the selected MIB modules in the tree.
      */
     protected void loadMibs() {
-        ArrayList<String> res = new ArrayList<String>();
+        ArrayList<String> res = new ArrayList<>();
         TreePath[] paths = tree.getSelectionPaths();
         for (int i = 0; paths != null && i < paths.length; i++) {
             DefaultMutableTreeNode node =

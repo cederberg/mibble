@@ -104,7 +104,7 @@ public class CompoundConstraint implements Constraint {
      * @return a list of the base constraints in the compound
      */
     public ArrayList<Constraint> getConstraintList() {
-        ArrayList<Constraint> list = new ArrayList<Constraint>();
+        ArrayList<Constraint> list = new ArrayList<>();
         if (first instanceof CompoundConstraint) {
             list.addAll(((CompoundConstraint) first).getConstraintList());
         } else {

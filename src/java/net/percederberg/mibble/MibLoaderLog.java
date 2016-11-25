@@ -31,7 +31,7 @@ public class MibLoaderLog {
     /**
      * The log entries.
      */
-    private ArrayList<LogEntry> entries = new ArrayList<LogEntry>();
+    private ArrayList<LogEntry> entries = new ArrayList<>();
 
     /**
      * The log error count.
