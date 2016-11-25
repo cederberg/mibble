@@ -203,7 +203,9 @@ public class MibbleBrowser {
             mib = loader.load(src);
             addFilePref(src);
         }
-        MibTreeBuilder.getInstance().addMib(mib);
+        for (Mib module : loader.getMibs(mib.getFile()).values()) {
+            MibTreeBuilder.getInstance().addMib(module);
+        }
     }
 
     /**
