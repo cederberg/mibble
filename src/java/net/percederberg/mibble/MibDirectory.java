@@ -163,9 +163,9 @@ public class MibDirectory {
         if (!file.canRead() || !file.isFile()) {
             return null;
         }
-        BufferedReader in = null;
-        try {
-            in = new BufferedReader(new FileReader(file));
+        try (
+            BufferedReader in = new BufferedReader(new FileReader(file));
+        ) {
             while (true) {
                 String str = in.readLine();
                 if (str == null) {
@@ -182,14 +182,6 @@ public class MibDirectory {
             // Do nothing
         } catch (IOException ignore) {
             // Do nothing
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException ignore) {
-                    // Do nothing
-                }
-            }
         }
         return null;
     }

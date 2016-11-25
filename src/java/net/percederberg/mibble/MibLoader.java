@@ -821,8 +821,9 @@ public class MibLoader {
         throws IOException, MibLoaderException {
 
         MibAnalyzer analyzer = new MibAnalyzer(src.getFile(), this, log);
-        Reader input = src.getReader();
-        try {
+        try (
+            Reader input = src.getReader();
+        ) {
             if (parser == null) {
                 parser = new Asn1Parser(input, analyzer);
                 parser.getTokenizer().setUseTokenList(true);
@@ -840,11 +841,6 @@ public class MibLoader {
             log.addAll(src.getFile(), e);
             throw new MibLoaderException(log);
         } finally {
-            try {
-                input.close();
-            } catch (Throwable ignore) {
-                // Errors on close are ignored
-            }
             analyzer.reset();
         }
     }

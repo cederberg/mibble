@@ -285,8 +285,9 @@ public class OpenDialog extends JDialog {
             String file = url.toString();
             if (file.startsWith("jar:file:") && file.contains("!")) {
                 file = file.substring(9, file.indexOf('!'));
-                try {
-                    JarFile jar = new JarFile(file);
+                try (
+                    JarFile jar = new JarFile(file)
+                ) {
                     Enumeration<JarEntry> e = jar.entries();
                     while (e.hasMoreElements()) {
                         JarEntry entry = e.nextElement();
@@ -295,7 +296,6 @@ public class OpenDialog extends JDialog {
                             res.add(name.substring(prefix.length()));
                         }
                     }
-                    jar.close();
                 } catch (Exception ignore) {
                     // Do nothing
                 }

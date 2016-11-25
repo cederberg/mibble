@@ -236,9 +236,9 @@ public class MibbleValidator {
             return false;
         }
         StringBuilder buffer = new StringBuilder();
-        BufferedReader in = null;
-        try {
-            in = new BufferedReader(new FileReader(file));
+        try (
+            BufferedReader in = new BufferedReader(new FileReader(file));
+        ) {
             String str;
             int line = 0;
             while (line++ < 100 && (str = in.readLine()) != null) {
@@ -248,14 +248,6 @@ public class MibbleValidator {
             // Do nothing
         } catch (IOException ignore) {
             // Do nothing
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException ignore) {
-                    // Do nothing
-                }
-            }
         }
         return buffer.indexOf("DEFINITIONS") > 0 &&
                buffer.indexOf("::=") > 0 &&

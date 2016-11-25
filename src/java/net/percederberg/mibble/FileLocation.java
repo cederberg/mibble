@@ -102,9 +102,9 @@ public class FileLocation {
         if (file == null || line < 0) {
             return null;
         }
-        BufferedReader input = null;
-        try {
-            input = new BufferedReader(new FileReader(file));
+        try (
+            BufferedReader input = new BufferedReader(new FileReader(file));
+        ) {
             // Only count line-feed characters in files with invalid line
             // termination sequences. The default readLine() method doesn't
             // quite do the right thing in those cases... (bug #16252)
@@ -118,14 +118,6 @@ public class FileLocation {
             return input.readLine();
         } catch (IOException e) {
             return null;
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException ignore) {
-                    // Nothing to do here
-                }
-            }
         }
     }
 }
