@@ -59,7 +59,7 @@ public class SnmpPanel extends JPanel {
      * The feedback flag. When this is set, the frame tree will be
      * updated with the results of the SNMP operations.
      */
-    private boolean feedback = true;
+    protected boolean feedback = true;
 
     /**
      * The blocked flag.
@@ -995,7 +995,7 @@ public class SnmpPanel extends JPanel {
             request = new SnmpRequest(oid, type.getSyntax(), value);
         }
 
-        return new Operation(manager, request, feedback);
+        return new Operation(manager, request);
     }
 
 
@@ -1017,14 +1017,9 @@ public class SnmpPanel extends JPanel {
         private SnmpRequest request;
 
         /**
-         * The operation to perform.
+         * The action to perform.
          */
-        private String operation;
-
-        /**
-         * The result feedback flag.
-         */
-        private boolean feedback;
+        private String action;
 
         /**
          * The thread stopped flag.
@@ -1036,22 +1031,18 @@ public class SnmpPanel extends JPanel {
          *
          * @param manager        the SNMP manager to use
          * @param request        the request OID, type and value
-         * @param feedback       the feedback flag
          */
-        public Operation(SnmpManager manager,
-                         SnmpRequest request,
-                         boolean feedback) {
+        public Operation(SnmpManager manager, SnmpRequest request) {
 
             this.manager = manager;
             this.request = request;
-            this.feedback = feedback;
         }
 
         /**
          * Starts a GET operation in a background thread.
          */
         public void startGet() {
-            this.operation = "GET";
+            this.action = "GET";
             start();
         }
 
@@ -1059,7 +1050,7 @@ public class SnmpPanel extends JPanel {
          * Starts a GET NEXT operation in a background thread.
          */
         public void startGetNext() {
-            this.operation = "GET NEXT";
+            this.action = "GET NEXT";
             start();
         }
 
@@ -1067,7 +1058,7 @@ public class SnmpPanel extends JPanel {
          * Starts a GET ALL operation in a background thread.
          */
         public void startGetAll() {
-            this.operation = "GET ALL";
+            this.action = "GET ALL";
             start();
         }
 
@@ -1075,7 +1066,7 @@ public class SnmpPanel extends JPanel {
          * Starts a SET operation in a background thread.
          */
         public void startSet() {
-            this.operation = "SET";
+            this.action = "SET";
             start();
         }
 
@@ -1098,24 +1089,24 @@ public class SnmpPanel extends JPanel {
          * the thread created through a call to start().
          */
         public void run() {
-            String msg = "Performing " + operation + " on " +
+            String msg = "Performing " + action + " on " +
                          request.getOid() + "...";
             setOperationStatus(msg);
             try {
-                if (operation.equals("GET ALL")) {
+                if (action.equals("GET ALL")) {
                     runGetAll();
                 } else {
-                    appendResults(operation + ": ");
+                    appendResults(action + ": ");
                     SnmpResponse response = null;
-                    if (operation.equals("GET")) {
+                    if (action.equals("GET")) {
                         response = manager.get(request.getOid());
-                    } else if (operation.equals("GET NEXT")) {
+                    } else if (action.equals("GET NEXT")) {
                         response = manager.getNext(request.getOid());
-                    } else if (operation.equals("SET")) {
+                    } else if (action.equals("SET")) {
                         response = manager.set(request);
                     } else {
                         throw new SnmpException("Unknown operation: " +
-                                                operation);
+                                                action);
                     }
                     appendResults(response.getOidsAndValues());
                     if (feedback) {
