@@ -61,14 +61,14 @@ public class MibbleValidator {
             System.exit(1);
         }
         ArrayList<Object> queue = new ArrayList<>();
-        for (int i = 0; i < args.length; i++) {
+        for (String arg : args) {
             try {
-                if (args[0].contains(":")) {
-                    queue.add(new URL(args[0]));
+                if (arg.contains(":")) {
+                    queue.add(new URL(arg));
                 } else {
-                    File file = new File(args[i]);
+                    File file = new File(arg);
                     if (!file.exists()) {
-                        System.out.println("Warning: Skipping " + args[i] +
+                        System.out.println("Warning: Skipping " + arg +
                                            ": file not found");
                     } else if (file.isDirectory()) {
                         addMibs(file, queue);
@@ -77,7 +77,7 @@ public class MibbleValidator {
                     }
                 }
             } catch (MalformedURLException e) {
-                System.out.println("Warning: Skipping " + args[i] +
+                System.out.println("Warning: Skipping " + arg +
                                    ": " + e.getMessage());
             }
         }
@@ -210,13 +210,15 @@ public class MibbleValidator {
      */
     private static void addMibs(File dir, ArrayList<Object> queue) {
         File[] files = dir.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].isHidden()) {
-                // Hidden file or directories are ignored
-            } else if (files[i].isDirectory()) {
-                addMibs(files[i], queue);
-            } else if (isMib(files[i])) {
-                queue.add(files[i]);
+        if (files != null) {
+            for (File file : files) {
+                if (file.isHidden()) {
+                    // Hidden file or directories are ignored
+                } else if (file.isDirectory()) {
+                    addMibs(file, queue);
+                } else if (isMib(file)) {
+                    queue.add(file);
+                }
             }
         }
     }

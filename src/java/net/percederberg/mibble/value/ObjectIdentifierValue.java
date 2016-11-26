@@ -212,9 +212,7 @@ public class ObjectIdentifierValue extends MibValue {
         // Recursively clear all children in same MIB
         if (children != null) {
             Mib mib = getMib();
-            ArrayList<ObjectIdentifierValue> copy = new ArrayList<>(children);
-            for (int i = 0; i < copy.size(); i++) {
-                ObjectIdentifierValue child = copy.get(i);
+            for (ObjectIdentifierValue child : new ArrayList<>(children)) {
                 if (mib == null || mib == child.getMib()) {
                     child.clear();
                 }
@@ -443,8 +441,7 @@ public class ObjectIdentifierValue extends MibValue {
      * @since 2.5
      */
     public ObjectIdentifierValue getChildByName(String name) {
-        for (int i = 0; i < children.size(); i++) {
-            ObjectIdentifierValue child = children.get(i);
+        for (ObjectIdentifierValue child : children) {
             if (name.equals(child.getName())) {
                 return child;
             }
@@ -679,8 +676,7 @@ public class ObjectIdentifierValue extends MibValue {
                                    "INTERNAL ERROR: OID merge with " +
                                    "symbol reference already set");
         }
-        for (int i = 0; i < parent.children.size(); i++) {
-            ObjectIdentifierValue child = parent.children.get(i);
+        for (ObjectIdentifierValue child : parent.children) {
             child.parent = this;
             addChild(log, fileRef, child);
         }

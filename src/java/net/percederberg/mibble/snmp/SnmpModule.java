@@ -74,14 +74,12 @@ public class SnmpModule {
      * @throws MibException if an error was encountered during the
      *             initialization
      */
-    void initialize(MibLoaderLog log)
-        throws MibException {
-
+    void initialize(MibLoaderLog log) throws MibException {
         for (int i = 0; i < groups.size(); i++) {
             groups.set(i, groups.get(i).initialize(log, null));
         }
-        for (int i = 0; i < compliances.size(); i++) {
-            compliances.get(i).initialize(log);
+        for (SnmpCompliance comp : compliances) {
+            comp.initialize(log);
         }
     }
 
@@ -158,9 +156,9 @@ public class SnmpModule {
             buffer.append("\n    Mandatory Groups: ");
             buffer.append(groups);
         }
-        for (int i = 0; i < compliances.size(); i++) {
+        for (SnmpCompliance comp : compliances) {
             buffer.append("\n    Module: ");
-            buffer.append(compliances.get(i));
+            buffer.append(comp);
         }
         return buffer.toString();
     }

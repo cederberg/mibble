@@ -151,13 +151,12 @@ public class MibblePrinter {
      * @param printMode      the print mode to use
      */
     private static void printMibs(MibLoader loader, int printMode) {
-        Mib[] mibs = loader.getAllMibs();
-        for (int i = 0; i < mibs.length; i++) {
-            if (mibs[i].isLoaded()) {
+        for (Mib mib : loader.getAllMibs()) {
+            if (mib.isLoaded()) {
                 if (printMode == MIB_PRINT_MODE) {
-                    printMib(mibs[i]);
+                    printMib(mib);
                 } else {
-                    printDebug(mibs[i]);
+                    printDebug(mib);
                 }
             }
         }

@@ -171,8 +171,8 @@ public class MibLoader {
      * @param dirs           the directories to add
      */
     public void addDirs(File[] dirs) {
-        for (int i = 0; i < dirs.length; i++) {
-            addDir(dirs[i]);
+        for (File file : dirs) {
+            addDir(file);
         }
     }
 
@@ -188,10 +188,9 @@ public class MibLoader {
             dir = new File(".");
         }
         addDir(dir);
-        File[] files = dir.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].isDirectory()) {
-                addAllDirs(files[i]);
+        for (File file : dir.listFiles()) {
+            if (file.isDirectory()) {
+                addAllDirs(file);
             }
         }
     }
@@ -755,8 +754,7 @@ public class MibLoader {
                 }
                 if (src != null && getMib(src.getFile()) == null) {
                     List<Mib> list = parseMib(src, log);
-                    for (int i = 0; i < list.size(); i++) {
-                        Mib mib = list.get(i);
+                    for (Mib mib : list) {
                         mib.setLoaded(loaded);
                         mibs.put(mib.getName(), mib);
                         if (firstMib == null) {
@@ -791,8 +789,7 @@ public class MibLoader {
 
         // Handle errors
         if (log.errorCount() > 0) {
-            for (int i = 0; i < processed.size(); i++) {
-                Mib mib = processed.get(i);
+            for (Mib mib : processed) {
                 mibs.remove(mib.getName());
                 mib.clear();
             }
@@ -863,9 +860,9 @@ public class MibLoader {
                 return new MibSource(file);
             }
         }
-        for (int i = 0; i < resources.size(); i++) {
-            ClassLoader loader = getClass().getClassLoader();
-            URL url = loader.getResource(resources.get(i) + "/" + name);
+        ClassLoader loader = getClass().getClassLoader();
+        for (String path : resources) {
+            URL url = loader.getResource(path + "/" + name);
             if (url != null) {
                 return new MibSource(name, url);
             }

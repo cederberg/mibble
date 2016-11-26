@@ -100,8 +100,8 @@ public class SnmpModuleIdentity extends SnmpType {
                                    "only values can have the " +
                                    getName() + " type");
         }
-        for (int i = 0; i < revisions.size(); i++) {
-            revisions.get(i).initialize(log);
+        for (SnmpRevision rev : revisions) {
+            rev.initialize(log);
         }
         return this;
     }
@@ -195,9 +195,9 @@ public class SnmpModuleIdentity extends SnmpType {
         buffer.append(contactInfo);
         buffer.append("\n  Description: ");
         buffer.append(getDescription("               "));
-        for (int i = 0; i < revisions.size(); i++) {
+        for (SnmpRevision rev : revisions) {
             buffer.append("\n  Revision: ");
-            buffer.append(revisions.get(i));
+            buffer.append(rev);
         }
         buffer.append("\n)");
         return buffer.toString();

@@ -129,8 +129,8 @@ public class MibLoaderLog {
      * @param log            the MIB loader log
      */
     public void addAll(MibLoaderLog log) {
-        for (int i = 0; i < log.entries.size(); i++) {
-            add(log.entries.get(i));
+        for (LogEntry entry : log.entries) {
+            add(entry);
         }
     }
 
@@ -190,8 +190,7 @@ public class MibLoaderLog {
      */
     public void printTo(PrintWriter output, int margin) {
         StringBuilder buffer = new StringBuilder();
-        for (int i = 0; i < entries.size(); i++) {
-            LogEntry entry = entries.get(i);
+        for (LogEntry entry : entries) {
             buffer.setLength(0);
             switch (entry.getType()) {
             case LogEntry.ERROR:

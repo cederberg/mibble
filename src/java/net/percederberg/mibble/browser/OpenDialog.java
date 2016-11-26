@@ -200,13 +200,12 @@ public class OpenDialog extends JDialog {
      * @param browser        the MIB browser app
      */
     private void buildTree(MibbleBrowser browser) {
-        String[] dirs = browser.loader.getResourceDirs();
-        for (int i = 0; i < dirs.length; i++) {
-            ArrayList<String> mibs = findResourceFiles(dirs[i] + "/");
+        for (String dir : browser.loader.getResourceDirs()) {
+            ArrayList<String> mibs = findResourceFiles(dir + "/");
             if (mibs != null && mibs.size() > 0) {
-                DefaultMutableTreeNode node = new DefaultMutableTreeNode(dirs[i]);
-                for (int j = 0; j < mibs.size(); j++) {
-                    node.add(new DefaultMutableTreeNode(mibs.get(j)));
+                DefaultMutableTreeNode node = new DefaultMutableTreeNode(dir);
+                for (String mibName : mibs) {
+                    node.add(new DefaultMutableTreeNode(mibName));
                 }
                 root.add(node);
             }
@@ -216,8 +215,8 @@ public class OpenDialog extends JDialog {
         if (files.size() > 0) {
             Collections.sort(files);
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(lastDir);
-            for (int i = 0; i < files.size(); i++) {
-                node.add(new FileTreeNode(files.get(i)));
+            for (File file : files) {
+                node.add(new FileTreeNode(file));
             }
             root.add(node);
         }

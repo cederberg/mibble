@@ -86,9 +86,9 @@ public class MibbleBrowser {
     public void start(String[] args) {
 
         // Check command-line arguments
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].startsWith("-")) {
-                printHelp("No option '" + args[i] + "' exist");
+        for (String arg : args) {
+            if (arg.startsWith("-")) {
+                printHelp("No option '" + arg + "' exist");
                 System.exit(1);
             }
         }
@@ -116,8 +116,8 @@ public class MibbleBrowser {
         // Load command-line & preference MIBs
         ArrayList<String> list = getFilePrefs();
         removeFilePrefs();
-        for (int i = 0; i < args.length; i++) {
-            list.add(args[i]);
+        for (String arg : args) {
+            list.add(arg);
         }
         if (list.size() > 0) {
             frame.loadMibsAsync(list.toArray(new String[list.size()]));
@@ -284,7 +284,7 @@ public class MibbleBrowser {
         removeFilePrefs();
         list.remove(file);
         for (int i = 0; i < list.size(); i++) {
-            prefs.put("file" + i, list.get(i).toString());
+            prefs.put("file" + i, list.get(i));
         }
     }
 

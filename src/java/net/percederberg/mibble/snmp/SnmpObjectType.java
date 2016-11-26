@@ -172,8 +172,8 @@ public class SnmpObjectType extends SnmpType {
         }
         syntax = syntax.initialize(symbol, log);
         checkType((MibValueSymbol) symbol, log, syntax);
-        for (int i = 0; i < index.size(); i++) {
-            index.get(i).initialize(symbol, log);
+        for (SnmpIndex idx : index) {
+            idx.initialize(symbol, log);
         }
         if (augments != null) {
             augments = augments.initialize(log, syntax);
@@ -207,9 +207,9 @@ public class SnmpObjectType extends SnmpType {
             SequenceOfType sequence = (SequenceOfType) type;
             checkType(symbol, log, sequence.getElementType());
         } else if (type instanceof SequenceType) {
-            ElementType[] elems = ((SequenceType) type).getAllElements();
-            for (int i = 0; i < elems.length; i++) {
-                checkElement(symbol, log, elems[i], i + 1);
+            int i = 1;
+            for (ElementType elem : ((SequenceType) type).getAllElements()) {
+                checkElement(symbol, log, elem, i++);
             }
         }
     }

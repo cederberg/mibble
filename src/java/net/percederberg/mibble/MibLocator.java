@@ -86,11 +86,13 @@ public class MibLocator {
         if (nameCache == null) {
             nameCache = new HashMap<>();
             File[] files = dir.listFiles();
-            for (int i = 0; files != null && i < files.length; i++) {
-                String name = files[i].getName();
-                Matcher m = NAME.matcher(name);
-                if (m.lookingAt() && files[i].isFile()) {
-                    nameCache.put(m.group().toUpperCase(), files[i]);
+            if (files != null) {
+                for (File file : files) {
+                    String name = file.getName();
+                    Matcher m = NAME.matcher(name);
+                    if (m.lookingAt() && file.isFile()) {
+                        nameCache.put(m.group().toUpperCase(), file);
+                    }
                 }
             }
         }
@@ -111,10 +113,12 @@ public class MibLocator {
         if (contentCache == null) {
             contentCache = new HashMap<>();
             File[] files = dir.listFiles();
-            for (int i = 0; i < files.length; i++) {
-                String name = readMibName(files[i]);
-                if (name != null) {
-                    contentCache.put(name, files[i]);
+            if (files != null) {
+                for (File file : files) {
+                    String name = readMibName(file);
+                    if (name != null) {
+                        contentCache.put(name, file);
+                    }
                 }
             }
         }

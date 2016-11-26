@@ -135,9 +135,7 @@ public class SizeConstraint implements Constraint {
      */
     public int nextValue(int start) {
         // TODO: the constraint list should be sorted
-        ArrayList<Constraint> list = getValues();
-        for (int i = 0; i < list.size(); i++) {
-            Constraint c = list.get(i);
+        for (Constraint c : getValues()) {
             Object obj = null;
             if (c instanceof ValueConstraint) {
                 obj = ((ValueConstraint) c).getValue().toObject();

@@ -81,10 +81,10 @@ public class MibImport implements MibContext {
             throw new MibException(fileRef, msg);
         }
         if (symbols != null) {
-            for (int i = 0; i < symbols.size(); i++) {
-                if (mib.getSymbol(symbols.get(i).toString()) == null) {
-                    String msg = "couldn't find imported symbol '" +
-                                 symbols.get(i) + "' in MIB '" + name + "'";
+            for (String sym : symbols) {
+                if (mib.getSymbol(sym) == null) {
+                    String msg = "couldn't find imported symbol '" + sym +
+                                 "' in MIB '" + name + "'";
                     throw new MibException(fileRef, msg);
                 }
             }

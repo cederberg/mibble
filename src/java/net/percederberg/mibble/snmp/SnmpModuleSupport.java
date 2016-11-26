@@ -73,9 +73,9 @@ public class SnmpModuleSupport {
         for (int i = 0; i < groups.size(); i++) {
             groups.set(i, groups.get(i).initialize(log, null));
         }
-        for (int i = 0; i < variations.size(); i++) {
+        for (SnmpVariation var : variations) {
             try {
-                variations.get(i).initialize(log);
+                var.initialize(log);
             } catch (MibException e) {
                 log.addError(e);
             }
@@ -128,9 +128,9 @@ public class SnmpModuleSupport {
         }
         buffer.append("\n    Includes: ");
         buffer.append(groups);
-        for (int i = 0; i < variations.size(); i++) {
+        for (SnmpVariation var : variations) {
             buffer.append("\n    Variation: ");
-            buffer.append(variations.get(i));
+            buffer.append(var);
         }
         return buffer.toString();
     }

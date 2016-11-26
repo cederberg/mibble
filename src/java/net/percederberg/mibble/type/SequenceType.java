@@ -76,8 +76,8 @@ public class SequenceType extends MibType {
     public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
-        for (int i = 0; i < elements.size(); i++) {
-            elements.get(i).initialize(symbol, log);
+        for (ElementType elem : elements) {
+            elem.initialize(symbol, log);
         }
         return this;
     }

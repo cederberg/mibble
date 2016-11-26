@@ -383,8 +383,7 @@ class MibAnalyzer extends Asn1Analyzer {
     protected Node exitImportList(Production node) {
         ArrayList<MibImport> imports = getChildValues(node);
         boolean addMissingSmi = true;
-        for (int i = 0; i < imports.size(); i++) {
-            MibImport imp = imports.get(i);
+        for (MibImport imp : imports) {
             if (imp.getName().startsWith("RFC1065-SMI") ||
                 imp.getName().startsWith("RFC1155-SMI") ||
                 imp.getName().startsWith("SNMPv2-SMI")) {
@@ -1164,8 +1163,7 @@ class MibAnalyzer extends Asn1Analyzer {
             MibValue upper = null;
             Boolean strictLower = null;
             Boolean strictUpper = null;
-            for (int i = 0; i < list.size(); i++) {
-                Object obj = list.get(i);
+            for (Object obj : list) {
                 if (obj instanceof Boolean && strictLower == null) {
                     strictLower = (Boolean) obj;
                 } else if (obj instanceof Boolean) {
@@ -1585,8 +1583,7 @@ class MibAnalyzer extends Asn1Analyzer {
         BitSet bits = new BitSet();
         ArrayList<ValueReference> values = new ArrayList<>();
         ArrayList<NamedNumber> components = getChildValues(node);
-        for (int i = 0; i < components.size(); i++) {
-            NamedNumber number = components.get(i);
+        for (NamedNumber number : components) {
             if (number.hasNumber()) {
                 bits.set(number.getNumber().intValue());
             } else {
@@ -1622,8 +1619,7 @@ class MibAnalyzer extends Asn1Analyzer {
         // Analyze components
         MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
         MibValue parent = null;
-        for (int i = 0; i < components.size(); i++) {
-            NamedNumber number = components.get(i);
+        for (NamedNumber number : components) {
             if (number.hasNumber()) {
                 int value = number.getNumber().intValue();
                 if (parent == null && value == 0) {

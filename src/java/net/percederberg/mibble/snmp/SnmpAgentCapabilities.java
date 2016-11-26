@@ -100,8 +100,8 @@ public class SnmpAgentCapabilities extends SnmpType {
                                    "only values can have the " +
                                    getName() + " type");
         }
-        for (int i = 0; i < modules.size(); i++) {
-            modules.get(i).initialize(log);
+        for (SnmpModuleSupport module : modules) {
+            module.initialize(log);
         }
         return this;
     }
@@ -179,9 +179,9 @@ public class SnmpAgentCapabilities extends SnmpType {
             buffer.append("\n  Reference: ");
             buffer.append(reference);
         }
-        for (int i = 0; i < modules.size(); i++) {
+        for (SnmpModuleSupport module : modules) {
             buffer.append("\n  Supports Module: ");
-            buffer.append(modules.get(i));
+            buffer.append(module);
         }
         buffer.append("\n)");
         return buffer.toString();

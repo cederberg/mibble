@@ -74,8 +74,8 @@ public class ChoiceType extends MibType {
     public MibType initialize(MibSymbol symbol, MibLoaderLog log)
         throws MibException {
 
-        for (int i = 0; i < elements.size(); i++) {
-            elements.get(i).initialize(symbol, log);
+        for (ElementType elem : elements) {
+            elem.initialize(symbol, log);
         }
         return this;
     }
@@ -110,8 +110,8 @@ public class ChoiceType extends MibType {
      *         false otherwise
      */
     public boolean isCompatible(MibValue value) {
-        for (int i = 0; i < elements.size(); i++) {
-            if (elements.get(i).isCompatible(value)) {
+        for (ElementType elem : elements) {
+            if (elem.isCompatible(value)) {
                 return true;
             }
         }

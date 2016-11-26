@@ -318,8 +318,7 @@ public class MibWriter {
         os.println();
         printDescription(type.getDescription());
         ArrayList<SnmpRevision> list = type.getRevisions();
-        for (int i = 0; i < list.size(); i++) {
-            SnmpRevision rev = list.get(i);
+        for (SnmpRevision rev : list) {
             os.println();
             if (rev.getComment() != null) {
                 os.println();
@@ -547,8 +546,7 @@ public class MibWriter {
             os.print("    REFERENCE       ");
             os.print(getQuote(type.getReference()));
         }
-        for (int i = 0; i < type.getModules().size(); i++) {
-            SnmpModule module = type.getModules().get(i);
+        for (SnmpModule module : type.getModules()) {
             os.println();
             printComment(module.getComment(), "    ", true);
             os.print("    MODULE          ");
@@ -563,11 +561,10 @@ public class MibWriter {
                 printReferenceList(module.getGroups(),
                                    "                    ");
             }
-            ArrayList<SnmpCompliance> list = module.getCompliances();
-            for (int j = 0; j < list.size(); j++) {
+            for (SnmpCompliance comp : module.getCompliances()) {
                 os.println();
                 os.println();
-                printModuleCompliance(list.get(j), smiVersion);
+                printModuleCompliance(comp, smiVersion);
             }
         }
     }
@@ -594,19 +591,17 @@ public class MibWriter {
             os.print("    REFERENCE       ");
             os.print(getQuote(type.getReference()));
         }
-        for (int i = 0; i < type.getModules().size(); i++) {
-            SnmpModuleSupport module = type.getModules().get(i);
+        for (SnmpModuleSupport module : type.getModules()) {
             os.println();
             os.print("    SUPPORTS        ");
             os.println(module.getModule());
             os.print("    INCLUDES        ");
             printReferenceList(module.getGroups(),
                                "                    ");
-            ArrayList<SnmpVariation> list = module.getVariations();
-            for (int j = 0; j < list.size(); j++) {
+            for (SnmpVariation var : module.getVariations()) {
                 os.println();
                 os.println();
-                printVariation(list.get(j), smiVersion);
+                printVariation(var, smiVersion);
             }
         }
     }
@@ -719,9 +714,9 @@ public class MibWriter {
                                    int smiVersion) {
 
         int column = 20;
-        for (int i = 0; i < elems.length; i++) {
-            if (elems[i].getName().length() + 2 > column) {
-                column = elems[i].getName().length() + 2;
+        for (ElementType elem : elems) {
+            if (elem.getName().length() + 2 > column) {
+                column = elem.getName().length() + 2;
             }
         }
         String typeIndent = indent;
@@ -848,9 +843,9 @@ public class MibWriter {
         if (obj instanceof BitSetValue) {
             obj = ((BitSetValue) obj).toAsn1String(values);
         } else if (values != null) {
-            for (int i = 0; i < values.length; i++) {
-                if (values[i].getValue().equals(obj)) {
-                    printReference(values[i].getName());
+            for (MibValueSymbol val : values) {
+                if (val.getValue().equals(obj)) {
+                    printReference(val.getName());
                     return;
                 }
             }

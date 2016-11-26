@@ -226,8 +226,8 @@ public class SnmpManager {
         BlockPdu  pdu = new BlockPdu(context);
 
         pdu.setPduType(BlockPdu.GET);
-        for (int i = 0; i < oids.length; i++) {
-            addOid(pdu, oids[i]);
+        for (String oid : oids) {
+            addOid(pdu, oid);
         }
         return send(pdu);
     }
@@ -262,8 +262,8 @@ public class SnmpManager {
         BlockPdu  pdu = new BlockPdu(context);
 
         pdu.setPduType(BlockPdu.GETNEXT);
-        for (int i = 0; i < oids.length; i++) {
-            addOid(pdu, oids[i]);
+        for (String oid : oids) {
+            addOid(pdu, oid);
         }
         return send(pdu);
     }
@@ -298,8 +298,8 @@ public class SnmpManager {
         BlockPdu  pdu = new BlockPdu(context);
 
         pdu.setPduType(BlockPdu.SET);
-        for (int i = 0; i < requests.length; i++) {
-            addOid(pdu, requests[i].getOid(), createAsnValue(requests[i]));
+        for (SnmpRequest req: requests) {
+            addOid(pdu, req.getOid(), createAsnValue(req));
         }
         return send(pdu);
     }

@@ -137,9 +137,9 @@ public class Mib implements MibContext {
 
         // Resolve imported MIB files
         int  errors = log.errorCount();
-        for (int i = 0; i < imports.size(); i++) {
+        for (MibImport imp : imports) {
             try {
-                imports.get(i).initialize(log);
+                imp.initialize(log);
             } catch (MibException e) {
                 log.addError(e);
             }
@@ -167,8 +167,7 @@ public class Mib implements MibContext {
 
         // Validate all symbols
         int errors = log.errorCount();
-        for (int i = 0; i < symbolList.size(); i++) {
-            MibSymbol symbol = symbolList.get(i);
+        for (MibSymbol symbol : new ArrayList<>(symbolList)) {
             try {
                 symbol.initialize(log);
             } catch (MibException e) {
@@ -205,8 +204,8 @@ public class Mib implements MibContext {
         }
         imports = null;
         if (symbolList != null) {
-            for (int i = 0; i < symbolList.size(); i++) {
-                symbolList.get(i).clear();
+            for (MibSymbol symbol : new ArrayList<>(symbolList)) {
+                symbol.clear();
             }
             symbolList.clear();
         }
@@ -475,8 +474,7 @@ public class Mib implements MibContext {
      */
     public List<MibImport> getAllImports() {
         ArrayList<MibImport> res = new ArrayList<>();
-        for (int i = 0; i < imports.size(); i++) {
-            MibImport imp = imports.get(i);
+        for (MibImport imp : imports) {
             if (imp.hasSymbols()) {
                 res.add(imp);
             }
@@ -493,8 +491,7 @@ public class Mib implements MibContext {
      *         null if not found
      */
     MibImport getImport(String name) {
-        for (int i = 0; i < imports.size(); i++) {
-            MibImport imp = imports.get(i);
+        for (MibImport imp : imports) {
             if (imp.getName().equals(name)) {
                 return imp;
             }
@@ -524,10 +521,9 @@ public class Mib implements MibContext {
      */
     public Mib[] getImportingMibs() {
         ArrayList<Mib> res = new ArrayList<>();
-        Mib[] mibs = loader.getAllMibs();
-        for (int i = 0; i < mibs.length; i++) {
-            if (mibs[i] != this && mibs[i].getImport(name) != null) {
-                res.add(mibs[i]);
+        for (Mib mib : loader.getAllMibs()) {
+            if (mib != this && mib.getImport(name) != null) {
+                res.add(mib);
             }
         }
         return res.toArray(new Mib[res.size()]);
@@ -626,9 +622,9 @@ public class Mib implements MibContext {
      */
     public MibValueSymbol getRootSymbol() {
         MibValueSymbol root = null;
-        for (int i = 0; i < symbolList.size(); i++) {
-            if (symbolList.get(i) instanceof MibValueSymbol) {
-                root = (MibValueSymbol) symbolList.get(i);
+        for (MibSymbol symbol : symbolList) {
+            if (symbol instanceof MibValueSymbol) {
+                root = (MibValueSymbol) symbol;
                 break;
             }
         }

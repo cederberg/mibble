@@ -79,8 +79,8 @@ public class BitSetValue extends MibValue {
         throws MibException {
 
         if (references != null) {
-            for (int i = 0; i < references.size(); i++) {
-                initialize(log, type, references.get(i));
+            for (ValueReference ref : references) {
+                initialize(log, type, ref);
             }
             references = null;
         }
@@ -257,9 +257,9 @@ public class BitSetValue extends MibValue {
      * @return the ASN.1 representation of the bit number
      */
     private String toAsn1String(Integer bit, MibValueSymbol[] values) {
-        for (int i = 0; i < values.length; i++) {
-            if (values[i].getValue().equals(bit)) {
-                return values[i].getName();
+        for (MibValueSymbol sym : values) {
+            if (sym.getValue().equals(bit)) {
+                return sym.getName();
             }
         }
         return bit.toString();

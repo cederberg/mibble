@@ -197,9 +197,9 @@ public class IntegerType extends MibType implements MibContext {
      * @param values         the list of value symbols
      */
     private void createValueConstraints(ArrayList<?> values) {
-        for (int i = 0; i < values.size(); i++) {
-            if (values.get(i) instanceof MibValueSymbol) {
-                MibValueSymbol sym = (MibValueSymbol) values.get(i);
+        for (Object val : values) {
+            if (val instanceof MibValueSymbol) {
+                MibValueSymbol sym = (MibValueSymbol) val;
                 symbols.put(sym.getName(), sym);
                 // TODO: check value constraint compability
                 ValueConstraint c = new ValueConstraint(null, sym.getValue());

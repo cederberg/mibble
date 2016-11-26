@@ -61,10 +61,10 @@ public class SnmpResponse {
         errorStatusString = pdu.getErrorStatusString();
         errorIndex = pdu.getErrorIndex();
         if (variables != null) {
-            for (int i = 0; i < variables.length; i++) {
-                oids.add(variables[i].getOid().toString());
-                values.put(variables[i].getOid().toString(),
-                           variables[i].getValue().toString());
+            for (varbind bind : variables) {
+                oids.add(bind.getOid().toString());
+                values.put(bind.getOid().toString(),
+                           bind.getValue().toString());
             }
         }
     }
@@ -136,8 +136,7 @@ public class SnmpResponse {
      */
     public String getOidsAndValues() {
         StringBuilder buffer = new StringBuilder();
-        for (int i = 0; i < oids.size(); i++) {
-            String oid = oids.get(i).toString();
+        for (String oid : oids) {
             buffer.append(oid);
             buffer.append(": ");
             buffer.append(getValue(oid));

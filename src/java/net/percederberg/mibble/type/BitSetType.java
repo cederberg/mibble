@@ -199,9 +199,9 @@ public class BitSetType extends MibType implements MibContext {
      * @param values         the list of value symbols
      */
     private void createValueConstraints(ArrayList<?> values) {
-        for (int i = 0; i < values.size(); i++) {
-            if (values.get(i) instanceof MibValueSymbol) {
-                MibValueSymbol sym = (MibValueSymbol) values.get(i);
+        for (Object val : values) {
+            if (val instanceof MibValueSymbol) {
+                MibValueSymbol sym = (MibValueSymbol) val;
                 symbols.put(sym.getName(), sym);
                 // TODO: check value constraint compability
                 ValueConstraint c = new ValueConstraint(null, sym.getValue());
@@ -263,9 +263,8 @@ public class BitSetType extends MibType implements MibContext {
         if (constraint == null) {
             return true;
         }
-        ArrayList<NumberValue> bits = value.getBits();
-        for (int i = 0; i < bits.size(); i++) {
-            if (!constraint.isCompatible(bits.get(i))) {
+        for (NumberValue bit : value.getBits()) {
+            if (!constraint.isCompatible(bit)) {
                 return false;
             }
         }
