@@ -19,8 +19,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A MIB directory mapper. This class attempts to map MIB names to
- * files in a directory. It keeps two internal caches; one based on
+ * A MIB module locator. This class attempts to map MIB names to
+ * files in a directory or . It keeps two internal caches; one based on
  * the file name similarity with MIB names, and one based on the
  * content of the first few lines in each file. Each of these caches
  * are created upon first request and the content cache is normally
@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  * @version  2.10
  * @since    2.10
  */
-public class MibDirectory {
+public class MibLocator {
 
     /**
      * The MIB name regular expression pattern.
@@ -60,7 +60,7 @@ public class MibDirectory {
      *
      * @param dir            the directory to index
      */
-    public MibDirectory(File dir) {
+    public MibLocator(File dir) {
         this.dir = dir;
     }
 

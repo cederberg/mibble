@@ -39,8 +39,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import net.percederberg.mibble.MibDirectory;
 import net.percederberg.mibble.MibLoader;
+import net.percederberg.mibble.MibLocator;
 import net.percederberg.mibble.MibbleBrowser;
 
 /**
@@ -211,7 +211,7 @@ public class OpenDialog extends JDialog {
                 root.add(node);
             }
         }
-        MibDirectory mibDir = new MibDirectory(new File(lastDir));
+        MibLocator mibDir = new MibLocator(new File(lastDir));
         ArrayList<File> files = new ArrayList<>(mibDir.getContentMap().values());
         if (files.size() > 0) {
             Collections.sort(files);
