@@ -14,6 +14,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -25,12 +26,14 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -96,6 +99,16 @@ public class OpenDialog extends JDialog {
         setTitle("Load MIB");
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         getContentPane().setLayout(new GridBagLayout());
+
+        // Add Esc key listener
+        ActionListener closeAction = new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+            }
+        };
+        KeyStroke escKey = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+        int focus = JComponent.WHEN_IN_FOCUSED_WINDOW;
+        getRootPane().registerKeyboardAction(closeAction, escKey, focus);
 
         // Add filter label
         JLabel label = new JLabel("Filter:");
@@ -163,11 +176,7 @@ public class OpenDialog extends JDialog {
 
         // Add cancel button
         button = new JButton("Cancel");
-        button.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-            }
-        });
+        button.addActionListener(closeAction);
         c = new GridBagConstraints();
         c.gridx = 2;
         c.gridy = 2;
