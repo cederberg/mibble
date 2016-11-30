@@ -4,16 +4,14 @@ MIBBLE README
 1. Introduction
 ---------------
 
-Mibble is an open-source SNMP MIB parser (or SMI parser) written
-in Java. The Mibble library contains classes for easy access to all
-the information in the MIB file, including OIDs, type data and
-descriptions. A couple of useful applications are also bundled with
-Mibble, among them a MIB browser with a simple SNMP manager.
+Mibble is an open-source SNMP MIB (or SMI) parser library for Java.
+It reads MIB files (in ASN.1 syntax) and provides an API to access
+all the information, including OIDs, types, descriptions, comments
+and the original MIB source text.
 
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-separate LICENCE.txt file for more details.
+Mibble comes bundled with a comprehensive set standard IANA and
+IETF MIBs, command-line apps for formatting and validation, and a
+graphical MIB browser with a simple SNMP manager.
 
 Please see https://www.mibble.org/ for more information.
 
@@ -25,14 +23,26 @@ See the separate doc/install.txt file for installation and usage for
 instructions.
 
 
-3. Acknowledgements
+3. License
+----------
+
+Mibble is dual-licensed under GNU GPL and a commercial license.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the separate LICENCE.txt file for details.
+
+
+4. Acknowledgements
 -------------------
 
 See the separate doc/authors.txt file for author and acknowledgement
 details.
 
 
-4. Bug Reports
+5. Bug Reports
 --------------
 
 Use the Github project page for reporting errors and issues:
@@ -40,7 +50,7 @@ Use the Github project page for reporting errors and issues:
 https://github.com/cederberg/mibble/
 
 
-5. Contributing
+6. Contributing
 ---------------
 
 If you find this software package useful or interesting, please
