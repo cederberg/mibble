@@ -89,19 +89,17 @@
         &newline;&indent;&indent;&indent;
         <hr/>
         &newline;&newline;&indent;&indent;&indent;
-        <p class="footer">
+        <p class="small">
           <xsl:text>Mibble </xsl:text>
           <xsl:value-of select="$version" />
           <xsl:text> (</xsl:text>
           <xsl:value-of select="$date" />
-          <xsl:text>). See the</xsl:text>
-          &newline;&indent;&indent;&indent;
-          <a href="https://www.mibble.org/">Mibble web site</a>
-          &newline;&indent;&indent;&indent;
-          <xsl:text>for more information.</xsl:text>
+          <xsl:text>). See </xsl:text>
+          <a href="https://www.mibble.org/">www.mibble.org</a>
+          <xsl:text> for more information.</xsl:text>
         </p>
         &newline;&newline;&indent;&indent;&indent;
-        <p class="footer">
+        <p class="small">
           <xsl:text disable-output-escaping="yes">Copyright &amp;copy; 2002-</xsl:text>
           <xsl:value-of select="$year" />
           <xsl:text disable-output-escaping="yes"> Per Cederberg. Permission
@@ -127,14 +125,13 @@
   </xsl:template>
 
   <xsl:template match="list">
-    <ul class="fa-ul li-margin-md">
+    <ul class="li-fa-chevron li-margin-md">
       <xsl:apply-templates />
     </ul>
   </xsl:template>
 
   <xsl:template match="item">
     <li>
-      <i class="fa fa-li fa-chevron-right"><xsl:text> </xsl:text></i>
       <xsl:apply-templates />
     </li>
   </xsl:template>
