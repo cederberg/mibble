@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 
 <!-- ### ENTITY DECLARATIONS ### -->
 <!DOCTYPE stylesheet [
@@ -20,7 +20,7 @@
   <!-- ### OUTPUT DECLARATION ### -->
   <xsl:output method="xml"
               version="1.0"
-              encoding="ISO-8859-1"
+              encoding="UTF-8"
               doctype-public="-//W3C//DTD XHTML 1.0 Strict//EN"
               doctype-system="DTD/xhtml1-strict.dtd" />
 
@@ -39,20 +39,17 @@
   <xsl:template match="head">
     <head>
       &newline;&indent;&indent;
-      <meta http-equiv="Content-Type" content="text/xhtml; charset=ISO-8859-1" />
+      <meta charset="utf-8" />
       &newline;&indent;&indent;
-      <meta http-equiv="Content-Style-Type" content="text/css" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
       &newline;&indent;&indent;
-      <meta http-equiv="Content-Language" content="en" />
-      <xsl:if test="$style != ''">
-        &newline;&indent;&indent;
-        <link rel="stylesheet">
-          <xsl:attribute name="href">
-            <xsl:value-of select="$style" />
-          </xsl:attribute>
-          <xsl:attribute name="type">text/css</xsl:attribute>
-        </link>
-      </xsl:if>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css" />
+      &newline;&indent;&indent;
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700" />
+      &newline;&indent;&indent;
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+      &newline;&indent;&indent;
+      <link rel="stylesheet" href="{$style}" />
       &newline;&indent;&indent;
       <title><xsl:value-of select="title" /></title>
       &newline;&indent;
@@ -62,34 +59,58 @@
 
   <!-- ### DOCUMENT BODY ### -->
   <xsl:template match="body">
+    &newline;&indent;
     <body>
-      &newline;&newline;&indent;&indent;
-      <h1><xsl:value-of select="/doc/head/title" /></h1>
-      &newline;
-      <xsl:apply-templates />
       &newline;&indent;&indent;
-      <hr/>
+      <section class="header">
+        &newline;&indent;&indent;&indent;
+        <div class="banner">
+          &newline;&indent;&indent;&indent;&indent;
+          <header class="box">
+            &newline;&indent;&indent;&indent;&indent;&indent;
+            <h1 class="name"><xsl:value-of select="/doc/head/title" /></h1>
+            &newline;&indent;&indent;&indent;&indent;&indent;
+            <p class="tagline">
+              <xsl:text>Mibble version </xsl:text>
+              <xsl:value-of select="$version" />
+              <xsl:text> (</xsl:text>
+              <xsl:value-of select="$date" />
+              <xsl:text>)</xsl:text>
+            </p>
+          &newline;&indent;&indent;&indent;&indent;
+          </header>
+        &newline;&indent;&indent;&indent;
+        </div>
+      &newline;&indent;&indent;
+      </section>
+      &newline;&indent;&indent;
+      <section class="content">
+        <xsl:apply-templates />
+        &newline;&indent;&indent;&indent;
+        <hr/>
+        &newline;&newline;&indent;&indent;&indent;
+        <p class="footer">
+          <xsl:text>Mibble </xsl:text>
+          <xsl:value-of select="$version" />
+          <xsl:text> (</xsl:text>
+          <xsl:value-of select="$date" />
+          <xsl:text>). See the</xsl:text>
+          &newline;&indent;&indent;&indent;
+          <a href="https://www.mibble.org/">Mibble web site</a>
+          &newline;&indent;&indent;&indent;
+          <xsl:text>for more information.</xsl:text>
+        </p>
+        &newline;&newline;&indent;&indent;&indent;
+        <p class="footer">
+          <xsl:text disable-output-escaping="yes">Copyright &amp;copy; 2002-</xsl:text>
+          <xsl:value-of select="$year" />
+          <xsl:text disable-output-escaping="yes"> Per Cederberg. Permission
+      is granted to copy this document verbatim in any medium, provided
+      that this copyright notice is left intact.</xsl:text>
+        </p>
       &newline;&newline;&indent;&indent;
-      <p class="footer">
-        <xsl:text>Mibble </xsl:text>
-        <xsl:value-of select="$version" />
-        <xsl:text> (</xsl:text>
-        <xsl:value-of select="$date" />
-        <xsl:text>). See the</xsl:text>
-        &newline;&indent;&indent;
-        <a href="https://www.mibble.org/">Mibble web site</a>
-        &newline;&indent;&indent;
-        <xsl:text>for more information.</xsl:text>
-      </p>
-      &newline;&newline;&indent;&indent;
-      <p class="footer">
-        <xsl:text disable-output-escaping="yes">Copyright &amp;copy; 2002-</xsl:text>
-        <xsl:value-of select="$year" />
-        <xsl:text disable-output-escaping="yes"> Per Cederberg. Permission
-    is granted to copy this document verbatim in any medium, provided
-    that this copyright notice is left intact.</xsl:text>
-      </p>
-      &newline;&newline;&indent;
+      </section>
+    &newline;&indent;
     </body>
   </xsl:template>
 
@@ -106,17 +127,20 @@
   </xsl:template>
 
   <xsl:template match="list">
-    <ul>
+    <ul class="fa-ul li-margin-md">
       <xsl:apply-templates />
     </ul>
   </xsl:template>
 
   <xsl:template match="item">
-    <li><xsl:apply-templates /></li>
+    <li>
+      <i class="fa fa-li fa-chevron-right"><xsl:text> </xsl:text></i>
+      <xsl:apply-templates />
+    </li>
   </xsl:template>
 
   <xsl:template match="item/title">
-    <strong><xsl:apply-templates /></strong>
+    <b><xsl:apply-templates /></b>
     <br/>
   </xsl:template>
 
@@ -134,10 +158,7 @@
     </xsl:variable>
     <xsl:choose>
       <xsl:when test="@url != ''">
-        <a>
-          <xsl:attribute name="href">
-            <xsl:value-of select="@url" />
-          </xsl:attribute>
+        <a href="{@url}">
           <xsl:value-of select="$text" />
         </a>
       </xsl:when>
@@ -151,12 +172,7 @@
         </a>
       </xsl:when>
       <xsl:when test="@bug != ''">
-        <a>
-          <xsl:attribute name="href">
-            <xsl:text>http://savannah.nongnu.org/bugs/index.php</xsl:text>
-            <xsl:text>?func=detailitem&amp;item_id=</xsl:text>
-            <xsl:value-of select="@bug" />
-          </xsl:attribute>
+        <a href="https://savannah.nongnu.org/bugs/index.php?func=detailitem&amp;item_id={@bug}">
           <xsl:text>Bug #</xsl:text>
           <xsl:value-of select="@bug" />
           <xsl:if test="string-length($text) &gt; 0">
@@ -166,11 +182,7 @@
         </a>
       </xsl:when>
       <xsl:when test="@issue != ''">
-        <a>
-          <xsl:attribute name="href">
-            <xsl:text>https://github.com/cederberg/mibble/issues/</xsl:text>
-            <xsl:value-of select="@issue" />
-          </xsl:attribute>
+        <a href="https://github.com/cederberg/mibble/issues/{@issue}">
           <xsl:text>Issue #</xsl:text>
           <xsl:value-of select="@issue" />
           <xsl:if test="string-length($text) &gt; 0">
@@ -195,19 +207,6 @@
         <xsl:value-of select="$version" />
       </xsl:when>
     </xsl:choose>
-  </xsl:template>
-
-  <xsl:template match="figure">
-    &newline;&indent;&indent;
-    <div class="figure">
-      <xsl:apply-templates select="content" />
-      &newline;&indent;&indent;&indent;
-      <p><strong>Figure <xsl:number/>.</strong>
-        &newline;&indent;&indent;&indent;
-        <xsl:apply-templates select="caption" />
-      </p>
-      &newline;&indent;&indent;
-    </div>
   </xsl:template>
 
 </xsl:stylesheet>
