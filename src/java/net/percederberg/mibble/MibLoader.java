@@ -10,9 +10,7 @@ package net.percederberg.mibble;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.util.ArrayList;
@@ -29,7 +27,7 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
  * A MIB loader. This class contains a search path for locating MIB
- * files, and also holds a refererence to previously loaded MIB files
+ * files, and also holds a reference to previously loaded MIB files
  * to avoid loading the same file multiple times. The MIB search path
  * consists of directories with MIB files that can be imported into
  * other MIBs. The search path directories can either be normal file
@@ -595,8 +593,10 @@ public class MibLoader {
      * @throws IOException if the MIB couldn't be found
      * @throws MibLoaderException if one of the MIB:s couldn't be
      *             loaded correctly
+     *
+     * @since 2.10
      */
-    private Mib load(MibSource src) throws IOException, MibLoaderException {
+    public Mib load(MibSource src) throws IOException, MibLoaderException {
         queue.clear();
         queue.add(src);
         return loadQueue();
@@ -874,148 +874,5 @@ public class MibLoader {
             }
         }
         return null;
-    }
-
-    /**
-     * A MIB input source. This class encapsulates the two different
-     * ways of locating a MIB file, either through a file or a URL.
-     */
-    private static class MibSource {
-
-        /**
-         * The MIB file. This variable is only set if the MIB is read
-         * from file, or if the MIB name is known.
-         */
-        private File file = null;
-
-        /**
-         * The MIB URL location. This variable is only set if the MIB
-         * is read from a URL.
-         */
-        private URL url = null;
-
-        /**
-         * The MIB reader. This variable is only set if the MIB
-         * is read from an input stream.
-         */
-        private Reader input = null;
-
-        /**
-         * Creates a new MIB input source. The MIB will be read from
-         * the specified file.
-         *
-         * @param file           the file to read from
-         */
-        public MibSource(File file) {
-            this.file = file;
-        }
-
-        /**
-         * Creates a new MIB input source. The MIB will be read from
-         * the specified URL.
-         *
-         * @param url            the URL to read from
-         */
-        public MibSource(URL url) {
-            this.url = url;
-        }
-
-        /**
-         * Creates a new MIB input source. The MIB will be read from
-         * the specified URL. This method also create a default file
-         * from the specified MIB name in order to improve possible
-         * error messages.
-         *
-         * @param name           the MIB name
-         * @param url            the URL to read from
-         */
-        public MibSource(String name, URL url) {
-            this(url);
-            this.file = new File(name);
-        }
-
-        /**
-         * Creates a new MIB input source. The MIB will be read from
-         * the specified input reader. The input reader will be closed
-         * after reading the MIB.
-         *
-         * @param input          the input stream to read from
-         */
-        public MibSource(Reader input) {
-            this.input = input;
-        }
-
-        /**
-         * Checks if this object is equal to another. This method
-         * will only return true for another mib source object with
-         * the same input source.
-         *
-         * @param obj            the object to compare with
-         *
-         * @return true if the object is equal to this, or
-         *         false otherwise
-         */
-        public boolean equals(Object obj) {
-            if (obj instanceof MibSource) {
-                MibSource src = (MibSource) obj;
-                if (url != null) {
-                    return url.equals(src.url);
-                } else if (file != null) {
-                    return file.equals(src.file);
-                }
-            }
-            return false;
-        }
-
-        /**
-         * Returns the hash code value for the object. This method is
-         * reimplemented to fulfil the contract of returning the same
-         * hash code for objects that are considered equal.
-         *
-         * @return the hash code value for the object
-         *
-         * @since 2.6
-         */
-        public int hashCode() {
-            if (url != null) {
-                return url.hashCode();
-            } else if (file != null) {
-                return file.hashCode();
-            } else {
-                return super.hashCode();
-            }
-        }
-
-        /**
-         * Returns the MIB file. If the MIB is loaded from URL this
-         * file does not actually exist, but is used for providing a
-         * unique reference to the MIB.
-         *
-         * @return the MIB file
-         */
-        public File getFile() {
-            return file;
-        }
-
-        /**
-         * Returns a stream reader for the MIB file. On the first
-         * call, a new stream may be opened. On subsequent calls, the
-         * same stream will be returned. It is the responsability of
-         * the called to ensure closing the stream (after use).
-         *
-         * @return a stream reader for the MIB file
-         *
-         * @throws IOException if the MIB file couldn't be opened
-         */
-        public Reader getReader() throws IOException {
-            if (input == null) {
-                if (url != null) {
-                    input = new InputStreamReader(url.openStream());
-                } else {
-                    input = new FileReader(file);
-                }
-            }
-            return input;
-        }
     }
 }
