@@ -88,7 +88,7 @@ public class MibbleValidator {
         int warnings = 0;
         for (int i = 0; i < queue.size(); i++) {
             Object src = queue.get(i);
-            System.out.print(i);
+            System.out.print(i + 1);
             System.out.print("/");
             System.out.print(queue.size());
             System.out.print(": Reading " + src + "... ");
