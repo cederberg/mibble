@@ -855,9 +855,9 @@ public class MibLoader {
      */
     private MibSource locate(String name) {
         for (MibLocator cache : dirCaches) {
-            File file = cache.findByName(name);
-            if (file != null) {
-                return new MibSource(file);
+            MibSource src = cache.findByName(name);
+            if (src != null) {
+                return src;
             }
         }
         ClassLoader loader = getClass().getClassLoader();
@@ -868,9 +868,9 @@ public class MibLoader {
             }
         }
         for (MibLocator cache : dirCaches) {
-            File file = cache.findByContent(name);
-            if (file != null) {
-                return new MibSource(file);
+            MibSource src = cache.findByContent(name);
+            if (src != null) {
+                return src;
             }
         }
         return null;

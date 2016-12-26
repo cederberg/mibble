@@ -18,12 +18,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -42,8 +38,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import net.percederberg.mibble.MibLoader;
 import net.percederberg.mibble.MibLocator;
+import net.percederberg.mibble.MibSource;
 import net.percederberg.mibble.MibbleBrowser;
 
 /**
@@ -210,17 +206,26 @@ public class OpenDialog extends JDialog {
      */
     private void buildTree(MibbleBrowser browser) {
         for (String dir : browser.loader.getResourceDirs()) {
-            ArrayList<String> mibs = findResourceFiles(dir + "/");
-            if (mibs != null && mibs.size() > 0) {
+            MibLocator loc = new MibLocator(getClass().getClassLoader(), dir);
+            ArrayList<String> mibs = new ArrayList<>();
+            for (MibSource src : loc.getNameMap().values()) {
+                mibs.add(src.getFile().toString());
+            }
+            Collections.sort(mibs);
+            if (mibs.size() > 0) {
                 DefaultMutableTreeNode node = new DefaultMutableTreeNode(dir);
-                for (String mibName : mibs) {
+                for (String path : mibs) {
+                    String mibName = path.substring(dir.length() + 1);
                     node.add(new DefaultMutableTreeNode(mibName));
                 }
                 root.add(node);
             }
         }
         MibLocator mibDir = new MibLocator(new File(lastDir));
-        ArrayList<File> files = new ArrayList<>(mibDir.getContentMap().values());
+        ArrayList<File> files = new ArrayList<>();
+        for (MibSource src : mibDir.getContentMap().values()) {
+            files.add(src.getFile());
+        }
         if (files.size() > 0) {
             Collections.sort(files);
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(lastDir);
@@ -277,39 +282,6 @@ public class OpenDialog extends JDialog {
             }
         }
         return newParent;
-    }
-
-    /**
-     * Returns a list of resource files (on the classpath).
-     *
-     * @param prefix         the classpath prefix (path)
-     *
-     * @return the list of resource files found
-     */
-    private ArrayList<String> findResourceFiles(String prefix) {
-        ArrayList<String> res = new ArrayList<>();
-        URL url = MibLoader.class.getClassLoader().getResource(prefix);
-        if (url != null) {
-            String file = url.toString();
-            if (file.startsWith("jar:file:") && file.contains("!")) {
-                file = file.substring(9, file.indexOf('!'));
-                try (
-                    JarFile jar = new JarFile(file)
-                ) {
-                    Enumeration<JarEntry> e = jar.entries();
-                    while (e.hasMoreElements()) {
-                        JarEntry entry = e.nextElement();
-                        String name = entry.getName();
-                        if (name.startsWith(prefix) && name.length() > prefix.length()) {
-                            res.add(name.substring(prefix.length()));
-                        }
-                    }
-                } catch (Exception ignore) {
-                    // Do nothing
-                }
-            }
-        }
-        return res;
     }
 
     /**
