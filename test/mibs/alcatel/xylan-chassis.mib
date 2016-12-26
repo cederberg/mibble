@@ -1,0 +1,2233 @@
+CHASSIS-MIB DEFINITIONS ::= BEGIN
+
+--  RCSID information
+
+--  $RCSfile: xylan-chassis.mib,v $
+--  $Revision: 1.79 $		$State: Exp $
+--  $Date: 1998/10/13 21:24:22 $
+--  $Author: sueh $
+
+
+--  xylan-chassis.mib
+--  Revision: 1.01
+--  Date: July 8, 1994
+
+--  Alcatel Internetworking, Inc.
+--  26801 W. Agoura Road
+--  Calabasas, CA 91301
+--  (818) 880-3500
+--  support@ind.alcatel.com
+
+--  This module provides authoritative definitions for Alcatel Internetworking, Inc.
+--  enterprise-specific chassis MIB.
+
+--  This module will be extended, as needed.
+
+
+--  Alcatel Internetworking, Inc. reserves the right to make changes in
+--  specification and other information contained in this document
+--  without prior notice.  The reader should consult Alcatel Internetworking,
+--  Inc. to determine whether any such changes have been made.
+--  Current MIBs are availible from the following URLs:
+--		ftp://ftp.ind.alcatel.com/pub/products/mibs
+--		http://www.ind.alcatel.com
+
+--  In no event shall Alcatel Internetworking, Inc. be liable for any incidental,
+--  indirect, special, or consequential damages whatsoever (including
+--  but not limited to lost profits) arising out of or related to this
+--  document or the information contained in it, even if Alcatel Internetworking,
+--  Inc. has been advised of, known, or should have known, the
+--  possibility of such damages.
+
+--  Alcatel Internetworking, Inc. grants vendors, end-users, and other interested
+--  parties a non-exclusive license to use this Specification in connection
+--  with the management of Alcatel Internetworking, Inc. products.
+
+--  Copyright (C) 1994, Alcatel Internetworking, Inc. All Rights Reserved
+
+
+IMPORTS
+    Gauge, Counter, TimeTicks, IpAddress
+        FROM RFC1155-SMI
+    OBJECT-TYPE
+        FROM RFC-1212
+    DisplayString
+        FROM RFC1213-MIB
+    MacAddress
+-- FIX: corrected MIB name
+--        FROM BRIDGE-MIB
+        FROM RFC1231-MIB
+    xylanChassis
+        FROM XYLAN-BASE-MIB
+        ;
+
+
+--  This MIB module uses the extended OBJECT-TYPE macro as defined
+--  RFC 1212 (but known in the epilog files under RFC1213-SMI...)
+
+
+
+
+--  groups within the chassis mib
+
+chasInfo		OBJECT IDENTIFIER ::= { xylanChassis 1 }
+chasPhysical		OBJECT IDENTIFIER ::= { xylanChassis 2 }
+chasController		OBJECT IDENTIFIER ::= { xylanChassis 3 }
+chasPowerSupply		OBJECT IDENTIFIER ::= { xylanChassis 4 }
+chasEnvmnt		OBJECT IDENTIFIER ::= { xylanChassis 5 }
+chasStatus		OBJECT IDENTIFIER ::= { xylanChassis 6 }
+
+
+--  chassis and module type codes.
+
+XylanChasType ::= INTEGER {
+    invalid(1),
+    other(2),
+    omni5(3),
+    omni9(4),
+    pizza(5),
+    micro(6),
+    omni5cell(7),
+    omni9cell(8),
+    omni5e(9),
+    omni9e(10),
+    pizport(11),
+    omni5wx(12),
+    omni9wx(13),
+    omni3wx(14),
+    os5024(15),
+    os4016(16),
+    os3032(17),
+    os2032(18),
+    os2016(19),
+    os1032(20),
+    os6032(21),
+    os5032(22),
+    xframe5(23),
+    xframe9(24),
+    xframe3(25),
+    os4024(26),
+    omnicore13(27)
+}
+
+XylanModuleSubunit ::= INTEGER {
+    base(1),
+    hsm1(2),
+    hsm2(3),
+    csm3(4)
+}
+
+XylanModuleType ::= INTEGER {
+    unknown(1),		-- upon first seeing the card
+    invalid(2),		-- no slot present
+    empty(3),		-- used internally only
+    hsm(4),		-- HSM base unit
+    mpm(5),		-- mpm, original version
+    eni8(6),		-- esm 8 port with 10BaseT
+    eni16(7),		-- esm 16 port not ready yet
+    tni(8),		-- token ring 6 port utp/stp
+    fddi(9),		-- fddi sub-module
+    cddi(10),		-- copper fddi sub-module
+    x100eni(11),	-- esm 4 port sub-module
+    atm(12),		-- asm .5 meg multi mode sub-module
+    eni12(13),		-- esm 12 port with 10BaseT
+    eni6(14),		-- esm 6 port universal module
+    mpm2(15),		-- mpm version 2
+    atmds3(16),		-- atm ds3 sub-module
+    fddis(17),		-- fddi single mode sub-module
+    atms(18),		-- atm .5 meg single mode sub-module
+    atmutp(19),		-- atm utp sub-module
+    esm8f(20),		-- esm 8 port fiber sub-module
+    esm12t(21),		-- esm 12 port with telco 10BaseT
+    tokf(22),		-- token ring fiber sub-module
+    atm2m(23),		-- atm 2 meg multi mode sub-module
+    atm2s(24),		-- atm 2 meg single mode sub-module
+    wsm(25),		-- WSM
+    wsmbri(26),		-- WSM BRI
+    hsm2(27),		-- HSM 2 base slot type
+    pizza(28),		-- pizza switch reserved
+    tsmcd6(29),		-- token cd6
+    csm(30),		-- Cell Switch module CSM-OC3-L
+    res31(31),		-- internal use
+    hre(32),		-- hardware routing engine
+    e10m(33),		-- 10Meg Ether Universal
+    atme3(34),		-- ATM E3 (European)
+    e100fsfd(35),	-- Ethernet 100 Base FX Singlemode Full Duplex
+    e100fmfd(36),	-- Ethernet 100 Base FX Multimode Full Duplex
+    e100txfd(37),	-- Ethernet 100 Base TX Copper Full Duplex
+    mpm1g(38),		-- MPM 1G - 1G bus
+    pizprt(39),		-- Pizza Port - this identifies a repeater
+    esm32(40),		-- 32 connector 4 segment ether repeater board
+    fcsm(41),		-- atm/csm combo board
+    csmh(42),		-- Cell Switch Module CSM-OC3-H
+    csm12s(43),		-- Cell Switch Module CSM-OC12-H
+    csma12(44),		-- Cell Switch Module CSM-A25-12
+    csma24(45),		-- Cell Switch Module CSM-A25-24
+    p10U(46),		-- Pizza 10 U virtural module type
+    asm2(47),		-- ATM SAHI OC3 MM
+    puplink(48),	-- pizza port uplink base
+    res49(49),		-- internal use
+    res50(50),		-- internal use
+    fddisc2(51),	-- FDDI Singlemode Category II
+    atmce2s2t(52),      -- ATM Const Bit Rate w/ 2 serial ports,
+                        -- and 2 T1 ports.
+    atmce2s2e(53),      -- ATM Const Bit Rate w/ 2 serial ports,
+                        -- and 2 E1 ports.
+    atmds3ux(54),	-- ATM-DS3 with Utopia Mux
+    atme3ux(55),	-- ATM-E3 with Utopia Mux
+    atmoc3ux(56),	-- ATM-OC3 with Utopia Mux
+        atmt1ux(57),	-- ATM-T1 with UTOPIA MUX
+        atme1ux(58),	-- ATM-E1 with UTOPIA MUX
+        wsm2s(59),          -- WSM 2 serial ports
+        wsm2snc(60),        -- WSM 2 ports no compress
+        wsmprit1(61),       -- ISDN capable Channelized T1 port,
+            --      1 Universal Serial Port
+        wsmprie1(62),	-- 1 ISDN capable Channelized E1 port
+            --      1 Universal Serial Port
+        csm12l(63),		-- CSM Switch Module CSM-OC12-L
+        meth12(64),         -- Mammoth 12 Port Ehernet
+        meth32(65),		-- Mammoth 32 Port Ehernet
+    e1008pm(66),	-- 8 port 100BaseT Multi Mode
+    e1008ps(67),	-- 8 port 100BaseT SIngle Mode
+    hsm3(68),		-- HSM3
+    csmu(69),		-- Universal CSM
+    e12f(70),		-- ethernet 12 port fiber
+    e12o(71),		-- ODS 12 port ethernet
+        csm6m2s(72),	-- CSM 6 Multi 2 Single M
+    atmsux(73),		-- ATM SM (512K SRAM) with UMUX
+    atm2sux(74),	-- ATM SM (2M SRAM) with UMUX
+    atm2mux(75),	-- ATM Multimode (2M SRAM) with UMUX
+    atmuux(76),		-- ATM UTP with UMUX UMUX
+        atmshfs(77),        -- ATM-SAHI (OC3) SINGLE MODE
+        atm2rm(78),         -- ATM-SAHI (OC3) Red MM
+        atm2rs(79),         -- ATM-SAHI (OC3) Red SM
+        atmsrm(80),         -- ATM-SAHI (OC12) Red MM
+        atmsrs(81),         -- ATM-SAHI (OC12) Red SM
+        fesmh2m(82),        -- FESM 2 PORT MM HBUS
+        fesmh2s(83),        -- FESM 2 PORT SM HBUS
+        fesm4(84),          -- FESM 4 PORT
+        csm8c(85),          -- CSM OC3 COPPER
+        atm2sl(86),         -- ATM OC3 SM Longreach
+        csmfsl(87),         -- CSM OC3 SM Longreach
+        csmsfsl(88),        -- CSM OC3 6M 2SM Longreach
+        csm12fsl(89),       -- CSM OC12 SM Longreach
+    pme8(90),		-- Pizza psuedo 8 10/100 Mammoth Ether
+    pme32(91),		-- Pizza psuedo 32 10 Mammoth Ether
+    p5024(92),		-- Pizza model 5024
+    p4016(93),		-- Pizza model 4016
+    p3032(94),		-- Pizza model 3032
+    p3032X(95),		-- Pizza model 3032 Expansion
+    p2032(96),		-- Pizza model 2024
+    p2016(97),		-- Pizza model 2016
+    p1032(98),		-- Pizza model 1032
+    p1032F(99),		-- Pizza model 1032F
+    fcsm622(100),	-- FCSM622
+    cab155(101),	-- CSM-AB-155
+    cab155fsl(102),	-- CSM-AB-155FSL
+    cab155c(103),	-- CSM-AB-155C
+    cab155s(104),	-- CSM-AB-155S
+    cabds1(105),	-- CSM-AB-DS1
+    cabds3(106),	-- CSM-AB-DS3
+    cabe1(107),		-- CSM-AB-E1
+    cabe3(108),		-- CSM-AB-E3
+    cabcee1(109),	-- CSM-AB-CE-E1
+    cabcet1(110),	-- CSM-AB-CE-T1
+    esxfm24(111),	-- ESX_FM_24
+    tsmcd16(112),	-- TSM-CD-16
+    tsmcd32(113),	-- TSM-CD-32
+    tsm1g(114),		-- TSM-1G
+    p1032cf(115),	-- Pizza model 1032CF
+    cab4imat1(116),	-- CSM-AB-IMA-T1-4
+    cab4imae1(117),	-- CSM-AB-IMA-E1-4
+    cab8imat1(118),	-- CSM-AB-IMA-T1-8
+    cab8imae1(119),	-- CSM-AB-IMA-E1-8
+    mpmc(120),		-- MPM_C
+    mpmf(121),		-- MPM_F
+    mpmos(122),		-- MPM_OS used in OmniStack products
+    atm2622s(123),	-- ASM2-622FS
+    atm2622m(124),	-- ASM2-622FM
+    atm2622sl(125),	-- ASM2-622FSL
+    ptsmcd16(126),	-- PIZZA with TSM-CD-16
+    ptsmcd32(127),	-- PIZZA with TSM-CD-32
+    atm2622rfsh(128),	-- ATM SAHI Redundant OC12 long reach
+    mt12(129),		-- Mammoth 12 port token-ring
+    esmf8(130),		-- 8 port ESM Fiber base module
+    esmf16(131),	-- MOD_TYPE_EF8 plus 8 port sub
+    atm155fshe(132),	-- ASM OC3 SML
+    atm155fsh(133),	-- ASM OC3 SML
+    pme32r(134),	-- Pizza psuedo 32 10 Mam Ether Reversed Ports
+    pme2(135),		-- Pizza psuedo 2 10/100 Mammoth Ether Ports
+    gsmfm(136),		-- Gigabit Ether - short range
+    gsmfms(137),	-- Gigabit Ether - medium range
+    gsmfmh(138),	-- Gigabit Ether - long range
+    cabt12m2(139),	-- CSM-ABT-155FM-2
+    cabt12m1(140),	-- CSM-ABT-155FM-1
+    cabt12s2(141),	-- CSM-ABT-155FS-2
+    cabt12s1(142),	-- CSM-ABT-155FS-1
+    cabt12l2(143),	-- CSM-ABT-155FSH-2
+    cabt12l1(144),	-- CSM-ABT-155FSH-1
+    cabt12c2(145),	-- CSM-ABT-155C-2
+    cabt12c1(146),	-- CSM-ABT-155C-1
+    cabt12ds32(147),	-- CSM-ABT-DS3-2
+    cabt12ds31(148),	-- CSM-ABT-DS3-1
+    cabt12e32(149),	-- CSM-ABT-E3-2
+    cabt12e31(150),	-- CSM-ABT-E3-2
+    cabcm(151),		-- CSM-AB-CM
+    cabce4sp(152),	-- CSM-AB-CE-4SP
+    esxc12(153),
+    esxc16(154),
+    esxc32(155),
+    esxf16(156),
+    gsxs2(157),
+    gsxs4(158),
+    gsxm2(159),
+    gsxm4(160),
+    gsxl2(161),
+    gsxl4(162),
+    tsxcd16(163),
+    tsxcd32(164),
+    etel24(165),
+    atm2155mu(166),
+    atm2155su(167),
+    atm2155fu(168),
+    atm2ds3u(169),
+    atm2e3u(170),
+    atm2t1u(171),
+    atm2e1u(172),
+    atm2utpu(173),
+    pizza6032(174),
+    pizza5032(175),
+    gsmx1(176),
+    esxfm12(177),
+    esxfm24a(178),
+    hsx(179),
+        pizza6032x(180),
+    pmfe32r(181),
+    os4024g(182),
+    os4024f(183),
+    os4024cf(184),
+    os4024c(185),
+    pmfe24(186),
+    gsmfm2(187),
+    gsmfs2(188),
+    esm100c32(189),
+    m013(190),
+    asxrfm622(191),
+    asxrfs622(192),
+    atm2imat1u(193),
+    atm2imae1u(194),
+    atmcest12(195),
+    atmcese12(196),
+    esx100fm12(197),
+    esx100fs12(198),
+    csma122(199),
+    pfe(200),
+    osgsmfm2(201),
+    osgsmfs2(202),
+    atm2ds3(203),
+    atm2e3(204),
+    cop(205),
+    vsd(206),
+    mpo(207),
+    mpx2(208),
+    atm2155rfmce(209),	-- [ASM2-155RFM-CE]
+    atm2ceds3x(210),	-- [ASM2-CE-DS3-MUX]
+    atm2155fmx(211),	-- [ASM2-155FM-MUX]
+    atm2155fsx(212),	-- [ASM2-155FS-MUX]
+    atm2155flx(213),	-- [ASM2-155FSL-MUX]
+    atm2155rsx(214),	-- [ASM2-155RFS-MUX]
+    atm2155rlx(215),	-- [ASM2-155RFSL-MUX]
+    gso6(216),		-- [GSO-6]
+    os6000(217),	-- [OS-6000]
+    os6032e(218),	-- [OS-6032E]
+    oa408(219),		-- [OA-408]
+    oa512(220),		-- [OA-512]
+    oa512u(221),	-- [OA-512-USP]
+    ocmbpc(222),	-- Omnicore, M-BUS probe card
+    ocd12cmid(223),	-- Omnicore, dual 12C, mac Id
+    hsxh(224)		-- [HSX-H]
+
+}
+
+
+--  module status and state types
+
+XylanMPMStateType ::= INTEGER {
+    unknown(1),
+    invalid(2),
+    primary(3),
+    secondary(4)
+}
+
+XylanPSStateType ::= INTEGER {
+    unknown(1),
+    notPresent(2),
+    okay(3),
+    bad(4)
+}
+
+XylanTempStateType ::= INTEGER {
+    unknown(1),
+    notPresent(2),
+    overThreshold(3),
+    underThreshold(4)
+}
+
+XylanImageSyncStatus ::= INTEGER {
+    insync(1),
+    newer(2),
+    older(3),
+    unknown(4),
+    syncing(5)
+}
+
+XylanConfigSyncStatus ::= INTEGER {
+    insync(1),
+    newer(2),
+    older(3),
+    unknown(4),
+    syncing(5),
+    bootvalues(6)
+}
+
+XylanConfigSyncEnable ::= INTEGER {
+    enabled(1),
+    disabled(2)
+}
+
+XylanFFSFileAction ::= INTEGER {
+    none(1),
+    writingTo(2),
+    deletingFrom(3),
+    readingFrom(4)
+}
+
+XylanFFSFileActionStatus ::= INTEGER {
+    none(1),
+    inProgress(2),
+    successfull(3),
+    failed(4)
+}
+
+-- MPM RS232-D serial port types
+
+XylanSerialPortSpeed ::= INTEGER {
+    unknown(1),
+    invalid(2),
+    b1200(3),
+    b9600(4),
+    b19200(5),
+    b38400(6)
+}
+
+XylanSerialPortParity ::= INTEGER {
+    unknown(1),
+    none(2),
+    even(3),
+    odd(4)	-- mark and space are NOT supported
+}
+
+
+XylanSerialPortMode ::= INTEGER {
+    down(1),
+    console(2),
+    slip(3)
+}
+
+
+-- chasInfo group. This group contains the 'global'
+-- chassis information data.
+-- Implimentation of this group is mandatory.
+
+chasMake  OBJECT-TYPE
+    SYNTAX  DisplayString  (SIZE (0..31))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+     "An authoritative identification of this
+      chassis or device.  By convention, this value is
+      allocated within the SMI enterprises subtree(1.3.6.1.4.1),
+      and provides an easy and unambiguous means for
+      determining `what kind of box' is being managed.  If this
+      information is not present or unknown, its value should
+      be set to chasTypeUnknown."
+    ::= { chasInfo 1 }
+
+chasType  OBJECT-TYPE
+    SYNTAX  XylanChasType
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The particular type of Xylan chassis. The value of
+     other(2) will be returned if the variable is supported
+     but the chassis is not one of the currently known
+     types of Omni5(3) or Omni9(4)."
+    ::= { chasInfo 2 }
+
+chasDescription  OBJECT-TYPE
+    SYNTAX  DisplayString  (SIZE (0..63))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "A description for this chassis/product.  The value shall
+     default to the textual product description, but the user
+     can override this to anything desired."
+    ::= { chasInfo 3 }
+
+chasPhysicalChanges  OBJECT-TYPE
+    SYNTAX   Counter
+    ACCESS   read-only
+    STATUS   mandatory
+    DESCRIPTION
+    "Depicts the number of physical changes that have occured
+     to the chassis MIB since reset or power on.  This includes
+     additions and removal of modules in the module table or
+     additions and removal of controllers in the controller table."
+    ::= { chasInfo 4 }
+
+chasLogicalChanges  OBJECT-TYPE
+    SYNTAX   Counter
+    ACCESS   read-only
+    STATUS   mandatory
+    DESCRIPTION
+    "Depicts the number of logical changes that have occured
+     to the chassis MIB since reset or power on.  This includes
+     all sets to name strings."
+    ::= { chasInfo 5 }
+
+chasNoOfResets  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "This object is a count of the number of times this
+     this station has been reset since a cold-start."
+    ::= { chasInfo 6 }
+
+chasBaseMacAddress  OBJECT-TYPE
+    SYNTAX  MacAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "This object is the 'base' MAC address for this chassis."
+    ::= { chasInfo 7 }
+
+chasFreeSlots  OBJECT-TYPE
+    SYNTAX  INTEGER (0..16)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The number of free front panel slots."
+    ::= { chasInfo 8 }
+
+
+    chasIpAddrToPing OBJECT-TYPE
+          SYNTAX  IpAddress
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+                  "The IP address to which a ping should be issued.
+                   A Network Management Station can use this to
+                   issue directed broadcast pings so as to augment
+                   the IP ARP table.  The ARP table is useful in
+                   discovering the IP network topology."
+          ::= { chasInfo 9 }
+
+
+    chasDupMacSupport OBJECT-TYPE
+          SYNTAX  INTEGER (0..64)
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+                  "The number of Duplication of any single MAC address
+                   learned. 0 indicates no duplicate MAC support,
+                   1 up to 64 indicates the number of duplication allowed
+                   per board.  The value of 1 indicates no
+                   duplication allowed per board only, but it is allowed
+                   between boards for the entire chassis."
+          ::= { chasInfo 10 }
+
+
+    chasNewDupMacSupport OBJECT-TYPE
+          SYNTAX  INTEGER (0..1000000)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+                  "This variable allows the user to cause duplicate
+                   MAC addresses to age out concurrently.  If set to
+           zero, it is ignored and the aging timer for each group
+                   where the address was learned will be used.  Values 1
+           through 9 are not valid.  If set to a value between 10 and
+           1000000, it will be used instead of the group aging timers.
+           Units are seconds.  "
+          ::= { chasInfo 11 }
+
+chasSonetMonitoring  OBJECT-TYPE
+      SYNTAX  INTEGER
+      ACCESS  read-write
+      STATUS  mandatory
+      DESCRIPTION
+          "on(1) -   Start Sonet Monitoring. If the image
+                         file (sec.img) is not loaded, this
+                         variable should be set to load it.
+           off(2) -  Stop Sonet Monitoring."
+      ::= { chasInfo 12 }
+
+    chasDateAndTime  OBJECT-TYPE
+          SYNTAX  INTEGER
+          ACCESS  read-only
+          STATUS  mandatory
+          DESCRIPTION
+              "Time and date information for the chassis."
+          ::= { chasInfo 13 }
+
+    chasCurrentDateAndTime  OBJECT-TYPE
+          SYNTAX  OCTET STRING (SIZE (15))
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+              "Current date and time.
+       Format - yyyymmddThhmmss
+        yyyy - year,
+        mm - month,
+        dd - day,
+        'T' separator,
+        hh - hour,
+        mm - month,
+        ss - second."
+          ::= { chasDateAndTime 1 }
+
+    chasTimezoneName  OBJECT-TYPE
+          SYNTAX  DisplayString (SIZE (0..10))
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+              "String containing the time zone name.
+        nzst	- New Zealand Time
+        aest	- Australia East Time
+        gst	- Guam Time
+        acst	- Australia Central Time
+        jst	- Japan Time
+        kst	- Korean Time
+        awst	- Australia West Time
+        msk	- Moscow Time
+        eet	- Eastern European Time
+        cet	- Central European Time
+        met	- Middle European Time
+        bst	- British Time
+        wet	- Western European Time
+        gmt	- Greenwich Mean Time
+        wat	- West Africa Time
+        nst	- Newfoundland Time
+        ast	- Atlantic Time
+        est	- Eastern Time (USA)
+        cst	- Cnetral Time (USA)
+        mst	- Mountain Time (USA)
+        pst	- Pacific Time (USA)
+        akst	- Alaska Time
+        hst	- Hawaii Time
+    Returns none is not set."
+          ::= { chasDateAndTime 2 }
+
+    chasTimezoneOffset  OBJECT-TYPE
+          SYNTAX  INTEGER (-780..720)
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+              "Time zone offset + or - minutes from UTC."
+          ::= { chasDateAndTime 3 }
+
+    chasTimezoneDstAdmin  OBJECT-TYPE
+          SYNTAX  INTEGER {
+            enable(1),
+            disable(2)
+            }
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+              "Daylight Savings Time enable/disable."
+          ::= { chasDateAndTime 4 }
+
+
+    chasTimezoneDst  OBJECT-TYPE
+          SYNTAX  OCTET STRING (SIZE (20))
+          ACCESS  read-write
+          STATUS  mandatory
+          DESCRIPTION
+              "Time and date information for the chassis.
+      wdmmhhmmwdmmhhmmHHMM
+      | start||  end ||offset|
+      w-d-mm,hh:mm,w-d-mm,hh:mm,HH:MM
+      w - Week (first(1), second(2), third(3), fourth(4), last(>4))
+      d - Day (Sunday(1), ..., Saturday(7))
+      m - Month (January(1), ..., December(12))
+      hh:mm - time of day DST changes (0-23:0-59)
+      HH:MM - offset DST changes by. (0-23:0-59)
+      Example: 11040200611002000100 -
+        Starts First Sunday in April at 2:00
+        Ends Last Sunday in October at 2:00
+        Time changes by 1:00 hr.
+      Returns disabled if disabled."
+          ::= { chasDateAndTime 5 }
+
+
+--  chasPhysical group. This group contains the physical
+--  slot information and the module inventory.
+
+--  chasModuleTable. This table maintains the per slot
+--  data that is related to a specific installed module
+--  in a slot.
+
+chasModuleTable  OBJECT-TYPE
+    SYNTAX  SEQUENCE OF ChasModuleEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    "A list of installed modules in this chassis."
+    ::= { chasPhysical 1 }
+
+chasModuleEntry  OBJECT-TYPE
+    SYNTAX  ChasModuleEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    "A module entry containing objects for a particular
+     module. This would contain entries that relate to the
+     module in a specific 'slot'."
+    INDEX { chasModuleSlot, chasModuleSubUnit }
+    ::= { chasModuleTable 1 }
+
+ChasModuleEntry ::= SEQUENCE {
+    chasModuleSlot
+        INTEGER,
+    chasModuleSubUnit
+        XylanModuleSubunit,
+    chasModuleType
+        XylanModuleType,
+    chasModulePartNum
+        DisplayString,
+    chasModuleDescription
+        DisplayString,
+    chasModuleHwRevision
+        INTEGER,
+    chasModuleHwModLevel
+        INTEGER,
+    chasModuleSerialNumber
+        DisplayString,
+    chasModuleMfgDate
+        DisplayString,
+    chasModuleFwVersion
+        DisplayString,
+    chasModuleBaseMacAddress
+        MacAddress,
+    chasModuleTimeStamp
+        TimeTicks,
+    chasModuleAdminStatus
+        INTEGER,
+    chasModuleOperStatus
+        INTEGER,
+    chasModuleLedStatus
+        INTEGER,
+    chasModuleVbusTxDiscards
+        Counter,
+    chasModuleVbusRxDiscards
+        Counter,
+    chasModuleLedStatusExtend
+        OCTET STRING
+    }
+
+chasModuleSlot  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The (zero-based) front slot number within the chassis."
+    ::= { chasModuleEntry 1 }
+
+chasModuleSubUnit  OBJECT-TYPE
+    SYNTAX  XylanModuleSubunit
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The sub-unit number within module in slot 'n'.
+     For each non-empty slot there will exist a module
+     entry with a chasModuleSubUnit value of base.
+     If the chasModuleType of that chasModuleEntry is
+     hsm, then there may be additional chasModuleEntrys
+     with the same chasModuleSlot value but with
+     chasModuleSubUnit values of hsm1, hsm2 or csm3.
+     These are HSM or CSM-U sub-modules.  An HSM module can
+     have up to 2 daughter cards on it. The first position
+     would be denoted by hsm1(2) and the second position is
+     hsm2(3). A CSM-U module can have up to 3 daughter cards on
+     it.The first position would be denoted by hsm1(2) and
+     the second position is hsm2(3) and the third postion is
+     csm3(4).
+
+     The general implication of this field is: each occupied
+     slot will have an entry field will be base(1), and may
+     if the module supports daughter cards have entries
+     for which if this field is hsm1(2), hsm2(3) or cms3(4),
+     corrosponding to an installed daughter card
+     on the HSM or CMS-U in the specified chasModuleSlot.
+     (and the card type will be listed in chasModuleType)."
+    ::= { chasModuleEntry 2 }
+
+chasModuleType  OBJECT-TYPE
+    SYNTAX  XylanModuleType
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "An authoritative identification of the type of
+     physical module that is in this physical location.
+
+     Notice that the value empty(3) will not be seen
+     in this table, because this table will only have
+     entries that contain modules."
+    ::= { chasModuleEntry 3 }
+
+chasModulePartNum  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..11))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The part number of ths module."
+    ::= { chasModuleEntry 4 }
+
+chasModuleDescription  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..31))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "Textual description of this particular module.  The
+    user can change this value to whatever is desired."
+    ::= { chasModuleEntry 5 }
+
+chasModuleHwRevision  OBJECT-TYPE
+    SYNTAX  INTEGER (0..99)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The current revision of this module's hardware."
+    ::= { chasModuleEntry 6 }
+
+chasModuleHwModLevel  OBJECT-TYPE
+    SYNTAX  INTEGER (0..99)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The modification level of this module's hardware."
+    ::= { chasModuleEntry 7 }
+
+chasModuleSerialNumber  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..11))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The serial number of the module present in this
+     physical location."
+    ::= { chasModuleEntry 8 }
+
+chasModuleMfgDate  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..31))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The manufacturing date for this module. This data
+     is retrieved from the module non-volitile memory."
+    ::= { chasModuleEntry 9 }
+
+chasModuleFwVersion  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..31))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "Textual decription of the version/revision level
+     for this module's firmware/software."
+    ::= { chasModuleEntry 10 }
+
+chasModuleBaseMacAddress  OBJECT-TYPE
+    SYNTAX  MacAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "This is the 'base' MAC address for this module. If
+     the module does not support the notion of MAC
+     addresses, the vaule shall be 0."
+    ::= { chasModuleEntry 11 }
+
+chasModuleTimeStamp  OBJECT-TYPE
+    SYNTAX  TimeTicks
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The value of sysUpTime of this management entitiy,
+     when this module was last (re-) initialized."
+    ::= { chasModuleEntry 12 }
+
+chasModuleAdminStatus  OBJECT-TYPE
+    SYNTAX  INTEGER {
+    unknown(1),
+    invalid(2),
+    enable(3),
+    disable(4),
+    reset(5),
+    load(6),
+    test(7)
+    }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "Provides desired (and actual) state of the given module.
+     Notice that not all values may be supported by a
+     specified physical module. In this case an SNMP error
+     returned when a set is attempted.
+
+     All modules (even empty slots) are in an unknown(1) state
+     when the chassis first powers up.
+
+     The invalid state is for non-existant modules, and hence is
+     never seen.  Neither of the unknown(1) or invalid(2) status
+     values can be written.
+
+     A physical module can be activated by writing a
+     value of enable(3).
+
+     A physical module may be de-activated by writing a
+     value of disable(4). In a disabled state, the module
+     is present in the chassis, but is benign. A disabled
+     module is availible for subsequent activation.
+
+     Writing a value of reset(5), disables the module AND
+     initiates a reset sequence.
+
+     Writing a value of load(6), disables the module
+     AND initiates a software load sequence.
+
+     Writing a value of test(7), disables the module
+     AND initiates selftest within the module."
+    ::= { chasModuleEntry 13 }
+
+chasModuleOperStatus  OBJECT-TYPE
+    SYNTAX  INTEGER {
+    unknown(1),		--  none of the following
+    invalid(2),
+    operational(3),
+    disabled(4),
+    resetInProgress(5),
+    loadInProgress(6),
+    testing(7),
+    warning(8),
+    nonFatalError(9),
+    fatalError(10)
+    }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "Provides operational state of the given module.
+     The exact definition of the values is
+     implementation specific.  A value of unknown(1)
+     implies some undetermined state, possibly as a
+     result of a module failing the low-level selftest.
+     A value of invalid(2) may mean that the module
+     exists but the chassis manager has no direct
+     control over it. A value of operational(3) implies
+     that the entity is running with no errors or
+     warnings. A value of disabled(4) reflects the
+     response to the chasModuleAdminStatus of disable(4).
+     A value of resetInProgress(5) also reflects the
+     equivalent AdminStatus reset(5).
+
+     Note that the states warning(8), nonFatalError(9),
+     and fatalError(10) reflect conditions detected
+     during operation. The module may or may not be
+     fuctional at this point.
+
+     For example a module's value of AdminStatus is
+     disable(4), the OperStatus will reflect that.
+     The AdminStatus is set to enable(3), the OperStatus
+     might then change to testing(7) then change to
+     operational(3)."
+    ::= { chasModuleEntry 14 }
+
+chasModuleLedStatus  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The LED state for this module. The exact definition
+     of the values are implimentation dependent. For
+     example, a power supply module may not have any
+     LEDs present, while a network interface element
+     might have 28 LEDs and a Controller might have
+     6 LEDs.
+
+     NOTE: due to European regulation, the LEDs will
+     NEVER be illuminated RED! They in fact will be
+     either green OR amber. This will be reflected in
+     the MIB as either GRN=1/RED=0 or GRN=1/RED=1.
+     Of course, if both are off then the LED is not
+     illuminated.
+
+     The current bit definitions for the defined modules are:
+
+     mpm    0     - OK1 RED (0 off, 1 on)
+        1     - OK2 RED (0 off, 1 on)
+        2     - PS1 RED (0 off, 1 on)
+        3     - PS2 RED (0 off, 1 on)
+        4     - OK1 GRN (0 off, 1 on)
+        5     - OK2 GRN (0 off, 1 on)
+        6     - PS1 GRN (0 off, 1 on)
+        7     - PS2 GRN (0 off, 1 on)
+        8     - PRI MPM GRN (0 on, 1 off)
+        9     - SEC MPM GRN (0 on, 1 off)
+        10    - TEMP ALARM AMBER (0 on, 1 off)
+        11-21 - undefined
+        22    - HRE PRESENT (1  yes, 0 no)
+        23    - BUS SPEED (1 960, 0 640)
+        24-31 - reserved
+
+     pizza  0     - OK1 RED  (0 off, 1 on)
+        1     - OK2 RED  (0 off, 1 on)
+        2-3   - unused
+        4     - OK1 GRN  (0 off, 1 on)
+        5     - OK2 GRN  (0 off, 1 on)
+        6     - HSM1 GRN (0 off, 1 on)
+        7     - HSM2 GRN (0 off, 1 on)
+        8-31  - reserved
+
+     eni8   0     - OK1 RED (0 off, 1 on)
+        1     - OK2 RED (0 off, 1 on)
+        2     - undefined
+        3     - undefined
+        4     - OK1 GRN (0 off, 1 on)
+        5     - OK2 GRN (0 off, 1 on)
+        6     - undefined
+        7     - undefined
+        8-15  - reserved
+        16    - STA1 GRN
+        17    - STA2 GRN
+        18    - STA3 GRN
+        19    - STA4 GRN
+        20    - STA5 GRN
+        21    - STA6 GRN
+        22    - STA7 GRN
+        23    - STA8 GRN
+
+     mesm8  0     - OK1 RED (0 off, 1 on)
+        1     - OK2 RED (0 off, 1 on)
+        2     - undefined
+        3     - undefined
+        4     - OK1 GRN (0 off, 1 on)
+        5     - OK2 GRN (0 off, 1 on)
+        6     - undefined
+        7     - undefined
+        8     - 1 = Full Duplex Port 1
+        9     - 1 = Full Duplex Port 2
+        10    - 1 = Full Duplex Port 3
+        11    - 1 = Full Duplex Port 4
+        12    - 1 = Full Duplex Port 5
+        13    - 1 = Full Duplex Port 6
+        14    - 1 = Full Duplex Port 7
+        15    - 1 = Full Duplex Port 8
+        16    - 1 = STA1 GRN
+        17    - 1 = STA2 GRN
+        18    - 1 = STA3 GRN
+        19    - 1 = STA4 GRN
+        20    - 1 = STA5 GRN
+        21    - 1 = STA6 GRN
+        22    - 1 = STA7 GRN
+        23    - 1 = STA8 GRN
+
+     mesm12 0     - OK1 RED (0 off, 1 on)
+        1     - OK2 RED (0 off, 1 on)
+        2     - undefined
+        3     - undefined
+        4     - OK1 GRN (0 off, 1 on)
+        5     - OK2 GRN (0 off, 1 on)
+        6     - undefined
+        7     - undefined
+        8     - 1 = STA1 GRN
+        9     - 1 = STA2 GRN
+        10    - 1 = STA3 GRN
+        11    - 1 = STA4 GRN
+        12    - 1 = STA5 GRN
+        13    - 1 = STA6 GRN
+        14    - 1 = STA7 GRN
+        15    - 1 = STA8 GRN
+        16    - 1 = STA9 GRN
+        17    - 1 = STA10 GRN
+        18    - 1 = STA11 GRN
+        19    - 1 = STA12 GRN
+        20-23 - reserved
+
+     mesm16 0     - OK1 RED (0 off, 1 on)
+        1     - OK2 RED (0 off, 1 on)
+        2     - undefined
+        3     - undefined
+        4     - OK1 GRN (0 off, 1 on)
+        5     - OK2 GRN (0 off, 1 on)
+        6     - undefined
+        7     - undefined
+        8     - 1 = STA1 GRN
+        9     - 1 = STA2 GRN
+        10    - 1 = STA3 GRN
+        11    - 1 = STA4 GRN
+        12    - 1 = STA5 GRN
+        13    - 1 = STA6 GRN
+        14    - 1 = STA7 GRN
+        15    - 1 = STA8 GRN
+        16    - 1 = STA9 GRN
+        17    - 1 = STA10 GRN
+        18    - 1 = STA11 GRN
+        19    - 1 = STA12 GRN
+        20    - 1 = STA13 GRN
+        21    - 1 = STA14 GRN
+        22    - 1 = STA15 GRN
+        23    - 1 = STA16 GRN
+
+     eni12  0     - OK1 RED (0 off, 1 on)
+        1     - OK2 RED (0 off, 1 on)
+        2     - undefined
+        3     - undefined
+        4     - OK1 GRN (0 off, 1 on)
+        5     - OK2 GRN (0 off, 1 on)
+        6     - undefined
+        7     - undefined
+        8     - STA1  GRN (1 on, 0 off)
+        9     - STA2  GRN (1 on, 0 off)
+        10    - STA3  GRN (1 on, 0 off)
+        11    - STA4  GRN (1 on, 0 off)
+        12    - STA5  GRN (1 on, 0 off)
+        13    - STA6  GRN (1 on, 0 off)
+        14    - STA7  GRN (1 on, 0 off)
+        15    - STA8  GRN (1 on, 0 off)
+        16    - STA9  GRN (1 on, 0 off)
+        17    - STA10 GRN (1 on, 0 off)
+        18    - STA11 GRN (1 on, 0 off)
+        19    - STA12 GRN (1 on, 0 off)
+        20-31 - reserved
+
+     eni16  0     - OK1 RED (0 off, 1 on)
+        1     - OK2 RED (0 off, 1 on)
+        2     - undefined
+        3     - undefined
+        4     - OK1 GRN (0 off, 1 on)
+        5     - OK2 GRN (0 off, 1 on)
+        6-7   - undefined
+        8     - ENB1  (1 - yes, 0 - no)
+        9     - ENB2  (1 - yes, 0 - no)
+        10    - ENB3  (1 - yes, 0 - no)
+        11    - ENB4  (1 - yes, 0 - no)
+        12    - ENB5  (1 - yes, 0 - no)
+        13    - ENB6  (1 - yes, 0 - no)
+        14    - ENB7  (1 - yes, 0 - no)
+        15    - ENB8  (1 - yes, 0 - no)
+        16    - ENB9  (1 - yes, 0 - no)
+        17    - ENB10 (1 - yes, 0 - no)
+        18    - ENB11 (1 - yes, 0 - no)
+        19    - ENB12 (1 - yes, 0 - no)
+        20    - ENB13 (1 - yes, 0 - no)
+        21    - ENB14 (1 - yes, 0 - no)
+        22    - ENB15 (1 - yes, 0 - no)
+        23    - ENB16 (1 - yes, 0 - no)
+        24-31 - reserved
+
+     tni    0-11  - reserved
+        12    - Status_1 LED (0 = ON)
+        13    - Status_2 LED (0 = ON)
+        14    - Status_3 LED (0 = ON)
+        15    - Status_4 LED (0 = ON)
+        16    - Status_5 LED (0 = ON)
+        17    - Status_6 LED (0 = ON)
+        18    - Beacon_1 LED (0 = ON)
+        19    - Beacon_2 LED (0 = ON)
+        20    - Beacon_3 LED (0 = ON)
+        21    - Beacon_4 LED (0 = ON)
+        22    - Beacon_5 LED (0 = ON)
+        23    - Beacon_6 LED (0 = ON)
+        24-31 - undefined
+
+     hsm    0     - OK1 RED (0 off, 1 on)
+        1     - OK2 RED (0 off, 1 on)
+        2     - undefined
+        3     - undefined
+        4     - OK1 GRN (0 off, 1 on)
+        5     - OK2 GRN (0 off, 1 on)
+        6-31  - reserved
+
+     fddi   0-3   - reserved
+        4     - LINK (0 flash (DISABLED), 1 on (ENABLED))
+        5     - WRAP B LED (0 on, 1 off)
+        6     - WRAP A LED (0 on, 1 off)
+        7     - THRU LED (0 on, 1 off)
+        8-31  - reserved
+
+     cddi   0-7   - reserved
+            8-9   - Link LED A 00 - off, x1 - on, 10 - flash
+            10-11 - Link LED B 00 - off, x1 - on, 10 - flash
+            12-13 - Link LED C 00 - off, x1 - on, 10 - flash
+            14-15 - Link LED D 00 - off, x1 - on, 10 - flash
+        16-31 - reserved
+
+                for example, the value 0xD8xx indicates
+        Link LED A - off
+        Link LED B - flashing
+        Link LED C - on
+        Link LED D - on
+
+     atm    0-3   - reserved
+        4     - FAR END (0 on, 1 off)
+        5     - YELLOW ALARM LED (0 on, 1 off)
+        6     - RED ALARM LED (0 on, 1 off)
+        7     - CELL ERROR LED (0 on, 1 off)
+        8     - Link (1 Green, 0 off)
+        9-31  - reserved
+
+     fesm   0-6   - reserved
+        6     - STA On (1 on, 0 off)
+        7     - STA Flash (1 Flash, 0 solid) (Not used)
+        8     - LINK1 On  (1 on, 0 off)
+        9     - LINK1 Flash (1 Flash, 0 solid) (Not used)
+        -- The following are for Copper Only
+        10    - LINK2 On  (1 on, 0 off)
+        11    - LINK2 Flash (1 Flash, 0 solid) (Not used)
+        12    - LINK3 On  (1 on, 0 off)
+        13    - LINK3 Flash (1 Flash, 0 solid) (Not used)
+        14    - LINK4 On  (1 on, 0 off)
+        15    - LINK4 Flash (1 Flash, 0 solid) (Not used)
+        16    - Full Duplex (1) Half Duplex (0)
+        17-31 - reserved
+
+    wsm	0-7   - reserved
+              -      off  blink    slow blink    on
+        8-9   - STA1  00    01         10        11
+        10-11 - STA2  00    01         10        11
+        12-13 - STA3  00    01         10        11
+        14-15 - STA4  00    01         10        11
+        16-17 - STA5  00    01         10        11
+        18-19 - STA6  00    01         10        11
+        20-21 - STA7  00    01         10        11
+        22-23 - STA8  00    01         10        11
+        24-31 - reserved
+
+     csm    0     - OK1 RED (0 off, 1 on)
+        1     - OK2 RED (0 off, 1 on)
+        2     - undefined
+        3     - undefined
+        4     - OK1 GRN (0 off, 1 on)
+        5     - OK2 GRN (0 off, 1 on)
+        6     - undefined
+        7     - undefined
+        8-23  - port = bit - 7;
+              - 0 - port down, LINK OFF, RED Amber
+              - 1 - port up, LINK Green, RED OFF
+        24-31 - unused
+
+     cabcm	0-7   - reserved
+                off  blink    on
+        8-9    LINK1	00    01      11
+        10-31 - reserved
+     fcsm   0     - OK1 RED (0 off, 1 on)
+        1     - OK2 RED (0 off, 1 on)
+        2     - undefined
+        3     - undefined
+        4     - OK1 GRN (0 off, 1 on)
+        5     - OK2 GRN (0 off, 1 on)
+        6-31  - unused
+
+         atmce2s2t,
+         atmce2s2e	0-7   - reserved
+        8     - LINK1 (1 on, 0 off)
+        9     - ERR1  (1 on, 0 off)
+        10    - LINK2 (1 on, 0 off)
+        11    - ERR2  (1 on, 0 off)
+              -      off  blink      on
+        12-13 - STA1  00    01       11
+        14-15 - STA2  00    01       11
+        16-31 - reserved
+
+
+        csmu        0     - OK1 RED (0 off, 1 on)
+        1     - OK2 RED (0 off, 1 on)
+        2     - undefined
+        3     - undefined
+        4     - OK1 GRN (0 off, 1 on)
+        5     - OK2 GRN (0 off, 1 on)
+        6     - undefined
+        7     - undefined
+
+     cabds3:
+     cabe3:         0-7   - reserved
+                      off  yellow    green
+        8-9    LINK1  00    01       11
+        10-11  LINK2  00    01       11
+        12-31 - reserved
+
+     cabds1:
+     cabe1:
+     cabcet1:
+     cabcee1:       0-7   - reserved
+                      off  yellow    green
+        8-9    LINK1  00    01       11
+        10-11  LINK2  00    01       11
+        12-13  LINK3  00    01       11
+        14-15  LINK4  00    01       11
+        16-31 - reserved
+
+     cab4imat1:
+     cab4imae1:
+     cab8imat1:
+     cab8imae1:     0-7   - reserved
+                      off  yellow    green
+        8-9    LINK1  00    01       11
+        10-11  LINK2  00    01       11
+        12-13  LINK3  00    01       11
+        14-15  LINK4  00    01       11
+        16-17  LINK5  00    01       11
+        18-19  LINK6  00    01       11
+        20-21  LINK7  00    01       11
+        22-23  LINK8  00    01       11
+        24-31 - reserved
+
+     Other modules will be defined later."
+
+    ::= { chasModuleEntry 15 }
+
+chasModuleVbusTxDiscards  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The current count of transmit VBUS buffer overruns."
+    ::= { chasModuleEntry 16 }
+
+chasModuleVbusRxDiscards  OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The current count of receive VBUS buffer overruns."
+    ::= { chasModuleEntry 17 }
+
+chasModuleLedStatusExtend  OBJECT-TYPE
+    SYNTAX  OCTET STRING (SIZE(0..20))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "A octet string containing module led information"
+    ::= { chasModuleEntry 18 }
+
+
+--  chasControllerTable. This table maintains the per
+--  chassis controller information. This table is used
+--  to track the controller specific information and
+--  primary/secondary status.
+
+chasControlTable  OBJECT-TYPE
+    SYNTAX  SEQUENCE OF ChasControlEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    "A list of Module controller status.
+     NOTE: Objects with ACCESS of read-write
+     which are associated with configuration
+     data which presists accross reboots are
+     in fact only valid for the Primary MPM.
+     If the Secondary MPM has different values
+     this information is not available to
+     snmp queries, nor is it possible to
+     write to the Secondaries instance of
+     these objects. Further, once the cconfigured
+     data is sychronized from the Primary to the Secondary,
+     all values set on the Primary will be those used by the
+     Secondary after the Secondary is reset.  There is
+     no ability to change a value for the Secondary except
+     by changinging it on the Primary and then writing the
+     configuation of the Primary to the Secondary."
+    ::= { chasController 1 }
+
+chasControlEntry  OBJECT-TYPE
+    SYNTAX  ChasControlEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    "A controller entry containing objects for a particular
+     controller."
+    INDEX   { chasControlSlot }
+    ::= { chasControlTable 1 }
+
+ChasControlEntry  ::= SEQUENCE {
+    chasControlSlot
+        INTEGER,
+    chasControlState
+        XylanMPMStateType,
+    chasControlDCEPortRate
+        XylanSerialPortSpeed,
+    chasControlDCEWordSize
+        INTEGER,
+    chasControlDCEStopBits
+        INTEGER,
+    chasControlDCEParity
+        XylanSerialPortParity,
+    chasControlDTEPortRate
+        XylanSerialPortSpeed,
+    chasControlDTEWordSize
+        INTEGER,
+    chasControlDTEStopBits
+        INTEGER,
+    chasControlDTEParity
+        XylanSerialPortParity,
+    chasControlIPAdd
+        IpAddress,
+    chasControlBootCode
+        DisplayString,
+    chasControlFreeFFS
+        INTEGER,
+    chasControlFreeBuffers
+        INTEGER,
+    chasControlBufferUtilization
+        Gauge,
+    chasControlCPUUtilization
+        Gauge,
+    chasControlImageSuffix
+        DisplayString,
+    chasControlImageSyncStatus
+        XylanImageSyncStatus,
+    chasControlConfigSyncStatus
+        XylanConfigSyncStatus,
+    chasControlConfigSyncEnable
+        XylanConfigSyncEnable,
+    chasControlDCEPortMode
+        XylanSerialPortMode,
+    chasControlDTEPortMode
+        XylanSerialPortMode,
+    chasControlEthPortIPAddr
+        IpAddress,
+    chasControlEthPortSubMask
+        IpAddress,
+    chasControlEthPortBcast
+        IpAddress,
+    chasControlEthPortGateWay
+        IpAddress,
+    chasControlEthPortRipMode
+        INTEGER,
+    chasControlEthPortRemoteHost
+        IpAddress,
+    chasControlEthPortRemoteMask
+        IpAddress
+    }
+
+chasControlSlot  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The physical slot number for this controller card.
+     This is the same as chasModuleSlot."
+    ::= { chasControlEntry 1 }
+
+chasControlState  OBJECT-TYPE
+    SYNTAX  XylanMPMStateType
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "Provides desired (and actual) state of the given
+     controller module. The unknown state may be
+     returned if the controller is not present or offline.
+
+     A controller may be placed into the Primary state
+     by writing a value of primary(3). Note that most
+     implimentations will verify that only one controller
+     is active; thus, setting this will automatically
+     place all other controllers into the secondary state.
+
+     A controller may be placed into the secondary state by
+     writing a value of secondary(4). The system will ensure
+     two modules are present and that the secondary is
+     capable of entering the primary state."
+    ::= { chasControlEntry 2 }
+
+chasControlDCEPortRate  OBJECT-TYPE
+    SYNTAX  XylanSerialPortSpeed
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "This is the current (and desired) baud rate for the DCE
+     (console) serial port 1. The power-on default rate is
+     9600 b/s."
+    ::= { chasControlEntry 3 }
+
+chasControlDCEWordSize  OBJECT-TYPE
+    SYNTAX  INTEGER (7..8)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "This is the current (and desired) word size for
+     serial port 0 (DCE). The power-on default is 8 bits."
+    ::= { chasControlEntry 4 }
+
+chasControlDCEStopBits  OBJECT-TYPE
+    SYNTAX  INTEGER (1..2)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "This is the current (and desired) number of stop
+     bits for serial port 0 (DCE). The power-on default
+     is 1 bit."
+    ::= { chasControlEntry 5 }
+
+chasControlDCEParity  OBJECT-TYPE
+    SYNTAX  XylanSerialPortParity
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "This is the current (and desired) parity for serial
+     port 0 (DCE). The power-on default rate is NONE."
+    ::= { chasControlEntry 6 }
+
+chasControlDTEPortRate  OBJECT-TYPE
+    SYNTAX  XylanSerialPortSpeed
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "This is the current (and desired) baud rate for the DTE
+     (modem) serial port 0. The power-on default rate is
+     9600 b/s."
+    ::= { chasControlEntry 7 }
+
+chasControlDTEWordSize  OBJECT-TYPE
+    SYNTAX  INTEGER (7..8)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "This is the current (and desired) word size for
+     serial port 1 (DTE). The power-on default is 8 bits."
+    ::= { chasControlEntry 8 }
+
+chasControlDTEStopBits  OBJECT-TYPE
+    SYNTAX  INTEGER (1..2)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "This is the current (and desired) number of stop
+     bits for serial port 1 (DTE). The power-on default
+     is 1 bit."
+    ::= { chasControlEntry 9 }
+
+chasControlDTEParity  OBJECT-TYPE
+    SYNTAX  XylanSerialPortParity
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "This is the current (and desired) parity for serial
+     port 1 (DTE). The power-on default rate is NONE."
+    ::= { chasControlEntry 10 }
+
+chasControlIPAdd  OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The IP address for this MPM and it's snmp agent."
+    ::= { chasControlEntry 11 }
+
+chasControlBootCode  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..255))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "FW boot code to load on reset for this controller."
+    ::= { chasControlEntry 12 }
+
+chasControlFreeFFS  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The current free Flash File System space."
+    ::= { chasControlEntry 13 }
+
+chasControlFreeBuffers  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The current software does not pool a specific
+     number of buffers.  Therefore this object
+     is obsolete."
+    ::= { chasControlEntry 14 }
+
+chasControlBufferUtilization  OBJECT-TYPE
+    SYNTAX  Gauge
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The current software does not pool a specific
+     number of buffers.  Therefore this object
+     is obsolete."
+    ::= { chasControlEntry 15 }
+
+chasControlCPUUtilization  OBJECT-TYPE
+    SYNTAX  Gauge
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The current CPU utilization for this controller."
+    ::= { chasControlEntry 16 }
+
+chasControlImageSuffix  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE(1..3))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "This character string will be used to determine which
+     file is downloaded to the NIs to be brought up
+     by the chassis manager.  Only files with suffixes
+     (the part of the file name following '.') matching
+     this character string will be downloaded to NIs
+     which are inserted into the chassis or reset.  If
+     the chassis is rebooted these files will be used
+     for the initial NI loads.
+     This value can only be set on the Primary MPM.
+     If automatic synchronization is enabled and the
+     required image files on the Secondary match those
+     on the Primary (State is Redundant or CONFIG FB)
+     then the value set will be copied to the Secondary
+     after the first 5min period of no configuration
+     updates or when a configsync is envoked."
+    ::= { chasControlEntry 17 }
+
+chasControlImageSyncStatus  OBJECT-TYPE
+    SYNTAX  XylanImageSyncStatus
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "For the Primary this means:
+     insync(1) the files in the secondary's flash file
+               system are the same as those in the primary's.
+     newer(2)  the files in the secondary's flash file
+               system have a more recent date than those
+           on the primary
+     older(3)  the files in the secondary's flash file
+               system have an earlier date than those
+           on the primary
+     unknown(4)no meaningfull answer exists
+     syncing(5)The Primary has initiated file synchronization
+           this should be temporay - 30 minutes at most!
+     For the Secondary the meaning or 2 and 3 are reversed
+
+     If this value is SET to 1, the chassis attempts to
+     synchronize the image files."
+    ::= { chasControlEntry 18 }
+
+chasControlConfigSyncStatus  OBJECT-TYPE
+    SYNTAX  XylanConfigSyncStatus
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "insync(1) All configuration data on the Primary is
+                   the same as that on the secondary.
+     newer(2)  The config data on the Primary MPM has been
+           updated more recently than the config data
+           on the secondary. (This is not a possible
+           value if the instance is the Secondary)
+     older(3)  The config data on the Primary MPM has been
+           updated more recently than the config data
+           on the secondary. (This is not a possible
+           value if the instance is the Primary)
+         unknown(4)No meaniful response can be given.
+     syncing(5)The Primary has initiated configuration
+               synchronization this should be temporay
+           15 minutes at most!
+     bootvalues(6) The configuration data contains the
+           boot values.  Only possible on secondary
+           if snmp is interaction with chassis is
+           possible
+     If this value is SET to 1, the chassis attempts to
+     synchronize the configuration file."
+    ::= { chasControlEntry 19 }
+
+chasControlConfigSyncEnable  OBJECT-TYPE
+    SYNTAX  XylanConfigSyncEnable
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "enabled(1) - After changes to configuration data
+                           AND after 5 min from the last change
+                           if the image files are synced, sync
+                           synchronize the configuration data.
+     disabled(2) - never automatically synchronize the
+               configuration data."
+    ::= { chasControlEntry 20 }
+
+chasControlDCEPortMode  OBJECT-TYPE
+    SYNTAX  XylanSerialPortMode
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "down(1) -     This port is down.
+     console(2) -  This is the console port
+     slip(3) -     This is a slip port.
+     This value can only be modified through the
+     console/slip port"
+    ::= { chasControlEntry 21 }
+
+chasControlDTEPortMode  OBJECT-TYPE
+    SYNTAX  XylanSerialPortMode
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "down(1) -     This port is down.
+     console(2) -  This is the console port
+     slip(3) -     This is a slip port.
+     This value can only be modified through the
+     console/slip port"
+    ::= { chasControlEntry 22 }
+
+chasControlEthPortIPAddr  OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "The IP network address of the Ethernet Mgmt. Port."
+    ::= { chasControlEntry 23 }
+
+chasControlEthPortSubMask  OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "The IP network subnet mask of the Ethernet Mgmt. Port."
+    ::= { chasControlEntry 24 }
+
+chasControlEthPortBcast  OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "The IP network broadcast address of the Ethernet Mgmt. Port."
+    ::= { chasControlEntry 25 }
+
+chasControlEthPortGateWay  OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "The IP network gateway address of the Ethernet Mgmt. Port."
+    ::= { chasControlEntry 26 }
+
+    chasControlEthPortRipMode  OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    silent(1),
+                    deaf(2),
+                    active(3),
+                    inactive(4)
+                    }
+        ACCESS  read-only
+        STATUS  mandatory
+        DESCRIPTION
+    "The RIP mode of the Ethernet Mgmt. Port."
+    ::= { chasControlEntry 27 }
+
+chasControlEthPortRemoteHost  OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "The IP network remote host address of the Ethernet Mgmt. Port."
+    ::= { chasControlEntry 28 }
+
+chasControlEthPortRemoteMask  OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "The IP network remote host subnet mask of the Ethernet Mgmt. Port."
+    ::= { chasControlEntry 29 }
+
+-- NEW TABLE
+--  chasControllerTable. This table maintains the per
+--  chassis controller information. This table is used
+--  to track the controller specific information and
+--  primary/secondary status.
+
+chasControlFFSTable  OBJECT-TYPE
+    SYNTAX  SEQUENCE OF ChasControlFFSEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    "This table provides a file directory listing of
+     both the primary and secondary MPMs. and provides
+     for simple file operations."
+    ::= { chasController 2 }
+
+chasControlFFSEntry  OBJECT-TYPE
+    SYNTAX  ChasControlFFSEntry
+    ACCESS  not-accessible
+    STATUS  mandatory
+    DESCRIPTION
+    "Each entry describes as single file.  Rather than use
+     the entire file name as an instance, a checksum of the
+     file name is used."
+    INDEX   { chasControlFFSFileSlot, chasControlFFSFileNameCks }
+    ::= { chasControlFFSTable 1 }
+
+ChasControlFFSEntry  ::= SEQUENCE {
+    chasControlFFSFileSlot
+        INTEGER,
+    chasControlFFSFileNameCks
+        INTEGER,
+    chasControlFFSFileName
+        DisplayString,
+    chasControlFFSFileSize
+        INTEGER,
+    chasControlFFSFileDate
+        TimeTicks,
+    chasControlFFSFileAction
+        XylanFFSFileAction
+    }
+
+chasControlFFSFileSlot  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "Which slot, valid values are 1 and 2. If there is
+    no Secondary MPM only one of these will be valid."
+    ::= { chasControlFFSEntry 1 }
+
+chasControlFFSFileNameCks  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "This value/instance is derived from the file name
+     and is used to determine which file the NMS is
+     inquiring about or operating on.  The NMS must
+     use the value given by the Switch."
+    ::= { chasControlFFSEntry 2 }
+
+chasControlFFSFileName  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE(1..40))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The file name."
+    ::= { chasControlFFSEntry 3 }
+
+chasControlFFSFileSize  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The file size: bytes of data."
+    ::= { chasControlFFSEntry 4 }
+
+chasControlFFSFileDate  OBJECT-TYPE
+    SYNTAX  TimeTicks
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The unix date the file was created.  this is
+    based upon number of seconds since 1/ 1/70.
+    Files created by older versions of the bootcode
+    alway have 1/ 1/70 00:00 as the date.
+    If the date is incorrect on the switch the values
+    in the file system will reflect that."
+    ::= { chasControlFFSEntry 5 }
+
+chasControlFFSFileAction  OBJECT-TYPE
+    SYNTAX  XylanFFSFileAction
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+    "none(1) No action has been requested for this file
+     writingTo(2) can only be specified for Primary
+            causes the specified file to be
+            written from Primary to Secondary.
+     deletingFrom(3) this file is being removed
+            can be specified for files on both
+            Primary and Secondary.
+     readingFrom(4) can only be specified for Secondary
+            causes the specified file to be copoed
+            from the Secondary to the Promary.
+     This value may be set to delete files from an MPM
+     or copy files between the Primary and Secondary.
+     Only one action is permitted at a time.  If a SET
+     is attempted to ANY chasControlFFSFileAction when
+     chasControlLastFFSActionSlot is inProgress(2)
+     the resource will be unavailable."
+    ::= { chasControlFFSEntry 6 }
+
+--      The value of objects under chasControlFFSActionStatus
+--      reflect successful writes to an instance (slot#/fncks)
+--	of chasControlFFSFileAction
+chasControlFFSActionStatus OBJECT IDENTIFIER ::= { chasController 3 }
+
+chasControlLastFFSAction  OBJECT-TYPE
+    SYNTAX  XylanFFSFileAction
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "writingTo(2) The file is being written to the Seconday.
+     deletingFrom(3) the file is being removed
+        from the slot indicated by chasControlLastFFSActionSlot.
+     readingFrom(4) the file is being copied from the
+        Secondary to the Primary.
+     The last action that was requested from the file system.
+     Only one action is permitted at a time.  If a SET
+     is attempted to ANY chasControlFFSFileAction when
+     chasControlLastFFSActionSlot is inProgress(2)
+     that resource will be unavailable."
+    ::= { chasControlFFSActionStatus 1 }
+
+chasControlLastFFSActionSlot  OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The slot number (1/2) which combined with the action
+     says what is really happening.  "
+    ::= { chasControlFFSActionStatus 2 }
+
+chasControlLastFFSActionFileName  OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE(1..40))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The name of the file upon which the last Action is
+    was successfully requested."
+    ::= { chasControlFFSActionStatus 3 }
+
+chasControlLastFFSActionDate  OBJECT-TYPE
+    SYNTAX  TimeTicks
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The time of the last successfull set to
+     chasControlFFSFileAction"
+    ::= { chasControlFFSActionStatus 4 }
+
+chasControlLastFFSActionSource  OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The IP address of the NMS which did the last
+     successfull set to chasControlFFSFileAction"
+    ::= { chasControlFFSActionStatus 5 }
+
+chasControlLastFFSActionStatus  OBJECT-TYPE
+    SYNTAX  XylanFFSFileActionStatus
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "none(1) No file action has ever been succesfully requested
+         since boot up of this MPM. Included takeover
+         by Secondary MPM.
+     inProgress(2) The action described by other members of
+        this group is still underway.
+     successfull(3) The action described by other members of
+        this group completed successfully.
+     failed(4) The action described by other members of
+        this group failed."
+    ::= { chasControlFFSActionStatus 6 }
+
+-- END OF NEW
+
+--  chasPowerSupply group.  This group contains the
+--  physical info and status on the chassis power supplies.
+
+chasPowerSupply1State  OBJECT-TYPE
+    SYNTAX  XylanPSStateType
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The status of power supply slot 1."
+    ::= { chasPowerSupply 1 }
+
+chasPowerSupply2State  OBJECT-TYPE
+    SYNTAX  XylanPSStateType
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The status of power supply slot 2."
+    ::= { chasPowerSupply 2 }
+
+
+
+
+--  chasEnvrmnt group.  This group contains the physical
+--  info and status on the temperature monitors.
+
+chasEnvrmnt1TempRange1  OBJECT-TYPE
+    SYNTAX  XylanTempStateType
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "This field contains the state of the temp
+     sensor located on the Primary MPM. This is
+     temperature sensor 0."
+    ::= { chasEnvmnt 1 }
+
+chasEnvrmnt1TempRange2  OBJECT-TYPE
+    SYNTAX  XylanTempStateType
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "This field contains the state of the temp
+     sensor located on the Primary MPM. This is
+     temperature sensor 1. If the module type is
+     mpm(5) the value returned is notPresent(2).
+     On other MPM types a returned value of
+     underThreshold(4) indcates that the temperature
+     is NOT too low and overThreshold(3) indicates
+     that the temperature IS too low."
+    ::= { chasEnvmnt 2 }
+
+chasEnvrmnt2TempRange1  OBJECT-TYPE
+    SYNTAX  XylanTempStateType
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "This field contains the state of the temp
+     sensor located on the Secondary MPM. This
+     is temperature sensor 0."
+    ::= { chasEnvmnt 3 }
+
+chasEnvrmnt2TempRange2  OBJECT-TYPE
+    SYNTAX  XylanTempStateType
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "This field contains the state of the temp
+     sensor located on the Secondary MPM. This is
+     temperature sensor 1. If there is no Secondary
+     MPM or if the module type is mpm(5) the value
+     returned is notPresent(2). On other MPM types
+     a returned value of underThreshold(4) indcates
+     that the temperature is NOT too low and
+     overThreshold(3) indicates that the temperature
+     IS too low."
+    ::= { chasEnvmnt 4 }
+
+
+
+
+--  chasStatus group.  This group contains the XYLAN
+--  NMS specific opaque type. It is used in conjuction
+--  with the XYLAN provided NMS application.
+
+chasXylanOpaque  OBJECT-TYPE
+ --   SYNTAX  ChasXylanOpaqueEntry
+    SYNTAX	OCTET STRING (SIZE (252))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+    "The Xylan proprietary status structure."
+    ::= { chasStatus 1 }
+
+-- chasXylanOpaqueEntry  OBJECT-TYPE
+--   SYNTAX  OPAQUE
+--   ACCESS  not-accessible
+--   STATUS  mandatory
+--   DESCRIPTION
+--	"The actual status definitions."
+--    ::= { chasXylanOpaque 1 }
+
+-- This is a bit field that contains the state
+-- of the panel LEDs. The definitions are
+-- specific to the module type. Please see the
+    -- chasModuleLedStatus object.
+
+    --XylanLedCode ::= INTEGER
+
+    --XylanFslot ::= SEQUENCE {
+        --xylanFslotType
+            --XylanModuleType,
+        --xylanFslotSubType
+            --XylanModuleSubType,
+        --xylanFslotStatus
+            --XylanLedCode
+    --}
+
+    --XylanModuleEnt ::= SEQUENCE {
+        --xylanModuleSlot
+            --OCTET STRING (SIZE (1)),
+        --xylanModuleSubunit
+            --OCTET STRING (SIZE (1)),
+        --xylanModuleType
+            --OCTET STRING (SIZE (1)),
+        --xylanModuleOperStatus
+            --OCTET STRING (SIZE (1)),
+        --xylanModuleLedStatus
+            --OCTET STRING (SIZE (4)),
+    --}
+
+    -- ChasXylanOpaqueEntry ::= SEQUENCE {
+        -- chasXylanType
+            -- XylanChasType,
+        -- chasXylanPSslot1
+            -- XylanPSStateType,
+        -- chasXylanPSslot2
+            -- XylanPSStateType,
+        -- chasXylanFslot1
+            -- XylanFslot,
+        -- chasXylanFslot2
+            -- XylanFslot,
+        -- chasXylanFslot3
+            -- XylanFslot,
+        -- chasXylanFslot4
+            --  XylanFslot,
+        -- chasXylanFslot5
+            -- XylanFslot,
+        -- chasXylanFslot6
+            -- XylanFslot,
+        -- chasXylanFslot7
+            -- XylanFslot,
+        -- chasXylanFslot8
+            -- XylanFslot,
+        -- chasXylanFslot9
+            -- XylanFslot,
+        -- chasXylanNumModule
+            --OCTET STRING (SIZE (4)),
+        -- chasXylanModuleEnt
+            --XylanModuleEnt
+    -- }
+
+
+    XylanModPortTypes ::= INTEGER {
+    unknown(1),		-- bad type
+    invalid(2),		-- something not thought about today
+    empty(3),		-- empty
+    serial(4),		-- modem / console
+    ethutp(5),		-- eth (unshielded twisted pair)
+    xmpt6(6),		-- eth (shielded twisted pair)
+    ethaui(7),		-- eth (D shaped 15 pin)
+    ethbnc(8),		-- eth (thin net coax)
+    ethfiorl(9),		-- eth (fiber)
+    tok(10),		-- tok (unshielded twisted pair)
+    xmpt11(11),		-- str (shielded twisted pair)
+    fsas(12),		-- fddi (single mode)
+    fdas(13),		-- fddi (multi mode)
+    xmpt14(14),		-- unassigned
+    cdas(15),		-- cddi (fddi copper)
+    xmpt16(16),		-- DS3
+    atm(17),		-- atm (OC3)
+    oc12(18),		-- Atm MultiMode port
+    xmpt19(19),		--
+    xmpt20(20),		--
+    tokfbr(21),		-- Token ring fiber
+    irp(22),		-- Internal router port
+    fdxaui(23),		-- Ethernet Full Duplex receiver
+    fdxaui2(24),		-- Ethernet Full Duplex transmitter
+    t1(25),			-- T1 interface
+    e1(26),			-- E1 interface
+    e3(27),			-- E3 interface
+    usp(28),		-- Universal Serial Port (USP)
+    isdnbri(29),		-- ISDN Basic Rate Interface
+    e100baset(30),		-- 100BaseT
+    atmds1(31),		-- DS1
+    tok100(32),		-- token ring 100BaseT
+    e100basef(33),		-- 100BaseF (fiber)
+    egigfm(34),		-- Gigabit Ethernet short haul
+    egigfms(35),		-- Gigabit Ethernet medium haul
+    egigfmh(36)		-- Gigabit Ethernet long haul
+    }
+
+    chasXylanCompaq  OBJECT-TYPE
+     --  SYNTAX  ChasXylanCompaqEntry
+        SYNTAX	OCTET STRING (SIZE (310))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The Xylan proprietary status structure."
+    ::= { chasStatus 2 }
+
+    -- chasXylanCompaqEntry  OBJECT-TYPE
+    --   SYNTAX  OPAQUE
+    --   ACCESS  not-accessible
+    --   STATUS  mandatory
+    --   DESCRIPTION
+    --	"The actual status definitions."
+    --    ::= { chasXylanCompaq 1 }
+
+-- This is a bit field that contains the state
+-- of the panel LEDs. The definitions are
+-- specific to the module type. Please see the
+-- chasModuleLedStatus object.
+
+--XylanFslotC ::= SEQUENCE {
+    --xylanFslotCType
+        --OCTET STRING (SIZE (1))
+        --This contains 8 bit version of XylanModuleType
+
+    --xylanFslotCStatus
+        --OCTET STRING (SIZE (3))
+        --This contains the low oder 24 bits of XylanLedCode
+--}
+
+-- ChasXylanOpaqueEntry ::= SEQUENCE {
+    -- chasXylanType
+        -- XylanChasType, OCTET STRING (SIZE (1)),
+    -- chasXylanPSslot1
+        -- XylanPSStateType, OCTET STRING (SIZE (1)),
+    -- chasXylanPSslot2
+        -- XylanPSStateType, OCTET STRING (SIZE (1)),
+    -- chasXylanNumSubUnits
+        --OCTET STRING (SIZE (1)),
+        --The number of valid subunits on HSMs
+    -- chasXylanFslot1
+        -- XylanFslotC,
+    -- chasXylanFslot2
+        -- XylanFslotC,
+    -- chasXylanFslot3
+        -- XylanFslotC,
+    -- chasXylanFslot4
+        --  XylanFslotC,
+    -- chasXylanFslot5
+        -- XylanFslotC,
+    -- chasXylanFslot6
+        -- XylanFslotC,
+    -- chasXylanFslot7
+        -- XylanFslotC,
+    -- chasXylanFslot8
+        -- XylanFslotC,
+    -- chasXylanFslot9
+        -- XylanFslotC,
+    -- chasXylanSubUnits
+        --OCTET STRING (SIZE (128),
+        --[16 * slot(1),subunit(1),type(1),opstat(1),leds(4)]
+    -- chasXylanPortTypes
+        --OCTET STRING (SIZE (144)),
+        --[144 XylanModPortTypes]
+        -- 16 bytes per slot
+        -- if # ports per slot <= 8
+        -- n x port type,8-n EMPTY,
+        -- n x (port stat * 16) ,8-n EMPTY
+        --else
+        -- n x port,16 - n EMPTY
+        -- for ME12 bytes 0-1 bits 0-11 will be interface status
+        --          bytes 2-4 bits 0-11 will be duplex status
+        -- for ME16 bytes 0-1 bits 0-11 will be interface status
+        --          bytes 2-4 bits 0-11 will be duplex status
+        -- for ME32 bytes 0-3 will give interface status:
+        -- byte 0 will be interface 1-8 low order to high order
+        -- byte 1 will be interface 9-16       "
+        -- byte 2 will be interface 17-24      "
+        -- byte 3 will be interface 25-32      "
+    -- }
+
+    chasXylanPollData  OBJECT-TYPE
+     --  SYNTAX  ChasXylanPollingDataEntry
+        SYNTAX	OCTET STRING (SIZE (388))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The third Xylan proprietary status structure."
+    ::= { chasStatus 3 }
+
+END
+
+--  And so ends the saga of the XYLAN chassis MIB.
