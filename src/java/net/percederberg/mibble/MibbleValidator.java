@@ -237,22 +237,22 @@ public class MibbleValidator {
         if (!file.canRead() || !file.isFile()) {
             return false;
         }
-        StringBuilder buffer = new StringBuilder();
         try (
             BufferedReader in = new BufferedReader(new FileReader(file));
         ) {
-            String str;
-            int line = 0;
-            while (line++ < 100 && (str = in.readLine()) != null) {
-                buffer.append(str);
+            while (true) {
+                String str = in.readLine();
+                if (str == null) {
+                    break;
+                }
+                str = str.trim();
+                if (!str.equals("") && !str.startsWith("--")) {
+                    return str.contains("DEFINITIONS");
+                }
             }
-        } catch (FileNotFoundException ignore) {
-            // Do nothing
-        } catch (IOException ignore) {
+        } catch (Exception ignore) {
             // Do nothing
         }
-        return buffer.indexOf("DEFINITIONS") > 0 &&
-               buffer.indexOf("::=") > 0 &&
-               buffer.indexOf("BEGIN") > 0;
+        return false;
     }
 }
