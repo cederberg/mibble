@@ -436,6 +436,9 @@ class MibAnalyzer extends Asn1Analyzer {
         String module = getStringValue(child, 0);
         MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
         MibImport imp = new MibImport(loader, ref, module, symbols);
+        if (module.equals("RFC1065-SMI")) {
+            log.addWarning(ref, "RFC1065-SMI is obsoleted by RFC1155-SMI");
+        }
 
         // Schedule MIB loading
         loader.scheduleLoad(module);
