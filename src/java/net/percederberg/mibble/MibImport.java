@@ -77,15 +77,17 @@ public class MibImport implements MibContext {
     public void initialize(MibLoaderLog log) throws MibException {
         mib = loader.getMib(name);
         if (mib == null) {
-            String msg = "couldn't find referenced MIB '" + name + "'";
-            throw new MibException(fileRef, msg);
+
+            String msg = "couldn't find referenced MIB '" + name + "', " +
+                         "skipping import of " + symbols.size() + " symbols";
+            log.addWarning(fileRef, msg);
         }
         if (symbols != null) {
             for (String sym : symbols) {
                 if (mib.getSymbol(sym) == null) {
                     String msg = "couldn't find imported symbol '" + sym +
                                  "' in MIB '" + name + "'";
-                    throw new MibException(fileRef, msg);
+                    log.addWarning(fileRef, msg);
                 }
             }
         }
