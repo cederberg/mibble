@@ -140,6 +140,9 @@ public class Mib implements MibContext {
         for (MibImport imp : imports) {
             try {
                 imp.initialize(log);
+                if (loaded) {
+                    imp.validateSmiVersion(log, this);
+                }
             } catch (MibException e) {
                 log.addError(e);
             }

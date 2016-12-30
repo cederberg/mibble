@@ -382,25 +382,30 @@ class MibAnalyzer extends Asn1Analyzer {
      */
     protected Node exitImportList(Production node) {
         ArrayList<MibImport> imports = getChildValues(node);
-        boolean addMissingSmi = true;
+        boolean importsSMI = false;
+        boolean isSMIv2 = false;
         for (MibImport imp : imports) {
-            if (imp.getName().startsWith("RFC1065-SMI") ||
-                imp.getName().startsWith("RFC1155-SMI") ||
-                imp.getName().startsWith("SNMPv2-SMI")) {
-
-                addMissingSmi = false;
-            }
+            String name = imp.getName();
+            importsSMI |= name.equals("RFC1065-SMI") ||
+                          name.equals("RFC1155-SMI") ||
+                          name.equals("SNMPv2-SMI");
+            isSMIv2 |= name.equals("SNMPv2-SMI") ||
+                       name.equals("SNMPv2-TC") ||
+                       name.equals("SNMPv2-CONF");
         }
-        if (addMissingSmi) {
-            // TODO: Ugly hack that adds a "hidden" SNMPv1 SMI as the last
-            //       import, but without any named symbols (triggering
-            //       warnings for each symbol used).
-            List<String> empty = Collections.<String> emptyList();
+        if (!importsSMI) {
+            // Add a "hidden" SMI as the last import (without named symbols)
+            // This will trigger warnings for each symbol found there.
             MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
-            MibImport imp = new MibImport(loader, ref, "RFC1155-SMI", empty);
+            String module = isSMIv2 ? "SNMPv2-SMI" : "RFC1155-SMI";
+            List<String> empty = Collections.<String> emptyList();
+            MibImport imp = new MibImport(loader, ref, module, empty);
             loader.scheduleLoad(imp.getName());
             currentMib.addImport(imp);
             imports.add(imp);
+        }
+        if (isSMIv2) {
+            currentMib.setSmiVersion(2);
         }
         MibContext current = loader.getDefaultContext();
         for (int i = imports.size() - 1; i >= 0; i--) {
@@ -434,7 +439,7 @@ class MibAnalyzer extends Asn1Analyzer {
         }
         child = getChildAt(node, 2);
         String module = getStringValue(child, 0);
-        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node);
+        MibFileRef ref = MibAnalyzerUtil.getFileRef(file, node.getChildAt(2));
         MibImport imp = new MibImport(loader, ref, module, symbols);
         if (module.equals("RFC1065-SMI")) {
             log.addWarning(ref, "RFC1065-SMI is obsoleted by RFC1155-SMI");

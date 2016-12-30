@@ -92,6 +92,24 @@ public class MibImport implements MibContext {
     }
 
     /**
+     * Validates the imported MIB module SMI version. Should be the
+     * same as the importing MIB module SMI version. A warning will
+     * be logged on mismatch.
+     *
+     * @param log            the MIB loader log
+     * @param mib            the importing MIB module
+     */
+    protected void validateSmiVersion(MibLoaderLog log, Mib mib) {
+        int parentVer = mib.getSmiVersion();
+        int importedVer = getMib().getSmiVersion();
+        if (parentVer != importedVer) {
+            String msg = "imported " + name + " module is SMIv" + importedVer +
+                         ", instead of SMIv" + parentVer;
+            log.addWarning(fileRef, msg);
+        }
+    }
+
+    /**
      * Checks if this import has a symbol list.
      *
      * @return true if this import contains a symbol list, or
