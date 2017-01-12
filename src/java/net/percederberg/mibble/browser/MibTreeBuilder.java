@@ -15,15 +15,16 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.swing.JTree;
-import javax.swing.tree.TreeModel;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import net.percederberg.mibble.Mib;
 import net.percederberg.mibble.MibSymbol;
+import net.percederberg.mibble.MibType;
 import net.percederberg.mibble.MibValue;
 import net.percederberg.mibble.MibValueSymbol;
+import net.percederberg.mibble.snmp.SnmpTrapType;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
@@ -104,91 +105,93 @@ public class MibTreeBuilder {
      * @param mib            the MIB to add
      */
     public void addMib(Mib mib) {
-
-        // Create value sub tree
-        MibTreeNode node = new MibTreeNode("VALUES", null);
-        JTree valueTree = new JTree(node);
-        Iterator<MibSymbol> iter = mib.getAllSymbols().iterator();
-        while (iter.hasNext()) {
-            MibSymbol symbol = iter.next();
-            addSymbol(valueTree.getModel(), symbol);
-        }
-
-        // TODO: create TYPES sub tree
-
-        // Add sub tree root to MIB tree
         MibTreeNode root = (MibTreeNode) mibTree.getModel().getRoot();
-        node = new MibTreeNode(mib.getName(), mib);
-        node.add((MibTreeNode) valueTree.getModel().getRoot());
-        root.add(node);
-    }
-
-    /**
-     * Adds a MIB symbol to a MIB tree model.
-     *
-     * @param model          the MIB tree model
-     * @param symbol         the MIB symbol
-     *
-     * @see #addToTree
-     */
-    private void addSymbol(TreeModel model, MibSymbol symbol) {
-        if (symbol instanceof MibValueSymbol) {
-            MibValue value = ((MibValueSymbol) symbol).getValue();
-            if (value instanceof ObjectIdentifierValue) {
-                ObjectIdentifierValue oid = (ObjectIdentifierValue) value;
-                addToTree(model, oid);
+        MibTreeNode mibNode = new MibTreeNode(mib.getName(), mib);
+        MibTreeNode valuesNode = new MibTreeNode("VALUES", mib);
+        MibTreeNode trapsNode = new MibTreeNode("TRAPS", mib);
+        for (MibSymbol symbol : mib.getAllSymbols()) {
+            if (symbol instanceof MibValueSymbol) {
+                addOid(valuesNode, (MibValueSymbol) symbol);
+                addTrap(trapsNode, (MibValueSymbol) symbol);
             }
         }
+        mibNode.add(valuesNode);
+        if (trapsNode.getChildCount() > 0) {
+            mibNode.add(trapsNode);
+        }
+        root.add(mibNode);
     }
 
     /**
-     * Adds an object identifier value to a MIB tree model.
+     * Adds an object identifier value (from the symbol) to a tree
+     * node parent. Additional in-between OID tree nodes will be
+     * inserted as needed.
      *
-     * @param model          the MIB tree model
+     * @param parent         the tree node parent
+     * @param symbol         the MIB value symbol
+     */
+    private void addOid(MibTreeNode parent, MibValueSymbol symbol) {
+        MibValue value = symbol.getValue();
+        if (value instanceof ObjectIdentifierValue) {
+            addOid(parent, (ObjectIdentifierValue) value);
+        }
+    }
+
+    /**
+     * Adds an object identifier value to a tree node parent.
+     * Additional in-between OID tree nodes will be inserted as
+     * needed.
+     *
+     * @param parent         the tree node parent
      * @param oid            the object identifier value
      *
-     * @return the MIB tree node added
+     * @return the tree node added (or already existing)
      */
-    private MibTreeNode addToTree(TreeModel model, ObjectIdentifierValue oid) {
-
-        // Add parent node to tree (if needed)
-        MibTreeNode parent = (MibTreeNode) model.getRoot();
-        if (hasParent(oid)) {
-            parent = addToTree(model, oid.getParent());
+    private MibTreeNode addOid(MibTreeNode parent, ObjectIdentifierValue oid) {
+        if (hasMibParent(oid, oid.getMib())) {
+            // Add parent OID to tree first
+            parent = addOid(parent, oid.getParent());
         }
-
-        // Check if node already added
-        for (int i = 0; i < model.getChildCount(parent); i++) {
-            MibTreeNode node = (MibTreeNode) model.getChild(parent, i);
-            if (node.getValue().equals(oid)) {
-                return node;
+        MibTreeNode node = parent.findChildByValue(oid);
+        if (node == null) {
+            String name = oid.getName() + " (" + oid.getValue() + ")";
+            node = new MibTreeNode(name, oid);
+            parent.add(node);
+            if (oid.getSymbol() != null) {
+                nodes.put(oid.getSymbol(), node);
             }
         }
-
-        // Create new node
-        String name = oid.getName() + " (" + oid.getValue() + ")";
-        MibTreeNode node = new MibTreeNode(name, oid);
-        parent.add(node);
-        nodes.put(oid.getSymbol(), node);
         return node;
     }
 
     /**
-     * Checks if the specified object identifier has a parent.
+     * Adds an SMIv1 TRAP-TYPE to a tree node parent.
+     *
+     * @param parent         the tree node parent
+     * @param symbol         the MIB value symbol
+     */
+    private void addTrap(MibTreeNode parent, MibValueSymbol symbol) {
+        MibType type = symbol.getType();
+        if (type instanceof SnmpTrapType) {
+            MibTreeNode node = new MibTreeNode(symbol.getName(), symbol);
+            parent.add(node);
+            nodes.put(symbol, node);
+        }
+    }
+
+    /**
+     * Checks if the specified object identifier has a parent in the
+     * same MIB.
      *
      * @param oid            the object identifier to check
+     * @param mib            the MIB to check
      *
      * @return true if the object identifier has a parent, or
      *         false otherwise
      */
-    private boolean hasParent(ObjectIdentifierValue oid) {
+    private static boolean hasMibParent(ObjectIdentifierValue oid, Mib mib) {
         ObjectIdentifierValue parent = oid.getParent();
-        return oid.getSymbol() != null
-            && oid.getSymbol().getMib() != null
-            && parent != null
-            && parent.getSymbol() != null
-            && parent.getSymbol().getMib() != null
-            && parent.getSymbol().getMib().equals(oid.getSymbol().getMib());
+        return parent != null && mib != null && mib.equals(parent.getMib());
     }
 
     /**

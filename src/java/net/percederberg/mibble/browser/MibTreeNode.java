@@ -81,10 +81,28 @@ public class MibTreeNode extends DefaultMutableTreeNode {
     public Mib getMib() {
         if (value instanceof Mib) {
             return (Mib) value;
+        } else if (value instanceof MibValueSymbol) {
+            return ((MibValueSymbol) value).getMib();
         } else if (value instanceof ObjectIdentifierValue) {
             return ((ObjectIdentifierValue) value).getMib();
         } else {
             return null;
+        }
+    }
+
+    /**
+     * Returns the MIB value symbol for this node. The symbol is only
+     * available for OID nodes with a corresponding symbol set.
+     *
+     * @return the MIB value symbol, or
+     *         null for none
+     */
+    public MibValueSymbol getSymbol() {
+        if (value instanceof MibValueSymbol) {
+            return (MibValueSymbol) value;
+        } else {
+            ObjectIdentifierValue oid = getOid();
+            return (oid == null) ? null : oid.getSymbol();
         }
     }
 
@@ -100,18 +118,6 @@ public class MibTreeNode extends DefaultMutableTreeNode {
         } else {
             return null;
         }
-    }
-
-    /**
-     * Returns the MIB value symbol for this node. The symbol is only
-     * available for OID nodes with a corresponding symbol set.
-     *
-     * @return the MIB value symbol, or
-     *         null for none
-     */
-    public MibValueSymbol getSymbol() {
-        ObjectIdentifierValue oid = getOid();
-        return (oid == null) ? null : oid.getSymbol();
     }
 
     /**
@@ -168,6 +174,24 @@ public class MibTreeNode extends DefaultMutableTreeNode {
                     str = str.substring(0, 150) + "...";
                 }
                 return str.replaceAll("[ \t\r\n]+", " ");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Searches for the first child with the specified value.
+     *
+     * @param value          the value to search for
+     *
+     * @return the tree node child found, or
+     *         null for none
+     */
+    public MibTreeNode findChildByValue(Object value) {
+        for (int i = 0; i < getChildCount(); i++) {
+            MibTreeNode child = (MibTreeNode) getChildAt(i);
+            if (child.value != null && child.value.equals(value)) {
+                return child;
             }
         }
         return null;
