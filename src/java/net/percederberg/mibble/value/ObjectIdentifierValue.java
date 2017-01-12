@@ -393,13 +393,15 @@ public class ObjectIdentifierValue extends MibValue {
     }
 
     /**
-     * Returns the MIB that this object identifer is connected to.
+     * Returns the MIB that this object identifier is connected to.
      * This method simply returns the symbol MIB.
      *
      * @return the symbol MIB, or
      *         null if no symbol has been set
+     *
+     * @since 2.10
      */
-    private Mib getMib() {
+    public Mib getMib() {
         return symbol == null ? null : symbol.getMib();
     }
 
