@@ -315,15 +315,11 @@ public abstract class MibType {
      * @since 2.2
      */
     public boolean hasReferenceTo(String module, String name) {
-        Mib  mib;
-
         if (reference == null) {
             return false;
         }
-        mib = reference.getMib();
-        if (mib.getName().equals(module)
-         && reference.getName().equals(name)) {
-
+        Mib mib = reference.getMib();
+        if (mib.getName().equals(module) && reference.getName().equals(name)) {
             return true;
         } else {
             return reference.getType().hasReferenceTo(module, name);

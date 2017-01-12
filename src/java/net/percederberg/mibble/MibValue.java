@@ -132,9 +132,7 @@ public abstract class MibValue implements Comparable<Object> {
             return false;
         }
         Mib mib = reference.getMib();
-        if (mib.getName().equals(module)
-         && reference.getName().equals(name)) {
-
+        if (mib.getName().equals(module) && reference.getName().equals(name)) {
             return true;
         } else {
             return reference.getValue().isReferenceTo(module, name);
