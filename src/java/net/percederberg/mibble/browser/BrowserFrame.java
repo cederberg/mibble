@@ -376,12 +376,12 @@ public class BrowserFrame extends JFrame {
      * Unloads the MIB file from the currently selected symbol.
      */
     protected void unloadMib() {
-        MibNode node = getSelectedNode();
+        MibTreeNode node = getSelectedNode();
         if (node == null) {
             return;
         }
         while (node.getLevel() > 1) {
-            node = (MibNode) node.getParent();
+            node = (MibTreeNode) node.getParent();
         }
         browser.unloadMib(node.getName());
         refreshTree(false);
@@ -446,8 +446,8 @@ public class BrowserFrame extends JFrame {
      * @return the currently selected MIB node, or
      *         null for none
      */
-    public MibNode getSelectedNode() {
-        return (MibNode) mibTree.getLastSelectedPathComponent();
+    public MibTreeNode getSelectedNode() {
+        return (MibTreeNode) mibTree.getLastSelectedPathComponent();
     }
 
     /**
@@ -461,7 +461,7 @@ public class BrowserFrame extends JFrame {
 
         // Find tree node
         MibValueSymbol symbol = browser.findMibSymbol(oid);
-        MibNode node = MibTreeBuilder.getInstance().getNode(symbol);
+        MibTreeNode node = MibTreeBuilder.getInstance().getNode(symbol);
         if (node == null) {
             mibTree.clearSelection();
             return;
@@ -515,7 +515,7 @@ public class BrowserFrame extends JFrame {
      * Updates the tree selection.
      */
     protected void updateTreeSelection() {
-        MibNode node = getSelectedNode();
+        MibTreeNode node = getSelectedNode();
         if (node == null) {
             descriptionArea.setText("");
         } else {

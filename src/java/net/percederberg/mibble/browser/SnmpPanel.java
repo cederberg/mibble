@@ -727,7 +727,7 @@ public class SnmpPanel extends JPanel {
      * tree.
      */
     public void updateOid() {
-        MibNode node = frame.getSelectedNode();
+        MibTreeNode node = frame.getSelectedNode();
         if (node == null || node.getOid() == null) {
             oidField.setText("");
         } else if (node.getSymbol() != null
@@ -766,7 +766,7 @@ public class SnmpPanel extends JPanel {
      */
     public void updateStatus() {
         SnmpObjectType type = null;
-        MibNode node = frame.getSelectedNode();
+        MibTreeNode node = frame.getSelectedNode();
         if (node != null) {
             type = node.getSnmpObjectType();
         }

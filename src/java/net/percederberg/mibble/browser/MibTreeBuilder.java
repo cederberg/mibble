@@ -51,7 +51,7 @@ public class MibTreeBuilder {
     /**
      * The MIB node map. This is indexed by the MIB symbol.
      */
-    private HashMap<MibSymbol,MibNode> nodes = new HashMap<>();
+    private HashMap<MibSymbol,MibTreeNode> nodes = new HashMap<>();
 
     /**
      * Returns the single instance of this class.
@@ -94,7 +94,7 @@ public class MibTreeBuilder {
      * @return the MIB node, or
      *         null if none found
      */
-    public MibNode getNode(MibSymbol symbol) {
+    public MibTreeNode getNode(MibSymbol symbol) {
         return nodes.get(symbol);
     }
 
@@ -106,7 +106,7 @@ public class MibTreeBuilder {
     public void addMib(Mib mib) {
 
         // Create value sub tree
-        MibNode node = new MibNode("VALUES", null);
+        MibTreeNode node = new MibTreeNode("VALUES", null);
         JTree valueTree = new JTree(node);
         Iterator<MibSymbol> iter = mib.getAllSymbols().iterator();
         while (iter.hasNext()) {
@@ -117,9 +117,9 @@ public class MibTreeBuilder {
         // TODO: create TYPES sub tree
 
         // Add sub tree root to MIB tree
-        MibNode root = (MibNode) mibTree.getModel().getRoot();
-        node = new MibNode(mib.getName(), mib);
-        node.add((MibNode) valueTree.getModel().getRoot());
+        MibTreeNode root = (MibTreeNode) mibTree.getModel().getRoot();
+        node = new MibTreeNode(mib.getName(), mib);
+        node.add((MibTreeNode) valueTree.getModel().getRoot());
         root.add(node);
     }
 
@@ -149,17 +149,17 @@ public class MibTreeBuilder {
      *
      * @return the MIB tree node added
      */
-    private MibNode addToTree(TreeModel model, ObjectIdentifierValue oid) {
+    private MibTreeNode addToTree(TreeModel model, ObjectIdentifierValue oid) {
 
         // Add parent node to tree (if needed)
-        MibNode parent = (MibNode) model.getRoot();
+        MibTreeNode parent = (MibTreeNode) model.getRoot();
         if (hasParent(oid)) {
             parent = addToTree(model, oid.getParent());
         }
 
         // Check if node already added
         for (int i = 0; i < model.getChildCount(parent); i++) {
-            MibNode node = (MibNode) model.getChild(parent, i);
+            MibTreeNode node = (MibTreeNode) model.getChild(parent, i);
             if (node.getValue().equals(oid)) {
                 return node;
             }
@@ -167,7 +167,7 @@ public class MibTreeBuilder {
 
         // Create new node
         String name = oid.getName() + " (" + oid.getValue() + ")";
-        MibNode node = new MibNode(name, oid);
+        MibTreeNode node = new MibTreeNode(name, oid);
         parent.add(node);
         nodes.put(oid.getSymbol(), node);
         return node;
@@ -201,10 +201,10 @@ public class MibTreeBuilder {
      */
     public boolean unloadMib(String mibName) {
         DefaultTreeModel model = (DefaultTreeModel) mibTree.getModel();
-        MibNode root = (MibNode) model.getRoot();
-        Enumeration<MibNode> e = root.preorderEnumeration();
+        MibTreeNode root = (MibTreeNode) model.getRoot();
+        Enumeration<MibTreeNode> e = root.preorderEnumeration();
         while (e.hasMoreElements()) {
-            MibNode tmp = e.nextElement();
+            MibTreeNode tmp = e.nextElement();
             if (tmp.getName().equals(mibName)) {
                 removeNodes(tmp);
                 model.removeNodeFromParent(tmp);
@@ -221,7 +221,7 @@ public class MibTreeBuilder {
      */
     public void unloadAllMibs() {
         nodes.clear();
-        ((MibNode) mibTree.getModel().getRoot()).removeAllChildren();
+        ((MibTreeNode) mibTree.getModel().getRoot()).removeAllChildren();
     }
 
     /**
@@ -229,11 +229,11 @@ public class MibTreeBuilder {
      *
      * @param root           the root node
      */
-    private void removeNodes(MibNode root) {
-        Iterator<Map.Entry<MibSymbol, MibNode>> iter = nodes.entrySet().iterator();
+    private void removeNodes(MibTreeNode root) {
+        Iterator<Map.Entry<MibSymbol, MibTreeNode>> iter = nodes.entrySet().iterator();
         while (iter.hasNext()) {
-            Map.Entry<MibSymbol, MibNode> entry = iter.next();
-            MibNode node = entry.getValue();
+            Map.Entry<MibSymbol, MibTreeNode> entry = iter.next();
+            MibTreeNode node = entry.getValue();
             if (node.isNodeDescendant(root)) {
                 iter.remove();
             }
@@ -250,7 +250,7 @@ public class MibTreeBuilder {
          * Creates a new MIB tree.
          */
         public MibTree() {
-            super(new MibNode("Mibble Browser", null));
+            super(new MibTreeNode("Mibble Browser", null));
         }
 
         /**
@@ -266,7 +266,7 @@ public class MibTreeBuilder {
                 return null;
             }
             TreePath path = getPathForLocation(e.getX(), e.getY());
-            MibNode node = (MibNode) path.getLastPathComponent();
+            MibTreeNode node = (MibTreeNode) path.getLastPathComponent();
             return node.getToolTipText();
         }
     }

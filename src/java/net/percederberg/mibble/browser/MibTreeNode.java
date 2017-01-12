@@ -18,34 +18,27 @@ import net.percederberg.mibble.snmp.SnmpType;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
- * A MIB tree node.
+ * A MIB tree node. This is an extension to the default tree nodes in
+ * order to provide separate name and value for a node in the tree.
+ * It also provides helpers for extracting relevant data from the node
+ * value.
  *
  * @author   Per Cederberg
  * @author   Watsh Rajneesh
- * @version  2.5
- * @since    2.3
+ * @version  2.10
+ * @since    2.10
  */
-public class MibNode extends DefaultMutableTreeNode {
+public class MibTreeNode extends DefaultMutableTreeNode {
 
     /**
-     * The MIB node name.
+     * The tree node name.
      */
     private String name;
 
     /**
-     * The MIB node value.
+     * The tree node value.
      */
     private Object value;
-
-    /**
-     * The MIB node MIB value (if applicable).
-     */
-    private Mib mib;
-
-    /**
-     * The MIB node object identifier (oid) value (if applicable).
-     */
-    private ObjectIdentifierValue oid;
 
     /**
      * Creates a new MIB tree node.
@@ -53,15 +46,10 @@ public class MibNode extends DefaultMutableTreeNode {
      * @param name           the node name
      * @param value          the node object identifier value
      */
-    public MibNode(String name, Object value) {
+    public MibTreeNode(String name, Object value) {
         super(name);
         this.name = name;
         this.value = value;
-        if (value instanceof Mib) {
-            this.mib = (Mib) value;
-        } else if (value instanceof ObjectIdentifierValue) {
-            this.oid = (ObjectIdentifierValue) value;
-        }
     }
 
     /**
@@ -74,7 +62,7 @@ public class MibNode extends DefaultMutableTreeNode {
     }
 
     /**
-     * Returns the node  value.
+     * Returns the node value.
      *
      * @return the node value, or
      *         null if no value is present
@@ -84,38 +72,58 @@ public class MibNode extends DefaultMutableTreeNode {
     }
 
     /**
-     * Returns the object identifier (oid) associated with the node.
+     * Returns the MIB for this node. The MIB is available either for
+     * the MIB root nodes or via the MIB value symbol for an OID node.
      *
-     * @return the node object identifier (oid), or
-     *         null if no object identifier is present
+     * @return the MIB for this node, or
+     *         null for none
      */
-    public ObjectIdentifierValue getOid() {
-        return oid;
+    public Mib getMib() {
+        if (value instanceof Mib) {
+            return (Mib) value;
+        } else if (value instanceof ObjectIdentifierValue) {
+            return ((ObjectIdentifierValue) value).getMib();
+        } else {
+            return null;
+        }
     }
 
     /**
-     * Returns the MIB value symbol for this node.
+     * Returns the object identifier value (OID) for this node.
+     *
+     * @return the object identifier value, or
+     *         null for none
+     */
+    public ObjectIdentifierValue getOid() {
+        if (value instanceof ObjectIdentifierValue) {
+            return (ObjectIdentifierValue) value;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the MIB value symbol for this node. The symbol is only
+     * available for OID nodes with a corresponding symbol set.
      *
      * @return the MIB value symbol, or
      *         null for none
      */
     public MibValueSymbol getSymbol() {
-        if (oid == null) {
-            return null;
-        } else {
-            return oid.getSymbol();
-        }
+        ObjectIdentifierValue oid = getOid();
+        return (oid == null) ? null : oid.getSymbol();
     }
 
     /**
-     * Returns the SNMP object type of the current node symbol.
+     * Returns the SNMP object type for this node. The object type is
+     * only set for OID nodes with a corresponding symbol having such
+     * a type.
      *
-     * @return the SNMP object type of the current node symbol, or
-     *         null if non-existent
+     * @return the SNMP object type for this node, or
+     *         null for none
      */
     public SnmpObjectType getSnmpObjectType() {
-        MibValueSymbol  symbol = getSymbol();
-
+        MibValueSymbol symbol = getSymbol();
         if (symbol != null && symbol.getType() instanceof SnmpObjectType) {
             return (SnmpObjectType) symbol.getType();
         } else {
@@ -126,11 +134,14 @@ public class MibNode extends DefaultMutableTreeNode {
     /**
      * Returns the detailed node description.
      *
-     * @return the detailed node description
+     * @return the detailed node description, or
+     *         an empty string if not available
      */
     public String getDescription() {
-        if (oid != null  && oid.getSymbol() != null) {
-            return oid.getSymbol().getText();
+        MibValueSymbol symbol = getSymbol();
+        Mib mib = getMib();
+        if (symbol != null) {
+            return symbol.getText();
         } else if (mib != null) {
             return mib.getText();
         } else {
@@ -141,16 +152,15 @@ public class MibNode extends DefaultMutableTreeNode {
     /**
      * Returns the tool tip text for this node.
      *
-     * @return the tool tip text for this node.
+     * @return the tool tip text for this node, or
+     *         null if not available
      */
     public String getToolTipText() {
-        MibType  type;
-        String   str;
-
-        if (oid != null  && oid.getSymbol() != null) {
-            type = oid.getSymbol().getType();
+        MibValueSymbol symbol = getSymbol();
+        if (symbol != null) {
+            MibType type = symbol.getType();
             if (type instanceof SnmpType) {
-                str = ((SnmpType) type).getDescription();
+                String str = ((SnmpType) type).getDescription();
                 if (str.indexOf('.') > 0) {
                     str = str.substring(0, str.indexOf('.') + 1);
                 }
