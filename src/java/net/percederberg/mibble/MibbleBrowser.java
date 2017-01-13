@@ -123,10 +123,9 @@ public class MibbleBrowser {
             frame.loadMibsAsync(list.toArray(new String[list.size()]));
         } else {
             frame.loadMibsAsync(new String[] {
-                "RFC1155-SMI",
-                "RFC1213-MIB",
                 "SNMPv2-SMI",
                 "SNMPv2-TC",
+                "SNMPv2-MIB",
                 "HOST-RESOURCES-MIB"
             });
         }
