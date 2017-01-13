@@ -227,6 +227,23 @@ public class MibValueSymbol extends MibSymbol {
     }
 
     /**
+     * Returns the symbol object identifier value (if set). This is a
+     * convenience method for getValue() with an additional type
+     * check and cast.
+     *
+     * @return the symbol OID value
+     *
+     * @since 2.10
+     */
+    public ObjectIdentifierValue getOid() {
+        if (value instanceof ObjectIdentifierValue) {
+            return (ObjectIdentifierValue) value;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Returns the parent symbol in the OID tree. This is a
      * convenience method for value symbols that have object
      * identifier values.
@@ -239,13 +256,9 @@ public class MibValueSymbol extends MibSymbol {
      * @since 2.5
      */
     public MibValueSymbol getParent() {
-        if (value instanceof ObjectIdentifierValue) {
-            ObjectIdentifierValue oid = ((ObjectIdentifierValue) value).getParent();
-            if (oid != null) {
-                return oid.getSymbol();
-            }
-        }
-        return null;
+        ObjectIdentifierValue oid = getOid();
+        ObjectIdentifierValue parent = (oid != null) ? oid.getParent() : null;
+        return (parent != null) ? parent.getSymbol() : null;
     }
 
     /**
@@ -261,10 +274,8 @@ public class MibValueSymbol extends MibSymbol {
      * @since 2.6
      */
     public int getChildCount() {
-        if (value instanceof ObjectIdentifierValue) {
-            return ((ObjectIdentifierValue) value).getChildCount();
-        }
-        return 0;
+        ObjectIdentifierValue oid = getOid();
+        return (oid != null) ? oid.getChildCount() : 0;
     }
 
     /**
@@ -282,13 +293,9 @@ public class MibValueSymbol extends MibSymbol {
      * @since 2.6
      */
     public MibValueSymbol getChild(int index) {
-        if (value instanceof ObjectIdentifierValue) {
-            ObjectIdentifierValue oid = ((ObjectIdentifierValue) value).getChild(index);
-            if (oid != null) {
-                return oid.getSymbol();
-            }
-        }
-        return null;
+        ObjectIdentifierValue oid = getOid();
+        ObjectIdentifierValue child = (oid != null) ? oid.getChild(index) : null;
+        return (child != null) ? child.getSymbol() : null;
     }
 
     /**
@@ -304,16 +311,13 @@ public class MibValueSymbol extends MibSymbol {
      * @since 2.6
      */
     public MibValueSymbol[] getChildren() {
-        if (value instanceof ObjectIdentifierValue) {
-            ObjectIdentifierValue oid = (ObjectIdentifierValue) value;
-            MibValueSymbol[] children = new MibValueSymbol[oid.getChildCount()];
-            for (int i = 0; i < oid.getChildCount(); i++) {
-                children[i] = oid.getChild(i).getSymbol();
-            }
-            return children;
-        } else {
-            return new MibValueSymbol[0];
+        ObjectIdentifierValue oid = getOid();
+        int count = (oid != null) ? oid.getChildCount() : 0;
+        MibValueSymbol[] children = new MibValueSymbol[count];
+        for (int i = 0; oid != null && i < count; i++) {
+            children[i] = oid.getChild(i).getSymbol();
         }
+        return children;
     }
 
     /**
