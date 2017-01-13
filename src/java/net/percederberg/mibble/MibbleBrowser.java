@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Properties;
 import java.util.prefs.Preferences;
 
@@ -179,12 +178,12 @@ public class MibbleBrowser {
     }
 
     /**
-     * Loads MIB file or URL.
+     * Loads MIB file or URL. If the MIB file was already loaded, the
+     * previously loaded MIB modules will be returned.
      *
      * @param src            the MIB file or URL
      *
-     * @return a collection of the MIB modules loaded, or
-     *         an empty collection if nothing was loaded
+     * @return a collection of the MIB modules found
      *
      * @throws IOException if the MIB file couldn't be found in the
      *             MIB search path
@@ -194,8 +193,12 @@ public class MibbleBrowser {
     public Collection<Mib> loadMib(String src) throws IOException, MibLoaderException {
         Mib mib = null;
         File file = new File(src);
-        if (loader.getMib(src) != null || loader.getMib(file) != null) {
-            return Collections.EMPTY_LIST; // Already loaded
+        if (loader.getMib(src) != null) {
+            mib = loader.getMib(src);
+            addFilePref(src);
+        } else if (loader.getMib(file) != null) {
+            mib = loader.getMib(file);
+            addFilePref(file.getAbsolutePath());
         } else if (file.exists()) {
             if (!loader.hasDir(file.getParentFile())) {
                 loader.removeAllDirs();

@@ -340,7 +340,9 @@ public class BrowserFrame extends JFrame {
         setStatus("Loading " + src + "...");
         try {
             for (Mib mib : browser.loadMib(src)) {
-                mibTree.addTreeNodes(mib);
+                if (mibTree.getRootNode().findChildByValue(mib) == null) {
+                    mibTree.addTreeNodes(mib);
+                }
             }
         } catch (FileNotFoundException e) {
             message = "Failed to load " + e.getMessage();
