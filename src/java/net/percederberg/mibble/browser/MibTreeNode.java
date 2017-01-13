@@ -11,7 +11,9 @@ package net.percederberg.mibble.browser;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import net.percederberg.mibble.Mib;
+import net.percederberg.mibble.MibSymbol;
 import net.percederberg.mibble.MibType;
+import net.percederberg.mibble.MibTypeSymbol;
 import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.snmp.SnmpObjectType;
 import net.percederberg.mibble.snmp.SnmpType;
@@ -74,8 +76,7 @@ public class MibTreeNode extends DefaultMutableTreeNode {
     }
 
     /**
-     * Returns the MIB for this node. The MIB is available either for
-     * the MIB root nodes or via the MIB value symbol for an OID node.
+     * Returns the MIB for this node, if available.
      *
      * @return the MIB for this node, or
      *         null for none
@@ -83,8 +84,8 @@ public class MibTreeNode extends DefaultMutableTreeNode {
     public Mib getMib() {
         if (value instanceof Mib) {
             return (Mib) value;
-        } else if (value instanceof MibValueSymbol) {
-            return ((MibValueSymbol) value).getMib();
+        } else if (value instanceof MibSymbol) {
+            return ((MibSymbol) value).getMib();
         } else if (value instanceof ObjectIdentifierValue) {
             return ((ObjectIdentifierValue) value).getMib();
         } else {
@@ -93,30 +94,28 @@ public class MibTreeNode extends DefaultMutableTreeNode {
     }
 
     /**
-     * Returns the MIB value symbol for this node. The symbol is only
-     * available for OID nodes with a corresponding symbol set.
+     * Returns the MIB symbol for this node, if available.
      *
      * @return the MIB value symbol, or
      *         null for none
      */
-    public MibValueSymbol getSymbol() {
-        if (value instanceof MibValueSymbol) {
-            return (MibValueSymbol) value;
+    public MibSymbol getSymbol() {
+        if (value instanceof MibSymbol) {
+            return (MibSymbol) value;
         } else {
-            ObjectIdentifierValue oid = getOid();
-            return (oid == null) ? null : oid.getSymbol();
+            return null;
         }
     }
 
     /**
-     * Returns the object identifier value (OID) for this node.
+     * Returns the MIB value symbol for this node, if available.
      *
-     * @return the object identifier value, or
+     * @return the MIB value symbol, or
      *         null for none
      */
-    public ObjectIdentifierValue getOid() {
-        if (value instanceof ObjectIdentifierValue) {
-            return (ObjectIdentifierValue) value;
+    public MibValueSymbol getValueSymbol() {
+        if (value instanceof MibValueSymbol) {
+            return (MibValueSymbol) value;
         } else {
             return null;
         }
@@ -124,14 +123,13 @@ public class MibTreeNode extends DefaultMutableTreeNode {
 
     /**
      * Returns the SNMP object type for this node. The object type is
-     * only set for OID nodes with a corresponding symbol having such
-     * a type.
+     * only available for MIB value symbol nodes of the right type.
      *
      * @return the SNMP object type for this node, or
      *         null for none
      */
     public SnmpObjectType getSnmpObjectType() {
-        MibValueSymbol symbol = getSymbol();
+        MibValueSymbol symbol = getValueSymbol();
         if (symbol != null && symbol.getType() instanceof SnmpObjectType) {
             return (SnmpObjectType) symbol.getType();
         } else {
@@ -146,7 +144,7 @@ public class MibTreeNode extends DefaultMutableTreeNode {
      *         an empty string if not available
      */
     public String getDescription() {
-        MibValueSymbol symbol = getSymbol();
+        MibSymbol symbol = getSymbol();
         Mib mib = getMib();
         if (symbol != null) {
             return symbol.getText();
@@ -164,21 +162,25 @@ public class MibTreeNode extends DefaultMutableTreeNode {
      *         null if not available
      */
     public String getToolTipText() {
-        MibValueSymbol symbol = getSymbol();
-        if (symbol != null) {
-            MibType type = symbol.getType();
-            if (type instanceof SnmpType) {
-                String str = ((SnmpType) type).getDescription();
-                if (str.indexOf('.') > 0) {
-                    str = str.substring(0, str.indexOf('.') + 1);
-                }
-                if (str.length() > 150) {
-                    str = str.substring(0, 150) + "...";
-                }
-                return str.replaceAll("[ \t\r\n]+", " ");
-            }
+        MibSymbol symbol = getSymbol();
+        MibType type = null;
+        if (symbol instanceof MibValueSymbol) {
+            type = ((MibValueSymbol) symbol).getType();
+        } else if (symbol instanceof MibTypeSymbol) {
+            type = ((MibTypeSymbol) symbol).getType();
         }
-        return null;
+        if (type instanceof SnmpType) {
+            String str = ((SnmpType) type).getDescription();
+            if (str.indexOf('.') > 0) {
+                str = str.substring(0, str.indexOf('.') + 1);
+            }
+            if (str.length() > 150) {
+                str = str.substring(0, 150) + "...";
+            }
+            return str.replaceAll("[ \t\r\n]+", " ");
+        } else {
+            return null;
+        }
     }
 
     /**

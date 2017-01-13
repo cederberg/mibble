@@ -28,6 +28,7 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.snmp.SnmpObjectType;
 
 /**
@@ -728,14 +729,13 @@ public class SnmpPanel extends JPanel {
      */
     public void updateOid() {
         MibTreeNode node = frame.getSelectedNode();
-        if (node == null || node.getOid() == null) {
+        MibValueSymbol symbol = (node != null) ? node.getValueSymbol() : null;
+        if (symbol == null || symbol.getOid() == null) {
             oidField.setText("");
-        } else if (node.getSymbol() != null
-                && node.getSymbol().isScalar()) {
-
-            oidField.setText(node.getOid().toString() + ".0");
+        } else if (symbol.isScalar()) {
+            oidField.setText(symbol.getOid().toString() + ".0");
         } else {
-            oidField.setText(node.getOid().toString());
+            oidField.setText(symbol.getOid().toString());
         }
     }
 
