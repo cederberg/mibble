@@ -38,7 +38,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
-import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.text.DefaultEditorKit;
@@ -46,6 +45,7 @@ import javax.swing.text.JTextComponent;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
+import net.percederberg.mibble.Mib;
 import net.percederberg.mibble.MibLoaderException;
 import net.percederberg.mibble.MibValueSymbol;
 import net.percederberg.mibble.MibbleBrowser;
@@ -100,7 +100,7 @@ public class BrowserFrame extends JFrame {
     /**
      * The MIB tree component.
      */
-    private JTree mibTree = null;
+    private MibTree mibTree = null;
 
     /**
      * The SNMP operations panel.
@@ -154,7 +154,7 @@ public class BrowserFrame extends JFrame {
         getContentPane().add(statusLabel, c);
 
         // Add MIB tree
-        mibTree = MibTreeBuilder.getInstance().getTree();
+        mibTree = new MibTree();
         mibTree.addTreeSelectionListener(new TreeSelectionListener() {
             public void valueChanged(TreeSelectionEvent e) {
                 updateTreeSelection();
@@ -339,7 +339,9 @@ public class BrowserFrame extends JFrame {
         String message = null;
         setStatus("Loading " + src + "...");
         try {
-            browser.loadMib(src);
+            for (Mib mib : browser.loadMib(src)) {
+                mibTree.addTreeNodes(mib);
+            }
         } catch (FileNotFoundException e) {
             message = "Failed to load " + e.getMessage();
         } catch (IOException e) {
@@ -377,14 +379,12 @@ public class BrowserFrame extends JFrame {
      */
     protected void unloadMib() {
         MibTreeNode node = getSelectedNode();
-        if (node == null) {
-            return;
+        Mib mib = (node != null) ? node.getMib() : null;
+        if (mib != null) {
+            browser.unloadMib(mib);
+            mibTree.removeTreeNodes(mib);
+            refreshTree(false);
         }
-        while (node.getLevel() > 1) {
-            node = (MibTreeNode) node.getParent();
-        }
-        browser.unloadMib(node.getName());
-        refreshTree(false);
     }
 
     /**
@@ -392,6 +392,7 @@ public class BrowserFrame extends JFrame {
      */
     protected void unloadAllMibs() {
         browser.unloadAllMibs();
+        mibTree.removeAllTreeNodes();
         refreshTree(false);
     }
 
@@ -461,7 +462,7 @@ public class BrowserFrame extends JFrame {
 
         // Find tree node
         MibValueSymbol symbol = browser.findMibSymbol(oid);
-        MibTreeNode node = MibTreeBuilder.getInstance().getNode(symbol);
+        MibTreeNode node = mibTree.getTreeNode(symbol);
         if (node == null) {
             mibTree.clearSelection();
             return;

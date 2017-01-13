@@ -11,13 +11,14 @@ package net.percederberg.mibble;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Properties;
 import java.util.prefs.Preferences;
 
 import javax.swing.UIManager;
 
 import net.percederberg.mibble.browser.BrowserFrame;
-import net.percederberg.mibble.browser.MibTreeBuilder;
 import net.percederberg.mibble.value.ObjectIdentifierValue;
 
 /**
@@ -182,16 +183,19 @@ public class MibbleBrowser {
      *
      * @param src            the MIB file or URL
      *
+     * @return a collection of the MIB modules loaded, or
+     *         an empty collection if nothing was loaded
+     *
      * @throws IOException if the MIB file couldn't be found in the
      *             MIB search path
      * @throws MibLoaderException if the MIB file couldn't be loaded
      *             correctly
      */
-    public void loadMib(String src) throws IOException, MibLoaderException {
+    public Collection<Mib> loadMib(String src) throws IOException, MibLoaderException {
         Mib mib = null;
         File file = new File(src);
         if (loader.getMib(src) != null || loader.getMib(file) != null) {
-            return; // Already loaded
+            return Collections.EMPTY_LIST; // Already loaded
         } else if (file.exists()) {
             if (!loader.hasDir(file.getParentFile())) {
                 loader.removeAllDirs();
@@ -203,30 +207,24 @@ public class MibbleBrowser {
             mib = loader.load(src);
             addFilePref(src);
         }
-        for (Mib module : loader.getMibs(mib.getFile()).values()) {
-            MibTreeBuilder.getInstance().addMib(module);
-        }
+        return loader.getMibs(mib.getFile()).values();
     }
 
     /**
-     * Unloads a named MIB.
+     * Unloads a loaded MIB module.
      *
-     * @param name           the MIB name
+     * @param mib            the MIB module
      */
-    public void unloadMib(String name) {
-        Mib mib = loader.getMib(name);
-        if (mib != null) {
-            File file = mib.getFile();
-            removeFilePref(file.getAbsolutePath());
-            if (!file.exists()) {
-                removeFilePref(mib.getName());
-            }
-            try {
-                loader.unload(name);
-            } catch (MibLoaderException ignore) {
-                // MIB loader unloading is best-attempt only
-            }
-            MibTreeBuilder.getInstance().unloadMib(name);
+    public void unloadMib(Mib mib) {
+        File file = mib.getFile();
+        removeFilePref(file.getAbsolutePath());
+        if (!file.exists()) {
+            removeFilePref(mib.getName());
+        }
+        try {
+            loader.unload(mib);
+        } catch (MibLoaderException ignore) {
+            // MIB loader unloading is best-attempt only
         }
     }
 
@@ -238,7 +236,6 @@ public class MibbleBrowser {
     public void unloadAllMibs() {
         removeFilePrefs();
         loader.unloadAll();
-        MibTreeBuilder.getInstance().unloadAllMibs();
     }
 
     /**

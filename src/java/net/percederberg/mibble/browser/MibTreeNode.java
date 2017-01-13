@@ -23,6 +23,8 @@ import net.percederberg.mibble.value.ObjectIdentifierValue;
  * It also provides helpers for extracting relevant data from the node
  * value.
  *
+ * @see MibTree
+ *
  * @author   Per Cederberg
  * @author   Watsh Rajneesh
  * @version  2.10
@@ -44,7 +46,7 @@ public class MibTreeNode extends DefaultMutableTreeNode {
      * Creates a new MIB tree node.
      *
      * @param name           the node name
-     * @param value          the node object identifier value
+     * @param value          the node value
      */
     public MibTreeNode(String name, Object value) {
         super(name);
