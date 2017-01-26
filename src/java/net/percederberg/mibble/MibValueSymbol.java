@@ -98,6 +98,15 @@ public class MibValueSymbol extends MibSymbol {
             ObjectIdentifierValue oid = (ObjectIdentifierValue) value;
             if (oid.getSymbol() == null) {
                 oid.setSymbol(this);
+            } else {
+                boolean loaded = getMib().isLoaded() || oid.getMib().isLoaded();
+                if (oid.getSymbol() != this && loaded) {
+                    log.addWarning(getFileRef(),
+                                   "duplicate definition of " + oid +
+                                   ", previously defined as '" +
+                                   oid.getSymbol().getName() + "' in " +
+                                   oid.getSymbol().getMib().getName());
+                }
             }
         }
     }
