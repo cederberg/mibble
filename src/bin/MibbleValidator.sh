@@ -7,4 +7,4 @@
 . `dirname "$0"`/setenv.sh
 
 # Run Mibble MIB validator
-$JAVA net.percederberg.mibble.MibbleValidator $*
+exec $JAVA net.percederberg.mibble.MibbleValidator $*
