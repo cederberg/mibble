@@ -177,11 +177,16 @@ public class Mib implements MibContext {
                 log.addError(e);
             }
             if (symbol instanceof MibValueSymbol) {
-                MibValueSymbol value = (MibValueSymbol) symbol;
-                if (value.getValue() instanceof NumberValue
-                 || value.getValue() instanceof ObjectIdentifierValue) {
-
-                    symbolValueMap.put(value.getValue().toString(), symbol);
+                MibValue value = ((MibValueSymbol) symbol).getValue();
+                boolean isNumber = value instanceof NumberValue;
+                boolean isOID = value instanceof ObjectIdentifierValue;
+                if (isNumber || isOID) {
+                    if (symbolValueMap.containsKey(value.toString())) {
+                        String msg = "duplicate definition of " +
+                                     value.toString() + " in MIB";
+                        log.addWarning(symbol.getFileRef(), msg);
+                    }
+                    symbolValueMap.put(value.toString(), symbol);
                 }
             }
         }
