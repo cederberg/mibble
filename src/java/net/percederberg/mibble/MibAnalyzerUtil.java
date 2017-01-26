@@ -3,7 +3,7 @@
  *
  * See LICENSE.txt for licensing information.
  *
- * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2017 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble;

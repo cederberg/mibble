@@ -3,7 +3,7 @@
  *
  * See LICENSE.txt for licensing information.
  *
- * Copyright (c) 2004-2016 Per Cederberg. All rights reserved.
+ * Copyright (c) 2004-2017 Per Cederberg. All rights reserved.
  */
 
 package net.percederberg.mibble.browser;
@@ -45,7 +45,7 @@ public class AboutDialog extends JDialog {
      * The copyright text.
      */
     private static final String COPYRIGHT =
-        "(c) 2004-2016 Per Cederberg. All rights reserved.\n" +
+        "(c) 2004-2017 Per Cederberg. All rights reserved.\n" +
         "This program comes with ABSOLUTELY NO\n" +
         "WARRANTY; for details see the accompanying\n" +
         "license.";

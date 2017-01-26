@@ -61,6 +61,6 @@ software. Please see the project web site for more information:
 https://www.mibble.org/
 
 _____________________________________________________________________
-Copyright (c) 2002-2016 Per Cederberg. Permission is granted to copy 
+Copyright (c) 2002-2017 Per Cederberg. Permission is granted to copy
 this document verbatim in any medium, provided that this copyright
 notice is left intact.
