@@ -40,6 +40,8 @@ public class MibblePrinter {
         "\n" +
         "    --mib     Prints a formatted and indented version of the MIB.\n" +
         "              This is the default printing mode.\n" +
+        "    --mibtree Prints a tree of all loaded MIBs, showing every MIB\n" +
+        "              import statement\n" +
         "    --oid     Prints the complete OID tree, including all nodes\n" +
         "              in imported MIB files\n" +
         "    --debug   Prints the MIB contents in debug format, which will\n" +
@@ -60,14 +62,19 @@ public class MibblePrinter {
     private static final int MIB_PRINT_MODE = 0;
 
     /**
+     * The MIB tree printing mode.
+     */
+    private static final int MIBTREE_PRINT_MODE = 1;
+
+    /**
      * The MIB oid tree printing mode.
      */
-    private static final int OID_PRINT_MODE = 1;
+    private static final int OID_PRINT_MODE = 2;
 
     /**
      * The MIB debug printing mode.
      */
-    private static final int DEBUG_PRINT_MODE = 2;
+    private static final int DEBUG_PRINT_MODE = 3;
 
     /**
      * The application main entry point.
@@ -88,6 +95,9 @@ public class MibblePrinter {
         int pos = 0;
         if (args[0].equals("--mib")) {
             printMode = MIB_PRINT_MODE;
+            pos++;
+        } else if (args[0].equals("--mibtree")) {
+            printMode = MIBTREE_PRINT_MODE;
             pos++;
         } else if (args[0].equals("--oid")) {
             printMode = OID_PRINT_MODE;
@@ -155,6 +165,8 @@ public class MibblePrinter {
             if (mib.isLoaded()) {
                 if (printMode == MIB_PRINT_MODE) {
                     printMib(mib);
+                } if (printMode == MIBTREE_PRINT_MODE) {
+                    printImports(mib, "");
                 } else {
                     printDebug(mib);
                 }
@@ -172,6 +184,28 @@ public class MibblePrinter {
         os.print(mib);
         System.out.println();
         System.out.println();
+    }
+
+    /**
+     * Prints the MIB import tree.
+     *
+     * @param mib            the MIB to print
+     * @param prefix         the indent prefix
+     */
+    private static void printImports(Mib mib, String prefix) {
+        System.out.print(prefix);
+        System.out.println(mib.getName());
+        if (prefix.length() >= 4) {
+            boolean isLast = prefix.endsWith(" \u2517\u2501 ");
+            prefix = prefix.substring(0, prefix.length() - 4);
+            prefix += isLast ? "    " : " \u2503  ";
+        }
+        Iterator<MibImport> iter = mib.getAllImports().iterator();
+        while (iter.hasNext()) {
+            MibImport imp = iter.next();
+            String branch = iter.hasNext() ? " \u2523\u2501 " : " \u2517\u2501 ";
+            printImports(imp.getMib(), prefix + branch);
+        }
     }
 
     /**
