@@ -13,149 +13,236 @@
 
   BUILD INSTRUCTIONS
 
-  This is an Ant build file for packaging Mibble. You can use it to
-  package the different distributions of Mibble. Note that this build
-  file will overwrite content in the current directory as a result of
-  the build process.
+  This is an Ant build file for Mibble. You can use it to simplify
+  compiling and packaging of your own modifications to the original
+  Mibble source code. Note that this build file will overwrite content
+  in the current directory as a result of the build process.
 
   To run Ant, choose one (or more) of the targets under the TOP-LEVEL
   TARGETS heading below. If you run Ant without any target specified
-  it will build and package all distributions.
+  it will build the whole Mibble project, while also performing tests
+  and creating the documentation.
 
   The following build properties are available (specify on the
   command-line with -Dname=value):
 
+    build.name
+        The base name of the build. Defaults to "mibble".
+
     build.version
         The build version number. Defaults to todays date.
 
-    build.type
-        The build type name. Set to "all" to run the complete build
-        with tests. By default this value is set to "minimal" which
-        avoids testing.
+    build.optimized
+        The optimized build flag. Set to any value to compile without
+        debug information. By default this flag is off.
 
 -->
 
 
 <!-- INITIALIZATION -->
-  <tstamp />
+  <property name="build.name" value="${ant.project.name}" />
+  <property name="build.title" value="Mibble" />
+  <property name="build.java.package" value="net.percederberg.mibble" />
+  <tstamp>
+    <format property="build.year" pattern="yyyy" />
+    <format property="build.printdate" pattern="yyyy-MM-dd" />
+  </tstamp>
   <property name="build.version" value="${DSTAMP}" />
-  <property name="build.type" value="minimal" />
+  <property name="build.date" value="${DSTAMP}" />
+  <property name="build.sysclasspath" value="ignore" />
+  <patternset id="pattern.srcfiles">
+    <include name="**/*.css" />
+    <include name="**/*.grammar" />
+    <include name="**/*.java" />
+    <include name="**/*.sh" />
+    <include name="**/*.txt" />
+    <include name="**/*.xml" />
+    <include name="**/*.xsl" />
+  </patternset>
+  <path id="project.class.path">
+    <fileset dir="lib" includes="*.jar" />
+  </path>
 
 
 <!-- TOP-LEVEL TARGETS -->
-  <target name="all" description="Builds both the public and commercial packages"
-          depends="commercial,public" />
+  <target name="all" description="Performs a full rebuild, including tests"
+          depends="compile,test,doc" />
 
-  <target name="commercial" description="Builds only the commercial package"
-          depends="package-clean,package-commercial" />
+  <target name="minimal" description="Performs a minimal rebuild, excluding tests"
+          depends="compile,doc" />
 
-  <target name="public" description="Builds only the public package"
-          depends="package-clean,package-public" />
+  <target name="compile" description="Compiles the source code"
+          depends="compile-clean,compile-codegen,compile-java,compile-scripts" />
+
+  <target name="test" description="Runs the validation tests"
+          depends="compile,test-validator" />
+
+  <target name="doc" description="Generates the documentation"
+          depends="doc-clean,doc-text,doc-html,doc-java" />
 
 
-<!-- PACKAGING TARGETS -->
-  <target name="package-clean">
-    <delete>
-      <fileset dir="." includes="mibble-*.tar.gz" />
+<!-- COMPILATION TARGETS -->
+  <target name="compile-clean">
+    <delete quiet="true">
+      <fileset dir="bin" />
+      <fileset dir="classes" />
+      <fileset dir="lib" includes="mibble*.jar" />
     </delete>
-  </target>
-
-  <target name="package-commercial">
-    <copy file="LICENSE-COMMERCIAL.txt"
-          tofile="LICENSE.txt"
-          overwrite="true" />
-    <ant antfile="compile.xml" target="${build.type}">
-      <property name="build.name" value="mibble-commercial" />
-    </ant>
-    <tar tarfile="mibble-commercial-${build.version}.tar.gz"
-         longfile="gnu"
-         compression="gzip">
-      <tarfileset dir="."
-                  fullpath="mibble-commercial-${build.version}/build.xml"
-                  includes="compile.xml" />
-      <tarfileset dir="."
-                  prefix="mibble-commercial-${build.version}">
-        <include name="README.txt" />
-        <include name="LICENSE.txt" />
-        <include name="bin/*.bat" />
-        <include name="MibbleBrowser.jar" />
-        <include name="lib/mibble-*.jar" />
-        <include name="lib/grammatica-*.jar" />
-        <include name="lib/snmp*.jar" />
-        <include name="src/**" />
-        <include name="doc/**" />
-      </tarfileset>
-      <tarfileset dir="."
-                  prefix="mibble-commercial-${build.version}"
-                  mode="777"
-                  includes="bin/*.sh" />
-    </tar>
-    <delete file="LICENSE.txt" />
-  </target>
-
-  <target name="package-public">
-    <copy file="LICENSE-GPL.txt"
-          tofile="LICENSE.txt"
-          overwrite="true" />
-    <ant antfile="compile.xml" target="${build.type}">
-      <property name="build.name" value="mibble" />
-    </ant>
-    <tar tarfile="mibble-${build.version}.tar.gz"
-         longfile="gnu"
-         compression="gzip">
-      <tarfileset dir="."
-                  fullpath="mibble-${build.version}/build.xml"
-                  includes="compile.xml" />
-      <tarfileset dir="."
-                  prefix="mibble-${build.version}">
-        <include name="README.txt" />
-        <include name="LICENSE.txt" />
-        <include name="bin/*.bat" />
-        <include name="MibbleBrowser.jar" />
-        <include name="lib/mibble-*.jar" />
-        <include name="lib/grammatica-*.jar" />
-        <include name="lib/snmp*.jar" />
-        <include name="src/**" />
-        <include name="doc/**" />
-      </tarfileset>
-      <tarfileset dir="."
-                  prefix="mibble-${build.version}"
-                  mode="777"
-                  includes="bin/*.sh" />
-    </tar>
-    <delete file="LICENSE.txt" />
-  </target>
-
-
-<!-- TOOLING & HELPER TARGETS -->
-
-  <target name="util-copyright" description="Updates copyright years in sources">
-    <replaceregexp match="(20\d\d)-20\d\d" replace="\1-2017" flags="g" byline="true">
-      <fileset dir="." includes="*.gradle" />
-      <fileset dir="." includes="*.md" />
-      <fileset dir="." includes="*.txt" />
-      <fileset dir="." includes="*.xml" />
-      <fileset dir="src/java" includes="**/*.java" />
-      <fileset dir="src/grammar" includes="**/*.grammar" />
-    </replaceregexp>
-  </target>
-
-  <target name="util-download-mibs" description="Downloads MIB files from libsmi">
-    <exec executable="svn">
-      <arg line="checkout http://svn.ibr.cs.tu-bs.de/software-ibr-1999-libsmi/trunk tmp" />
-    </exec>
+    <mkdir dir="bin" />
+    <mkdir dir="classes" />
+    <mkdir dir="lib" />
     <replaceregexp match="\s+$" replace="" flags="g" byline="true">
-      <fileset dir="tmp/mibs" includes="**/*" />
-    </replaceregexp>
-    <fixcrlf srcDir="tmp/mibs" tab="remove" />
-    <copy todir="src/mibs" overwrite="true" force="true" verbose="true">
-      <fileset dir="tmp/mibs">
-        <include name="iana/*" />
-        <include name="ietf/*" />
-        <exclude name="**/Makefile*" />
+      <fileset dir=".">
+        <patternset refid="pattern.srcfiles" />
+        <include name="**/*.bat" />
+        <include name="src/mibs/**/*" />
       </fileset>
+    </replaceregexp>
+    <fixcrlf srcdir="." tab="remove">
+      <patternset refid="pattern.srcfiles" />
+      <include name="src/mibs/**/*" />
+    </fixcrlf>
+    <fixcrlf srcdir="." eol="dos" eof="add" tab="remove">
+      <include name="**/*.bat" />
+    </fixcrlf>
+  </target>
+
+  <target name="compile-codegen">
+    <taskdef resource="ant-grammatica.properties" classpathref="project.class.path" />
+    <grammatica grammar="src/grammar/asn1.grammar">
+      <java dir="src/java"
+            package="${build.java.package}.asn1"
+            public="true" />
+    </grammatica>
+  </target>
+
+  <target name="compile-java"
+          depends="compile-java-optimized,compile-java-debug">
+    <echo file="classes/net/percederberg/mibble/build.properties"># Automatically Generated, DO NOT EDIT
+build.title = ${build.title}
+build.version = ${build.version}
+build.date = ${build.printdate}
+</echo>
+    <unjar src="lib/grammatica-1.6.jar" dest="classes">
+      <patternset>
+        <include name="net/percederberg/grammatica/parser/**/*.class" />
+      </patternset>
+    </unjar>
+    <jar jarfile="lib/${build.name}-parser-${build.version}.jar">
+      <manifest>
+        <attribute name="Main-Class" value="${build.java.package}.MibbleBrowser" />
+        <attribute name="Class-Path" value="${build.name}-mibs-${build.version}.jar" />
+      </manifest>
+      <fileset dir="." includes="README.txt" />
+      <fileset dir="." includes="LICENSE.txt" />
+      <fileset dir="classes" />
+    </jar>
+    <jar jarfile="lib/${build.name}-mibs-${build.version}.jar">
+      <zipfileset dir="src/mibs" prefix="mibs" />
+    </jar>
+    <unjar src="lib/snmp6_0.jar" dest="classes" />
+    <jar jarfile="${build.title}Browser.jar">
+      <manifest>
+        <attribute name="Main-Class" value="${build.java.package}.MibbleBrowser" />
+      </manifest>
+      <fileset dir="." includes="README.txt" />
+      <fileset dir="." includes="LICENSE.txt" />
+      <fileset dir="classes" />
+      <zipfileset dir="src/mibs" prefix="mibs" />
+    </jar>
+  </target>
+
+  <target name="compile-java-optimized" if="build.optimized">
+    <javac srcdir="src/java"
+           destdir="classes"
+           classpathref="project.class.path"
+           source="1.7"
+           target="1.7"
+           debug="off"
+           optimize="on"
+           deprecation="on" />
+  </target>
+
+  <target name="compile-java-debug" unless="build.optimized">
+    <javac srcdir="src/java"
+           destdir="classes"
+           classpathref="project.class.path"
+           source="1.7"
+           target="1.7"
+           debug="on"
+           deprecation="on" />
+  </target>
+
+  <target name="compile-scripts">
+    <copy todir="bin" overwrite="true">
+      <fileset dir="src/bin" />
+      <filterset>
+        <filter token="NAME" value="${build.name}" />
+        <filter token="VERSION" value="${build.version}" />
+      </filterset>
     </copy>
-    <delete dir="tmp" quiet="true" />
+    <chmod dir="bin" includes="*.sh" perm="ugo+x" />
+  </target>
+
+
+<!-- TEST TARGETS -->
+  <target name="test-validator">
+    <java classname="${build.java.package}.MibbleValidator"
+          classpath="lib/${build.name}-parser-${build.version}.jar"
+          failonerror="true">
+      <arg value="src/mibs" />
+    </java>
+  </target>
+
+
+<!-- DOCUMENTATION TARGETS -->
+  <target name="doc-clean">
+    <delete dir="doc" quiet="true" />
+    <mkdir dir="doc" />
+    <mkdir dir="doc/api" />
+  </target>
+
+  <target name="doc-text">
+    <xslt style="src/doc/txt.xsl"
+          basedir="src/doc/release"
+          destdir="doc"
+          extension=".txt"
+          includes="*.xml">
+      <param name="name" expression="${build.name}" />
+      <param name="version" expression="${build.version}" />
+      <param name="year" expression="${build.year}" />
+      <param name="date" expression="${build.printdate}" />
+    </xslt>
+  </target>
+
+  <target name="doc-html">
+    <copy file="src/doc/style.css"
+          todir="doc" />
+    <xslt style="src/doc/html.xsl"
+          basedir="src/doc/release"
+          destdir="doc"
+          extension=".html"
+          includes="*.xml">
+      <param name="name" expression="${build.name}" />
+      <param name="version" expression="${build.version}" />
+      <param name="year" expression="${build.year}" />
+      <param name="date" expression="${build.printdate}" />
+      <param name="style" expression="style.css" />
+    </xslt>
+  </target>
+
+  <target name="doc-java">
+    <javadoc packagenames="${build.java.package}.*"
+             excludepackagenames="${build.java.package}.asn1.*,${build.java.package}.browser.*"
+             sourcepath="src/java"
+             destdir="doc/api"
+             classpath="classes"
+             classpathref="project.class.path"
+             version="false"
+             use="true"
+             author="false"
+             windowtitle="${build.title} ${build.version} Documentation"
+             failonerror="true" />
   </target>
 
 </project>

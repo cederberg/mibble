@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Mibble MIB Parser (www.mibble.org)
+
+  See LICENSE.txt for licensing information.
+
+  Copyright (c) 2004-2017 Per Cederberg. All rights reserved.
+-->
+
+<project name="mibble" default="all">
+
+<!--
+
+  BUILD INSTRUCTIONS
+
+  This is an Ant build file for packaging Mibble. You can use it to
+  package the different distributions of Mibble. Note that this build
+  file will overwrite content in the current directory as a result of
+  the build process.
+
+  To run Ant, choose one (or more) of the targets under the TOP-LEVEL
+  TARGETS heading below. If you run Ant without any target specified
+  it will build and package all distributions.
+
+  The following build properties are available (specify on the
+  command-line with -Dname=value):
+
+    build.version
+        The build version number. Defaults to todays date.
+
+    build.type
+        The build type name. Set to "all" to run the complete build
+        with tests. By default this value is set to "minimal" which
+        avoids testing.
+
+-->
+
+
+<!-- INITIALIZATION -->
+  <tstamp />
+  <property name="build.version" value="${DSTAMP}" />
+  <property name="build.type" value="minimal" />
+
+
+<!-- TOP-LEVEL TARGETS -->
+  <target name="all" description="Builds both the public and commercial packages"
+          depends="commercial,public" />
+
+  <target name="commercial" description="Builds only the commercial package"
+          depends="package-clean,package-commercial" />
+
+  <target name="public" description="Builds only the public package"
+          depends="package-clean,package-public" />
+
+
+<!-- PACKAGING TARGETS -->
+  <target name="package-clean">
+    <delete>
+      <fileset dir="." includes="mibble-*.tar.gz" />
+    </delete>
+  </target>
+
+  <target name="package-commercial">
+    <copy file="LICENSE-COMMERCIAL.txt"
+          tofile="LICENSE.txt"
+          overwrite="true" />
+    <ant antfile="build.xml" target="${build.type}">
+      <property name="build.name" value="mibble-commercial" />
+    </ant>
+    <tar tarfile="mibble-commercial-${build.version}.tar.gz"
+         longfile="gnu"
+         compression="gzip">
+      <tarfileset dir="."
+                  prefix="mibble-commercial-${build.version}">
+        <include name="README.txt" />
+        <include name="LICENSE.txt" />
+        <include name="build.xml" />
+        <include name="bin/*.bat" />
+        <include name="MibbleBrowser.jar" />
+        <include name="lib/mibble-*.jar" />
+        <include name="lib/grammatica-*.jar" />
+        <include name="lib/snmp*.jar" />
+        <include name="src/**" />
+        <include name="doc/**" />
+      </tarfileset>
+      <tarfileset dir="."
+                  prefix="mibble-commercial-${build.version}"
+                  mode="777"
+                  includes="bin/*.sh" />
+    </tar>
+    <delete file="LICENSE.txt" />
+  </target>
+
+  <target name="package-public">
+    <copy file="LICENSE-GPL.txt"
+          tofile="LICENSE.txt"
+          overwrite="true" />
+    <ant antfile="build.xml" target="${build.type}">
+      <property name="build.name" value="mibble" />
+    </ant>
+    <tar tarfile="mibble-${build.version}.tar.gz"
+         longfile="gnu"
+         compression="gzip">
+      <tarfileset dir="."
+                  prefix="mibble-${build.version}">
+        <include name="README.txt" />
+        <include name="LICENSE.txt" />
+        <include name="build.xml" />
+        <include name="bin/*.bat" />
+        <include name="MibbleBrowser.jar" />
+        <include name="lib/mibble-*.jar" />
+        <include name="lib/grammatica-*.jar" />
+        <include name="lib/snmp*.jar" />
+        <include name="src/**" />
+        <include name="doc/**" />
+      </tarfileset>
+      <tarfileset dir="."
+                  prefix="mibble-${build.version}"
+                  mode="777"
+                  includes="bin/*.sh" />
+    </tar>
+    <delete file="LICENSE.txt" />
+  </target>
+
+
+<!-- TOOLING & HELPER TARGETS -->
+
+  <target name="util-copyright" description="Updates copyright years in sources">
+    <replaceregexp match="(20\d\d)-20\d\d" replace="\1-2017" flags="g" byline="true">
+      <fileset dir="." includes="*.gradle" />
+      <fileset dir="." includes="*.md" />
+      <fileset dir="." includes="*.txt" />
+      <fileset dir="." includes="*.xml" />
+      <fileset dir="src/java" includes="**/*.java" />
+      <fileset dir="src/grammar" includes="**/*.grammar" />
+    </replaceregexp>
+  </target>
+
+  <target name="util-download-mibs" description="Downloads MIB files from libsmi">
+    <exec executable="svn">
+      <arg line="checkout http://svn.ibr.cs.tu-bs.de/software-ibr-1999-libsmi/trunk tmp" />
+    </exec>
+    <replaceregexp match="\s+$" replace="" flags="g" byline="true">
+      <fileset dir="tmp/mibs" includes="**/*" />
+    </replaceregexp>
+    <fixcrlf srcDir="tmp/mibs" tab="remove" />
+    <copy todir="src/mibs" overwrite="true" force="true" verbose="true">
+      <fileset dir="tmp/mibs">
+        <include name="iana/*" />
+        <include name="ietf/*" />
+        <exclude name="**/Makefile*" />
+      </fileset>
+    </copy>
+    <delete dir="tmp" quiet="true" />
+  </target>
+
+</project>
