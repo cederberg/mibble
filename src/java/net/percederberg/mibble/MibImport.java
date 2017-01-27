@@ -70,17 +70,14 @@ public class MibImport implements MibContext {
      * symbols.  This method will be called by the MIB loader.
      *
      * @param log            the MIB loader log
-     *
-     * @throws MibException if an error was encountered during the
-     *             initialization
      */
     public void initialize(MibLoaderLog log) throws MibException {
         mib = loader.getMib(name);
         if (mib == null) {
-
             String msg = "couldn't find referenced MIB '" + name + "', " +
                          "skipping import of " + symbols.size() + " symbols";
             log.addWarning(fileRef, msg);
+            return;
         }
         if (symbols != null) {
             for (String sym : symbols) {
