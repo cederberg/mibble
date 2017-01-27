@@ -71,15 +71,13 @@ public class MibImport implements MibContext {
      *
      * @param log            the MIB loader log
      */
-    public void initialize(MibLoaderLog log) throws MibException {
+    public void initialize(MibLoaderLog log) {
         mib = loader.getMib(name);
         if (mib == null) {
             String msg = "couldn't find referenced MIB '" + name + "', " +
                          "skipping import of " + symbols.size() + " symbols";
             log.addWarning(fileRef, msg);
-            return;
-        }
-        if (symbols != null) {
+        } else if (symbols != null) {
             for (String sym : symbols) {
                 if (mib.getSymbol(sym) == null) {
                     String msg = "couldn't find imported symbol '" + sym +
@@ -99,11 +97,11 @@ public class MibImport implements MibContext {
      * @param mib            the importing MIB module
      */
     protected void validateSmiVersion(MibLoaderLog log, Mib mib) {
-        int parentVer = mib.getSmiVersion();
-        int importedVer = getMib().getSmiVersion();
-        if (parentVer != importedVer) {
+        int expectedVer = mib.getSmiVersion();
+        int importedVer = (this.mib == null) ? 0 : this.mib.getSmiVersion();
+        if (this.mib != null && expectedVer != importedVer) {
             String msg = "imported " + name + " module is SMIv" + importedVer +
-                         ", instead of SMIv" + parentVer;
+                         ", instead of SMIv" + expectedVer;
             log.addWarning(fileRef, msg);
         }
     }

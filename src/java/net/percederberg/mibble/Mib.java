@@ -138,13 +138,9 @@ public class Mib implements MibContext {
         // Resolve imported MIB files
         int  errors = log.errorCount();
         for (MibImport imp : imports) {
-            try {
-                imp.initialize(log);
-                if (loaded) {
-                    imp.validateSmiVersion(log, this);
-                }
-            } catch (MibException e) {
-                log.addError(e);
+            imp.initialize(log);
+            if (loaded) {
+                imp.validateSmiVersion(log, this);
             }
         }
 
