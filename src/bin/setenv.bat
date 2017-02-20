@@ -29,7 +29,7 @@ if not exist "%JAVA_HOME%\bin\java.exe" goto ERROR
 ::Setup the classpath variable
 :FIXCP
 del reg1.txt 2> nul
-set CLASSPATH=lib\@NAME@-parser-@VERSION@.jar;lib\@NAME@-mibs-@VERSION@.jar;lib\snmp6_0.jar
+set CLASSPATH=lib\@NAME@-parser-@VERSION@.jar;lib\@NAME@-mibs-@VERSION@.jar;lib\snmp6_1.jar
 goto DONE
 
 :ERROR
