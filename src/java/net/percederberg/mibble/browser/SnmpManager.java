@@ -164,7 +164,11 @@ public class SnmpManager {
             }
             if (auth != null && privacy != null) {
                 type = privacy.getType();
-                if (!type.equals(SnmpPrivacy.CBC_DES_TYPE)) {
+                if (type.equals(SnmpPrivacy.DES_TYPE)) {
+                    pool.setPrivacyProtocol(SnmpContextv3Face.DES_ENCRYPT);
+                } else if (type.equals(SnmpPrivacy.AES_TYPE)) {
+                    pool.setPrivacyProtocol(SnmpContextv3Face.AES_ENCRYPT);
+                } else {
                     throw new SnmpException("Unsupported privacy " +
                                             "protocol: " + type);
                 }

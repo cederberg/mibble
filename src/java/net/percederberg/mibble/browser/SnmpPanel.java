@@ -273,7 +273,8 @@ public class SnmpPanel extends JPanel {
         authTypeCombo.addItem(SnmpAuthentication.MD5_TYPE);
         authTypeCombo.addItem(SnmpAuthentication.SHA1_TYPE);
         privacyTypeCombo.addItem("None");
-        privacyTypeCombo.addItem(SnmpPrivacy.CBC_DES_TYPE);
+        privacyTypeCombo.addItem(SnmpPrivacy.DES_TYPE);
+        privacyTypeCombo.addItem(SnmpPrivacy.AES_TYPE);
 
         // Associate labels
         hostLabel.setLabelFor(hostField);

@@ -18,9 +18,14 @@ package net.percederberg.mibble.browser;
 public class SnmpPrivacy {
 
     /**
-     * The CBC-DES privacy type.
+     * The DES privacy type.
      */
-    public static final String CBC_DES_TYPE = "CBC-DES";
+    public static final String DES_TYPE = "3-DES (CBC-DES)";
+
+    /**
+     * The AES privacy type.
+     */
+    public static final String AES_TYPE = "AES (CFB128-AES-128)";
 
     /**
      * The privacy type.
