@@ -1,0 +1,1987 @@
+InfraSolutionX-MIB DEFINITIONS ::= BEGIN
+	IMPORTS
+		OBJECT-TYPE			FROM RFC-1212
+		NOTIFICATION-TYPE		FROM SNMPv2-SMI
+		enterprises 			FROM RFC1155-SMI;
+	AustinHughes				OBJECT IDENTIFIER ::= { enterprises 34550 }	
+	  InfraSolutionX			OBJECT IDENTIFIER ::= { AustinHughes 10 }
+	    InfraBox				OBJECT IDENTIFIER ::= { InfraSolutionX 1 }
+	    handleGroup				OBJECT IDENTIFIER ::= { InfraSolutionX 2 }
+		handleAdmin				OBJECT IDENTIFIER ::= { handleGroup 1 }
+		handleControl				OBJECT IDENTIFIER ::= { handleAdmin 5 }
+		FrontHandleControl				OBJECT IDENTIFIER ::= { handleControl 1 }
+		RearHandleControl				OBJECT IDENTIFIER ::= { handleControl 2 }
+    	    pduGroup				OBJECT IDENTIFIER ::= { InfraSolutionX 3 }
+		pduAdmin				OBJECT IDENTIFIER ::= { pduGroup 1 }
+		pduControl				OBJECT IDENTIFIER ::= { pduAdmin 5 }
+	    iBoxSensorGroup			OBJECT IDENTIFIER ::= { InfraSolutionX 5 }
+		iBoxSensorAdmin				OBJECT IDENTIFIER ::= { iBoxSensorGroup 1 }
+		iBoxSensorControl				OBJECT IDENTIFIER ::= { iBoxSensorAdmin 5 }
+	--###########################################################################################
+	-- Last update : 2014/07/11
+	--  -updated description of SetLampOperation, SetCircuitLoadPeakAmpReset, circuitState
+	--   and SetCircuitAmpAlarmThresh
+	-- Last update : 2014/07/09
+	--	-updated description of SetOutletDelaySwitchONCount
+	--	2014/07/07
+	--	-Added Traps for PDU, Handle
+	--	-updated description of SetEnvSensorEventTrigger
+	--	2014/06/25
+	--	-updated description of SetEnvSensorHumidAlarmThreshold
+	--	2014/06/09
+	--	-SET is added to handleControl, pduControl, iBoxSensorControl
+	--###########################################################################################
+	-- textual conventions
+	-- InetAddressIPv4 is extrated from INET-ADDRESS-MIB
+	InetAddressIPv4 ::= TEXTUAL-CONVENTION
+	    DISPLAY-HINT "1d.1d.1d.1d"
+	    STATUS       current
+	    DESCRIPTION
+		"Represents an IPv4 network address:
+
+
+		   Octets   Contents         Encoding
+		    1-4     IPv4 address     network-byte order
+
+		 The corresponding InetAddressType value is ipv4(1).
+
+		 This textual convention SHOULD NOT be used directly in object
+		 definitions, as it restricts addresses to a specific format.
+		 However, if it is used, it MAY be used either on its own or in
+		 conjunction with InetAddressType, as a pair."
+	    SYNTAX       OCTET STRING (SIZE (4))
+	-- DateAndTime is extrated from SNMPv2-TC
+	DateAndTime ::= TEXTUAL-CONVENTION
+	    DISPLAY-HINT "2d-1d-1d,1d:1d:1d.1d,1a1d:1d"
+	    STATUS       current
+	    DESCRIPTION
+		    "A date-time specification.
+
+		    field  octets  contents                  range
+		    -----  ------  --------                  -----
+		      1      1-2   year*                     0..65536
+		      2       3    month                     1..12
+		      3       4    day                       1..31
+		      4       5    hour                      0..23
+		      5       6    minutes                   0..59
+		      6       7    seconds                   0..60
+				   (use 60 for leap-second)
+		      7       8    deci-seconds              0..9
+		      8       9    direction from UTC        '+' / '-'
+		      9      10    hours from UTC*           0..13
+		     10      11    minutes from UTC          0..59
+
+		    * Notes:
+		    - the value of year is in network-byte order
+		    - daylight saving time in New Zealand is +13
+
+		    For example, Tuesday May 26, 1992 at 1:30:15 PM EDT would be
+		    displayed as:
+
+				     1992-5-26,13:30:15.0,-4:0
+
+		    Note that if only local time is known, then timezone
+		    information (fields 8-10) is not present."
+	    SYNTAX       OCTET STRING (SIZE (8 | 11))
+	-- DisplayString is extrated from SNMPv2-TC
+	DisplayString ::= TEXTUAL-CONVENTION
+	    DISPLAY-HINT "255a"
+	    STATUS       current
+	    DESCRIPTION
+		    "Represents textual information taken from the NVT ASCII
+		    character set, as defined in pages 4, 10-11 of RFC 854.
+
+		    To summarize RFC 854, the NVT ASCII repertoire specifies:
+
+		      - the use of character codes 0-127 (decimal)
+
+		      - the graphics characters (32-126) are interpreted as
+			US ASCII
+
+		      - NUL, LF, CR, BEL, BS, HT, VT and FF have the special
+			meanings specified in RFC 854
+
+		      - the other 25 codes have no standard interpretation
+
+		      - the sequence 'CR LF' means newline
+
+		      - the sequence 'CR NUL' means carriage-return
+
+		      - an 'LF' not preceded by a 'CR' means moving to the
+			same column on the next line.
+
+		      - the sequence 'CR x' for any x other than LF or NUL is
+			illegal.  (Note that this also means that a string may
+			end with either 'CR LF' or 'CR NUL', but not with CR.)
+
+		    Any object defined using this syntax may not exceed 255
+		    characters in length."
+	    SYNTAX       OCTET STRING (SIZE (0..255))
+	-------------------------------------------------------------------------------------------------------
+	--
+	--InfraSolution.InfraBox.InfraBoxAdmin
+	--
+	InfraBoxAdmin			OBJECT IDENTIFIER ::= { InfraBox 1 }
+	InfraBoxModel  OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The InfraBox model ( X-2000 / X-1000 )."
+		::= { InfraBoxAdmin 1 }
+		--main_conf.AppText
+	InfraBoxName  OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..16))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"The name of the product.
+			 SET: input length = 1 to 16 characters.
+			 The reserved characters (space), (double quote), (single quote), (#), (%), (&), (;) and (\) will be replaced with (_) character."
+
+		::= { InfraBoxAdmin 2 }
+		--main_conf.DeviceName		
+	InfraBoxLocation  OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..16))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"The location of the product.
+			 SET: input length = 1 to 16 characters.
+			 The reserved characters (space), (double quote), (single quote), (#), (%), (&), (;) and (\) will be replaced with (_) character."
+		::= { InfraBoxAdmin 3 }
+		--main_conf.Location
+	InfraBoxMacAddress  OBJECT-TYPE
+		SYNTAX      OCTET STRING
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The MAC address of the products"
+		::= { InfraBoxAdmin 8 }
+		--mac_conf
+	InfraBoxIpAddressIpv4  OBJECT-TYPE
+		SYNTAX      InetAddressIPv4
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The current IPv4 address."
+		::= { InfraBoxAdmin 9 }
+		--web_conf.IpV4Addr
+	InfraBoxSubnetIpv4  OBJECT-TYPE
+		SYNTAX      InetAddressIPv4
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The current IPv4 subnet."
+		::= { InfraBoxAdmin 10 }
+		--web_conf.IpV4Netmask
+	InfraBoxGatewayIpv4  OBJECT-TYPE
+		SYNTAX      InetAddressIPv4
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The current IPv4 gateway"
+		::= { InfraBoxAdmin 11 }
+		--web_conf.IpV4GatewayIP
+	InfraBoxSolutionType  OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The current Solution profile type. (1)=InfraSolution, (2)=InfraGuard, (3)=InfraPower."
+		::= { InfraBoxAdmin 12 }
+		--main_conf.infraType
+	InfraBoxSolutionFirmwareInformation  OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The firmawre version code"
+		::= { InfraBoxAdmin 13 }
+		--main_conf.FirmwareVersion
+	-------------------------------------------------------------------------------------------------------	
+	--
+	--InfraSolutionX.InfraBox.handleGroup.handleAdmin.handleTable.handleEntry.
+	--
+	
+	handleTable        OBJECT-TYPE
+		SYNTAX      SEQUENCE OF handleEntry
+		MAX-ACCESS  not-accessible
+		STATUS      current
+		DESCRIPTION
+			"Table of Handle Entries"
+		::= { handleAdmin 1 }
+	handleEntry        OBJECT-TYPE
+		SYNTAX      HandleEntry
+		MAX-ACCESS  not-accessible
+		STATUS 	    current
+		DESCRIPTION
+			"Entries of Handle"
+		INDEX   { handleIndex }
+		::= { handleTable 1 }
+	HandleEntry ::=
+		SEQUENCE {
+			handleIndex			INTEGER,
+			handleModel			DisplayString,
+			handleName			DisplayString,
+			handleBelongToRack		DisplayString,
+			handleBelongToZone		DisplayString,
+			handleLocation			DisplayString,
+			handleReaderType		DisplayString,
+			handleConnectionStatus		DisplayString,
+			handleLastAccessCardNo		DisplayString,
+			handleLastDoorOpenTime		DisplayString,
+			handleLastDoorCloseTime		DisplayString,
+			handleLastAccessDuration	DisplayString,
+			handleRemoteRelease		DisplayString,
+			handleAlarmState		DisplayString,
+			handleAccessMode		DisplayString,
+			handleDoorSensorSate		DisplayString,
+			handleLockSate			DisplayString
+		}	
+	handleIndex OBJECT-TYPE
+		SYNTAX      INTEGER (1..16)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The index of this handle. 
+			 (1)=front handle, (2)=rear handle"
+		::= { handleEntry 1 }
+	handleModel OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The model number of this handle."
+		::= { handleEntry 2 }
+	handleName OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The name of this handle."
+		::= { handleEntry 4 }
+	handleBelongToRack OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The name of rack which the handle belongs to."
+		::= { handleEntry 5 }
+	handleBelongToZone OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The name of zone which the handle belongs to."
+		::= { handleEntry 6 }
+	handleLocation OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The handle location of the rack. 
+			 (front)=Front Door or (rear)=Rear Door"
+		::= { handleEntry 7 }	
+	handleReaderType OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The reader type of the handle. 
+			 (Mifare), (Proximity) or (iClass)"
+		::= { handleEntry 8 }
+	handleConnectionStatus OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The handle connection status. 
+			 (Disconnected) or (Connected)"
+		::= { handleEntry 11 }
+	handleLastAccessCardNo OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The last handle access card no. 
+			 (00000000)=key/remote/alarm, (00000001) to (99999999)=the 8 digit decimal card number."
+		::= { handleEntry 12 }
+	handleLastDoorOpenTime OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The last door open time. 
+			 (yymmddhhnnss)=year,month,day,hour,minute,second"
+		::= { handleEntry 13 }
+	handleLastDoorCloseTime OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The last door close time. 
+			 (yymmddhhnnss)=year,month,day,hour,minute,second"
+		::= { handleEntry 14 }
+	handleLastAccessDuration OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The last door open duration"
+		::= { handleEntry 15 }
+		--The time different between handleLastDoorOpenTime and handleLastDoorCloseTime in unit of second
+	handleAlarmState OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The status of the handle. 
+			 (0)=normal, (1)=alarm."
+		::= { handleEntry 17 }
+	handleAccessMode OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The access mode of the handle. 
+			 (0)=key mode, (1)=card mode."
+		::= { handleEntry 18 }
+	handleDoorSensorSate OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The door sensor state of the handle. 
+			 (0)=door close, (1)=door open"
+		::= { handleEntry 19 }
+	handleLockSate OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The lock state of the handle. 
+			 (0)=locked, (1)=unlocked"
+		::= { handleEntry 20 }
+	--
+	--InfraSolutionX.InfraBox.handleGroup.handleAdmin.handleControl.FrontHandleControl
+	--
+	SetFrontHandleRemoteRelease OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Send remote unlock request to the front handle. 
+			 GET: (0)=locked, (1)=unlocked.
+			 SET: (1)=confirm remote release."
+		::= { FrontHandleControl 5 }
+	--
+	--InfraSolutionX.InfraBox.handleGroup.handleAdmin.handleControl.RearHandleControl
+	--
+	SetRearHandleRemoteRelease OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Send remote unlock request to the rear handle. 
+			 GET: (0)=locked, (1)=unlocked.
+			 SET: (1)=confirm remote release"
+		::= { RearHandleControl 5 }
+	--
+	--	pduAdmin
+	--	
+	pduTable        OBJECT-TYPE
+		SYNTAX      SEQUENCE OF PduEntry
+		MAX-ACCESS  not-accessible
+		STATUS      current
+		DESCRIPTION
+			"Table of PDU"
+		::= { pduAdmin 1 }
+	pduEntry        OBJECT-TYPE
+		SYNTAX      PduEntry
+		MAX-ACCESS  not-accessible
+		STATUS 	    current
+		DESCRIPTION
+			"Table entries of PDU"
+		INDEX   { pduIndex }
+		::= { pduTable 1 }
+	PduEntry ::=
+		SEQUENCE {
+			pduIndex			INTEGER,
+			pduModel			DisplayString,
+			pduID				DisplayString,
+			pduName				DisplayString,
+			pduLocation			DisplayString,
+			pduGroupNumber			DisplayString,
+			pduMainLoadVoltage		DisplayString,
+			pduMainLoadAmp			INTEGER,
+			pduMainPowerFactor		DisplayString,
+			pduMainActivePower		INTEGER,
+			pduMainApparentPower		INTEGER,
+			pduMainCumulativeEnergy		INTEGER,
+			pduRealTimeClock		DisplayString,
+			circuits			DisplayString,
+			circuitBreakers			DisplayString,
+			outlets				DisplayString,
+			THSensors			DisplayString
+		}
+	pduIndex OBJECT-TYPE
+		SYNTAX      INTEGER (1..16)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The PDU cascade level. 
+			 (1)=PDU level P1, (2)=PDU level P2, (3)=PDU level P3, (4)=PDU level P4."
+		::= { pduEntry 1 }
+		--PDU_Details.Device_ID (converted 2nd byte to integer)
+	pduModel OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The model number of this PDU."
+		::= { pduEntry 2 }
+		--PDU_Details.PDU_Model
+	pduID OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..16))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The unique identifier of this PDU."
+		::= { pduEntry 3 }
+	pduName OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..16))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The name of this PDU."
+		::= { pduEntry 6 }
+		--PDU_Details.PDU_Name
+	pduLocation OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..16))
+		MAX-ACCESS read-only
+		STATUS      current
+		DESCRIPTION
+			"The location of this PDU."
+		::= { pduEntry 7 }
+		--PDU_Details.PDU_Location
+	pduGroupNumber OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The group number of this PDU. 
+			 Ranged from 000 to 240.
+			 (000)=group 000, (240)=group 240."
+		::= { pduEntry 8 }
+		-- updated on 2012/10/08 by Ed
+	pduMainLoadVoltage OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (4))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The AC voltage measured on this PDU in tenth of Volts.
+			 (0000)=0.0VAC, (2201)=220.1VAC"
+		::= { pduEntry 13 }
+		--PDU_Details.PDU_Load_Voltage
+	pduMainLoadAmp OBJECT-TYPE
+		SYNTAX      INTEGER
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The current measured on this PDU in tenth of Amps.
+			 (0)=0.0A, (10)=1.0A, (123)=12.3A, (160)=16.0A, (320)=32.0A, (400)=40.0A."
+		::= { pduEntry 14 }
+		--Circuit_Details.Circuit_Load_Amp (sum of all circuits)
+	pduMainPowerFactor OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The power factor of this PDU in hundredth, 
+			 Ranged from (000) to (100). 
+			 In format of 'A.BB', where A is digits before decimal place, B is the digits after decimal place.
+			 (000)=0.0, (001)=0.01, (100)=1.0."
+		::= { pduEntry 16 }
+		--PDU_Details.PDU_PowerFactor
+	pduMainActivePower OBJECT-TYPE
+		SYNTAX      INTEGER
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The active power consumption of this PDU in hundredth of W, 
+			 Ranged from (0000000) to (9999999). 
+			 In format of 'AAAAA.BB', where A is digits before decimal place, B is the digits after decimal place.
+			 (0000000)=0.00 W, (1234567)=12345.67 W."
+		::= { pduEntry 17 }
+		--Circuit_Details.Circuit_ActivePower (sum of all circuits)
+	pduMainApparentPower OBJECT-TYPE
+		SYNTAX      INTEGER
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The apparent power consumption for this PDU in hundredth of VA.
+			 Ranged from (0000000) to (9999999). 
+			 In format of 'AAAAA.BB', where A is digits before decimal place, B is the digits after decimal place.
+ 			 (0000000)=0.00 VA, (1234567)=12345.67 VA."
+		::= { pduEntry 18 }
+		--Circuit_Details.Circuit_ApparentPower (sum of all circuits)
+	pduMainCumulativeEnergy OBJECT-TYPE
+		SYNTAX      INTEGER
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The cumulative energy (kWh) of this PDU in hundredth of kilowatt-hours.
+			 Sum up all circuits Cumulative energy reading (byte after @)"
+		::= { pduEntry 19 }
+		--Circuit_Details.Circuit_CumulativeEnergy (sum of all circuits)
+	pduRealTimeClock OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (0..14))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The real time clock & calendar. 
+			(yymmddhhnnssw)=year,month,day,hour,minute,second,day of week. 
+			(w)=0:Sunday, 1:Monday ... 6:Saturday"
+		::= { pduEntry 20 }
+	--
+	--	circuits
+	--
+	circuits	OBJECT-TYPE
+		SYNTAX		DisplayString (SIZE (1..4))
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION
+			""
+		::= { pduEntry 24 }
+	circuitTable        OBJECT-TYPE
+		SYNTAX      SEQUENCE OF CircuitTablEntry
+		MAX-ACCESS  not-accessible
+		STATUS      current
+		DESCRIPTION
+			"Table of circuit exist in a PDU"
+		::= { circuits 1 }
+		
+	circuitTablEntry        OBJECT-TYPE
+		SYNTAX      CircuitTablEntry
+		MAX-ACCESS  not-accessible
+		STATUS 	    current
+		DESCRIPTION
+			"Table entries of circuit exist in a PDU"
+		INDEX   { pduIndex,
+					circuitIndex }
+		::= { circuitTable 1 }
+	CircuitTablEntry ::=
+		SEQUENCE {
+			circuitIndex			INTEGER,
+			circuitRatedAmp			DisplayString,
+			circuitState			INTEGER,
+			circuitLoadVoltage		DisplayString,
+			circuitLoadAmp			DisplayString,
+			circuitLoadPeakAmp		DisplayString,
+			circuitCumulativeEnergy		DisplayString,
+			circuitBreakerStateCopy		INTEGER,
+			circuitLoadAmpAlarmThresh	DisplayString,
+			circuitLoadAmpRisingAlertThresh	DisplayString,
+			circuitLoadAmpLowAlertThresh	DisplayString
+		}
+	circuitIndex OBJECT-TYPE
+		SYNTAX      INTEGER (1..2)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"Circuit ID, (1)=Circuit A, (2)=Circuit B"
+		::= { circuitTablEntry 1 }
+	circuitRatedAmp OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The input current rating of this circuit in tenth of Amps.
+			(0)=0.0A, (1)=0.1A, (101)=10.1A, (160)=16.0A"
+		::= { circuitTablEntry 2 }
+	circuitState OBJECT-TYPE
+		SYNTAX      INTEGER (0..4)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The status of this circuit, (0)=Normal, (1)=Alarm, (2)=alert, (3) = low alert, (4)=not exist"
+		::= { circuitTablEntry 5 }
+		
+	circuitLoadVoltage OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (4))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The voltage measured on this circuit in tenth of Volts.
+			(0000)=0 V, (1100)=110.0 V, (2400)=240.0 V."
+		::= { circuitTablEntry 6 }
+		
+	circuitLoadAmp OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The load measured on this circuit in tenth of Amps.
+			(000)=0.0 A, (001)=0.1 A, (050)=5.0 A, (100)=10.0 A, (---)=unmeasurable."
+		::= { circuitTablEntry 7 }
+	circuitLoadPeakAmp OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (16))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The the peak current measured on this circuit in tenth of Amps with timestamp.
+			 (140411152059@123)=2014-APR-11 15:20:59, 12.3 Amp."
+		::= { circuitTablEntry 12 }
+		
+	circuitCumulativeEnergy OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (21))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The cumulative energy of this outlet in hundredth of kilowatt-hours with time stapm in < yymmddhhnnss@caaaaabb > format. 
+			 (yymmddhhnnss)=the timestamp when start the accumulation (year, month, day, hour, minute, second).
+			 (@)=sperator character to split timestamp and the cumulative energy.
+			 (c)=cycle counter. If the cumulative energy over 9999999, the counter will be increased by 1 and the 	 energy is reset.
+			 (aaaaabb)=the cumulative energy in hundredth of kWh."
+		::= { circuitTablEntry 13 }
+		
+	circuitBreakerStateCopy OBJECT-TYPE
+		SYNTAX      INTEGER (0..1)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The circuit breaker state, (0)=connected,  (1)= tripped"
+		::= { circuitTablEntry 15 }
+		
+	circuitLoadAmpAlarmThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The upper alarm current threshold of this circuit in tenth of Amps.
+			 (000)=0.0A, (001)=0.1A, (101)=10.1A, (160)=16.0A."
+		::= { circuitTablEntry 16 }
+	circuitLoadAmpRisingAlertThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The rising alert current threshold of this circuit in tenth of Amps.
+			 (000)=Disable, (001)=0.1A, (101)=10.1A, (160)=16.0A."
+		::= { circuitTablEntry 17 }
+	circuitLoadAmpLowAlertThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The lower alert current threshold of this circuit in tenth of Amps.
+			 (000)=Disable, (001)=0.1A, (101)=10.1A, (160)=16.0A."
+		::= { circuitTablEntry 18 }
+	--
+	--	circuitBreakers
+	--
+	circuitBreakers	OBJECT-TYPE
+		SYNTAX		DisplayString (SIZE (1..4))
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION
+			""
+		::= { pduEntry 25 }
+	circuitBreakerTable        OBJECT-TYPE
+		SYNTAX      SEQUENCE OF CircuitBreakerTableEntry
+		MAX-ACCESS  not-accessible
+		STATUS      current
+		DESCRIPTION
+			"Table of circuit breaker."
+		::= { circuitBreakers 1 }
+		
+	circuitBreakerTableEntry        OBJECT-TYPE
+		SYNTAX      CircuitBreakerTableEntry
+		MAX-ACCESS  not-accessible
+		STATUS 	    current
+		DESCRIPTION
+			"Table entries of circuit breaker."
+		INDEX   { pduIndex,
+					circuitBreakerIndex }
+		::= { circuitBreakerTable 1 }
+	CircuitBreakerTableEntry ::=
+		SEQUENCE {
+			circuitBreakerIndex					INTEGER,
+			circuitBreakerRatedAmp				DisplayString,
+			circuitBreakerState					INTEGER
+		}
+		
+	circuitBreakerIndex OBJECT-TYPE
+		SYNTAX      INTEGER (1..2)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"Circuit Breaker ID, value (1)=circuit breaker A, (2)=circuit breaker B"
+		::= { circuitBreakerTableEntry 1 }
+	circuitBreakerRatedAmp OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The current rating of this circuit breaker in tenth of Amps.
+			(0)=0.0A, (1)=0.1A, (101)=10.1A, (160)=16.0A"
+		::= { circuitBreakerTableEntry 2 }
+	circuitBreakerState OBJECT-TYPE
+		SYNTAX      INTEGER (0..1)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The circuit breaker state, (0)=connected,  (1)= tripped"
+		::= { circuitBreakerTableEntry 4 }
+	--
+	--	outlets
+	--
+	outlets	OBJECT-TYPE
+		SYNTAX		DisplayString (SIZE (1..4))
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION
+			""
+		::= { pduEntry 26 }
+	stdOutletTable        OBJECT-TYPE
+		SYNTAX      SEQUENCE OF StdOutletTableEntry
+		MAX-ACCESS  not-accessible
+		STATUS      current
+		DESCRIPTION
+			"Table of non C19 outlet"
+		::= { outlets 1 }
+		
+	stdOutletTableEntry        OBJECT-TYPE
+		SYNTAX      StdOutletTableEntry
+		MAX-ACCESS  not-accessible
+		STATUS 	    current
+		DESCRIPTION
+			"table entries of no c19 outlet"
+		INDEX   { pduIndex,
+					stdOutletIndex }
+		::= { stdOutletTable 1 }
+		
+	StdOutletTableEntry ::=
+		SEQUENCE {
+			stdOutletIndex				INTEGER,
+			stdOutletCircuit			DisplayString,
+			stdOutletType				DisplayString,
+			stdOutletName				DisplayString,
+			stdOutletPowerStatus			INTEGER,
+			stdOutletAlarmState			INTEGER,
+			stdOutletLoadAmp			DisplayString,
+			stdOutletEnergy				DisplayString,
+			stdOutletPeakAmp			DisplayString,
+			stdOutletCumulativeEnergy		DisplayString,
+			stdOutletLoadAmpAlarmThresh		DisplayString,
+			stdOutletLoadAmpRisingAlertThresh	DisplayString,
+			stdOutletLoadAmpLowAlertThresh		DisplayString,
+			stdOutletPowerUpSequenceDelay		INTEGER
+		}
+		
+	stdOutletIndex OBJECT-TYPE
+		SYNTAX      INTEGER (1..48)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The unique number for this outlet "
+		::= { stdOutletTableEntry 1 }
+	stdOutletCircuit OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The circuit of this outlet belongs to, (1)= Circuit A, (2)=Circuit B"
+		::= { stdOutletTableEntry 2 }
+		
+	stdOutletType OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..16))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The type for this outlet, (1)=IEC C13, (2)=NEMA 5-20, (3)=BS1363, (4)=Schuko, (5)=French, (6)=AS 3112"
+		::= { stdOutletTableEntry 3 }
+	stdOutletName OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..16))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The name of this outlet."
+		::= { stdOutletTableEntry 4 }
+		
+	stdOutletPowerStatus OBJECT-TYPE
+		SYNTAX      INTEGER (0..1)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"GET:The power state of this outlet. (0)=OFF, (1)=ON"
+		::= { stdOutletTableEntry 7 }
+	stdOutletAlarmState OBJECT-TYPE
+		SYNTAX      INTEGER (0..4)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The alarm state for this outlet, 
+			 (0) = normal, (1) = alarm, (2)=alert, (3) = low alert, (4) = not exist"
+		::= { stdOutletTableEntry 8 }
+	stdOutletLoadAmp OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The current load measured on this outlet in tenth of Amps.
+			(000)=0.0 A, (001)=0.1 A, (050)=5.0 A, (100)=10.0 A, (---)=unmeasurable."
+		::= { stdOutletTableEntry 9 }		
+	stdOutletEnergy OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..7))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The power consumption of this outlet in hundredth of watt. 
+			 (0)=0 W, (1)=0.01 W, (12)=0.12 W, (1234567)=12345.67 W."
+		::= { stdOutletTableEntry 10 }
+				
+	stdOutletPeakAmp OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (16))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The the peak current measured on this circuit in tenth of Amps with timestamp.
+			 (140411152059@123)=2014-APR-11 15:20:59, 12.3 Amp."
+		::= { stdOutletTableEntry 11 }
+		
+	stdOutletCumulativeEnergy OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (21))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The cumulative energy of this outlet in hundredth of kilowatt-hours with time stapm in < yymmddhhnnss@caaaaabb > format. 
+			 (yymmddhhnnss)=the timestamp when start the accumulation (year, month, day, hour, minute, second).
+			 (@)=sperator character to split timestamp and the cumulative energy.
+			 (c)=cycle counter. If the cumulative energy over 9999999, the counter will be increased by 1 and the 	 energy is reset.
+			 (aaaaabb)=the cumulative energy in hundredth of kWh."
+		::= { stdOutletTableEntry 12 }
+	stdOutletLoadAmpAlarmThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The upper alarm current threshold of this outlet in tenth of Amps.
+			 (000)=0.0 A, (050)=5.0 A, (160)=16.0 A."
+		::= { stdOutletTableEntry 13 }
+		-- Added on 2013/04/08
+	stdOutletLoadAmpRisingAlertThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The rising alert current threshold of this outlet in tenth of Amps, 000=disabled.
+			 (000)=0.0 A, (050)=5.0 A, (160)=16.0 A."
+		::= { stdOutletTableEntry 14 }
+		-- Added on 2014/05/14
+	stdOutletLoadAmpLowAlertThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The lower alert current threshold of this outlet in tenth of Amps, 000=disabled.
+			 (000)=disable, (050)=5.0 A, (160)=16.0 A."
+		::= { stdOutletTableEntry 15 }		
+		-- Added on 2013/04/08
+	stdOutletPowerUpSequenceDelay OBJECT-TYPE
+		SYNTAX      INTEGER (0..9)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The power up sequence delay of this outlet in seconds.
+			(0)=1 s, (1)=2 s, (9)=10s."
+		::= { stdOutletTableEntry 18 }
+		
+	--
+	--	c19OutletTable
+	--
+	c19OutletTable        OBJECT-TYPE
+		SYNTAX      SEQUENCE OF C19OutletTableEntry
+		MAX-ACCESS  not-accessible
+		STATUS      current
+		DESCRIPTION
+			"Table of C19 outlet"
+		::= { outlets 2 }
+		
+	c19OutletTableEntry        OBJECT-TYPE
+		SYNTAX      C19OutletTableEntry
+		MAX-ACCESS  not-accessible
+		STATUS 	    current
+		DESCRIPTION
+			"Table entries of C19 outlet"
+		INDEX   { pduIndex,
+					c19OutletIndex }
+		::= { c19OutletTable 1 }
+		
+	C19OutletTableEntry ::=
+		SEQUENCE {
+			c19OutletIndex				INTEGER,
+			c19OutletCircuit			DisplayString,
+			c19OutletType				DisplayString,
+			c19OutletName					DisplayString,
+			c19OutletPowerStatus			INTEGER,
+			c19OutletAlarmState			INTEGER,
+			c19OutletLoadAmp			DisplayString,
+			c19OutletEnergy				DisplayString,
+			c19OutletPeakAmp			DisplayString,
+			c19OutletCumulativeEnergy		DisplayString,
+			c19OutletLoadAmpAlarmThresh		DisplayString,
+			c19OutletLoadAmpRisingAlertThresh	DisplayString,
+			c19OutletLoadAmpLowAlertThresh		DisplayString,
+			c19OutletPowerUpSequenceDelay		INTEGER
+		}
+	c19OutletIndex OBJECT-TYPE
+		SYNTAX      INTEGER (1..48)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The unique number for this outlet."
+		::= { c19OutletTableEntry 1 }
+	c19OutletCircuit OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The circuit of this outlet belongs to.
+			 (1)= Circuit A, (2)=Circuit B"
+		::= { c19OutletTableEntry 2 }
+		
+	c19OutletType OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The type for this outlet, 
+			 (1)=IEC C13, (2)=IEC C19, (3)=BS1363, (4)=NEMA 5-20R, (5)=CEE7"
+		::= { c19OutletTableEntry 3 }
+	c19OutletName OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..16))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The name of this outlet."
+		::= { c19OutletTableEntry 4 }
+		
+	c19OutletPowerStatus OBJECT-TYPE
+		SYNTAX      INTEGER (0..1)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"GET:The power state for this outlet.
+			 (0)=OFF, (1)=ON"
+		::= { c19OutletTableEntry 7 }
+	c19OutletAlarmState OBJECT-TYPE
+		SYNTAX      INTEGER (0..4)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The alarm state for this outlet. 
+			 (0) = normal, (1) = alarm, (2)=alert, (3) = low alert, (4) = not exist"
+		::= { c19OutletTableEntry 8 }
+		
+	c19OutletLoadAmp OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The current load measured on this outlet in tenth of Amps"
+		::= { c19OutletTableEntry 9 }
+	c19OutletEnergy OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1..7))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The power consumption of this outlet in hundredth of watt. 
+			 (0)=0 W, (1)=0.01 W, (12)=0.12 W, (1234567)=12345.67 W."
+		::= { c19OutletTableEntry 10 }
+		
+	c19OutletPeakAmp OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (16))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The the peak current measured on this circuit in tenth of Amps with timestamp.
+			 (140411152059@123)=2014-APR-11 15:20:59, 12.3 Amp."
+		::= { c19OutletTableEntry 11 }
+		
+	c19OutletCumulativeEnergy OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (21))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The cumulative energy of this outlet in hundredth of kilowatt-hours with time stapm in < yymmddhhnnss@caaaaabb > format. 
+			 (yymmddhhnnss)=the timestamp when start the accumulation (year, month, day, hour, minute, second).
+			 (@)=sperator character to split timestamp and the cumulative energy.
+			 (c)=cycle counter. If the cumulative energy over 9999999, the counter will be increased by 1 and the 	 energy is reset.
+			 (aaaaabb)=the cumulative energy in hundredth of kWh."
+		::= { c19OutletTableEntry 12 }
+	c19OutletLoadAmpAlarmThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The upper alarm current threshold of this outlet in tenth of Amps."
+		::= { c19OutletTableEntry 13 }
+		-- Added on 2013/04/09
+	c19OutletLoadAmpRisingAlertThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The rising alert current threshold of this outlet in tenth of Amps."
+		::= { c19OutletTableEntry 14 }
+		-- Added on 2014/05/14
+	c19OutletLoadAmpLowAlertThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The lower alert current threshold of this outlet in tenth of Amps. 
+			 (000)=disabled, (050)=5.0 A, (160)=16.0 A"
+		::= { c19OutletTableEntry 15 }	
+		-- Added on 2013/04/09
+		
+	c19OutletPowerUpSequenceDelay OBJECT-TYPE
+		SYNTAX      INTEGER (0..9)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The power up sequence delay of this outlet in seconds.
+			(0)=1 s, (1)=2 s, (9)=10s."
+		::= { c19OutletTableEntry 18 }
+	--
+	--	Sensors
+	--
+	THSensors	OBJECT-TYPE
+		SYNTAX		DisplayString (SIZE (1..4))
+		MAX-ACCESS	not-accessible
+		STATUS		current
+		DESCRIPTION
+			""
+		::= { pduEntry 27 }
+	THsensorTable        OBJECT-TYPE
+		SYNTAX      SEQUENCE OF THSensorTableEntry
+		MAX-ACCESS  not-accessible
+		STATUS      current
+		DESCRIPTION
+			"Table entries of T/TH sensor"
+		::= { THSensors 1 }
+		
+	THsensorTableEntry        OBJECT-TYPE
+		SYNTAX      THSensorTableEntry
+		MAX-ACCESS  not-accessible
+		STATUS 	    current
+		DESCRIPTION
+			""
+		INDEX   { pduIndex,
+					THSensorIndex }
+		::= { THsensorTable 1 }
+		
+	THSensorTableEntry ::=
+		SEQUENCE {
+			THSensorIndex						INTEGER,
+			THSensorLocation					DisplayString,
+			THSensorType						DisplayString,
+			THSensorConnState					INTEGER,
+			THSensorAlarmState					DisplayString,
+			tempSensorValue						INTEGER,
+			tempSensorValueStr					DisplayString,
+			tempSensorUpperAlarmThresh			DisplayString,
+			tempSensorRisingAlertThresh			DisplayString,
+			humiSensorValue						INTEGER,
+			humiSensorValueStr					DisplayString,
+			humiSensorUpperAlarmThresh			DisplayString,
+			humiSensorRisingAlertThresh			DisplayString,
+			THSensorActivation					INTEGER
+		}
+		
+	THSensorIndex OBJECT-TYPE
+		SYNTAX      INTEGER (1..2)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The id of the sensor.1=TH1, 2=TH2"
+		::= { THsensorTableEntry 1 }
+	THSensorLocation OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (0..16))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The location of the sensor."
+		::= { THsensorTableEntry 3 }
+		
+	THSensorType OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (1))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The sensor type. (1) = Temperature sensor, (2) = Temperature-Humidity sensor"
+		::= { THsensorTableEntry 4 }
+		
+	THSensorConnState OBJECT-TYPE
+		SYNTAX      INTEGER (0..1)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The connection status of this sensor.
+			 0=disconnected, 1=connected"
+		::= { THsensorTableEntry 5 }
+		
+	THSensorAlarmState OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (2))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"2 digit, first digit = temperature status & second digit = humidity status.
+			(00)=Temperature status is normal, and humidity status is normal.
+			(01)=Temperature status is normal, and humidity status is alarm.
+			(10)=Temperature status is alarm, and humidity status is normal.
+			(11)=Temperature status is alarm, and humidity status is alarm.
+			(02)=Temperature status is normal, and humidity status is rising alert.
+			(20)=Temperature status is rising alert, and humidity status is normal.
+			(22)=Temperature status is rising alert, and humidity status is rising alert."
+		::= { THsensorTableEntry 6 }
+		
+	tempSensorValue OBJECT-TYPE
+		SYNTAX      INTEGER (0..999)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The temperature measured in tenth of degree celsius.
+			 (0)=0.0,
+ 			 (1)=0.1,
+			 (10)=1.0,
+			 (100)=10.0,
+			 (999)=99.9"
+		::= { THsensorTableEntry 7 }
+		
+	tempSensorValueStr OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (4))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The temperature reading, in degrees celsius, shown as a string ('----' if its disconnected).
+			 (0000)=0.0,
+ 			 (0001)=0.1,
+			 (0010)=1.0,
+			 (0100)=10.0,
+			 (0999)=99.9"
+		::= { THsensorTableEntry 8 }
+		
+	tempSensorUpperAlarmThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (4))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The temperature upper alarm threshold in tenth of degree Celsius
+			 (0001)=0.1,
+			 (0010)=1.0,
+			 (0100)=10.0,
+			 (0450)=45.0,
+			 (0999)=99.9"
+		::= { THsensorTableEntry 9 }
+	tempSensorRisingAlertThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (4))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The temperature rising alert threshold in tenth of degree Celsius
+			 (0000)=disable,
+			 (0001)=0.1,
+			 (0010)=1.0,
+			 (0100)=10.0,
+			 (0450)=45.0,
+			 (0999)=99.9"
+		::= { THsensorTableEntry 10 }
+	humiSensorValue OBJECT-TYPE
+		SYNTAX      INTEGER (0..999)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The relative humidity measured in tenth of percent.
+ 			 (1)=0.1,
+			 (10)=1.0,
+			 (100)=10.0,
+			 (999)=99.9"
+		::= { THsensorTableEntry 11 }
+		
+	humiSensorValueStr OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The relative humidity measured tenth of percent,  shown as a string ('---' if its disconnected).
+			 (001)=0.1,
+			 (010)=1.0,
+			 (100)=10.0,
+			 (999)=99.9"
+		::= { THsensorTableEntry 12 }
+		
+	humiSensorUpperAlarmThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The relative humidity upper alarm threshold in tenth of percent.
+			 (001)=0.1,
+			 (010)=1.0,
+			 (100)=10.0,
+			 (999)=99.9"
+		::= { THsensorTableEntry 13 }
+	humiSensorRisingAlertThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (3))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The relative humidity rising alert threshold in tenth of percent.
+			 (000)=disable,
+			 (001)=0.1,
+			 (010)=1.0,
+			 (100)=10.0,
+			 (999)=99.9"
+		::= { THsensorTableEntry 14 }
+	THSensorActivation OBJECT-TYPE
+		SYNTAX      INTEGER (1)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The activation of the T/TH sensor port on the PDU.
+			 (0)=Deactivated. 
+			 (1)=Actvated"
+		::= { THsensorTableEntry 15 }
+
+	--
+	--InfraSolutionX.iBoxSensorGroup.iBoxSensorAdmin..iBoxSensorTable.iBoxSensorEntry.
+	--
+	iBoxSensorTable        OBJECT-TYPE
+		SYNTAX      SEQUENCE OF IBoxSensorEntry
+		MAX-ACCESS  not-accessible
+		STATUS      current
+		DESCRIPTION
+			"Table of Sensor"
+		::= { iBoxSensorAdmin 1 }
+	iBoxSensorEntry        OBJECT-TYPE
+		SYNTAX      IBoxSensorEntry
+		MAX-ACCESS  not-accessible
+		STATUS 	    current
+		DESCRIPTION
+			"Table entries of sensor"
+		INDEX   { iBoxSensorIndex }
+		::= { iBoxSensorTable 1 }
+	IBoxSensorEntry ::=
+		SEQUENCE {
+			iBoxSensorIndex				INTEGER,
+			iBoxSensorModel				DisplayString,
+			iBoxSensorName				DisplayString,
+			iBoxSensorLocation			DisplayString,
+			iBoxSensorType				DisplayString,
+			iBoxSensorAlarmThreshold		DisplayString,
+			iBoxSensorAlarmState			DisplayString,
+			iBoxSensorControlState			DisplayString,
+			iBoxSensorReading			DisplayString,
+			iBoxSensorOperatingMode			DisplayString,
+			iBoxSensorActivation			DisplayString
+		}	
+	iBoxSensorIndex OBJECT-TYPE
+		SYNTAX      INTEGER (1..16)
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The index of the sensor. 
+			(1)=Temp. 1, (2)=Temp. 2, (3)=Humid. 1, (4)=Humid. 2, 
+			(5)=Smoke, (6)=Shock, (7)=Water 1, (8)=Water 2, (9)=Lamp 1, (10)=Lamp 2, 
+			(11)=Beacon, (12)=Alarm-Out, (13)=Buzzer."
+		::= { iBoxSensorEntry 1 }
+	iBoxSensorModel OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (0..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The model number of this sensor."
+		::= { iBoxSensorEntry 2 }
+	iBoxSensorName OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (0..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The name of this sensor."
+		::= { iBoxSensorEntry 3 }
+	iBoxSensorLocation OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (0..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The location of this sensor"
+		::= { iBoxSensorEntry 4 }	
+	iBoxSensorType OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (0..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The type of the sensor
+			(T1)=Temp. 1, (T2)=Temp. 2
+			(H1)=Humid. 1, (H2)=Humid. 2, 
+			(S1)=Smoke, (S2)=Shock,
+			(W1)=Water 1, (W2)=Water 2,
+			(L1)=Lamp 1, (L2)=Lamp 2, 
+			(B1)=Beacon, (A1)=Alarm-Out, (Z1)=Buzzer."
+		::= { iBoxSensorEntry 5 }	
+	iBoxSensorAlarmThreshold OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (0..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The upper alarm threshold of the sensor 
+			 Sensor type is T1, T2: (0000) to (1000)=the temperature alarm threshold in tenth of degree Celsius. (----)=Disconnected. 
+			 Sensor type is H1, H2: (000) to (100)=the humidity alarm threshold in tenth of percent. (---)=Disconnected. "
+		::= { iBoxSensorEntry 6 }	
+	iBoxSensorAlarmState OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (0..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The status of the sensor.
+			Sensor type is T1, T2: (0)=Normal, (1)=Alarm, (-)=Disconnected. 
+			Sensor type is H1, H2: (0)=Normal, (1)=Alarm, (-)=Disconnected."
+		::= { iBoxSensorEntry 9 }
+	iBoxSensorControlState OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (0..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The control state of the sensor. (For T1 & T2, the output is the 4-digit 7-segment display)
+			Sensor type is T1, T2: (0)=OFF, (1)=ON, (3)=Blink 
+			Sensor type is H1, H2: (0)=OFF, (1)=ON, (3)=Blink."
+		::= { iBoxSensorEntry 10 }
+	iBoxSensorReading OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (0..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The sensor reading.
+			 Sensor type is T1, T2: (0000) to (1000)=the temperature measured in tenth of degree Celsius. (----)=Disconnected. 
+			 Sensor type is H1, H2: (001) to (100)=the humidity measured in percent. (---)=Disconnected.
+			 For Temperature reading:
+			 (0000)=0.0, (0001)=0.1, (0010)=1.0, (0100)=10.0, (0999)=99.9
+			 For Humidity reading:
+			 (000)=0, (001)=1, (010)=10, (099)=99, (100)=100"
+		::= { iBoxSensorEntry 11 }
+	iBoxSensorActivation OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (0..32))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The activation state of the sensor.
+			 (0)=Deactivated, (1)=Activated"
+		::= { iBoxSensorEntry 13 }
+	--
+	--InfraSolutionX.pduGroup.pduAdmin.pduControl
+	--
+	SetPduName OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (4..19))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the name(max. 16 characters) of this PDU. 
+			 Syntax: [pdu_level]:[pdu_name_text].
+			 where [pdu_level] ranged from 1 to 4 (pdu level 1 to 4).
+			 For example: (P1.default_pdu_name)=setup the pdu name text 'default_pdu_name' for PDU Level 1"
+		::= { pduControl 1 }
+		--PDU_Details.PDU_Name
+	SetPduLocation OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (4..19))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the location(max. 16 characters) of this PDU. 
+			 Syntax: [pdu_level]:[pdu_location_text].
+			 where [pdu_level] ranged from 1 to 4 (pdu level 1 to 4).
+			 For example: (P1.default_pdu_loc.)=setup the pdu location text 'default_pdu_loc.' for PDU Level 1"
+		::= { pduControl 2 }
+		--PDU_Details.PDU_Location
+	SetCircuitLoadPeakAmpReset OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"Reset the peak current of the circuit to zero.
+			 Syntax: [pdu_id].[cirucit_id].
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4).
+			 where [cirucit_id] is A for confirm reset peak current record of circuit A.
+			 where [cirucit_id] is B for confirm reset peak current record of circuit B.
+			 For example: (P1.CA.1)=reset the peak current record of the circuit A to zero.
+			 For example: (P1.CB.1)=reset the peak current record of the circuit B to zero."
+		::= { pduControl 10 }
+	SetCircuitCumulativeEnergyReset OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"Reset the KWh of the circuit to zero.
+			 Syntax: [pdu_id].[cirucit_id].
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4).
+			 where [cirucit_id] is A for confirm reset KWh of circuit A.
+			 where [cirucit_id] is B for confirm reset KWh of circuit B.
+			 For example: (P1.CA.1)=reset the KWh of the circuit A to zero.
+			 For example: (P1.CB.1)=reset the KWh of the circuit B to zero."
+		::= { pduControl 11 }
+
+	SetCircuitLoadAmpAlarmThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (9))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the upper alarm current threshold of the circuit in tenth of Amps.
+			 Syntax: [pdu_id].[circuit_alarm_threshold].
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4).
+			 where [cirucit_id] is A or B (circuit A or circuit B).
+			 where [circuit_alarm_threshold] ranged from 001 to 160 (0.1A to 16.0A).
+			 For example: (P1.CA.130)=setup the alarm threshold for the ciruit of PDU level 1(P1) to 13.0 A."
+		::= { pduControl 12 }
+	SetCircuitLoadAmpRisingAlertThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (9))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the rising alert current threshold of the circuit in tenth of Amps.
+			 Syntax: [pdu_id].[circuit_id].[rising_alert_threshold].
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4).
+			 where [cirucit_id] is A or B (circuit A  or circuit B).
+			 where [circuit_rising_alert_threshold] ranged from 001 to 160 (0.1A to 16.0A).
+			 For example: (P1.CA.100)=setup the rising alert threshold for ciruit A of PDU level 1(P1) to 10.0 A.
+			 For example: (P1.CB.100)=setup the rising alert threshold for ciruit B of PDU level 1(P1) to 10.0 A."
+		::= { pduControl 13 }
+	SetCircuitLoadAmpLowAlertThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (9))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the low alert current threshold of the circuit in tenth of Amps.
+			 Syntax: [pdu_id].[circuit_low_alert_threshold].
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4).
+			 where [cirucit_id] is A or B (circuit A  or circuit B).
+			 where [circuit_low_alert_threshold] ranged from 001 to 160 (0.1A to 16.0A).
+			 For example: (P1.CA.000)=setup the low alert threshold for ciruit A of PDU level 1(P1) to 0.0 A."
+		::= { pduControl 14 }
+
+	SetOutletPowerOFF OBJECT-TYPE
+		SYNTAX       DisplayString (SIZE (7..8))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: switch OFF the power of the outlet Syntax: [pdu_id].[outlet_id]. 
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4). 
+			       [outlet_id] ranged from 01 to 48 for std outlets, C1 to C48 for c19 outlet.
+			 For example: (P1.C1.0)= switch off outlet C1 of the PDU level P1. 
+			 For example: (P1.01.0)= switch off outlet 01 of the PDU level P1.
+			 For example: (P2.C9.0)= switch off outlet C9 of the PDU level P2.
+			 For example: (P2.48.0)= switch off outlet 48 of the PDU level P2."
+
+		::= { pduControl 20 }
+	SetOutletPowerON OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..8))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: switch ON the power of the outlet Syntax: [pdu_id].[outlet_id].
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4). 
+			       [outlet_id] ranged from 01 to 48 for std outlets, C1 to C48 for c19 outlet.
+			 For example: (P1.C1.1)= switch on outlet C1 of the PDU level P1. 
+			 For example: (P1.01.1)= switch on outlet 01 of the PDU level P1.
+			 For example: (P2.C9.1)= switch on outlet C9 of the PDU level P2.
+			 For example: (P2.48.1)= switch on outlet 48 of the PDU level P2."
+		::= { pduControl 21 }
+	SetOutletName OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..23))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: setup the outlet name of this pdu.
+			 Syntax: [pdu_id].[outlet_id].[outlet_name]
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4). 
+			       [outlet_id] ranged from 01 to 48 for std outlets, C1 to C48 for c19 outlet.
+			       [outlet_name] is 1 to 16 characters descriping the outlet name
+			 For example: (P1.01.outlet_name_01)=setup the outlet name for outlet id 01 on PDU level 1(P1).
+			 For example: (P4.C1.outlet_name_C1)=setup the outlet name for outlet id C1 on PDU level 4(P4)."
+		::= { pduControl 22 }
+
+	SetOutletDelaySwitchONCount OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..8))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: switch ON the power of the outlet Syntax: [pdu_id].[outlet_id].[delay_on]
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4). 
+			       [outlet_id] ranged from 01 to 48 for std outlets, C1 to C48 for c19 outlet.
+			       [delay_on] ranged from (0):1 to (9):10s
+			 For example: (P1.C1.0)= set delay switch on count ( 1 second) for outlet C1 of the PDU level P1."
+		::= { pduControl 23 }
+
+	SetOutletPeakAmpReset OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..8))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the Peak Amp of the outlet on this pdu to zero.
+			 Syntax: [pdu_id].[outlet_id]
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4). 
+			       [outlet_id] ranged from 01 to 48 for std outlets, C1 to C48 for c19 outlet.
+			 For example: (P1.01.1)=reset the peak Amp of outlet id 01 on PDU level 1(P1).
+			 For example: (P4.C1.1)=reset the peak Amp of outlet id C1 on PDU level 4(P4)."
+		::= { pduControl 24 }
+
+	SetOutletCumulativeEnergyReset OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..8))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the KWh of the outlet on this pdu to zero.
+			 Syntax: [pdu_id].[outlet_id]
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4). 
+			       [outlet_id] ranged from 01 to 48 for std outlets, C1 to C48 for c19 outlet.
+			 For example: (P1.01.1)=reset the KWh of outlet id 01 on PDU level 1(P1).
+			 For example: (P4.C1.1)=reset the KWh of outlet id C1 on PDU level 4(P4)."
+		::= { pduControl 25 }
+
+	SetOutletLoadAmpAlarmThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..10))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the upper alarm current threshold of the outlet on this pdu in tenth of Amps.
+			 Syntax: [pdu_id].[outlet_id].[alarm_threshold]
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4). 
+			       [outlet_id] ranged from 01 to 48 for std outlets, C1 to C48 for c19 outlet.
+			       [alarm_threshold] ranged from 001 to 160.
+			 For example: (P1.01.050)=setup the alarm threshold for outlet_id 01 of PDU level 1(P1) to 5.0 A.
+			 For example: (P1.C1.050)=setup the alarm threshold for outlet_id C1 of PDU level 1(P1) to 5.0 A."
+		::= { pduControl 26 }
+
+	SetOutletLoadAmpRisingAlertThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..10))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the rising alert current threshold of the outlet on this pdu in tenth of Amps.
+			 Syntax: [pdu_id].[outlet_id].[rising_alert_threshold]
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4). 
+			       [outlet_id] ranged from 01 to 48 for std outlets, C1 to C48 for c19 outlet.
+			       [rising_alert_threshold] ranged from 001 to 160.
+			 For example: (P1.01.030)=setup the rising alert threshold for outlet_id 01 of PDU level 1(P1) to 3.0 A.
+			 For example: (P1.C1.030)=setup the rising alert threshold for outlet_id C1 of PDU level 1(P1) to 3.0 A."
+		::= { pduControl 27 }
+
+	SetOutletLoadAmpLowAlertThresh OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..10))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the low alert current threshold of the outlet on this pdu in tenth of Amps.
+			 Syntax: [pdu_id].[outlet_id].[low_alert_threshold]
+			 where [pdu_id] ranged from P1 to P4 (pdu level 1 to 4). 
+			       [outlet_id] ranged from 01 to 48 for std outlets, C1 to C48 for c19 outlet.
+			       [low_alert_threshold] ranged from 001 to 160.
+			 For example: (P1.01.030)=setup the low alert threshold for outlet_id 01 of PDU level 1(P1) to 3.0 A.
+			 For example: (P1.C1.030)=setup the low alert threshold for outlet_id C1 of PDU level 1(P1) to 3.0 A."
+		::= { pduControl 28 }
+
+	SetTHSensorActivate OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: Activate the sensor port (T or TH sensor) on this PDU.
+			 Syntax: [pdu_id].[TH_Sensor_port].
+			 where [pdu_id] ranged from (P1) to (P4) (pdu level 1 to 4).
+			 where [TH_Sensor_port] is (T1) for T/TH sensor 1 or (T2) for T/TH sensor 2.
+			 For example: (P1.T1.1)=Activate the TH1 on pdu level P1.
+			 For example: (P1.T2.1)=Activate the TH2 on pdu level P1."
+		::= { pduControl 30 }
+	SetTHSensorDeactivate OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: Deactivate the sensor port (T or TH sensor) on this PDU.
+			 Syntax: [pdu_id].[TH_Sensor_port].
+			 where [pdu_id] ranged from (P1) to (P4) (pdu level 1 to 4).
+			 where [TH_Sensor_port] is (T1) for T/TH sensor 1 or (T2) for T/TH sensor 2.
+			 For example: (P1.T1.0)=Deactivate the TH1 on pdu level P1.
+			 For example: (P1.T2.0)=Deactivate the TH2 on pdu level P1."
+		::= { pduControl 31 }
+
+	SetTHSensorLocation OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..22))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: setup the location text of sensor port (T or TH sensor) on this PDU.
+			 Syntax: [pdu_id].[TH_Sensor_port].[TH1_Location].
+			 where [pdu_id] ranged from (P1) to (P4) (pdu level 1 to 4).
+			 where [TH_Sensor_port] is (T1) for T/TH sensor 1 or (T2) for T/TH sensor 2.
+			 where [TH1_Location] is a text with 3 to 16 characters.
+			 For example: (P1.T1.th1_location)=setup the location text 'th1_location' for TH1 on pdu level P1.
+			 For example: (P1.T2.th2_location)=setup the location text 'th2_location' for TH2 on pdu level P1."
+		::= { pduControl 32 }
+
+	SetTHSensorTempAlarmThreshold OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..10))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: setup the temperature alarm threshold of T/TH sensor on this PDU.
+			 Syntax: [pdu_id].[TH_Sensor_port].[Temp_alarm].
+			 where [pdu_id] ranged from (P1) to (P4) (pdu level 1 to 4).
+			 where [TH_Sensor_port] is (T1) for T/TH sensor 1 or (T2) for T/TH sensor 2.
+			 where [Temp_alarm] is (0000) to (0999) (0'C to 99.9'C).
+			 For example: (P1.T1.0400)=setup the temperature alarm threshold of TH1 on PDU level P1 to 40.0'C.
+			 For example: (P1.T2.0400)=setup the temperature alarm threshold of TH2 on PDU level P1 to 40.0'C."
+		::= { pduControl 33 }
+	SetTHSensorTempRisingAlertThreshold OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..10))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: setup the temperature rising alert threshold of T/TH sensor on this PDU.
+			 Syntax: [pdu_id].[Temp_alarm].
+			 where [pdu_id] ranged from (P1) to (P4) (pdu level 1 to 4).
+			 where [TH_Sensor_port] is (T1) for T/TH sensor 1 or (T2) for T/TH sensor 2.
+			 where [Temp_alarm] is (0000) to (0999) (0'C to 99.9'C).
+			 For example: (P1.T1.0400)=setup the temperature rising alert threshold of TH2 on PDU level P1 to 40.0'C.
+			 For example: (P1.T2.0400)=setup the temperature rising alert threshold of TH2 on PDU level P1 to 40.0'C."
+		::= { pduControl 34 }
+		--reserved 24 for SetTHTempLowAlertThreshold
+	SetTHSensorHumidAlarmThreshold OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..9))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: setup the humidity alarm threshold of TH sensor on this PDU.
+			 Syntax: [pdu_id].[TH_Sensor_port].[Humid_alarm].
+			 where [pdu_id] ranged from (P1) to (P4) (pdu level 1 to 4).
+			 where [TH_Sensor_port] is (T1) for T/TH sensor 1 or (T2) for T/TH sensor 2.
+			 where [Humid_alarm] is (001) to (999) (0.0 percents to 99.9 percents).
+			 For example: (P1.H1.900)=setup the humidity alarm threshold of TH1 on PDU level P1 to 90 percent.
+			 For example: (P1.H2.900)=setup the humidity alarm threshold of TH2 on PDU level P1 to 90 percent."
+		::= { pduControl 35 }
+	SetTHSensorHumidRisingAlertThreshold OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7..9))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: setup the humidity rising alert threshold of TH sensor on this PDU.
+			 Syntax: [pdu_id].[TH_Sensor_port].[Humid_alert].
+			 where [pdu_id] ranged from (P1) to (P4) (pdu level 1 to 4).
+			 where [TH_Sensor_port] is (T1) for T/TH sensor 1 or (T2) for T/TH sensor 2.
+			 where [Humid_alert] is (001) to (999) (0.0 percents to 99.9 percents).
+			 For example: (P1.H1.700)=setup the humidity rising alert threshold of TH1 on PDU level P1 to 70 percent.
+			 For example: (P1.H2.700)=setup the humidity rising alert threshold of TH2 on PDU level P1 to 70 percent."
+		::= { pduControl 36 }
+		--reserved 27 for SetTHHumidLowAlertThreshold
+
+	--
+	--InfraSolutionX.iBoxSensorGroup.iBoxSensorAdmin.iBoxSensorControl
+	--
+	SetEnvSensorEnable OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (4))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: Activate the sensor
+			 Syntax: [Sensor_id].[activation]
+			 where [Sensor_id] is (T1) for T/TH sensor 1 or (T2) for T/TH sensor 2.
+			 where [activation] is (0) for disable, (1) for enable.
+			 For example: (T1.1)=Activate the TH1 on InfraBox.
+			 For example: (T2.1)=Activate the TH2 on InfraBox.
+			 For example: (W1.1)=Activate the Water 1 on InfraBox.
+			 For example: (W2.1)=Activate the Water 2 on InfraBox.
+			 For example: (S1.1)=Activate the Smoke/Shock 1 on InfraBox.
+			 For example: (S2.1)=Activate the Smoke/Shock 2 on InfraBox."
+		::= { iBoxSensorControl 1 }
+	SetEnvSensorDisable OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (4))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: Deactivate the sensor
+			 Syntax: [Sensor_id].[activation]
+			 where [Sensor_id] is (T1) for T/TH sensor 1 or (T2) for T/TH sensor 2.
+			 where [activation] is (0) for disable, (1) for enable.
+			 For example: (T1.0)=Deactivate the TH1 on InfraBox.
+			 For example: (T2.0)=Deactivate the TH2 on InfraBox.
+			 For example: (W1.0)=Deactivate the Water 1 on InfraBox.
+			 For example: (W2.0)=Deactivate the Water 2 on InfraBox.
+			 For example: (S1.0)=Deactivate the Smoke/Shock 1 on InfraBox.
+			 For example: (S2.0)=Deactivate the Smoke/Shock 2 on InfraBox."
+		::= { iBoxSensorControl 2 }
+	SetEnvSensorTempAlarmThreshold OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (7))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the alarm threshold of the temperature sensor.
+			 Syntax: [Sensor_id].[temp_alarm_threshold]
+			 where [Sensor_id] is (T1) for Temp. sensor on Port T1 or (T2) for Temp. senosr on Port T2
+			 where [temp_alarm_threshold] is ranged from (0000) to (0999) in tenth of degree Celsius
+			 For example: (T1.0650)=set the alarm threshold for Temp. sensor on port T1 to 65.0 degree Celsius.
+			 For example: (T2.0600)=set the alarm threshold for Temp. sensor on port T2 to 60.0 degree Celsius."
+		::= { iBoxSensorControl 3 }
+	SetEnvSensorHumidAlarmThreshold OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (6))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the alarmthreshold of the humidity sensor.
+			 Syntax: [Sensor_id].[humid_alarm_threshold]
+			 where [Sensor_id] is (H1) for Humid. sensor on Port T1 or (H2) for Humid. senosr on Port T2
+			 where [humid_alarm_threshold] is ranged from (001) to (100) percent.
+			 For example: (H1.095)=set the alarm threshold for Humid. sensor on port T1 to 95.0 percent.
+			 For example: (H2.090)=set the alarm threshold for Humid. sensor on port T2 to 90.0 percent."
+		::= { iBoxSensorControl 4 }
+	SetLampOperation OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (4))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the Lamp operation mode on the InfraBox.
+			 Syntax: [Lamp_id].[control]
+			 where [Lamp_id] is (L1) for Lamp 1 or (L2) for Lamp 2.
+			 where [control] is (0) for disable, (1) for enable, (2)=Turn on when door open(L1, L2 only).
+			 For example: (L1.2)=Enable(Turn on when door open) the Lamp 1 on InfraBox.
+			 For example: (L2.2)=Enable(Turn on when door open) the Lamp 2 on InfraBox."
+		::= { iBoxSensorControl 5 }
+	SetEnvSensorEventTrigger OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (6))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: config the output (Beacon, Alarm-Out, Buzzer) for the sensor event is triggered.
+			 Syntax: [Sensor_id].[beacon_out][alarm_out][buzzer_out]
+			   Where [beacon_out] is 0:disable, 1:enable,
+			         [alarm_out] is 0:disable, 1:enable,
+			         [buzzer_out] is 0:disable, 1:enable.
+			 For example: (T1.001)=set the buzzer audio output only for the temp. / humid.(Port T1 (T1 and H1)) alarm event is triggered.
+			 For example: (W2.111)=set the audio and visual output (Beacon, Alarm-Out and Buzzer) for the Water 2 sensor with alarm event is triggered "
+		::= { iBoxSensorControl 6 }
+	SetPDUDisable OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (4))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: Deactivate the PDU
+			 Syntax: [PDU_id].[activation]
+			 where [PDU_id] is (P1 to P4) for PDU 1 to PDU 4 on the InfraBox.
+			 where [activation] is (0) for disable, (1) for enable.
+			 For example: (P1.0)=Deactivate the PDU1 on the InfraBox.
+			 For example: (P2.0)=Deactivate the PDU2 on the InfraBox.
+			 For example: (P3.0)=Deactivate the PDU3 on the InfraBox.
+			 For example: (P4.0)=Deactivate the PDU4 on the InfraBox."
+		::= { iBoxSensorControl 7 }
+	SetPDUEnable OBJECT-TYPE
+		SYNTAX      DisplayString (SIZE (4))
+		MAX-ACCESS  write-only
+		STATUS      current
+		DESCRIPTION
+			"SET: Activate the PDU
+			 Syntax: [PDU_id].[activation]
+			 where [PDU_id] is (P1 to P4) for PDU 1 to PDU 4 on the InfraBox.
+			 where [activation] is (0) for disable, (1) for enable.
+			 For example: (P1.1)=Activate the PDU1 on the InfraBox.
+			 For example: (P2.1)=Activate the PDU2 on the InfraBox.
+			 For example: (P3.1)=Activate the PDU3 on the InfraBox.
+			 For example: (P4.1)=Activate the PDU4 on the InfraBox."
+		::= { iBoxSensorControl 8 }
+	--
+	--	handleTraps
+	--
+	handleTraps	OBJECT IDENTIFIER	::= { handleGroup 2 }
+
+	handleUnlockedRemotely		NOTIFICATION-TYPE
+		OBJECTS {
+			handleIndex, handleLocation, handleConnectionStatus, handleLastAccessCardNo, handleLastDoorOpenTime, handleLastDoorCloseTime, handleLastAccessDuration, handleAlarmState, handleAccessMode, handleDoorSensorSate, handleLockSate
+		}
+		STATUS      current
+		DESCRIPTION
+			"The handle is unlocked.
+			 The trap sends out once."
+		::= { handleTraps 1 }
+
+	handleLocked		NOTIFICATION-TYPE
+		OBJECTS {
+			handleIndex, handleLocation, handleConnectionStatus, handleLastAccessCardNo, handleLastDoorOpenTime, handleLastDoorCloseTime, handleLastAccessDuration, handleAlarmState, handleAccessMode, handleDoorSensorSate, handleLockSate
+		}
+		STATUS      current
+		DESCRIPTION
+			"The handle is locked.
+			 The trap sends out once."
+		::= { handleTraps 2 }
+
+	doorNormalOpen		NOTIFICATION-TYPE
+		OBJECTS {
+			handleIndex, handleLocation, handleConnectionStatus, handleLastAccessCardNo, handleLastDoorOpenTime, handleLastDoorCloseTime, handleLastAccessDuration, handleAlarmState, handleAccessMode, handleDoorSensorSate, handleLockSate
+		}
+		STATUS      current
+		DESCRIPTION
+			"The door is opened.
+			 The trap sends out once."
+		::= { handleTraps 3 }
+
+	doorClose		NOTIFICATION-TYPE
+		OBJECTS {
+			handleIndex, handleLocation, handleConnectionStatus, handleLastAccessCardNo, handleLastDoorOpenTime, handleLastDoorCloseTime, handleLastAccessDuration, handleAlarmState, handleAccessMode, handleDoorSensorSate, handleLockSate
+		}
+		STATUS      current
+		DESCRIPTION
+			"The door is close.
+			 The trap sends out once."
+		::= { handleTraps 4 }
+
+	handleKeyAccess		NOTIFICATION-TYPE
+		OBJECTS {
+			handleIndex, handleLocation, handleConnectionStatus, handleLastAccessCardNo, handleLastDoorOpenTime, handleLastDoorCloseTime, handleLastAccessDuration, handleAlarmState, handleAccessMode, handleDoorSensorSate, handleLockSate
+		}
+		STATUS      current
+		DESCRIPTION
+			"Physical key access is detected at this handle.(handle is unlocked)
+			 The trap sends out once."
+		::= { handleTraps 6 }
+
+	handleAuthorizedCardAccess		NOTIFICATION-TYPE
+		OBJECTS {
+			handleIndex, handleLocation, handleConnectionStatus, handleLastAccessCardNo, handleLastDoorOpenTime, handleLastDoorCloseTime, handleLastAccessDuration, handleAlarmState, handleAccessMode, handleDoorSensorSate, handleLockSate
+		}
+		STATUS      current
+		DESCRIPTION
+			"Authorized card presenting is detected at this handle.(handle is unlocked)
+			 The trap sends out once."
+		::= { handleTraps 7 }
+	handleUnautorizedCard		NOTIFICATION-TYPE
+		OBJECTS {
+			handleIndex, handleLocation, handleConnectionStatus, handleLastAccessCardNo, handleLastDoorOpenTime, handleLastDoorCloseTime, handleLastAccessDuration, handleAlarmState, handleAccessMode, handleDoorSensorSate, handleLockSate
+		}
+		STATUS      current
+		DESCRIPTION
+			"Unauthorized card presenting is detected at this handle.
+			 The trap sends out once."
+		::= { handleTraps 8 }
+	doorAlarmOpen		NOTIFICATION-TYPE
+		OBJECTS {
+			handleIndex, handleLocation, handleConnectionStatus, handleLastAccessCardNo, handleLastDoorOpenTime, handleLastDoorCloseTime, handleLastAccessDuration, handleAlarmState, handleAccessMode, handleDoorSensorSate, handleLockSate
+		}
+		STATUS      current
+		DESCRIPTION
+			"The door is unautorized opened and alarm is triggered.
+			 The trap sends out once."
+		::= { handleTraps 9 }
+	doorAlarmStop		NOTIFICATION-TYPE
+		OBJECTS {
+			handleIndex, handleLocation, handleConnectionStatus, handleLastAccessCardNo, handleLastDoorOpenTime, handleLastDoorCloseTime, handleLastAccessDuration, handleAlarmState, handleAccessMode, handleDoorSensorSate, handleLockSate
+		}
+		STATUS      current
+		DESCRIPTION
+			"The door is return to normal
+			 The trap sends out once."
+		::= { handleTraps 12 }
+
+	--
+	--	pduTraps
+	--
+	pduTraps	OBJECT IDENTIFIER	::= { pduGroup 2 }
+		
+	circuitLoadEventTriggered		NOTIFICATION-TYPE
+		OBJECTS {
+			pduIndex, pduName, pduLocation, circuitIndex, circuitName, circuitState,circuitLoadAmp, circuitLoadAmpAlarmThresh, circuitLoadAmpRisingAlertThresh, circuitLoadAmpLowAlertThresh
+		}
+		STATUS      current
+		DESCRIPTION
+			"The circuit current upper alarm of this PDU triggered.
+			 The trap sends out 50 seconds in cycle ( 4 level PDUs connected ) until the current reading returns below circuitLoadAmpAlarmThresh."
+		::= { pduTraps 1 }
+
+	c19OutletLoadEventTriggered		NOTIFICATION-TYPE
+		OBJECTS {
+			pduIndex, pduName, pduLocation, circuc19OutletIndex, c19OutletName, c19OutletAlarmState, c19OutletLoadAmp, c19OutletLoadAmpAlarmThresh, c19OutletLoadAmpRisingAlertThresh, c19OutletLoadAmpLowAlertThresh
+		}
+		STATUS      current
+		DESCRIPTION
+			"The c19 outlet current upper alarm of this PDU triggered.
+			 The trap sends out 50 seconds in cycle ( 4 level PDUs connected ) until the c19 outlet current reading returns below c19OutletLoadAmpAlarmThresh."
+		::= { pduTraps 2 }
+	stdOutletLoadEventTriggered		NOTIFICATION-TYPE
+		OBJECTS {
+			pduIndex, pduName, pduLocation, stdOutletIndex, stdOutletName, stdOutletAlarmState, stdOutletLoadAmp, stdOutletLoadAmpAlarmThresh, stdOutletLoadAmpRisingAlertThresh, stdOutletLoadAmpLowAlertThresh
+		}
+		STATUS      current
+		DESCRIPTION
+			"The standard outlet current upper alarm of this PDU triggered.
+			 The trap sends out 50 seconds in cycle ( 4 level PDUs connected ) until the standard outlet current reading returns below stdOutletLoadAmpAlarmThresh."
+		::= { pduTraps 3 }
+
+	circuitBreakerTripped		NOTIFICATION-TYPE
+		OBJECTS {
+			pduIndex, pduName, pduLocation, circuitBreakerIndex, circuitBreakerState
+		}
+		STATUS      current
+		DESCRIPTION
+			"The circuit breaker of this PDU tripped.
+			 The trap sends out 50 seconds in cycle ( 4 level PDUs connected )."
+		::= { pduTraps 12 }
+		
+	circuitBreakerRecovered		NOTIFICATION-TYPE
+		OBJECTS {
+			pduIndex, pduName, pduLocation, circuitBreakerIndex, circuitBreakerState
+		}
+		STATUS      current
+		DESCRIPTION
+			"The circuit breaker of this PDU recovered
+			 The trap sends out once."
+		::= { pduTraps 13 }
+
+	sensorConnectionLost		NOTIFICATION-TYPE
+		OBJECTS {
+			pduIndex, pduName, pduLocation, THSensorIndex, THSensorType, THSensorLocation
+		}
+		STATUS      current
+		DESCRIPTION
+			"The temperature or temperatue-humidity sensor disconnected.
+			 The trap sends out 50 seconds in cycle ( 4 level PDUs connected ) until the temperature or temperature-humidity sensor is reconnected."
+		::= { pduTraps 40 }
+		
+	tempSensorEventTriggered		NOTIFICATION-TYPE
+		OBJECTS {
+			pduIndex, pduName, pduLocation, THSensorIndex, THSensorType, THSensorLocation, THSensorAlarmState, tempSensorValueStr, tempSensorUpperAlarmThresh, tempSensorRisingAlertThresh
+		}
+		STATUS      current
+		DESCRIPTION
+			"The temperature upper alarm triggered.
+			 The trap sends out 50 seconds in cycle ( 4 level PDUs connected ) until the temperature reading returns below tempSensorUpperAlarmThresh."
+		::= { pduTraps 41 }
+
+		
+	humiSensorEventTriggered		NOTIFICATION-TYPE
+		OBJECTS {
+			pduIndex, pduName, pduLocation, THSensorIndex, THSensorType, THSensorLocation, THSensorAlarmState, humiSensorValueStr, humiSensorUpperAlarmThresh, humiSensorRisingAlertThresh
+		}
+		STATUS      current
+		DESCRIPTION
+			"The relative humidity upper alarm triggered.
+			 The trap sends out 50 seconds in cycle ( 4 level PDUs connected ) until the temperature reading returns below humiSensorUpperAlarmThresh."
+		::= { pduTraps 47 }
+
+	pduConnectionLost		NOTIFICATION-TYPE
+		OBJECTS {
+			pduIndex, pduName, pduLocation
+		}
+		STATUS      current
+		DESCRIPTION
+			"The pdu is disconnected.
+			 The trap sends out once."
+		::= { pduTraps 53 }
+
+END
