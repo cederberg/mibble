@@ -63,7 +63,7 @@ public class MibbleValidator {
         ArrayList<Object> queue = new ArrayList<>();
         for (String arg : args) {
             try {
-                if (arg.contains(":")) {
+                if (arg.contains("://")) {
                     queue.add(new URL(arg));
                 } else {
                     File file = new File(arg);
