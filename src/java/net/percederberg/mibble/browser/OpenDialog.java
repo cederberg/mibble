@@ -309,13 +309,16 @@ public class OpenDialog extends JDialog {
      */
     protected void openFile() {
         FileDialog dialog = new FileDialog(this, "Select MIB File");
+        dialog.setMultipleMode(true);
         dialog.setDirectory(lastDir);
         dialog.setVisible(true);
-        if (dialog.getFile() != null) {
-            File file = new File(dialog.getDirectory(), dialog.getFile());
-            lastDir = dialog.getDirectory();
-            mibs = new String[] { file.getAbsolutePath() };
-        }
+        File[] files = dialog.getFiles();
+        String[] fileNames = new String[files.length];
+        for (int i = 0; i < files.length; i++) {
+			fileNames[i] = files[i].getAbsolutePath();
+		}
+        
+        mibs = fileNames;
         this.dispose();
     }
 
